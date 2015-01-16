@@ -1,0 +1,74 @@
+<h2>GoAgent Status</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Sys Platform</td><td id="sys_platform"></td>
+        </tr>
+        <tr>
+            <td>OS System</td><td id="os_system"></td>
+        </tr>
+        <tr>
+            <td>OS version</td><td id="os_version"></td>
+        </tr>
+        <tr>
+            <td>OS release</td><td id="os_release"></td>
+        </tr>
+        <tr>
+            <td>GoAgent Version</td><td id="goagent_version"></td>
+        </tr>
+        <tr>
+            <td>Python Version</td><td id="python_version"></td>
+        </tr>
+        <tr>
+            <td>Proxy Listen</td><td id="proxy_listen"></td>
+        </tr>
+        <tr>
+            <td>GAE appid</td><td id="gae_appid"></td>
+        </tr>
+        <tr>
+            <td>PAC URL</td><td id="pac_url"></td>
+        </tr>
+        <tr>
+            <td>Google IP</td><td id="gws_ip_num"></td>
+        </tr>
+    </tbody>
+</table>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script src="/js/jquery.timer.js"></script>
+<script type="text/javascript">
+    function update_status(){
+        $.getJSON( "http://127.0.0.1:8084/status", function( data ) {
+            $('#sys_platform').html(data.syst_platform);
+            $('#os_system').html(data.os_system);
+            $('#os_version').html(data.os_version);
+            $('#os_release').html(data.os_release);
+            $('#goagent_version').html(data.goagent_version);
+            $('#python_version').html(data.python_version);
+            $('#proxy_listen').html(data.proxy_listen);
+            $('#pac_url').html(data.pac_url);
+            $("#gws_ip_num").html(data.gws_ip_num);
+
+            var appids = "";
+            $.each( data.gae_appid, function( key, val ) {
+                appids += val + "|";
+            });
+            $('#gae_appid').html(appids);
+        });
+    }
+
+    var timer = $.timer(function() {
+        update_status();
+    });
+
+    update_status();
+    timer.set({ time : 1000, autostart : true });
+</script>

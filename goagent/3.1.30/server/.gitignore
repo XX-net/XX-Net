@@ -1,0 +1,5 @@
+.DS_Store
+*~
+*.pyc
+app.yaml
+.appcfg_cookies

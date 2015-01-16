@@ -1,0 +1,56 @@
+
+<br><br>
+    <h3 >Check update:
+        <div class="pull-right">
+            <input id="check_update" type="checkbox" checked>
+        </div>
+    </h3>
+<br><br>
+<div id="status"></div>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/highlight.js"></script>
+<script src="/js/bootstrap-switch.min.js"></script>
+<script type="text/javascript">
+    var check_update = 0;
+
+    $('#check_update').on('init.bootstrapSwitch', function (event) {
+        $.getJSON( "/config?cmd=get_config", function( data ) {
+            check_update = data.check_update;
+            if(data.check_update == 1){
+                //$('#check_update').attr('checked'); // "checked"
+                $('#check_update').bootstrapSwitch('state', true);
+            }else{
+                //$('#check_update').attr('unchecked'); // "checked"
+                $('#check_update').bootstrapSwitch('state', false);
+            }
+        });
+    });
+
+    // initialize all the inputs
+    $('input[type="checkbox"], input[type="radio"]')
+            .not("[data-switch-no-init]")
+            .bootstrapSwitch();
+
+
+    $('#check_update').on('switchChange.bootstrapSwitch', function (event, state) {
+        if(state){
+            val = 1;
+        }else{
+            val = 0;
+        }
+        if(val == check_update){
+            return;
+        }else{
+            check_update = val;
+        }
+        $.getJSON( "/config?cmd=set_config&check_update="+val, function( data ) {
+            res = data.res
+            $("#status").html(res)
+        });
+    });
+
+
+</script>

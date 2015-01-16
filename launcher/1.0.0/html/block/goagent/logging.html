@@ -1,0 +1,74 @@
+
+<style type="text/css">
+    .form-control { width: 100%; font-family: Verdana, Geneva, sans-serif; }
+    #log {
+        font-family: monospace;
+        font-size:1.0em;
+
+    }
+    textarea:read-only {
+        cursor: text;
+    }
+    textarea:scrollbar {
+        cursor: pointer;
+    }
+</style>
+
+<h1>GoAgent Log:</h1>
+
+<textarea class="form-control" rows="30" wrap='off' readonly id="log"></textarea>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script src="/js/jquery.timer.js"></script>
+
+<script type="text/javascript">
+    var last_line_no = 1
+    var tid = 0;
+    $.getJSON( "http://127.0.0.1:8084/log?cmd=get_last&max_line=500", function( data ) {
+        var text = '';
+        $.each( data, function( key, val ) {
+            text += val;
+            last_line_no = key
+        });
+        $("#log").val(text)
+        $('#log').scrollTop($('#log')[0].scrollHeight);
+        enable_autoscroll();
+    });
+
+
+    function enable_autoscroll() {
+        if (tid == 0) {
+            tid = setTimeout(pull_log, 2000);
+        }
+    }
+
+    function pull_log() {
+        var from_no = parseInt(last_line_no) + 1
+        $.getJSON( "http://127.0.0.1:8084/log?cmd=get_new&last_no="+from_no, function( data ) {
+            var text = '';
+            $.each( data, function( key, val ) {
+                text += val;
+                last_line_no = key
+            });
+            var org_txt = $("#log").val()
+            $("#log").val(org_txt + text)
+
+            tid = setTimeout(pull_log, 2000);
+            $('#log').scrollTop($('#log').scrollHeight);
+        });
+
+    }
+    $('#log').scroll(function() {
+        var h1 = $(this).scrollTop();
+        var h2 = $(this).height();
+        var h3 = $(this)[0].scrollHeight;
+        if (h1 + h2 >= h3 - 100) {
+            enable_autoscroll();
+        }else{
+            clearTimeout(tid);
+            tid = 0;
+        }
+    });
+
+</script>
