@@ -18,7 +18,7 @@ Support platform
 ## Links
 |   |   |
 | --------   | :----  |
-|Download: |https://codeload.github.com/XX-net/XX-Net/zip/v1.0.0|
+|Download: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.0|
 |Issues:  |https://github.com/XX-net/XX-Net/issues|
 |Discus:  |https://groups.google.com/forum/#!forum/xx-net|
 |Email:   |xxnet.dev at gmail.com|
