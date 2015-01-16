@@ -16,11 +16,12 @@ Support platform
 
 
 ## Links
-| --------   | :----  |
+|   |   |
 |Download: |https://codeload.github.com/XX-net/XX-Net/zip/v1.0.0|
 |Issues:  |https://github.com/XX-net/XX-Net/issues|
 |Discus:  |https://groups.google.com/forum/#!forum/xx-net|
 |Email:   |xxnet.dev at gmail.com|
 
-Known Issues:
+Known Issues
+============
 * New Windows Chrome visit youtube, can't play video
