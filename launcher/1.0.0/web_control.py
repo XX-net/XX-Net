@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# coding:utf-8
 
 import ConfigParser, io, os, re, sys
 import SocketServer, socket, ssl
