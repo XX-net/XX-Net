@@ -1,28 +1,35 @@
-XX-Net
+叉叉网(XX-Net)
+
+
+主要特性
 ========
 
-* Integrate GoAgent with auto search google ip
-* Web UI
-* Include public appid
-* Auto update
+* GoAgent 集成搜索 google ip
+* 基于Web 的配置界面、上传部署、Log查看
+* 内置了公共 appid, 安装即可上网, 注册自己的google appid
+* 新版本提示、更新升级
 
-Support platform
+平台
 ================
-* XP, need tcpip.sys patch, like tcp-z
+* Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
 * Win7
 * Win8
-* Ubuntu, no systray
+* Ubuntu （不能显示系统托盘）
 * Debian
 
 
-## Links
+## 链接
 |   |   |
 | --------   | :----  |
-|Download: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.0|
-|Issues:  |https://github.com/XX-net/XX-Net/issues|
-|Discus:  |https://groups.google.com/forum/#!forum/xx-net|
+|下载: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.0|
+|问题报告:  |https://github.com/XX-net/XX-Net/issues|
+|讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 |Email:   |xxnet.dev at gmail.com|
 
-Known Issues
-============
-* New Windows Chrome visit youtube, can't play video
+
+感谢
+=========
+* GoAgent
+* GoGoTest
+* goagentfindip
+* checkgoogleip
