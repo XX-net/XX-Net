@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# coding:utf-8
 
 import urllib2
 import json
@@ -248,8 +250,16 @@ def create_desktop_shortcut():
     if sys.platform == "linux" or sys.platform == "linux2":
         pass
     elif sys.platform == "win32":
+        import ctypes
+        msg = u"是否在桌面创建图标？"
+        title = u"XX-Net 叉叉网"
+        res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
+        # Yes:1 No:2
+        if res == 2:
+            return
+
         import subprocess
-        p = subprocess.call(["cmd", "/c", "create_shortcut.js"], shell=False)
+        p = subprocess.call(["Wscript.exe", "create_shortcut.js"], shell=False)
 
 def notify_install_tcpz_for_winXp():
     import ctypes
