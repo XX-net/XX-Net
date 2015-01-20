@@ -1,6 +1,8 @@
 叉叉网(XX-Net)
 
 
+
+
 主要特性
 ========
 
@@ -21,7 +23,7 @@
 ## 链接
 |   |   |
 | --------   | :----  |
-|下载: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.0|
+|下载: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.1|
 |问题报告:  |https://github.com/XX-net/XX-Net/issues|
 |讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 |Email:   |xxnet.dev at gmail.com|
@@ -37,7 +39,9 @@
 * Linux下, 执行 start.sh
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
-* 虽然系统内置了公共appid, 还是建议部署自己的appid
+* 服务端
+  - 协议采用3.1的版本，请重新部署服务端
+  - 虽然系统内置了公共appid, 还是建议部署自己的appid
 
 感谢
 =========
@@ -45,3 +49,9 @@
 * GoGoTest
 * goagentfindip
 * checkgoogleip
+
+
+
+问题反馈
+=======
+* 有问题请反馈，这是对项目最好的支持
