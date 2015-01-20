@@ -42,7 +42,7 @@ class Check_ip():
         self.load_ip()
 
         if len(self.gws_ip_list) < min_good_ip_num:
-            self.get_more_proxy_ip()
+            self.search_more_google_ip()
 
     def load_ip(self):
         try:
@@ -77,8 +77,7 @@ class Check_ip():
             with open("good_ip.txt", "w") as fd:
                 for ip_str, property in self.ip_dict.items():
                     fd.write( "%s %s %s %d\n" % (ip_str, property['domain'], property['server'], property['conn_time']) )
-                fd.close()
-                self.iplist_need_save = 0
+            self.iplist_need_save = 0
         except Exception as e:
             logging.error("save good_ip.txt fail %s", e)
         finally:
@@ -86,40 +85,34 @@ class Check_ip():
 
     def set_ip(self, ip_str, conn_time, domain=None, server=None):
         conn_time = int(conn_time)
+        if conn_time >= timeout:
+            self.remove_ip(ip_str)
+            return
+
         self.iplist_need_save = 1
         self.ip_lock.acquire()
-        if ip_str in self.ip_dict:
-            if conn_time >= timeout:
-                self.ip_lock.release()
-                self.remove_ip(ip_str)
+        try:
+            if ip_str in self.ip_dict:
+                self.ip_dict[ip_str]['conn_time'] = conn_time
                 return
 
-            self.ip_dict[ip_str]['conn_time'] = conn_time
+            else:
+                if domain==None or server==None:
+                    # update connect time only
+                    return
+
+                self.ip_dict[ip_str] = {'conn_time':conn_time, 'domain':domain, 'server':server}
+
+                if domain not in self.domain_ip_list:
+                    self.domain_ip_list[domain] = []
+                self.domain_ip_list[domain].append(ip_str)
+                if 'gws' in server:
+                    self.gws_ip_list.append(ip_str)
+
+        except Exception as e:
+            logging.error("set_ip err:%s", e)
+        finally:
             self.ip_lock.release()
-            return
-
-        else:
-            if conn_time >= timeout:
-                self.ip_lock.release()
-                return
-            if domain==None or server==None:
-                self.ip_lock.release()
-                return
-            #if not 'gws' in server:
-            #    self.ip_lock.release()
-            #    return
-
-            self.ip_dict[ip_str] = {'conn_time':conn_time, 'domain':domain, 'server':server}
-
-            if domain not in self.domain_ip_list:
-                self.domain_ip_list[domain] = []
-            self.domain_ip_list[domain].append(ip_str)
-            if 'gws' in server:
-                self.gws_ip_list.append(ip_str)
-
-            self.ip_lock.release()
-            return
-
 
     def remove_ip(self, ip_str):
         self.ip_lock.acquire()
@@ -128,54 +121,54 @@ class Check_ip():
             self.ip_lock.release()
             return
 
-        property = self.ip_dict[ip_str]
-        domain = property['domain']
-        server = property['server']
 
-        del self.ip_dict[ip_str]
         try:
+            property = self.ip_dict[ip_str]
+            domain = property['domain']
+            server = property['server']
+            del self.ip_dict[ip_str]
             self.domain_ip_list[domain].remove(ip_str)
-        except:
-            pass
 
-        if 'gws' in server:
-            try:
+            if 'gws' in server and ip_str in self.gws_ip_list:
                 self.gws_ip_list.remove(ip_str)
-            except:
-                pass
 
+        except Exception as e:
+            logging.warn("remove_ip fail %s", e)
+        finally:
+            self.ip_lock.release()
 
-        self.ip_lock.release()
         logging.info("remove gae ip:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
 
         if len(self.gws_ip_list) < min_good_ip_num:
-            self.get_more_proxy_ip()
+            self.search_more_google_ip()
 
     def get_batch_ip(self, num = 1):
-
         self.ip_lock.acquire()
-        if time.time() - self.last_sort_time > 10:
-            ip_dict_conn_time = {}
-            for ip_str in self.ip_dict:
-                if 'gws' not in self.ip_dict[ip_str]['server']:
-                    continue
-                ip_dict_conn_time[ip_str] = self.ip_dict[ip_str]['conn_time']
-            self.gws_ip_list = sorted(ip_dict_conn_time.items(), key=operator.itemgetter(1))
-            self.last_sort_time = time.time()
-
-        if len(self.gws_ip_list) == 0:
-            logging.warning("no gws ip")
-            #raise NetWorkIOError
-            return []
-
-        i = 0
         ret_list = []
-        for (ip_str, _) in self.gws_ip_list:
-            ret_list.append( ip_str)
-            i += 1
-            if i >= num:
-                break
-        self.ip_lock.release()
+        try:
+            if time.time() - self.last_sort_time > 10:
+                ip_dict_conn_time = {}
+                for ip_str in self.ip_dict:
+                    if 'gws' not in self.ip_dict[ip_str]['server']:
+                        continue
+                    ip_dict_conn_time[ip_str] = self.ip_dict[ip_str]['conn_time']
+                self.gws_ip_list = sorted(ip_dict_conn_time.items(), key=operator.itemgetter(1))
+                self.last_sort_time = time.time()
+
+            if len(self.gws_ip_list) == 0:
+                logging.warning("no gws ip")
+                return []
+
+            i = 0
+            for (ip_str, _) in self.gws_ip_list:
+                ret_list.append( ip_str)
+                i += 1
+                if i >= num:
+                    break
+        except Exception as e:
+            logging.error("get_batch_ip fail:%s", e)
+        finally:
+            self.ip_lock.release()
         return ret_list
 
     def get_domain_batch_ip(self, domain, num = 1):
@@ -192,6 +185,8 @@ class Check_ip():
                 self.last_sort_time_for_domain[domain] = time.time()
 
             if domain not in self.domain_ip_list or len(self.domain_ip_list[domain]) == 0:
+                ret_list = []
+                logging.warn("no domain ip for %s", domain)
                 return []
 
             i = 0
@@ -202,7 +197,7 @@ class Check_ip():
                 if i >= num:
                     break
         except Exception as e:
-            pass
+            logging.warn("get_domain_batch_ip %s fail:%s", domain, e)
         finally:
             self.ip_lock.release()
         return ret_list
@@ -227,13 +222,13 @@ class Check_ip():
                 self.set_ip(ip_str, conn_time, domain, server)
                 self.save_ip_list()
             except Exception as e:
-                pass
+                logging.warn("google_ip.runJum fail:%s", e)
 
         self.ncount_lock.acquire()
         self.ncount -= 1
         self.ncount_lock.release()
 
-    def get_more_proxy_ip(self):
+    def search_more_google_ip(self):
         while self.ncount < max_check_ip_thread_num:
             self.ncount_lock.acquire()
             self.ncount += 1
@@ -249,16 +244,16 @@ class Check_ip():
 
         for ip_str in tmp_ip_list:
             (domain, conn_time, timeout, server) = self.ssl_check.get_ssl_domain(ip_str)
-            if timeout == 1:
+            if timeout == 1 or domain == None:
                 self.remove_ip(ip_str)
             else:
-                self.set_ip(ip_str, conn_time, domain, server)
+                self.set_ip(ip_str, conn_time)
             self.save_ip_list()
 
 
 def test():
     check = Check_ip()
-    check.get_more_proxy_ip()
+    check.search_more_google_ip()
     #check.test_ip("74.125.130.98", print_result=True)
     while True:
         time.sleep(10)

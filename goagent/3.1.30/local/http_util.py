@@ -282,7 +282,7 @@ class HTTPUtil(object):
         ip_list = Common.google_ip.get_batch_ip(5)
         if len(ip_list) == 0:
             logging.warn('no google ip for connect')
-            return
+            return None
         addresses = [(x, address[1]) for x in ip_list]
 
         for i in range(self.max_retry):

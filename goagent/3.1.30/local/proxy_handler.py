@@ -635,7 +635,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
         try:
-            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True, ssl_version=ssl.PROTOCOL_TLSv1)
+            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
         except Exception as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
                 logging.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s', self.connection, e, self.path)
