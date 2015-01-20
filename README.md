@@ -1,6 +1,8 @@
 叉叉网(XX-Net)
 
-
+下载链接：
+==========
+https://codeload.github.com/XX-net/XX-Net/zip/1.0.2
 
 
 主要特性
@@ -23,7 +25,6 @@
 ## 链接
 |   |   |
 | --------   | :----  |
-|下载: |https://codeload.github.com/XX-net/XX-Net/zip/1.0.1|
 |问题报告:  |https://github.com/XX-net/XX-Net/issues|
 |讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 |Email:   |xxnet.dev at gmail.com|
