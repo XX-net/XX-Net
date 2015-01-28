@@ -92,6 +92,7 @@ class LocalServer(SocketServer.ThreadingTCPServer):
             SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
 class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+    deploy_proc = None
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
 
@@ -210,13 +211,23 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             appid = reqs['appid'][0]
             email = reqs['email'][0]
             passwd = reqs['passwd'][0]
-            deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
+            self.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['get_log']:
+
             if os.path.isfile(log_path):
-                self.send_file(log_path, "txt")
+                with open(log_path, "r") as f:
+                    content = f.read()
             else:
-                pass
+                content = ""
+
+            if self.deploy_proc:
+                proc_status = self.deploy_proc.poll()
+                if not proc_status == None:
+                    # process is ended
+                    content += "\r\n== END ==\n"
+
+            data = content
 
 
         mimetype = 'text/plain'

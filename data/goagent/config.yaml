@@ -1,5 +1,5 @@
 modules:
-  goagent: {auto_start: 1, current_version: 3.1.32, ignore_version: 3.1.32}
+  goagent: {auto_start: 1, current_version: 3.1.31, ignore_version: 3.1.31}
   launcher: {current_version: 1.0.0, ignore_version: 1.0.0}
 update: {check_update: 0, last_path: /media/release/XX-Net/launcher/1.0.0, node_id: !!python/long '8796754053427',
-  uuid: fe2d0e80-ed75-43ed-83f0-409194ca8566}
+  uuid: 63b44f9f-8256-4f44-a512-1da2bdebb62b}
