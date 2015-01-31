@@ -241,14 +241,24 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "check_update": "%d" }' % (config.config["update"]["check_update"])
+            data = '{ "check_update": "%d", "popup_webui": %d }' % (config.get(["update", "check_update"], 1), config.get(["web_ui", "popup_webui"], 1) )
         elif reqs['cmd'] == ['set_config']:
-            if reqs['check_update'] :
+            if 'check_update' in reqs:
                 check_update = int(reqs['check_update'][0])
                 if check_update != 0 and check_update != 1:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
                     config.config["update"]["check_update"] = int(check_update)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
+            elif 'popup_webui' in reqs :
+                popup_webui = int(reqs['popup_webui'][0])
+                if popup_webui != 0 and popup_webui != 1:
+                    data = '{"res":"fail, popup_webui:%s"}' % popup_webui
+                else:
+                    config.set(["web_ui", "popup_webui"], popup_webui)
                     config.save()
 
                     data = '{"res":"success"}'

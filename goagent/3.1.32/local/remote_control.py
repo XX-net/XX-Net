@@ -31,6 +31,8 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_log_handler()
         elif path == "/status":
             return self.req_status_handler()
+        elif path == "/ip_list":
+            return self.req_ip_list_handler()
         elif path == "/quit":
             config.keep_run = False
             data = "Quit"
@@ -111,18 +113,37 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
+        if "user-agent" in self.headers.dict:
+            user_agent = self.headers.dict["user-agent"]
+        else:
+            user_agent = ""
+
         gws_ip_num = len(google_ip.gws_ip_list)
         res_arr = {"gws_ip_num": gws_ip_num,
                    "sys_platform":sys.platform,
                    "os_system":platform.system(),
                    "os_version":platform.version(),
                    "os_release":platform.release(),
+                   "browser":user_agent,
                    "goagent_version": config.__version__,
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":config.GAE_APPIDS,
                    "pac_url":config.pac_url}
         data = json.dumps(res_arr)
+
+        mimetype = 'text/plain'
+        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(data)
+
+    def req_ip_list_handler(self):
+        data = ""
+        for ip in google_ip.gws_ip_list:
+            handshake_time = google_ip.ip_dict[ip]["handshake_time"]
+            timeout = google_ip.ip_dict[ip]["timeout"]
+            history = google_ip.ip_dict[ip]["history"]
+            data += "%s \t %d \t %d \t %s\r\n" % (ip, handshake_time, timeout, history)
+
 
         mimetype = 'text/plain'
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())

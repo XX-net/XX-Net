@@ -375,5 +375,5 @@ class CertUtil(object):
 
 
 if __name__ == '__main__':
-    capath = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_keyfile)
+    #capath = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_keyfile)
     CertUtil.check_ca()

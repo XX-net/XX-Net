@@ -33,11 +33,50 @@ def save():
     except Exception as e:
         logging.warn("save config %s fail %s", data_path, e)
 
+def get(path, default_val=""):
+    global config
+    try:
+        value = default_val
+        cmd = "config"
+        for p in path:
+            cmd += '["%s"]' % p
+        value = eval(cmd)
+        return value
+    except:
+        return default_val
+
+def _set(m, k_list, v):
+    k0 = k_list[0]
+    if len(k_list) == 1:
+        m[k0] = v
+        return
+    if k0 not in m:
+        m[k0] = {}
+    _set(m[k0], k_list[1:], v)
+
+def set(path, val):
+    global config
+    _set(config, path, val)
+
+
 def main():
     load()
     #config["tax"] = 260
     #save()
     print yaml.dump(config)
 
+def test():
+    load()
+    val = get(["web_ui", "popup_webui"], 0)
+    print val
+
+def test2():
+    set(["web_ui", "popup_webui"], 0)
+    set(["web_ui", "popup"], 0)
+    print config
+
 if __name__ == "__main__":
-    main()
+    test2()
+    #main()
+    #a = eval('2*3')
+    #eval("conf = {}")

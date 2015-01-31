@@ -17,7 +17,7 @@ elif sys.platform == "win32":
 import web_control
 import module_init
 import update
-
+import config
 
 def exit_handler():
     print 'Stopping all modules before exit!'
@@ -43,7 +43,9 @@ def main():
 
     web_control.start()
 
-    webbrowser.open("http://127.0.0.1:8085/")
+    config.load()
+    if config.get(["web_ui", "popup_webui"], 1) == 1:
+        webbrowser.open("http://127.0.0.1:8085/")
 
     update.start()
 

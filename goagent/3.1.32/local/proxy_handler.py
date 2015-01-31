@@ -26,6 +26,7 @@ import urlparse
 
 from cert_util import CertUtil
 from connect_manager import https_manager,forwork_manager
+import traceback
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
@@ -137,11 +138,17 @@ def gae_urlfetch(method, url, headers, payload, app_server, **kwargs):
     request_headers['Content-Length'] = str(len(payload))
 
     # post data
+    #start_time = time.time()
     response = https_manager.request(request_method, app_server, payload, request_headers)
+    #stop_time = time.time()
+    #cost_time = stop_time - start_time
+
     if hasattr(response, "status"):
         response.app_status = response.status
     else:
         return response
+    #logging.debug("request time:%d status:%d url:%s ", int(cost_time * 1000), response.status, url)
+
     response.app_options = response.getheader('X-GOA-Options', '')
     if response.status != 200:
         return response
@@ -341,7 +348,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     normcookie = functools.partial(re.compile(', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
     normattachment = functools.partial(re.compile(r'filename=(.+?)').sub, 'filename="\\1"')
-    appid = appid_manager.get_appid()
 
 
     def setup(self):
@@ -423,9 +429,12 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 # TODO: test validate = 1
                 kwargs['validate'] = 0
 
-                appid = self.appid
+                appid = appid_manager.get_appid()
                 app_server = "https://" + appid + ".appspot.com/2?"
+                time_start = time.time()
                 response = gae_urlfetch(self.command, self.path, request_headers, payload, app_server, **kwargs)
+                time_stop = time.time()
+                time_cost = int((time_stop - time_start) * 1000)
                 if not response:
                     if retry >= config.FETCHMAX_LOCAL-1:
                         html = generate_message_html('502 URLFetch failed', 'Local URLFetch %r failed' % self.path, str(errors))
@@ -440,9 +449,9 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if response.app_status == 404:
                     logging.warning('APPID %r not exists, remove it.', appid)
                     appid_manager.report_not_exist(appid)
-                    self.appid = appid_manager.get_appid()
+                    appid = appid_manager.get_appid()
 
-                    if not self.appid:
+                    if not appid:
                         html = generate_message_html('404 No usable Appid Exists', 'No usable Appid Exists, please add appid')
                         self.wfile.write(b'HTTP/1.0 502\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
                         response.close()
@@ -455,9 +464,9 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if response.app_status == 503:
                     logging.warning('APPID %r out of auota, remove it.', appid)
                     appid_manager.report_out_of_quota(appid)
-                    self.appid = appid_manager.get_appid()
+                    appid = appid_manager.get_appid()
 
-                    if not self.appid:
+                    if not appid:
                         html = generate_message_html('404 No usable Appid Exists', 'No usable Appid Exists, please add appid')
                         self.wfile.write(b'HTTP/1.0 502\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
                         response.close()
@@ -481,7 +490,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                 # first response, has no retry.
                 if not headers_sent:
-                    logging.info('"GAE %s %s HTTP/1.1" status:%s len:%s', self.command, self.path, response.status, response.getheader('Content-Length', '-'))
+                    logging.info('"GAE t:%d %s %s HTTP/1.1" status:%s len:%s', time_cost, self.command, self.path, response.status, response.getheader('Content-Length', '-'))
                     if response.status == 206:
                         # 206 means "Partial Content"
                         fetchservers = [app_server]
@@ -532,6 +541,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     return
                 else:
                     logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r, errno: %d ', self.path, e, int(e.args[0])) #IOError(9, 'Bad file descriptor')
+                    traceback.print_exc()
 
     def do_CONNECT(self):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""
@@ -555,7 +565,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         for i in range(3):
             try:
-                if host == "appengine.google.com":
+                if host == "appengine.google.com" or host == "www.google.com":
                     connected_in_s = 5
                     # goagent upload to appengine is slow, it need more 'fresh' connection.
 
@@ -569,7 +579,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     break
                 elif i == 0:
                     # only logging first create_connection error
-                    logging.error('http_util.create_connection((host=%r, port=%r)) timeout', host, port, )
+                    logging.warn('http_util.create_connection((host=%r, port=%r)) timeout', host, port, )
             except NetWorkIOError as e:
                 if e.args[0] == 9:
                     logging.error('GAEProxyHandler direct forward remote (%r, %r) failed', host, port)
