@@ -5,7 +5,9 @@
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.0.2
+https://codeload.github.com/XX-net/XX-Net/zip/1.0.4
+
+
 
 
 主要特性
