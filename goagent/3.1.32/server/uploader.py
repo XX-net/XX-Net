@@ -11,7 +11,7 @@ os.chdir(code_path)
 
 
 sys.modules.pop('google', None)
-lib_path = os.path.join(code_path, "google_appengine.zip")
+lib_path = os.path.join(code_path, "lib")
 sys.path.insert(0, lib_path)
 
 import mimetypes
