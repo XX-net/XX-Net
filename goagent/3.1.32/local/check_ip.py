@@ -22,7 +22,7 @@ import socket
 import cert_util
 from openssl_wrap import SSLConnection
 
-if __name__ == "__main__":
+if __name__ == "__main__"  and False:
     import logging
 else:
     # hide log in working mode.
@@ -62,7 +62,7 @@ class Check_frame(object):
     def check(self, callback=None, check_ca=False):
 
         timeout = 5
-        openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile)
+        openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
 
         ssl_sock = None
         try:
@@ -234,13 +234,65 @@ def test_main():
         ip_str = ip_utils.ip_num_to_string(ip_int)
         test(ip_str, 1)
 
+from google_ip_range import ip_range
+import threading
+class fast_search_ip():
+    check_num = 0
+    gws_num = 0
+    lock = threading.Lock()
+
+    def check_ip(self, ip_str):
+        result = test_gws(ip_str)
+
+        self.lock.acquire()
+        self.check_num += 1
+        self.lock.release()
+
+        if not result:
+            return False
+
+        self.lock.acquire()
+        self.gws_num += 1
+        self.lock.release()
+        return True
+
+    def runJob(self):
+        while self.check_num < 1000000:
+            try:
+                time.sleep(1)
+                #ip_int = ip_range.get_ip()
+                ip_int = ip_range.random_get_ip()
+                ip_str = ip_utils.ip_num_to_string(ip_int)
+                self.check_ip(ip_str)
+            except Exception as e:
+                logging.warn("google_ip.runJob fail:%s", e)
+
+
+
+    def search_more_google_ip(self):
+        for i in range(50):
+            p = threading.Thread(target = self.runJob)
+            p.daemon = True
+            p.start()
+
 if __name__ == "__main__":
     #test("203.165.14.230", 10) #gws
-    test('210.139.253.39', 100)
+    #test('208.117.224.213', 10)
     #test("218.176.242.24")
     #test_main()
 
+    test_speed = fast_search_ip()
+    test_speed.search_more_google_ip()
+    for i in range(2000000):
 
+        test_speed.lock.acquire()
+        #test_speed.check_num = 0
+        #test_speed.gws_num = 0
+        test_speed.lock.release()
+
+        time.sleep(1)
+        if test_speed.check_num != 0:
+            print test_speed.check_num, test_speed.gws_num, (test_speed.gws_num * 1000 / test_speed.check_num)
 
 # about ip connect time and handshake time
 # handshake time is double of connect time in common case.

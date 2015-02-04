@@ -12,6 +12,7 @@ import threading
 import logging
 import module_init
 import config
+import cgi
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -106,6 +107,24 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_CONNECT(self):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
+    def do_POST(self):
+        logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
+        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        if ctype == 'multipart/form-data':
+            self.postvars = cgi.parse_multipart(self.rfile, pdict)
+        elif ctype == 'application/x-www-form-urlencoded':
+            length = int(self.headers.getheader('content-length'))
+            self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+        else:
+            self.postvars = {}
+
+        path = urlparse.urlparse(self.path).path
+        if path == '/goagent_deploy':
+            self.req_goagent_deploy_handler()
+        else:
+            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+
     def do_GET(self):
         logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
         # check for '..', which will leak file
@@ -141,7 +160,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif path == '/goagent_deploy':
             self.req_goagent_deploy_handler()
         elif path == '/quit':
-            module_init.module_init.stop_all()
+            module_init.stop_all()
             #stop()
             os._exit(0)
         elif path == '/config':
@@ -204,15 +223,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['deploy']:
             try:
-                os.remove(log_path)
-            except:
-                pass
-            script_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, os.pardir, "goagent", goagent_version, "server", 'uploader.py'))
-            appid = reqs['appid'][0]
-            email = reqs['email'][0]
-            passwd = reqs['passwd'][0]
-            self.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
-            data = '{"res":"success"}'
+                if os.path.isfile(log_path):
+                    os.remove(log_path)
+                script_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, os.pardir, "goagent", goagent_version, "server", 'uploader.py'))
+                appid = self.postvars['appid'][0]
+                email = self.postvars['email'][0]
+                passwd = self.postvars['passwd'][0]
+                self.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
+                data = '{"res":"success"}'
+            except Exception as e:
+                data = '{"res":"fail", "error":"%s"}' % e
+
         elif reqs['cmd'] == ['get_log']:
 
             if os.path.isfile(log_path):

@@ -35,8 +35,9 @@ class Config(object):
         self.CONFIG = ConfigParser.ConfigParser()
         self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
+        self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent'))
         # load ../../../data/goagent/config.ini
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent', 'config.ini'))
+        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
 
         self.CONFIG.read(self.CONFIG_FILENAME)
         if os.path.isfile(self.CONFIG_USER_FILENAME):

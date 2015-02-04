@@ -84,7 +84,7 @@
         });
 
         $("#deploy_button").attr('disabled','disabled');
-        $.getJSON( "/goagent_deploy?cmd=deploy&appid="+appid+"&email="+email+"&passwd="+passwd, function( data ) {
+        $.post( "/goagent_deploy?cmd=deploy", {"appid":appid, "email": email, "passwd": passwd }, function( data ) {
             res = data.res
             if(res == "success") {
                 $("#status").html("start deploy to gae server, appid:"+appid+" Account:"+email)

@@ -14,7 +14,7 @@ import logging
 from config import config
 
 from google_ip import google_ip
-
+import connect_manager
 
 class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -33,6 +33,8 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_status_handler()
         elif path == "/ip_list":
             return self.req_ip_list_handler()
+        elif path == "/ssl_pool":
+            return self.req_ssl_pool_handler()
         elif path == "/quit":
             config.keep_run = False
             data = "Quit"
@@ -138,12 +140,32 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def req_ip_list_handler(self):
         data = ""
+        i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
             timeout = google_ip.ip_dict[ip]["timeout"]
             history = google_ip.ip_dict[ip]["history"]
-            data += "%s \t %d \t %d \t %s\r\n" % (ip, handshake_time, timeout, history)
+            t0 = 0
+            str = ''
+            for item in history:
+                t = item[0]
+                v = item[1]
+                if t0 == 0:
+                    t0 = t
+                time_per = int((t - t0) * 1000)
+                t0 = t
+                str += "%d(%s) " % (time_per, v)
+            data += "%d \t %s      \t %d \t %d \t %s\r\n" % (i, ip, handshake_time, timeout, str)
+            i += 1
 
+
+        mimetype = 'text/plain'
+        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(data)
+
+
+    def req_ssl_pool_handler(self):
+        data = connect_manager.https_manager.conn_pool.to_string()
 
         mimetype = 'text/plain'
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())

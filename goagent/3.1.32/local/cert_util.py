@@ -310,7 +310,8 @@ class CertUtil(object):
                 if not os.path.exists(pemfile):
                     return os.system('cp "%s" "%s" && update-ca-certificates' % (certfile, new_certfile))
             elif any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-                return os.system('certutil -L -d sql:$HOME/.pki/nssdb | grep "%s" || certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (commonname, commonname, certfile))
+                cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb | grep "%s" || certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (commonname, commonname, certfile)
+                return os.system(cmd_line)
             else:
                 logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
         return 0

@@ -105,6 +105,7 @@ class APPID_manager(object):
 
     def report_not_exist(self, appid):
         try:
+            #logging.error("APPID_manager, report_not_exist %s", appid)
             config.GAE_APPIDS.remove(appid)
         except:
             pass
@@ -462,7 +463,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 # TODO: test
                 # appid over qouta, switch to next appid
                 if response.app_status == 503:
-                    logging.warning('APPID %r out of auota, remove it.', appid)
+                    logging.warning('APPID %r out of Quota, remove it.', appid)
                     appid_manager.report_out_of_quota(appid)
                     appid = appid_manager.get_appid()
 
@@ -490,7 +491,9 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                 # first response, has no retry.
                 if not headers_sent:
-                    logging.info('"GAE t:%d %s %s HTTP/1.1" status:%s len:%s', time_cost, self.command, self.path, response.status, response.getheader('Content-Length', '-'))
+                    data_size = response.getheader('Content-Length', '0')
+                    download_speed = int(data_size) * 1000 / time_cost
+                    logging.info('"GAE t:%d speed:%d len:%s status:%s %s %s HTTP/1.1"', time_cost, download_speed, response.getheader('Content-Length', '-'), response.status, self.command, self.path)
                     if response.status == 206:
                         # 206 means "Partial Content"
                         fetchservers = [app_server]
@@ -540,7 +543,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     logging.info('GAEProxyHandler.do_METHOD_AGENT url=%r return %r, abort.', self.path, e)
                     return
                 else:
-                    logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r, errno: %d ', self.path, e, int(e.args[0])) #IOError(9, 'Bad file descriptor')
+                    logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r', self.path, e) #IOError(9, 'Bad file descriptor'), int(e.args[0])
                     traceback.print_exc()
 
     def do_CONNECT(self):
@@ -574,8 +577,9 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     # gws connect can be used after tcp connection created 15 s
 
                 remote = forwork_manager.create_connection(connected_in_s)
-                if remote is not None and data:
-                    remote.sendall(data)
+                if remote is not None:
+                    if data:
+                        remote.sendall(data)
                     break
                 elif i == 0:
                     # only logging first create_connection error
