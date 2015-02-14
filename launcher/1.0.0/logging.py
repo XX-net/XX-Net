@@ -49,7 +49,7 @@ def basicConfig(*args, **kwargs):
         debug = dummy
 
 def log(level, fmt, *args, **kwargs):
-    string = '%s - [%s] %s\n' % (level, time.ctime()[4:-5], fmt % args)
+    string = '%s - [%s] %s\n' % (time.ctime()[4:-5], level, fmt % args)
     #print string
     sys.stderr.write(string)
     log_fd.write(string)

@@ -17,6 +17,8 @@ import Queue
 import math
 import os
 from config import config
+import traceback
+import sys
 
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
@@ -91,9 +93,8 @@ class Check_ip():
 
                 logging.info("load ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
                 self.add_ip(ip_str, handshake_time, domain, server)
-                #logging.debug("load_ip ip:%s time:%d", ip_str, handshake_time)
             except Exception as e:
-                logging.warn("load_ip line:%s err:%s", line, e)
+                logging.exception("load_ip line:%s err:%s", line, e)
 
         logging.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_ip_by_handshake_time(force=True)
@@ -187,6 +188,7 @@ class Check_ip():
                 return ip_str
         except Exception as e:
             logging.error("get_gws_ip fail:%s", e)
+            traceback.print_exc()
         finally:
             self.ip_lock.release()
 

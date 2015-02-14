@@ -1,23 +1,32 @@
 
 <style type="text/css">
-    .form-control { width: 100%; font-family: Verdana, Geneva, sans-serif; }
     #log {
+        -moz-appearance: textfield-multiline;
+        -webkit-appearance: textarea;
+        border: 1px solid gray;
+        font: medium -moz-fixed;
+        font: -webkit-small-control;
+        font-family: Verdana, Geneva, sans-serif;
         font-family: monospace;
         font-size:1.0em;
-
+        background-color:#f9f9f9;
+        height: 100%;
+        overflow: auto;
+        padding: 2px;
+        resize: both;
+        width: 100%;
+        white-space:nowrap;
     }
-    textarea:read-only {
-        cursor: text;
-    }
-    textarea:scrollbar {
-        cursor: pointer;
+    #log_container{
+        height:85vh;
     }
 </style>
 
 <h2>GoAgent Log:</h2>
-
-<textarea class="form-control" rows="30" wrap='off' readonly id="log"></textarea>
-
+<div id="log_container">
+    <div id="log" ></div>
+</div>
+<div id="status"></div>
 
 <script src="/js/jquery-1.11.2.min.js"></script>
 <script src="/js/jquery.timer.js"></script>
@@ -25,16 +34,7 @@
 <script type="text/javascript">
     var last_line_no = 1
     var tid = 0;
-    $.getJSON( "http://127.0.0.1:8084/log?cmd=get_last&max_line=500", function( data ) {
-        var text = '';
-        $.each( data, function( key, val ) {
-            text += val;
-            last_line_no = key
-        });
-        $("#log").val(text)
-        $('#log').scrollTop($('#log')[0].scrollHeight);
-        enable_autoscroll();
-    });
+    pull_log();
 
 
     function enable_autoscroll() {
@@ -51,23 +51,27 @@
                 text += val;
                 last_line_no = key
             });
-            var org_txt = $("#log").val()
-            $("#log").val(org_txt + text)
+            var org_txt = $("#log").html()
+            $("#log").html(org_txt + text)
 
             tid = setTimeout(pull_log, 2000);
-            $('#log').scrollTop($('#log').scrollHeight);
+            var height = $('#log')[0].scrollHeight;
+            $('#log').scrollTop(height);
+            $('#status').html(last_line_no + " h:" + height);
         });
-
     }
+
     $('#log').scroll(function() {
         var h1 = $(this).scrollTop();
         var h2 = $(this).height();
         var h3 = $(this)[0].scrollHeight;
         if (h1 + h2 >= h3 - 100) {
             enable_autoscroll();
+            $('#status').html("auto");
         }else{
             clearTimeout(tid);
             tid = 0;
+            $('#status').html("stop");
         }
     });
 
