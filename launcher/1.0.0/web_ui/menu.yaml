@@ -1,0 +1,12 @@
+module_title: SYSTEM
+menu_sort_id: 100
+sub_menus: {
+  1:{
+    title: Config,
+    url: config
+  },
+  2:{
+    title: About,
+    url: about
+  }
+}

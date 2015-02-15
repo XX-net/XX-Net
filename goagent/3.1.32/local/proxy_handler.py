@@ -540,11 +540,11 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         logging.warn('GAEProxyHandler.do_METHOD_AGENT timed out, url=%r, content_length=%r, try again', self.path, content_length)
                         self.headers['Range'] = 'bytes=%d-%d' % (start, end)
                 elif isinstance(e, NetWorkIOError) and 'bad write retry' in e.args[-1]:
-                    logging.info('GAEProxyHandler.do_METHOD_AGENT url=%r return %r, abort.', self.path, e)
+                    logging.warn('GAEProxyHandler.do_METHOD_AGENT url=%r return %r, abort.', self.path, e)
                     return
                 else:
                     logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r', self.path, e) #IOError(9, 'Bad file descriptor'), int(e.args[0])
-                    traceback.print_exc()
+                    #traceback.print_exc()
 
     def do_CONNECT(self):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""

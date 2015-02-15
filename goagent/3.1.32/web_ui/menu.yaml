@@ -1,0 +1,20 @@
+module_title: GoAgent
+menu_sort_id: 1
+sub_menus: {
+  1:{
+    title: Status,
+    url: status
+  },
+  2:{
+    title: Config,
+    url: config
+  },
+  3:{
+    title: Deploy,
+    url: deploy
+  },
+  4:{
+    title: Logging,
+    url: logging
+  }
+}

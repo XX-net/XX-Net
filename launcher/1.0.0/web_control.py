@@ -1,71 +1,29 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import ConfigParser, io, os, re, sys
+import os, re, sys
 import SocketServer, socket, ssl
 import BaseHTTPServer
 import errno
 import urlparse
-import subprocess
 import threading
+import operator
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+
+import yaml
 
 import logging
 import module_init
 import config
-import cgi
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 
-class User_config(object):
-    appid = ''
-    password = ''
-
-    def __init__(self):
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-        self.CONFIG = ConfigParser.ConfigParser()
-
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        # load ../../data/goagent/config.ini
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'goagent', 'config.ini'))
-
-        self.load()
-
-    def load(self):
-        self.appid = ''
-        self.password = ''
-        try:
-            if os.path.isfile(self.CONFIG_USER_FILENAME):
-                self.CONFIG.read(self.CONFIG_USER_FILENAME)
-            else:
-                return
-
-            self.appid = self.CONFIG.get('gae', 'appid')
-            self.password = self.CONFIG.get('gae', 'password')
-        except:
-            pass
-    def save(self, appid, password):
-        path = "/2"
-        try:
-            f = open(self.CONFIG_USER_FILENAME, 'w')
-            f.write("[gae]\n")
-            f.write("appid = %s\n" % appid)
-            f.write("password = %s\n" % password)
-            f.write("path = %s\n" % path)
-            f.close()
-        except:
-            logging.warn("launcher.config save user config fail:%s", self.CONFIG_USER_FILENAME)
-
-    def clean(self):
-        self.appid = ''
-        self.password = ''
-        self.CONFIG.remove_section('gae')
-        try:
-            os.remove(self.CONFIG_USER_FILENAME)
-        except:
-            logging.warn("launcher clean goagent user config fail:%s", self.CONFIG_USER_FILENAME)
-
-user_config = User_config()
 
 class LocalServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
@@ -92,38 +50,34 @@ class LocalServer(SocketServer.ThreadingTCPServer):
             del etype, value
             SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
+module_menus = {}
 class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
+
+
+    def load_module_menus(self):
+        global module_menus
+        config.load()
+        modules = config.get(['modules'], None)
+        for module in modules:
+            values = modules[module]
+            version = values["current_version"]
+            menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
+            if not os.path.isfile(menu_path):
+                continue
+            module_menu = yaml.load(file(menu_path, 'r'))
+            module_menus[module] = module_menu
+
+        module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        #for k,v in self.module_menus:
+        #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
+
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
 
-    def do_HEAD(s):
-        print "do_HEAD"
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
-        s.end_headers()
- #       self.wfile.write(b'HTTP/1.1 200\r\nConnection: close\r\n\r\n')
-
-    def do_CONNECT(self):
-        self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
-
-    def do_POST(self):
-        logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
-        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-        if ctype == 'multipart/form-data':
-            self.postvars = cgi.parse_multipart(self.rfile, pdict)
-        elif ctype == 'application/x-www-form-urlencoded':
-            length = int(self.headers.getheader('content-length'))
-            self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
-        else:
-            self.postvars = {}
-
-        path = urlparse.urlparse(self.path).path
-        if path == '/goagent_deploy':
-            self.req_goagent_deploy_handler()
-        else:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+    def send_response(self, mimetype, data):
+        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(data)
 
     def do_GET(self):
         logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
@@ -133,127 +87,97 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             logging.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
-        path = urlparse.urlparse(self.path).path
-        if path == '/':
-            path = 'index.html'
-        filename = os.path.normpath('./html/' + path)
-        if os.path.isfile(filename):
-            if filename.endswith('.js'):
+        url_path = urlparse.urlparse(self.path).path
+        if url_path == '/':
+            return self.req_index_handler()
+
+        if len(url_path.split('/')) >= 3 and url_path.split('/')[1] == "modules":
+            module = url_path.split('/')[2]
+            config.load()
+            modules_versoin = config.get(['modules', module, 'current_version'], None)
+            file_path = os.path.join(root_path, module, modules_versoin, url_path.split('/')[3:].join('/'))
+        else:
+            file_path = os.path.join(current_path, 'web_ui' + url_path)
+
+
+        if os.path.isfile(file_path):
+            if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
-            elif filename.endswith('.css'):
+            elif file_path.endswith('.css'):
                 mimetype = 'text/css'
-            elif filename.endswith('.html'):
+            elif file_path.endswith('.html'):
                 mimetype = 'text/html'
-            elif filename.endswith('.jpg'):
+            elif file_path.endswith('.jpg'):
                 mimetype = 'image/jpeg'
-            elif filename.endswith('.png'):
+            elif file_path.endswith('.png'):
                 mimetype = 'image/png'
             else:
                 mimetype = 'text/plain'
 
 
-            self.send_file(filename, mimetype)
-        elif path == '/status':
-            self.req_status_handler()
-        elif path == '/goagent_config':
-            self.req_goagent_config_handler()
-        elif path == '/goagent_deploy':
-            self.req_goagent_deploy_handler()
-        elif path == '/quit':
-            module_init.stop_all()
-            #stop()
-            os._exit(0)
-        elif path == '/config':
+            self.send_file(file_path, mimetype)
+        elif url_path == '/config':
             self.req_config_handler()
+        elif url_path == '/init_module':
+            self.req_init_module_handler()
+        elif url_path == '/quit':
+            module_init.stop_all()
+            os._exit(0)
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def send_file(self, filename, mimetype):
-        data = ''
         try:
             with open(filename, 'rb') as fp:
                 data = fp.read()
-                self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-                self.wfile.write(data)
+                self.send_response(mimetype, data)
+                #self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+                #self.wfile.write(data)
         except:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
 
-    def req_status_handler(self):
-        data = "status ok"
-        mimetype = 'text/plain'
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
-
-    def req_goagent_config_handler(self):
+    def req_index_handler(self):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
-        data = ''
 
-        if reqs['cmd'] == ['get_config']:
-            user_config.load()
-            data = '{ "appid": "%s", "passwd": "%s" }' % (user_config.appid, user_config.password)
-        elif reqs['cmd'] == ['set_config']:
-            if reqs['appid'] and reqs['passwd']:
-                appid = reqs['appid'][0]
-                if appid == '':
-                    user_config.clean()
+        try:
+            target_module = reqs['module'][0]
+            target_menu = reqs['menu'][0]
+        except:
+            target_module = 'goagent'
+            target_menu = 'status'
+
+        if len(module_menus) == 0:
+            self.load_module_menus()
+
+        index_path = os.path.join(current_path, 'web_ui', "index.html")
+        with open(index_path, "r") as f:
+            index_content = f.read()
+
+        menu_content = ''
+        for module,v in module_menus:
+            #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
+            title = v["module_title"]
+            menu_content += '<li class="nav-header">%s</li>\n' % title
+            for sub_id in v['sub_menus']:
+                sub_title = v['sub_menus'][sub_id]['title']
+                sub_url = v['sub_menus'][sub_id]['url']
+                if target_module == title and target_menu == sub_url:
+                    active = 'class="active"'
                 else:
-                    user_config.save(appid=appid, password=reqs['passwd'][0])
+                    active = ''
+                menu_content += '<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % (active, module, sub_url, sub_title)
 
-                module_init.stop("goagent")
-                module_init.start("goagent")
-                data = '{"res":"success"}'
-            else:
-                data = '{"res":"fail"}'
+        right_content_file = os.path.join(root_path, target_module, config.get(["modules", target_module, "current_version"]), "web_ui", target_menu + ".html")
+        if os.path.isfile(right_content_file):
+            with open(right_content_file, "r") as f:
+                right_content = f.read()
+        else:
+            right_content = ""
 
-        mimetype = 'text/plain'
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
-
-
-    def req_goagent_deploy_handler(self):
-        import config
-        goagent_version = config.config["modules"]["goagent"]["current_version"]
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
-        data = ''
-
-        log_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, os.pardir, "goagent", goagent_version, "server", 'upload.log'))
-
-        if reqs['cmd'] == ['deploy']:
-            try:
-                if os.path.isfile(log_path):
-                    os.remove(log_path)
-                script_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, os.pardir, "goagent", goagent_version, "server", 'uploader.py'))
-                appid = self.postvars['appid'][0]
-                email = self.postvars['email'][0]
-                passwd = self.postvars['passwd'][0]
-                self.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
-                data = '{"res":"success"}'
-            except Exception as e:
-                data = '{"res":"fail", "error":"%s"}' % e
-
-        elif reqs['cmd'] == ['get_log']:
-
-            if os.path.isfile(log_path):
-                with open(log_path, "r") as f:
-                    content = f.read()
-            else:
-                content = ""
-
-            if self.deploy_proc:
-                proc_status = self.deploy_proc.poll()
-                if not proc_status == None:
-                    # process is ended
-                    content += "\r\n== END ==\n"
-
-            data = content
-
-
-        mimetype = 'text/plain'
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
+        data = index_content % (menu_content, right_content)
+        self.send_response('text/html', data)
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -287,9 +211,37 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = '{"res":"fail"}'
 
         mimetype = 'text/plain'
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
+        self.send_response(mimetype, data)
+        #self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        #self.wfile.write(data)
 
+    def req_init_module_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        try:
+            module = reqs['module'][0]
+            config.load()
+            modules_versoin = config.get(['modules', module, 'current_version'], None)
+
+            if reqs['cmd'] == ['start']:
+                result = module_init.start(module)
+                data = '{ "module": "%s", "cmd": "start", "result": "%s" }' % (module, result)
+            elif reqs['cmd'] == ['stop']:
+                result = module_init.stop(module)
+                data = '{ "module": "%s", "cmd": "stop", "result": "%s" }' % (module, result)
+            elif reqs['cmd'] == ['restart']:
+                result_stop = module_init.stop(module)
+                result_start = module_init.start(module)
+                data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (module, result_stop, result_start)
+        except Exception as e:
+            logging.exception("init_module except:%s", e)
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+        #self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        #self.wfile.write(data)
 
 process = 0
 server = 0

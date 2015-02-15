@@ -43,8 +43,6 @@ class Config(object):
         if os.path.isfile(self.CONFIG_USER_FILENAME):
             with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
                 content = fp.read()
-                if '[gae]' in content:
-                    self.CONFIG.remove_section('gae')
                 self.CONFIG.readfp(io.BytesIO(content))
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
@@ -54,18 +52,10 @@ class Config(object):
 
         self.GAE_APPIDS = re.findall(r'[\w\-\.]+', self.CONFIG.get('gae', 'appid').replace('.appspot.com', ''))
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
-        self.GAE_PATH = self.CONFIG.get('gae', 'path')
-        self.GAE_MODE = "https"
-
-
 
         self.HOSTS_MAP = collections.OrderedDict((k, v or k) for k, v in self.CONFIG.items('hosts') if '\\' not in k and ':' not in k and not k.startswith('.'))
         self.HOSTS_POSTFIX_MAP = collections.OrderedDict((k, v) for k, v in self.CONFIG.items('hosts') if '\\' not in k and ':' not in k and k.startswith('.'))
         self.HOSTS_POSTFIX_ENDSWITH = tuple(self.HOSTS_POSTFIX_MAP)
-
-        #self.CONNECT_HOSTS_MAP = collections.OrderedDict((k, v) for k, v in self.CONFIG.items('hosts') if ':' in k and not k.startswith('.'))
-        #self.CONNECT_POSTFIX_MAP = collections.OrderedDict((k, v) for k, v in self.CONFIG.items('hosts') if ':' in k and k.startswith('.'))
-        #self.CONNECT_POSTFIX_ENDSWITH = tuple(self.CONNECT_POSTFIX_MAP)
 
         self.AUTORANGE_HOSTS = self.CONFIG.get('autorange', 'hosts').split('|')
         self.AUTORANGE_HOSTS_MATCH = [re.compile(fnmatch.translate(h)).match for h in self.AUTORANGE_HOSTS]

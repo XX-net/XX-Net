@@ -64,7 +64,7 @@ import socket, ssl
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 import proxy_handler
-import remote_control
+import web_control
 
 from config import config
 
@@ -225,7 +225,7 @@ def main():
         p.start()
 
     if config.CONTROL_ENABLE:
-        control_server = LocalProxyServer((config.CONTROL_IP, config.CONTROL_PORT), remote_control.RemoveContralServerHandler)
+        control_server = LocalProxyServer((config.CONTROL_IP, config.CONTROL_PORT), web_control.RemoveContralServerHandler)
         p = threading.Thread(target=control_server.serve_forever)
         p.setDaemon(True)
         p.start()

@@ -31,6 +31,11 @@
         }
     </style>
 
+    <script src="/js/jquery-1.11.2.min.js"></script>
+    <script src="/js/jquery.timer.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/ie-emulation-modes-warning.js"></script>
+
 </head>
 <body>
 
@@ -65,40 +70,12 @@
         <div class="span3">
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
-                    <li class="nav-header">GoAgent</li>
-                    <li class="active"  id="li_goagent_status"><a href="#" id="goagent_status">Status</a></li>
-                    <li id="li_goagent_config"><a href="#" id="goagent_config">Config</a></li>
-                    <li id="li_goagent_deploy"><a href="#" id="goagent_deploy">Deploy</a></li>
-                    <li id="li_goagent_log"><a href="#" id="goagent_log">Log</a></li>
-                    <li class="nav-header">System</li>
-                    <li id="li_config"><a href="#" id="config">Config</a></li>
-                    <li id="li_about"><a href="#" id="about">About</a></li>
+                    %s
                 </ul>
             </div><!--/.well -->
         </div><!--/span-->
         <div class="span9" id="right_content">
-            <div class="hero-unit">
-                <h1>XX-Net</h1>
-                <p>This is a project for work on network not block by any other.</p>
-                <p><a href="#" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
-            </div>
-            <div class="row-fluid">
-                <div class="span4">
-                    <h2>Status</h2>
-                    <p>GoAgent status, use google gws server for proxy.</p>
-                    <p><a class="btn" href="#">View details &raquo;</a></p>
-                </div><!--/span-->
-                <div class="span4">
-                    <h2>Loggin</h2>
-                    <p>View system log in web. </p>
-                    <p><a class="btn" href="#">View details &raquo;</a></p>
-                </div><!--/span-->
-                <div class="span4">
-                    <h2>About</h2>
-                    <p>Project home pages, FAQ and Issue discuss. </p>
-                    <p><a class="btn" href="#">View details &raquo;</a></p>
-                </div><!--/span-->
-            </div><!--/row-->
+            %s
         </div><!--/span-->
     </div><!--/row-->
 
@@ -107,12 +84,8 @@
 </div><!--/.fluid-container-->
 
 
-<script src="js/jquery-1.11.2.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/ie-emulation-modes-warning.js"></script>
-<script src="js/menu_action.js"></script>
-<script src="js/frame_action.js"></script>
 
+    <script src="/js/frame_action.js"></script>
 <script type="text/javascript">
     var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
     // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)

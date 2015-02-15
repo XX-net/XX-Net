@@ -19,6 +19,10 @@ def start(module):
             logging.error("module not exist %s", module)
             raise
 
+        if module in proc_handler:
+            logging.error("module %s is running", module)
+            return "module is running"
+
         version = config.config["modules"][module]["current_version"]
         logging.info("use %s version:%s", module, version)
 
@@ -26,10 +30,10 @@ def start(module):
         proc_handler[module] = subprocess.Popen([sys.executable, script_path], shell=False)
         logging.info("%s %s started %s", module, version, script_path)
 
-    except:
-        logging.warn("start module %s fail", module)
-
-
+    except Exception as e:
+        logging.exception("start module %s fail:%s", module, e)
+        return "Except:%s" % e
+    return "start success."
 
 def stop(module):
     try:
@@ -42,8 +46,10 @@ def stop(module):
         del proc_handler[module]
 
         logging.info("module %s stopped", module)
-    except:
-        pass
+    except Exception as e:
+        logging.exception("stop module %s fail:%s", module, e)
+        return "Except:%s" % e
+    return "stop success."
 
 def start_all_auto():
     config.load()

@@ -12,7 +12,8 @@
 
 <script src="/js/jquery-1.11.2.min.js"></script>
 <script type="text/javascript">
-    $.getJSON( "/goagent_config?cmd=get_config", function( data ) {
+    $.post( "http://127.0.0.1:8084/config?cmd=get_config", {}, function( data ) {
+        var data = JSON.parse(data);
         $( "#gae_appid" ).val(data.appid);
         $( "#gae_passwd" ).val(data.passwd);
     });
@@ -22,9 +23,12 @@
 
         appid = $( "#gae_appid" ).val()
         passwd = $( "#gae_passwd" ).val()
-        $.getJSON( "/goagent_config?cmd=set_config&appid="+appid+"&passwd="+passwd, function( data ) {
+
+        $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd }, function( data ) {
             res = data.res
-            $("#status").html(res)
+            if(res == "success") {
+                $("#status").html(res)
+            }
         });
     });
 </script>

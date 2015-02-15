@@ -21,8 +21,6 @@
 <h3 >Log:</h3>
 <textarea class="form-control" rows="20" cols="80"  id="deploy_log"></textarea>
 
-<script src="/js/jquery-1.11.2.min.js"></script>
-<script src="/js/jquery.timer.js"></script>
 
 <script type="text/javascript">
     function isValidEmailAddress(emailAddress) {
@@ -72,7 +70,7 @@
         }
 
         var timer = $.timer(function() {
-            $( "#deploy_log" ).load( "/goagent_deploy?cmd=get_log" );
+            $( "#deploy_log" ).load( "http://127.0.0.1:8084/deploy?cmd=get_log" );
 
             log = $("#deploy_log").val();
             if (log.indexOf("== END ==") > -1){
@@ -84,7 +82,7 @@
         });
 
         $("#deploy_button").attr('disabled','disabled');
-        $.post( "/goagent_deploy?cmd=deploy", {"appid":appid, "email": email, "passwd": passwd }, function( data ) {
+        $.post( "http://127.0.0.1:8084/deploy?cmd=deploy", {"appid":appid, "email": email, "passwd": passwd }, function( data ) {
             res = data.res
             if(res == "success") {
                 $("#status").html("start deploy to gae server, appid:"+appid+" Account:"+email)
