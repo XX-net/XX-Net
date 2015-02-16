@@ -1,0 +1,73 @@
+<h2>GoAgent config</h2>
+<form id="form-goagent-config">
+    <input type="text" class="input-small" placeholder="appid" id="gae_appid">
+    <input type="password" class="input-small" placeholder="password" id="gae_passwd">
+    Leave empty to use public appid
+    <br>
+    <hr>
+
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" id="proxy_enable"> Enable proxy
+        </label>
+    </div>
+    <select class="input-small" id="proxy_type">
+        <option>HTTP</option>
+        <option>SOCKS4</option>
+        <option>SOCKS5</option>
+    </select>
+    <input type="text" class="input-medium" placeholder="host" id="proxy_host">
+    <input type="text" class="input-small" placeholder="port" id="proxy_port">
+
+
+    <br>
+    <hr>
+    <button type="submit" class="btn">Save and restart</button>
+    <div id="status"></div>
+</form>
+<div>Register google account and apply AppEngine ip: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">Help Link</a> </div>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+    $.post( "http://127.0.0.1:8084/config?cmd=get_config", {}, function( data ) {
+        var data = JSON.parse(data);
+        $( "#gae_appid" ).val(data.appid);
+        $( "#gae_passwd" ).val(data.passwd);
+        if(data.proxy_enable == 1){
+            $("#proxy_enable").prop('checked', true);
+        }else{
+            $("#proxy_enable").prop('checked', false);
+        }
+        $("#proxy_type").val(data.proxy_type);
+        $("#proxy_host").val(data.proxy_host);
+        $("#proxy_port").val(data.proxy_port);
+    });
+
+
+
+    $( "#form-goagent-config" ).submit(function( event ) {
+        event.preventDefault();
+
+        appid = $( "#gae_appid" ).val()
+        passwd = $( "#gae_passwd" ).val()
+
+        if($("#proxy_enable").prop('checked')){
+            proxy_enable = 1;
+        }else{
+            proxy_enable = 0;
+        }
+        proxy_type = $("#proxy_type").val();
+        proxy_host = $("#proxy_host").val();
+        proxy_port = $("#proxy_port").val();
+
+        $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
+            "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port },
+        function( data ) {
+            res = data.res
+            if(res == "success") {
+                $("#status").html(res)
+            }
+        });
+    });
+</script>

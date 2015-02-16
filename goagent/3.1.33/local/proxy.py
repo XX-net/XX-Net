@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # coding:utf-8
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang.2008@gmail.com>
 # Based on WallProxy 0.4.0 by Hust Moon <www.ehust@gmail.com>
@@ -75,7 +75,11 @@ from config import config
 def spawn_later(seconds, target, *args, **kwargs):
     def wrap(*args, **kwargs):
         __import__('time').sleep(seconds)
-        return target(*args, **kwargs)
+        try:
+            result = target(*args, **kwargs)
+        except:
+            result = None
+        return result
     return __import__('thread').start_new_thread(wrap, args, kwargs)
 
 

@@ -11,7 +11,7 @@ import os
 import re
 import subprocess
 import cgi
-from httplib2 import Http
+import urllib2
 import sys
 
 import logging
@@ -24,51 +24,76 @@ import ConfigParser
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+
+import yaml
 
 class User_config(object):
     appid = ''
     password = ''
 
-    def __init__(self):
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-        self.CONFIG = ConfigParser.ConfigParser()
+    proxy_enable = "0"
+    proxy_type = "HTTP"
+    proxy_host = ""
+    proxy_port = "0"
 
-        # load ../../data/goagent/config.ini
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
+    def __init__(self):
         self.load()
 
     def load(self):
-        self.appid = ''
-        self.password = ''
+        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+        CONFIG = ConfigParser.ConfigParser()
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
+
         try:
-            if os.path.isfile(self.CONFIG_USER_FILENAME):
-                self.CONFIG.read(self.CONFIG_USER_FILENAME)
+            if os.path.isfile(CONFIG_USER_FILENAME):
+                CONFIG.read(CONFIG_USER_FILENAME)
             else:
                 return
 
-            self.appid = self.CONFIG.get('gae', 'appid')
-            self.password = self.CONFIG.get('gae', 'password')
-        except Exception as e:
-            logging.exception("User_config.load except:%s", e)
+            try:
+                self.appid = CONFIG.get('gae', 'appid')
+                self.password = CONFIG.get('gae', 'password')
+            except:
+                pass
 
-    def save(self, appid, password):
+            self.proxy_enable = CONFIG.get('proxy', 'enable')
+            self.proxy_type = CONFIG.get('proxy', 'type')
+            self.proxy_host = CONFIG.get('proxy', 'host')
+            self.proxy_port = CONFIG.get('proxy', 'port')
+        except Exception as e:
+            logging.warn("User_config.load except:%s", e)
+
+    def save(self):
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
         try:
-            f = open(self.CONFIG_USER_FILENAME, 'w')
-            if appid != "":
+            f = open(CONFIG_USER_FILENAME, 'w')
+            if self.appid != "":
                 f.write("[gae]\n")
-                f.write("appid = %s\n" % appid)
-                f.write("password = %s\n" % password)
+                f.write("appid = %s\n" % self.appid)
+                f.write("password = %s\n\n" % self.password)
+            f.write("[proxy]\n")
+            f.write("enable = %s\n" % self.proxy_enable)
+            f.write("type = %s\n" % self.proxy_type)
+            f.write("host = %s\n" % self.proxy_host)
+            f.write("port = %s\n" % self.proxy_port)
             f.close()
         except:
-            logging.warn("launcher.config save user config fail:%s", self.CONFIG_USER_FILENAME)
+            logging.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
 
 
 user_config = User_config()
 
 def http_request(url, method="GET"):
-    h = Http()
-    resp, content = h.request(url, method)
-    return content
+    opener = urllib2.build_opener()
+    try:
+        req = opener.open(url)
+
+    except Exception as e:
+        logging.exception("web_control http_request:%s fail:%s", url, e)
+    return
 
 class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
@@ -80,6 +105,14 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
+        try:
+            refer = self.headers.getheader('Referer')
+            netloc = urlparse.urlparse(refer).netloc
+            if not "127.0.0.1" in netloc:
+                logging.warn("web control ref:%s refuse", netloc)
+                return
+        except:
+            pass
         path = urlparse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
@@ -125,6 +158,14 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_POST(self):
+        try:
+            refer = self.headers.getheader('Referer')
+            netloc = urlparse.urlparse(refer).netloc
+            if not "127.0.0.1" in netloc:
+                logging.warn("web control ref:%s refuse", netloc)
+                return
+        except:
+            pass
         logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -148,7 +189,6 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def send_response(self, mimetype, data):
-        mimetype = 'text/plain'
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)
 
@@ -189,6 +229,16 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
 
+    def get_launcher_version(self):
+        data_path = os.path.abspath( os.path.join(root_path, 'data', 'launcher', 'config.yaml'))
+        try:
+            config = yaml.load(file(data_path, 'r'))
+            return config["modules"]["launcher"]["current_version"]
+            #print yaml.dump(config)
+        except yaml.YAMLError, exc:
+            print "Error in configuration file:", exc
+            return "unknown"
+
     def req_status_handler(self):
         import platform,sys
 
@@ -197,6 +247,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             user_agent = ""
 
+        launcher_version = self.get_launcher_version()
         gws_ip_num = len(google_ip.gws_ip_list)
         res_arr = {"gws_ip_num": gws_ip_num,
                    "sys_platform":sys.platform,
@@ -204,6 +255,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "os_version":platform.version(),
                    "os_release":platform.release(),
                    "browser":user_agent,
+                   "launcher_version":launcher_version,
                    "goagent_version": config.__version__,
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
@@ -220,12 +272,15 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         try:
             if reqs['cmd'] == ['get_config']:
-                user_config.load()
-                data = '{ "appid": "%s", "passwd": "%s" }' % (user_config.appid, user_config.password)
+                data = json.dumps(user_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
-                appid = self.postvars['appid'][0]
-                passwd = self.postvars['passwd'][0]
-                user_config.save(appid=appid, password=passwd)
+                user_config.appid = self.postvars['appid'][0]
+                user_config.password = self.postvars['passwd'][0]
+                user_config.proxy_enable = self.postvars['proxy_enable'][0]
+                user_config.proxy_type = self.postvars['proxy_type'][0]
+                user_config.proxy_host = self.postvars['proxy_host'][0]
+                user_config.proxy_port = self.postvars['proxy_port'][0]
+                user_config.save()
 
                 data = '{"res":"success"}'
                 self.send_response('text/plain', data)

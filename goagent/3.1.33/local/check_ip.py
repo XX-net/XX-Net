@@ -1,6 +1,9 @@
 
 import sys
 import os
+import httplib
+import time
+import socket
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
@@ -14,15 +17,15 @@ elif sys.platform == "linux" or sys.platform == "linux2":
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+import socks
 
-import httplib
-import time
-import socket
-
+from config import config
 import cert_util
 from openssl_wrap import SSLConnection
 
-if __name__ == "__main__"  and False:
+if __name__ == "__main__":
     import logging
 else:
     # hide log in working mode.
@@ -42,6 +45,21 @@ max_timeout = 5000
 g_conn_timeout = 1
 g_handshake_timeout = 2
 
+
+if config.PROXY_TYPE == "HTTP":
+    proxy_type = socks.HTTP
+elif config.PROXY_TYPE == "SOCKS4":
+    proxy_type = socks.SOCKS4
+elif config.PROXY_TYPE == "SOCKS5":
+    proxy_type = socks.SOCKS5
+else:
+    config.PROXY_ENABLE = 0
+    logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+
+if config.PROXY_ENABLE:
+    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
+    default_socket = socket.socket
+    socket.socket = socks.socksocket
 
 
 
@@ -276,7 +294,7 @@ class fast_search_ip():
             p.start()
 
 if __name__ == "__main__":
-    #test("203.165.14.230", 10) #gws
+    test("208.117.224.103", 10) #gws
     #test('208.117.224.213', 10)
     #test("218.176.242.24")
     #test_main()

@@ -81,6 +81,10 @@ class Config(object):
         self.CONTROL_IP = self.CONFIG.get('control', 'ip')
         self.CONTROL_PORT = self.CONFIG.getint('control', 'port')
 
+        self.PROXY_ENABLE = self.CONFIG.getint('proxy', 'enable')
+        self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')
+        self.PROXY_HOST = self.CONFIG.get('proxy', 'host')
+        self.PROXY_PORT = self.CONFIG.getint('proxy', 'port')
 
         self.LOVE_ENABLE = self.CONFIG.getint('love', 'enable')
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')

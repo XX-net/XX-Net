@@ -26,7 +26,6 @@ import urlparse
 
 from cert_util import CertUtil
 from connect_manager import https_manager,forwork_manager
-import traceback
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
@@ -78,14 +77,12 @@ class APPID_manager(object):
     def __init__(self):
         self.working_appid_list = config.GAE_APPIDS
 
-        if len(self.working_appid_list) == 0:
-            self.working_appid = None
-            logging.error("No usable appid left, add new appid to continue use GoAgent")
-        else:
-            self.working_appid = random.choice(self.working_appid_list)
-
     def get_appid(self):
-        return self.working_appid
+        if len(self.working_appid_list) == 0:
+            logging.error("No usable appid left, add new appid to continue use GoAgent")
+            return None
+        else:
+            return random.choice(self.working_appid_list)
 
     def report_out_of_quota(self, appid):
         try:
@@ -94,14 +91,6 @@ class APPID_manager(object):
             pass
         if len(self.working_appid_list) == 0:
             self.working_appid_list = config.GAE_APPIDS
-
-        if len(self.working_appid_list) == 0:
-            self.working_appid = None
-            logging.error("No usable appid left, add new appid to continue use GoAgent")
-            return
-
-        if self.working_appid == appid:
-            self.working_appid = random.choice(self.working_appid_list)
 
     def report_not_exist(self, appid):
         try:
@@ -115,8 +104,76 @@ class APPID_manager(object):
 appid_manager = APPID_manager()
 
 
+skip_headers = frozenset(['Vary',
+                          'Via',
+                          'X-Forwarded-For',
+                          'Proxy-Authorization',
+                          'Proxy-Connection',
+                          'Upgrade',
+                          'X-Chrome-Variations',
+                          'Connection',
+                          'Cache-Control'])
 
-def gae_urlfetch(method, url, headers, payload, app_server, **kwargs):
+def _request(sock, headers, payload, bufsize=8192):
+    request_data = 'POST /2? HTTP/1.1\r\n'
+    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    request_data += '\r\n'
+
+    if isinstance(payload, bytes):
+        sock.sendall(request_data.encode() + payload)
+    elif hasattr(payload, 'read'):
+        sock.sendall(request_data)
+        while True:
+            data = payload.read(bufsize)
+            if not data:
+                break
+            sock.sendall(data)
+    else:
+        raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
+
+    response = httplib.HTTPResponse(sock, buffering=True)
+    try:
+        response.begin()
+    except httplib.BadStatusLine:
+        response = None
+    return response
+
+# Caller:  gae_urlfetch
+def request(payload=None, headers={}):
+    max_retry = 3
+    for i in range(max_retry):
+        ssl_sock = None
+        try:
+            ssl_sock = https_manager.create_ssl_connection()
+            if not ssl_sock:
+                logging.debug('create_ssl_connection fail')
+                continue
+
+            if ssl_sock.host == '':
+                ssl_sock.appid = appid_manager.get_appid()
+                if not ssl_sock.appid:
+                    raise "no appid can use."
+                headers['Host'] = ssl_sock.appid + ".appspot.com"
+                ssl_sock.host = headers['Host']
+            else:
+                headers['Host'] = ssl_sock.host
+
+
+            response = _request(ssl_sock, headers, payload)
+            if response:
+                response.ssl_sock = ssl_sock
+            return response
+
+        except Exception as e:
+            logging.warn('request failed:%s', e)
+            if ssl_sock:
+                ssl_sock.close()
+            if i == max_retry - 1:
+                raise
+            else:
+                continue
+
+def gae_urlfetch(method, url, headers, payload, **kwargs):
 
     if payload:
         if len(payload) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
@@ -125,24 +182,24 @@ def gae_urlfetch(method, url, headers, payload, app_server, **kwargs):
                 payload = zpayload
                 headers['Content-Encoding'] = 'deflate'
         headers['Content-Length'] = str(len(payload))
+
     # GAE donot allow set `Host` header
     if 'Host' in headers:
         del headers['Host']
+
+    if config.GAE_PASSWORD:
+        kwargs['password'] = config.GAE_PASSWORD
+
     metadata = 'G-Method:%s\nG-Url:%s\n%s' % (method, url, ''.join('G-%s:%s\n' % (k, v) for k, v in kwargs.items() if v))
-    skip_headers = https_manager.skip_headers
     metadata += ''.join('%s:%s\n' % (k.title(), v) for k, v in headers.items() if k not in skip_headers)
+
     # prepare GAE request
-    request_method = 'POST'
     request_headers = {}
     metadata = zlib.compress(metadata)[2:-4]
     payload = '%s%s%s' % (struct.pack('!h', len(metadata)), metadata, payload)
     request_headers['Content-Length'] = str(len(payload))
 
-    # post data
-    #start_time = time.time()
-    response = https_manager.request(request_method, app_server, payload, request_headers)
-    #stop_time = time.time()
-    #cost_time = stop_time - start_time
+    response = request(payload, request_headers)
 
     if hasattr(response, "status"):
         response.app_status = response.status
@@ -171,7 +228,6 @@ def gae_urlfetch(method, url, headers, payload, app_server, **kwargs):
 
 
 class RangeFetch(object):
-    """Range Fetch Class"""
 
     maxsize = 1024*1024*4
     bufsize = 8192
@@ -179,21 +235,18 @@ class RangeFetch(object):
     waitsize = 1024*512
     expect_begin = 0
 
-    def __init__(self, wfile, response, method, url, headers, payload, fetchservers, password, maxsize=0, bufsize=0, waitsize=0, threads=0):
+    def __init__(self, wfile, response, method, url, headers, payload, maxsize=0, bufsize=0, waitsize=0, threads=0):
         self.wfile = wfile
         self.response = response
         self.command = method
         self.url = url
         self.headers = headers
         self.payload = payload
-        self.fetchservers = fetchservers
-        self.password = password
         self.maxsize = maxsize or self.__class__.maxsize
         self.bufsize = bufsize or self.__class__.bufsize
         self.waitsize = waitsize or self.__class__.bufsize
         self.threads = threads or self.__class__.threads
         self._stopped = None
-        self._last_app_status = {}
 
     def fetch(self):
         response_status = self.response.status
@@ -274,12 +327,8 @@ class RangeFetch(object):
                         time.sleep(10)
                         continue
                     headers['Range'] = 'bytes=%d-%d' % (start, end)
-                    fetchserver = ''
                     if not response:
-                        fetchserver = random.choice(self.fetchservers)
-                        if self._last_app_status.get(fetchserver, 200) >= 500:
-                            time.sleep(5)
-                        response = gae_urlfetch(self.command, self.url, headers, self.payload, fetchserver, password=self.password)
+                        response = gae_urlfetch(self.command, self.url, headers, self.payload)
                 except Queue.Empty:
                     continue
                 except Exception as e:
@@ -290,8 +339,6 @@ class RangeFetch(object):
                     logging.warning('RangeFetch %s return %r', headers['Range'], response)
                     range_queue.put((start, end, None))
                     continue
-                if fetchserver:
-                    self._last_app_status[fetchserver] = response.app_status
                 if response.app_status != 200:
                     logging.warning('Range Fetch "%s %s" %s return %s', self.command, self.url, headers['Range'], response.app_status)
                     response.close()
@@ -424,32 +471,27 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             try:
                 content_length = 0
                 kwargs = {}
-                if config.GAE_PASSWORD:
-                    kwargs['password'] = config.GAE_PASSWORD
 
                 # TODO: test validate = 1
                 kwargs['validate'] = 0
 
-                appid = appid_manager.get_appid()
-                app_server = "https://" + appid + ".appspot.com/2?"
                 time_start = time.time()
-                response = gae_urlfetch(self.command, self.path, request_headers, payload, app_server, **kwargs)
+                response = gae_urlfetch(self.command, self.path, request_headers, payload, **kwargs)
                 time_stop = time.time()
                 time_cost = int((time_stop - time_start) * 1000)
                 if not response:
                     if retry >= config.FETCHMAX_LOCAL-1:
                         html = generate_message_html('502 URLFetch failed', 'Local URLFetch %r failed' % self.path, str(errors))
                         self.wfile.write(b'HTTP/1.0 502\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
-                        logging.warning('GET %s no response', self.path)
+                        logging.warning('GET no response %s ', self.path)
                         return
                     else:
                         continue
 
-                # TODO: test
                 # appid not exists, try remove it from appid
                 if response.app_status == 404:
-                    logging.warning('APPID %r not exists, remove it.', appid)
-                    appid_manager.report_not_exist(appid)
+                    logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+                    appid_manager.report_not_exist(response.ssl_sock.appid)
                     appid = appid_manager.get_appid()
 
                     if not appid:
@@ -460,11 +502,10 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     else:
                         continue
 
-                # TODO: test
                 # appid over qouta, switch to next appid
                 if response.app_status == 503:
-                    logging.warning('APPID %r out of Quota, remove it.', appid)
-                    appid_manager.report_out_of_quota(appid)
+                    logging.warning('APPID %r out of Quota, remove it.', response.ssl_sock.appid)
+                    appid_manager.report_out_of_quota(response.ssl_sock.appid)
                     appid = appid_manager.get_appid()
 
                     if not appid:
@@ -496,8 +537,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     logging.info('"GAE t:%d speed:%d len:%s status:%s %s %s HTTP/1.1"', time_cost, download_speed, response.getheader('Content-Length', '-'), response.status, self.command, self.path)
                     if response.status == 206:
                         # 206 means "Partial Content"
-                        fetchservers = [app_server]
-                        rangefetch = RangeFetch(self.wfile, response, self.command, self.path, self.headers, payload, fetchservers, config.GAE_PASSWORD, maxsize=config.AUTORANGE_MAXSIZE, bufsize=config.AUTORANGE_BUFSIZE, waitsize=config.AUTORANGE_WAITSIZE, threads=config.AUTORANGE_THREADS)
+                        rangefetch = RangeFetch(self.wfile, response, self.command, self.path, self.headers, payload, maxsize=config.AUTORANGE_MAXSIZE, bufsize=config.AUTORANGE_BUFSIZE, waitsize=config.AUTORANGE_WAITSIZE, threads=config.AUTORANGE_THREADS)
                         return rangefetch.fetch()
                     if response.getheader('Set-Cookie'):
                         response.msg['Set-Cookie'] = self.normcookie(response.getheader('Set-Cookie'))
@@ -537,10 +577,10 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 elif e.args[0] == errno.ETIMEDOUT or isinstance(e.args[0], str) and 'timed out' in e.args[0]:
                     if content_length and accept_ranges == 'bytes':
                         # we can retry range fetch here
-                        logging.warn('GAEProxyHandler.do_METHOD_AGENT timed out, url=%r, content_length=%r, try again', self.path, content_length)
+                        logging.warn('GAEProxyHandler.do_METHOD_AGENT timed out, content_length=%r, url=%r, try again', content_length, self.path)
                         self.headers['Range'] = 'bytes=%d-%d' % (start, end)
                 elif isinstance(e, NetWorkIOError) and 'bad write retry' in e.args[-1]:
-                    logging.warn('GAEProxyHandler.do_METHOD_AGENT url=%r return %r, abort.', self.path, e)
+                    logging.warn('GAEProxyHandler.do_METHOD_AGENT return %r, abort. url=%r ', e, self.path)
                     return
                 else:
                     logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r', self.path, e) #IOError(9, 'Bad file descriptor'), int(e.args[0])

@@ -6,16 +6,11 @@ import os
 import errno
 import binascii
 import time
-import collections
-import random
 import thread
 import socket
 import select
 import Queue
-import httplib
-import urlparse
 import struct
-import traceback
 import logging
 import threading
 import operator
@@ -28,9 +23,29 @@ if sys.platform == "win32":
 elif sys.platform == "linux" or sys.platform == "linux2":
     win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
     sys.path.append(win32_lib)
-
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
+
+from config import config
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+import socks
+if config.PROXY_TYPE == "HTTP":
+    proxy_type = socks.HTTP
+elif config.PROXY_TYPE == "SOCKS4":
+    proxy_type = socks.SOCKS4
+elif config.PROXY_TYPE == "SOCKS5":
+    proxy_type = socks.SOCKS5
+else:
+    config.PROXY_ENABLE = 0
+    logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+
+if config.PROXY_ENABLE:
+    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
+    default_socket = socket.socket
+    socket.socket = socks.socksocket
+
+
 
 from google_ip import google_ip
 
@@ -86,11 +101,6 @@ class Connect_pool():
         return self.get(block=False)
 
     def _get(self):
-        #pool = sorted(self.pool.items(), key=operator.itemgetter(1))
-        #k,v = pool[0]
-        #self.pool.pop(k)
-        #return (v, k)
-
         fastest_time = 9999
         fastest_sock = None
         for sock in self.pool:
@@ -142,52 +152,7 @@ class Https_connection_manager(object):
     thread_num_lock = threading.Lock()
     thread_num = 0
 
-    protocol_version = 'HTTP/1.1'
-    skip_headers = frozenset(['Vary',
-                              'Via',
-                              'X-Forwarded-For',
-                              'Proxy-Authorization',
-                              'Proxy-Connection',
-                              'Upgrade',
-                              'X-Chrome-Variations',
-                              'Connection',
-                              'Cache-Control'])
 
-    ssl_ciphers = ['ECDHE-ECDSA-AES256-SHA',
-                            'ECDHE-RSA-AES256-SHA',
-                            'DHE-RSA-CAMELLIA256-SHA',
-                            'DHE-DSS-CAMELLIA256-SHA',
-                            'DHE-RSA-AES256-SHA',
-                            'DHE-DSS-AES256-SHA',
-                            'ECDH-RSA-AES256-SHA',
-                            'ECDH-ECDSA-AES256-SHA',
-                            'CAMELLIA256-SHA',
-                            'AES256-SHA',
-                            'ECDHE-ECDSA-RC4-SHA',
-                            'ECDHE-ECDSA-AES128-SHA',
-                            'ECDHE-RSA-RC4-SHA',
-                            'ECDHE-RSA-AES128-SHA',
-                            'DHE-RSA-CAMELLIA128-SHA',
-                            'DHE-DSS-CAMELLIA128-SHA',
-                            'DHE-RSA-AES128-SHA',
-                            'DHE-DSS-AES128-SHA',
-                            'ECDH-RSA-RC4-SHA',
-                            'ECDH-RSA-AES128-SHA',
-                            'ECDH-ECDSA-RC4-SHA',
-                            'ECDH-ECDSA-AES128-SHA',
-                            'SEED-SHA',
-                            'CAMELLIA128-SHA',
-                            'RC4-SHA',
-                            'RC4-MD5',
-                            'AES128-SHA',
-                            'ECDHE-ECDSA-DES-CBC3-SHA',
-                            'ECDHE-RSA-DES-CBC3-SHA',
-                            'EDH-RSA-DES-CBC3-SHA',
-                            'EDH-DSS-DES-CBC3-SHA',
-                            'ECDH-RSA-DES-CBC3-SHA',
-                            'ECDH-ECDSA-DES-CBC3-SHA',
-                            'DES-CBC3-SHA',
-                            'TLS_EMPTY_RENEGOTIATION_INFO_SCSV']
 
     def __init__(self):
         # http://docs.python.org/dev/library/ssl.html
@@ -203,12 +168,7 @@ class Https_connection_manager(object):
 
         self.conn_pool = Connect_pool() #Queue.PriorityQueue()
 
-
-        # set_ciphers as Modern Browsers
-        # http://www.openssl.org/docs/apps/ciphers.html
-        #ssl_ciphers = [x for x in self.ssl_ciphers if random.random() > 0.5]
-
-        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile) #, cipher_suites=ssl_ciphers)
+        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1")
 
         # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
         self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
@@ -273,7 +233,7 @@ class Https_connection_manager(object):
                 ssl_sock.sock = sock
                 ssl_sock.create_time = time_begin
                 ssl_sock.handshake_time = handshake_time
-
+                ssl_sock.host = ''
 
                 def verify_SSL_certificate_issuer(ssl_sock):
                     cert = ssl_sock.get_peer_certificate()
@@ -363,71 +323,10 @@ class Https_connection_manager(object):
 
 
 
-    def _request(self, sock, method, path, protocol_version, headers, payload, bufsize=8192):
-        skip_headers = self.skip_headers
-
-        request_data = '%s %s %s\r\n' % (method, path, protocol_version)
-        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
-        request_data += '\r\n'
-
-        if isinstance(payload, bytes):
-            sock.sendall(request_data.encode() + payload)
-        elif hasattr(payload, 'read'):
-            sock.sendall(request_data)
-            while 1:
-                data = payload.read(bufsize)
-                if not data:
-                    break
-                sock.sendall(data)
-        else:
-            raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
-
-        response = httplib.HTTPResponse(sock, buffering=True)
-        try:
-            response.begin()
-        except httplib.BadStatusLine:
-            response = None
-        return response
-
-    # Caller:  gae_urlfetch
-    # so scheme always be https
-    def request(self, method, url, payload=None, headers={}):
-        scheme, netloc, path, _, query, _ = urlparse.urlparse(url)
-        if netloc.rfind(':') <= netloc.rfind(']'):
-            host = netloc
-        else:
-            host, _, port = netloc.rpartition(':')
-            path += '?' + query
-
-        if 'Host' not in headers:
-            headers['Host'] = host
-
-        for i in range(self.max_retry):
-            ssl_sock = None
-            try:
-                ssl_sock = self.create_ssl_connection()
-                if not ssl_sock:
-                    logging.debug('request "%s %s" create_ssl_connection fail', method, url)
-                    continue
-
-                response = self._request(ssl_sock, method, path, self.protocol_version, headers, payload)
-                if response:
-                    response.ssl_sock = ssl_sock
-                return response
-
-            except Exception as e:
-                logging.debug('request "%s %s" failed:%s', method, url, e)
-                if ssl_sock:
-                    ssl_sock.close()
-                if i == self.max_retry - 1:
-                    raise
-                else:
-                    continue
-
 
 class Forward_connection_manager():
-    max_retry = 3
-    max_timeout = 3
+    timeout = 3
+    max_timeout = 5
     tcp_connection_cache = Queue.PriorityQueue()
 
     def create_connection(self, sock_life=5):
@@ -436,6 +335,8 @@ class Forward_connection_manager():
                 time.sleep(delay)
             ip = ip_port[0]
             sock = None
+            # start connection time record
+            start_time = time.time()
             try:
                 # create a ipv4/ipv6 socket object
                 sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -446,9 +347,8 @@ class Forward_connection_manager():
                 # disable negal algorithm to send http request quickly.
                 sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
                 # set a short timeout to trigger timeout retry more quickly.
-                sock.settimeout(self.max_timeout)
-                # start connection time record
-                start_time = time.time()
+                sock.settimeout(self.timeout)
+
 
                 conn_time = 0
                 # TCP connect
@@ -487,7 +387,8 @@ class Forward_connection_manager():
 
 
         port = 443
-        for j in range(self.max_retry):
+        start_time = time.time()
+        while time.time() - start_time < self.max_timeout:
             addresses = []
             for i in range(3):
                 ip = google_ip.get_gws_ip()
@@ -507,7 +408,7 @@ class Forward_connection_manager():
                 if not isinstance(result, (socket.error, OSError)):
                     thread.start_new_thread(recycle_connection, (len(addrs)-i-1, queobj))
                     return result
-        logging.warning('create_connection fail.')
+        logging.warning('create tcp connection fail.')
 
 
     def forward_socket(self, local, remote, timeout=60, tick=2, bufsize=8192):

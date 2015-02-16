@@ -1,3 +1,0 @@
-socks_proxy:
-  {host:"", port:1080, user:"", password:""}
-appids: {appids: "", password:""}

@@ -1,2 +1,2 @@
 #!/bin/bash
-python launcher/start.py
+python2 launcher/start.py
