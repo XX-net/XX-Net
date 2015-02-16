@@ -12,7 +12,8 @@ elif sys.platform == "win32":
     current_path = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(current_path)
     from win_tray import sys_tray
-
+else:
+    from non_tray import sys_tray
 
 import web_control
 import module_init

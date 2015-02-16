@@ -158,6 +158,8 @@ def download_module(module, new_version):
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
+            else:
+                install_module(module, new_version)
 
             break
 
@@ -239,7 +241,8 @@ def check_update():
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
-
+                else:
+                    download_module(module, new_version)
 
     except Exception as e:
         logging.warn("check_update except:%s", e)

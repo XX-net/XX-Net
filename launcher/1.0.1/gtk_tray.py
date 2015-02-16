@@ -33,9 +33,6 @@ class Gtk_tray():
         self.trayicon.set_tooltip('XX-Net')
         self.trayicon.set_visible(True)
 
-    def set_goagent_manager(self, mgr):
-        self.mgr = mgr
-
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
