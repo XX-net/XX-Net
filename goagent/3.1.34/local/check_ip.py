@@ -17,9 +17,6 @@ elif sys.platform == "linux" or sys.platform == "linux2":
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
-import socks
 
 from config import config
 import cert_util
@@ -45,21 +42,25 @@ max_timeout = 5000
 g_conn_timeout = 1
 g_handshake_timeout = 2
 
-
-if config.PROXY_TYPE == "HTTP":
-    proxy_type = socks.HTTP
-elif config.PROXY_TYPE == "SOCKS4":
-    proxy_type = socks.SOCKS4
-elif config.PROXY_TYPE == "SOCKS5":
-    proxy_type = socks.SOCKS5
-else:
-    config.PROXY_ENABLE = 0
-    logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-
 if config.PROXY_ENABLE:
-    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
-    default_socket = socket.socket
-    socket.socket = socks.socksocket
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+    import socks
+
+    if config.PROXY_TYPE == "HTTP":
+        proxy_type = socks.HTTP
+    elif config.PROXY_TYPE == "SOCKS4":
+        proxy_type = socks.SOCKS4
+    elif config.PROXY_TYPE == "SOCKS5":
+        proxy_type = socks.SOCKS5
+    else:
+        config.PROXY_ENABLE = 0
+        logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+
+    if config.PROXY_ENABLE:
+        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
+        #default_socket = socket.socket
+        #socket.socket = socks.socksocket
 
 
 
@@ -88,7 +89,10 @@ class Check_frame(object):
                 import struct
                 ip_port = (ip, 443)
 
-                sock = socket.socket(socket.AF_INET)
+                if config.PROXY_ENABLE:
+                    sock = socks.socksocket(socket.AF_INET)
+                else:
+                    sock = socket.socket(socket.AF_INET)
                 # set reuseaddr option to avoid 10048 socket error
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
@@ -148,7 +152,7 @@ class Check_frame(object):
         except SSLError as e:
             logging.debug("Check_appengine %s SSLError:%s", self.ip, e)
         except IOError as e:
-            #logging.debug("Check_appengine %s IOError:%s", ip, e)
+            logging.debug("Check %s IOError:%s", self.ip, e)
             pass
         except httplib.BadStatusLine:
             #logging.debug('Check_appengine http.bad status line ip:%s', ip)
@@ -209,6 +213,31 @@ def test_app_check(ssl_sock, ip):
     time_cost = (time_stop - time_start)*1000
     logging.debug("app check time:%d", time_cost)
     return True
+
+def network_is_ok():
+
+    if config.PROXY_ENABLE:
+        default_socket = socket.socket
+        socket.socket = socks.socksocket
+    try:
+        conn = httplib.HTTPSConnection("github.com", 443)
+        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+                  "accept":"application/json, text/javascript, */*; q=0.01",
+                  "accept-encoding":"gzip, deflate, sdch",
+                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+                  "connection":"keep-alive"
+                  }
+        conn.request("HEAD", "/", headers=header)
+        response = conn.getresponse()
+        if response.status:
+            return True
+    except:
+        pass
+    finally:
+        if config.PROXY_ENABLE:
+            socket.socket = default_socket
+
+    return False
 
 def test_gws(ip_str):
     logging.info("==>%s", ip_str)
@@ -293,12 +322,7 @@ class fast_search_ip():
             p.daemon = True
             p.start()
 
-if __name__ == "__main__":
-    test("208.117.224.103", 10) #gws
-    #test('208.117.224.213', 10)
-    #test("218.176.242.24")
-    #test_main()
-
+def test_multi_thread_search_ip():
     test_speed = fast_search_ip()
     test_speed.search_more_google_ip()
     for i in range(2000000):
@@ -311,6 +335,15 @@ if __name__ == "__main__":
         time.sleep(1)
         if test_speed.check_num != 0:
             print test_speed.check_num, test_speed.gws_num, (test_speed.gws_num * 1000 / test_speed.check_num)
+
+
+if __name__ == "__main__":
+    print network_is_ok()
+    print network_is_ok()
+    test("208.117.224.103", 10) #gws
+    #test('208.117.224.213', 10)
+    #test("218.176.242.24")
+    #test_main()
 
 # about ip connect time and handshake time
 # handshake time is double of connect time in common case.

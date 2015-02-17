@@ -11,14 +11,12 @@ import ip_utils
 import check_ip
 from google_ip_range import ip_range
 import logging
-import httplib
 import random
 import Queue
 import math
 import os
 from config import config
 import traceback
-import sys
 
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
@@ -91,7 +89,7 @@ class Check_ip():
                 server = str_l[2]
                 handshake_time = int(str_l[3])
 
-                logging.info("load ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
+                #logging.info("load ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
                 self.add_ip(ip_str, handshake_time, domain, server)
             except Exception as e:
                 logging.exception("load_ip line:%s err:%s", line, e)
@@ -254,9 +252,6 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-        #self.try_sort_ip_by_handshake_time(force=True)
-        #self.gws_ip_pointer = 0
-        #self.gws_ip_pointer_reset_time = time.time()
 
 
     def report_connect_fail(self, ip_str, force_remove=False):
@@ -266,7 +261,6 @@ class Check_ip():
         if not force_remove and not self.network_is_ok():
             return
 
-        #ip_removed = False
         self.ip_lock.acquire()
         try:
             if not ip_str in self.ip_dict:
@@ -283,7 +277,6 @@ class Check_ip():
             self.ip_dict[ip_str]["fail_time"] = time.time()
 
             if force_remove or self.ip_dict[ip_str]['timeout'] >= 2:
-                #ip_removed = True
                 property = self.ip_dict[ip_str]
                 server = property['server']
                 del self.ip_dict[ip_str]
@@ -300,8 +293,6 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-        #
-        #    self.try_sort_ip_by_handshake_time(force=True)
 
         if not self.is_ip_enough():
             self.search_more_google_ip()
@@ -351,20 +342,8 @@ class Check_ip():
         if time.time() - self.network_fail_time < 3:
             return False
 
-        try:
-            conn = httplib.HTTPSConnection("github.com", 443)
-            header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                      "accept":"application/json, text/javascript, */*; q=0.01",
-                      "accept-encoding":"gzip, deflate, sdch",
-                      "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                      "connection":"keep-alive"
-                      }
-            conn.request("HEAD", "/", headers=header)
-            response = conn.getresponse()
-            if response.status:
-                return True
-        except:
-            pass
+        if check_ip.network_is_ok():
+            return True
 
         self.network_fail_time = time.time()
         return False
@@ -400,8 +379,6 @@ class Check_ip():
         self.ncount_lock.release()
 
     def search_more_google_ip(self):
-        if True: # TODO: test
-            return
 
         while self.ncount < max_check_ip_thread_num:
             self.ncount_lock.acquire()

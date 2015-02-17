@@ -54,11 +54,19 @@ Modifications made by Anorov (https://github.com/Anorov)
 
 __version__ = "1.5.1"
 
+import os, sys
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+if sys.platform == "win32":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
+
 import socket
 import struct
 from errno import EOPNOTSUPP, EINVAL, EAGAIN
 from io import BytesIO, SEEK_CUR
 from collections import Callable
+import encodings.idna
 
 PROXY_TYPE_SOCKS4 = SOCKS4 = 1
 PROXY_TYPE_SOCKS5 = SOCKS5 = 2
@@ -690,3 +698,8 @@ class socksocket(_BaseSocket):
         if not proxy_port:
             raise GeneralProxyError("Invalid proxy type")
         return proxy_addr, proxy_port
+
+if __name__ == "__main__":
+    name = "abc"
+    name2 = name.encode('idna')
+    print name2

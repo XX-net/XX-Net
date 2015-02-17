@@ -98,6 +98,8 @@ class Config(object):
         info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)
+        if self.PROXY_ENABLE:
+            info += '%s Proxy    : %s:%d\n' % (self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
         info += 'Debug INFO         : %s\n' % self.LISTEN_DEBUGINFO if self.LISTEN_DEBUGINFO else ''
         info += 'GAE APPID          : %s\n' % '|'.join(self.GAE_APPIDS)
         if self.PAC_ENABLE:

@@ -619,7 +619,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 remote = forwork_manager.create_connection(connected_in_s)
                 if remote is not None:
                     if data:
-                        remote.sendall(data)
+                        remote.send(data) #TODO: check this
                     break
                 elif i == 0:
                     # only logging first create_connection error

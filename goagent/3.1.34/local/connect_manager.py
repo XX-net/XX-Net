@@ -27,23 +27,24 @@ import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
 from config import config
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
-import socks
-if config.PROXY_TYPE == "HTTP":
-    proxy_type = socks.HTTP
-elif config.PROXY_TYPE == "SOCKS4":
-    proxy_type = socks.SOCKS4
-elif config.PROXY_TYPE == "SOCKS5":
-    proxy_type = socks.SOCKS5
-else:
-    config.PROXY_ENABLE = 0
-    logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-
 if config.PROXY_ENABLE:
-    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
-    default_socket = socket.socket
-    socket.socket = socks.socksocket
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+    import socks
+    if config.PROXY_TYPE == "HTTP":
+        proxy_type = socks.HTTP
+    elif config.PROXY_TYPE == "SOCKS4":
+        proxy_type = socks.SOCKS4
+    elif config.PROXY_TYPE == "SOCKS5":
+        proxy_type = socks.SOCKS5
+    else:
+        config.PROXY_ENABLE = 0
+        logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+
+    if config.PROXY_ENABLE:
+        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
+        #socks.default_socket = socket.socket
+        #socket.socket = socks.socksocket
 
 
 
@@ -193,7 +194,10 @@ class Https_connection_manager(object):
             ssl_sock = None
             ip = ip_port[0]
             try:
-                sock = socket.socket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
+                if config.PROXY_ENABLE:
+                    sock = socks.socksocket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
+                else:
+                    sock = socket.socket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
                 # set reuseaddr option to avoid 10048 socket error
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
@@ -337,9 +341,13 @@ class Forward_connection_manager():
             sock = None
             # start connection time record
             start_time = time.time()
+            conn_time = 0
             try:
                 # create a ipv4/ipv6 socket object
-                sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+                if config.PROXY_ENABLE:
+                    sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+                else:
+                    sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
                 # set reuseaddr option to avoid 10048 socket error
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 # resize socket recv buffer 8K->32K to improve browser releated application performance
@@ -349,8 +357,6 @@ class Forward_connection_manager():
                 # set a short timeout to trigger timeout retry more quickly.
                 sock.settimeout(self.timeout)
 
-
-                conn_time = 0
                 # TCP connect
                 sock.connect(ip_port)
 
@@ -362,7 +368,7 @@ class Forward_connection_manager():
 
                 # put ssl socket object to output queobj
                 queobj.put(sock)
-            except (socket.error, OSError) as e:
+            except Exception as e:
                 # any socket.error, put Excpetions to output queobj.
                 queobj.put(e)
                 conn_time = int((time.time() - start_time) * 1000)
@@ -388,7 +394,8 @@ class Forward_connection_manager():
 
         port = 443
         start_time = time.time()
-        while time.time() - start_time < self.max_timeout:
+        #while time.time() - start_time < self.max_timeout:
+        for j in range(3):
             addresses = []
             for i in range(3):
                 ip = google_ip.get_gws_ip()
@@ -405,7 +412,7 @@ class Forward_connection_manager():
                 #delay += 0.05
             for i in range(len(addrs)):
                 result = queobj.get()
-                if not isinstance(result, (socket.error, OSError)):
+                if not isinstance(result, (socket.error, OSError, IOError)):
                     thread.start_new_thread(recycle_connection, (len(addrs)-i-1, queobj))
                     return result
         logging.warning('create tcp connection fail.')
@@ -480,4 +487,6 @@ def test_pool_speed():
     # sort time is 0ms for 100
 
 if __name__ == "__main__":
-    test_pool_speed()
+    #test_pool_speed()
+    sock = forwork_manager.create_connection()
+    print sock

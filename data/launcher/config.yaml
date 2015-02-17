@@ -1,5 +1,5 @@
 modules:
-  goagent: {auto_start: 1, current_version: 3.1.33, ignore_version: 3.1.33}
+  goagent: {auto_start: 1, current_version: 3.1.34, ignore_version: 3.1.34}
   launcher: {current_version: 1.0.2, ignore_version: 1.0.2}
 update: {check_update: 1, last_path: /, node_id: '0',
   uuid: 0}
