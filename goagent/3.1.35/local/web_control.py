@@ -24,9 +24,6 @@ import ConfigParser
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
 
 import yaml
 
@@ -38,6 +35,8 @@ class User_config(object):
     proxy_type = "HTTP"
     proxy_host = ""
     proxy_port = "0"
+    proxy_user = ""
+    proxy_passwd = ""
 
     def __init__(self):
         self.load()
@@ -63,6 +62,8 @@ class User_config(object):
             self.proxy_type = CONFIG.get('proxy', 'type')
             self.proxy_host = CONFIG.get('proxy', 'host')
             self.proxy_port = CONFIG.get('proxy', 'port')
+            self.proxy_user = CONFIG.get('proxy', 'user')
+            self.proxy_passwd = CONFIG.get('proxy', 'passwd')
         except Exception as e:
             logging.warn("User_config.load except:%s", e)
 
@@ -79,6 +80,8 @@ class User_config(object):
             f.write("type = %s\n" % self.proxy_type)
             f.write("host = %s\n" % self.proxy_host)
             f.write("port = %s\n" % self.proxy_port)
+            f.write("user = %s\n" % self.proxy_user)
+            f.write("passwd = %s\n" % self.proxy_passwd)
             f.close()
         except:
             logging.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
@@ -280,6 +283,8 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.proxy_type = self.postvars['proxy_type'][0]
                 user_config.proxy_host = self.postvars['proxy_host'][0]
                 user_config.proxy_port = self.postvars['proxy_port'][0]
+                user_config.proxy_user = self.postvars['proxy_user'][0]
+                user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.save()
 
                 data = '{"res":"success"}'

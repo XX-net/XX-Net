@@ -85,6 +85,8 @@ class Config(object):
         self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')
         self.PROXY_HOST = self.CONFIG.get('proxy', 'host')
         self.PROXY_PORT = self.CONFIG.getint('proxy', 'port')
+        self.PROXY_USER = self.CONFIG.get('proxy', 'user')
+        self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
         self.LOVE_ENABLE = self.CONFIG.getint('love', 'enable')
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')

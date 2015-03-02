@@ -18,7 +18,9 @@
     </select>
     <input type="text" class="input-medium" placeholder="host" id="proxy_host">
     <input type="text" class="input-small" placeholder="port" id="proxy_port">
-
+    <br>
+    <input type="text" class="input-small" placeholder="User name" id="proxy_user">
+    <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
 
     <br>
     <hr>
@@ -42,6 +44,8 @@
         $("#proxy_type").val(data.proxy_type);
         $("#proxy_host").val(data.proxy_host);
         $("#proxy_port").val(data.proxy_port);
+        $("#proxy_user").val(data.proxy_user);
+        $("#proxy_passwd").val(data.proxy_passwd);
     });
 
 
@@ -60,9 +64,12 @@
         proxy_type = $("#proxy_type").val();
         proxy_host = $("#proxy_host").val();
         proxy_port = $("#proxy_port").val();
+        proxy_user = $("#proxy_user").val();
+        proxy_passwd = $("#proxy_passwd").val();
 
         $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
-            "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port },
+            "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
+             "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,},
         function( data ) {
             res = data.res
             if(res == "success") {

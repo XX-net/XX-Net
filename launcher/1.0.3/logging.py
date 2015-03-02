@@ -53,7 +53,10 @@ def log(level, fmt, *args, **kwargs):
     #print string
     sys.stderr.write(string)
     log_fd.write(string)
-    log_fd.flush()
+    try:
+        log_fd.flush()
+    except:
+        pass
 
 def dummy(*args, **kwargs):
     pass

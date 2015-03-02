@@ -23,7 +23,6 @@
 #      Rui Wang          <isnowfy@gmail.com>
 #      Wang Wei Qiang    <wwqgtxx@gmail.com>
 #      Felix Yan         <felixonmars@gmail.com>
-#      Sui Feng          <suifeng.me@qq.com>
 #      QXO               <qxodream@gmail.com>
 #      Geek An           <geekan@foxmail.com>
 #      Poly Rabbit       <mcx_221@foxmail.com>
@@ -39,6 +38,24 @@
 
 import sys
 import os
+
+import sys
+import os
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
+
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+
+if sys.platform == "win32":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
+elif sys.platform == "linux" or sys.platform == "linux2":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+    sys.path.append(win32_lib)
+
+
 import time
 import traceback
 
@@ -55,7 +72,6 @@ if os.path.islink(__file__):
     __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
 work_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(work_path)
-sys.path += work_path
 
 from cert_util import CertUtil
 import pac_server

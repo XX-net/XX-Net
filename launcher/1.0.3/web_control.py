@@ -11,15 +11,13 @@ import operator
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
 
 import yaml
 
 import logging
 import module_init
 import config
+import autorun
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -186,7 +184,10 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "check_update": "%d", "popup_webui": %d }' % (config.get(["update", "check_update"], 1), config.get(["web_ui", "popup_webui"], 1) )
+            data = '{ "check_update": "%d", "popup_webui": %d, "auto_start": %d }' %\
+                   (config.get(["update", "check_update"], 1)
+                    , config.get(["modules", "launcher", "popup_webui"], 1)
+                    , config.get(["modules", "launcher", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = int(reqs['check_update'][0])
@@ -203,17 +204,28 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if popup_webui != 0 and popup_webui != 1:
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
                 else:
-                    config.set(["web_ui", "popup_webui"], popup_webui)
+                    config.set(["modules", "launcher", "popup_webui"], popup_webui)
+                    config.save()
+
+                    data = '{"res":"success"}'
+            elif 'auto_start' in reqs :
+                auto_start = int(reqs['auto_start'][0])
+                if auto_start != 0 and auto_start != 1:
+                    data = '{"res":"fail, auto_start:%s"}' % auto_start
+                else:
+                    if auto_start:
+                        autorun.enable()
+                    else:
+                        autorun.disable()
+
+                    config.set(["modules", "launcher", "auto_start"], auto_start)
                     config.save()
 
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
 
-        mimetype = 'text/plain'
-        self.send_response(mimetype, data)
-        #self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        #self.wfile.write(data)
+        self.send_response('application/json', data)
 
     def req_init_module_handler(self):
         req = urlparse.urlparse(self.path).query

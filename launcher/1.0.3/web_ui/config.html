@@ -10,6 +10,11 @@
             <input id="popup_webui" type="checkbox" checked>
         </div>
     </h4>
+    <h4 >Auto start when login desktop:
+        <div class="pull-right">
+            <input id="auto_start" type="checkbox" checked>
+        </div>
+    </h4>
 <br><br>
 <div id="status"></div>
 
@@ -21,6 +26,7 @@
 <script type="text/javascript">
     var check_update = 1;
     var popup_webui = 1;
+    var auto_start = 0;
 
     $('#check_update').on('init.bootstrapSwitch', function (event) {
         $.getJSON( "/config?cmd=get_config", function( data ) {
@@ -36,6 +42,13 @@
                 $('#popup_webui').bootstrapSwitch('state', true);
             }else{
                 $('#popup_webui').bootstrapSwitch('state', false);
+            }
+
+            auto_start = data.auto_start;
+            if(data.auto_start == 1){
+                $('#auto_start').bootstrapSwitch('state', true);
+            }else{
+                $('#auto_start').bootstrapSwitch('state', false);
             }
         });
     });
@@ -77,6 +90,22 @@
         });
     });
 
+    $('#auto_start').on('switchChange.bootstrapSwitch', function (event, state) {
+        if(state){
+            val = 1;
+        }else{
+            val = 0;
+        }
+        if(val == auto_start){
+            return;
+        }else{
+            auto_start = val;
+        }
+        $.getJSON( "/config?cmd=set_config&auto_start="+val, function( data ) {
+            res = data.res
+            $("#status").html(res)
+        });
+    });
 
     ///////////////////////////////////////////////////////////////////////
     // initialize all the inputs

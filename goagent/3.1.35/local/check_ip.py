@@ -6,13 +6,6 @@ import time
 import socket
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
-if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
-    sys.path.append(win32_lib)
-elif sys.platform == "linux" or sys.platform == "linux2":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
-    sys.path.append(win32_lib)
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
@@ -43,8 +36,6 @@ g_conn_timeout = 1
 g_handshake_timeout = 2
 
 if config.PROXY_ENABLE:
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
     import socks
 
     if config.PROXY_TYPE == "HTTP":
@@ -58,9 +49,7 @@ if config.PROXY_ENABLE:
         logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
 
     if config.PROXY_ENABLE:
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT)
-        #default_socket = socket.socket
-        #socket.socket = socks.socksocket
+        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 
 
 

@@ -54,6 +54,8 @@ def stop(module):
 def start_all_auto():
     config.load()
     for module in config.config["modules"]:
+        if module == "launcher":
+            continue
         if "auto_start" in config.config['modules'][module] and config.config['modules'][module]["auto_start"]:
             start(module)
 
