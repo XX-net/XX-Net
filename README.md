@@ -5,26 +5,24 @@
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.0.9
+https://codeload.github.com/XX-net/XX-Net/zip/1.1.0
 
 
 
 
 主要特性
 ========
-
-* GoAgent 动态搜索 google ip，稳定快速
-* Web界面，傻瓜模式
-* 内置了公共 appid, 开箱即用
-* 新版本提示、更新升级
+* GoAgent 稳定快速
+* Web界面，傻瓜易用
+* 内置了公共 appid, 上千可用ip, 开箱即用
 
 平台支持情况
 ================
 * Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
 * Win7/8/10
-* Ubuntu （不能显示系统托盘）
+* Ubuntu （不显示系统托盘）
 * Debian
-* Mac OS X 暂时未调试， 下一个版本解决
+* Mac OS X （不显示系统托盘）
 
 ## 链接
 |   |   |
@@ -35,7 +33,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.0.9
 
 使用方法：
 ========
-* Windows下, 双击 start.lnk 快捷方式
+* Windows下, 双击 start.lnk/start.bat/start.vbs 快捷方式
   - 启动弹出浏览器： 访问 http://localhost:8085/
   - 托盘图标：点击可弹出Web管理界面, 右键可显示常用功能菜单。
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
