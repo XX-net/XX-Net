@@ -4,20 +4,6 @@
 import sys
 import os
 import glob
-
-sys.path += glob.glob('%s/*.egg' % os.path.dirname(os.path.abspath(__file__)))
-
-try:
-    import gevent
-    import gevent.socket
-    import gevent.server
-    import gevent.queue
-    import gevent.event
-    import gevent.monkey
-    gevent.monkey.patch_all(subprocess=True)
-except ImportError:
-    gevent = None
-
 import base64
 import time
 import re
@@ -26,14 +12,6 @@ import thread
 import BaseHTTPServer
 import urllib2
 import urlparse
-try:
-    import OpenSSL
-except ImportError:
-    OpenSSL = None
-try:
-    import dnslib
-except ImportError:
-    dnslib = None
 
 
 from config import config
@@ -69,10 +47,7 @@ class PacUtil(object):
                 logging.info('try download %r to update_pacfile(%r)', config.PAC_ADBLOCK, filename)
                 adblock_content = opener.open(config.PAC_ADBLOCK).read()
                 logging.info('%r downloaded, try convert it with adblock2pac', config.PAC_ADBLOCK)
-                if 'gevent' in sys.modules and time.sleep is getattr(sys.modules['gevent'], 'sleep', None) and hasattr(gevent.get_hub(), 'threadpool'):
-                    jsrule = gevent.get_hub().threadpool.apply_e(Exception, PacUtil.adblock2pac, (adblock_content, 'FindProxyForURLByAdblock', blackhole, default))
-                else:
-                    jsrule = PacUtil.adblock2pac(adblock_content, 'FindProxyForURLByAdblock', blackhole, default)
+                jsrule = PacUtil.adblock2pac(adblock_content, 'FindProxyForURLByAdblock', blackhole, default)
                 content += '\r\n' + jsrule + '\r\n'
                 logging.info('%r downloaded and parsed', config.PAC_ADBLOCK)
             else:
@@ -87,10 +62,7 @@ class PacUtil(object):
             logging.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
             autoproxy_content = base64.b64decode(opener.open(config.PAC_GFWLIST).read())
             logging.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
-            if 'gevent' in sys.modules and time.sleep is getattr(sys.modules['gevent'], 'sleep', None) and hasattr(gevent.get_hub(), 'threadpool'):
-                jsrule = gevent.get_hub().threadpool.apply_e(Exception, PacUtil.autoproxy2pac, (autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default))
-            else:
-                jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
+            jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
             content += '\r\n' + jsrule + '\r\n'
             logging.info('%r downloaded and parsed', config.PAC_GFWLIST)
         except Exception as e:

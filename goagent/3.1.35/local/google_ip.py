@@ -23,7 +23,7 @@ good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name
 
 
 # const value:
-max_check_ip_thread_num = 10
+max_check_ip_thread_num = 5
 max_good_ip_num = 4000  # stop scan ip when enough
 
 
@@ -46,6 +46,7 @@ class Check_ip():
     gws_ip_list = [] # gererate from ip_dict, sort by handshake_time, when get_batch_ip
     ip_lock = threading.Lock()
     iplist_need_save = 0
+    iplist_saved_time = 0
     last_sort_time_for_gws = 0  # keep status for avoid wast too many cpu
 
     network_fail_time = 0 # keep status for avoid retry too frequently
@@ -103,8 +104,13 @@ class Check_ip():
             p.start()
 
     def save_ip_list(self, force=False):
-        if self.iplist_need_save == 0 and not force:
-            return
+        if not force:
+            if self.iplist_need_save == 0:
+                return
+            if time.time() - self.iplist_saved_time < 10:
+                return
+
+        self.iplist_saved_time = time.time()
 
         try:
             self.ip_lock.acquire()
@@ -407,6 +413,8 @@ class Check_ip():
             else:
                 self.update_ip(ip_str, result.handshake_time)
                 logging.info("check_exist_ip update ip:%s server:%s time:%d", ip_str, result.server_type, result.handshake_time)
+
+            time.sleep(1)
 
         self.save_ip_list()
 

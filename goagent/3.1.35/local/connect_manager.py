@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import sys
 import os
 import errno
 import binascii
 import time
-import thread
 import socket
 import select
 import Queue
@@ -155,8 +153,8 @@ class Https_connection_manager(object):
         self.max_retry = 3
         self.timeout = 3
         self.max_timeout = 5
-        self.max_thread_num = 40
-        self.connection_pool_num = 30
+        self.max_thread_num = 10
+        self.connection_pool_num = 20
 
         self.conn_pool = Connect_pool() #Queue.PriorityQueue()
 
@@ -173,10 +171,15 @@ class Https_connection_manager(object):
 
         while self.conn_pool.qsize() > self.connection_pool_num:
             t, ssl_sock = self.conn_pool.get_slowest()
-            if t < 300:
+
+            if t < 500:
                 #self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+                ssl_sock.close()
                 return
-            ssl_sock.close()
+            else:
+                ssl_sock.close()
+
+
 
     def create_ssl_connection(self):
 
@@ -268,6 +271,7 @@ class Https_connection_manager(object):
                     if ssl_sock:
                         ssl_sock.last_use_time = time.time()
                         self.conn_pool.put((ssl_sock.handshake_time, ssl_sock))
+                    time.sleep(1)
             finally:
                 self.thread_num_lock.acquire()
                 self.thread_num -= 1
@@ -282,6 +286,7 @@ class Https_connection_manager(object):
                 p = threading.Thread(target = connect_thread)
                 p.daemon = True
                 p.start()
+                time.sleep(0.5)
 
 
         while True:
@@ -320,14 +325,19 @@ class Https_connection_manager(object):
 
 
 class Forward_connection_manager():
-    timeout = 3
-    max_timeout = 5
+    timeout = 1
+    max_timeout = 10
     tcp_connection_cache = Queue.PriorityQueue()
+    thread_num_lock = threading.Lock()
+    thread_num = 0
+    max_thread_num = 10
 
-    def create_connection(self, sock_life=5):
-        def _create_connection(ip_port, queobj, delay=0):
-            if delay != 0:
-                time.sleep(delay)
+    def create_connection(self, port=443, sock_life=5):
+        if port != 443:
+            logging.warn("forward port %d not supported.", port)
+            return None
+
+        def _create_connection(ip_port):
             ip = ip_port[0]
             sock = None
             # start connection time record
@@ -358,54 +368,52 @@ class Forward_connection_manager():
                 logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
 
                 # put ssl socket object to output queobj
-                queobj.put(sock)
+                self.tcp_connection_cache.put((time.time(), sock))
             except Exception as e:
-                # any socket.error, put Excpetions to output queobj.
-                queobj.put(e)
                 conn_time = int((time.time() - start_time) * 1000)
                 logging.debug("tcp conn %s fail t:%d", ip, conn_time)
                 google_ip.report_connect_fail(ip)
                 #logging.info("create_tcp report fail ip:%s", ip)
                 if sock:
                     sock.close()
-
-        def recycle_connection(count, queobj):
-            for i in range(count):
-                sock = queobj.get()
-                if sock and not isinstance(sock, Exception):
-                    self.tcp_connection_cache.put((time.time(), sock))
-
-        try:
-            ctime, sock = self.tcp_connection_cache.get_nowait()
-            if time.time() - ctime < sock_life:
-                return sock
-        except Queue.Empty:
-            pass
+            finally:
+                self.thread_num_lock.acquire()
+                self.thread_num -= 1
+                self.thread_num_lock.release()
 
 
-        port = 443
+        while True:
+            try:
+                ctime, sock = self.tcp_connection_cache.get_nowait()
+                if time.time() - ctime < sock_life:
+                    return sock
+                else:
+                    sock.close()
+                    continue
+            except Queue.Empty:
+                break
+
         start_time = time.time()
-        #while time.time() - start_time < self.max_timeout:
-        for j in range(3):
-            addresses = []
-            for i in range(3):
+        while time.time() - start_time < self.max_timeout:
+
+            if self.thread_num < self.max_thread_num:
                 ip = google_ip.get_gws_ip()
                 if not ip:
-                    logging.warning("no gws ip.")
+                    logging.error("no gws ip.")
                     return
-                addresses.append((ip, port))
+                addr = (ip, port)
+                self.thread_num_lock.acquire()
+                self.thread_num += 1
+                self.thread_num_lock.release()
+                p = threading.Thread(target=_create_connection, args=(addr,))
+                p.daemon = True
+                p.start()
 
-            addrs = addresses
-            queobj = Queue.Queue()
-            delay = 0
-            for addr in addrs:
-                thread.start_new_thread(_create_connection, (addr, queobj, delay))
-                #delay += 0.05
-            for i in range(len(addrs)):
-                result = queobj.get()
-                if not isinstance(result, (socket.error, OSError, IOError)):
-                    thread.start_new_thread(recycle_connection, (len(addrs)-i-1, queobj))
-                    return result
+            try:
+                ctime, sock = self.tcp_connection_cache.get(timeout=0.4)
+                return sock
+            except:
+                continue
         logging.warning('create tcp connection fail.')
 
 
@@ -425,6 +433,10 @@ class Forward_connection_manager():
                 for sock in ins:
                     data = sock.recv(bufsize)
                     if not data:
+                        if sock is remote:
+                            logging.debug("forward remote disconnected.")
+                        else:
+                            logging.debug("forward local disconnected.")
                         return
 
                     if sock is remote:
@@ -433,15 +445,15 @@ class Forward_connection_manager():
                     else:
                         remote.sendall(data)
                         timecount = timeout
-        except NetWorkIOError as e:
+        except Exception as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.ENOTCONN, errno.EPIPE):
-                raise
+                logging.exception("forward except:%s.", e)
         finally:
             if local:
                 local.close()
             if remote:
                 remote.close()
-            logging.debug("forward closed.")
+
 
 
 

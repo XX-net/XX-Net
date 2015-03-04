@@ -14,6 +14,21 @@ import threading
 import logging
 
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
+data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent'))
+if not os.path.isdir(data_path):
+    data_path = current_path
+
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+
+if sys.platform == "win32":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
+elif sys.platform == "linux" or sys.platform == "linux2":
+    linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+    sys.path.append(linux_lib)
 
 import OpenSSL
 
@@ -123,9 +138,11 @@ class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
 
     ca_vendor = 'GoAgent'
-    ca_keyfile = 'CA.crt'
+    ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
-    ca_certdir = 'certs'
+    ca_certdir = os.path.join(data_path, 'certs')
+    if not os.path.isdir(ca_certdir):
+        os.mkdir(ca_certdir)
     ca_lock = threading.Lock()
 
     @staticmethod
@@ -247,7 +264,8 @@ class CertUtil(object):
 
     @staticmethod
     def import_ca(certfile):
-        commonname = os.path.splitext(os.path.basename(certfile))[0]
+        #commonname = os.path.splitext(os.path.basename(certfile))[0]
+        commonname = "GoAgent CA - GoAgent"
         if sys.platform.startswith('win'):
             import ctypes
             with open(certfile, 'rb') as fp:
@@ -298,8 +316,27 @@ class CertUtil(object):
                 if not os.path.exists(pemfile):
                     return os.system('cp "%s" "%s" && update-ca-certificates' % (certfile, new_certfile))
             elif any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-                cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb | grep "%s" || certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (commonname, commonname, certfile)
-                return os.system(cmd_line)
+                # certutil -L -d sql:$HOME/.pki/nssdb | grep "%s" ||  % commonname,
+                # remove old cert first
+                cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % commonname
+                os.system(cmd_line)
+
+                # install new cert
+                cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (commonname, certfile)
+                os.system(cmd_line)
+
+                #Firefox:
+                firefox_config_path = get_linux_firefox_path()
+                if not firefox_config_path:
+                    return
+
+                cmd_line = 'certutil -d %s -D -n "%s" ' % (firefox_config_path, commonname)
+                os.system(cmd_line) # remove old cert first
+
+                cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, commonname, certfile)
+                os.system(cmd_line) # install new cert
+
+                return 0
             else:
                 logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
         return 0
@@ -362,7 +399,19 @@ class CertUtil(object):
         if not os.path.exists(certdir):
             os.makedirs(certdir)
 
+def get_linux_firefox_path():
+    home_path = os.path.expanduser("~")
+    firefox_path = os.path.join(home_path, ".mozilla/firefox")
+    if not os.path.isdir(firefox_path):
+        return
+
+    for filename in os.listdir(firefox_path):
+        if filename.endswith(".default") and os.path.isdir(os.path.join(firefox_path, filename)):
+            config_path = os.path.join(firefox_path, filename)
+            return config_path
+
 
 if __name__ == '__main__':
     #capath = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_keyfile)
     CertUtil.check_ca()
+    #print get_linux_firefox_path()

@@ -46,7 +46,7 @@ if sys.platform == 'win32':
 
     run_cmd = os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + " " +\
               os.path.abspath( os.path.join(root_path, "launcher", "start.py"))
-else:
+elif sys.platform == 'linux' or sys.platform == 'linux2':
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
     _xdg_user_autostart = os.path.join(os.path.expanduser(_xdg_config_home),
             "autostart")
@@ -82,6 +82,11 @@ else:
             os.unlink(getfilename(name))
 
     run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+else:
+    def add(name, cmd):
+        pass
+    def remove(name):
+        pass
 
 def enable():
     add("XX-Net", run_cmd)

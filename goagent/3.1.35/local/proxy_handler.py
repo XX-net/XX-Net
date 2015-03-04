@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import sys
-import os
 
 import errno
 import time
@@ -15,7 +13,6 @@ import logging
 import random
 import string
 import threading
-import thread
 import socket
 import ssl
 import Queue
@@ -210,8 +207,13 @@ def gae_urlfetch(method, url, headers, payload, **kwargs):
     response.status, headers_length = struct.unpack('!hh', data)
     data = response.read(headers_length)
     if len(data) < headers_length:
-        response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
+        if data.startswith('ent 服务端已经在'):
+            response.status = 501
+            response.app_status = 501
+        else:
+            response.status = 502
+        message = b'connection aborted. too short headers data=' + data
+        response.fp = io.BytesIO(message)
         response.read = response.fp.read
         return response
     response.msg = httplib.HTTPMessage(io.BytesIO(zlib.decompress(data, -zlib.MAX_WBITS)))
@@ -261,7 +263,10 @@ class RangeFetch(object):
         range_queue.put((start, end, self.response))
         for begin in range(end+1, length, self.maxsize):
             range_queue.put((begin, min(begin+self.maxsize-1, length-1), None))
-        thread.start_new_thread(self.__fetchlet, (range_queue, data_queue, 0))
+        #thread.start_new_thread(self.__fetchlet, (range_queue, data_queue, 0))
+        p = threading.Thread(target=self.__fetchlet, args=(range_queue, data_queue, 0))
+        p.daemon = True
+        p.start()
         t0 = time.time()
         cur_threads = 1
         has_peek = hasattr(data_queue, 'peek')
@@ -269,7 +274,10 @@ class RangeFetch(object):
         self.expect_begin = start
         while self.expect_begin < length - 1:
             while cur_threads < self.threads and time.time() - t0 > cur_threads * config.AUTORANGE_MAXSIZE / 1048576:
-                thread.start_new_thread(self.__fetchlet, (range_queue, data_queue, cur_threads * config.AUTORANGE_MAXSIZE))
+                #thread.start_new_thread(self.__fetchlet, (range_queue, data_queue, cur_threads * config.AUTORANGE_MAXSIZE))
+                p = threading.Thread(target=self.__fetchlet, args=(range_queue, data_queue, cur_threads * config.AUTORANGE_MAXSIZE))
+                p.daemon = True
+                p.start()
                 cur_threads += 1
             try:
                 if has_peek:
@@ -514,6 +522,14 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     response.close()
                     continue
 
+                if response.app_status == 501:
+                    deploy_url = "http://127.0.0.1:8085/?module=goagent&menu=deploy"
+                    message = u'请重新部署服务端: <a href="%s">%s</a>' % (deploy_url, deploy_url)
+                    html = generate_message_html('Please deploy new server', message)
+                    self.wfile.write(b'HTTP/1.0 501\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
+                    response.close()
+                    return
+
                 if response.app_status != 200 and retry == config.FETCHMAX_LOCAL-1:
                     logging.info('GAE %s %s status:%s', self.command, self.path, response.status)
                     self.wfile.write(('HTTP/1.1 %s\r\n%s\r\n' % (response.status, ''.join('%s: %s\r\n' % (k.title(), v) for k, v in response.getheaders() if k.title() != 'Transfer-Encoding'))))
@@ -592,39 +608,40 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         host, _, port = self.path.rpartition(':')
         port = int(port)
         logging.info('FWD %s %s:%d ', self.command, host, port)
+        if host == "appengine.google.com" or host == "www.google.com":
+            connected_in_s = 5 # goagent upload to appengine is slow, it need more 'fresh' connection.
+        else:
+            connected_in_s = 10  # gws connect can be used after tcp connection created 15 s
 
-        self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
-        data = self.connection.recv(1024)
 
+        try:
+            self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
+            data = self.connection.recv(1024)
+        except Exception as e:
+            logging.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
+            self.connection.close()
+            return
 
-        for i in range(3):
-            try:
-                if host == "appengine.google.com" or host == "www.google.com":
-                    connected_in_s = 5
-                    # goagent upload to appengine is slow, it need more 'fresh' connection.
+        remote = forwork_manager.create_connection(port=port, sock_life=connected_in_s)
+        if remote is None:
+            self.connection.close()
+            logging.warn('FWD %s %s:%d create_connection fail', self.command, host, port)
+            return
 
-                else:
-                    connected_in_s = 10
-                    # gws connect can be used after tcp connection created 15 s
+        try:
+            if data:
+                remote.send(data)
+        except Exception as e:
+            logging.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
+            self.connection.close()
+            remote.close()
+            return
 
-                remote = forwork_manager.create_connection(connected_in_s)
-                if remote is not None:
-                    if data:
-                        remote.send(data) #TODO: check this
-                    break
-                elif i == 0:
-                    # only logging first create_connection error
-                    logging.warn('http_util.create_connection((host=%r, port=%r)) timeout', host, port, )
-            except NetWorkIOError as e:
-                if e.args[0] == 9:
-                    logging.error('GAEProxyHandler direct forward remote (%r, %r) failed', host, port)
-                    continue
-                else:
-                    raise
-        if hasattr(remote, 'fileno'):
-            # reset timeout default to avoid long http upload failure, but it will delay timeout retry :(
-            remote.settimeout(None)
-            forwork_manager.forward_socket(self.connection, remote, bufsize=self.bufsize)
+        # reset timeout default to avoid long http upload failure, but it will delay timeout retry :(
+        remote.settimeout(None)
+
+        forwork_manager.forward_socket(self.connection, remote, bufsize=self.bufsize)
+        logging.debug('FWD %s %s:%d closed', self.command, host, port)
 
     def do_CONNECT_AGENT(self):
         """deploy fake cert to client"""

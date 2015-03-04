@@ -93,6 +93,7 @@ class SysTrayIcon(object):
         if self._hwnd:
             return      # already started
         self._message_loop_thread = threading.Thread(target=self._message_loop_func)
+        self._message_loop_thread.daemon = True
         self._message_loop_thread.start()
 
     def shutdown(self):

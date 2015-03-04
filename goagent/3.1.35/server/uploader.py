@@ -93,7 +93,7 @@ def upload(appid, email, password):
     with open(filename, 'wb') as fp:
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
-    for i in range(3):
+    for i in range(10):
         try:
             result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
             result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
