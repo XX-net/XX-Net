@@ -34,7 +34,6 @@
 <script src="/js/jquery-1.11.2.min.js"></script>
 <script type="text/javascript">
     $.post( "http://127.0.0.1:8084/config?cmd=get_config", {}, function( data ) {
-        var data = JSON.parse(data);
         $( "#gae_appid" ).val(data.appid);
         $( "#gae_passwd" ).val(data.passwd);
         if(data.proxy_enable == 1){
@@ -69,9 +68,10 @@
         proxy_passwd = $("#proxy_passwd").val();
 
         $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
-            "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
-             "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,},
-        function( data ) {
+                "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
+                "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,},
+            function( data ) {
+
             res = data.res
             if(res == "success") {
                 $("#status").html(res)

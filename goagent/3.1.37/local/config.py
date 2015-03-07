@@ -84,7 +84,11 @@ class Config(object):
         self.PROXY_ENABLE = self.CONFIG.getint('proxy', 'enable')
         self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')
         self.PROXY_HOST = self.CONFIG.get('proxy', 'host')
-        self.PROXY_PORT = self.CONFIG.getint('proxy', 'port')
+        self.PROXY_PORT = self.CONFIG.get('proxy', 'port')
+        if self.PROXY_PORT == "":
+            self.PROXY_PORT = 0
+        else:
+            self.PROXY_PORT = int(self.PROXY_PORT)
         self.PROXY_USER = self.CONFIG.get('proxy', 'user')
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
@@ -101,7 +105,7 @@ class Config(object):
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)
         if self.PROXY_ENABLE:
-            info += '%s Proxy    : %s:%d\n' % (self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
+            info += '%s Proxy    : %s:%s\n' % (self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
         info += 'Debug INFO         : %s\n' % self.LISTEN_DEBUGINFO if self.LISTEN_DEBUGINFO else ''
         info += 'GAE APPID          : %s\n' % '|'.join(self.GAE_APPIDS)
         if self.PAC_ENABLE:

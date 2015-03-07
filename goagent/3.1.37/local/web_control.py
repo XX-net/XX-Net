@@ -51,7 +51,7 @@ class User_config(object):
     proxy_enable = "0"
     proxy_type = "HTTP"
     proxy_host = ""
-    proxy_port = "0"
+    proxy_port = ""
     proxy_user = ""
     proxy_passwd = ""
 
