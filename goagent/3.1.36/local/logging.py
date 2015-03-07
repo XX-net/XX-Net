@@ -75,8 +75,8 @@ def log(level, console_color, html_color, fmt, *args, **kwargs):
         buffer_len = len(buffer)
         if buffer_len > buffer_size:
             del buffer[last_no - buffer_size]
-    except:
-        string = '%s - [%s]LOG_EXCEPT: %s\n' % (time.ctime()[4:-5], level, fmt % args)
+    except Exception as e:
+        string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br>' % (time.ctime()[4:-5], level, fmt % args, e)
         last_no += 1
         buffer[last_no] = string
         buffer_len = len(buffer)

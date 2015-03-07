@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import webbrowser
 import os, sys
-import atexit
-import logging
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -20,6 +17,9 @@ elif sys.platform == "win32":
 else:
     from non_tray import sys_tray
 
+import atexit
+import logging
+import webbrowser
 import web_control
 import module_init
 import update
@@ -45,13 +45,15 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    web_control.confirm_xxnet_exit()
+
     setup_win_python.check_setup()
 
     module_init.start_all_auto()
 
     web_control.start()
 
-    config.load()
+    #config.load()
     if config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         webbrowser.open("http://127.0.0.1:8085/")
 

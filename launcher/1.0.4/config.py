@@ -54,6 +54,7 @@ def set(path, val):
     global config
     _set(config, path, val)
 
+load()
 
 def main():
     load()

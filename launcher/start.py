@@ -24,5 +24,14 @@ except yaml.YAMLError, exc:
 launcher_version = config["modules"]["launcher"]["current_version"]
 
 import subprocess
-start_script = os.path.abspath( os.path.join(current_path, launcher_version, "start.py"))
-subprocess.call([sys.executable, start_script], shell=False)
+
+def main():
+    start_script = os.path.abspath( os.path.join(current_path, launcher_version, "start.py"))
+    subprocess.call([sys.executable, start_script], shell=False)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit()

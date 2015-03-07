@@ -13,22 +13,22 @@ import threading
 
 import logging
 
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
 data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent'))
 if not os.path.isdir(data_path):
     data_path = current_path
 
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
+if __name__ == "__main__":
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
 
-if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
-    sys.path.append(win32_lib)
-elif sys.platform == "linux" or sys.platform == "linux2":
-    linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
-    sys.path.append(linux_lib)
+    if sys.platform == "win32":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        sys.path.append(win32_lib)
+    elif sys.platform == "linux" or sys.platform == "linux2":
+        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        sys.path.append(linux_lib)
 
 import OpenSSL
 
@@ -141,8 +141,6 @@ class CertUtil(object):
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
-    if not os.path.isdir(ca_certdir):
-        os.mkdir(ca_certdir)
     ca_lock = threading.Lock()
 
     @staticmethod
@@ -170,7 +168,7 @@ class CertUtil(object):
         return key, ca
 
     @staticmethod
-    def dump_ca():
+    def generate_ca_file():
         key, ca = CertUtil.create_ca()
         with open(CertUtil.ca_keyfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
@@ -263,86 +261,48 @@ class CertUtil(object):
         return res
 
     @staticmethod
-    def import_ca(certfile):
-        #commonname = os.path.splitext(os.path.basename(certfile))[0]
-        commonname = "GoAgent CA - GoAgent"
-        if sys.platform.startswith('win'):
-            import ctypes
-            with open(certfile, 'rb') as fp:
-                certdata = fp.read()
-                if certdata.startswith(b'-----'):
-                    begin = b'-----BEGIN CERTIFICATE-----'
-                    end = b'-----END CERTIFICATE-----'
-                    certdata = base64.b64decode(b''.join(certdata[certdata.find(begin)+len(begin):certdata.find(end)].strip().splitlines()))
-                crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
-                store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
-                if not store_handle:
-                    return -1
-                CERT_FIND_SUBJECT_STR = 0x00080007
-                CERT_FIND_HASH = 0x10000
-                X509_ASN_ENCODING = 0x00000001
-                class CRYPT_HASH_BLOB(ctypes.Structure):
-                    _fields_ = [('cbData', ctypes.c_ulong), ('pbData', ctypes.c_char_p)]
-                assert CertUtil.ca_thumbprint
-                crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(':', '')))
-                crypt_handle = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_HASH, ctypes.byref(crypt_hash), None)
-                if crypt_handle:
-                    crypt32.CertFreeCertificateContext(crypt_handle)
-                    return 0
+    def import_windows_ca(common_name, certfile):
+        import ctypes
+        with open(certfile, 'rb') as fp:
+            certdata = fp.read()
+            if certdata.startswith(b'-----'):
+                begin = b'-----BEGIN CERTIFICATE-----'
+                end = b'-----END CERTIFICATE-----'
+                certdata = base64.b64decode(b''.join(certdata[certdata.find(begin)+len(begin):certdata.find(end)].strip().splitlines()))
+            crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
+            store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
+            if not store_handle:
+                return False
+            CERT_FIND_SUBJECT_STR = 0x00080007
+            CERT_FIND_HASH = 0x10000
+            X509_ASN_ENCODING = 0x00000001
+            class CRYPT_HASH_BLOB(ctypes.Structure):
+                _fields_ = [('cbData', ctypes.c_ulong), ('pbData', ctypes.c_char_p)]
+            assert CertUtil.ca_thumbprint
+            crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(':', '')))
+            crypt_handle = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_HASH, ctypes.byref(crypt_hash), None)
+            if crypt_handle:
+                crypt32.CertFreeCertificateContext(crypt_handle)
+                return True
 
-                ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
-                crypt32.CertCloseStore(store_handle, 0)
-                del crypt32
+            ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
+            crypt32.CertCloseStore(store_handle, 0)
+            del crypt32
 
 
-                if not ret and __name__ != "__main__":
-                    #res = CertUtil.win32_notify(msg=u'Import GoAgent Ca?', title=u'Authority need')
-                    #if res == 2:
-                    #    return -1
+            if not ret and __name__ != "__main__":
+                #res = CertUtil.win32_notify(msg=u'Import GoAgent Ca?', title=u'Authority need')
+                #if res == 2:
+                #    return -1
 
-                    import win32elevate
-                    win32elevate.elevateAdminRun(os.path.abspath(__file__))
-                    return 0
+                import win32elevate
+                win32elevate.elevateAdminRun(os.path.abspath(__file__))
+                return True
 
-                return 0 if ret else -1
-        elif sys.platform == 'darwin':
-            return os.system(('security find-certificate -a -c "%s" | grep "%s" >/dev/null || security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "%s"' % (commonname, commonname, certfile.decode('utf-8'))).encode('utf-8'))
-        elif sys.platform.startswith('linux'):
-            import platform
-            platform_distname = platform.dist()[0]
-            if platform_distname == 'Ubuntu':
-                pemfile = "/etc/ssl/certs/%s.pem" % commonname
-                new_certfile = "/usr/local/share/ca-certificates/%s.crt" % commonname
-                if not os.path.exists(pemfile):
-                    return os.system('cp "%s" "%s" && update-ca-certificates' % (certfile, new_certfile))
-            elif any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-                # certutil -L -d sql:$HOME/.pki/nssdb | grep "%s" ||  % commonname,
-                # remove old cert first
-                cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % commonname
-                os.system(cmd_line)
-
-                # install new cert
-                cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (commonname, certfile)
-                os.system(cmd_line)
-
-                #Firefox:
-                firefox_config_path = get_linux_firefox_path()
-                if not firefox_config_path:
-                    return
-
-                cmd_line = 'certutil -d %s -D -n "%s" ' % (firefox_config_path, commonname)
-                os.system(cmd_line) # remove old cert first
-
-                cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, commonname, certfile)
-                os.system(cmd_line) # install new cert
-
-                return 0
-            else:
-                logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
-        return 0
+            return True if ret else False
 
     @staticmethod
-    def remove_ca(name):
+    def remove_windows_ca(name):
         import ctypes
         import ctypes.wintypes
         class CERT_CONTEXT(ctypes.Structure):
@@ -352,39 +312,146 @@ class CertUtil(object):
                 ('cbCertEncoded', ctypes.wintypes.DWORD),
                 ('pCertInfo', ctypes.c_void_p),
                 ('hCertStore', ctypes.c_void_p),]
-        crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
-        store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
-        pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, None)
-        while pCertCtx:
-            certCtx = CERT_CONTEXT.from_address(pCertCtx)
-            certdata = ctypes.string_at(certCtx.pbCertEncoded, certCtx.cbCertEncoded)
-            cert =  OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata)
-            if hasattr(cert, 'get_subject'):
-                cert = cert.get_subject()
-            cert_name = next((v for k, v in cert.get_components() if k == 'CN'), '')
-            if cert_name and name == cert_name:
-                crypt32.CertDeleteCertificateFromStore(crypt32.CertDuplicateCertificateContext(pCertCtx))
-            pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
-        return 0
+        try:
+            crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
+            store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
+            pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, None)
+            while pCertCtx:
+                certCtx = CERT_CONTEXT.from_address(pCertCtx)
+                certdata = ctypes.string_at(certCtx.pbCertEncoded, certCtx.cbCertEncoded)
+                cert =  OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata)
+                if hasattr(cert, 'get_subject'):
+                    cert = cert.get_subject()
+                cert_name = next((v for k, v in cert.get_components() if k == 'CN'), '')
+                if cert_name and name == cert_name:
+                    crypt32.CertDeleteCertificateFromStore(crypt32.CertDuplicateCertificateContext(pCertCtx))
+                pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
+        except Exception as e:
+            logging.warning('CertUtil.remove_windows_ca failed: %r', e)
+
 
     @staticmethod
-    def check_ca():
-        #Check CA exists
-        capath = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_keyfile)
-        certdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_certdir)
-        if not os.path.exists(capath):
-            if os.path.exists(certdir):
-                any(os.remove(x) for x in glob.glob(certdir+'/*.crt')+glob.glob(certdir+'/.*.crt'))
+    def get_linux_firefox_path():
+        home_path = os.path.expanduser("~")
+        firefox_path = os.path.join(home_path, ".mozilla/firefox")
+        if not os.path.isdir(firefox_path):
+            return
+
+        for filename in os.listdir(firefox_path):
+            if filename.endswith(".default") and os.path.isdir(os.path.join(firefox_path, filename)):
+                config_path = os.path.join(firefox_path, filename)
+                return config_path
+
+    @staticmethod
+    def import_linux_firefox_ca(common_name, ca_file):
+        firefox_config_path = CertUtil.get_linux_firefox_path()
+        if not firefox_config_path:
+            return False
+
+        if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
+            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            return False
+
+        cmd_line = 'certutil -L -d %s |grep "GoAgent" ||certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
+        os.system(cmd_line) # remove old cert first
+
+        cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, common_name, ca_file)
+        os.system(cmd_line) # install new cert
+        return True
+
+    @staticmethod
+    def import_debian_ca(common_name, ca_file):
+        home_path = os.path.expanduser("~")
+        nss_path = os.path.join(home_path, ".pki/nssdb")
+        if not os.path.isdir(nss_path):
+            return False
+
+        if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
+            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            return False
+
+        # shell command to list all cert
+        # certutil -L -d sql:$HOME/.pki/nssdb
+
+        # remove old cert first
+        cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" ||certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
+        os.system(cmd_line)
+
+        # install new cert
+        cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (common_name, ca_file)
+        os.system(cmd_line)
+        return True
+
+
+    @staticmethod
+    def import_ubuntu_system_ca(common_name, certfile):
+        import platform
+        platform_distname = platform.dist()[0]
+        if platform_distname != 'Ubuntu':
+            return
+
+        pemfile = "/etc/ssl/certs/CA.pem"
+        new_certfile = "/usr/local/share/ca-certificates/CA.crt"
+        if not os.path.exists(pemfile) or not CertUtil.file_is_same(certfile, new_certfile):
+            if os.system('cp "%s" "%s" && update-ca-certificates' % (certfile, new_certfile)) != 0:
+                logging.warning('install root certificate failed, Please run as administrator/root/sudo')
+
+    @staticmethod
+    def file_is_same(file1, file2):
+        BLOCKSIZE = 65536
+
+        try:
+            with open(file1, 'rb') as f1:
+                buf1 = f1.read(BLOCKSIZE)
+        except:
+            return False
+
+        try:
+            with open(file2, 'rb') as f2:
+                buf2 = f2.read(BLOCKSIZE)
+        except:
+            return False
+
+        if buf1 != buf2:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def import_ca(certfile):
+        commonname = "GoAgent CA - GoAgent"
+        if sys.platform.startswith('win'):
+            CertUtil.import_windows_ca(commonname, certfile)
+        elif sys.platform == 'darwin':
+            os.system(('security find-certificate -a -c "%s" | grep "%s" >/dev/null || security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "%s"' % (commonname, commonname, certfile.decode('utf-8'))).encode('utf-8'))
+        elif sys.platform.startswith('linux'):
+            CertUtil.import_debian_ca(commonname, certfile)
+            CertUtil.import_linux_firefox_ca(commonname, certfile)
+            #CertUtil.import_ubuntu_system_ca(commonname, certfile) # we don't need install CA to system root, special user is enough
+
+
+    @staticmethod
+    def init_ca():
+        #Check Certs Dir
+        if not os.path.exists(CertUtil.ca_certdir):
+            os.makedirs(CertUtil.ca_certdir)
+
+        # Confirmed GoAgent CA exist
+        if not os.path.exists(CertUtil.ca_keyfile):
+            # clean old site certs
+            any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
+
             if os.name == 'nt':
-                try:
-                    CertUtil.remove_ca('%s CA' % CertUtil.ca_vendor)
-                except Exception as e:
-                    logging.warning('CertUtil.remove_ca failed: %r', e)
-            CertUtil.dump_ca()
-        with open(capath, 'rb') as fp:
+                CertUtil.remove_windows_ca('%s CA' % CertUtil.ca_vendor)
+
+            CertUtil.generate_ca_file()
+
+        # Load GoAgent CA
+        with open(CertUtil.ca_keyfile, 'rb') as fp:
             CertUtil.ca_thumbprint = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read()).digest('sha1')
-        #Check Certs
-        certfiles = glob.glob(certdir+'/*.crt')+glob.glob(certdir+'/.*.crt')
+
+        #Check exist site cert buffer with CA
+        certfiles = glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt')
         if certfiles:
             filename = random.choice(certfiles)
             commonname = os.path.splitext(os.path.basename(filename))[0]
@@ -392,26 +459,15 @@ class CertUtil(object):
                 serial_number = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read()).get_serial_number()
             if serial_number != CertUtil.get_cert_serial_number(commonname):
                 any(os.remove(x) for x in certfiles)
-        #Check CA imported
-        if CertUtil.import_ca(capath) != 0:
-            logging.warning('install root certificate failed, Please run as administrator/root/sudo')
-        #Check Certs Dir
-        if not os.path.exists(certdir):
-            os.makedirs(certdir)
 
-def get_linux_firefox_path():
-    home_path = os.path.expanduser("~")
-    firefox_path = os.path.join(home_path, ".mozilla/firefox")
-    if not os.path.isdir(firefox_path):
-        return
+        CertUtil.import_ca(CertUtil.ca_keyfile)
 
-    for filename in os.listdir(firefox_path):
-        if filename.endswith(".default") and os.path.isdir(os.path.join(firefox_path, filename)):
-            config_path = os.path.join(firefox_path, filename)
-            return config_path
 
+def test_del_ca():
+    commonname = "GoAgent CA - GoAgent"
+    cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" ||certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( commonname)
+    os.system(cmd_line)
 
 if __name__ == '__main__':
-    #capath = os.path.join(os.path.dirname(os.path.abspath(__file__)), CertUtil.ca_keyfile)
-    CertUtil.check_ca()
-    #print get_linux_firefox_path()
+    CertUtil.init_ca()
+    #test_del_ca()

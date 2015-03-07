@@ -192,7 +192,7 @@ def check_update():
 
     global update_content, update_dict
     try:
-        config.load()
+        #config.load()
         if not config.config["update"]["check_update"]:
             return
 
@@ -308,7 +308,7 @@ def get_uuid():
     import uuid
     node_id = uuid.getnode()
 
-    config.load()
+    #config.load()
     if node_id != config.config["update"]["node_id"] or config.config["update"]["uuid"] == '':
         uuid = str(uuid.uuid4())
         config.config["update"]["node_id"] = node_id

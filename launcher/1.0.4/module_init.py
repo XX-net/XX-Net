@@ -14,7 +14,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 def start(module):
 
     try:
-        config.load()
+        #config.load()
         if not module in config.config["modules"]:
             logging.error("module not exist %s", module)
             raise
@@ -52,7 +52,7 @@ def stop(module):
     return "stop success."
 
 def start_all_auto():
-    config.load()
+    #config.load()
     for module in config.config["modules"]:
         if module == "launcher":
             continue

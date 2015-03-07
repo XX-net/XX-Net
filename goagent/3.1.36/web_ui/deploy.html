@@ -1,0 +1,137 @@
+
+<style type="text/css">
+    .form-control { width: 100%; }
+</style>
+
+<h2>部署GAE服务端</h2>
+<form id="form-goagent-deploy">
+    <input type="text" class="input-small" placeholder="appids" id="gae_appid">
+    <input type="text" class="input-middle" placeholder="E-mail" id="gae_email" >
+    <input type="password" class="input-small" placeholder="password" id="gae_passwd">
+    <br>
+    <button type="submit" class="btn" id="deploy_button">开始</button>
+    <div id="status"></div>
+</form>
+<br>
+<div> 批量部署多个appid，请用|分割</div>
+<div > 请记得开启Google的弱安全连接:
+    <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">跳转</a>
+</div>
+<div>注册Google帐号和appid: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">帮助页面</a> </div>
+<br>
+<h3 >Log:</h3>
+<textarea class="form-control" rows="20" cols="80"  id="deploy_log"></textarea>
+<div>部署后，请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置appid，方会生效</div>
+
+<script type="text/javascript">
+    function isValidEmailAddress(emailAddress) {
+        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+        return pattern.test(emailAddress);
+    };
+
+    function isValid_appids(appids) {
+        var pattern = new RegExp(/^[0-9a-zA-Z\-|]+$/i);
+        return pattern.test(appids);
+    };
+    var status = "init";
+    var timer = $.timer(function() {
+
+        $.getJSON( "http://127.0.0.1:8084/deploy?cmd=get_log", function( data ) {
+            console.log("get_log status:" + data.status);
+            if(status == "init"){
+                if(data.status == "init"){
+                    timer.stop();
+                }else if(data.status == "running"){
+                    $("#status").html("部署进行中...");
+                    $("#deploy_log" ).val(data.log);
+                    $("#deploy_button").attr('disabled','disabled');
+                    status = "running";
+                }else if(data.status == "finished" ){
+                    $("#status").html("部署结束.");
+                    $("#deploy_log" ).val(data.log);
+                    timer.stop();
+                    status = "finished";
+                }else{
+                    $("#status").html("异常：status=init and return:" + data.status);
+                    $("#deploy_log" ).val(data.log);
+                    timer.stop();
+                }
+            }else if(status == "running"){
+                if(data.status == "running"){
+                    $("#deploy_log" ).val(data.log);
+                }else if(data.status == "finished" ){
+                    $("#status").html("部署结束.");
+                    $("#deploy_log" ).val(data.log);
+                    $("#deploy_button").removeAttr('disabled');
+                    timer.stop();
+                    status = "finished";
+                }else if(data.status == "init"){
+                    // server is preparing to run
+                }else{
+                    $("#status").html("异常：status=running and return:" + data.status);
+                    $("#deploy_log" ).val(data.log);
+                    timer.stop();
+                }
+            }else{
+                $("#status").html("异常：status=" + status + " and return:" + data.status);
+                timer.stop();
+            }
+        });
+    });
+    timer.set({ time : 1000, autostart : true });
+
+    $( "#form-goagent-deploy" ).submit(function( event ) {
+        event.preventDefault();
+        $("#deploy_log").html("");
+
+        appid = $( "#gae_appid" ).val();
+        email = $( "#gae_email" ).val();
+        passwd = $( "#gae_passwd" ).val();
+
+        if( appid.length == 0 ){
+            $("#gae_appid").focus();
+            $("#status").html("Input you appid");
+            return;
+        }
+        if( !isValid_appids(appid)){
+            $("#gae_appid").focus();
+            $("#status").html("Check you appid!");
+            return;
+        }
+
+        if( email.length == 0 ) {
+            $("#gae_email").focus();
+            $("#status").html("Input you google account!");
+            return;
+        }
+        if( !isValidEmailAddress( email ) ) {
+            $("#gae_email").focus();
+            $("#status").html("Check your email format");
+            return;
+        }
+
+        if( passwd.length == 0){
+            $("#gae_passwd").focus();
+            $("#status").html("Input you password");
+            return;
+        }
+
+
+        $("#status").html("部署进行中, appid:"+appid+" Account:"+email);
+        $.post( "http://127.0.0.1:8084/deploy?cmd=deploy", {"appid":appid, "email": email, "passwd": passwd }, function( data ) {
+            res = data.res;
+            console.log("deploy res:" + res);
+            if(res != "success") {
+                $("#status").html("异常：Deploy return:" + data.res);
+                console.log("deploy return:" + data.res);
+                status = "running";
+                timer.play();
+            }else{
+                status = "running";
+                console.log("deploy begin.");
+                timer.play();
+            }
+        });
+    });
+
+</script>

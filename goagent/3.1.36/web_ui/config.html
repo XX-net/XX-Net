@@ -1,14 +1,15 @@
-<h2>GoAgent config</h2>
+<h2>配置GoAgent</h2>
 <form id="form-goagent-config">
     <input type="text" class="input-small" placeholder="appid" id="gae_appid">
     <input type="password" class="input-small" placeholder="password" id="gae_passwd">
-    Leave empty to use public appid
+    清空将使用公共appid
     <br>
+    建议部署自己的appid
     <hr>
 
     <div class="checkbox">
         <label>
-            <input type="checkbox" id="proxy_enable"> Enable proxy
+            <input type="checkbox" id="proxy_enable"> 开启前置代理
         </label>
     </div>
     <select class="input-small" id="proxy_type">
@@ -24,10 +25,10 @@
 
     <br>
     <hr>
-    <button type="submit" class="btn">Save and restart</button>
+    <button type="submit" class="btn">保存并重启</button>
     <div id="status"></div>
 </form>
-<div>Register google account and apply AppEngine ip: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">Help Link</a> </div>
+<div>注册Google帐号和appid: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">帮助链接</a> </div>
 
 
 <script src="/js/jquery-1.11.2.min.js"></script>

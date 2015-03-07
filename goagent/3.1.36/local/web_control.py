@@ -1,7 +1,23 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+import sys
+import os
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+
+if __name__ == "__main__":
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
+
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
+    if sys.platform == "win32":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        sys.path.append(win32_lib)
+    elif sys.platform == "linux" or sys.platform == "linux2":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        sys.path.append(win32_lib)
 
 import platform
 import BaseHTTPServer
@@ -13,6 +29,7 @@ import subprocess
 import cgi
 import urllib2
 import sys
+import datetime
 
 import logging
 from config import config
@@ -21,7 +38,7 @@ from google_ip import google_ip
 import connect_manager
 import ConfigParser
 
-
+os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 
@@ -141,15 +158,15 @@ def os_detail():
 
 
 def http_request(url, method="GET"):
-    opener = urllib2.build_opener()
+    proxy_handler = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(proxy_handler)
     try:
         req = opener.open(url)
-
     except Exception as e:
         logging.exception("web_control http_request:%s fail:%s", url, e)
     return
 
-class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
 
     def address_string(self):
@@ -159,6 +176,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
+        logging.debug ('GoAgent Web_control %s "%s %s ', self.address_string(), self.command, self.path)
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
@@ -185,7 +203,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
         else:
-            logging.warn('Control Req %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
@@ -220,7 +238,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
         except:
             pass
-        logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
+        logging.debug ('GoAgent web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
@@ -293,9 +311,25 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             print "Error in configuration file:", exc
             return "unknown"
 
+    @staticmethod
+    def xxnet_version():
+        readme_file = os.path.join(root_path, "README.md")
+        try:
+            fd = open(readme_file, "r")
+            lines = fd.readlines()
+            import re
+            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') #zip/([0-9]+).([0-9]+).([0-9]+)
+            #m = p.match(content)
+            for line in lines:
+                m = p.match(line)
+                if m:
+                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
+                    return version
+        except Exception as e:
+            logging.exception("xxnet_version fail")
+        return "get_version_fail"
+
     def req_status_handler(self):
-
-
         if "user-agent" in self.headers.dict:
             user_agent = self.headers.dict["user-agent"]
         else:
@@ -311,6 +345,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "architecture":platform.architecture(),
                    "os_detail":os_detail(),
                    "browser":user_agent,
+                   "xxnet_version":RemoteContralServerHandler.xxnet_version(),
                    "launcher_version":launcher_version,
                    "goagent_version": config.__version__,
                    "python_version": config.python_version,
@@ -319,7 +354,7 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "pac_url":config.pac_url}
         data = json.dumps(res_arr)
 
-        self.send_response('text/plain', data)
+        self.send_response('application/json', data)
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -341,14 +376,14 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.save()
 
                 data = '{"res":"success"}'
-                self.send_response('text/plain', data)
+                self.send_response('application/json', data)
 
                 http_request("http://127.0.0.1:8085/init_module?module=goagent&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response('text/plain', data)
+        self.send_response('application/json', data)
 
 
     def req_deploy_handler(self):
@@ -357,38 +392,43 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         data = ''
 
         log_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'upload.log'))
+        time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
 
         if reqs['cmd'] == ['deploy']:
-            try:
-                if os.path.isfile(log_path):
-                    os.remove(log_path)
-                script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
-                appid = self.postvars['appid'][0]
-                email = self.postvars['email'][0]
-                passwd = self.postvars['passwd'][0]
-                self.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
-                data = '{"res":"success"}'
-            except Exception as e:
-                data = '{"res":"fail", "error":"%s"}' % e
+            if RemoteContralServerHandler.deploy_proc and RemoteContralServerHandler.deploy_proc.poll() == None:
+                logging.warn("deploy is running, request denied.")
+                data = '{"res":"deploy is running", "time":"%s"}' % (time_now)
+            else:
+                try:
+                    if os.path.isfile(log_path):
+                        os.remove(log_path)
+                    script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
+                    appid = self.postvars['appid'][0]
+                    email = self.postvars['email'][0]
+                    passwd = self.postvars['passwd'][0]
+                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
+                    logging.info("deploy begin.")
+                    data = '{"res":"success", "time":"%s"}' % time_now
+                except Exception as e:
+                    data = '{"res":"%s", "time":"%s"}' % (e, time_now)
 
         elif reqs['cmd'] == ['get_log']:
-            if os.path.isfile(log_path):
+            if self.deploy_proc and os.path.isfile(log_path):
                 with open(log_path, "r") as f:
                     content = f.read()
             else:
                 content = ""
 
-            if self.deploy_proc:
-                proc_status = self.deploy_proc.poll()
-                if not proc_status == None:
-                    # process is ended
-                    content += "\r\n== END ==\n"
+            status = 'init'
+            if RemoteContralServerHandler.deploy_proc:
+                if RemoteContralServerHandler.deploy_proc.poll() == None:
+                    status = 'running'
+                else:
+                    status = 'finished'
 
-            data = content
+            data = json.dumps({'status':status,'log':content, 'time':time_now})
 
-
-        mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response('application/json', data)
 
     def req_ip_list_handler(self):
         data = ""
@@ -421,3 +461,5 @@ class RemoveContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
 
+if __name__ == "__main__":
+    print RemoteContralServerHandler.xxnet_version()

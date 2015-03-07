@@ -39,9 +39,6 @@
 import sys
 import os
 
-import sys
-import os
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
 
@@ -245,7 +242,7 @@ def main():
         p.start()
 
     if config.CONTROL_ENABLE:
-        control_server = LocalProxyServer((config.CONTROL_IP, config.CONTROL_PORT), web_control.RemoveContralServerHandler)
+        control_server = LocalProxyServer((config.CONTROL_IP, config.CONTROL_PORT), web_control.RemoteContralServerHandler)
         p = threading.Thread(target=control_server.serve_forever)
         p.setDaemon(True)
         p.start()
@@ -255,7 +252,7 @@ def main():
     p.setDaemon(True)
     p.start()
 
-    CertUtil.check_ca()
+    CertUtil.init_ca()
 
     while config.keep_run:
         time.sleep(1)

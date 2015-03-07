@@ -1,15 +1,24 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import os, re, sys
+import os, sys
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+if __name__ == "__main__":
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
+import re
 import SocketServer, socket, ssl
 import BaseHTTPServer
 import errno
 import urlparse
 import threading
-import operator
+import urllib2
+import time
+import datetime
 
-current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
 import yaml
@@ -55,7 +64,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def load_module_menus(self):
         global module_menus
-        config.load()
+        #config.load()
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
@@ -78,7 +87,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        logging.debug ('HTTP %s "%s %s ', self.address_string(), self.command, self.path)
+        logging.debug ('launcher web_control %s "%s %s ', self.address_string(), self.command, self.path)
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
@@ -91,7 +100,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if len(url_path.split('/')) >= 3 and url_path.split('/')[1] == "modules":
             module = url_path.split('/')[2]
-            config.load()
+            #config.load()
             modules_versoin = config.get(['modules', module, 'current_version'], None)
             file_path = os.path.join(root_path, module, modules_versoin, url_path.split('/')[3:].join('/'))
         else:
@@ -119,6 +128,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif url_path == '/init_module':
             self.req_init_module_handler()
         elif url_path == '/quit':
+            self.send_response('application/json', '{"status":"success"}')
             module_init.stop_all()
             os._exit(0)
         else:
@@ -129,9 +139,9 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             with open(filename, 'rb') as fp:
                 data = fp.read()
-                self.send_response(mimetype, data)
-                #self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-                #self.wfile.write(data)
+            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%H:%M:%S-%a/%d/%b/%Y')
+            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nexpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (tme, mimetype, len(data))).encode())
+            self.wfile.write(data)
         except:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
 
@@ -174,7 +184,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             right_content = ""
 
-        data = index_content % (menu_content, right_content)
+        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -250,10 +260,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         except Exception as e:
             logging.exception("init_module except:%s", e)
 
-        mimetype = 'text/plain'
-        self.send_response(mimetype, data)
-        #self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        #self.wfile.write(data)
+        self.send_response("application/json", data)
 
 process = 0
 server = 0
@@ -276,3 +283,24 @@ def stop():
     logging.info("launcher web control exited.")
     process = 0
 
+
+def http_request(url, method="GET"):
+    proxy_handler = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(proxy_handler)
+    try:
+        req = opener.open(url)
+        return req
+    except Exception as e:
+        #logging.exception("web_control http_request:%s fail:%s", url, e)
+        return False
+
+def confirm_xxnet_exit():
+    for i in range(10):
+        if http_request("http://127.0.0.1:8085/quit") == False:
+            return True
+        time.sleep(1)
+    return False
+
+if __name__ == "__main__":
+    #confirm_xxnet_exit()
+    http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

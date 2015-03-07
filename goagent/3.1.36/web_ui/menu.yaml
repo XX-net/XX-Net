@@ -2,19 +2,19 @@ module_title: GoAgent
 menu_sort_id: 1
 sub_menus: {
   1:{
-    title: Status,
+    title: 状态,
     url: status
   },
   2:{
-    title: Config,
+    title: 配置,
     url: config
   },
   3:{
-    title: Deploy,
+    title: 部署服务端,
     url: deploy
   },
   4:{
-    title: Logging,
+    title: 日志,
     url: logging
   }
 }

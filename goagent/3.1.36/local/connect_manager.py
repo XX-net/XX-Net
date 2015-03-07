@@ -326,7 +326,7 @@ class Https_connection_manager(object):
 
 class Forward_connection_manager():
     timeout = 1
-    max_timeout = 10
+    max_timeout = 20
     tcp_connection_cache = Queue.PriorityQueue()
     thread_num_lock = threading.Lock()
     thread_num = 0
@@ -410,7 +410,7 @@ class Forward_connection_manager():
                 p.start()
 
             try:
-                ctime, sock = self.tcp_connection_cache.get(timeout=0.4)
+                ctime, sock = self.tcp_connection_cache.get(timeout=0.3)
                 return sock
             except:
                 continue

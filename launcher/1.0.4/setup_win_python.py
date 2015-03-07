@@ -48,7 +48,7 @@ def smart_check(): #400 ms
     import uuid
     node_id = uuid.getnode()
     import config
-    config.load()
+    #config.load()
 
     if current_path != config.config["update"]["last_path"] or node_id != config.config["update"]["node_id"]:
         check_setup()

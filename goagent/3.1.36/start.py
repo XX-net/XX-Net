@@ -12,4 +12,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_path)
 import local.proxy as goagent
 
-goagent.main()
+
+
+try:
+    goagent.main()
+except KeyboardInterrupt:
+    sys.exit()
