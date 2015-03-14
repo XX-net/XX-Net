@@ -259,7 +259,7 @@ def main():
 
     if do_profile:
         pr.disable()
-        pr.print_stats(sort="cumtime")
+        pr.print_stats()
 
 if __name__ == '__main__':
     try:

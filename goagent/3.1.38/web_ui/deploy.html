@@ -17,7 +17,7 @@
 <div > 请记得开启Google的弱安全连接:
     <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">跳转</a>
 </div>
-<div>注册Google帐号和appid: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">帮助页面</a> </div>
+<div>注册Google帐号和appid<a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a> </div>
 <br>
 <h3 >Log:</h3>
 <textarea class="form-control" rows="20" cols="80"  id="deploy_log"></textarea>
@@ -41,13 +41,14 @@
             if(status == "init"){
                 if(data.status == "init"){
                     timer.stop();
+                    $("#status").html("状态：空闲");
                 }else if(data.status == "running"){
-                    $("#status").html("部署进行中...");
+                    $("#status").html("状态：部署进行中...");
                     $("#deploy_log" ).val(data.log);
                     $("#deploy_button").attr('disabled','disabled');
                     status = "running";
                 }else if(data.status == "finished" ){
-                    $("#status").html("部署结束.");
+                    $("#status").html("状态：部署结束.");
                     $("#deploy_log" ).val(data.log);
                     timer.stop();
                     status = "finished";
@@ -60,13 +61,16 @@
                 if(data.status == "running"){
                     $("#deploy_log" ).val(data.log);
                 }else if(data.status == "finished" ){
-                    $("#status").html("部署结束.");
+                    $("#status").html("状态：部署结束.");
                     $("#deploy_log" ).val(data.log);
                     $("#deploy_button").removeAttr('disabled');
                     timer.stop();
                     status = "finished";
                 }else if(data.status == "init"){
-                    // server is preparing to run
+                    $("#status").html("状态：XXNet重启.");
+                    $("#deploy_button").removeAttr('disabled');
+                    timer.stop();
+                    status = "init";
                 }else{
                     $("#status").html("异常：status=running and return:" + data.status);
                     $("#deploy_log" ).val(data.log);
@@ -127,6 +131,7 @@
                 status = "running";
                 timer.play();
             }else{
+                $("#deploy_button").attr('disabled','disabled');
                 status = "running";
                 console.log("deploy begin.");
                 timer.play();

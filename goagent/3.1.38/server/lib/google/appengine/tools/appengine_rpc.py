@@ -329,7 +329,7 @@ class AbstractRpcServer(object):
 
   def Send(self, request_path, payload="",
            content_type="application/octet-stream",
-           timeout=None,
+           timeout=20,
            **kwargs):
     """Sends an RPC and returns the response.
 

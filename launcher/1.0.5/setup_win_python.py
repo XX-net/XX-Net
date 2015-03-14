@@ -16,7 +16,8 @@ def copy_VCR_files():
     for path, dirs, files in os.walk(src_path):
         for file in files:
             sep_path = path.split(os.path.sep)
-            relate_path = os.path.sep.join(sep_path[5:])
+            home_path_depth = len(python_path.split(os.path.sep))
+            relate_path = os.path.sep.join(sep_path[home_path_depth + 1:])
             #print relate_path
             dest_path = os.path.join(win_dst_path, relate_path)
             if not os.path.isdir(dest_path):

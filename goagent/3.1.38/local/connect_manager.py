@@ -27,13 +27,10 @@ if config.PROXY_ENABLE:
     elif config.PROXY_TYPE == "SOCKS5":
         proxy_type = socks.SOCKS5
     else:
-        config.PROXY_ENABLE = 0
-        logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+        logging.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+        raise
 
-    if config.PROXY_ENABLE:
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-        #socks.default_socket = socket.socket
-        #socket.socket = socks.socksocket
+    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 
 
 
@@ -140,7 +137,7 @@ class Connect_pool():
 class Https_connection_manager(object):
 
     thread_num_lock = threading.Lock()
-    thread_num = 0
+
 
 
 
@@ -153,6 +150,7 @@ class Https_connection_manager(object):
         self.max_retry = 3
         self.timeout = 3
         self.max_timeout = 5
+        self.thread_num = 0
         self.max_thread_num = 10
         self.connection_pool_num = 20
 
@@ -279,7 +277,7 @@ class Https_connection_manager(object):
 
         def create_more_connection():
             target_thread_num = min(self.max_thread_num, (self.connection_pool_num - self.conn_pool.qsize()))
-            while self.thread_num < target_thread_num:
+            while self.thread_num < target_thread_num and self.conn_pool.qsize() < self.connection_pool_num:
                 self.thread_num_lock.acquire()
                 self.thread_num += 1
                 self.thread_num_lock.release()
@@ -332,7 +330,7 @@ class Forward_connection_manager():
     thread_num = 0
     max_thread_num = 10
 
-    def create_connection(self, port=443, sock_life=5):
+    def create_connection(self, host="", port=443, sock_life=5):
         if port != 443:
             logging.warn("forward port %d not supported.", port)
             return None
@@ -368,6 +366,7 @@ class Forward_connection_manager():
                 logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
 
                 # put ssl socket object to output queobj
+                #sock.ip = ip
                 self.tcp_connection_cache.put((time.time(), sock))
             except Exception as e:
                 conn_time = int((time.time() - start_time) * 1000)
@@ -382,22 +381,26 @@ class Forward_connection_manager():
                 self.thread_num_lock.release()
 
 
-        while True:
-            try:
-                ctime, sock = self.tcp_connection_cache.get_nowait()
-                if time.time() - ctime < sock_life:
-                    return sock
-                else:
-                    sock.close()
-                    continue
-            except Queue.Empty:
-                break
+        if host != "appengine.google.com":
+            while True:
+                try:
+                    ctime, sock = self.tcp_connection_cache.get_nowait()
+                    if time.time() - ctime < sock_life:
+                        return sock
+                    else:
+                        sock.close()
+                        continue
+                except Queue.Empty:
+                    break
 
         start_time = time.time()
         while time.time() - start_time < self.max_timeout:
 
             if self.thread_num < self.max_thread_num:
-                ip = google_ip.get_gws_ip()
+                if host == "appengine.google.com":
+                    ip = google_ip.get_host_ip("*.google.com")
+                else:
+                    ip = google_ip.get_gws_ip()
                 if not ip:
                     logging.error("no gws ip.")
                     return

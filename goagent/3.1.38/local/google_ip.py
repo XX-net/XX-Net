@@ -196,6 +196,40 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
+    def get_host_ip(self, host):
+        self.try_sort_ip_by_handshake_time()
+
+        self.ip_lock.acquire()
+        try:
+            ip_num = len(self.ip_dict)
+            if ip_num == 0:
+                #logging.warning("no gws ip")
+                time.sleep(1)
+                return None
+
+            for ip_str in self.ip_dict:
+                domain = self.ip_dict[ip_str]["domain"]
+                if domain != host:
+                    continue
+
+                get_time = self.ip_dict[ip_str]["get_time"]
+                if time.time() - get_time < 10:
+                    continue
+                handshake_time = self.ip_dict[ip_str]["handshake_time"]
+                fail_time = self.ip_dict[ip_str]["fail_time"]
+                if time.time() - fail_time < 300:
+                    continue
+
+                logging.debug("get host:%s ip:%s t:%d", host, ip_str, handshake_time)
+                self.ip_dict[ip_str]['history'].append([time.time(), "get"])
+                self.ip_dict[ip_str]['get_time'] = time.time()
+                return ip_str
+        except Exception as e:
+            logging.error("get_gws_ip fail:%s", e)
+            traceback.print_exc()
+        finally:
+            self.ip_lock.release()
+
     def add_ip(self, ip_str, handshake_time, domain=None, server=None):
         if not isinstance(ip_str, basestring):
             logging.error("add_ip input")

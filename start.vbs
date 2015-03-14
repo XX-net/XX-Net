@@ -6,5 +6,6 @@ Set objFile = objFSO.GetFile(strPath)
 strFolder = objFSO.GetParentFolderName(objFile) 
 
 Dim strArgs
-strArgs = strFolder & "/python27/1.0/pythonw.exe" & " " & strFolder & "/launcher/start.py"
+quo = """"
+strArgs = quo & strFolder & "/python27/1.0/pythonw.exe" & quo & " " & quo & strFolder & "/launcher/start.py " & quo
 oShell.Run strArgs, 0, false

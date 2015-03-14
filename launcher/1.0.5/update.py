@@ -256,17 +256,17 @@ def create_desktop_shortcut():
         import ctypes
         msg = u"是否在桌面创建图标？"
         title = u"XX-Net 叉叉网"
-        res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
+        #res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
         # Yes:1 No:2
-        if res == 2:
-            return
+        #if res == 2:
+        #    return
 
         import subprocess
         p = subprocess.call(["Wscript.exe", "create_shortcut.js"], shell=False)
 
 def notify_install_tcpz_for_winXp():
     import ctypes
-    ctypes.windll.user32.MessageBoxW(None, u"you need patch tcpip.sys using tcp-z", u"Patch XP needed", 0)
+    ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
 
 def check_new_machine():
     import os
@@ -291,7 +291,7 @@ def check_loop():
 
     #wait goagent to start
     #update need goagent as proxy
-    time.sleep(4)
+    time.sleep(10)
 
     while True:
         check_update()

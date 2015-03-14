@@ -5,7 +5,7 @@
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.2.1
+https://codeload.github.com/XX-net/XX-Net/zip/1.3.0
 
 版本历史： https://github.com/XX-net/XX-Net/releases
 

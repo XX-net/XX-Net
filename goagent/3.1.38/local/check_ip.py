@@ -1,6 +1,21 @@
 
 import sys
 import os
+if __name__ == "__main__":
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
+
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
+    if sys.platform == "win32":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        sys.path.append(win32_lib)
+    elif sys.platform == "linux" or sys.platform == "linux2":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        sys.path.append(win32_lib)
+
+
 import httplib
 import time
 import socket
@@ -35,6 +50,7 @@ max_timeout = 5000
 g_conn_timeout = 1
 g_handshake_timeout = 2
 
+default_socket = None
 if config.PROXY_ENABLE:
     import socks
 
@@ -45,12 +61,11 @@ if config.PROXY_ENABLE:
     elif config.PROXY_TYPE == "SOCKS5":
         proxy_type = socks.SOCKS5
     else:
-        config.PROXY_ENABLE = 0
-        logging.warn("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+        logging.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+        raise
 
-    if config.PROXY_ENABLE:
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-
+    socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
+    default_socket = socket.socket
 
 
 
@@ -192,9 +207,11 @@ def test_app_check(ssl_sock, ip):
         response.begin()
         status = response.status
         if status != 200:
+            logging.debug("app check %s status:%d", ip, status)
             raise Exception("app check fail")
         content = response.read()
         if not content == "CHECK_OK":
+            logging.debug("app check %s content:%s", ip, content)
             raise Exception("content fail")
     finally:
         response.close()
@@ -204,10 +221,9 @@ def test_app_check(ssl_sock, ip):
     return True
 
 def network_is_ok():
-
     if config.PROXY_ENABLE:
-        default_socket = socket.socket
         socket.socket = socks.socksocket
+        logging.debug("patch socks")
     try:
         conn = httplib.HTTPSConnection("github.com", 443)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
@@ -225,6 +241,7 @@ def network_is_ok():
     finally:
         if config.PROXY_ENABLE:
             socket.socket = default_socket
+            logging.debug("restore socket")
 
     return False
 
@@ -239,6 +256,16 @@ def test_gws(ip_str):
     check.result.server_type = result
 
     return check.result
+
+
+def test_with_app(ip_str):
+    #logging.info("==>%s", ip_str)
+    check = Check_frame(ip_str)
+
+    result = check.check(callback=test_app_check, check_ca=True)
+    logging.info("test %s app %s", ip_str, result)
+
+
 
 def test(ip_str, loop=1):
     logging.info("==>%s", ip_str)
@@ -325,14 +352,45 @@ def test_multi_thread_search_ip():
         if test_speed.check_num != 0:
             print test_speed.check_num, test_speed.gws_num, (test_speed.gws_num * 1000 / test_speed.check_num)
 
+def check_all_exist_ip():
+
+    good_ip_file_name = "good_ip.txt"
+    good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
+    if not os.path.isfile(good_ip_file):
+        print "open file ", good_ip_file_name, " fail."
+        return
+
+    with open(good_ip_file, "r") as fd:
+        lines = fd.readlines()
+
+    for line in lines:
+        try:
+            str_l = line.split(' ')
+            if len(str_l) != 4:
+                logging.warning("line err: %s", line)
+                continue
+            ip_str = str_l[0]
+            domain = str_l[1]
+            server = str_l[2]
+            handshake_time = int(str_l[3])
+
+            logging.info("test ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
+            test_with_app(ip_str)
+            #self.add_ip(ip_str, handshake_time, domain, server)
+        except Exception as e:
+            logging.exception("load_ip line:%s err:%s", line, e)
+
+
 
 if __name__ == "__main__":
-    print network_is_ok()
-    print network_is_ok()
-    test("208.117.224.103", 10) #gws
+    #print network_is_ok()
+    #print network_is_ok()
+    #test("208.117.224.103", 10) #gws
     #test('208.117.224.213', 10)
     #test("218.176.242.24")
     #test_main()
+    check_all_exist_ip()
+
 
 # about ip connect time and handshake time
 # handshake time is double of connect time in common case.
@@ -344,3 +402,4 @@ if __name__ == "__main__":
 # most case, connect time is 300ms - 600ms.
 # good case is 60ms
 # bad case is 1300ms and more.
+

@@ -97,7 +97,11 @@ def upload(appid, email, password):
     for i in range(10):
         try:
             result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+            if result == 1:
+                continue
             result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+            if result == 1:
+                continue
             break
         except Exception as e:
             my_stdout.write("upload  fail: %s\n\n" % e)

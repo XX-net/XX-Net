@@ -108,14 +108,14 @@ def _request(sock, headers, payload, bufsize=8192):
     request_data += '\r\n'
 
     if isinstance(payload, bytes):
-        sock.sendall(request_data.encode() + payload)
+        sock.send(request_data.encode() + payload)
     elif hasattr(payload, 'read'):
-        sock.sendall(request_data)
+        sock.send(request_data)
         while True:
             data = payload.read(bufsize)
             if not data:
                 break
-            sock.sendall(data)
+            sock.send(data)
     else:
         raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
 
@@ -568,8 +568,13 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     if not data:
                         response.close()
                         return
-                    start += len(data)
-                    self.wfile.write(data)
+                    data_len = len(data)
+                    start += data_len
+                    ret = self.wfile.write(data)
+                    if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
+                        logging.debug("self.wfile.write ret:%d", ret)
+                        ret = self.wfile.write(data)
+
                     if start >= end:
                         https_manager.save_ssl_connection_for_reuse(response.ssl_sock) #, response.connection_cache_key)
                         #response.close()
@@ -597,7 +602,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
-
         if host in config.HOSTS_MAP or host.endswith(config.HOSTS_POSTFIX_ENDSWITH):
             return self.do_CONNECT_FWD()
         else:
@@ -622,7 +626,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.connection.close()
             return
 
-        remote = forwork_manager.create_connection(port=port, sock_life=connected_in_s)
+        remote = forwork_manager.create_connection(host=host, port=port, sock_life=connected_in_s)
         if remote is None:
             self.connection.close()
             logging.warn('FWD %s %s:%d create_connection fail', self.command, host, port)
@@ -641,7 +645,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         remote.settimeout(None)
 
         forwork_manager.forward_socket(self.connection, remote, bufsize=self.bufsize)
-        logging.debug('FWD %s %s:%d closed', self.command, host, port)
+        logging.debug('FWD %s %s:%d with closed', self.command, host, port)
 
     def do_CONNECT_AGENT(self):
         """deploy fake cert to client"""

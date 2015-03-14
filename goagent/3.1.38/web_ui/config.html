@@ -2,33 +2,33 @@
 <form id="form-goagent-config">
     <input type="text" class="input-small" placeholder="appid" id="gae_appid">
     <input type="password" class="input-small" placeholder="password" id="gae_passwd">
-    清空将使用公共appid
+    清空将使用公共appid(<font color="red">公共appid不能看视频</font>)
     <br>
-    建议部署自己的appid
+    建议申请自己的appid<a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a>
     <hr>
 
     <div class="checkbox">
         <label>
-            <input type="checkbox" id="proxy_enable"> 开启前置代理
+            <input type="checkbox" id="proxy_enable"> 局域网代理（大部分情况不需要配置）<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy">帮助</a>
         </label>
     </div>
-    <select class="input-small" id="proxy_type">
-        <option>HTTP</option>
-        <option>SOCKS4</option>
-        <option>SOCKS5</option>
-    </select>
-    <input type="text" class="input-medium" placeholder="host" id="proxy_host">
-    <input type="text" class="input-small" placeholder="port" id="proxy_port">
-    <br>
-    <input type="text" class="input-small" placeholder="User name" id="proxy_user">
-    <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
-
+    <div id="proxy_detail" style="display:none";>
+        <select class="input-medium" id="proxy_type">
+            <option>HTTP</option>
+            <option>SOCKS4</option>
+            <option>SOCKS5</option>
+        </select>
+        <input type="text" class="input-medium" placeholder="host" id="proxy_host">
+        <input type="text" class="input-small" placeholder="port" id="proxy_port">
+        <br>
+        <input type="text" class="input-small" placeholder="User name" id="proxy_user">
+        <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
+    </div>
     <br>
     <hr>
     <button type="submit" class="btn">保存并重启</button>
     <div id="status"></div>
 </form>
-<div>注册Google帐号和appid: <a href=" https://github.com/XX-net/XX-Net/wiki/Help" target="_blank">帮助链接</a> </div>
 
 
 <script src="/js/jquery-1.11.2.min.js"></script>
@@ -48,6 +48,13 @@
         $("#proxy_passwd").val(data.proxy_passwd);
     });
 
+    $('#proxy_enable').click(function(data){
+        if($("#proxy_enable").prop('checked')){
+            $('#proxy_detail').show();
+        }else{
+            $('#proxy_detail').hide();
+        }
+    });
 
 
     $( "#form-goagent-config" ).submit(function( event ) {

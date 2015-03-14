@@ -176,7 +176,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        logging.debug ('GoAgent Web_control %s "%s %s ', self.address_string(), self.command, self.path)
+
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
@@ -185,12 +185,17 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
         except:
             pass
+
         path = urlparse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/status":
             return self.req_status_handler()
-        elif path == '/deploy':
+        else:
+            logging.debug('GoAgent Web_control %s "%s %s ', self.address_string(), self.command, self.path)
+
+
+        if path == '/deploy':
             return self.req_deploy_handler()
         elif path == "/ip_list":
             return self.req_ip_list_handler()
