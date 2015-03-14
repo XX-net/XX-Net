@@ -352,7 +352,7 @@ class CertUtil(object):
             logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
-        cmd_line = 'certutil -L -d %s |grep "GoAgent" ||certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
+        cmd_line = 'certutil -L -d %s |grep "GoAgent" &&certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
         os.system(cmd_line) # remove old cert first
 
         cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, common_name, ca_file)
@@ -374,7 +374,7 @@ class CertUtil(object):
         # certutil -L -d sql:$HOME/.pki/nssdb
 
         # remove old cert first
-        cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" ||certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
+        cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" && certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
         os.system(cmd_line)
 
         # install new cert
