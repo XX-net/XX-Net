@@ -487,6 +487,14 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     else:
                         continue
 
+                # public gae appid deny this site request.
+                if response.app_status == 403:
+                    logging.warn("public appid deny this host:%s", host)
+                    html = generate_message_html('403 public Appid deny this host proxy', u'共用appid因为资源有限，限制观看视频和文件下载等消耗资源过多的访问，请使用自己的appid')
+                    self.wfile.write(b'HTTP/1.0 403\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
+                    response.close()
+                    return
+
                 # appid not exists, try remove it from appid
                 if response.app_status == 404:
                     logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
@@ -494,8 +502,8 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     appid = appid_manager.get_appid()
 
                     if not appid:
-                        html = generate_message_html('404 No usable Appid Exists', 'No usable Appid Exists, please add appid')
-                        self.wfile.write(b'HTTP/1.0 502\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
+                        html = generate_message_html('404 No usable Appid Exists', u'没有可用appid了，请配置可用的appid')
+                        self.wfile.write(b'HTTP/1.0 404\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
                         response.close()
                         return
                     else:
@@ -508,8 +516,8 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     appid = appid_manager.get_appid()
 
                     if not appid:
-                        html = generate_message_html('404 No usable Appid Exists', 'No usable Appid Exists, please add appid')
-                        self.wfile.write(b'HTTP/1.0 502\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
+                        html = generate_message_html('503 No usable Appid Exists', u'appid流量不足，请增加appid')
+                        self.wfile.write(b'HTTP/1.0 503\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
                         response.close()
                         return
                     else:
