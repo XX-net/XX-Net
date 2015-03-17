@@ -1,10 +1,2 @@
-#!/bin/bash
-
-SCRIPTPATH=`dirname "${BASH_SOURCE[0]}"`
-cd $SCRIPTPATH
-
-if hash python2 2>/dev/null; then
-    python2 launcher/start.py
-else
-    python launcher/start.py
-fi
+cd "$(dirname "$0")"
+/usr/bin/env python2.7 launcher/start.py

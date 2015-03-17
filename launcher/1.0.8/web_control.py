@@ -296,6 +296,10 @@ def http_request(url, method="GET"):
 
 def confirm_xxnet_exit():
     for i in range(10):
+        if http_request("http://127.0.0.1:8084/quit") == False:
+            break
+        time.sleep(1)
+    for i in range(10):
         if http_request("http://127.0.0.1:8085/quit") == False:
             return True
         time.sleep(1)

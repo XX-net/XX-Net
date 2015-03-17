@@ -167,6 +167,13 @@ def download_module(module, new_version):
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
+            elif sys.platform == "darwin":
+                from  mac_tray import sys_tray
+                if sys_tray.dialog_yes_no(msg, u"Install", None, None) == 1:
+                    install_module(module, new_version)
+                else:
+                    ignore_module(module, new_version)
+
             else:
                 install_module(module, new_version)
 
@@ -250,6 +257,14 @@ def check_update():
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
+                elif sys.platform == "darwin":
+                    from mac_tray import sys_tray
+                    msg = "Module %s new version: %s, Download?" % (module,  new_version)
+                    if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
+                        download_module(module, new_version)
+                    else:
+                        ignore_module(module, new_version)
+
                 else:
                     download_module(module, new_version)
 

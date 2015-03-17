@@ -26,8 +26,8 @@ class Win_tray():
 
 
     def on_restart_goagent(self, widget=None, data=None):
-        module_init.stop()
-        module_init.start()
+        module_init.stop_all()
+        module_init.start_all_auto()
 
     def on_check_update(self, widget=None, data=None):
         update.check_update()
