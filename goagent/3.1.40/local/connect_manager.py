@@ -151,8 +151,8 @@ class Https_connection_manager(object):
         self.timeout = 3
         self.max_timeout = 5
         self.thread_num = 0
-        self.max_thread_num = 10
-        self.connection_pool_num = 20
+        self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
+        self.connection_pool_num = config.CONFIG.getint("connect_manager", "https_connection_pool") #20/30
 
         self.conn_pool = Connect_pool() #Queue.PriorityQueue()
 
@@ -284,7 +284,7 @@ class Https_connection_manager(object):
                 p = threading.Thread(target = connect_thread)
                 p.daemon = True
                 p.start()
-                time.sleep(0.5)
+                time.sleep(0.1)
 
 
         while True:
@@ -295,7 +295,7 @@ class Https_connection_manager(object):
                 ssl_sock = None
                 break
 
-            if time.time() - ssl_sock.last_use_time < 210: # gws ssl connection can keep for 230s after created
+            if time.time() - ssl_sock.last_use_time < 230: # gws ssl connection can keep for 230s after created
                 logging.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                 break
             else:
@@ -328,7 +328,7 @@ class Forward_connection_manager():
     tcp_connection_cache = Queue.PriorityQueue()
     thread_num_lock = threading.Lock()
     thread_num = 0
-    max_thread_num = 10
+    max_thread_num = config.CONFIG.getint("connect_manager", "forward_max_connect_thread") #10
 
     def create_connection(self, host="", port=443, sock_life=5):
         if port != 443:

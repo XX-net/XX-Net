@@ -44,8 +44,17 @@
         <tr>
             <td>Proxy Listen</td><td id="proxy_listen"></td>
         </tr>
+        <tr hidden="true">
+            <td>Set appids</td><td  style="max-width:150px;word-wrap: break-word;" id="gae_appid"></td>
+        </tr>
         <tr>
-            <td>GAE appid</td><td  style="max-width:150px;word-wrap: break-word;" id="gae_appid"></td>
+            <td>working appids</td><td  style="max-width:150px;word-wrap: break-word;" id="working_appid"></td>
+        </tr>
+        <tr>
+            <td>Out of Quota appids</td><td  style="max-width:150px;word-wrap: break-word;" id="out_of_quota_appids"></td>
+        </tr>
+        <tr>
+            <td>Not Exist appids</td><td  style="max-width:150px;word-wrap: break-word;" id="not_exist_appids"></td>
         </tr>
         <tr>
             <td>PAC URL</td><td id="pac_url"></td>
@@ -78,11 +87,10 @@
             $('#pac_url').html(data.pac_url);
             $("#gws_ip_num").html(data.gws_ip_num);
 
-            var appids = "";
-            $.each( data.gae_appid, function( key, val ) {
-                appids += val + "|";
-            });
-            $('#gae_appid').html(appids);
+            $('#gae_appid').html(data.gae_appid);
+            $('#working_appid').html(data.working_appid);
+            $('#out_of_quota_appids').html(data.out_of_quota_appids);
+            $('#not_exist_appids').html(data.not_exist_appids);
         });
     }
 

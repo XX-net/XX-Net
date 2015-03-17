@@ -33,7 +33,7 @@ import datetime
 
 import logging
 from config import config
-
+from appids_manager import appid_manager
 from google_ip import google_ip
 import connect_manager
 import ConfigParser
@@ -355,7 +355,10 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "goagent_version": config.__version__,
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
-                   "gae_appid":config.GAE_APPIDS,
+                   "gae_appid":"|".join(config.GAE_APPIDS),
+                   "working_appid":"|".join(appid_manager.working_appid_list),
+                   "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
+                   "not_exist_appids":"|".join(appid_manager.not_exist_appids),
                    "pac_url":config.pac_url}
         data = json.dumps(res_arr)
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+import os
 import urllib2
 import json
 import time
@@ -10,6 +11,8 @@ import sys
 
 import logging
 import config
+import uuid
+import platform
 
 
 autoproxy = '127.0.0.1:8087'
@@ -106,14 +109,20 @@ def install_module(module, new_version):
 def download_module(module, new_version):
     import os
     global update_content, update_dict
+
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    download_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'downloads'))
+    if not os.path.isdir(download_path):
+        os.mkdir(download_path)
+
     try:
         for source in update_dict["modules"][module]["versions"][new_version]["sources"]:
             url = source["url"]
             filename = module + "-" + new_version + ".zip"
 
 
-            current_path = os.path.dirname(os.path.abspath(__file__))
-            file_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'downloads', filename))
+
+            file_path = os.path.join(download_path, filename)
 
             if os.path.isfile(file_path) and sha1_file(file_path) == update_dict["modules"][module]["versions"][new_version]["sha1"]:
                 pass
@@ -269,21 +278,24 @@ def notify_install_tcpz_for_winXp():
     ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
 
 def check_new_machine():
-    import os
+
     current_path = os.path.dirname(os.path.abspath(__file__))
-    import uuid
     node_id = uuid.getnode()
     if current_path != config.config["update"]["last_path"] or node_id != config.config["update"]["node_id"]:
         config.config["update"]["last_path"] = current_path
         config.save()
-        get_uuid() # update node_id and uuid
+        if node_id != config.config["update"]["node_id"]:
+            logging.info("new machine, re generate uuid and update node_id")
+            generate_new_uuid()
 
+            if sys.platform == "win32" and platform.release() == "XP":
+                notify_install_tcpz_for_winXp()
+        else:
+            logging.info("path changed in same machine")
+
+        logging.info("generate desktop shortcut")
         create_desktop_shortcut()
 
-        import sys
-        import platform
-        if sys.platform == "win32" and platform.release() == "XP":
-            notify_install_tcpz_for_winXp()
 
 
 def check_loop():
@@ -302,21 +314,33 @@ def start():
     p.setDaemon(True)
     p.start()
 
+def need_new_uuid():
+    node_id = uuid.getnode()
+    if node_id != config.config["update"]["node_id"]:
+        logging.info("need_new_uuid: old node_id:%s current:%s", config.config["update"]["node_id"], node_id)
+        return True
+    if config.config["update"]["uuid"] == '':
+        logging.info("need_new_uuid: uuid is empty")
+        return True
+    return False
+
+def generate_new_uuid():
+    node_id = uuid.getnode()
+    xx_net_uuid = str(uuid.uuid4())
+    config.config["update"]["node_id"] = node_id
+    config.config["update"]["uuid"] = xx_net_uuid
+    logging.info("generate node_id:%s", node_id)
+    logging.info("generate uuid:%s", xx_net_uuid)
+    config.save()
 
 
 def get_uuid():
-    import uuid
-    node_id = uuid.getnode()
+    if need_new_uuid():
+        generate_new_uuid()
 
-    #config.load()
-    if node_id != config.config["update"]["node_id"] or config.config["update"]["uuid"] == '':
-        uuid = str(uuid.uuid4())
-        config.config["update"]["node_id"] = node_id
-        config.config["update"]["uuid"] = uuid
-        config.save()
-    else:
-        uuid = config.config["update"]["uuid"]
-    return uuid
+    xx_net_uuid = config.config["update"]["uuid"]
+    logging.info("get uuid:%s", xx_net_uuid)
+    return xx_net_uuid
 
 if __name__ == "__main__":
     #get_uuid()

@@ -10,7 +10,6 @@ import functools
 import re
 import io
 import logging
-import random
 import string
 import threading
 import socket
@@ -23,6 +22,7 @@ import urlparse
 
 from cert_util import CertUtil
 from connect_manager import https_manager,forwork_manager
+from appids_manager import appid_manager
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
@@ -61,35 +61,6 @@ def generate_message_html(title, banner, detail=''):
     '''
     return string.Template(MESSAGE_TEMPLATE).substitute(title=title, banner=banner, detail=detail)
 
-class APPID_manager(object):
-    def __init__(self):
-        self.working_appid_list = config.GAE_APPIDS
-
-    def get_appid(self):
-        if len(self.working_appid_list) == 0:
-            logging.error("No usable appid left, add new appid to continue use GoAgent")
-            return None
-        else:
-            return random.choice(self.working_appid_list)
-
-    def report_out_of_quota(self, appid):
-        try:
-            self.working_appid_list.remove(appid)
-        except:
-            pass
-        if len(self.working_appid_list) == 0:
-            self.working_appid_list = config.GAE_APPIDS
-
-    def report_not_exist(self, appid):
-        try:
-            #logging.error("APPID_manager, report_not_exist %s", appid)
-            config.GAE_APPIDS.remove(appid)
-        except:
-            pass
-
-        self.report_out_of_quota(appid)
-
-appid_manager = APPID_manager()
 
 
 skip_headers = frozenset(['Vary',

@@ -22,10 +22,10 @@ good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
 
 
-# const value:
-max_check_ip_thread_num = 5
-max_good_ip_num = 4000  # stop scan ip when enough
-
+# get value from config:
+max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
+max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # stop scan ip when enough
+ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
 class Check_ip():
     ncount = 0
@@ -171,12 +171,9 @@ class Check_ip():
                     self.gws_ip_pointer = 0
                     self.gws_ip_pointer_reset_time = time.time()
 
-                #fastest_num = min(ip_num-1, 20)
-                #index = random.randint(0, fastest_num)
-                #index = get_random_pr(fastest_num)
                 ip_str = self.gws_ip_list[self.gws_ip_pointer]
                 get_time = self.ip_dict[ip_str]["get_time"]
-                if time.time() - get_time < 10:
+                if time.time() - get_time < ip_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
                 handshake_time = self.ip_dict[ip_str]["handshake_time"]
