@@ -294,8 +294,10 @@ class Check_ip():
     def report_connect_fail(self, ip_str, force_remove=False):
         # ignore if system network is disconnected.
         if time.time() - self.network_fail_time < 3:
+            #logging.debug("report_connect_fail network fail recently")
             return
         if not force_remove and not self.network_is_ok():
+            #logging.debug("report_connect_fail network fail")
             return
 
         self.ip_lock.acquire()

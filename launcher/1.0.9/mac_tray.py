@@ -15,11 +15,13 @@ if __name__ == "__main__":
 import rumps
 import webbrowser
 import module_init
+import logging
+import os
 
 class Mac_tray(rumps.App):
     def __init__(self):
         super(Mac_tray, self).__init__("XX-Net", title="XX-Net", icon="Python.ico", quit_button=None)
-        self.menu = ["Config", "Reset", "Quit"]
+        self.menu = ["Config", "Enable Proxy", "Disable Proxy", "Reset", "Quit"]
 
     @rumps.clicked("Config")
     def on_config(self, _):
@@ -29,6 +31,34 @@ class Mac_tray(rumps.App):
     def on_reset(self, _):
         module_init.stop_all()
         module_init.start_all_auto()
+
+    @rumps.clicked("Enable Proxy")
+    def on_enable_proxy(self, _):
+        cmd1 = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
+        cmd2 = "networksetup -setwebproxy Wi-Fi 127.0.0.1 8087"
+        cmd3 = "networksetup -setwebproxystate Ethernet on"
+        cmd4 = "networksetup -setwebproxystate Wi-Fi on"
+        cmd5 = "networksetup -setsecurewebproxy Ethernet 127.0.0.1 8087"
+        cmd6 = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
+        cmd7 = "networksetup -setsecurewebproxystate Ethernet on"
+        cmd8 = "networksetup -setsecurewebproxystate Wi-Fi on"
+        exec_command = "%s;%s;%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
+        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
+        cmd = admin_command.encode('utf-8')
+        logging.info("try enable proxy:%s", cmd)
+        os.system(cmd)
+
+    @rumps.clicked("Disable Proxy")
+    def on_disable_proxy(self, _):
+        cmd1 = "networksetup -setwebproxystate Ethernet off"
+        cmd2 = "networksetup -setwebproxystate Wi-Fi off"
+        cmd3 = "networksetup -setsecurewebproxystate Ethernet off"
+        cmd4 = "networksetup -setsecurewebproxystate Wi-Fi off"
+        exec_command = "%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4)
+        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
+        cmd = admin_command.encode('utf-8')
+        logging.info("try disable proxy:%s", cmd)
+        os.system(cmd)
 
     @rumps.clicked("Quit")
     def on_quit(self, _):

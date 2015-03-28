@@ -19,6 +19,7 @@ if __name__ == "__main__":
 import httplib
 import time
 import socket
+import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -220,12 +221,22 @@ def test_app_check(ssl_sock, ip):
     logging.debug("app check time:%d", time_cost)
     return True
 
+checking_lock = threading.Lock()
+checking_num = 0
 def network_is_ok():
+    global checking_lock, checking_num
+    if checking_num > 0:
+        return False
+
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
         logging.debug("patch socks")
+
+    checking_lock.acquire()
+    checking_num += 1
+    checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("github.com", 443)
+        conn = httplib.HTTPSConnection("www.baidu.com", 443, timeout=3)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -239,10 +250,15 @@ def network_is_ok():
     except:
         pass
     finally:
+        checking_lock.acquire()
+        checking_num -= 1
+        checking_lock.release()
+
         if config.PROXY_ENABLE:
             socket.socket = default_socket
             logging.debug("restore socket")
 
+    logging.warn("network check to github fail.")
     return False
 
 def test_gws(ip_str):
@@ -385,11 +401,11 @@ def check_all_exist_ip():
 if __name__ == "__main__":
     #print network_is_ok()
     #print network_is_ok()
-    #test("208.117.224.103", 10) #gws
+    test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    #test("218.176.242.24")
+    test("64.233.189.166")
     #test_main()
-    check_all_exist_ip()
+    #check_all_exist_ip()
 
 
 # about ip connect time and handshake time

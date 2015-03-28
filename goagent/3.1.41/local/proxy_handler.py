@@ -458,14 +458,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     else:
                         continue
 
-                # public gae appid deny this site request.
-                if response.app_status == 403:
-                    logging.warn("public appid deny this host:%s", host)
-                    html = generate_message_html('403 public Appid deny this host proxy', u'共用appid因为资源有限，限制观看视频和文件下载等消耗资源过多的访问，请使用自己的appid')
-                    self.wfile.write(b'HTTP/1.0 403\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
-                    response.close()
-                    return
-
                 # appid not exists, try remove it from appid
                 if response.app_status == 404:
                     logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
@@ -496,7 +488,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                 # 500 is Web server internal err
                 if response.app_status == 500 and range_in_query and special_range:
-
                     logging.warning('500 with range in query') #, need trying another APPID?
                     response.close()
                     continue
@@ -504,13 +495,14 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if response.app_status == 501:
                     deploy_url = "http://127.0.0.1:8085/?module=goagent&menu=deploy"
                     message = u'请重新部署服务端: <a href="%s">%s</a>' % (deploy_url, deploy_url)
-                    html = generate_message_html('Please deploy new server', message)
+                    html = generate_message_html('Please deploy your new server', message)
                     self.wfile.write(b'HTTP/1.0 501\r\nContent-Type: text/html\r\n\r\n' + html.encode('utf-8'))
+                    logging.warning('501 Please deploy your new server') #, need trying another APPID?
                     response.close()
                     return
 
                 if response.app_status != 200 and retry == config.FETCHMAX_LOCAL-1:
-                    logging.info('GAE %s %s status:%s', self.command, self.path, response.status)
+                    logging.warn('GAE %s %s status:%s', self.command, self.path, response.status)
                     self.wfile.write(('HTTP/1.1 %s\r\n%s\r\n' % (response.status, ''.join('%s: %s\r\n' % (k.title(), v) for k, v in response.getheaders() if k.title() != 'Transfer-Encoding'))))
                     self.wfile.write(response.read())
                     response.close()
@@ -542,23 +534,33 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     start, end, length = 0, content_length-1, content_length
 
+                if content_length == 0:
+                    https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
+                    return
+
+                send_to_broswer = True
                 while True:
-                    data = response.read(8192)
+                    data = response.read(8192) #TODO: loop read until timeout or except.
                     if not data:
                         response.close()
                         return
                     data_len = len(data)
                     start += data_len
-                    ret = self.wfile.write(data)
-                    if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                        logging.debug("self.wfile.write ret:%d", ret)
-                        ret = self.wfile.write(data)
+                    if send_to_broswer:
+                        try:
+                            ret = self.wfile.write(data)
+                            if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
+                                logging.debug("self.wfile.write ret:%d", ret)
+                                ret = self.wfile.write(data)
+                        except Exception as e_b:
+                            logging.exception('GAEProxyHandler.do_METHOD_AGENT send to browser %r return %r', self.path, e_b)
+                            send_to_broswer = False
 
                     if start >= end:
-                        https_manager.save_ssl_connection_for_reuse(response.ssl_sock) #, response.connection_cache_key)
-                        #response.close()
+                        https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
                         return
             except Exception as e:
+                logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r', self.path, e)
                 errors.append(e)
                 if response:
                     response.close()
@@ -575,7 +577,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     return
                 else:
                     logging.exception('GAEProxyHandler.do_METHOD_AGENT %r return %r', self.path, e) #IOError(9, 'Bad file descriptor'), int(e.args[0])
-                    #traceback.print_exc()
 
     def do_CONNECT(self):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""

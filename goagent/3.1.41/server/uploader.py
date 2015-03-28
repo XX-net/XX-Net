@@ -45,8 +45,12 @@ class Logger(object):
         self.terminal = sys.stdout
         self.fd = open(log_file_name, "w")
     def write(self, message):
+        if message == '\n':
+            time_string = ""
+        else:
+            time_string = '%s - ' % (time.ctime()[4:-5])
         self.terminal.write(message)
-        self.fd.write(message)
+        self.fd.write(time_string + message)
         self.fd.flush()
     def flush(self):
         pass
@@ -78,10 +82,6 @@ def upload(appid, email, password):
 
     my_stdout.write("============  Begin upload  ============\r\nappid:%s \r\n\r\n" % (appid))
 
-    try:
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
-    except OSError:
-        pass
 
     dirname = os.path.join(code_path, "gae")
     assert isinstance(dirname, basestring) and isinstance(appid, basestring)
@@ -109,10 +109,8 @@ def upload(appid, email, password):
                 my_stdout.write("Retry again.\n\n")
                 time.sleep(1)
 
-
     try:
         os.remove(filename)
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
     except OSError:
         pass
 
@@ -137,12 +135,22 @@ def appid_is_valid(appid):
 
 def uploads(appids, email, password):
 
+    try:
+        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
+    except OSError:
+        pass
+
     for appid in appids.split('|'):
         if appid == "":
             continue
         if not appid_is_valid(appid):
             continue
         upload(appid, email, password)
+
+    try:
+        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
+    except OSError:
+        pass
 
     my_stdout.write("== END ==\n\n")
     do_clean_up()

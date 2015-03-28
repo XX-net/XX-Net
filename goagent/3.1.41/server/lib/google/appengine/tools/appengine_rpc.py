@@ -216,7 +216,7 @@ class AbstractRpcServer(object):
         url="https://www.google.com/accounts/ClientLogin",
         data=urllib.urlencode(data))
     try:
-      response = self.opener.open(req)
+      response = self.opener.open(req, data=None, timeout=50)
       response_body = response.read()
       response_dict = dict(x.split("=")
                            for x in response_body.split("\n") if x)

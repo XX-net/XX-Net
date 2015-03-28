@@ -82,6 +82,47 @@ elif sys.platform == 'linux' or sys.platform == 'linux2':
             os.unlink(getfilename(name))
 
     run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+elif sys.platform == 'darwin':
+    plist_template = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.xxnet.launcher</string>
+
+	<key>LimitLoadToSessionType</key>
+	<string>Aqua</string>
+
+	<key>ProgramArguments</key>
+	<array>
+	  <string>%s</string>
+	</array>
+
+	<key>RunAtLoad</key>
+	<true/>
+
+	<key>StandardErrorPath</key>
+	<string>/dev/null</string>
+	<key>StandardOutPath</key>
+	<string>/dev/null</string>
+</dict>
+</plist>"""
+
+    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    from os.path import expanduser
+    home = expanduser("~")
+
+    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.xxnet.launcher.plist")
+
+    def add(name, cmd):
+        file_content = plist_template % cmd
+        logging.info("create file:%s", plist_file_path)
+        with open(plist_file_path, "w") as f:
+            f.write(file_content)
+    def remove(name):
+        if(os.path.isfile(plist_file_path)):
+            os.unlink(plist_file_path)
+            logging.info("remove file:%s", plist_file_path)
 else:
     def add(name, cmd):
         pass

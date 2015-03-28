@@ -148,7 +148,7 @@ class Https_connection_manager(object):
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
         self.max_retry = 3
-        self.timeout = 3
+        self.timeout = 1.5
         self.max_timeout = 5
         self.thread_num = 0
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
@@ -156,7 +156,7 @@ class Https_connection_manager(object):
 
         self.conn_pool = Connect_pool() #Queue.PriorityQueue()
 
-        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1")
+        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile)
 
         # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
         self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
@@ -171,9 +171,9 @@ class Https_connection_manager(object):
             t, ssl_sock = self.conn_pool.get_slowest()
 
             if t < 500:
-                #self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
-                ssl_sock.close()
-                return
+                self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+                #ssl_sock.close()
+                #return
             else:
                 ssl_sock.close()
 
@@ -284,7 +284,7 @@ class Https_connection_manager(object):
                 p = threading.Thread(target = connect_thread)
                 p.daemon = True
                 p.start()
-                time.sleep(0.1)
+                time.sleep(0.3)
 
 
         while True:
@@ -295,7 +295,7 @@ class Https_connection_manager(object):
                 ssl_sock = None
                 break
 
-            if time.time() - ssl_sock.last_use_time < 230: # gws ssl connection can keep for 230s after created
+            if time.time() - ssl_sock.last_use_time < 210: # gws ssl connection can keep for 230s after created
                 logging.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                 break
             else:
@@ -335,7 +335,8 @@ class Forward_connection_manager():
             logging.warn("forward port %d not supported.", port)
             return None
 
-        def _create_connection(ip_port):
+        def _create_connection(ip_port, delay=0):
+            time.sleep(delay)
             ip = ip_port[0]
             sock = None
             # start connection time record

@@ -51,7 +51,11 @@ if sys.platform == "win32":
 elif sys.platform == "linux" or sys.platform == "linux2":
     win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
     sys.path.append(win32_lib)
-
+elif sys.platform == "darwin":
+    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+    sys.path.append(darwin_lib)
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
+    sys.path.append(extra_lib)
 
 import time
 import traceback

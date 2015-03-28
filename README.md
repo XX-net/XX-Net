@@ -5,7 +5,7 @@
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.3.6
+https://codeload.github.com/XX-net/XX-Net/zip/1.4.0
 
 版本历史： https://github.com/XX-net/XX-Net/releases
 
@@ -16,6 +16,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.3.6
 * GoAgent 稳定快速
 * Web界面，傻瓜易用
 * 内置了公共 appid, 上千可用ip, 开箱即用
+* 自动导入证书
 
 平台支持情况
 ================
@@ -23,7 +24,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.3.6
 * Win7/8/10
 * Ubuntu （不显示系统托盘）
 * Debian
-* Mac OS X （不显示系统托盘）
+* Mac OS X
 
 ## 链接
 |   |   |
@@ -40,14 +41,16 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.3.6
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
   - 第一次启动, 会提示在桌面建立快捷方式,可根据自己需要选择。
   - 推荐用Chrome浏览器, 安装SwichySharp, 可在swichysharp目录下找到插件和配置文件
+  - Firefox 需手动导入证书 data/goagent/CA.crt 启动后生成
 * Linux下, 执行 start.sh
+  - 自动导入证书，需安装 libnss3-tools 包
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
 * Mac下，双击 start.command
-  - 请导入data/goagent/CA.crt证书
+  - 会自动导入证书，如果还有提示非安全连接，请手动导入data/goagent/CA.crt证书
 * 服务端
   - 协议采用3.1的版本，请重新部署服务端，新版服务端兼容3.2的客户端
-  - 虽然系统内置了公共appid, 还是建议部署自己的appid
+  - 虽然系统内置了公共appid, 还是建议部署自己的appid，公共appid限制看视频
 
 感谢
 =========

@@ -196,7 +196,7 @@ def gae_application(environ, start_response):
 
     if __hostsdeny__ and netloc.endswith(__hostsdeny__):
         start_response('403 Forbidden', [('Content-Type', 'text/html')])
-        yield message_html('403 Hosts Deny', 'Hosts Deny(%r)' % netloc, detail='url=%r' % url)
+        yield message_html('403 Hosts Deny', 'Hosts Deny(%r)' % netloc, detail='共用appid因为资源有限，限制观看视频和文件下载等消耗资源过多的访问，请使用自己的appid <a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a> ')
         raise StopIteration
 
     if netloc.startswith(('127.0.0.', '::1', 'localhost')):
