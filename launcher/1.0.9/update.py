@@ -295,18 +295,12 @@ def notify_install_tcpz_for_winXp():
 def check_new_machine():
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    node_id = uuid.getnode()
-    if current_path != config.config["update"]["last_path"] or node_id != config.config["update"]["node_id"]:
+    if current_path != config.config["update"]["last_path"]: # or node_id != config.config["update"]["node_id"]:
         config.config["update"]["last_path"] = current_path
         config.save()
-        if node_id != config.config["update"]["node_id"]:
-            logging.info("new machine, re generate uuid and update node_id")
-            generate_new_uuid()
 
-            if sys.platform == "win32" and platform.release() == "XP":
-                notify_install_tcpz_for_winXp()
-        else:
-            logging.info("path changed in same machine")
+        if sys.platform == "win32" and platform.release() == "XP":
+            notify_install_tcpz_for_winXp()
 
         logging.info("generate desktop shortcut")
         create_desktop_shortcut()
@@ -330,10 +324,6 @@ def start():
     p.start()
 
 def need_new_uuid():
-    node_id = uuid.getnode()
-    if node_id != config.config["update"]["node_id"]:
-        logging.info("need_new_uuid: old node_id:%s current:%s", config.config["update"]["node_id"], node_id)
-        return True
     if config.config["update"]["uuid"] == '':
         logging.info("need_new_uuid: uuid is empty")
         return True
