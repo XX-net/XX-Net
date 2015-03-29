@@ -240,7 +240,7 @@ class Https_connection_manager(object):
                     if not issuer_commonname.startswith('Google'):
                         raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
-                #verify_SSL_certificate_issuer(ssl_sock)
+                verify_SSL_certificate_issuer(ssl_sock)
 
                 return ssl_sock
             except Exception as e:
