@@ -28,7 +28,7 @@ max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # 
 ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
 class Check_ip():
-    ncount = 0
+    searching_thread_count = 0
     ncount_lock = threading.Lock()
 
     to_remove_ip_list = Queue.Queue()
@@ -328,7 +328,7 @@ class Check_ip():
                 self.to_remove_ip_list.put(ip_str)
                 self.try_remove_thread()
         except Exception as e:
-            logging.error("set_ip err:%s", e)
+            logging.exception("set_ip err:%s", e)
         finally:
             self.ip_lock.release()
 
@@ -387,8 +387,27 @@ class Check_ip():
         self.network_fail_time = time.time()
         return False
 
+    def remove_slowest_ip(self):
+        self.ip_lock.acquire()
+        try:
+            ip_num = len(self.gws_ip_list)
+            if ip_num < max_good_ip_num:
+                return
 
+            ip_str = self.gws_ip_list[ip_num - 1]
+            logging.info("remove_slowest_ip:%s", ip_str)
 
+            property = self.ip_dict[ip_str]
+            server = property['server']
+            del self.ip_dict[ip_str]
+
+            if 'gws' in server and ip_str in self.gws_ip_list:
+                self.gws_ip_list.remove(ip_str)
+
+        except Exception as e:
+            logging.exception("remove_slowest_ip err:%s", e)
+        finally:
+            self.ip_lock.release()
 
     def check_ip(self, ip_str):
         result = check_ip.test_gws(ip_str)
@@ -403,25 +422,27 @@ class Check_ip():
         return True
 
     def runJob(self):
-        while not self.is_ip_enough():
+        while True: #not self.is_ip_enough() and self.searching_thread_count < 2:
             try:
                 time.sleep(1)
                 ip_int = ip_range.get_ip()
                 ip_str = ip_utils.ip_num_to_string(ip_int)
                 if self.check_ip(ip_str):
                     self.save_ip_list()
+
+                self.remove_slowest_ip()
             except Exception as e:
                 logging.warn("google_ip.runJob fail:%s", e)
 
         self.ncount_lock.acquire()
-        self.ncount -= 1
+        self.searching_thread_count -= 1
         self.ncount_lock.release()
 
     def search_more_google_ip(self):
 
-        while self.ncount < max_check_ip_thread_num:
+        while self.searching_thread_count < max_check_ip_thread_num:
             self.ncount_lock.acquire()
-            self.ncount += 1
+            self.searching_thread_count += 1
             self.ncount_lock.release()
             p = threading.Thread(target = self.runJob)
             p.daemon = True
