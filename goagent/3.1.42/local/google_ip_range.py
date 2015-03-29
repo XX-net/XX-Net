@@ -3,27 +3,31 @@
 # Based on checkgoogleip by  <moonshawdo@gmail.com>
 import random
 import bisect
-import os
 import time
-
+import os
+import shutil
 import ip_utils
+from config import config
+import logging
 
 random.seed(time.time()* 1000000)
 
 class Ip_range(object):
     def __init__(self):
-        # change path to launcher
-        global __file__
-        __file__ = os.path.abspath(__file__)
-        if os.path.islink(__file__):
-            __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+        self.range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
+        if not os.path.isfile(self.range_file):
+            current_path = os.path.dirname(os.path.abspath(__file__))
+            default_range_file = os.path.join(current_path, "ip_range.txt")
+            self.range_file = default_range_file
+            #shutil.copy(default_range_file, self.range_file)
 
         self.load_ip_range()
 
 
     def load_ip_range(self):
-        fd = open("ip_range.txt", "r")
+        logging.info("load ip range file:%s", self.range_file)
+        fd = open(self.range_file, "r")
         if not fd:
             print "open ip_range.txt fail."
             exit()
