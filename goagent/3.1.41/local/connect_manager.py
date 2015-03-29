@@ -171,9 +171,9 @@ class Https_connection_manager(object):
             t, ssl_sock = self.conn_pool.get_slowest()
 
             if t < 500:
-                self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
-                #ssl_sock.close()
-                #return
+                #self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+                ssl_sock.close()
+                return
             else:
                 ssl_sock.close()
 
