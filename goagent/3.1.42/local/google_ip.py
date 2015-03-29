@@ -69,8 +69,8 @@ class Check_ip():
     def __init__(self):
         self.load_ip()
 
-        if not self.is_ip_enough():
-            self.search_more_google_ip()
+        #if not self.is_ip_enough():
+        self.search_more_google_ip()
 
     def load_ip(self):
         if not os.path.isfile(good_ip_file):
@@ -395,10 +395,11 @@ class Check_ip():
                 return
 
             ip_str = self.gws_ip_list[ip_num - 1]
-            logging.info("remove_slowest_ip:%s", ip_str)
 
             property = self.ip_dict[ip_str]
             server = property['server']
+            handshake_time = property['handshake_time']
+            logging.info("remove_slowest_ip:%s handshake_time:%d", ip_str, handshake_time)
             del self.ip_dict[ip_str]
 
             if 'gws' in server and ip_str in self.gws_ip_list:
