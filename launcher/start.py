@@ -10,25 +10,50 @@ sys.path.append(noarch_lib)
 
 import yaml
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher', 'config.yaml'))
-
-config = {}
-
-try:
-    config = yaml.load(file(data_path, 'r'))
-except yaml.YAMLError, exc:
-    print "Error in configuration file:", exc
-
-
-launcher_version = config["modules"]["launcher"]["current_version"]
-
 import subprocess
 
-def main():
-    start_script = os.path.abspath( os.path.join(current_path, launcher_version, "start.py"))
-    subprocess.call([sys.executable, start_script], shell=False)
+def get_launcher_version_from_config():
+    config_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher', 'config.yaml'))
+    if not os.path.isfile(config_path):
+        return False
 
+    try:
+        config = yaml.load(file(config_path, 'r'))
+        launcher_version = config["modules"]["launcher"]["current_version"]
+        return launcher_version
+    except yaml.YAMLError, exc:
+        print "Error in configuration file:", exc
+        return False
+
+def scan_launcher_version():
+    for filename in os.listdir(current_path):
+        if os.path.isdir(os.path.join(current_path, filename)):
+            return filename
+    return False
+
+def create_data_path():
+    data_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data'))
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
+    data_launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher'))
+    if not os.path.isdir(data_launcher_path):
+        os.mkdir(data_launcher_path)
+
+    data_goagent_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'goagent'))
+    if not os.path.isdir(data_goagent_path):
+        os.mkdir(data_goagent_path)
+
+def main():
+    create_data_path()
+
+    launcher_version = get_launcher_version_from_config()
+    if not launcher_version:
+        launcher_version = scan_launcher_version()
+    launcher_path = os.path.join(current_path, launcher_version)
+    sys.path.insert(0, launcher_path)
+    from start import main as launcher_main
+    launcher_main()
 
 if __name__ == '__main__':
     try:

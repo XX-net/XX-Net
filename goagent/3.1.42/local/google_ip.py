@@ -18,9 +18,10 @@ import os
 from config import config
 import traceback
 
+current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
-
+default_good_ip_fie = os.path.join(current_path, "good_ip.txt")
 
 # get value from config:
 max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
@@ -73,10 +74,13 @@ class Check_ip():
         self.search_more_google_ip()
 
     def load_ip(self):
-        if not os.path.isfile(good_ip_file):
-            return
+        if os.path.isfile(good_ip_file):
+            file_path = good_ip_file
+        else:
+            file_path = default_good_ip_fie
 
-        with open(good_ip_file, "r") as fd:
+
+        with open(file_path, "r") as fd:
             lines = fd.readlines()
 
         for line in lines:

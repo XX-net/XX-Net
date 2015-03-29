@@ -401,9 +401,9 @@ def check_all_exist_ip():
 if __name__ == "__main__":
     #print network_is_ok()
     #print network_is_ok()
-    test("216.58.220.86", 10) #gws
+    #test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    test("64.233.189.166")
+    test("127.0.0.1")
     #test_main()
     #check_all_exist_ip()
 

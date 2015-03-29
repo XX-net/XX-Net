@@ -1,24 +1,22 @@
 
-import os, sys
+import os
 import logging
 
 
 import yaml
 
 
-
-
 current_path = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'launcher', 'config.yaml'))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.join(root_path, 'data', 'launcher', 'config.yaml')
 
 config = {}
-
 def load():
     global config, data_path
     try:
         config = yaml.load(file(data_path, 'r'))
         #print yaml.dump(config)
-    except yaml.YAMLError, exc:
+    except Exception as  exc:
         print "Error in configuration file:", exc
 
 
@@ -54,13 +52,35 @@ def set(path, val):
     global config
     _set(config, path, val)
 
-load()
+
+def scan_module_version(module):
+    module_path = os.path.join(root_path, module)
+    for filename in os.listdir(module_path):
+        if os.path.isdir(os.path.join(module_path, filename)):
+            return filename
+    return False
+
+def generate_default_config():
+    global config
+    config = {"modules": {}, "update":{"check_update":1, "last_path":"", "uuid":""}}
+
+    modules = ["goagent", "launcher"]
+    for module in modules:
+        version = scan_module_version(module)
+        config["modules"][module] = {"auto_start":1, "current_version":version}
+
+
 
 def main():
-    load()
+    if os.path.isfile(data_path):
+        load()
+    else:
+        generate_default_config()
     #config["tax"] = 260
     #save()
-    print yaml.dump(config)
+    #print yaml.dump(config)
+
+main()
 
 def test():
     load()
