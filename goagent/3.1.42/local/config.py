@@ -36,6 +36,9 @@ class Config(object):
         self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
         self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent'))
+        if not os.path.isdir(self.DATA_PATH):
+            self.DATA_PATH = current_path
+
         # load ../../../data/goagent/config.ini
         self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
 
@@ -110,7 +113,7 @@ class Config(object):
         info += 'GAE APPID          : %s\n' % '|'.join(self.GAE_APPIDS)
         if self.PAC_ENABLE:
             info += 'Pac Server         : http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
-            info += 'Pac File           : file://%s\n' % os.path.join(os.path.dirname(os.path.abspath(__file__)), self.PAC_FILE).replace('\\', '/')
+            #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
         info += '------------------------------------------------------\n'
         return info
 

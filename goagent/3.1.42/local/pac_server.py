@@ -16,11 +16,20 @@ import urlparse
 
 from config import config
 
+default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)
+
+user_pacfile = os.path.join(config.DATA_PATH, config.PAC_FILE)
+
+serving_pacfile = user_pacfile
+if not os.path.isfile(serving_pacfile):
+    serving_pacfile = default_pacfile
+
 class PacUtil(object):
     """GoAgent Pac Util"""
 
     @staticmethod
     def update_pacfile(filename):
+        global serving_pacfile, user_pacfile
         listen_ip = config.LISTEN_IP
         autoproxy = '%s:%s' % (listen_ip, config.LISTEN_PORT)
         blackhole = '%s:%s' % (listen_ip, config.PAC_PORT)
@@ -29,7 +38,7 @@ class PacUtil(object):
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
         content = ''
         need_update = True
-        with open(filename, 'rb') as fp:
+        with open(serving_pacfile, 'rb') as fp:
             content = fp.read()
         try:
             placeholder = '// AUTO-GENERATED RULES, DO NOT MODIFY!'
@@ -71,9 +80,10 @@ class PacUtil(object):
         except:
             return
         if need_update:
-            with open(filename, 'wb') as fp:
+            with open(user_pacfile, 'wb') as fp:
                 fp.write(content)
-            logging.info('%r successfully updated', filename)
+            logging.info('%r successfully updated', user_pacfile)
+            serving_pacfile = user_pacfile
 
     @staticmethod
     def autoproxy2pac(content, func_name='FindProxyForURLByAutoProxy', proxy='127.0.0.1:8087', default='DIRECT', indent=4):
@@ -232,8 +242,6 @@ class PacUtil(object):
 
 
 class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-
-    pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)
     onepixel = b'GIF89a\x01\x00\x01\x00\x80\xff\x00\xc0\xc0\xc0\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
 
     def address_string(self):
@@ -243,9 +251,22 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path
+        global serving_pacfile, user_pacfile
+        logging.info('PAC from:%s %s %s ', self.address_string(), self.command, self.path)
 
-        logging.info('PAC %s "%s %s ', self.address_string(), self.command, self.path)
+        path = urlparse.urlparse(self.path).path # '/proxy.pac'
+        filename = os.path.normpath('./' + path) # proxy.pac
+
+        if self.path.startswith(('http://', 'https://')):
+            data = b'HTTP/1.1 200\r\nCache-Control: max-age=86400\r\nExpires:Oct, 01 Aug 2100 00:00:00 GMT\r\nConnection: close\r\n'
+            if filename.endswith(('.jpg', '.gif', '.jpeg', '.bmp')):
+                data += b'Content-Type: image/gif\r\n\r\n' + self.onepixel
+            else:
+                data += b'\r\n This is the Pac server, not proxy port, use 8087 as proxy port.'
+            self.wfile.write(data)
+            logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
+            return
+
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
@@ -253,32 +274,17 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
 
-        filename = os.path.normpath('./' + path)
-        if self.path.startswith(('http://', 'https://')):
-            data = b'HTTP/1.1 200\r\nCache-Control: max-age=86400\r\nExpires:Oct, 01 Aug 2100 00:00:00 GMT\r\nConnection: close\r\n'
-            if filename.endswith(('.jpg', '.gif', '.jpeg', '.bmp')):
-                data += b'Content-Type: image/gif\r\n\r\n' + self.onepixel
-            else:
-                data += b'\r\n'
-            self.wfile.write(data)
-            logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
-        elif os.path.isfile(filename):
-            if filename.endswith('.pac'):
-                mimetype = 'text/plain'
-            else:
-                mimetype = 'application/octet-stream'
-            if self.path.endswith('.pac?flush'):
-                thread.start_new_thread(PacUtil.update_pacfile, (self.pacfile,))
-            elif time.time() - os.path.getmtime(self.pacfile) > config.PAC_EXPIRED:
-                thread.start_new_thread(lambda: os.utime(self.pacfile, (time.time(), time.time())) or PacUtil.update_pacfile(self.pacfile), tuple())
-            self.send_file(filename, mimetype)
-        else:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+        if filename != 'proxy.pac':
+            logging.warn("pac_server GET %s fail", filename)
+            self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
+            return
+
+        mimetype = 'text/plain'
+        if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(serving_pacfile) > config.PAC_EXPIRED:
+            thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
+        self.send_file(serving_pacfile, mimetype)
 
     def send_file(self, filename, mimetype):
-        # logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
-        data = ''
         with open(filename, 'rb') as fp:
             data = fp.read()
         if data:
