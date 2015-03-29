@@ -86,7 +86,7 @@ class Check_frame(object):
     def check(self, callback=None, check_ca=False):
 
         timeout = 5
-        openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
+        openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
 
         ssl_sock = None
         try:
