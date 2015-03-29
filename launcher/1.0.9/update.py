@@ -269,7 +269,7 @@ def check_update():
                     download_module(module, new_version)
 
     except Exception as e:
-        logging.warn("check_update except:%s", e)
+        logging.exception("check_update except:%s", e)
         return
 
 def create_desktop_shortcut():
@@ -295,7 +295,7 @@ def notify_install_tcpz_for_winXp():
 def check_new_machine():
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    if current_path != config.config["update"]["last_path"]: # or node_id != config.config["update"]["node_id"]:
+    if current_path != config.config["update"]["last_path"]:
         config.config["update"]["last_path"] = current_path
         config.save()
 
@@ -324,17 +324,14 @@ def start():
     p.start()
 
 def need_new_uuid():
-    if config.config["update"]["uuid"] == '':
+    if not config.get(["update", "uuid"]):
         logging.info("need_new_uuid: uuid is empty")
         return True
     return False
 
 def generate_new_uuid():
-    node_id = uuid.getnode()
     xx_net_uuid = str(uuid.uuid4())
-    config.config["update"]["node_id"] = node_id
     config.config["update"]["uuid"] = xx_net_uuid
-    logging.info("generate node_id:%s", node_id)
     logging.info("generate uuid:%s", xx_net_uuid)
     config.save()
 
