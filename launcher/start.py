@@ -48,8 +48,10 @@ def main():
     create_data_path()
 
     launcher_version = get_launcher_version_from_config()
-    if not launcher_version:
+    launcher_path = os.path.join(current_path, launcher_version)  
+    if not launcher_version or not os.path.isdir(launcher_path):
         launcher_version = scan_launcher_version()
+    print "launcher version:", launcher_version
     launcher_path = os.path.join(current_path, launcher_version)
     sys.path.insert(0, launcher_path)
     from start import main as launcher_main

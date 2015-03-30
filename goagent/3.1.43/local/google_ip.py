@@ -392,22 +392,25 @@ class Check_ip():
         return False
 
     def remove_slowest_ip(self):
+        self.try_sort_ip_by_handshake_time(force=True)
+
         self.ip_lock.acquire()
         try:
             ip_num = len(self.gws_ip_list)
-            if ip_num < max_good_ip_num:
-                return
+            while ip_num > max_good_ip_num:
 
-            ip_str = self.gws_ip_list[ip_num - 1]
+                ip_str = self.gws_ip_list[ip_num - 1]
 
-            property = self.ip_dict[ip_str]
-            server = property['server']
-            handshake_time = property['handshake_time']
-            logging.info("remove_slowest_ip:%s handshake_time:%d", ip_str, handshake_time)
-            del self.ip_dict[ip_str]
+                property = self.ip_dict[ip_str]
+                server = property['server']
+                handshake_time = property['handshake_time']
+                logging.info("remove_slowest_ip:%s handshake_time:%d", ip_str, handshake_time)
+                del self.ip_dict[ip_str]
 
-            if 'gws' in server and ip_str in self.gws_ip_list:
-                self.gws_ip_list.remove(ip_str)
+                if 'gws' in server and ip_str in self.gws_ip_list:
+                    self.gws_ip_list.remove(ip_str)
+
+                ip_num -= 1
 
         except Exception as e:
             logging.exception("remove_slowest_ip err:%s", e)
@@ -433,9 +436,8 @@ class Check_ip():
                 ip_int = ip_range.get_ip()
                 ip_str = ip_utils.ip_num_to_string(ip_int)
                 if self.check_ip(ip_str):
+                    self.remove_slowest_ip()
                     self.save_ip_list()
-
-                self.remove_slowest_ip()
             except Exception as e:
                 logging.warn("google_ip.runJob fail:%s", e)
 
