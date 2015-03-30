@@ -8,8 +8,9 @@
 https://codeload.github.com/XX-net/XX-Net/zip/1.5.5
 
 版本历史： https://github.com/XX-net/XX-Net/releases
-
-
+   
+  
+  
 
 主要特性
 ========
@@ -17,6 +18,11 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.5.5
 * Web界面，傻瓜易用
 * 内置了公共 appid, 上千可用ip, 开箱即用
 * 自动导入证书
+
+## XX-Net不是匿名工具 
+详情请看：  
+https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
+
 
 平台支持情况
 ================
