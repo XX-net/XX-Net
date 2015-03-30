@@ -71,9 +71,30 @@ def generate_default_config():
 
     config["modules"]["launcher"]["auto_start"] = 0 # this means auto start on system login
 
+def recheck_module_path():
+    need_save_config = False
+    for module in config["modules"]:
+        current_version = config["modules"][module]["current_version"]
+        if os.path.isdir(os.path.join(root_path, module, current_version)):
+            continue
+
+        logging.info("module %s version %s not exist", module, current_version)
+        current_version = scan_module_version(module)
+        if not current_version:
+            logging.error("recheck_module_path %s get version fail", module)
+            continue
+
+        config["modules"][module]["current_version"] = current_version
+        logging.info("module %s auto upgrade to version %s", module, current_version)
+        need_save_config = True
+
+    return need_save_config
+
 def main():
     if os.path.isfile(data_path):
         load()
+        if recheck_module_path():
+            save()
     else:
         generate_default_config()
     #config["tax"] = 260
