@@ -392,6 +392,9 @@ class Check_ip():
         return False
 
     def remove_slowest_ip(self):
+        if len(self.gws_ip_list) <= max_good_ip_num:
+            return
+
         self.try_sort_ip_by_handshake_time(force=True)
 
         self.ip_lock.acquire()
