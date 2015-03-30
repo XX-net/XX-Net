@@ -286,7 +286,7 @@ def create_desktop_shortcut():
         #    return
 
         import subprocess
-        p = subprocess.call(["Wscript.exe", "create_shortcut.js"], shell=False)
+        p = subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
 
 def notify_install_tcpz_for_winXp():
     import ctypes
