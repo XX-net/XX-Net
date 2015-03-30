@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-if __name__ == "__main__":
-    import os
-    import sys
+import os
+import sys
 
-    current_path = os.path.dirname(os.path.abspath(__file__))
+current_path = os.path.dirname(os.path.abspath(__file__))
+
+
+if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
@@ -20,7 +22,8 @@ import os
 
 class Mac_tray(rumps.App):
     def __init__(self):
-        super(Mac_tray, self).__init__("XX-Net", title="XX-Net", icon="Python.ico", quit_button=None)
+        icon_path = os.path.join(current_path, "Python.ico")
+        super(Mac_tray, self).__init__("XX-Net", title="XX-Net", icon=icon_path, quit_button=None)
         self.menu = ["Config", "Enable Proxy", "Disable Proxy", "Reset", "Quit"]
 
     @rumps.clicked("Config")
