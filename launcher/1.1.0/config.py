@@ -69,7 +69,7 @@ def generate_default_config():
         version = scan_module_version(module)
         config["modules"][module] = {"auto_start":1, "current_version":version}
 
-
+    config["modules"]["launcher"]["auto_start"] = 0 # this means auto start on system login
 
 def main():
     if os.path.isfile(data_path):
