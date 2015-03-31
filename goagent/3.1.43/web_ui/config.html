@@ -41,6 +41,7 @@
         $( "#gae_passwd" ).val(data.passwd);
         if(data.proxy_enable == 1){
             $("#proxy_enable").prop('checked', true);
+            $('#proxy_detail').show();
         }else{
             $("#proxy_enable").prop('checked', false);
         }

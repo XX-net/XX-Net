@@ -64,7 +64,7 @@ def generate_default_config():
     global config
     config = {"modules": {}, "update":{"check_update":1, "last_path":"", "uuid":""}}
 
-    modules = ["goagent", "launcher"]
+    modules = ["goagent", "launcher", "php_proxy"]
     for module in modules:
         version = scan_module_version(module)
         config["modules"][module] = {"auto_start":1, "current_version":version}
