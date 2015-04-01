@@ -83,7 +83,7 @@ class SysTrayIcon(object):
                                       self._hinst,
                                       None)
         UpdateWindow(self._hwnd)
-        self._refresh_icon()
+        self._refresh_icon(recreate=True)
 
     def _message_loop_func(self):
         self._create_window()
@@ -146,11 +146,11 @@ class SysTrayIcon(object):
             hicon = LoadIcon(0, IDI_APPLICATION)
         return hicon
 
-    def _refresh_icon(self):
+    def _refresh_icon(self, recreate=False):
         if self._hwnd is None:
             return
         hicon = self._load_icon()
-        if self._notify_id:
+        if self._notify_id and not recreate:
             message = NIM_MODIFY
         else:
             message = NIM_ADD
@@ -163,7 +163,7 @@ class SysTrayIcon(object):
         Shell_NotifyIcon(message, ctypes.byref(self._notify_id))
 
     def _restart(self, hwnd, msg, wparam, lparam):
-        self._refresh_icon()
+        self._refresh_icon(recreate=True)
 
     def _destroy(self, hwnd, msg, wparam, lparam):
         if self._on_quit:
