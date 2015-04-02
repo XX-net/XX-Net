@@ -29,7 +29,6 @@ class Config(object):
 
     def load(self):
         """load config from proxy.ini"""
-
         current_path = os.path.dirname(os.path.abspath(__file__))
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
         self.CONFIG = ConfigParser.ConfigParser()
@@ -60,16 +59,10 @@ class Config(object):
         self.HOSTS_POSTFIX_MAP = collections.OrderedDict((k, v) for k, v in self.CONFIG.items('hosts') if '\\' not in k and ':' not in k and k.startswith('.'))
         self.HOSTS_POSTFIX_ENDSWITH = tuple(self.HOSTS_POSTFIX_MAP)
 
-        self.AUTORANGE_HOSTS = self.CONFIG.get('autorange', 'hosts').split('|')
-        self.AUTORANGE_HOSTS_MATCH = [re.compile(fnmatch.translate(h)).match for h in self.AUTORANGE_HOSTS]
-        self.AUTORANGE_ENDSWITH = tuple(self.CONFIG.get('autorange', 'endswith').split('|'))
-        self.AUTORANGE_NOENDSWITH = tuple(self.CONFIG.get('autorange', 'noendswith').split('|'))
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
         self.AUTORANGE_WAITSIZE = self.CONFIG.getint('autorange', 'waitsize')
         self.AUTORANGE_BUFSIZE = self.CONFIG.getint('autorange', 'bufsize')
         self.AUTORANGE_THREADS = self.CONFIG.getint('autorange', 'threads')
-
-        self.FETCHMAX_LOCAL = 3
 
         self.PAC_ENABLE = self.CONFIG.getint('pac', 'enable')
         self.PAC_IP = self.CONFIG.get('pac', 'ip')

@@ -1196,7 +1196,7 @@ def main():
 
     if common.PHP_ENABLE:
         CertUtil.init_ca()
-        
+
         host, port = common.PHP_LISTEN.split(':')
         HandlerClass = PHPProxyHandler if not common.PROXY_ENABLE else ProxyPHPProxyHandler
         HandlerClass.handler_plugins['php'] = PHPFetchPlugin(common.PHP_FETCHSERVERS, common.PHP_PASSWORD, common.PHP_VALIDATE)

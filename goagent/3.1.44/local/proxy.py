@@ -85,19 +85,9 @@ import web_control
 
 from config import config
 
+from gae_handler import spawn_later
 
 
-
-
-def spawn_later(seconds, target, *args, **kwargs):
-    def wrap(*args, **kwargs):
-        __import__('time').sleep(seconds)
-        try:
-            result = target(*args, **kwargs)
-        except:
-            result = None
-        return result
-    return __import__('thread').start_new_thread(wrap, args, kwargs)
 
 
 

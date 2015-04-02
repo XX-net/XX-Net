@@ -149,10 +149,11 @@ class Https_connection_manager(object):
 
         self.max_retry = 3
         self.timeout = 1.5
-        self.max_timeout = 5
+        self.max_timeout = 15
         self.thread_num = 0
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
-        self.connection_pool_num = config.CONFIG.getint("connect_manager", "https_connection_pool") #20/30
+        self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max") #20/30
+        self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min") #20/30
 
         self.conn_pool = Connect_pool() #Queue.PriorityQueue()
 
@@ -167,12 +168,12 @@ class Https_connection_manager(object):
         ssl_sock.last_use_time = time.time()
         self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
 
-        while self.conn_pool.qsize() > self.connection_pool_num:
+        while self.conn_pool.qsize() > self.connection_pool_max_num:
             t, ssl_sock = self.conn_pool.get_slowest()
 
-            if t < 500:
-                #self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
-                ssl_sock.close()
+            if t < 200:
+                self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+                #ssl_sock.close()
                 return
             else:
                 ssl_sock.close()
@@ -185,6 +186,9 @@ class Https_connection_manager(object):
             sock = None
             ssl_sock = None
             ip = ip_port[0]
+
+            connect_time = 0
+            handshake_time = 0
             try:
                 if config.PROXY_ENABLE:
                     sock = socks.socksocket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
@@ -211,8 +215,6 @@ class Https_connection_manager(object):
                 #if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
                 #    ssl_sock.set_tlsext_host_name(server_hostname)
 
-                connect_time = 0
-                handshake_time = 0
                 time_begin = time.time()
                 ssl_sock.connect(ip_port)
                 time_connected = time.time()
@@ -257,7 +259,7 @@ class Https_connection_manager(object):
 
         def connect_thread():
             try:
-                while self.conn_pool.qsize() < self.connection_pool_num:
+                while self.conn_pool.qsize() < self.connection_pool_min_num:
                     ip_str = google_ip.get_gws_ip()
                     if not ip_str:
                         logging.warning("no gws ip")
@@ -276,8 +278,8 @@ class Https_connection_manager(object):
                 self.thread_num_lock.release()
 
         def create_more_connection():
-            target_thread_num = min(self.max_thread_num, (self.connection_pool_num - self.conn_pool.qsize()))
-            while self.thread_num < target_thread_num and self.conn_pool.qsize() < self.connection_pool_num:
+            target_thread_num = min(self.max_thread_num, (self.connection_pool_min_num - self.conn_pool.qsize()))
+            while self.thread_num < target_thread_num and self.conn_pool.qsize() < self.connection_pool_min_num:
                 self.thread_num_lock.acquire()
                 self.thread_num += 1
                 self.thread_num_lock.release()
@@ -304,7 +306,7 @@ class Https_connection_manager(object):
 
         conn_num = self.conn_pool.qsize()
         logging.debug("ssl conn_num:%d", conn_num)
-        if conn_num < self.connection_pool_num:
+        if conn_num < self.connection_pool_min_num:
             create_more_connection()
 
         if ssl_sock:

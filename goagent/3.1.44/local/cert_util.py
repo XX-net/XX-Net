@@ -169,10 +169,13 @@ class CertUtil(object):
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
         ca.sign(key, 'sha1')
+        #logging.debug("CA key:%s", key)
+        logging.info("create ca")
         return key, ca
 
     @staticmethod
     def generate_ca_file():
+        logging.info("generate CA file:%s", CertUtil.ca_keyfile)
         key, ca = CertUtil.create_ca()
         with open(CertUtil.ca_keyfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
@@ -474,7 +477,9 @@ class CertUtil(object):
 
         # Confirmed GoAgent CA exist
         if not os.path.exists(CertUtil.ca_keyfile):
-            # clean old site certs
+            logging.info("no CA file exist")
+
+            logging.info("clean old site certs")
             any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
 
             if os.name == 'nt':
