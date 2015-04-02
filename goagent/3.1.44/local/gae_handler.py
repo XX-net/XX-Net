@@ -112,7 +112,7 @@ class GAE_Exception(BaseException):
         self.type = type
         self.message = message
 
-# Caller:  gae_urlfetch
+
 def request(headers={}, payload=None):
     max_retry = 3
     for i in range(max_retry):
@@ -126,7 +126,6 @@ def request(headers={}, payload=None):
             if ssl_sock.host == '':
                 ssl_sock.appid = appid_manager.get_appid()
                 if not ssl_sock.appid:
-                    #raise "no appid can use."
                     raise GAE_Exception(1, "no appid can use")
                 headers['Host'] = ssl_sock.appid + ".appspot.com"
                 ssl_sock.host = headers['Host']
@@ -145,67 +144,74 @@ def request(headers={}, payload=None):
             logging.warn('request failed:%s', e)
             if ssl_sock:
                 ssl_sock.close()
-    #raise "try max times"
     raise GAE_Exception(2, "try max times")
 
-def gae_urlfetch(method, url, headers, payload, **kwargs):
 
-    if payload:
-        if len(payload) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
-            zpayload = zlib.compress(payload)[2:-4]
-            if len(zpayload) < len(payload):
-                payload = zpayload
+def inflate(data):
+    return zlib.decompress(data, -zlib.MAX_WBITS)
+
+def deflate(data):
+    return zlib.compress(data)[2:-4]
+
+def fetch(method, url, headers, body):
+    if isinstance(body, basestring) and body:
+        if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
+            zbody = deflate(body)
+            if len(zbody) < len(body):
+                body = zbody
                 headers['Content-Encoding'] = 'deflate'
-        headers['Content-Length'] = str(len(payload))
+        headers['Content-Length'] = str(len(body))
 
     # GAE donot allow set `Host` header
     if 'Host' in headers:
         del headers['Host']
 
+    kwargs = {}
     if config.GAE_PASSWORD:
         kwargs['password'] = config.GAE_PASSWORD
 
-    metadata = 'G-Method:%s\nG-Url:%s\n%s' % (method, url, ''.join('G-%s:%s\n' % (k, v) for k, v in kwargs.items() if v))
-    metadata += ''.join('%s:%s\n' % (k.title(), v) for k, v in headers.items() if k not in skip_headers)
+    #kwargs['options'] =
+    #kwargs['validate'] =
+    kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
 
-    # prepare GAE request
+    payload = '%s %s HTTP/1.1\r\n' % (method, url)
+    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
+
     request_headers = {}
-    metadata = zlib.compress(metadata)[2:-4]
-    payload = '%s%s%s' % (struct.pack('!h', len(metadata)), metadata, payload)
-    request_headers['Content-Length'] = str(len(payload))
+    payload = deflate(payload)
 
-    response = request(payload, request_headers)
+    body = '%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
+    request_headers['Content-Length'] = str(len(body))
 
-    if hasattr(response, "status"):
-        response.app_status = response.status
-    else:
+    response = request(request_headers, body)
+
+    response.app_status = response.status
+    if response.app_status != 200:
         return response
-    #logging.debug("request time:%d status:%d url:%s ", int(cost_time * 1000), response.status, url)
 
-    response.app_options = response.getheader('X-GOA-Options', '')
-    if response.status != 200:
-        return response
-    data = response.read(4)
-    if len(data) < 4:
+    data = response.read(2)
+    if len(data) < 2:
+        logging.warn("fetch too short lead byte len:%d %s", len(data), url)
         response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short leadtype data=' + data)
+        response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
         response.read = response.fp.read
         return response
-    response.status, headers_length = struct.unpack('!hh', data)
+    headers_length, = struct.unpack('!h', data)
     data = response.read(headers_length)
     if len(data) < headers_length:
-        if data.startswith('ent 服务端已经在'):
-            response.status = 501
-            response.app_status = 501
-        else:
-            response.status = 502
-        message = b'connection aborted. too short headers data=' + data
-        response.fp = io.BytesIO(message)
+        logging.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
+        response.status = 502
+        response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
         response.read = response.fp.read
         return response
-    response.msg = httplib.HTTPMessage(io.BytesIO(zlib.decompress(data, -zlib.MAX_WBITS)))
+    raw_response_line, headers_data = inflate(data).split('\r\n', 1)
+    _, response.status, response.reason = raw_response_line.split(None, 2)
+    response.status = int(response.status)
+    response.reason = response.reason.strip()
+    response.msg = httplib.HTTPMessage(io.BytesIO(headers_data))
+    response.app_msg = response.msg.fp.read()
     return response
-
 
 
 max_retry = 3
@@ -236,6 +242,8 @@ def handler(method, url, headers, body, wfile):
     for i in xrange(max_retry):
         try:
             response = fetch(method, url, headers, body)
+            if response.app_status != 200:
+                logging.debug("fetch gae status:%d url:%s", response.app_status, url)
 
             if response.app_status == 404:
                 logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
@@ -302,6 +310,11 @@ def handler(method, url, headers, body, wfile):
             wfile.write("%s: %s\r\n" % (key, value))
         wfile.write("\r\n")
 
+        if len(response.app_msg):
+            logging.warn("APPID error:%d url:%s", response.status, url)
+            wfile.write(response.app_msg)
+            response.close()
+            return
 
         content_length = int(response.getheader('Content-Length', 0))
         content_range = response.getheader('Content-Range', '')
@@ -347,75 +360,8 @@ def handler(method, url, headers, body, wfile):
     except Exception as e:
         logging.exception("gae_handler %s except:%r", url, e)
 
-def inflate(data):
-    return zlib.decompress(data, -zlib.MAX_WBITS)
-
-def deflate(data):
-    return zlib.compress(data)[2:-4]
-
-def fetch(method, url, headers, body):
-    if isinstance(body, basestring) and body:
-        if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
-            zbody = deflate(body)
-            if len(zbody) < len(body):
-                body = zbody
-                headers['Content-Encoding'] = 'deflate'
-        headers['Content-Length'] = str(len(body))
-
-    # GAE donot allow set `Host` header
-    if 'Host' in headers:
-        del headers['Host']
-
-    kwargs = {}
-    if config.GAE_PASSWORD:
-        kwargs['password'] = config.GAE_PASSWORD
-
-    #kwargs['options'] =
-    #kwargs['validate'] =
-    kwargs['maxsize'] = config.AUTORANGE_MAXSIZE #209715 #2
-
-    payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
-
-    request_headers = {}
-    payload = deflate(payload)
-
-    body = '%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
-    request_headers['Content-Length'] = str(len(body))
-
-    response = request(request_headers, body)
-
-    response.app_status = response.status
-    if response.app_status != 200:
-        return response
-
-    data = response.read(2)
-    if len(data) < 2:
-        logging.warn("fetch too short lead byte len:%d %s", len(data), url)
-        response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
-        response.read = response.fp.read
-        return response
-    headers_length, = struct.unpack('!h', data)
-    data = response.read(headers_length)
-    if len(data) < headers_length:
-        logging.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
-        response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
-        response.read = response.fp.read
-        return response
-    raw_response_line, headers_data = inflate(data).split('\r\n', 1)
-    _, response.status, response.reason = raw_response_line.split(None, 2)
-    response.status = int(response.status)
-    response.reason = response.reason.strip()
-    response.msg = httplib.HTTPMessage(io.BytesIO(headers_data))
-    return response
-
 
 class RangeFetch(object):
-    """Range Fetch Class"""
-
     threads = config.AUTORANGE_THREADS
     maxsize = config.AUTORANGE_MAXSIZE
     bufsize = config.AUTORANGE_BUFSIZE
