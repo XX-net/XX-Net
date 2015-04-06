@@ -17,6 +17,7 @@ import httplib
 import Queue
 import urlparse
 import threading
+import BaseHTTPServer
 
 from connect_manager import https_manager
 from appids_manager import appid_manager
@@ -71,6 +72,7 @@ def spawn_later(seconds, target, *args, **kwargs):
 
 skip_headers = frozenset(['Vary',
                           'Via',
+                          'X-Google-Cache-Control',
                           'X-Forwarded-For',
                           'Proxy-Authorization',
                           'Proxy-Connection',
@@ -78,6 +80,20 @@ skip_headers = frozenset(['Vary',
                           'X-Chrome-Variations',
                           'Connection',
                           'Cache-Control'])
+
+def send_header(wfile, keyword, value):
+    keyword = keyword.title()
+    if keyword == 'Set-Cookie':
+        for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
+            wfile.write("%s: %s\r\n" % (keyword, cookie))
+            logging.debug("Head1 %s: %s", keyword, cookie)
+    elif keyword == 'Content-Disposition' and '"' not in value:
+        value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
+        wfile.write("%s: %s\r\n" % (keyword, value))
+        logging.debug("Head1 %s: %s", keyword, value)
+    else:
+        wfile.write("%s: %s\r\n" % (keyword, value))
+        logging.debug("Head1 %s: %s", keyword, value)
 
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
@@ -176,6 +192,8 @@ def fetch(method, url, headers, body):
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    for k, v in headers.items():
+        logging.debug("Send %s: %s", k, v)
     payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
 
     request_headers = {}
@@ -228,9 +246,10 @@ def send_response(wfile, status=404, headers={}, body=''):
     if 'Connection' not in headers:
         headers['Connection'] = 'close'
 
-    wfile.write("HTTP/1.0 %d\r\n" % status)
+    wfile.write("HTTP/1.1 %d\r\n" % status)
     for key, value in headers.items():
-        wfile.write("%s: %s\r\n" % (key, value))
+        #wfile.write("%s: %s\r\n" % (key, value))
+        send_header(wfile, key, value)
     wfile.write("\r\n")
     wfile.write(body)
 
@@ -307,7 +326,11 @@ def handler(method, url, headers, body, wfile):
         for key, value in response.getheaders():
             if key.title() == 'Transfer-Encoding':
                 continue
-            wfile.write("%s: %s\r\n" % (key, value))
+            if key.title() in skip_headers:
+                continue
+            #wfile.write("%s: %s\r\n" % (key.title(), value))
+            send_header(wfile, key, value)
+            logging.debug("Head- %s: %s", key.title(), value)
         wfile.write("\r\n")
 
         if len(response.app_msg):
@@ -354,11 +377,11 @@ def handler(method, url, headers, body, wfile):
 
     except NetWorkIOError as e:
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            logging.warn("gae_handler %s %r", url, e)
+            logging.warn("gae_handler err:%r %s ", e, url)
         else:
-            logging.exception("gae_handler %s except:%r", url, e)
+            logging.exception("gae_handler except:%r %s", e, url)
     except Exception as e:
-        logging.exception("gae_handler %s except:%r", url, e)
+        logging.exception("gae_handler except:%r %s", e, url)
 
 
 class RangeFetch(object):
@@ -394,7 +417,8 @@ class RangeFetch(object):
 
         self.wfile.write("HTTP/1.1 %d\r\n" % self.response.status)
         for key, value in self.response.getheaders():
-            self.wfile.write("%s: %s\r\n" % (key, value))
+            #self.wfile.write("%s: %s\r\n" % (key, value))
+            send_header(self.wfile, key, value)
         self.wfile.write("\r\n")
 
 
