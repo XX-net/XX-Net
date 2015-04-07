@@ -22,7 +22,10 @@ elif sys.platform == "darwin":
     osx_lib = os.path.join(python_path, 'lib', 'osx')
     sys.path.append(osx_lib)
 
-    from mac_tray import sys_tray
+    try:
+        from mac_tray import sys_tray
+    except:
+        from non_tray import sys_tray
 else:
     from non_tray import sys_tray
 
