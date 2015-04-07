@@ -86,14 +86,14 @@ def send_header(wfile, keyword, value):
     if keyword == 'Set-Cookie':
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
-            logging.debug("Head1 %s: %s", keyword, cookie)
+            #logging.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
-        logging.debug("Head1 %s: %s", keyword, value)
+        #logging.debug("Head1 %s: %s", keyword, value)
     else:
         wfile.write("%s: %s\r\n" % (keyword, value))
-        logging.debug("Head1 %s: %s", keyword, value)
+        #logging.debug("Head1 %s: %s", keyword, value)
 
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
@@ -192,8 +192,8 @@ def fetch(method, url, headers, body):
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
-    for k, v in headers.items():
-        logging.debug("Send %s: %s", k, v)
+    #for k, v in headers.items():
+    #    logging.debug("Send %s: %s", k, v)
     payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
 
     request_headers = {}
@@ -330,7 +330,7 @@ def handler(method, url, headers, body, wfile):
                 continue
             #wfile.write("%s: %s\r\n" % (key.title(), value))
             send_header(wfile, key, value)
-            logging.debug("Head- %s: %s", key.title(), value)
+            #logging.debug("Head- %s: %s", key.title(), value)
         wfile.write("\r\n")
 
         if len(response.app_msg):
