@@ -27,7 +27,19 @@
         <input type="text" class="input-small" placeholder="User name" id="proxy_user">
         <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
     </div>
-    <br>
+    <hr>
+    <details>
+        <summary>高级</summary>
+        <p>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" id="enable_appengine_gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE">帮助</a>
+            </label>
+        </div>
+        </p>
+    </details>
+
     <hr>
     <button type="submit" class="btn">保存并重启</button>
     <div id="status"></div>
@@ -50,6 +62,11 @@
         $("#proxy_port").val(data.proxy_port);
         $("#proxy_user").val(data.proxy_user);
         $("#proxy_passwd").val(data.proxy_passwd);
+        if(data.host_appengine == "gae"){
+            $("#enable_appengine_gae").prop('checked', true);
+        }else{
+            $("#enable_appengine_gae").prop('checked', false);
+        }
     });
 
     $('#proxy_enable').click(function(data){
@@ -72,6 +89,11 @@
         }else{
             proxy_enable = 0;
         }
+        if($("#enable_appengine_gae").prop('checked')){
+            host_appengine = "gae";
+        }else{
+            host_appengine = "fwd";
+        }
         proxy_type = $("#proxy_type").val();
         proxy_host = $("#proxy_host").val();
         proxy_port = $("#proxy_port").val();
@@ -80,7 +102,8 @@
 
         $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
                 "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
-                "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,},
+                "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,
+                "host_appengine": host_appengine},
             function( data ) {
 
             res = data.res

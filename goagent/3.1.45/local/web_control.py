@@ -55,7 +55,10 @@ class User_config(object):
     proxy_user = ""
     proxy_passwd = ""
 
+    host_appengine = "gae"
+
     def __init__(self):
+        self.host_appengine = "gae"
         self.load()
 
     def load(self):
@@ -75,12 +78,18 @@ class User_config(object):
             except:
                 pass
 
+            try:
+                self.host_appengine = CONFIG.get('hosts', 'appengine.google.com')
+            except:
+                pass
+
             self.proxy_enable = CONFIG.get('proxy', 'enable')
             self.proxy_type = CONFIG.get('proxy', 'type')
             self.proxy_host = CONFIG.get('proxy', 'host')
             self.proxy_port = CONFIG.get('proxy', 'port')
             self.proxy_user = CONFIG.get('proxy', 'user')
             self.proxy_passwd = CONFIG.get('proxy', 'passwd')
+
         except Exception as e:
             logging.warn("User_config.load except:%s", e)
 
@@ -92,13 +101,19 @@ class User_config(object):
                 f.write("[gae]\n")
                 f.write("appid = %s\n" % self.appid)
                 f.write("password = %s\n\n" % self.password)
+
             f.write("[proxy]\n")
             f.write("enable = %s\n" % self.proxy_enable)
             f.write("type = %s\n" % self.proxy_type)
             f.write("host = %s\n" % self.proxy_host)
             f.write("port = %s\n" % self.proxy_port)
             f.write("user = %s\n" % self.proxy_user)
-            f.write("passwd = %s\n" % self.proxy_passwd)
+            f.write("passwd = %s\n\n" % self.proxy_passwd)
+
+            if self.host_appengine != "gae":
+                f.write("[hosts]\n")
+                f.write("appengine.google.com = %s\n" % self.host_appengine)
+
             f.close()
         except:
             logging.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
@@ -381,6 +396,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.proxy_port = self.postvars['proxy_port'][0]
                 user_config.proxy_user = self.postvars['proxy_user'][0]
                 user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
+                user_config.host_appengine = self.postvars['host_appengine'][0]
                 user_config.save()
 
                 data = '{"res":"success"}'
