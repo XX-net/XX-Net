@@ -2,23 +2,16 @@
 # coding:utf-8
 
 
-
-
 import ConfigParser
 import os
 import sys
 import re
 import io
 import collections
-import fnmatch
-
-
 
 
 
 class Config(object):
-    """Global Config Object"""
-
     current_path = os.path.dirname(os.path.abspath(__file__))
 
     version = current_path.split(os.path.sep)[-2]
@@ -55,9 +48,25 @@ class Config(object):
         self.GAE_APPIDS = re.findall(r'[\w\-\.]+', self.CONFIG.get('gae', 'appid').replace('.appspot.com', ''))
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
 
-        self.HOSTS_MAP = collections.OrderedDict((k, v or k) for k, v in self.CONFIG.items('hosts') if '\\' not in k and ':' not in k and not k.startswith('.'))
-        self.HOSTS_POSTFIX_MAP = collections.OrderedDict((k, v) for k, v in self.CONFIG.items('hosts') if '\\' not in k and ':' not in k and k.startswith('.'))
-        self.HOSTS_POSTFIX_ENDSWITH = tuple(self.HOSTS_POSTFIX_MAP)
+        fwd_endswith = []
+        fwd_hosts = []
+        gae_endswith = []
+        gae_hosts = []
+        for k, v in self.CONFIG.items('hosts'):
+            if v == "fwd":
+                if k.startswith('.'):
+                    fwd_endswith.append(k)
+                else:
+                    fwd_hosts.append(k)
+            else:
+                if k.startswith('.'):
+                    gae_endswith.append(k)
+                else:
+                    gae_hosts.append(k)
+        self.HOSTS_FWD_ENDSWITH = tuple(fwd_endswith)
+        self.HOSTS_FWD = tuple(fwd_hosts)
+        self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
+        self.HOSTS_GAE = tuple(gae_hosts)
 
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
         self.AUTORANGE_WAITSIZE = self.CONFIG.getint('autorange', 'waitsize')
@@ -113,3 +122,12 @@ class Config(object):
 
 config = Config()
 config.load()
+
+
+def test():
+    hosts = ['google.com']
+    if 'www.google.com' in hosts:
+        print "in ."
+
+if __name__ == "__main__":
+    test()

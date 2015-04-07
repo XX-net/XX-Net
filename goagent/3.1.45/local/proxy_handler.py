@@ -69,7 +69,11 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.parsed_url = urlparse.urlparse(self.path)
 
-        if host in config.HOSTS_MAP or host.endswith(config.HOSTS_POSTFIX_ENDSWITH):
+
+        if host in config.HOSTS_GAE or host.endswith(config.HOSTS_GAE_ENDSWITH):
+            return self.do_AGENT()
+
+        if host in config.HOSTS_FWD or host.endswith(config.HOSTS_FWD_ENDSWITH):
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
         else:
             return self.do_AGENT()
@@ -94,10 +98,10 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
-        if host == "appengine.google.com":
+        if host in config.HOSTS_GAE or host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_CONNECT_AGENT()
 
-        if host in config.HOSTS_MAP or host.endswith(config.HOSTS_POSTFIX_ENDSWITH):
+        if host in config.HOSTS_FWD or host.endswith(config.HOSTS_FWD_ENDSWITH):
             return self.do_CONNECT_FWD()
         else:
             return self.do_CONNECT_AGENT()
