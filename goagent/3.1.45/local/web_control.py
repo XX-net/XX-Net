@@ -59,6 +59,7 @@ class User_config(object):
 
     def __init__(self):
         self.host_appengine = "gae"
+        self.ip_connect_interval = 10
         self.load()
 
     def load(self):
@@ -80,6 +81,11 @@ class User_config(object):
 
             try:
                 self.host_appengine = CONFIG.get('hosts', 'appengine.google.com')
+            except:
+                pass
+
+            try:
+                self.ip_connect_interval = CONFIG.getint('google_ip', 'ip_connect_interval')
             except:
                 pass
 
@@ -112,7 +118,11 @@ class User_config(object):
 
             if self.host_appengine != "gae":
                 f.write("[hosts]\n")
-                f.write("appengine.google.com = %s\n" % self.host_appengine)
+                f.write("appengine.google.com = %s\n\n" % self.host_appengine)
+
+            if self.ip_connect_interval != 10:
+                f.write("[google_ip]\n")
+                f.write("ip_connect_interval = %d\n\n" % int(self.ip_connect_interval))
 
             f.close()
         except:
@@ -397,6 +407,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.proxy_user = self.postvars['proxy_user'][0]
                 user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.host_appengine = self.postvars['host_appengine'][0]
+                user_config.ip_connect_interval = self.postvars['ip_connect_interval'][0]
                 user_config.save()
 
                 data = '{"res":"success"}'

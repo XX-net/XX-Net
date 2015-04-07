@@ -37,6 +37,8 @@
                 <input type="checkbox" id="enable_appengine_gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE">帮助</a>
             </label>
         </div>
+        <br>
+        google ip 使用频率限制：<input type="text" class="input-small"  id="ip_connect_interval"><a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval">帮助</a>
         </p>
     </details>
 
@@ -67,6 +69,7 @@
         }else{
             $("#enable_appengine_gae").prop('checked', false);
         }
+        $("#ip_connect_interval").val(data.ip_connect_interval);
     });
 
     $('#proxy_enable').click(function(data){
@@ -99,11 +102,13 @@
         proxy_port = $("#proxy_port").val();
         proxy_user = $("#proxy_user").val();
         proxy_passwd = $("#proxy_passwd").val();
+        ip_connect_interval = $("#ip_connect_interval").val();
 
         $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
                 "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
                 "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,
-                "host_appengine": host_appengine},
+                "host_appengine": host_appengine,
+                "ip_connect_interval": ip_connect_interval},
             function( data ) {
 
             res = data.res
