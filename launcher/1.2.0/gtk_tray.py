@@ -65,8 +65,8 @@ class Gtk_tray():
         webbrowser.open_new("http://127.0.0.1:8085/")
 
     def on_restart_goagent(self, widget=None, data=None):
-        module_init.stop()
-        module_init.start()
+        module_init.stop("goagent")
+        module_init.start("goagent")
 
     def on_quit(self, widget, data=None):
         gtk.main_quit()
