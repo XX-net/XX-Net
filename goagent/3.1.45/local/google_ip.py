@@ -298,10 +298,10 @@ class Check_ip():
     def report_connect_fail(self, ip_str, force_remove=False):
         # ignore if system network is disconnected.
         if time.time() - self.network_fail_time < 3:
-            #logging.debug("report_connect_fail network fail recently")
+            logging.debug("report_connect_fail network fail recently")
             return
         if not force_remove and not self.network_is_ok():
-            #logging.debug("report_connect_fail network fail")
+            logging.debug("report_connect_fail network fail")
             return
 
         self.ip_lock.acquire()
@@ -386,9 +386,11 @@ class Check_ip():
             return False
 
         if check_ip.network_is_ok():
+            logging.debug("network is ok")
             return True
 
         self.network_fail_time = time.time()
+        logging.debug("network is fail")
         return False
 
     def remove_slowest_ip(self):
