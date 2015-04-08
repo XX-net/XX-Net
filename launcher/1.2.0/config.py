@@ -60,21 +60,12 @@ def scan_module_version(module):
             return filename
     return False
 
-def generate_default_config():
-    global config
-    config = {"modules": {}, "update":{"check_update":1, "last_path":"", "uuid":""}}
+def recheck_module_path():
+    need_save_config = False
 
     modules = ["goagent", "launcher", "php_proxy"]
     for module in modules:
-        version = scan_module_version(module)
-        config["modules"][module] = {"auto_start":1, "current_version":version}
-
-    config["modules"]["launcher"]["auto_start"] = 0 # this means auto start on system login
-
-def recheck_module_path():
-    need_save_config = False
-    for module in config["modules"]:
-        current_version = config["modules"][module]["current_version"]
+        current_version = get(["modules", module, "current_version"], "_")
         if os.path.isdir(os.path.join(root_path, module, current_version)):
             continue
 
@@ -84,22 +75,22 @@ def recheck_module_path():
             logging.error("recheck_module_path %s get version fail", module)
             continue
 
-        config["modules"][module]["current_version"] = current_version
+        set(["modules", module, "current_version"], current_version)
         logging.info("module %s auto upgrade to version %s", module, current_version)
         need_save_config = True
+
+        if module != "launcher" and get(["modules", module, "auto_start"], -1) == -1:
+            set(["modules", module, "auto_start"], 1)
+
 
     return need_save_config
 
 def main():
     if os.path.isfile(data_path):
         load()
-        if recheck_module_path():
-            save()
-    else:
-        generate_default_config()
-    #config["tax"] = 260
-    #save()
-    #print yaml.dump(config)
+
+    if recheck_module_path():
+        save()
 
 main()
 
