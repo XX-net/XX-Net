@@ -31,11 +31,12 @@ class Win_tray():
             0, winreg.KEY_ALL_ACCESS)
 
     def make_menu(self):
-        menu_options = (("Config", None, self.on_show),
-                        ("Check update", None, self.on_check_update),
-                        ("Enable Proxy", None, self.on_enable_proxy),
-                        ("Disable Proxy", None, self.on_disable_proxy),
-                        ("restart goagent", None, self.on_restart_goagent))
+        menu_options = ((u"Config", None, self.on_show),
+#                        ("检查", None, self.on_check_update),
+                        (u"Set Global GoAgent Proxy", None, self.on_enable_proxy),
+                        (u"Set Global PAC Proxy", None, self.on_enable_pac),
+                        (u"Disable Global Proxy", None, self.on_disable_proxy),
+                        (u"Reset GoAgent", None, self.on_restart_goagent))
         return menu_options
 
     def on_show(self, widget=None, data=None):
@@ -55,12 +56,18 @@ class Win_tray():
         logging.info("set register path:%r name:%s type:%d value:%s", reg_path, name, reg_type, value)
 
     def on_enable_proxy(self, widget=None, data=None):
+        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy
         self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 1)
         self.set_register(self.INTERNET_SETTINGS, 'ProxyOverride', 1, '*.local;<local>')  # Bypass the proxy for localhost
         self.set_register(self.INTERNET_SETTINGS, 'ProxyServer', 1, '127.0.0.1:8087')
 
+    def on_enable_pac(self, widget=None, data=None):
+        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable goagent proxy
+        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "http://127.0.0.1:8086/proxy.pac")
+
     def on_disable_proxy(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0)
+        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable goagent proxy
+        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy
 
     def show_control_web(self, widget=None, data=None):
         webbrowser.open("http://127.0.0.1:8085/")
