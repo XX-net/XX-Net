@@ -305,6 +305,8 @@ class CertUtil(object):
                 import win32elevate
                 win32elevate.elevateAdminRun(os.path.abspath(__file__))
                 return True
+            #else:
+                #CertUtil.win32_notify(msg=u'Import GoAgent Ca finished, please restart browser.', title=u'Restart browser need.')
 
             return True if ret else False
 
