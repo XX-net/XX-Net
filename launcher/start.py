@@ -10,7 +10,6 @@ sys.path.append(noarch_lib)
 
 import yaml
 
-import subprocess
 
 def get_launcher_version_from_config():
     config_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher', 'config.yaml'))
@@ -18,10 +17,10 @@ def get_launcher_version_from_config():
         return False
 
     try:
-        config = yaml.load(file(config_path, 'r'))
+        config = yaml.load(open(config_path, 'r'))
         launcher_version = config["modules"]["launcher"]["current_version"]
         return launcher_version
-    except yaml.YAMLError, exc:
+    except yaml.YAMLError as exc:
         print "Error in configuration file:", exc
         return False
 
