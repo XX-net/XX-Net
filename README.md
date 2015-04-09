@@ -1,11 +1,12 @@
-叉叉Net
+XX-Net
 ========
 
 
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.7.2
+https://codeload.github.com/XX-net/XX-Net/zip/1.8.0
+(新版服务端有小改进，建议重新部署服务端)
 
 版本历史： https://github.com/XX-net/XX-Net/releases
    
@@ -18,6 +19,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.7.2
 * Web界面，傻瓜易用
 * 内置了公共 appid, 上千可用ip, 开箱即用
 * 自动导入证书
+* 设置开机启动
 
 ## XX-Net不是匿名工具 
 详情请看：  
@@ -30,7 +32,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * Win7/8/10
 * Ubuntu （不显示系统托盘）
 * Debian
-* Mac OS X
+* Mac OS X(10.7; 10.8; 10.9; 10.10)
 
 ## 链接
 |   |   |
@@ -45,7 +47,6 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - 启动弹出浏览器： 访问 http://localhost:8085/
   - 托盘图标：点击可弹出Web管理界面, 右键可显示常用功能菜单。
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
-  - 第一次启动, 会提示在桌面建立快捷方式,可根据自己需要选择。
   - 推荐用Chrome浏览器, 安装SwichySharp, 可在swichysharp目录下找到插件和配置文件
   - Firefox 需手动导入证书 data/goagent/CA.crt 启动后生成
 * Linux下, 执行 start.sh
@@ -54,8 +55,9 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
 * Mac下，双击 start.command
   - 会自动导入证书，如果还有提示非安全连接，请手动导入data/goagent/CA.crt证书
+  - 命令行启动方式：./start.sh
 * 服务端
-  - 协议采用3.1的版本，请重新部署服务端，新版服务端兼容3.2的客户端
+  - 协议采用3.3的版本，请重新部署服务端，服务端兼容3.1.x/3.2.x的客户端
   - 虽然系统内置了公共appid, 还是建议部署自己的appid，公共appid限制看视频
 
 感谢
