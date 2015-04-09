@@ -428,8 +428,9 @@ class RangeFetch(object):
         logging.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d', self.url, start, end)
 
         self.wfile.write("HTTP/1.1 %d\r\n" % self.response.status)
-        for key, value in self.response.getheaders():
-            #self.wfile.write("%s: %s\r\n" % (key, value))
+        for key in response_headers:
+            value = response_headers[key]
+            logging.debug("Head %s: %s", key.title(), value)
             send_header(self.wfile, key, value)
         self.wfile.write("\r\n")
 
