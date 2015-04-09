@@ -17,13 +17,13 @@ elif sys.platform == "win32":
 elif sys.platform == "darwin":
     darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
     sys.path.append(darwin_lib)
-    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
     osx_lib = os.path.join(python_path, 'lib', 'osx')
     sys.path.append(osx_lib)
 
     try:
-        from mac_tray import sys_tray
+        import mac_tray as sys_tray
     except:
         from non_tray import sys_tray
 else:
