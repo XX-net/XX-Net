@@ -59,7 +59,7 @@ import os
 import sys
 import sysconfig
 
-reload(sys).setdefaultencoding('UTF-8')
+#reload(sys).setdefaultencoding('UTF-8')
 sys.dont_write_bytecode = True
 
 
@@ -74,18 +74,18 @@ if sys.platform == "win32":
     win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
     sys.path.append(win32_lib)
 elif sys.platform == "linux" or sys.platform == "linux2":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
-    sys.path.append(win32_lib)
+    linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+    sys.path.append(linux_lib)
 elif sys.platform == "darwin":
     darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
     sys.path.append(darwin_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
-
 try:
     __import__('gevent.monkey', fromlist=['.']).patch_all()
-except (ImportError, SystemError):
+except (ImportError, SystemError) as e:
+    print "import gevent fail:", e
     sys.exit(sys.stderr.write('please install python-gevent\n'))
 
 import base64
@@ -1085,7 +1085,7 @@ class Common(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'GoAgent Version    : %s (python/%s gevent/%s pyopenssl/%s)\n' % (__version__, sys.version[:5], gevent.__version__, OpenSSL.__version__)
+        info += 'PHP proxy Version    : %s (python/%s gevent/%s pyopenssl/%s)\n' % (__version__, sys.version[:5], gevent.__version__, OpenSSL.__version__)
         info += 'Uvent Version      : %s (pyuv/%s libuv/%s)\n' % (__import__('uvent').__version__, __import__('pyuv').__version__, __import__('pyuv').LIBUV_VERSION) if all(x in sys.modules for x in ('pyuv', 'uvent')) else ''
 
         info += 'Local Proxy        : %s:%s\n' % (self.PROXY_HOST, self.PROXY_PORT) if self.PROXY_ENABLE else ''
