@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-__version__ = '3.2.0'
+__version__ = '3.3.0'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -237,6 +237,7 @@ def application(environ, start_response):
     status_code = int(response.status_code)
     data = response.content
     response_headers = response.headers
+    response_headers['X-Head-Content-Length'] = response_headers.get('Content-Length', '')
     content_type = response_headers.get('content-type', '')
     if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get('accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
         status_code = 206

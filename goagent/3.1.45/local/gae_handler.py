@@ -79,7 +79,8 @@ skip_headers = frozenset(['Vary',
                           'Upgrade',
                           'X-Chrome-Variations',
                           'Connection',
-                          'Cache-Control'])
+                          'Cache-Control'
+                          ])
 
 def send_header(wfile, keyword, value):
     keyword = keyword.title()
@@ -188,7 +189,7 @@ def fetch(method, url, headers, body):
 
     #kwargs['options'] =
     #kwargs['validate'] =
-    kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
+    #kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
@@ -204,6 +205,7 @@ def fetch(method, url, headers, body):
 
     response = request(request_headers, body)
 
+    response.app_msg = ''
     response.app_status = response.status
     if response.app_status != 200:
         return response
@@ -323,14 +325,24 @@ def handler(method, url, headers, body, wfile):
     try:
 
         wfile.write("HTTP/1.1 %d\r\n" % response.status)
+        response_headers = {}
         for key, value in response.getheaders():
-            if key.title() == 'Transfer-Encoding':
+            key = key.title()
+            if key == 'Transfer-Encoding':
                 continue
-            if key.title() in skip_headers:
+            if key in skip_headers:
                 continue
-            #wfile.write("%s: %s\r\n" % (key.title(), value))
+            response_headers[key] = value
+
+        if method == "HEAD":
+            if 'X-Head-Content-Length' in response_headers:
+                response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
+                del response_headers['X-Head-Content-Length']
+
+        for key in response_headers:
+            value = response_headers[key]
             send_header(wfile, key, value)
-            #logging.debug("Head- %s: %s", key.title(), value)
+            #logging.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")
 
         if len(response.app_msg):
