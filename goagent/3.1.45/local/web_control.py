@@ -59,7 +59,7 @@ class User_config(object):
 
     def __init__(self):
         self.host_appengine = "gae"
-        self.ip_connect_interval = 10
+        self.ip_connect_interval = 3
         self.load()
 
     def load(self):
