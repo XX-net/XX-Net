@@ -204,7 +204,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if check_update != 0 and check_update != 1:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
-                    config.config["update"]["check_update"] = int(check_update)
+                    config.set(["update", "check_update"], int(check_update))
                     config.save()
 
                     data = '{"res":"success"}'
