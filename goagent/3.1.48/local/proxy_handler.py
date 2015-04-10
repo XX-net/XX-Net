@@ -70,13 +70,19 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.parsed_url = urlparse.urlparse(self.path)
 
 
-        if host in config.HOSTS_GAE or host.endswith(config.HOSTS_GAE_ENDSWITH):
+        if host in config.HOSTS_GAE:
             return self.do_AGENT()
 
-        if host in config.HOSTS_FWD or host.endswith(config.HOSTS_FWD_ENDSWITH):
+        if host in config.HOSTS_FWD:
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
-        else:
+
+        if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
+
+        if host.endswith(config.HOSTS_FWD_ENDSWITH):
+            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+
+        return self.do_AGENT()
 
 
     # Called by do_METHOD and do_CONNECT_AGENT
@@ -98,10 +104,16 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
-        if host in config.HOSTS_GAE or host.endswith(config.HOSTS_GAE_ENDSWITH):
+        if host in config.HOSTS_GAE:
             return self.do_CONNECT_AGENT()
 
-        if host in config.HOSTS_FWD or host.endswith(config.HOSTS_FWD_ENDSWITH):
+        if host in config.HOSTS_FWD:
+            return self.do_CONNECT_FWD()
+
+        if host.endswith(config.HOSTS_GAE_ENDSWITH):
+            return self.do_CONNECT_AGENT()
+
+        if host.endswith(config.HOSTS_FWD_ENDSWITH):
             return self.do_CONNECT_FWD()
         else:
             return self.do_CONNECT_AGENT()
