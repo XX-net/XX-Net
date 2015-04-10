@@ -197,7 +197,7 @@ class Https_connection_manager(object):
             else:
                 host = ssl_sock.host
 
-            logging.debug("head request %s", host)
+            #logging.debug("head request %s", host)
 
             request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
 
@@ -215,6 +215,8 @@ class Https_connection_manager(object):
                     raise Exception("app check fail")
                 content = response.read()
                 return True
+            except httplib.BadStatusLine as e:
+                return False
             except Exception as e:
                 logging.debug("head request fail:%r", e)
                 return False
@@ -228,7 +230,7 @@ class Https_connection_manager(object):
                 sock_list = self.conn_pool.get_need_keep_alive()
                 for ssl_sock in sock_list:
                     inactive_time = time.time() -ssl_sock.last_use_time
-                    logging.debug("inactive_time:%d", inactive_time)
+                    #logging.debug("inactive_time:%d", inactive_time)
                     if head_request(ssl_sock):
                         self.save_ssl_connection_for_reuse(ssl_sock)
                     else:
