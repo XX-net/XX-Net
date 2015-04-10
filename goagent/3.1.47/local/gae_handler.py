@@ -189,7 +189,7 @@ def fetch(method, url, headers, body):
 
     #kwargs['options'] =
     #kwargs['validate'] =
-    #kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
+    kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
@@ -297,9 +297,12 @@ def handler(method, url, headers, body, wfile):
             if response.app_status < 500:
                 break
 
+        except GAE_Exception as e:
+            errors.append(e)
+            logging.warn("gae_exception:%s %r", e, url)
         except Exception as e:
             errors.append(e)
-            logging.exception('gae_handler.handler %s %r, retry...', url, e)
+            logging.exception('gae_handler.handler %r %s , retry...', e, url)
 
     if len(errors) == max_retry:
         if response and response.app_status >= 500:

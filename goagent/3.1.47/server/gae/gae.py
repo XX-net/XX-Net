@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-__version__ = '3.3.0'
+__version__ = '3.3.1'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -190,7 +190,7 @@ def application(environ, start_response):
     errors = []
     for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
-            response = urlfetch.fetch(url, body, fetchmethod, headers, allow_truncated=False, follow_redirects=False, deadline=timeout, validate_certificate=validate_certificate)
+            response = urlfetch.fetch(url, body, fetchmethod, headers, allow_truncated=True, follow_redirects=False, deadline=timeout, validate_certificate=validate_certificate)
             break
         except apiproxy_errors.OverQuotaError as e:
             time.sleep(5)
