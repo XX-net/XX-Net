@@ -23,7 +23,7 @@ def start(module):
             logging.error("module %s is running", module)
             return "module is running"
 
-        version = config.config["modules"][module]["current_version"]
+        version = config.get(["modules", module, "current_version"], "")
         logging.info("use %s version:%s", module, version)
 
         script_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, module, version, 'start.py'))

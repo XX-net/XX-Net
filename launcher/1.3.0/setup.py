@@ -88,10 +88,11 @@ def get_new_new_config():
         print "Error in configuration file:", exc
 
 def process_data_files():
-    new_config = get_new_new_config()
-    config.load()
-    config.config["modules"]["goagent"]["current_version"] = new_config["modules"]["goagent"]["current_version"]
-    config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
+    #TODO: fix bug
+    #new_config = get_new_new_config()
+    #config.load()
+    #config.config["modules"]["goagent"]["current_version"] = new_config["modules"]["goagent"]["current_version"]
+    #config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
     config.save()
 
 def install_xxnet_files():

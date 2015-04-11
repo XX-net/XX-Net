@@ -55,11 +55,11 @@ class User_config(object):
     proxy_user = ""
     proxy_passwd = ""
 
-    host_appengine = "gae"
+    host_appengine_mode = "gae"
+
+    ip_connect_interval = ""
 
     def __init__(self):
-        self.host_appengine = "gae"
-        self.ip_connect_interval = 3
         self.load()
 
     def load(self):
@@ -80,7 +80,7 @@ class User_config(object):
                 pass
 
             try:
-                self.host_appengine = CONFIG.get('hosts', 'appengine.google.com')
+                self.host_appengine_mode = CONFIG.get('hosts', 'appengine.google.com')
             except:
                 pass
 
@@ -116,11 +116,12 @@ class User_config(object):
             f.write("user = %s\n" % self.proxy_user)
             f.write("passwd = %s\n\n" % self.proxy_passwd)
 
-            if self.host_appengine != "gae":
+            if self.host_appengine_mode != "gae":
                 f.write("[hosts]\n")
-                f.write("appengine.google.com = %s\n\n" % self.host_appengine)
+                f.write("appengine.google.com = %s\n\n" % self.host_appengine_mode)
+                f.write(".google.com = %s\n\n" % self.host_appengine_mode)
 
-            if self.ip_connect_interval != 10:
+            if self.ip_connect_interval != "":
                 f.write("[google_ip]\n")
                 f.write("ip_connect_interval = %d\n\n" % int(self.ip_connect_interval))
 
@@ -385,7 +386,9 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
-                   "pac_url":config.pac_url}
+                   "pac_url":config.pac_url,
+                   "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval")
+                   }
         data = json.dumps(res_arr)
 
         self.send_response('application/json', data)
@@ -407,7 +410,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.proxy_port = self.postvars['proxy_port'][0]
                 user_config.proxy_user = self.postvars['proxy_user'][0]
                 user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
-                user_config.host_appengine = self.postvars['host_appengine'][0]
+                user_config.host_appengine_mode = self.postvars['host_appengine'][0]
                 user_config.ip_connect_interval = self.postvars['ip_connect_interval'][0]
                 user_config.save()
 

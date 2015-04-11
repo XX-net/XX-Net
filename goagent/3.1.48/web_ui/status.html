@@ -65,6 +65,9 @@
         <tr>
             <td>connected link</td><td id="connected_link"></td>
         </tr>
+        <tr>
+            <td>ip_connect_interval</td><td id="ip_connect_interval"></td>
+        </tr>
     </tbody>
 </table>
 
@@ -95,6 +98,7 @@
             $('#working_appid').html(data.working_appid);
             $('#out_of_quota_appids').html(data.out_of_quota_appids);
             $('#not_exist_appids').html(data.not_exist_appids);
+            $('#ip_connect_interval').html(data.ip_connect_interval);
         });
     }
 
