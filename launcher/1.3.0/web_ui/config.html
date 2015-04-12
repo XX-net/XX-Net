@@ -1,117 +1,121 @@
+<h2>系统配置选项</h2>
 
-<br><br>
-    <h4 >开机自动启动:
-        <div class="pull-right">
-            <input id="auto_start" type="checkbox" checked>
-        </div>
-    </h4>
-    <h4 >检查版本更新:
-        <div class="pull-right">
-            <input id="check_update" type="checkbox" checked>
-        </div>
-    </h4>
-    <h4 >启动时弹出状态页:
-        <div class="pull-right">
-            <input id="popup_webui" type="checkbox" checked>
-        </div>
-    </h4>
-<br><br>
-<div id="status"></div>
+<div class="alert fade in hide">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    <p class="message"></p>
+</div> <!-- .alert -->
 
+<div id="options">
+    <div class="row-fluid">
+        <div class="span4">开机自动启动</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="auto-start" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">检查版本更新</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="check-update" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">启动时弹出状态页</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="popup-webui" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+</div> <!-- #options -->
 
-<script src="/js/jquery-1.11.2.min.js"></script>
-<script src="/js/bootstrap.min.js"></script>
-<script src="/js/highlight.js"></script>
-<script src="/js/bootstrap-switch.min.js"></script>
+<!-- JavaScript -->
 <script type="text/javascript">
-    var check_update = 1;
-    var popup_webui = 1;
-    var auto_start = 0;
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
 
-    $('#check_update').on('init.bootstrapSwitch', function (event) {
-        $.getJSON( "/config?cmd=get_config", function( data ) {
-            check_update = data.check_update;
-            if(data.check_update == 1){
-                $('#check_update').bootstrapSwitch('state', true);
-            }else{
-                $('#check_update').bootstrapSwitch('state', false);
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['auto_start'] != 0 ) {
+                    $( "#auto_start").parent().removeClass('switch-off');
+                    $( "#auto_start").parent().addClass('switch-on');
+
+                    $( "#auto_start").prop('checked', true);
+                }
+                if ( result['check_update'] != 0 ) {
+                    $( "#check-update").parent().removeClass('switch-off');
+                    $( "#check-update").parent().addClass('switch-on');
+                    
+                    $( "#check-update").prop('checked', true);
+                }
+                if ( result['popup_webui'] != 0 ) {
+                    $( "#popup-webui").parent().removeClass('switch-off');
+                    $( "#popup-webui").parent().addClass('switch-on');
+
+                    $( "#popup-webui").prop('checked', true);
+                }
             }
+        });     
+    });
+</script>
+<script type="text/javascript">
+    $('#auto-start').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'auto_start',
+            value     = isChecked ? 1 : 0;
 
-            popup_webui = data.popup_webui;
-            if(data.popup_webui == 1){
-                $('#popup_webui').bootstrapSwitch('state', true);
-            }else{
-                $('#popup_webui').bootstrapSwitch('state', false);
+        return setConfig(key, value);
+    });
+    
+    $('#check-update').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'check_update',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#popup-webui').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'popup_webui',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+</script>
+<script type="text/javascript">
+    function setConfig(key, value) {
+        var pageRequests = {};
+
+        pageRequests['cmd'] = 'set_config';
+        pageRequests[key]   = value;
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    $('.alert').html('设置已成功保存.');
+                    $('.alert').addClass('alert-success');
+                    $('.alert').removeClass('alert-error');
+                    $('.alert').removeClass('hide');
+                } else {
+                    $('.alert').html('发生未知错误.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
+                    $('.alert').removeClass('hide');
+                }
             }
-
-            auto_start = data.auto_start;
-            if(data.auto_start == 1){
-                $('#auto_start').bootstrapSwitch('state', true);
-            }else{
-                $('#auto_start').bootstrapSwitch('state', false);
-            }
         });
-    });
-
-    $('#check_update').on('switchChange.bootstrapSwitch', function (event, state) {
-        if(state){
-            val = 1;
-        }else{
-            val = 0;
-        }
-        if(val == check_update){
-            return;
-        }else{
-            check_update = val;
-        }
-        $.getJSON( "/config?cmd=set_config&check_update="+val, function( data ) {
-            res = data.res
-            $("#status").html(res)
-        });
-    });
-
-    ///////////////////////////////////////////////////////////////////////
-
-
-    $('#popup_webui').on('switchChange.bootstrapSwitch', function (event, state) {
-        if(state){
-            val = 1;
-        }else{
-            val = 0;
-        }
-        if(val == popup_webui){
-            return;
-        }else{
-            popup_webui = val;
-        }
-        $.getJSON( "/config?cmd=set_config&popup_webui="+val, function( data ) {
-            res = data.res
-            $("#status").html(res)
-        });
-    });
-
-    $('#auto_start').on('switchChange.bootstrapSwitch', function (event, state) {
-        if(state){
-            val = 1;
-        }else{
-            val = 0;
-        }
-        if(val == auto_start){
-            return;
-        }else{
-            auto_start = val;
-        }
-        $.getJSON( "/config?cmd=set_config&auto_start="+val, function( data ) {
-            res = data.res
-            $("#status").html(res)
-        });
-    });
-
-    ///////////////////////////////////////////////////////////////////////
-    // initialize all the inputs
-    $('input[type="checkbox"], input[type="radio"]')
-            .not("[data-switch-no-init]")
-            .bootstrapSwitch();
-
-
+    }
 </script>
