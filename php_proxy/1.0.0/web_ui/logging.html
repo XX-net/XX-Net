@@ -1,78 +1,54 @@
-
-<style type="text/css">
-    #log {
-        -moz-appearance: textfield-multiline;
-        -webkit-appearance: textarea;
-        border: 1px solid gray;
-        font: medium -moz-fixed;
-        font: -webkit-small-control;
-        font-family: Verdana, Geneva, sans-serif;
-        font-family: monospace;
-        font-size:1.0em;
-        background-color:#f9f9f9;
-        height: 100%;
-        overflow: auto;
-        padding: 2px;
-        resize: both;
-        width: 100%;
-        white-space:nowrap;
-    }
-    #log_container{
-        height:85vh;
-    }
-</style>
-
-<h2>PHP代理日志:</h2>
-<div id="log_container">
-    <div id="log" ></div>
+<h2>PHP代理日志</h2>
+<div class="alert alert-info">Total Lines: 0</div> <!-- .alert -->
+<div id="log-container">
+    <textarea id="log" readonly></textarea>
 </div>
-<div id="status"></div>
 
-<script src="/js/jquery-1.11.2.min.js"></script>
-<script src="/js/jquery.timer.js"></script>
-
+<!-- JavaScript -->
 <script type="text/javascript">
-    var last_line_no = 1
-    var tid = 0;
-    pull_log();
+    $(function() {
+        window.previousOffset = 0;
+        window.offset         = 1;
 
+        var timer = $.timer(function() {
+            getLog();
+        });
+        timer.set({ 
+            time: 2500, 
+            autostart: true 
+        });
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        getLog();
+    });
+</script>
+<script type="text/javascript">
+    function getLog() {
+        var pageRequests = {
+            'cmd': 'get_new',
+            'last_no': offset
+        };
 
-    function enable_autoscroll() {
-        if (tid == 0) {
-            tid = setTimeout(pull_log, 2000);
-        }
-    }
+        $.ajax({
+            type: 'GET',
+            url: 'http://127.0.0.1:8083/log',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                $.each(result, function(key, value) {
+                    window.offset = key;
 
-    function pull_log() {
-        var from_no = parseInt(last_line_no) + 1
-        $.getJSON( "http://127.0.0.1:8083/log?cmd=get_new&last_no="+from_no, function( data ) {
-            var text = '';
-            $.each( data, function( key, val ) {
-                text += val;
-                last_line_no = key
-            });
-            var org_txt = $("#log").html()
-            $("#log").html(org_txt + text)
-
-            tid = setTimeout(pull_log, 2000);
-            var height = $('#log')[0].scrollHeight;
-            $('#log').scrollTop(height);
-            $('#status').html(last_line_no + " h:" + height);
+                    if ( window.previousOffset != window.offset ) {
+                        $('#log').append(value);
+                        $('#log').scrollTop($('#log')[0].scrollHeight);
+                    }
+                });
+                
+                $('.alert').html('Total Lines: ' + offset);
+                window.previousOffset = window.offset;
+            }
         });
     }
-
-    $('#log').scroll(function() {
-        var h1 = $(this).scrollTop();
-        var h2 = $(this).height();
-        var h3 = $(this)[0].scrollHeight;
-        if (h1 + h2 >= h3 - 100) {
-            enable_autoscroll();
-            $('#status').html("auto");
-        }else{
-            clearTimeout(tid);
-            tid = 0;
-            $('#status').html("stop");
-        }
-    });
-
 </script>
