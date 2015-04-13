@@ -55,11 +55,9 @@ class User_config(object):
     proxy_user = ""
     proxy_passwd = ""
 
-    host_appengine_mode = "gae"
-
-    ip_connect_interval = ""
-
     def __init__(self):
+        self.host_appengine_mode = "gae"
+        self.ip_connect_interval = ""
         self.load()
 
     def load(self):
@@ -410,7 +408,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.proxy_port = self.postvars['proxy_port'][0]
                 user_config.proxy_user = self.postvars['proxy_user'][0]
                 user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
-                user_config.host_appengine_mode = self.postvars['host_appengine'][0]
+                user_config.host_appengine_mode = self.postvars['host_appengine_mode'][0]
                 user_config.ip_connect_interval = self.postvars['ip_connect_interval'][0]
                 user_config.save()
 

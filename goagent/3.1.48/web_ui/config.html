@@ -64,7 +64,7 @@
         $("#proxy_port").val(data.proxy_port);
         $("#proxy_user").val(data.proxy_user);
         $("#proxy_passwd").val(data.proxy_passwd);
-        if(data.host_appengine == "gae"){
+        if(data.host_appengine_mode == "gae"){
             $("#enable_appengine_gae").prop('checked', true);
         }else{
             $("#enable_appengine_gae").prop('checked', false);
@@ -93,9 +93,9 @@
             proxy_enable = 0;
         }
         if($("#enable_appengine_gae").prop('checked')){
-            host_appengine = "gae";
+            host_appengine_mode = "gae";
         }else{
-            host_appengine = "fwd";
+            host_appengine_mode = "fwd";
         }
         proxy_type = $("#proxy_type").val();
         proxy_host = $("#proxy_host").val();
@@ -107,7 +107,7 @@
         $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
                 "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
                 "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,
-                "host_appengine": host_appengine,
+                "host_appengine_mode": host_appengine_mode,
                 "ip_connect_interval": ip_connect_interval},
             function( data ) {
 
