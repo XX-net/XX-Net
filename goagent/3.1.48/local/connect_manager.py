@@ -155,6 +155,7 @@ class Connect_pool():
 class Https_connection_manager(object):
 
     thread_num_lock = threading.Lock()
+    keep_alive = False
 
     def __init__(self):
         # http://docs.python.org/dev/library/ssl.html
@@ -179,9 +180,10 @@ class Https_connection_manager(object):
         if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
-        p = threading.Thread(target = self.keep_alive_thread)
-        p.daemon = True
-        p.start()
+        if self.keep_alive:
+            p = threading.Thread(target = self.keep_alive_thread)
+            p.daemon = True
+            p.start()
 
         self.keep_alive = True
 
