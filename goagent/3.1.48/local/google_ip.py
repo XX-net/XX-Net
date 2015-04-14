@@ -444,7 +444,7 @@ class Check_ip():
                     self.remove_slowest_ip()
                     self.save_ip_list()
             except Exception as e:
-                logging.warn("google_ip.runJob fail:%s", e)
+                logging.exception("google_ip.runJob fail:%s", e)
 
         self.ncount_lock.acquire()
         self.searching_thread_count -= 1

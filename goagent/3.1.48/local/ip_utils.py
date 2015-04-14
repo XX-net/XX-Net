@@ -35,11 +35,29 @@ def split_ip(strline):
     begin = ""
     end = ""
     if "-" in strline:
-        "xxx.xxx.xxx.xxx-xxx.xxx.xxx.xxx"
-        begin, end = strline.split("-")
-        if 1 <= len(end) <= 3:
-            prefix = begin[0:begin.rfind(".")]
-            end = prefix + "." + end
+        num_regions = strline.split(".")
+        if len(num_regions) == 4:
+            "xxx.xxx.xxx-xxx.xxx-xxx"
+            begin = ''
+            end = ''
+            for region in num_regions:
+                if '-' in region:
+                    s, e = region.split('-')
+                    begin += '.' + s
+                    end += '.' + e
+                else:
+                    begin += '.' + region
+                    end += '.' + region
+            begin = begin[1:]
+            end = end[1:]
+
+        else:
+            "xxx.xxx.xxx.xxx-xxx.xxx.xxx.xxx"
+            begin, end = strline.split("-")
+            if 1 <= len(end) <= 3:
+                prefix = begin[0:begin.rfind(".")]
+                end = prefix + "." + end
+
     elif strline.endswith("."):
         "xxx.xxx.xxx."
         begin = strline + "0"

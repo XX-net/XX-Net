@@ -43,6 +43,8 @@ class Ip_range(object):
             begin, end = ip_utils.split_ip(line)
             nbegin = ip_utils.ip_string_to_num(begin)
             nend = ip_utils.ip_string_to_num(end)
+            if not nbegin or not nend or nend < nbegin:
+                logging.error("load ip range:%s", line)
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
             self.ip_range_list.append( [nbegin, nend] )
@@ -76,11 +78,20 @@ class Ip_range(object):
         while True:
             index = random.randint(0, len(self.ip_range_list) - 1)
             ip_range = self.ip_range_list[index]
-            id_2 = random.randint(0, ip_range[1] - ip_range[0] - 1)
+            #logging.debug("random.randint %d - %d", ip_range[0], ip_range[1])
+            if ip_range[1] == ip_range[0]:
+                return ip_range[1]
+
+            try:
+                id_2 = random.randint(0, ip_range[1] - ip_range[0])
+            except Exception as e:
+                logging.exception("random.randint:%r %d - %d, %d", e, ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
+
             ip = ip_range[0] + id_2
             add_last_byte = ip % 255
             if add_last_byte == 0 or add_last_byte == 255:
                 continue
+
             return ip
 
 ip_range = Ip_range()
