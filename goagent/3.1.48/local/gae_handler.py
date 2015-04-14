@@ -116,12 +116,14 @@ def _request(sock, headers, payload, bufsize=8192):
     response = httplib.HTTPResponse(sock, buffering=True)
     try:
         orig_timeout = sock.gettimeout()
-        sock.settimeout(30)
+        sock.settimeout(90)
         response.begin()
         sock.settimeout(orig_timeout)
-    except httplib.BadStatusLine:
-        logging.warn("_request bad status line")
+    except httplib.BadStatusLine as e:
+        logging.warn("_request bad status line:%r", e)
         response = None
+    except Exception as e:
+        logging.exception("_request:%r", e)
     return response
 
 class GAE_Exception(BaseException):
@@ -190,6 +192,7 @@ def fetch(method, url, headers, body):
     #kwargs['options'] =
     #kwargs['validate'] =
     kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
+    kwargs['timeout'] = '19'
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
@@ -326,8 +329,7 @@ def handler(method, url, headers, body, wfile):
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
 
     try:
-
-        wfile.write("HTTP/1.1 %d\r\n" % response.status)
+        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
         response_headers = {}
         for key, value in response.getheaders():
             key = key.title()
