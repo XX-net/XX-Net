@@ -183,62 +183,72 @@ class Https_connection_manager(object):
         p.daemon = True
         p.start()
 
+        self.keep_alive = True
 
-    def keep_alive_thread(self):
-
-        def head_request(ssl_sock):
-            if ssl_sock.host == '':
-                ssl_sock.appid = appid_manager.get_appid()
-                if not ssl_sock.appid:
-                    logging.error("no appid can use")
-                    return False
-                host = ssl_sock.appid + ".appspot.com"
-                ssl_sock.host = host
-            else:
-                host = ssl_sock.host
-
-            #logging.debug("head request %s", host)
-
-            request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
-
-            try:
-                ssl_sock.settimeout(2)
-
-                ssl_sock.send(request_data.encode())
-                response = httplib.HTTPResponse(ssl_sock, buffering=True)
-
-                response.begin()
-
-                status = response.status
-                if status != 200:
-                    logging.debug("app head fail status:%d", status)
-                    raise Exception("app check fail")
-                content = response.read()
-                return True
-            except httplib.BadStatusLine as e:
+    def head_request(self, ssl_sock):
+        if ssl_sock.host == '':
+            ssl_sock.appid = appid_manager.get_appid()
+            if not ssl_sock.appid:
+                logging.error("no appid can use")
                 return False
-            except Exception as e:
-                logging.debug("head request fail:%r", e)
-                return False
-            finally:
+            host = ssl_sock.appid + ".appspot.com"
+            ssl_sock.host = host
+        else:
+            host = ssl_sock.host
+
+        # public appid don't keep alive, for quota limit.
+        if ssl_sock.appid.startswith("xxnet-") and ssl_sock.appid[7:].isdigit():
+            #logging.info("public appid don't keep alive")
+            self.keep_alive = False
+            return False
+
+        #logging.debug("head request %s", host)
+
+        request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
+
+        response = None
+        try:
+            ssl_sock.settimeout(3)
+            ssl_sock.sock.settimeout(3)
+
+            data = request_data.encode()
+            ret = ssl_sock.send(data)
+            if ret != len(data):
+                logging.warn("head send len:%d %d", ret, len(data))
+            response = httplib.HTTPResponse(ssl_sock, buffering=True)
+
+            response.begin()
+
+            status = response.status
+            if status != 200:
+                logging.debug("app head fail status:%d", status)
+                raise Exception("app check fail")
+            return True
+        except httplib.BadStatusLine as e:
+            return False
+        except Exception as e:
+            logging.debug("head request fail:%r", e)
+            return False
+        finally:
+            if response:
                 response.close()
 
-
-        while True:
+    def keep_alive_thread(self):
+        while self.keep_alive:
             time.sleep(2)
             try:
-                sock_list = self.conn_pool.get_need_keep_alive()
+                sock_list = self.conn_pool.get_need_keep_alive(maxtime=200)
                 for ssl_sock in sock_list:
-                    inactive_time = time.time() -ssl_sock.last_use_time
+                    #inactive_time = time.time() -ssl_sock.last_use_time
                     #logging.debug("inactive_time:%d", inactive_time)
-                    if head_request(ssl_sock):
+                    if self.head_request(ssl_sock):
                         self.save_ssl_connection_for_reuse(ssl_sock)
                     else:
                         ssl_sock.close()
 
                 self.create_more_connection()
             except Exception as e:
-                logging.exception("keep alive except:%r", e)
+                logging.warn("keep alive except:%r", e)
 
     def save_ssl_connection_for_reuse(self, ssl_sock):
         ssl_sock.last_use_time = time.time()
@@ -573,5 +583,12 @@ def test_pool_speed():
 
 if __name__ == "__main__":
     #test_pool_speed()
-    sock = forwork_manager.create_connection()
-    print sock
+    #sock = forwork_manager.create_connection()
+    #print sock
+    appid = "xxnet-a23"
+    le = appid[7:]
+    print le
+    if appid.startswith("xxnet-") and le.isdigit():
+        print "is dig"
+    else:
+        print "not dig"
