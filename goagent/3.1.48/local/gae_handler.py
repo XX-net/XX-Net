@@ -432,10 +432,16 @@ class RangeFetch(object):
 
         logging.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d', self.url, start, end)
 
-        self.wfile.write("HTTP/1.1 %d\r\n" % self.response.status)
+        self.wfile.write("HTTP/1.1 200 OK\r\n")
         for key in response_headers:
+            if key == 'Transfer-Encoding':
+                continue
+            if key == 'X-Head-Content-Length':
+                continue
+            if key in skip_headers:
+                continue
             value = response_headers[key]
-            logging.debug("Head %s: %s", key.title(), value)
+            #logging.debug("Head %s: %s", key.title(), value)
             send_header(self.wfile, key, value)
         self.wfile.write("\r\n")
 
@@ -480,11 +486,15 @@ class RangeFetch(object):
                 break
 
             try:
-                self.wfile.write(data)
+                ret = self.wfile.write(data)
+                if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
+                    logging.debug("send to browser wfile.write ret:%d, retry", ret)
+                    ret = self.wfile.write(data)
+                    logging.debug("send to browser wfile.write ret:%d", ret)
                 self.expect_begin += len(data)
                 del data
             except Exception as e:
-                logging.info('RangeFetch client closed(%s). %s', e, self.url)
+                logging.warn('RangeFetch client closed(%s). %s', e, self.url)
                 break
         self._stopped = True
 
