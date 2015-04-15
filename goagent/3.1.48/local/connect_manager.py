@@ -29,8 +29,9 @@ if config.PROXY_ENABLE:
         proxy_type = socks.SOCKS5
     else:
         logging.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-        raise
+        config.PROXY_ENABLE = 0
 
+if config.PROXY_ENABLE:
     socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 
 
