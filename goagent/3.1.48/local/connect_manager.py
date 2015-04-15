@@ -93,7 +93,7 @@ class Connect_pool():
         fastest_sock = None
         for sock in self.pool:
             time = self.pool[sock]
-            if time < fastest_time:
+            if time < fastest_time or not fastest_sock:
                 fastest_time = time
                 fastest_sock = sock
 
