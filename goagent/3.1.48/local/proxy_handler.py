@@ -34,7 +34,7 @@ import gae_handler
 
 
 class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-
+    gae_support_methods = tuple(["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])
     bufsize = 256*1024
     max_retry = 3
 
@@ -204,6 +204,21 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
         logging.debug('GAE CONNECT %s %s', self.command, self.path)
+        if self.command not in self.gae_support_methods:
+            if host.endswith(".google.com") or host.endswith(config.HOSTS_FWD_ENDSWITH):
+                if host in config.HOSTS_GAE:
+                    gae_set = [s for s in config.HOSTS_GAE]
+                    gae_set.remove(host)
+                    config.HOSTS_GAE = tuple(gae_set)
+                if host not in config.HOSTS_FWD:
+                    fwd_set = [s for s in config.HOSTS_FWD]
+                    fwd_set.append(host)
+                    config.HOSTS_FWD = tuple(fwd_set)
+                logging.warn("Method %s not support in GAE, Redirect to FWD for %s", self.command, self.path)
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path).encode())
+            else:
+                logging.warn("Method %s not support in GoAgent for %s", self.command, self.path)
+                return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
         try:
             if self.path[0] == '/' and host:
