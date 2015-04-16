@@ -41,6 +41,8 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
+from config import config
+
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
@@ -145,6 +147,7 @@ class CertUtil(object):
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
+    ca_digest = 'sha1' if sys.platform == 'win32' and sys.getwindowsversion() < (6,) else 'sha256'
     ca_lock = threading.Lock()
 
     @staticmethod
@@ -160,7 +163,7 @@ class CertUtil(object):
         subj.organizationalUnitName = '%s Root' % CertUtil.ca_vendor
         subj.commonName = '%s XX-Net' % CertUtil.ca_vendor
         req.set_pubkey(key)
-        req.sign(key, 'sha1')
+        req.sign(key, CertUtil.ca_digest)
         ca = OpenSSL.crypto.X509()
         ca.set_serial_number(0)
         ca.gmtime_adj_notBefore(0)
@@ -168,7 +171,7 @@ class CertUtil(object):
         ca.set_issuer(req.get_subject())
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
-        ca.sign(key, 'sha1')
+        ca.sign(key, CertUtil.ca_digest)
         #logging.debug("CA key:%s", key)
         logging.info("create ca")
         return key, ca
@@ -213,7 +216,7 @@ class CertUtil(object):
             sans = [commonname] + [x for x in sans if x != commonname]
         #req.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans)).encode()])
         req.set_pubkey(pkey)
-        req.sign(pkey, 'sha1')
+        req.sign(pkey, CertUtil.ca_digest)
 
         cert = OpenSSL.crypto.X509()
         cert.set_version(2)
@@ -231,7 +234,7 @@ class CertUtil(object):
         else:
             sans = [commonname] + [s for s in sans if s != commonname]
         #cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
-        cert.sign(key, 'sha1')
+        cert.sign(key, CertUtil.ca_digest)
 
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
         with open(certfile, 'wb') as fp:
@@ -505,6 +508,10 @@ class CertUtil(object):
 
         CertUtil.import_ca(CertUtil.ca_keyfile)
 
+        # change the status,
+        # web_control /cert_import_status will return True, else return False
+        # launcher will wait ready to open browser and check update
+        config.cert_import_ready = True
 
 def test_del_ca():
     commonname = "GoAgent CA - GoAgent"
