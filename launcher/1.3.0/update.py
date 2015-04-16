@@ -209,7 +209,7 @@ def check_update():
     global update_content, update_dict
     try:
         #config.load()
-        if not config.get(["update", "check_update"]):
+        if not config.get(["update", "check_update"], 1):
             return
 
         req_url = update_url + "?uuid=" + get_uuid()
