@@ -123,7 +123,7 @@ def _request(sock, headers, payload, bufsize=8192):
         logging.warn("_request bad status line:%r", e)
         response = None
     except Exception as e:
-        logging.exception("_request:%r", e)
+        logging.warn("_request:%r", e)
     return response
 
 class GAE_Exception(BaseException):
@@ -267,7 +267,7 @@ def handler(method, url, headers, body, wfile):
         try:
             response = fetch(method, url, headers, body)
             if response.app_status != 200:
-                logging.debug("fetch gae status:%d url:%s", response.app_status, url)
+                logging.debug("fetch gae status:%s url:%s", response.app_status, url)
 
             if response.app_status == 404:
                 logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
