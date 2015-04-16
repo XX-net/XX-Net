@@ -312,7 +312,7 @@ def check_loop():
 
     #wait goagent to start
     #update need goagent as proxy
-    time.sleep(10)
+    time.sleep(1)
 
     while True:
         check_update()

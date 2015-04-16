@@ -225,6 +225,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_ip_list_handler()
         elif path == "/ssl_pool":
             return self.req_ssl_pool_handler()
+        elif path == "/is_ready":
+            return self.req_is_ready_handler()
         elif path == "/quit":
             config.keep_run = False
             data = "Quit"
@@ -494,6 +496,12 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def req_ssl_pool_handler(self):
         data = connect_manager.https_manager.conn_pool.to_string()
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+
+    def req_is_ready_handler(self):
+        data = "%s" % config.cert_import_ready
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

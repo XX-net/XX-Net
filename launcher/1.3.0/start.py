@@ -65,7 +65,7 @@ def main():
 
     web_control.start()
 
-    #config.load()
+
     if config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         webbrowser.open("http://127.0.0.1:8085/")
 

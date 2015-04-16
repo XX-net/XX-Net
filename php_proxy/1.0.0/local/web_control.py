@@ -137,6 +137,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_log_handler()
         elif path == "/config":
             return self.req_config_handler()
+        elif path == "/is_ready":
+            return self.req_is_ready_handler()
         elif path == "/quit":
             common.keep_run = False
             data = "Quit"
@@ -248,6 +250,12 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = '{"res":"fail", "except":"%s"}' % e
         self.send_response('application/json', data)
 
+
+    def req_is_ready_handler(self):
+        data = "True"
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
 
 if __name__ == "__main__":
     pass

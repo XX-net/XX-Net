@@ -305,6 +305,27 @@ def confirm_xxnet_exit():
         time.sleep(1)
     return False
 
+def confirm_module_ready(port):
+    if port == 0:
+        logging.error("confirm_module_ready with port 0")
+        time.sleep(1)
+        return False
+
+    for i in range(200):
+        req = http_request("http://127.0.0.1:%d/is_ready" % port)
+        if req == False:
+            time.sleep(1)
+            continue
+
+        content = req.read(1024)
+        req.close()
+        #logging.debug("cert_import_ready return:%s", content)
+        if content == "True":
+            return True
+        else:
+            time.sleep(1)
+    return False
+
 if __name__ == "__main__":
     #confirm_xxnet_exit()
     http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

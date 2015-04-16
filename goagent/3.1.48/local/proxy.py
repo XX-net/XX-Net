@@ -229,6 +229,13 @@ def main():
     pre_start()
     logging.info(config.info())
 
+    CertUtil.init_ca()
+
+    server = LocalProxyServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
+    p = threading.Thread(target=server.serve_forever)
+    p.setDaemon(True)
+    p.start()
+
     if config.PAC_ENABLE:
         server = LocalProxyServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
         p = threading.Thread(target=server.serve_forever)
@@ -241,12 +248,6 @@ def main():
         p.setDaemon(True)
         p.start()
 
-    server = LocalProxyServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
-    p = threading.Thread(target=server.serve_forever)
-    p.setDaemon(True)
-    p.start()
-
-    CertUtil.init_ca()
 
     while config.keep_run:
         time.sleep(1)

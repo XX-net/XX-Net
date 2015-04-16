@@ -82,6 +82,11 @@ def recheck_module_path():
         if module != "launcher" and get(["modules", module, "auto_start"], -1) == -1:
             set(["modules", module, "auto_start"], 1)
 
+    if get(["modules", "goagent", "control_port"], 0) == 0:
+        set(["modules", "goagent", "control_port"], 8084)
+
+    if get(["modules", "php_proxy", "control_port"], 0) == 0:
+        set(["modules", "php_proxy", "control_port"], 8083)
 
     return need_save_config
 
