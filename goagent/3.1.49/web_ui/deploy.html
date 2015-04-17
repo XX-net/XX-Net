@@ -43,10 +43,39 @@
     <div id="logs" class="tab-pane fade">
         <p>部署完成后, 请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效.</p>
         <textarea id="log" readonly></textarea>
+        <div class="row-fluid">
+            <div class="span12">
+                <button class="btn btn-cancel btn-block">终止部署</button>
+            </div> <!-- .span12 -->
+        </div> <!-- .row-fluid -->
     </div> <!-- #log -->
 </div> <!-- #tab-content -->
 
 <!-- JavaScript -->
+<script type="text/javascript">
+    $(function() {
+        window.status = 'init';
+        window.timer  = $.timer(function() {
+            getDeployStatus();
+        });
+        window.timer.set({ 
+            time: 1000, 
+            autostart: true
+        });
+    });
+</script>
+<script type="text/javascript">
+    $('.btn-cancel').click(function() {
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8084/deploy?cmd=cancel',
+            dataType: 'JSON',
+            success: function(result) {
+                // Do nothing
+            }
+        });
+    });
+</script>
 <script type="text/javascript">
     $(function() {
         window.status = 'init';
@@ -103,6 +132,10 @@
 
                             $('#log').append(result['log']);
                             $("button[type=submit]").removeAttr('disabled');
+                        } else if ( result['status'] == 'cancel' ) {
+                            timer.stop();
+                            window.status = "init";
+                            $('.alert').html('当前状态: 部署被用户终止');
                         } else {
                             timer.stop();
                             $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
@@ -113,7 +146,6 @@
                     $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
                     $('#log').append(result['log']);
                 }
-
                 $('#log').scrollTop($('#log')[0].scrollHeight);
             }
         });

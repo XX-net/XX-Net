@@ -37,6 +37,7 @@ select {
             transition: border .25s linear,color .25s linear;
 }
 
+button.btn-cancel,
 button[type=submit] {
     margin-top: 30px;
 }
