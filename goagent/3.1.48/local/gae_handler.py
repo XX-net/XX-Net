@@ -108,8 +108,8 @@ def _request(sock, headers, payload, bufsize=8192):
         start = 0
         while start < payload_len:
             send_size = min(payload_len - start, 65535)
-            sock.send(payload[start:start+send_size])
-            start += send_size
+            sended = sock.send(payload[start:start+send_size])
+            start += sended
     elif hasattr(payload, 'read'):
         sock.send(request_data)
         while True:
@@ -186,7 +186,7 @@ def fetch(method, url, headers, body):
             if len(zbody) < len(body):
                 body = zbody
                 headers['Content-Encoding'] = 'deflate'
-        if len(body) > 65535:
+        if len(body) > 10 * 1024 * 1024:
             logging.warn("body len:%d %s %s", len(body), method, url)
         headers['Content-Length'] = str(len(body))
 
