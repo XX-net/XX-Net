@@ -1,6 +1,5 @@
 <h2>GoAgent状态信息</h2>
-
-<table class="table table-bordered table-striped">
+<table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
             <th width="25%">Property</th>
@@ -9,107 +8,139 @@
     </thead>
     <tbody>
         <tr>
-            <td>Sys Platform</td><td id="sys_platform"></td>
+            <td>Sys Platform</td>
+            <td id="sys-platform"></td>
         </tr>
         <tr>
-            <td>OS System</td><td id="os_system"></td>
+            <td>OS System</td>
+            <td id="os-system"></td>
         </tr>
         <tr>
-            <td>OS version</td><td id="os_version"></td>
+            <td>OS version</td>
+            <td id="os-version"></td>
         </tr>
         <tr>
-            <td>OS release</td><td id="os_release"></td>
+            <td>OS release</td>
+            <td id="os-release"></td>
         </tr>
         <tr>
-            <td>OS detail</td><td id="os_detail"></td>
+            <td>OS detail</td>
+            <td id="os-detail"></td>
         </tr>
         <tr>
-            <td>language</td><td id="language"></td>
+            <td>language</td>
+            <td id="language"></td>
         </tr>
         <tr>
-            <td>architecture</td><td id="architecture"></td>
+            <td>architecture</td>
+            <td id="architecture"></td>
         </tr>
         <tr>
-            <td>Browser</td><td id="browser"></td>
+            <td>Browser</td>
+            <td id="browser"></td>
         </tr>
         <tr>
-            <td>XX-Net Version</td><td id="xxnet_version"></td>
+            <td>XX-Net Version</td>
+            <td id="xxnet-version"></td>
         </tr>
         <tr>
-            <td>Launcher Version</td><td id="launcher_version"></td>
+            <td>Launcher Version</td>
+            <td id="launcher-version"></td>
         </tr>
         <tr>
-            <td>GoAgent Version</td><td id="goagent_version"></td>
+            <td>GoAgent Version</td>
+            <td id="goagent-version"></td>
         </tr>
         <tr>
-            <td>Python Version</td><td id="python_version"></td>
+            <td>Python Version</td>
+            <td id="python-version"></td>
         </tr>
         <tr>
-            <td>Proxy Listen</td><td id="proxy_listen"></td>
+            <td>Proxy Listen</td>
+            <td id="proxy-listen"></td>
         </tr>
         <tr hidden="true">
-            <td>Set appids</td><td  style="max-width:150px;word-wrap: break-word;" id="gae_appid"></td>
+            <td>Set appids</td>
+            <td id="gae-appid"></td>
         </tr>
         <tr>
-            <td>working appids</td><td  style="max-width:150px;word-wrap: break-word;" id="working_appid"></td>
+            <td>working appids</td>
+            <td id="working-appid"></td>
         </tr>
         <tr>
-            <td>Out of Quota appids</td><td  style="max-width:150px;word-wrap: break-word;" id="out_of_quota_appids"></td>
+            <td>Out of Quota appids</td>
+            <td id="out-of-quota-appids"></td>
         </tr>
         <tr>
-            <td>Not Exist appids</td><td  style="max-width:150px;word-wrap: break-word;" id="not_exist_appids"></td>
+            <td>Not Exist appids</td>
+            <td id="not-exist-appids"></td>
         </tr>
         <tr>
-            <td>PAC URL</td><td id="pac_url"></td>
+            <td>PAC URL</td>
+            <td id="pac-url"></td>
         </tr>
         <tr>
-            <td>Google IP</td><td id="gws_ip_num"></td>
+            <td>Google IP</td>
+            <td id="gws-ip-num"></td>
         </tr>
         <tr>
-            <td>connected link</td><td id="connected_link"></td>
+            <td>connected link</td>
+            <td id="connected-link"></td>
         </tr>
         <tr>
-            <td>ip_connect_interval</td><td id="ip_connect_interval"></td>
+            <td>ip-connect-interval</td>
+            <td id="ip-connect-interval"></td>
         </tr>
     </tbody>
 </table>
+<p><a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="-blank">日志页</a>内容, 方便分析问题.</p>
 
-<div>* <a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>，请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="_blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="_blank">日志页</a>内容，方便分析问题。</div>
-<div>* 如果状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。</div>
-<script src="/js/jquery-1.11.2.min.js"></script>
-<script src="/js/jquery.timer.js"></script>
 <script type="text/javascript">
-    function update_status(){
-        $.getJSON( "http://127.0.0.1:8084/status", function( data ) {
-            $('#sys_platform').html(data.sys_platform);
-            $('#os_system').html(data.os_system);
-            $('#os_version').html(data.os_version);
-            $('#os_release').html(data.os_release);
-            $('#os_detail').html(data.os_detail);
-            $('#language').html(data.language);
-            $('#architecture').html(data.architecture);
-            $('#browser').html(data.browser);
-            $('#xxnet_version').html(data.xxnet_version);
-            $('#launcher_version').html(data.launcher_version);
-            $('#goagent_version').html(data.goagent_version);
-            $('#python_version').html(data.python_version);
-            $('#proxy_listen').html(data.proxy_listen);
-            $('#pac_url').html(data.pac_url);
-            $("#gws_ip_num").html(data.gws_ip_num);
-            $("#connected_link").html(data.connected_link);
+    $(function() {
+        var timer = $.timer(function() {
+            getStatus();
+        });
 
-            $('#gae_appid').html(data.gae_appid);
-            $('#working_appid').html(data.working_appid);
-            $('#out_of_quota_appids').html(data.out_of_quota_appids);
-            $('#not_exist_appids').html(data.not_exist_appids);
-            $('#ip_connect_interval').html(data.ip_connect_interval);
+        timer.set({ 
+            time: 1000, 
+            autostart: true 
+        });
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        getStatus();
+    });
+</script>
+<script type="text/javascript">
+    function getStatus() {
+        $.ajax({
+            type: 'GET',
+            url: 'http://127.0.0.1:8084/status',
+            resultType: 'JSON',
+            success: function(result) {
+                $('#sys-platform').html(result['sys_platform']);
+                $('#os-system').html(result['os_system']);
+                $('#os-version').html(result['os_version']);
+                $('#os-release').html(result['os_release']);
+                $('#os-detail').html(result['os_detail']);
+                $('#language').html(result['language']);
+                $('#architecture').html(result['architecture']);
+                $('#browser').html(result['browser']);
+                $('#xxnet-version').html(result['xxnet_version']);
+                $('#launcher-version').html(result['launcher_version']);
+                $('#goagent-version').html(result['goagent_version']);
+                $('#python-version').html(result['python_version']);
+                $('#proxy-listen').html(result['proxy_listen']);
+                $('#pac-url').html(result['pac_url']);
+                $("#gws-ip-num").html(result['gws_ip_num']);
+                $("#connected-link").html(result['connected_link']);
+                $('#gae-appid').html(result['gae_appid']);
+                $('#working-appid').html(result['working_appid']);
+                $('#out-of-quota-appids').html(result['out_of_quota_appids']);
+                $('#not-exist-appids').html(result['not_exist_appids']);
+                $('#ip-connect-interval').html(result['ip_connect_interval']);
+            }
         });
     }
-
-    var timer = $.timer(function() {
-        update_status();
-    });
-
-    update_status();
-    timer.set({ time : 1000, autostart : true });
 </script>
