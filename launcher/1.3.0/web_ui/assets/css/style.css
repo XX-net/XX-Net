@@ -64,6 +64,11 @@ div#header div#logo img {
     max-height: 32px;
 }
 
+div#header a#resize-window-trigger {
+    display: block;
+    padding-top: 8px;
+}
+
 div#content {
     margin: 40px auto;
     padding: 40px 0 0;

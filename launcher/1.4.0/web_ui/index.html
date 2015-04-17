@@ -25,14 +25,21 @@
 <body>
     <div id="header" class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
-            <div class="container row-fluid">
-                <div id="logo" class="span4">
-                    <a href="/">
-                        <img src="/assets/img/logo-light.png" alt="Logo">
-                        XX-Net
-                    </a>
-                </div> <!-- #logo -->
-            </div> <!-- .row-fluid -->
+            <div class="container">
+                <div class="row-fluid">
+                    <div id="logo" class="span4">
+                        <a href="/">
+                            <img src="/assets/img/logo-light.png" alt="Logo">
+                            XX-Net
+                        </a>
+                    </div> <!-- #logo -->
+                    <div class="span8 text-right">
+                        <a id="resize-window-trigger" href="javascript:void(0);">
+                            <img src="/assets/img/fixed-width.png" alt="resize-window">
+                        </a>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+            </div> <!-- .container -->
         </div> <!-- .navbar-inner -->
     </div> <!-- #header -->
     <div id="content">
@@ -54,5 +61,27 @@
             </p>
         </div> <!-- .container -->
     </div> <!-- #footer -->
+    <!-- JavaScript -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript">
+        $(function() {
+            window.isFullWidth = false;
+        });
+    </script>
+    <script type="text/javascript">
+        $('#resize-window-trigger').click(function() {
+            isFullWidth = !isFullWidth;
+
+            if ( isFullWidth ) {
+                $('img', this).attr('src', '/assets/img/full-width.png');
+                $('.container').addClass('container-fluid');
+                $('.container').removeClass('container');
+            } else {
+                $('img', this).attr('src', '/assets/img/fixed-width.png');
+                $('.container-fluid').addClass('container');
+                $('.container-fluid').removeClass('container-fluid');
+            }
+        });
+    </script>
 </body>
 </html>
