@@ -1,6 +1,14 @@
 html, body {
+    font-family: "Segoe UI", "Microsoft YaHei";
     margin: 0;
     padding: 0;
+}
+
+button,
+input, 
+select,
+textarea {
+    font-family: "Segoe UI", "Microsoft YaHei" !important;
 }
 
 a {

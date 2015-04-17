@@ -113,7 +113,7 @@
                 $('#php-server').val(result['php_server']);
                 $('#php-password').val(result['php_password']);
 
-                if ( result['proxy_enable'] != 0 ) {
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
                     $('#enable-front-proxy').parent().removeClass('switch-off');
                     $('#enable-front-proxy').parent().addClass('switch-on');
 

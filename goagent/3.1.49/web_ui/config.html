@@ -133,7 +133,7 @@
                 }
                 $("#ip-connect-interval").val(result['ip_connect_interval'] || 10);
 
-                if ( result['proxy_enable'] != 0 ) {
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
                     $('#enable-proxy').parent().removeClass('switch-off');
                     $('#enable-proxy').parent().addClass('switch-on');
 
