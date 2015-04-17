@@ -27,6 +27,7 @@ import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 from config import config
+from google_ip import google_ip
 
 def generate_message_html(title, banner, detail=''):
     MESSAGE_TEMPLATE = '''
@@ -102,7 +103,13 @@ def _request(sock, headers, payload, bufsize=8192):
     request_data += '\r\n'
 
     if isinstance(payload, bytes):
-        sock.send(request_data.encode() + payload)
+        sock.send(request_data.encode())
+        payload_len = len(payload)
+        start = 0
+        while start < payload_len:
+            send_size = min(payload_len - start, 65535)
+            sock.send(payload[start:start+send_size])
+            start += send_size
     elif hasattr(payload, 'read'):
         sock.send(request_data)
         while True:
@@ -179,6 +186,8 @@ def fetch(method, url, headers, body):
             if len(zbody) < len(body):
                 body = zbody
                 headers['Content-Encoding'] = 'deflate'
+        if len(body) > 65535:
+            logging.warn("body len:%d %s %s", len(body), method, url)
         headers['Content-Length'] = str(len(body))
 
     # GAE donot allow set `Host` header
@@ -263,7 +272,12 @@ def handler(method, url, headers, body, wfile):
 
     errors = []
     response = None
-    for i in xrange(max_retry):
+    while True:
+        if time.time() - time_request > 30: #time out
+            html = generate_message_html('504 GoAgent Proxy Time out', u'GoAgent代理处理超时，请查看日志！')
+            send_response(wfile, 504, body=html.encode('utf-8'))
+            return
+
         try:
             response = fetch(method, url, headers, body)
             if response.app_status != 200:
@@ -282,6 +296,12 @@ def handler(method, url, headers, body, wfile):
                 else:
                     response.close()
                     continue
+
+            if response.app_status == 405: #Method not allowed
+                logging.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
+                google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                response.close()
+                continue
 
             if response.app_status == 503:
                 logging.warning('APPID %r out of Quota, remove it.', response.ssl_sock.appid)

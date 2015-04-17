@@ -297,12 +297,13 @@ class Check_ip():
 
     def report_connect_fail(self, ip_str, force_remove=False):
         # ignore if system network is disconnected.
-        if time.time() - self.network_fail_time < 3:
-            logging.debug("report_connect_fail network fail recently")
-            return
-        if not force_remove and not self.network_is_ok():
-            logging.debug("report_connect_fail network fail")
-            return
+        if not force_remove:
+            if time.time() - self.network_fail_time < 3:
+                logging.debug("report_connect_fail network fail recently")
+                return
+            if not self.network_is_ok():
+                logging.debug("report_connect_fail network fail")
+                return
 
         self.ip_lock.acquire()
         try:
@@ -310,7 +311,7 @@ class Check_ip():
                 return
 
             fail_time = self.ip_dict[ip_str]["fail_time"]
-            if time.time() - fail_time < 1:
+            if not force_remove and time.time() - fail_time < 1:
                 return
 
             # increase handshake_time to make it can be used in lower probability
@@ -329,8 +330,9 @@ class Check_ip():
 
                 logging.info("remove ip:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
 
-                self.to_remove_ip_list.put(ip_str)
-                self.try_remove_thread()
+                if not force_remove:
+                    self.to_remove_ip_list.put(ip_str)
+                    self.try_remove_thread()
         except Exception as e:
             logging.exception("set_ip err:%s", e)
         finally:

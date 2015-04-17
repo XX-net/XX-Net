@@ -79,12 +79,16 @@ class Check_result():
         self.handshake_time = max_timeout
 
 class Check_frame(object):
-    def __init__(self, ip):
+    def __init__(self, ip, check_cert=True):
         self.result = Check_result()
         self.ip = ip
 
         self.timeout = 5
-        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
+        self.check_cert = check_cert
+        if check_cert:
+            self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
+        else:
+            self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
 
     def connect_ssl(self, ip):
         import struct
@@ -140,12 +144,12 @@ class Check_frame(object):
                     raise socket.error(' certficate is none')
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-                if not issuer_commonname.startswith('Google'):
+                if self.check_cert and not issuer_commonname.startswith('Google'):
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
 
                 ssl_cert = cert_util.SSLCert(cert)
-                logging.info("CN:%s", ssl_cert.cn)
+                logging.info("%s CN:%s", self.ip, ssl_cert.cn)
                 self.result.domain = ssl_cert.cn
             if check_ca:
                 check_ssl_cert(ssl_sock)
@@ -157,6 +161,7 @@ class Check_frame(object):
 
         except SSLError as e:
             logging.debug("Check_appengine %s SSLError:%s", self.ip, e)
+            pass
         except IOError as e:
             logging.warn("Check %s IOError:%s", self.ip, e)
             pass
@@ -308,6 +313,18 @@ def test_gws(ip_str):
 
     return check.result
 
+def test_gvs(ip_str):
+    #logging.info("%s", ip_str)
+    check = Check_frame(ip_str, check_cert=False)
+
+    result = check.check(callback=test_server_type, check_ca=True)
+    if not result or not "gvs" in result:
+        return False
+
+    check.result.server_type = result
+
+    return check.result
+
 
 def test_with_app(ip_str):
     #logging.info("==>%s", ip_str)
@@ -374,8 +391,8 @@ class fast_search_ip():
         while self.check_num < 1000000:
             try:
                 time.sleep(1)
-                #ip_int = ip_range.get_ip()
-                ip_int = ip_range.random_get_ip()
+                ip_int = ip_range.get_ip()
+                #ip_int = ip_range.random_get_ip()
                 ip_str = ip_utils.ip_num_to_string(ip_int)
                 self.check_ip(ip_str)
             except Exception as e:
@@ -384,7 +401,7 @@ class fast_search_ip():
 
 
     def search_more_google_ip(self):
-        for i in range(50):
+        for i in range(20):
             p = threading.Thread(target = self.runJob)
             p.daemon = True
             p.start()
@@ -439,9 +456,9 @@ if __name__ == "__main__":
     #print network_is_ok()
     #test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    #test("127.0.0.1")
-    #test_main()
-    check_all_exist_ip()
+    #test("194.78.99.84")
+    test_multi_thread_search_ip()
+    #check_all_exist_ip()
     #test_gws("210.158.146.245")
 
 # about ip connect time and handshake time
