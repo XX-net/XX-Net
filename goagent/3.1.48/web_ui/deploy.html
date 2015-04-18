@@ -10,6 +10,7 @@
     <input type="password" class="input-small" placeholder="password" id="gae_passwd">
     <br>
     <button type="submit" class="btn" id="deploy_button">开始</button>
+    <button type="button" class="btn" id="cancel_button">取消</button>
     <div id="status"></div>
 </form>
 <br>
@@ -71,6 +72,9 @@
                     $("#deploy_button").removeAttr('disabled');
                     timer.stop();
                     status = "init";
+                }else if(data.status == "cancel"){
+                    status = "init";
+                    timer.stop();
                 }else{
                     $("#status").html("异常：status=running and return:" + data.status);
                     $("#deploy_log" ).val(data.log);
@@ -83,6 +87,10 @@
         });
     });
     timer.set({ time : 1000, autostart : true });
+
+    $( "#cancel_button" ).click(function( event ) {
+        $.post( "http://127.0.0.1:8084/deploy?cmd=cancel", null, null);
+    });
 
     $( "#form-goagent-deploy" ).submit(function( event ) {
         event.preventDefault();
