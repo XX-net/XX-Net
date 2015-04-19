@@ -6,7 +6,10 @@ import os
 import re
 import socket
 import time
-
+import ssl
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
+    
 code_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(code_path)
 
