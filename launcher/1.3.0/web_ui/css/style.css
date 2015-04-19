@@ -109,10 +109,6 @@ div#content input[type=password] {
             box-sizing: border-box;
 }
 
-div#footer p#copyright {
-    font-size: 12px;
-}
-
 /* Style for config.html in PHP-Proxy */
 div#content form#goagent-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
     margin-top: 5px;
@@ -129,6 +125,7 @@ table#status td {
 }
 
 /* Style for logging.html */
+div#log,
 textarea#log {
     color: #34495e;
     height: 285px;
