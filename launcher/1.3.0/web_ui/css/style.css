@@ -125,15 +125,23 @@ table#status td {
 }
 
 /* Style for logging.html */
-div#log,
-textarea#log {
+div#log {
+    background-color: #f4f6f6;
+    border: 2px solid #d5dbdb;
+    border-radius: 6px;
     color: #34495e;
+    font-size: 14.994px;
     height: 285px;
+    line-height: 24px;
     max-width: 100%;
-    resize: none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    overflow-y: auto;
+    padding: 5px 11px;
+    text-indent: 0;
+}
+
+div#log > p {
+    margin-bottom: 0;
+    word-wrap: break-word;
 }
 
 /* Styles for about.html */

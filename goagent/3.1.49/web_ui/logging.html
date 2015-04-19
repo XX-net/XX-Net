@@ -1,7 +1,7 @@
 <h2>GoAgent代理日志</h2>
-<div id="log-container">
-    <textarea id="log" readonly></textarea>
-</div>
+<div id="log-container" class="row-fluid">
+    <div id="log" class="span12"></div> <!-- #log -->
+</div> <!-- #log-container -->
 
 <script type="text/javascript">
     $(function() {
@@ -73,17 +73,47 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
-                $.each(result, function(key, value) {
-                    window.offset = key;
+                $.each(result, function(lineNumber, log) {
+                    window.offset = lineNumber;
 
+                    var logTemplate = '<p style="color: %s;">%s</p>';
                     if ( window.previousOffset != window.offset ) {
-                        $('#log').append(value);
+                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log));
                         scrollLog();
                     }
                 });
-                
                 window.previousOffset = window.offset;
             }
         });
+    }
+</script>
+<script type="text/javascript">
+    function getLogLevel(log) {
+        if ( log.indexOf('[DEBUG]') != -1 ) {
+            return 'DEBUG';
+        } else if ( log.indexOf('[INFO]') != -1 ) {
+            return 'INFO';
+        } else if ( log.indexOf('[WARNING]') != -1 ) {
+            return 'WARNING';
+        } else if ( log.indexOf('[ERROR]') != -1 ) {
+            return 'ERROR';
+        } else if ( log.indexOf('[CRITICAL]') != -1 ) {
+            return 'CRITICAL';
+        }
+        return 'DUMMY';
+    }
+</script>
+<script type="text/javascript">
+    function getLogColor(logLevel) {
+        var colors = {
+            'DUMMY': '#000',
+            'DEBUG': '#21610b',
+            'INFO': '#000',
+            'WARNING': '#ff8000',
+            'ERROR': '#fe2e2e',
+            'CRITICAL': '#d7df01'    
+        };
+
+        return colors[logLevel];
     }
 </script>
