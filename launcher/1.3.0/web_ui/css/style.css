@@ -144,6 +144,16 @@ div#log > p {
     word-wrap: break-word;
 }
 
+textarea#log {
+    color: #34495e;
+    height: 285px;
+    max-width: 100%;
+    resize: none;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
 /* Styles for about.html */
 div#content div#about a {
     text-decoration: none;
