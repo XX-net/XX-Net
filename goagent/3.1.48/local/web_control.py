@@ -466,19 +466,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     status = 'finished'
 
             data = json.dumps({'status':status,'log':content, 'time':time_now})
-        elif reqs['cmd'] == ['cancel']:
-            if self.deploy_proc and os.path.isfile(log_path):
-                with open(log_path, "r") as f:
-                    content = f.read()
-            else:
-                content = ""
-
-            if RemoteContralServerHandler.deploy_proc:
-                if RemoteContralServerHandler.deploy_proc.poll() == None:
-                    RemoteContralServerHandler.deploy_proc.kill()
-                status = 'cancel'
-
-            data = json.dumps({'status':status,'log':content, 'time':time_now})
 
         self.send_response('application/json', data)
 
