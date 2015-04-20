@@ -44,5 +44,12 @@ class APPID_manager(object):
         if len(self.working_appid_list) == 0:
             self.working_appid_list = config.GAE_APPIDS
 
+    def appid_exist(self, appids):
+        for appid in appids.split('|'):
+            if appid == "":
+                continue
+            if appid in config.GAE_APPIDS:
+                return True
+        return False
 
 appid_manager = APPID_manager()
