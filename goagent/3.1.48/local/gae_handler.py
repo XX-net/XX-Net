@@ -354,15 +354,16 @@ def handler(method, url, headers, body, wfile):
         for key, value in response.getheaders():
             key = key.title()
             if key == 'Transfer-Encoding':
+                #http://en.wikipedia.org/wiki/Chunked_transfer_encoding
                 continue
             if key in skip_headers:
                 continue
             response_headers[key] = value
 
-        if method == "HEAD":
-            if 'X-Head-Content-Length' in response_headers:
+        if 'X-Head-Content-Length' in response_headers:
+            if method == "HEAD":
                 response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
-                del response_headers['X-Head-Content-Length']
+            del response_headers['X-Head-Content-Length']
 
         for key in response_headers:
             value = response_headers[key]
