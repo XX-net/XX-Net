@@ -87,6 +87,15 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
+        try:
+            refer = self.headers.getheader('Referer')
+            netloc = urlparse.urlparse(refer).netloc
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
+                logging.warn("web control ref:%s refuse", netloc)
+                return
+        except:
+            pass
+        
         logging.debug ('launcher web_control %s "%s %s ', self.address_string(), self.command, self.path)
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:

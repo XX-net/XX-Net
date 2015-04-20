@@ -30,6 +30,8 @@ import cgi
 import urllib2
 import sys
 import datetime
+import locale
+
 
 import logging
 from config import config
@@ -204,7 +206,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
@@ -264,7 +266,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
@@ -360,6 +362,12 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             logging.exception("xxnet_version fail")
         return "get_version_fail"
 
+    def get_os_language(self):
+        lang_code, code_page = locale.getdefaultlocale()
+        #('en_GB', 'cp1252'), en_US,
+        return lang_code
+
+
     def req_status_handler(self):
         if "user-agent" in self.headers.dict:
             user_agent = self.headers.dict["user-agent"]
@@ -375,6 +383,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "os_release":platform.release(),
                    "architecture":platform.architecture(),
                    "os_detail":os_detail(),
+                   "language":self.get_os_language(),
                    "browser":user_agent,
                    "xxnet_version":RemoteContralServerHandler.xxnet_version(),
                    "launcher_version":launcher_version,
@@ -434,15 +443,18 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
 
         if reqs['cmd'] == ['deploy']:
+            appid = self.postvars['appid'][0]
+
             if RemoteContralServerHandler.deploy_proc and RemoteContralServerHandler.deploy_proc.poll() == None:
                 logging.warn("deploy is running, request denied.")
                 data = '{"res":"deploy is running", "time":"%s"}' % (time_now)
+
             else:
                 try:
                     if os.path.isfile(log_path):
                         os.remove(log_path)
                     script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
-                    appid = self.postvars['appid'][0]
+
                     email = self.postvars['email'][0]
                     passwd = self.postvars['passwd'][0]
                     RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)

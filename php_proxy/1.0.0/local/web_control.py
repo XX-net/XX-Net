@@ -126,7 +126,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
@@ -155,7 +155,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
