@@ -22,7 +22,7 @@ import logging
 
 class Win_tray():
     def __init__(self):
-        icon_path = os.path.join(os.path.dirname(__file__), "python.ico")
+        icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
         self.systray = SysTrayIcon(icon_path, "XX-Net", self.make_menu(), self.on_quit, left_click=self.on_show)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
@@ -31,8 +31,16 @@ class Win_tray():
             0, winreg.KEY_ALL_ACCESS)
 
     def make_menu(self):
-        menu_options = ((u"Config", None, self.on_show),
-#                        ("检查", None, self.on_check_update),
+        import locale
+        lang_code, code_page = locale.getdefaultlocale()
+        if lang_code == "zh_CN":
+            menu_options = ((u"设置", None, self.on_show),
+                        (u"全局通过GoAgent代理上网", None, self.on_enable_proxy),
+                        (u"全局PAC智能代理切换", None, self.on_enable_pac),
+                        (u"取消全局代理", None, self.on_disable_proxy),
+                        (u"重启 GoAgent", None, self.on_restart_goagent))
+        else:
+            menu_options = ((u"Config", None, self.on_show),
                         (u"Set Global GoAgent Proxy", None, self.on_enable_proxy),
                         (u"Set Global PAC Proxy", None, self.on_enable_pac),
                         (u"Disable Global Proxy", None, self.on_disable_proxy),
