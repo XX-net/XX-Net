@@ -47,7 +47,7 @@ select:focus {
     outline: none;
 }
 
-span.color-red {
+.color-red {
     color: red;
 }
 

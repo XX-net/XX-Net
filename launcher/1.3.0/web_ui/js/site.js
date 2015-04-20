@@ -6,5 +6,3 @@ String.prototype.format = function() {
     }
     return newStr;
 }
-
-/* Highlight in Navigation Item of Sidebar */

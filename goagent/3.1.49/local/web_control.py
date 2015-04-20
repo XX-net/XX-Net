@@ -422,8 +422,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval")
                    }
         data = json.dumps(res_arr)
-
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query

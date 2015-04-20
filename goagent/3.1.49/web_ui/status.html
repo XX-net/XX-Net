@@ -95,6 +95,7 @@
 </table>
 <p><a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="-blank">日志页</a>内容, 方便分析问题.</p>
 
+<!-- JavaScript -->
 <script type="text/javascript">
     $(function() {
         var timer = $.timer(function() {
@@ -117,7 +118,7 @@
         $.ajax({
             type: 'GET',
             url: 'http://127.0.0.1:8084/status',
-            resultType: 'JSON',
+            dataType: 'JSON',
             success: function(result) {
                 $('#sys-platform').html(result['sys_platform']);
                 $('#os-system').html(result['os_system']);
