@@ -5,11 +5,11 @@ XX-Net
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.8.12
+https://codeload.github.com/XX-net/XX-Net/zip/1.9.0
 
 (1.8.3之前的用户，请重新部署服务端)
 
-版本历史： https://github.com/XX-net/XX-Net/releases
+版本： https://github.com/XX-net/XX-Net/releases
    
   
   
@@ -44,7 +44,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 
 使用方法：
 ========
-* Windows下, 双击 start.lnk/start.bat/start.vbs 快捷方式
+* Windows下, 双击 start.lnk/start.vbs
   - 启动弹出浏览器： 访问 http://localhost:8085/
   - 托盘图标：点击可弹出Web管理界面, 右键可显示常用功能菜单。
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
