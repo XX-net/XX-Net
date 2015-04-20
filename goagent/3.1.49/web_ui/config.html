@@ -124,7 +124,7 @@
             dataType: 'JSON',
             success: function(result) {
                 $('#gae-appid').val(result['appid']);
-                $('#gae-password').val(result['passwd']);
+                $('#gae-password').val(result['password']);
 
                 if ( result['host_appengine_mode'] == 'gae' ) {
                     $('#deploy-via-gae').parent().removeClass('switch-off');
@@ -171,7 +171,7 @@
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
             'appid': gaeAppId,
-            'passwd': gaePassword,
+            'password': gaePassword,
             'host_appengine_mode': hostAppEngine,
             'ip_connect_interval': ipConnectInterval,
             'proxy_enable': enableProxy,

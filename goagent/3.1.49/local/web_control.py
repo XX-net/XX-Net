@@ -434,7 +434,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = json.dumps(user_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
                 user_config.appid = self.postvars['appid'][0]
-                user_config.password = self.postvars['passwd'][0]
+                user_config.password = self.postvars['password'][0]
                 user_config.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.proxy_type = self.postvars['proxy_type'][0]
                 user_config.proxy_host = self.postvars['proxy_host'][0]
