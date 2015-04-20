@@ -446,14 +446,14 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.save()
 
                 data = '{"res":"success"}'
-                self.send_response('application/json', data)
+                self.send_response('text/html', data)
 
                 http_request("http://127.0.0.1:8085/init_module?module=goagent&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
 
     def req_deploy_handler(self):
@@ -501,7 +501,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             data = json.dumps({'status':status,'log':content, 'time':time_now})
 
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
     def req_ip_list_handler(self):
         data = ""
