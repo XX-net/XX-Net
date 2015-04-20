@@ -195,6 +195,7 @@ def http_request(url, method="GET"):
 class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
 
+
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
 
@@ -363,8 +364,30 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         return "get_version_fail"
 
     def get_os_language(self):
-        lang_code, code_page = locale.getdefaultlocale()
-        #('en_GB', 'cp1252'), en_US,
+        if hasattr(self, "lang_code"):
+            return self.lang_code
+
+        try:
+            lang_code, code_page = locale.getdefaultlocale()
+            #('en_GB', 'cp1252'), en_US,
+            self.lang_code = lang_code
+            return lang_code
+        except:
+            #Mac fail to run this
+            pass
+
+        if sys.platform == "darwin":
+            try:
+                oot = os.pipe()
+                p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'],stdout=oot[1])
+                p.communicate()
+                lang_code = os.read(oot[0],10000)
+                self.lang_code = lang_code
+                return lang_code
+            except:
+                pass
+
+        lang_code = 'Unknown'
         return lang_code
 
 
