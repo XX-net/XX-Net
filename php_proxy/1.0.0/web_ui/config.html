@@ -104,7 +104,7 @@
             url: 'http://127.0.0.1:8083/config?cmd=get_config',
             dataType: 'JSON',
             success: function(result) {
-                if ( result['php_enable'] != 0 ) {
+                if ( typeof(result['php_enable']) != 'undefined' && result['php_enable'] != 0 ) {
                     $('#enable-php-proxy').parent().removeClass('switch-off');
                     $('#enable-php-proxy').parent().addClass('switch-on');
 
