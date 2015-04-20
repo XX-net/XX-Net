@@ -6,7 +6,7 @@
     <li class="active"><a href="#authentication" data-toggle="tab">授权</a></li>
     <li><a href="#logs" data-toggle="tab">日志</a></li>
 </ul>
-<div class="tab-content">
+<div id="deploy" class="tab-content">
     <div id="authentication" class="tab-pane fade in active">
         <form method="POST" onSubmit="onSubmit(); return false;">
             <div class="row-fluid">
@@ -15,6 +15,10 @@
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="gae-appid" type="text" />
+                    <p class="tip">
+                        批量部署多个AppID, 请用|分割.
+                        建议开启Google的弱安全连接<a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">(帮助)</a>.
+                    </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
@@ -43,9 +47,9 @@
     <div id="logs" class="tab-pane fade">
         <p>部署完成后, 请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效.</p>
         <textarea id="log" readonly></textarea>
-        <div class="row-fluid">
+        <div class="row-fluid hide">
             <div class="span12">
-                <button class="btn btn-cancel btn-block">终止部署</button>
+                <button class="btn btn-danger btn-block">终止部署</button>
             </div> <!-- .span12 -->
         </div> <!-- .row-fluid -->
     </div> <!-- #log -->
@@ -55,9 +59,11 @@
 <script type="text/javascript">
     $(function() {
         window.status = 'init';
+
         window.timer  = $.timer(function() {
             getDeployStatus();
         });
+
         window.timer.set({ 
             time: 1000, 
             autostart: true
@@ -65,7 +71,24 @@
     });
 </script>
 <script type="text/javascript">
-    $('.btn-cancel').click(function() {
+    $(function() {
+        resizeLogWindow();
+    });
+
+    $(window).resize(function() {
+        resizeLogWindow();
+    });
+</script>
+<script type="text/javascript">
+    function resizeLogWindow() {
+        var windowHeight    = $(window).height(),
+            preservedHeight = 300;
+
+        $('#log').css('height', windowHeight - preservedHeight);
+    }
+</script>
+<script type="text/javascript">
+    $('.btn-danger').click(function() {
         $.ajax({
             type: 'POST',
             url: 'http://127.0.0.1:8084/deploy?cmd=cancel',
@@ -73,20 +96,6 @@
             success: function(result) {
                 // Do nothing
             }
-        });
-    });
-</script>
-<script type="text/javascript">
-    $(function() {
-        window.status = 'init';
-
-        window.timer  = $.timer(function() {
-            getDeployStatus();
-        });
-
-        window.timer.set({ 
-            time: 1000, 
-            autostart: true
         });
     });
 </script>
@@ -99,7 +108,7 @@
             success: function(result) {
                 if ( window.status == 'init' ) {
                     if ( result['status'] == 'init' ) {
-                        timer.stop();
+                        window.timer.stop();
                         $('.alert').html('当前状态: 空闲');
                     } else if ( result['status'] == 'running' ) {
                         window.status = 'running';
@@ -108,41 +117,41 @@
                         $('#log').append(result['log']);
                         $("button[type=submit]").attr('disabled','disabled');
                     } else if ( result['status'] == 'finished' ) {
-                        timer.stop();
+                        window.timer.stop();
                         window.status = 'finished';
                         $('.alert').html('当前状态: 部署完成');
 
                         $('#log').append(result['log']);
                         $("button[type=submit]").removeAttr('disabled');
                     } else {
-                        timer.stop();
+                        window.timer.stop();
                         $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
                         $('#log').append(result['log']);
                     }
                 } else if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
-                            timer.stop();
-                            $('.alert').html('当前状态: XX-Net被重置.');
-                        } else if ( result['status'] == 'running' ) {
-                            $('#log').append(result['log']);
-                        } else if ( result['status'] == 'finished' ) {
-                            timer.stop();
-                            window.status = 'finished';
-                            $('.alert').html('当前状态: 部署完成');
+                        window.timer.stop();
+                        $('.alert').html('当前状态: XX-Net被重置.');
+                    } else if ( result['status'] == 'running' ) {
+                        $('#log').append(result['log']);
+                    } else if ( result['status'] == 'finished' ) {
+                        window.timer.stop();
+                        window.status = 'finished';
+                        $('.alert').html('当前状态: 部署完成');
 
-                            $('#log').append(result['log']);
-                            $("button[type=submit]").removeAttr('disabled');
-                        } else if ( result['status'] == 'cancel' ) {
-                            timer.stop();
-                            window.status = "init";
-                            $('.alert').html('当前状态: 部署被用户终止');
-                        } else {
-                            timer.stop();
-                            $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
-                            $('#log').append(result['log']);
-                        }
+                        $('#log').append(result['log']);
+                        $("button[type=submit]").removeAttr('disabled');
+                    } else if ( result['status'] == 'cancel' ) {
+                        window.timer.stop();
+                        window.status = "init";
+                        $('.alert').html('当前状态: 部署被用户终止');
+                    } else {
+                        window.timer.stop();
+                        $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
+                        $('#log').append(result['log']);
+                    }
                 } else {
-                    timer.stop();
+                    window.timer.stop();
                     $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
                     $('#log').append(result['log']);
                 }

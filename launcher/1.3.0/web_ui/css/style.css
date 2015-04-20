@@ -37,7 +37,7 @@ select {
             transition: border .25s linear,color .25s linear;
 }
 
-button.btn-cancel,
+button.btn-danger,
 button[type=submit] {
     margin-top: 30px;
 }
@@ -71,7 +71,7 @@ div#header a#resize-window-trigger {
 }
 
 div#content {
-    margin: 40px auto;
+    margin: 40px auto 0;
     padding: 40px 0 0;
 }
 
@@ -152,6 +152,12 @@ textarea#log {
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+}
+
+/* Styles for deploy.html */
+div#content div#deploy p.tip {
+    font-size: 13px;
+    margin-top: 5px;
 }
 
 /* Styles for about.html */
