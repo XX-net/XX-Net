@@ -2450,7 +2450,7 @@ class AppCfgApp(object):
         error_format = 'Error %d: %s'
 
       print >>self.error_fh, (error_format % (e.code, body.rstrip('\n')))
-      return 1
+      raise e
     except yaml_errors.EventListenerError, e:
       print >>self.error_fh, ('Error parsing yaml file:\n%s' % e)
       return 1

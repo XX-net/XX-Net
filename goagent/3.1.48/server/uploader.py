@@ -7,6 +7,14 @@ import re
 import socket
 import time
 
+#patch for ArchLinux: CERTIFICATE_VERIFY_FAILED
+try:
+    import ssl
+    if hasattr(ssl, "_create_unverified_context") and hasattr(ssl, "_create_default_https_context"):
+        ssl._create_default_https_context = ssl._create_unverified_context
+except:
+    pass
+
 code_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(code_path)
 
@@ -50,7 +58,8 @@ class Logger(object):
         else:
             time_string = '%s - ' % (time.ctime()[4:-5])
         self.terminal.write(message)
-        self.fd.write(time_string + message)
+        out_msg = time_string + message
+        self.fd.write(out_msg.decode('utf-8').encode('utf-8'))
         self.fd.flush()
     def flush(self):
         pass
@@ -85,34 +94,40 @@ def upload(appid, email, password):
 
     dirname = os.path.join(code_path, "gae")
     assert isinstance(dirname, basestring) and isinstance(appid, basestring)
-    filename = os.path.join(dirname, 'app.yaml')
+    app_yaml_file = os.path.join(dirname, 'app.yaml')
     template_filename = os.path.join(dirname, 'app.template.yaml')
     assert os.path.isfile(template_filename), u'%s not exists!' % template_filename
 
     with open(template_filename, 'rb') as fp:
         yaml = fp.read()
-    with open(filename, 'wb') as fp:
+    with open(app_yaml_file, 'wb') as fp:
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
-    for i in range(10):
-        try:
-            result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
-            if result == 1:
-                continue
-            result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
-            if result == 1:
-                continue
-            break
-        except Exception as e:
-            my_stdout.write("upload  fail: %s\n\n" % e)
-            if i < 9:
-                my_stdout.write("Retry again.\n\n")
-                time.sleep(1)
-
     try:
-        os.remove(filename)
-    except OSError:
-        pass
+        for i in range(10):
+            try:
+                result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                if result != 0:
+                    continue
+                result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                if result != 0:
+                    continue
+                return True
+            except appengine_rpc.ClientLoginError as e:
+                my_stdout.write("upload  fail: %s\n\n" % e)
+                raise e
+            except Exception as e:
+                my_stdout.write("upload  fail: %s\n\n" % e)
+                if i < 9:
+                    my_stdout.write("Retry again.\n\n")
+                    time.sleep(1)
+        return False
+
+    finally:
+        try:
+            os.remove(app_yaml_file)
+        except OSError:
+            pass
 
 
 
@@ -133,26 +148,50 @@ def appid_is_valid(appid):
         return False
     return True
 
+def clean_cookie_file():
+    try:
+        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
+    except OSError:
+        pass
+
 def uploads(appids, email, password):
+    clean_cookie_file()
 
+    success_appid_list = []
+    fail_appid_list = []
     try:
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
-    except OSError:
-        pass
+        for appid in appids.split('|'):
+            if appid == "":
+                continue
+            if not appid_is_valid(appid):
+                continue
+            if upload(appid, email, password):
+                success_appid_list.append(appid)
+            else:
+                fail_appid_list.append(appid)
 
-    for appid in appids.split('|'):
-        if appid == "":
-            continue
-        if not appid_is_valid(appid):
-            continue
-        upload(appid, email, password)
+    except appengine_rpc.ClientLoginError as e:
+        my_stdout.write("Auth fail. Please check you password.\n")
+        my_stdout.write("登录失败，请检查你的帐号密码。\n")
+        my_stdout.write("如果启用两阶段登录，请申请应用专用密码: https://security.google.com/settings/security/apppasswords\n")
+        my_stdout.write("如果没有启用两阶段登录，请允许弱安全应用: https://www.google.com/settings/security/lesssecureapps\n")
 
-    try:
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
-    except OSError:
-        pass
+        fail_appid_list = appids.split('|')
+
+    clean_cookie_file()
+    my_stdout.write("=======================\n")
+
+    if len(success_appid_list) > 0:
+        my_stdout.write("Deploy %d appid successed.\n" % len(success_appid_list))
+
+    if len(fail_appid_list) > 0:
+        my_stdout.write("Deploy failed appid list:\n")
+        for appid in fail_appid_list:
+            my_stdout.write("- %s\n" % appid)
+
 
     my_stdout.write("== END ==\n\n")
+
     do_clean_up()
 
 def main():

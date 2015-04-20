@@ -91,7 +91,7 @@ class ClientLoginError(urllib2.HTTPError):
   def __init__(self, url, code, msg, headers, args):
     urllib2.HTTPError.__init__(self, url, code, msg, headers, None)
     self.args = args
-    self.reason = args["Error"]
+    self.app_reason = args["Error"]
     self.info = args.get("Info")
 
   def read(self):
@@ -283,7 +283,7 @@ class AbstractRpcServer(object):
         if os.getenv("APPENGINE_RPC_USE_SID", "0") == "1":
           return
       except ClientLoginError, e:
-        if e.reason == "BadAuthentication":
+        if hasattr(e, 'app_reason') and e.app_reason == "BadAuthentication":
           if e.info == "InvalidSecondFactor":
             print >>sys.stderr, ("Use an application-specific password instead "
                                  "of your regular account password.")
@@ -291,30 +291,31 @@ class AbstractRpcServer(object):
                                  "support/accounts/bin/answer.py?answer=185833")
           else:
             print >>sys.stderr, "Invalid username or password."
+            raise e
           continue
-        if e.reason == "CaptchaRequired":
+        if hasattr(e, 'app_reason') and e.app_reason == "CaptchaRequired":
           print >>sys.stderr, (
               "Please go to\n"
               "https://www.google.com/accounts/DisplayUnlockCaptcha\n"
               "and verify you are a human.  Then try again.")
           break
-        if e.reason == "NotVerified":
+        if hasattr(e, 'app_reason') and e.app_reason == "NotVerified":
           print >>sys.stderr, "Account not verified."
           break
-        if e.reason == "TermsNotAgreed":
+        if hasattr(e, 'app_reason') and e.app_reason == "TermsNotAgreed":
           print >>sys.stderr, "User has not agreed to TOS."
           break
-        if e.reason == "AccountDeleted":
+        if hasattr(e, 'app_reason') and e.app_reason == "AccountDeleted":
           print >>sys.stderr, "The user account has been deleted."
           break
-        if e.reason == "AccountDisabled":
+        if hasattr(e, 'app_reason') and e.app_reason == "AccountDisabled":
           print >>sys.stderr, "The user account has been disabled."
           break
-        if e.reason == "ServiceDisabled":
+        if hasattr(e, 'app_reason') and e.app_reason == "ServiceDisabled":
           print >>sys.stderr, ("The user's access to the service has been "
                                "disabled.")
           break
-        if e.reason == "ServiceUnavailable":
+        if hasattr(e, 'app_reason') and e.app_reason == "ServiceUnavailable":
           print >>sys.stderr, "The service is not available; try again later."
           break
         raise
