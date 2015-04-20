@@ -15,83 +15,90 @@
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">
-            <label for="gae-password">RC4 Password(一般无需配置)</label>
+            <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
         </div> <!-- .span4 -->
-        <div class="span8">
-            <input id="gae-password" type="password" />
-        </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
-        <div class="span4">
-            <label for="deploy-via-gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE">(帮助)</a></label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <input id="deploy-via-gae" type="checkbox" data-toggle="switch" />
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
-    <div class="row-fluid">
-        <div class="span4">
-            <label for="ip-connect-interval">Google IP使用频率限制<a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval">(帮助)</a></label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <input id="ip-connect-interval" type="text" value="10" />
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
-    <div class="row-fluid">
-        <div class="span4">
-            <label for="enable-proxy">局域网代理(一般无需配置) <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">(帮助)</a></label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <input id="enable-proxy" type="checkbox" data-toggle="switch" />
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
-    <div id="proxy-options" style="display: none;">
+    <div id="advanced-options" style="display: none;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-type">代理服务器类型</label>
+                <label for="gae-password">RC4 Password(一般无需配置)</label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <select id="proxy-type">
-                    <option value="http">HTTP</option>
-                    <option value="https">HTTPS</option>
-                    <option value="socks4">SOCKS 4</option>
-                    <option value="socks5">SOCKS 5</option>
-                </select>
+                <input id="gae-password" type="password" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-host">代理服务器地址</label>
+                <label for="deploy-via-gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE">(帮助)</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+                <input id="deploy-via-gae" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-port">端口</label>
+                <label for="ip-connect-interval">Google IP使用频率限制<a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval">(帮助)</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="proxy-port" type="text" placeholder="Example: 808" />
+                <input id="ip-connect-interval" type="text" value="10" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-username">用户名</label>
+                <label for="enable-proxy">局域网代理(一般无需配置) <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">(帮助)</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="proxy-username" type="text" />
+                <input id="enable-proxy" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
-                <label for="proxy-password">密码</label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="proxy-password" type="password" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-    </div> <!-- #proxy-options -->
+        <div id="proxy-options" style="display: none;">
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-type">代理服务器类型</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <select id="proxy-type">
+                        <option value="http">HTTP</option>
+                        <option value="https">HTTPS</option>
+                        <option value="socks4">SOCKS 4</option>
+                        <option value="socks5">SOCKS 5</option>
+                    </select>
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-host">代理服务器地址</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-port">端口</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-port" type="text" placeholder="Example: 808" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-username">用户名</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-username" type="text" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-password">密码</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-password" type="password" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+        </div> <!-- #proxy-options -->
+    </div>
     <div class="row-fluid">
         <div class="span12">
             <button class="btn btn-primary btn-block" type="submit">保存并重启GoAgent</button>
@@ -103,6 +110,21 @@
 <script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
+
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#advanced-options').slideDown();            
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#advanced-options').slideUp();
+        }
     });
 </script>
 <script type="text/javascript">

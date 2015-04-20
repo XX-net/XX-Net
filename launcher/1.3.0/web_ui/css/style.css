@@ -109,6 +109,11 @@ div#content input[type=password] {
             box-sizing: border-box;
 }
 
+/* Style for config.html in GoAgent */
+div#content form#goagent-config div#advanced-options {
+    padding-left: 20px;
+}
+
 /* Style for config.html in PHP-Proxy */
 div#content form#goagent-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
     margin-top: 5px;
