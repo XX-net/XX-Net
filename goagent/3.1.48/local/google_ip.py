@@ -477,7 +477,7 @@ class Check_ip():
                     return
 
                 logging.info("check_exist_ip fail ip:%s ", ip_str)
-                self.report_connect_fail(ip_str, force_remove=True)
+                self.report_connect_fail(ip_str)
             else:
                 self.update_ip(ip_str, result.handshake_time)
                 logging.info("check_exist_ip update ip:%s server:%s time:%d", ip_str, result.server_type, result.handshake_time)
