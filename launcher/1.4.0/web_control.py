@@ -137,7 +137,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif url_path == '/init_module':
             self.req_init_module_handler()
         elif url_path == '/quit':
-            self.send_response('application/json', '{"status":"success"}')
+            self.send_response('text/html', '{"status":"success"}')
             module_init.stop_all()
             os._exit(0)
         else:
@@ -244,7 +244,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 data = '{"res":"fail"}'
 
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
     def req_init_module_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -269,7 +269,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         except Exception as e:
             logging.exception("init_module except:%s", e)
 
-        self.send_response("application/json", data)
+        self.send_response("text/html", data)
 
 process = 0
 server = 0

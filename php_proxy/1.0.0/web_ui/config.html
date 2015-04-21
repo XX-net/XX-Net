@@ -1,97 +1,180 @@
 <h2>配置PHP代理</h2>
-<form id="form-goagent-config">
-    <div class="checkbox">
-        <label>
-            <input type="checkbox" id="php_enable"> 启用PHP代理<a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy" target="_blank">帮助</a>
-        </label>
-    </div>
-    <input type="text" class="input-large" placeholder="fetch server" id="php_server">
-    <br>
-    <input type="password" class="input-middle" placeholder="php_password" id="php_password">
-    <hr>
+<div class="alert fade in hide">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    <p class="message"></p>
+</div> <!-- .alert -->
+<form id="goagent-php-config" method="POST" onSubmit="onSubmit(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="enable-php-proxy">
+                启用PHP代理
+                <a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy" target="_blank">(帮助)</a>
+            </label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="enable-php-proxy" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="php-server">PHP Server URL</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="php-server" type="text" placeholder="Example: http://zjhzxhz.com/index.php" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="php-password">PHP Password</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="php-password" type="password" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="enable-front-proxy">启用前置代理</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="enable-front-proxy" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div id="front-proxy-options" style="display: none;">
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-host">代理服务器地址</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-port">端口</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-port" type="text" placeholder="Example: 808" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-username">用户名</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-username" type="text" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-password">密码</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-password" type="password" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+    </div> <!-- #front-proxy-options -->
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">保存并重启GoAgent</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form> <!-- #goagent-php-config -->
 
-    <div class="checkbox">
-        <label>
-            <input type="checkbox" id="proxy_enable"> 前置代理
-        </label>
-    </div>
-    <div id="proxy_detail" style="display:none";>
-        <input type="text" class="input-medium" placeholder="host" id="proxy_host">
-        <input type="text" class="input-small" placeholder="port" id="proxy_port">
-        <br>
-        <input type="text" class="input-small" placeholder="User name" id="proxy_username">
-        <input type="password" class="input-small" placeholder="Password" id="proxy_password">
-    </div>
-    <br>
-    <hr>
-    <button type="submit" class="btn">保存并重启</button>
-    <div id="status"></div>
-</form>
-
-
-<script src="/js/jquery-1.11.2.min.js"></script>
+<!-- JavaScript -->
 <script type="text/javascript">
-    $.post( "http://127.0.0.1:8083/config?cmd=get_config", {}, function( data ) {
-        if(data.php_enable == 1){
-            $("#php_enable").prop('checked', true);
-        }else{
-            $("#php_enable").prop('checked', false);
-        }
-        $( "#php_server" ).val(data.php_server);
-        $( "#php_password" ).val(data.php_password);
-
-        if(data.proxy_enable == 1){
-            $("#proxy_enable").prop('checked', true);
-            $('#proxy_detail').show();
-        }else{
-            $("#proxy_enable").prop('checked', false);
-            $('#proxy_detail').hide();
-        }
-        $("#proxy_host").val(data.proxy_host);
-        $("#proxy_port").val(data.proxy_port);
-        $("#proxy_username").val(data.proxy_username);
-        $("#proxy_password").val(data.proxy_password);
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
+</script>
+<script type="text/javascript">
+    $('#enable-front-proxy').change(function() {
+        var isChecked = $(this).is(':checked');
 
-    $('#proxy_enable').click(function(data){
-        if($("#proxy_enable").prop('checked')){
-            $('#proxy_detail').show();
-        }else{
-            $('#proxy_detail').hide();
+        if ( isChecked ) {
+            $('#front-proxy-options').slideDown();
+        } else {
+            $('#front-proxy-options').slideUp();
         }
     });
+</script>
+<script type="text/javascript">
+    $(function() {
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8083/config?cmd=get_config',
+            dataType: 'JSON',
+            success: function(result) {
+                if ( typeof(result['php_enable']) != 'undefined' && result['php_enable'] != 0 ) {
+                    $('#enable-php-proxy').parent().removeClass('switch-off');
+                    $('#enable-php-proxy').parent().addClass('switch-on');
 
+                    $('#enable-php-proxy').prop('checked', true);
+                }
+                $('#php-server').val(result['php_server']);
+                $('#php-password').val(result['php_password']);
 
-    $( "#form-goagent-config" ).submit(function( event ) {
-        event.preventDefault();
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
+                    $('#enable-front-proxy').parent().removeClass('switch-off');
+                    $('#enable-front-proxy').parent().addClass('switch-on');
 
-        if($("#php_enable").prop('checked')){
-            php_enable = 1;
-        }else{
-            php_enable = 0;
-        }
-        php_server = $( "#php_server" ).val()
-        php_password = $( "#php_password" ).val()
-
-        if($("#proxy_enable").prop('checked')){
-            proxy_enable = 1;
-        }else{
-            proxy_enable = 0;
-        }
-        proxy_host = $("#proxy_host").val();
-        proxy_port = $("#proxy_port").val();
-        proxy_username = $("#proxy_username").val();
-        proxy_password = $("#proxy_password").val();
-
-        $.post( "http://127.0.0.1:8083/config?cmd=set_config", {"php_enable":php_enable, "php_server":php_server, "php_password": php_password,
-                "proxy_enable":proxy_enable, "proxy_host":proxy_host, "proxy_port":proxy_port,
-                "proxy_username":proxy_username, "proxy_password":proxy_password,},
-            function( data ) {
-
-            res = data.res
-            if(res == "success") {
-                $("#status").html(res)
+                    $('#enable-front-proxy').prop('checked', true);
+                    $('#front-proxy-options').slideDown();
+                }
+                $('#proxy-host').val(result['proxy_host']);
+                $('#proxy-port').val(result['proxy_port']);
+                $('#proxy-username').val(result['proxy_username']);
+                $('#proxy-password').val(result['proxy_password']);
             }
         });
     });
+</script>
+<script type="text/javascript">
+    function onSubmit() {
+        var enablePhpProxy   = $('#enable-php-proxy').is(':checked') ? 1 : 0,
+            phpServer        = $('#php-server').val(),
+            phpPassword      = $('#php-password').val(),
+            enableFrontProxy = $('#enable-front-proxy').is(':checked') ? 1 : 0,
+            proxyHost        = $('#proxy-host').val(),
+            proxyPort        = $('#proxy-port').val(),
+            proxyUsername    = $('#proxy-username').val(),
+            proxyPassword    = $('#proxy-password').val();
+        
+        return setConfig(enablePhpProxy, phpServer, phpPassword, enableFrontProxy, 
+                            proxyHost, proxyPort, proxyUsername, proxyPassword);
+    }
+</script>
+<script type="text/javascript">
+    function setConfig(enablePhpProxy, phpServer, phpPassword, enableFrontProxy, 
+                        proxyHost, proxyPort, proxyUsername, proxyPassword) {
+        var config = {
+            'php_enable': enablePhpProxy, 
+            'php_server': phpServer, 
+            'php_password': phpPassword, 
+            'proxy_enable': enableFrontProxy, 
+            'proxy_host': proxyHost, 
+            'proxy_port': proxyPort, 
+            'proxy_username': proxyUsername, 
+            'proxy_password': proxyPassword
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8083/config?cmd=set_config',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    $('.alert').html('设置已成功保存.');
+                    $('.alert').addClass('alert-success');
+                    $('.alert').removeClass('alert-error');
+                    $('.alert').removeClass('hide');
+                } else {
+                    $('.alert').html('发生未知错误.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
+                    $('.alert').removeClass('hide');
+                }
+            }
+        });
+    }
 </script>

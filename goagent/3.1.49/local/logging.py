@@ -70,8 +70,7 @@ def log(level, console_color, html_color, fmt, *args, **kwargs):
         set_console_color(reset_color)
 
         last_no += 1
-        string = string.replace('\n', '<br>')
-        buffer[last_no] = '<font color="%s">%s</font>' % (html_color, string)
+        buffer[last_no] = string
         buffer_len = len(buffer)
         if buffer_len > buffer_size:
             del buffer[last_no - buffer_size]

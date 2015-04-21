@@ -1,78 +1,119 @@
-
-<style type="text/css">
-    #log {
-        -moz-appearance: textfield-multiline;
-        -webkit-appearance: textarea;
-        border: 1px solid gray;
-        font: medium -moz-fixed;
-        font: -webkit-small-control;
-        font-family: Verdana, Geneva, sans-serif;
-        font-family: monospace;
-        font-size:1.0em;
-        background-color:#f9f9f9;
-        height: 100%;
-        overflow: auto;
-        padding: 2px;
-        resize: both;
-        width: 100%;
-        white-space:nowrap;
-    }
-    #log_container{
-        height:85vh;
-    }
-</style>
-
-<h2>GoAgent日志:</h2>
-<div id="log_container">
-    <div id="log" ></div>
-</div>
-<div id="status"></div>
-
-<script src="/js/jquery-1.11.2.min.js"></script>
-<script src="/js/jquery.timer.js"></script>
+<h2>GoAgent代理日志</h2>
+<div id="log-container" class="row-fluid">
+    <div id="log" class="span12"></div> <!-- #log -->
+</div> <!-- #log-container -->
 
 <script type="text/javascript">
-    var last_line_no = 1
-    var tid = 0;
-    pull_log();
-
-
-    function enable_autoscroll() {
-        if (tid == 0) {
-            tid = setTimeout(pull_log, 2000);
-        }
-    }
-
-    function pull_log() {
-        var from_no = parseInt(last_line_no) + 1
-        $.getJSON( "http://127.0.0.1:8084/log?cmd=get_new&last_no="+from_no, function( data ) {
-            var text = '';
-            $.each( data, function( key, val ) {
-                text += val;
-                last_line_no = key
-            });
-            var org_txt = $("#log").html()
-            $("#log").html(org_txt + text)
-
-            tid = setTimeout(pull_log, 2000);
-            var height = $('#log')[0].scrollHeight;
-            $('#log').scrollTop(height);
-            $('#status').html(last_line_no + " h:" + height);
-        });
-    }
-
-    $('#log').scroll(function() {
-        var h1 = $(this).scrollTop();
-        var h2 = $(this).height();
-        var h3 = $(this)[0].scrollHeight;
-        if (h1 + h2 >= h3 - 100) {
-            enable_autoscroll();
-            $('#status').html("auto");
-        }else{
-            clearTimeout(tid);
-            tid = 0;
-            $('#status').html("stop");
-        }
+    $(function() {
+        resizeLogWindow();
     });
 
+    $(window).resize(function() {
+        resizeLogWindow();
+    });
+</script>
+<script type="text/javascript">
+    function resizeLogWindow() {
+        var windowHeight    = $(window).height(),
+            preservedHeight = 220;
+
+        $('#log').css('height', windowHeight - preservedHeight);
+    }
+</script>
+<script type="text/javascript">
+    $(function() {
+        window.previousOffset  = 0;
+        window.offset          = 1;
+        window.isAutoScrollLog = true;
+
+        var timer = $.timer(function() {
+            getLog();
+        });
+        timer.set({ 
+            time: 2500, 
+            autostart: true 
+        });
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        getLog();
+    });
+</script>
+<script type="text/javascript">
+    $('#log').scroll(function() {
+        var preservedHeight = $('#log').height() + 10,
+            scrollHeight    = $('#log')[0].scrollHeight,
+            scrollTop       = $('#log').scrollTop();
+
+        if ( scrollTop + preservedHeight == scrollHeight ) {
+            window.isAutoScrollLog = true;
+        } else {
+            window.isAutoScrollLog = false;
+        }
+    });
+</script>
+<script type="text/javascript">
+    function scrollLog() {
+        if ( window.isAutoScrollLog ) {
+            $('#log').scrollTop($('#log')[0].scrollHeight);
+        }
+    }
+</script>
+<script type="text/javascript">
+    function getLog() {
+        var pageRequests = {
+            'cmd': 'get_new',
+            'last_no': offset
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: 'http://127.0.0.1:8084/log',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                $.each(result, function(lineNumber, log) {
+                    window.offset = lineNumber;
+
+                    var logTemplate = '<p style="color: %s;">%s</p>';
+                    if ( window.previousOffset != window.offset ) {
+                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log.replace(/\n/g, '<br>')));
+                        scrollLog();
+                    }
+                });
+                window.previousOffset = window.offset;
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    function getLogLevel(log) {
+        if ( log.indexOf('[DEBUG]') != -1 ) {
+            return 'DEBUG';
+        } else if ( log.indexOf('[INFO]') != -1 ) {
+            return 'INFO';
+        } else if ( log.indexOf('[WARNING]') != -1 ) {
+            return 'WARNING';
+        } else if ( log.indexOf('[ERROR]') != -1 ) {
+            return 'ERROR';
+        } else if ( log.indexOf('[CRITICAL]') != -1 ) {
+            return 'CRITICAL';
+        }
+        return 'DUMMY';
+    }
+</script>
+<script type="text/javascript">
+    function getLogColor(logLevel) {
+        var colors = {
+            'DUMMY': '#000',
+            'DEBUG': '#21610b',
+            'INFO': '#000',
+            'WARNING': '#ff8000',
+            'ERROR': '#fe2e2e',
+            'CRITICAL': '#d7df01'    
+        };
+
+        return colors[logLevel];
+    }
 </script>
