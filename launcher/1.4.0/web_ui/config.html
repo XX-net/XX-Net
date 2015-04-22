@@ -45,10 +45,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['auto_start'] != 0 ) {
-                    $( "#auto_start").parent().removeClass('switch-off');
-                    $( "#auto_start").parent().addClass('switch-on');
+                    $( "#auto-start").parent().removeClass('switch-off');
+                    $( "#auto-start").parent().addClass('switch-on');
 
-                    $( "#auto_start").prop('checked', true);
+                    $( "#auto-start").prop('checked', true);
                 }
                 if ( result['check_update'] != 0 ) {
                     $( "#check-update").parent().removeClass('switch-off');
