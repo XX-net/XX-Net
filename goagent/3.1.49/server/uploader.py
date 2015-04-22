@@ -119,8 +119,10 @@ def upload(appid, email, password):
             except Exception as e:
                 my_stdout.write("upload  fail: %s\n\n" % e)
                 if i < 9:
-                    my_stdout.write("Retry again.\n\n")
+                    my_stdout.write("Retry %d time...\n\n" % (i + 1))
                     time.sleep(1)
+                else:
+                    my_stdout.write("Retry max time, failed.\n\n" % (i + 1))
         return False
 
     finally:

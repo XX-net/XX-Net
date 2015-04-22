@@ -422,8 +422,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval")
                    }
         data = json.dumps(res_arr)
-
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -435,7 +434,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = json.dumps(user_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
                 user_config.appid = self.postvars['appid'][0]
-                user_config.password = self.postvars['passwd'][0]
+                user_config.password = self.postvars['password'][0]
                 user_config.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.proxy_type = self.postvars['proxy_type'][0]
                 user_config.proxy_host = self.postvars['proxy_host'][0]
@@ -447,14 +446,14 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.save()
 
                 data = '{"res":"success"}'
-                self.send_response('application/json', data)
+                self.send_response('text/html', data)
 
                 http_request("http://127.0.0.1:8085/init_module?module=goagent&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
 
     def req_deploy_handler(self):
@@ -486,6 +485,13 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 except Exception as e:
                     data = '{"res":"%s", "time":"%s"}' % (e, time_now)
 
+        elif reqs['cmd'] == ['cancel']:
+            if RemoteContralServerHandler.deploy_proc and RemoteContralServerHandler.deploy_proc.poll() == None:
+                RemoteContralServerHandler.deploy_proc.kill()
+                data = '{"res":"deploy is killed", "time":"%s"}' % (time_now)
+            else:
+                data = '{"res":"deploy is not running", "time":"%s"}' % (time_now)
+
         elif reqs['cmd'] == ['get_log']:
             if self.deploy_proc and os.path.isfile(log_path):
                 with open(log_path, "r") as f:
@@ -502,7 +508,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             data = json.dumps({'status':status,'log':content, 'time':time_now})
 
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
     def req_ip_list_handler(self):
         data = ""

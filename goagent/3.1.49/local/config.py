@@ -7,7 +7,7 @@ import os
 import sys
 import re
 import io
-import collections
+import logging
 
 
 
@@ -31,14 +31,24 @@ class Config(object):
         if not os.path.isdir(self.DATA_PATH):
             self.DATA_PATH = current_path
 
-        # load ../../../data/goagent/config.ini
+        # load ../../../data/goagent/config.ini, set by web_ui
         self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
-
         self.CONFIG.read(self.CONFIG_FILENAME)
         if os.path.isfile(self.CONFIG_USER_FILENAME):
             with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
                 content = fp.read()
                 self.CONFIG.readfp(io.BytesIO(content))
+
+        # load ../../../data/goagent/manual.ini, set by manual
+        self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
+        if os.path.isfile(self.CONFIG_MANUAL_FILENAME):
+            with open(self.CONFIG_MANUAL_FILENAME, 'rb') as fp:
+                content = fp.read()
+                try:
+                    self.CONFIG.readfp(io.BytesIO(content))
+                    logging.info("load manual.ini success")
+                except Exception as e:
+                    logging.exception("data/goagent/manual.ini load error:%s", e)
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')

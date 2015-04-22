@@ -1,120 +1,244 @@
 <h2>配置GoAgent</h2>
-<form id="form-goagent-config">
-    <input type="text" class="input-middle" placeholder="appid" id="gae_appid">
-    清空将使用公共appid(<font color="red">公共appid不能看视频</font>)
-    建议申请自己的appid(<a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a>)
-    <br>
-    <input type="password" class="input-small" placeholder="RC4 password" id="gae_passwd">
-    一般不需要填
-    <br>
+<div class="alert fade in hide">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    <p class="message"></p>
+</div> <!-- .alert -->
+<form id="goagent-config" method="POST" onSubmit="onSubmit(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="gae-appid">GAE AppID </label>
 
-    <hr>
-
-    <div class="checkbox">
-        <label>
-            <input type="checkbox" id="proxy_enable"> 局域网代理（大部分情况不需要配置）<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">帮助</a>
-        </label>
-    </div>
-    <div id="proxy_detail" style="display:none";>
-        <select class="input-medium" id="proxy_type">
-            <option>HTTP</option>
-            <option>SOCKS4</option>
-            <option>SOCKS5</option>
-        </select>
-        <input type="text" class="input-medium" placeholder="host" id="proxy_host">
-        <input type="text" class="input-small" placeholder="port" id="proxy_port">
-        <br>
-        <input type="text" class="input-small" placeholder="User name" id="proxy_user">
-        <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
-    </div>
-    <hr>
-    <details>
-        <summary>高级</summary>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="gae-appid" type="text" placeholder="默认使用公共AppID"/>
+            <div id="gae_appid_tip" class="hide">
+                <p>
+                    <font color="red">公共appid不能看视频、下载文件.</font>
+                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">（怎么申请）</a>
+                </p>
+            </div>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
+        </div> <!-- .span4 -->
+    </div> <!-- .row-fluid -->
+    <div id="advanced-options" style="display: none;">
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="gae-password">RC4 Password(一般无需配置)</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="gae-password" type="password" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="deploy-via-gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE">(帮助)</a></label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="deploy-via-gae" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="ip-connect-interval">Google IP使用频率限制<a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval">(帮助)</a></label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="ip-connect-interval" type="text" value="10" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="enable-proxy">局域网代理(一般无需配置) <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">(帮助)</a></label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="enable-proxy" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div id="proxy-options" style="display: none;">
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-type">代理服务器类型</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <select id="proxy-type">
+                        <option value="HTTP">HTTP</option>
+                        <option value="SOCKS4">SOCKS 4</option>
+                        <option value="SOCKS5">SOCKS 5</option>
+                    </select>
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-host">代理服务器地址</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-port">端口</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-port" type="text" placeholder="Example: 808" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-username">用户名</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-username" type="text" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-password">密码</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-password" type="password" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+        </div> <!-- #proxy-options -->
         <p>
-
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" id="enable_appengine_gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE" target="_blank">帮助</a>
-            </label>
-        </div>
-        <br>
-        google ip 使用频率限制：<input type="text" class="input-small" placeholder="default 10" id="ip_connect_interval"><a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval" target="_blank">帮助</a>
+            指引：<a href="hhttps://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">如何通过文件配置</a>
         </p>
-    </details>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">保存并重启GoAgent</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form> <!-- #goagent-config -->
 
-    <hr>
-    <button type="submit" class="btn">保存并重启</button>
-    <div id="status"></div>
-</form>
-
-
-<script src="/js/jquery-1.11.2.min.js"></script>
+<!-- JavaScript -->
 <script type="text/javascript">
-    $.post( "http://127.0.0.1:8084/config?cmd=get_config", {}, function( data ) {
-        $( "#gae_appid" ).val(data.appid);
-        $( "#gae_passwd" ).val(data.passwd);
-        if(data.proxy_enable == 1){
-            $("#proxy_enable").prop('checked', true);
-            $('#proxy_detail').show();
-        }else{
-            $("#proxy_enable").prop('checked', false);
-        }
-        $("#proxy_type").val(data.proxy_type);
-        $("#proxy_host").val(data.proxy_host);
-        $("#proxy_port").val(data.proxy_port);
-        $("#proxy_user").val(data.proxy_user);
-        $("#proxy_passwd").val(data.proxy_passwd);
-        if(data.host_appengine_mode == "gae"){
-            $("#enable_appengine_gae").prop('checked', true);
-        }else{
-            $("#enable_appengine_gae").prop('checked', false);
-        }
-        $("#ip_connect_interval").val(data.ip_connect_interval);
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
+</script>
+<script type="text/javascript">
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
 
-    $('#proxy_enable').click(function(data){
-        if($("#proxy_enable").prop('checked')){
-            $('#proxy_detail').show();
-        }else{
-            $('#proxy_detail').hide();
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#advanced-options').slideDown();            
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#advanced-options').slideUp();
         }
     });
+</script>
+<script type="text/javascript">
+    $('#enable-proxy').change(function() {
+        var isChecked = $(this).is(':checked');
 
-
-    $( "#form-goagent-config" ).submit(function( event ) {
-        event.preventDefault();
-
-        appid = $( "#gae_appid" ).val()
-        passwd = $( "#gae_passwd" ).val()
-
-        if($("#proxy_enable").prop('checked')){
-            proxy_enable = 1;
-        }else{
-            proxy_enable = 0;
+        if ( isChecked ) {
+            $('#proxy-options').slideDown();
+        } else {
+            $('#proxy-options').slideUp();
         }
-        if($("#enable_appengine_gae").prop('checked')){
-            host_appengine_mode = "gae";
-        }else{
-            host_appengine_mode = "fwd";
-        }
-        proxy_type = $("#proxy_type").val();
-        proxy_host = $("#proxy_host").val();
-        proxy_port = $("#proxy_port").val();
-        proxy_user = $("#proxy_user").val();
-        proxy_passwd = $("#proxy_passwd").val();
-        ip_connect_interval = $("#ip_connect_interval").val();
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8084/config?cmd=get_config',
+            dataType: 'JSON',
+            success: function(result) {
+                $('#gae-appid').val(result['appid']);
+                if(!result['appid'] || result['appid'] == ""){
+                    $('#gae_appid_tip').removeClass("hide");
+                }
+                $('#gae-password').val(result['password']);
 
-        $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
-                "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
-                "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,
-                "host_appengine_mode": host_appengine_mode,
-                "ip_connect_interval": ip_connect_interval},
-            function( data ) {
+                if ( result['host_appengine_mode'] == 'gae' ) {
+                    $('#deploy-via-gae').parent().removeClass('switch-off');
+                    $('#deploy-via-gae').parent().addClass('switch-on');
+                    $('#deploy-via-gae').prop('checked', true);
+                }
+                $("#ip-connect-interval").val(result['ip_connect_interval'] || 10);
 
-            res = data.res
-            if(res == "success") {
-                $("#status").html(res)
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
+                    $('#enable-proxy').parent().removeClass('switch-off');
+                    $('#enable-proxy').parent().addClass('switch-on');
+
+                    $('#enable-proxy').prop('checked', true);
+                    $('#proxy-options').slideDown();
+                }
+                $('#proxy-type').val(result['proxy_type']);
+                $('#proxy-host').val(result['proxy_host']);
+                $('#proxy-port').val(result['proxy_port']);
+                $('#proxy-username').val(result['proxy_user']);
+                $('#proxy-password').val(result['proxy_passwd']);
+            },
+            error: function(){
+                    $('.alert').html('读取设置失败.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
+                    $('.alert').removeClass('hide');
+            }
+        });     
+    });
+</script>
+<script type="text/javascript">
+    function onSubmit() {
+        var gaeAppId          = $('#gae-appid').val(),
+            gaePassword       = $('#gae-password').val(),
+            hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'fwd',
+            ipConnectInterval = $('#ip-connect-interval').val(),
+            enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
+            proxyType         = $('#proxy-type').val(),
+            proxyHost         = $('#proxy-host').val(),
+            proxyPort         = $('#proxy-port').val(),
+            proxyUsername     = $('#proxy-username').val(),
+            proxyPassword     = $('#proxy-password').val();
+
+        return setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, 
+                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
+    }
+</script>
+<script type="text/javascript">
+    function setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, 
+                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
+        var config = {
+            'appid': gaeAppId,
+            'password': gaePassword,
+            'host_appengine_mode': hostAppEngine,
+            'ip_connect_interval': ipConnectInterval,
+            'proxy_enable': enableProxy,
+            'proxy_type': proxyType,
+            'proxy_host': proxyHost,
+            'proxy_port': proxyPort,
+            'proxy_user': proxyUsername,
+            'proxy_passwd': proxyPassword
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8084/config?cmd=set_config',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    $('.alert').html('设置已成功保存.');
+                    $('.alert').addClass('alert-success');
+                    $('.alert').removeClass('alert-error');
+                    $('.alert').removeClass('hide');
+                } else {
+                    $('.alert').html('发生未知错误.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
+                    $('.alert').removeClass('hide');
+                }
             }
         });
-    });
+    }
 </script>

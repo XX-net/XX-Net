@@ -207,7 +207,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
         logging.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
-            if host.endswith(".google.com") or host.endswith(config.HOSTS_FWD_ENDSWITH):
+            if host.endswith(".google.com") or host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
                 if host in config.HOSTS_GAE:
                     gae_set = [s for s in config.HOSTS_GAE]
                     gae_set.remove(host)

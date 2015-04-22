@@ -35,8 +35,8 @@ class Win_tray():
         lang_code, code_page = locale.getdefaultlocale()
         if lang_code == "zh_CN":
             menu_options = ((u"设置", None, self.on_show),
-                        (u"全局通过GoAgent代理上网", None, self.on_enable_proxy),
-                        (u"全局PAC智能代理切换", None, self.on_enable_pac),
+                        (u"全局通过GoAgent代理", None, self.on_enable_proxy),
+                        (u"全局PAC智能代理", None, self.on_enable_pac),
                         (u"取消全局代理", None, self.on_disable_proxy),
                         (u"重启 GoAgent", None, self.on_restart_goagent))
         else:
