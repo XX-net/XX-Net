@@ -26,34 +26,28 @@
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="gae-email" type="text" />
-                    <p class="tip">
-
-                    </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
                     <label for="gae-password">Password</label>
                 </div> <!-- .span4 -->
-                <div class="span8">
+                <div id="password-field" class="span8">
                     <input id="gae-password" type="password" />
-                    <p id="password_tip" class="hide">
-                        如果启用两步验证，请使用应用专用密码：<a href="https://security.google.com/settings/security/apppasswords" target="_blank">去设置</a><br>
-                        否则，请开启弱安全应用登录：<a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">去设置</a><br>
-
+                    <p id="password-tip" class="tip hide">
+                        如果启用两步验证, 请使用应用专用密码: <a href="https://security.google.com/settings/security/apppasswords" target="_blank">立即设置</a><br>
+                        否则, 请开启弱安全应用登录: <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">立即设置</a><br>
                         <a href="https://github.com/XX-net/XX-Net/wiki/Deploy-password-problem" target="_blank">帮助说明</a>
                     </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" type="submit" id="control_button">开始部署</button>
+                    <button class="btn btn-primary btn-block" type="submit">开始部署</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
-        <p class="tip">
-            * XX-Net 1.8.3之前的服务端，请重新部署。
-        </p>
+        <p class="tip">* XX-Net 1.8.3之前的服务端, 请重新部署.</p>
     </div> <!-- #authentication -->
     <div id="logs" class="tab-pane fade">
         <div id="log" class="span12"></div>
@@ -75,9 +69,9 @@
             autostart: true
         });
     });
-
+</script>
+<script type="text/javascript">
     $('#log').scroll(function() {
-
         var preservedHeight = $('#log').height() + 10,
             scrollHeight    = $('#log')[0].scrollHeight,
             scrollTop       = $('#log').scrollTop();
@@ -88,15 +82,20 @@
             window.isAutoScrollLog = false;
         }
     });
-
-
-    $('#gae-password').focus(function(){
-        $('#password_tip').removeClass('hide');
+</script>
+<script type="text/javascript">
+    $('#password-field').click(function(){
+        $('#password-tip').removeClass('hide');
     });
-    $('#gae-password').focusout(function(){
-        $('#password_tip').addClass('hide');
+</script>
+<script type="text/javascript">
+    $('html').click(function() {
+        $('#password-tip').addClass('hide');
     });
 
+    $('#password-field').click(function(event){
+        event.stopPropagation();
+    });
 </script>
 <script type="text/javascript">
     $(function() {
@@ -114,8 +113,10 @@
 
         $('#log').css('height', windowHeight - preservedHeight);
     }
-    function update_log(content){
-        $('#log').html(content.replace(/\n/g, '<br>'));
+</script>
+<script type="text/javascript">
+    function updateLog(logContent) {
+        $('#log').html(logContent.replace(/\n/g, '<br>'));
     }
 </script>
 <script type="text/javascript">
@@ -133,47 +134,43 @@
                         window.status = 'running';
                         $('.alert').html('当前状态: 正在部署...');
                         
-                        update_log(result['log']);
-
-                        switch_button_to_cancel();
-
+                        updateLog(result['log']);
+                        changeButtonStatus('cancel');
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
                         $('.alert').html('当前状态: 部署完成');
 
-                        update_log(result['log']);
+                        updateLog(result['log']);
                     } else {
                         window.timer.stop();
                         $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
-                        update_log(result['log']);
+                        updateLog(result['log']);
                     }
                 } else if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
                         $('.alert').html('当前状态: XX-Net被重置.');
 
-                        switch_button_to_start();
+                        changeButtonStatus('start');
                     } else if ( result['status'] == 'running' ) {
-                        update_log(result['log']);
+                        updateLog(result['log']);
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
                         $('.alert').html('当前状态: 部署完成. <br>请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效.');
 
-                        update_log(result['log']);
-
-                        switch_button_to_start();
-
+                        updateLog(result['log']);
+                        changeButtonStatus('start');
                     } else {
                         window.timer.stop();
                         $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
-                        update_log(result['log']);
+                        updateLog(result['log']);
                     }
                 } else {
                     window.timer.stop();
                     $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
-                    update_log(result['log']);
+                    updateLog(result['log']);
                 }
                 if(window.isAutoScrollLog == true){
                     $('#log').scrollTop($('#log')[0].scrollHeight);
@@ -183,27 +180,29 @@
     }
 </script>
 <script type="text/javascript">
-    function switch_button_to_start(){
-        $('#control_button').removeClass('btn-danger');
-        $('#control_button').addClass('btn-primary');
-        $('#control_button').html('开始部署');
+    function changeButtonStatus(status) {
+        if ( status == 'start' ) {
+            $('button.btn').removeClass('btn-danger');
+            $('button.btn').addClass('btn-primary');
+            $('button.btn').html('开始部署');
+        } else if ( status == 'cancel' ) {
+            $('button.btn').removeClass('btn-primary');
+            $('button.btn').addClass('btn-danger');
+            $('button.btn').html('终止部署');
+        }
     }
-    function switch_button_to_cancel(){
-        $('#control_button').removeClass('btn-primary');
-        $('#control_button').addClass('btn-danger');
-        $('#control_button').html('终止部署');
-    }
-
 </script>
 <script type="text/javascript">
-    $('#control_button').click(function (){
-        if($('#control_button').hasClass('btn-primary')){
-            on_start();
-        }else if($('#control_button').hasClass('btn-danger')){
-            on_cancel();
+    $('button.btn').click(function() {
+        if ( $('button.btn').html() == '开始部署' ){
+            onStart();
+        } else if ( $('button.btn').html() == '终止部署' ) {
+            onCancel();
         }
     });
-    function on_start(){
+</script>
+<script type="text/javascript">
+    function onStart(){
         var appId        = $('#gae-appid').val(),
             email        = $('#gae-email').val(),
             password     = $('#gae-password').val();
@@ -219,24 +218,23 @@
             $('.alert').removeClass('alert-error');
             $('.alert').addClass('alert-info');
         }
-        deployProcess(appId, email, password);
 
-        switch_button_to_cancel();
+        deployProcess(appId, email, password);
+        changeButtonStatus('cancel');
     }
 </script>
 <script type="text/javascript">
-    function on_cancel() {
+    function onCancel() {
         $.ajax({
             type: 'POST',
             url: 'http://127.0.0.1:8084/deploy?cmd=cancel',
             dataType: 'JSON',
             success: function(result) {
-                switch_button_to_start();
-
-                $('.alert').html("部署已经取消。");
+                changeButtonStatus('start');
+                $('.alert').html("当前状态: 部署已取消.");
             },
-            fail: function(result){
-                $('.alert').html("return:" % result);
+            error: function(result){
+                $('.alert').html("当前状态: 发生异常.<br>异常信息:" + result);
             }
         });
     }

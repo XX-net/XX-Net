@@ -39,7 +39,7 @@ select {
 
 button.btn-danger,
 button[type=submit] {
-    margin-top: 30px;
+    margin-top: 10px;
 }
 
 select:focus {
