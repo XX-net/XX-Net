@@ -7,14 +7,13 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="gae-appid">GAE AppID </label>
-
         </div> <!-- .span4 -->
         <div class="span8">
             <input id="gae-appid" type="text" placeholder="默认使用公共AppID"/>
-            <div id="gae_appid_tip" class="hide">
+            <div id="gae-appid-tip" class="hide">
                 <p>
-                    <font color="red">公共appid不能看视频、下载文件.</font>
-                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">（怎么申请）</a>
+                    <span color="red">公共AppID不能看视频、下载文件.</span>
+                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">(怎么申请)</a>
                 </p>
             </div>
         </div> <!-- .span8 -->
@@ -103,10 +102,12 @@
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
         </div> <!-- #proxy-options -->
-        <p>
-            指引：<a href="hhttps://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">如何通过文件配置</a>
-        </p>
-    </div>
+        <div class="row-fluid">
+            <div class="span4">
+                小贴士: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">如何通过文件配置</a>
+            </div> <!-- .span4 -->
+        </div> <!-- .row-fluid -->
+    </div> <!-- #advanced-options -->
     <div class="row-fluid">
         <div class="span12">
             <button class="btn btn-primary btn-block" type="submit">保存并重启GoAgent</button>
@@ -154,8 +155,8 @@
             dataType: 'JSON',
             success: function(result) {
                 $('#gae-appid').val(result['appid']);
-                if(!result['appid'] || result['appid'] == ""){
-                    $('#gae_appid_tip').removeClass("hide");
+                if( !result['appid'] || result['appid'] == '' ){
+                    $('#gae-appid-tip').removeClass("hide");
                 }
                 $('#gae-password').val(result['password']);
 
@@ -164,7 +165,7 @@
                     $('#deploy-via-gae').parent().addClass('switch-on');
                     $('#deploy-via-gae').prop('checked', true);
                 }
-                $("#ip-connect-interval").val(result['ip_connect_interval'] || 10);
+                $('#ip-connect-interval').val(result['ip_connect_interval'] || 10);
 
                 if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
                     $('#enable-proxy').parent().removeClass('switch-off');
