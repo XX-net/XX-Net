@@ -38,14 +38,23 @@
                     </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
+
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="rc4-password">RC4 Password</label>
+                    <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
                 </div> <!-- .span4 -->
-                <div id="rc4-password-field" class="span8">
-                    <input id="rc4-password" type="password" />
-                </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
+            <div id="advanced-options" style="display: none;">
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label for="rc4-password">RC4 Password(一般无需配置)</label>
+                    </div> <!-- .span4 -->
+                    <div id="rc4-password-field" class="span8">
+                        <input id="rc4-password" type="password" />
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+            </div> <!-- #advanced-options -->
+
             <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">开始部署</button>
@@ -73,6 +82,21 @@
             time: 1000,
             autostart: true
         });
+    });
+</script>
+<script type="text/javascript">
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
+
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#advanced-options').slideDown();            
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#advanced-options').slideUp();
+        }
     });
 </script>
 <script type="text/javascript">
