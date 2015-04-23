@@ -5,6 +5,9 @@
     我们建议您使用最新版本的Chrome浏览器.
 </div>
 <![endif]-->
+<div class="alert hide" id="alert-box">
+
+</div>
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -101,7 +104,7 @@
 </table>
 <div id="tip">
     <p>
-        状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。<br>
+        <a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="-blank">日志页</a>内容, 方便分析问题.<br><br>
     </p>
 </div>
 
@@ -152,10 +155,13 @@
                 $('#not-exist-appids').html(result['not_exist_appids']);
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
 
-                $('#tip').html('<a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="-blank">日志页</a>内容, 方便分析问题.<br><br>');
+                if(!$('#alert-box').hasClass("hide")){
+                    $('#alert-box').addClass("hide");
+                }
             },
-            fail: function(result) {
-                $('#tip').append('<br>GoAgent not working');
+            error: function(result) {
+                $('#alert-box').html('状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。<br>');
+                $('#alert-box').removeClass("hide");
             }
         });
     }
