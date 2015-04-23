@@ -481,7 +481,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
                     """修改gae.py"""
-                    gae_path = os.path.join(root_path, "server", "gae", "gae.py")
+                    gae_path = os.path.join(root_path, "goagent", config.__version__, "server", "gae", "gae.py")
 
                     try:
                         gae_obj = open(gae_path, 'r')
