@@ -55,6 +55,9 @@ def set(path, val):
 
 def scan_module_version(module):
     module_path = os.path.join(root_path, module)
+    if not os.path.isdir(module_path):
+        return False
+
     for filename in os.listdir(module_path):
         if os.path.isdir(os.path.join(module_path, filename)):
             return filename
