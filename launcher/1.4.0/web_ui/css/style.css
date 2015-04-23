@@ -39,7 +39,7 @@ select {
 
 button.btn-danger,
 button[type=submit] {
-    margin-top: 30px;
+    margin-top: 10px;
 }
 
 select:focus {
@@ -219,6 +219,10 @@ div#content div#options div.row-fluid div.span4 {
 @media only screen and (max-width: 767px) {
     div#header {
         margin: 0;
+    }
+
+    div#header div.span8 {
+        display: none;
     }
 
     div#header div#logo {
