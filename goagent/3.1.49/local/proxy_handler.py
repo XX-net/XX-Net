@@ -59,6 +59,11 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
 
+    def forward_local(self):
+        html = gae_handler.generate_message_html('Browser pass local request to proxy', u'您的浏览器把本地请求转发到代理上。<br>请在浏览器中设置：访问本地，不经过代理。<br><a href="https://github.com/XX-net/XX-Net/wiki/Browser-pass-localhost-request-to-proxy">帮助</a>')
+        gae_handler.send_response(self.wfile, 200, body=html.encode('utf-8'))
+
+
     def do_METHOD(self):
         host = self.headers.get('Host', '')
 
@@ -66,6 +71,10 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.path = 'http://%s%s' % (host, self.path)
         elif not host and '://' in self.path:
             host = urlparse.urlparse(self.path).netloc
+
+        if host.startswith("127.0.0.1") or host.startswith("localhost"):
+            logging.warn("Your browser forward localhost to proxy.")
+            return self.forward_local()
 
         self.parsed_url = urlparse.urlparse(self.path)
 
@@ -246,3 +255,6 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 finally:
                     self.__realconnection = None
 
+
+if __name__ == "__main__":
+    pass
