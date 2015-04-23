@@ -156,7 +156,29 @@ def clean_cookie_file():
     except OSError:
         pass
 
-def uploads(appids, email, password):
+"""自动修改gae.py中的RC4密码字段"""
+def edit_gae_py(rc4_password):
+    global code_path
+    gae_path = os.path.join(code_path, "gae", "gae.py")
+    try:
+        gae_obj = open(gae_path, 'r')
+        lines = gae_obj.readlines()
+        gae_obj.close()
+
+        for i in range(0, len(lines)):
+            if lines[i].startswith('__password__'):
+                lines[i] = "__password__ = '" + rc4_password + "'\n"
+                break
+
+        gae_obj = open(gae_path, 'w')
+        gae_obj.writelines(lines)
+        gae_obj.close()
+    except Exception as e:
+        my_stdout.write('Setting in the Gae.py RC4 password failed!\n')
+
+def uploads(appids, email, password, rc4_password):
+    edit_gae_py(rc4_password)
+
     clean_cookie_file()
 
     success_appid_list = []
@@ -196,8 +218,10 @@ def uploads(appids, email, password):
 
     do_clean_up()
 
+    edit_gae_py('')
+
 def main():
-    if len(sys.argv) <3:
+    if len(sys.argv) < 3:
         my_stdout.write("Usage: uploader.py <appids> <email> [password]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
@@ -206,13 +230,19 @@ def main():
 
     appids = sys.argv[1]
     email = sys.argv[2]
-    if len(sys.argv) == 4:
+
+    if len(sys.argv) >= 4:
         password = sys.argv[3]
     else:
         import getpass
         password = getpass.getpass("password:")
 
-    uploads(appids, email, password)
+    if len(sys.argv) >= 5:
+        rc4_password = sys.argv[4]
+    else:
+        rc4_password = ''
+
+    uploads(appids, email, password, rc4_password)
 
 if __name__ == '__main__':
     main()

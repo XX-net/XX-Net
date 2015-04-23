@@ -480,27 +480,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     email = self.postvars['email'][0]
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
-                    """修改gae.py"""
-                    gae_path = os.path.join(root_path, "goagent", config.__version__, "server", "gae", "gae.py")
-
-                    try:
-                        gae_obj = open(gae_path, 'r')
-                        lines = in_obj.readlines()
-                        gae_obj.close()
-
-                        for i in range(0, lines.length):
-                            if lines[i].startswith('__password__'):
-                                lines[i] = "__password__ = '" + rc4_passwd + "'\n"
-                                break
-
-                        gae_obj = open(gae_path, 'w')
-                        gae_obj.writelines(lines)
-                        gae_obj.close()
-                    except Exception as e:
-                        logging.exception('Setting in the Gae.py RC4 password failed!', e)
- 
-                    """修改结束"""
-                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
+                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd], stdout = subprocess.PIPE)
                     logging.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
