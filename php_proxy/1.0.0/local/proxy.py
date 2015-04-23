@@ -82,11 +82,16 @@ elif sys.platform == "darwin":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
+
+from cert_util import CertUtil
+
+
 try:
     __import__('gevent.monkey', fromlist=['.']).patch_all()
 except (ImportError, SystemError) as e:
     print "import gevent fail:", e
     sys.exit(sys.stderr.write('please install python-gevent\n'))
+
 
 import base64
 import collections
@@ -150,7 +155,6 @@ from proxylib import URLRewriteFilter
 from proxylib import UserAgentFilter
 from proxylib import XORCipher
 
-from cert_util import CertUtil
 import web_control
 
 def is_google_ip(ipaddr):
@@ -1194,8 +1198,13 @@ def main():
 
     logging.info(common.info())
 
+    if common.CONTROL_ENABLE:
+        control_server = LocalProxyServer((common.CONTROL_IP, common.CONTROL_PORT), web_control.RemoteContralServerHandler)
+        p = threading.Thread(target=control_server.serve_forever)
+        p.setDaemon(True)
+        p.start()
+
     if common.PHP_ENABLE:
-        CertUtil.init_ca()
 
         host, port = common.PHP_LISTEN.split(':')
         HandlerClass = PHPProxyHandler if not common.PROXY_ENABLE else ProxyPHPProxyHandler
@@ -1203,11 +1212,7 @@ def main():
         php_server = LocalProxyServer((host, int(port)), HandlerClass)
         thread.start_new_thread(php_server.serve_forever, tuple())
 
-    if common.CONTROL_ENABLE:
-        control_server = LocalProxyServer((common.CONTROL_IP, common.CONTROL_PORT), web_control.RemoteContralServerHandler)
-        p = threading.Thread(target=control_server.serve_forever)
-        p.setDaemon(True)
-        p.start()
+        CertUtil.init_ca()
 
     while common.keep_run:
         gevent.sleep(1)

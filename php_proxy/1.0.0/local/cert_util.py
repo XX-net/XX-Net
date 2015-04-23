@@ -41,6 +41,15 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
+def get_cmd_out(cmd):
+    return []
+    #old gevent conflict with subprocess
+    # need gevent 1.0.1
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = proc.stdout
+    lines = out.readlines()
+    return lines
+
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
@@ -141,7 +150,7 @@ class SSLCert:
 class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
 
-    ca_vendor = 'PHP_proxy'
+    ca_vendor = 'PHP_proxy' #TODO: here should be XX-Net
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
@@ -159,7 +168,7 @@ class CertUtil(object):
         subj.localityName = 'Cernet'
         subj.organizationName = CertUtil.ca_vendor
         subj.organizationalUnitName = '%s Root' % CertUtil.ca_vendor
-        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor
+        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be PHP_proxy
         req.set_pubkey(key)
         req.sign(key, CertUtil.ca_digest)
         ca = OpenSSL.crypto.X509()
@@ -366,6 +375,29 @@ class CertUtil(object):
 
     @staticmethod
     def import_debian_ca(common_name, ca_file):
+
+        def get_debian_ca_sha1(nss_path):
+            commonname = "PHP_proxy XX-Net - PHP_proxy" # TODO: here should be PHP_proxy - XX-Net
+
+            cmd = ['certutil', '-L','-d', 'sql:%s' % nss_path, '-n', commonname]
+            lines = get_cmd_out(cmd)
+
+            get_sha1_title = False
+            sha1 = ""
+            for line in lines:
+                if line.endswith("Fingerprint (SHA1):\n"):
+                    get_sha1_title = True
+                    continue
+                if get_sha1_title:
+                    sha1 = line
+                    break
+
+            sha1 = sha1.replace(' ', '').replace(':', '').replace('\n', '')
+            if len(sha1) != 40:
+                return False
+            else:
+                return sha1
+
         home_path = os.path.expanduser("~")
         nss_path = os.path.join(home_path, ".pki/nssdb")
         if not os.path.isdir(nss_path):
@@ -374,6 +406,12 @@ class CertUtil(object):
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
             logging.warning('please install *libnss3-tools* package to import PHP_proxy root ca')
             return False
+
+        sha1 = get_debian_ca_sha1(nss_path)
+        ca_hash = CertUtil.ca_thumbprint.replace(':', '')
+        if sha1 == ca_hash:
+            logging.info("php_proxy system cert exist")
+            return
 
         # shell command to list all cert
         # certutil -L -d sql:$HOME/.pki/nssdb
@@ -456,7 +494,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_ca(certfile):
-        commonname = "PHP_proxy XX-Net - PHP_proxy"
+        commonname = "PHP_proxy XX-Net - PHP_proxy" #TODO: here should be PHP_proxy - XX-Net
         if sys.platform.startswith('win'):
             CertUtil.import_windows_ca(commonname, certfile)
         elif sys.platform == 'darwin':
@@ -469,6 +507,7 @@ class CertUtil(object):
 
     @staticmethod
     def init_ca():
+        logging.debug("init_ca")
         #Check Certs Dir
         if not os.path.exists(CertUtil.ca_certdir):
             os.makedirs(CertUtil.ca_certdir)
@@ -500,20 +539,6 @@ class CertUtil(object):
         CertUtil.import_ca(CertUtil.ca_keyfile)
 
 
-def test_del_ca():
-    commonname = "PHP_proxy CA - PHP_proxy"
-    cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "PHP_proxy" ||certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( commonname)
-    os.system(cmd_line)
-
-def test_cmd():
-    cmd = "pwd"
-    cmd = ['security', 'find-certificate', '-Z', '-a', '-c', 'PHP_proxy']
-    #cmd = ['security', 'find-certificate',]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out = proc.communicate()
-    print out[0]
 
 if __name__ == '__main__':
     CertUtil.init_ca()
-    #test_del_ca()
-    #test_cmd()
