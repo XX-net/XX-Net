@@ -481,22 +481,24 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
                     """修改gae.py"""
-                    gae_path = os.path.join(root_path, "goagent/3.1.49/server/gae.py")
-                    new_gae_path = os.path.join(root_path, "goagent/3.1.49/server/gae/gae.py")
-                    in_obj = open(gae_path, 'r')
-                    out_obj = open(new_gae_path, 'w')
+                    gae_path = os.path.join(root_path, "server", "gae", "gae.py")
 
-                    line = in_obj.readline()
-                    while line:
-                        if line.startswith('__password__'):
-                            out_obj.write("__password__ = '" + rc4_passwd + "'\n")
-                        else:
-                            out_obj.write(line)
-                        
-                        line = in_obj.readline()
+                    try:
+                        gae_obj = open(gae_path, 'r')
+                        lines = in_obj.readlines()
+                        gae_obj.close()
 
-                    in_obj.close()
-                    out_obj.close()
+                        for i in range(0, lines.length):
+                            if lines[i].startswith('__password__'):
+                                lines[i] = "__password__ = '" + rc4_passwd + "'\n"
+                                break
+
+                        gae_obj = open(gae_path, 'w')
+                        gae_obj.writelines(lines)
+                        gae_obj.close()
+                    except Exception as e:
+                        logging.exception('Setting in the Gae.py RC4 password failed!', e)
+ 
                     """修改结束"""
                     RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd], stdout=subprocess.PIPE)
                     logging.info("deploy begin.")
