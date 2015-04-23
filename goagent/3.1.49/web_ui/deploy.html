@@ -51,6 +51,10 @@
                     </div> <!-- .span4 -->
                     <div id="rc4-password-field" class="span8">
                         <input id="rc4-password" type="password" />
+                        <p id="rc4-password-tip" class="tip hide">
+                            如果使用RC4密码, 请在配置GoAgent时同样在高级设置中配置RC4密码。<br>
+                            <a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">帮助说明</a>
+                        </p>
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
             </div> <!-- #advanced-options -->
@@ -116,13 +120,21 @@
     $('#password-field').click(function(){
         $('#password-tip').removeClass('hide');
     });
+    $('#rc4-password-field').click(function(){
+        $('#rc4-password-tip').removeClass('hide');
+    });
 </script>
 <script type="text/javascript">
     $('html').click(function() {
         $('#password-tip').addClass('hide');
+        $('#rc4-password-tip').addClass('hide');
     });
 
     $('#password-field').click(function(event){
+        event.stopPropagation();
+    });
+
+    $('#rc4-password-field').click(function(event){
         event.stopPropagation();
     });
 </script>
