@@ -43,6 +43,13 @@ from pyasn1.error import PyAsn1Error
 
 from config import config
 
+
+def get_cmd_out(cmd):
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = proc.stdout
+    lines = out.readlines()
+    return lines
+
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
@@ -143,7 +150,7 @@ class SSLCert:
 class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
 
-    ca_vendor = 'GoAgent'
+    ca_vendor = 'GoAgent' #TODO: here should be XX-Net
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
@@ -161,7 +168,7 @@ class CertUtil(object):
         subj.localityName = 'Cernet'
         subj.organizationName = CertUtil.ca_vendor
         subj.organizationalUnitName = '%s Root' % CertUtil.ca_vendor
-        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor
+        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be GoAgent
         req.set_pubkey(key)
         req.sign(key, CertUtil.ca_digest)
         ca = OpenSSL.crypto.X509()
@@ -373,6 +380,29 @@ class CertUtil(object):
 
     @staticmethod
     def import_debian_ca(common_name, ca_file):
+
+        def get_debian_ca_sha1(nss_path):
+            commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
+
+            cmd = ['certutil', '-L','-d', 'sql:%s' % nss_path, '-n', commonname]
+            lines = get_cmd_out(cmd)
+
+            get_sha1_title = False
+            sha1 = ""
+            for line in lines:
+                if line.endswith("Fingerprint (SHA1):\n"):
+                    get_sha1_title = True
+                    continue
+                if get_sha1_title:
+                    sha1 = line
+                    break
+
+            sha1 = sha1.replace(' ', '').replace(':', '').replace('\n', '')
+            if len(sha1) != 40:
+                return False
+            else:
+                return sha1
+
         home_path = os.path.expanduser("~")
         nss_path = os.path.join(home_path, ".pki/nssdb")
         if not os.path.isdir(nss_path):
@@ -381,6 +411,13 @@ class CertUtil(object):
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
             logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
+
+        sha1 = get_debian_ca_sha1(nss_path)
+        ca_hash = CertUtil.ca_thumbprint.replace(':', '')
+        if sha1 == ca_hash:
+            logging.info("system cert exist")
+            return
+
 
         # shell command to list all cert
         # certutil -L -d sql:$HOME/.pki/nssdb
@@ -433,7 +470,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_mac_ca(common_name, certfile):
-        commonname = "GoAgent XX-Net"
+        commonname = "GoAgent XX-Net" #TODO: need check again
         ca_hash = CertUtil.ca_thumbprint.replace(':', '')
 
         def get_exist_ca_sha1():
@@ -463,7 +500,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_ca(certfile):
-        commonname = "GoAgent XX-Net - GoAgent"
+        commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
         if sys.platform.startswith('win'):
             CertUtil.import_windows_ca(commonname, certfile)
         elif sys.platform == 'darwin':
@@ -513,20 +550,13 @@ class CertUtil(object):
         # launcher will wait ready to open browser and check update
         config.cert_import_ready = True
 
-def test_del_ca():
-    commonname = "GoAgent CA - GoAgent"
-    cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" ||certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( commonname)
-    os.system(cmd_line)
 
-def test_cmd():
-    cmd = "pwd"
-    cmd = ['security', 'find-certificate', '-Z', '-a', '-c', 'GoAgent']
-    #cmd = ['security', 'find-certificate',]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out = proc.communicate()
-    print out[0]
+
 
 if __name__ == '__main__':
     CertUtil.init_ca()
-    #test_del_ca()
-    #test_cmd()
+
+
+#TODO:
+# CA commaon should be GoAgent, vander should be XX-Net
+# need change and test on all support platform: Windows/Mac/Ubuntu/Debian
