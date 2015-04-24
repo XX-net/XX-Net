@@ -22,7 +22,10 @@ def get_launcher_version_from_config():
         return launcher_version
     except yaml.YAMLError as exc:
         print "Error in configuration file:", exc
-        return False
+    except Exception as e:
+        print "get_launcher_version_from_config:", e
+
+    return False
 
 def scan_launcher_version():
     for filename in os.listdir(current_path):

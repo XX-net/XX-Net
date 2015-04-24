@@ -82,8 +82,9 @@ def recheck_module_path():
         logging.info("module %s auto upgrade to version %s", module, current_version)
         need_save_config = True
 
-        if module != "launcher" and get(["modules", module, "auto_start"], -1) == -1:
-            set(["modules", module, "auto_start"], 1)
+        if module not in ["launcher", "php_proxy"]:
+            if get(["modules", module, "auto_start"], -1) == -1:
+                set(["modules", module, "auto_start"], 1)
 
     if get(["modules", "goagent", "control_port"], 0) == 0:
         set(["modules", "goagent", "control_port"], 8084)
