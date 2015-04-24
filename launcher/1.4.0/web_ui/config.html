@@ -25,11 +25,24 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">PHP模块开关(重启生效)</div> <!-- .span4 -->
-        <div class="span8">
-            <input id="php-enable" type="checkbox" data-toggle="switch" />
-        </div> <!-- .span8 -->
+        <div class="span4">
+            <label for="module-switch" style="font-weight: bold;"><i class="icon icon-chevron-right"></i> 模块开关(重启生效)</label>
+        </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
+    <div id="module-switch" style="display: none;">
+        <div class="row-fluid">
+            <div class="span4">Goagent模块开关(重启生效)</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="goagent-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">PHP模块开关(重启生效)</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="php-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+    </div> <!-- #module-switch -->
 </div> <!-- #options -->
 
 <!-- JavaScript -->
@@ -74,8 +87,29 @@
 
                     $( "#php-enable").prop('checked', true);
                 }
+                if ( result['goagent_enable'] != 0 ) {
+                    $( "#goagent-enable").parent().removeClass('switch-off');
+                    $( "#goagent-enable").parent().addClass('switch-on');
+
+                    $( "#goagent-enable").prop('checked', true);
+                }
             }
         });     
+    });
+</script>
+<script type="text/javascript">
+    $('label[for=module-switch]').click(function() {
+        var isAdvancedOptionsShown = $('#module-switch').is(':visible');
+
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#module-switch').slideDown();            
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#module-switch').slideUp();
+        }
     });
 </script>
 <script type="text/javascript">
@@ -106,6 +140,14 @@
     $('#php-enable').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'php_enable',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#goagent-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'goagent_enable',
             value     = isChecked ? 1 : 0;
 
         return setConfig(key, value);
