@@ -37,7 +37,7 @@ appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH = './.appcfg_cookies'
 
 
 defined_password = ''
-def getpass_getpass(prompt='Password:', stream=None):
+def getpass_getpass(prompt = 'Password:', stream = None):
     global defined_password
     return defined_password
 
@@ -77,7 +77,7 @@ def do_clean_up():
     sys.stdout = org_stdout
 
 try:
-    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
+    socket.create_connection(('127.0.0.1', 8087), timeout = 1).close()
     os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
 except:
     pass
@@ -106,10 +106,10 @@ def upload(appid, email, password):
     try:
         for i in range(10):
             try:
-                result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
-                result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
                 return True
@@ -159,20 +159,19 @@ def clean_cookie_file():
 """自动修改gae.py中的RC4密码字段"""
 def edit_gae_py(rc4_password):
     global code_path
-    gae_path = os.path.join(code_path, "gae", "gae.py")
+    gae_file_name = os.path.join(code_path, "gae", "gae.py")
     try:
-        gae_obj = open(gae_path, 'r')
-        lines = gae_obj.readlines()
-        gae_obj.close()
+        with open(gae_file_name, 'r') as fgae:
+            lines = fgae.readlines()
 
         for i in range(0, len(lines)):
             if lines[i].startswith('__password__'):
                 lines[i] = "__password__ = '" + rc4_password + "'\n"
                 break
 
-        gae_obj = open(gae_path, 'w')
-        gae_obj.writelines(lines)
-        gae_obj.close()
+        with open(gae_file_name, 'w') as fgae:
+            fgae.writelines(lines)
+
     except Exception as e:
         my_stdout.write('Setting in the Gae.py RC4 password failed!\n')
 
