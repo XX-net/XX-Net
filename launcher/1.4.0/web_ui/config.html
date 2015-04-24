@@ -24,6 +24,12 @@
             <input id="popup-webui" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">PHP模式开关</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="php-enable" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
 </div> <!-- #options -->
 
 <!-- JavaScript -->
@@ -62,6 +68,12 @@
 
                     $( "#popup-webui").prop('checked', true);
                 }
+                if ( result['php_enable'] != 0 ) {
+                    $( "#php-enable").parent().removeClass('switch-off');
+                    $( "#php-enable").parent().addClass('switch-on');
+
+                    $( "#php-enable").prop('checked', true);
+                }
             }
         });     
     });
@@ -86,6 +98,14 @@
     $('#popup-webui').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'popup_webui',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#php-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'php_enable',
             value     = isChecked ? 1 : 0;
 
         return setConfig(key, value);
