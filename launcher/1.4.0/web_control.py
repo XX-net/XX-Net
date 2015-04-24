@@ -68,7 +68,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            if config.get(["modules", module, "auto_start"], 1) != 1:
+            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1:
                 continue
 
             version = values["current_version"]
