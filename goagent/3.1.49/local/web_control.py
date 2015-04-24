@@ -5,6 +5,7 @@ import sys
 import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
@@ -235,6 +236,24 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = "Quit"
             self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
             self.wfile.write(data)
+            return
+        elif path.startswith("/wizard/"):
+            file_path = os.path.abspath(os.path.join(web_ui_path, '/'.join(path.split('/')[1:])))
+            if not os.path.isfile(file_path):
+                self.wfile.write(b'HTTP/1.1 404 Not Found\r\n\r\n')
+                logging.warn('%s %s %s wizard file %s not found', self.address_string(), self.command, self.path, file_path)
+                return
+
+            if file_path.endswith('.html'):
+                mimetype = 'text/html'
+            elif file_path.endswith('.png'):
+                mimetype = 'image/png'
+            elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+                mimetype = 'image/jpeg'
+            else:
+                mimetype = 'application/octet-stream'
+
+            self.send_file(file_path, mimetype)
             return
         else:
             logging.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
