@@ -37,7 +37,7 @@ appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH = './.appcfg_cookies'
 
 
 defined_password = ''
-def getpass_getpass(prompt='Password:', stream=None):
+def getpass_getpass(prompt = 'Password:', stream = None):
     global defined_password
     return defined_password
 
@@ -77,7 +77,7 @@ def do_clean_up():
     sys.stdout = org_stdout
 
 try:
-    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
+    socket.create_connection(('127.0.0.1', 8087), timeout = 1).close()
     os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
 except:
     pass
@@ -106,10 +106,10 @@ def upload(appid, email, password):
     try:
         for i in range(10):
             try:
-                result =  appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
-                result =  appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn=my_input, error_fh=my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
                 return True
@@ -156,7 +156,28 @@ def clean_cookie_file():
     except OSError:
         pass
 
-def uploads(appids, email, password):
+"""自动修改gae.py中的RC4密码字段"""
+def edit_gae_py(rc4_password):
+    global code_path
+    gae_file_name = os.path.join(code_path, "gae", "gae.py")
+    try:
+        with open(gae_file_name, 'r') as fgae:
+            lines = fgae.readlines()
+
+        for i in range(0, len(lines)):
+            if lines[i].startswith('__password__'):
+                lines[i] = "__password__ = '" + rc4_password + "'\n"
+                break
+
+        with open(gae_file_name, 'w') as fgae:
+            fgae.writelines(lines)
+
+    except Exception as e:
+        my_stdout.write('Setting in the Gae.py RC4 password failed!\n')
+
+def uploads(appids, email, password, rc4_password):
+    edit_gae_py(rc4_password)
+
     clean_cookie_file()
 
     success_appid_list = []
@@ -196,8 +217,10 @@ def uploads(appids, email, password):
 
     do_clean_up()
 
+    edit_gae_py('')
+
 def main():
-    if len(sys.argv) <3:
+    if len(sys.argv) < 3:
         my_stdout.write("Usage: uploader.py <appids> <email> [password]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
@@ -206,13 +229,19 @@ def main():
 
     appids = sys.argv[1]
     email = sys.argv[2]
-    if len(sys.argv) == 4:
+
+    if len(sys.argv) >= 4:
         password = sys.argv[3]
     else:
         import getpass
         password = getpass.getpass("password:")
 
-    uploads(appids, email, password)
+    if len(sys.argv) >= 5:
+        rc4_password = sys.argv[4]
+    else:
+        rc4_password = ''
+
+    uploads(appids, email, password, rc4_password)
 
 if __name__ == '__main__':
     main()

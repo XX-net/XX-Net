@@ -38,6 +38,27 @@
                     </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
+
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
+                </div> <!-- .span4 -->
+            </div> <!-- .row-fluid -->
+            <div id="advanced-options" style="display: none;">
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label for="rc4-password">RC4 Password(一般无需配置)</label>
+                    </div> <!-- .span4 -->
+                    <div id="rc4-password-field" class="span8">
+                        <input id="rc4-password" type="password" />
+                        <p id="rc4-password-tip" class="tip hide">
+                            如果使用RC4密码, 请在配置GoAgent时同样在高级设置中配置RC4密码。<br>
+                            <a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">帮助说明</a>
+                        </p>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+            </div> <!-- #advanced-options -->
+
             <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">开始部署</button>
@@ -68,6 +89,21 @@
     });
 </script>
 <script type="text/javascript">
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
+
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#advanced-options').slideDown();            
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#advanced-options').slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
     $('#log').scroll(function() {
         var preservedHeight = $('#log').height() + 10,
             scrollHeight    = $('#log')[0].scrollHeight,
@@ -84,13 +120,21 @@
     $('#password-field').click(function(){
         $('#password-tip').removeClass('hide');
     });
+    $('#rc4-password-field').click(function(){
+        $('#rc4-password-tip').removeClass('hide');
+    });
 </script>
 <script type="text/javascript">
     $('html').click(function() {
         $('#password-tip').addClass('hide');
+        $('#rc4-password-tip').addClass('hide');
     });
 
     $('#password-field').click(function(event){
+        event.stopPropagation();
+    });
+
+    $('#rc4-password-field').click(function(event){
         event.stopPropagation();
     });
 </script>
@@ -203,6 +247,7 @@
         var appId        = $('#gae-appid').val(),
             email        = $('#gae-email').val(),
             password     = $('#gae-password').val();
+            rc4_password = $('#rc4-password').val();
         var errorMessage = getErrorMessage(appId, email, password);
 
         if ( errorMessage.length != 0 ) {
@@ -216,7 +261,7 @@
             $('.alert').addClass('alert-info');
         }
 
-        deployProcess(appId, email, password);
+        deployProcess(appId, email, password, rc4_password);
         changeButtonStatus('cancel');
     }
 </script>
@@ -254,11 +299,12 @@
     }
 </script>
 <script type="text/javascript">
-    function deployProcess(appId, email, password) {
+    function deployProcess(appId, email, password, rc4_password) {
         var authentication = {
             'appid': appId,
             'email': email,
-            'passwd': password
+            'passwd': password,
+			'rc4_passwd': rc4_password
         };
 
         $.ajax({
