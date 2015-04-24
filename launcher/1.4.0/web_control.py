@@ -68,13 +68,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            if config.get(["modules", module, "auto_start"], 1) == 1:
-                version = values["current_version"]
-                menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
-                if not os.path.isfile(menu_path):
-                    continue
-                module_menu = yaml.load(file(menu_path, 'r'))
-                module_menus[module] = module_menu
+            if config.get(["modules", module, "auto_start"], 1) != 1:
+                continue
+
+            version = values["current_version"]
+            menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
+            if not os.path.isfile(menu_path):
+                continue
+                
+            module_menu = yaml.load(file(menu_path, 'r'))
+            module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
