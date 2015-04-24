@@ -207,11 +207,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "check_update": "%d", "popup_webui": %d, "auto_start": %d, "php_enable": %d }' %\
+            data = '{ "check_update": "%d", "popup_webui": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
                    (config.get(["update", "check_update"], 1)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "php_proxy", "auto_start"], 0))
+                    , config.get(["modules", "php_proxy", "auto_start"], 0)
+                    , config.get(["modules", "goagent", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = int(reqs['check_update'][0])
@@ -245,6 +246,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     config.set(["modules", "launcher", "auto_start"], auto_start)
                     config.save()
 
+                    data = '{"res":"success"}'
+            elif 'goagent_enable' in reqs :
+                goagent_enable = int(reqs['goagent_enable'][0])
+                if goagent_enable != 0 and goagent_enable != 1:
+                    data = '{"res":"fail, goagent_enable:%s"}' % goagent_enable
+                else:
+                    config.set(["modules", "goagent", "auto_start"], goagent_enable)
+                    config.save()
                     data = '{"res":"success"}'
             elif 'php_enable' in reqs :
                 php_enable = int(reqs['php_enable'][0])
