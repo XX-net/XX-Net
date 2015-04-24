@@ -38,7 +38,6 @@
                     </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
-
             <div class="row-fluid">
                 <div class="span4">
                     <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
@@ -57,7 +56,6 @@
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
             </div> <!-- #advanced-options -->
-
             <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">开始部署</button>
@@ -245,8 +243,8 @@
     function onStart(){
         var appId        = $('#gae-appid').val(),
             email        = $('#gae-email').val(),
-            password     = $('#gae-password').val();
-            rc4_password = $('#rc4-password').val();
+            password     = $('#gae-password').val(),
+            rc4Password  = $('#rc4-password').val();
         var errorMessage = getErrorMessage(appId, email, password);
 
         if ( errorMessage.length != 0 ) {
@@ -260,7 +258,7 @@
             $('.alert').addClass('alert-info');
         }
 
-        deployProcess(appId, email, password, rc4_password);
+        deployProcess(appId, email, password, rc4Password);
         changeButtonStatus('cancel');
     }
 </script>
@@ -298,12 +296,12 @@
     }
 </script>
 <script type="text/javascript">
-    function deployProcess(appId, email, password, rc4_password) {
+    function deployProcess(appId, email, password, rc4Password) {
         var authentication = {
             'appid': appId,
             'email': email,
             'passwd': password,
-			'rc4_passwd': rc4_password
+            'rc4_passwd': rc4Password
         };
 
         $.ajax({
