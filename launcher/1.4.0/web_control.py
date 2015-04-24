@@ -68,12 +68,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            version = values["current_version"]
-            menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
-            if not os.path.isfile(menu_path):
-                continue
-            module_menu = yaml.load(file(menu_path, 'r'))
-            module_menus[module] = module_menu
+            if config.get(["modules", module, "auto_start"], 1) == 1:
+                version = values["current_version"]
+                menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
+                if not os.path.isfile(menu_path):
+                    continue
+                module_menu = yaml.load(file(menu_path, 'r'))
+                module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
@@ -245,7 +246,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif 'php_enable' in reqs :
                 php_enable = int(reqs['php_enable'][0])
                 if php_enable != 0 and php_enable != 1:
-                    data = '{"res":"fail, php_enable:%s"}' % auto_start
+                    data = '{"res":"fail, php_enable:%s"}' % php_enable
                 else:
                     config.set(["modules", "php_proxy", "auto_start"], php_enable)
                     config.save()

@@ -165,7 +165,7 @@ def update_rc4_password(rc4_password):
 
         for i in range(0, len(lines)):
             if lines[i].startswith('__password__'):
-                lines[i] = "__password__ = '" + rc4_password + "'\n"
+                lines[i] = "__password__ = '%s'\n" % rc4_password
                 break
 
         with open(gae_file_name, 'w') as fgae:
