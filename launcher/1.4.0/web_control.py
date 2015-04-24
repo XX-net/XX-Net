@@ -166,8 +166,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            target_module = 'goagent'
-            target_menu = 'status'
+            if config.get(['modules', 'goagent', 'auto_start'], 0) == 1:
+                target_module = 'goagent'
+                target_menu = 'status'
+            else:
+                target_module = 'launcher'
+                target_menu = 'about'
+
 
         if len(module_menus) == 0:
             self.load_module_menus()
