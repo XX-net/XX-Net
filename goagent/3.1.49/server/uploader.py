@@ -37,7 +37,7 @@ appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH = './.appcfg_cookies'
 
 
 defined_password = ''
-def getpass_getpass(prompt = 'Password:', stream = None):
+def getpass_getpass(prompt='Password:', stream=None):
     global defined_password
     return defined_password
 
@@ -77,7 +77,7 @@ def do_clean_up():
     sys.stdout = org_stdout
 
 try:
-    socket.create_connection(('127.0.0.1', 8087), timeout = 1).close()
+    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
     os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
 except:
     pass
@@ -106,10 +106,10 @@ def upload(appid, email, password):
     try:
         for i in range(10):
             try:
-                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
-                result = appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn = getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
                     continue
                 return True
@@ -156,8 +156,7 @@ def clean_cookie_file():
     except OSError:
         pass
 
-"""自动修改gae.py中的RC4密码字段"""
-def edit_gae_py(rc4_password):
+def update_rc4_password(rc4_password):
     global code_path
     gae_file_name = os.path.join(code_path, "gae", "gae.py")
     try:
@@ -176,7 +175,7 @@ def edit_gae_py(rc4_password):
         my_stdout.write('Setting in the Gae.py RC4 password failed!\n')
 
 def uploads(appids, email, password, rc4_password):
-    edit_gae_py(rc4_password)
+    update_rc4_password(rc4_password)
 
     clean_cookie_file()
 
@@ -217,11 +216,11 @@ def uploads(appids, email, password, rc4_password):
 
     do_clean_up()
 
-    edit_gae_py('')
+    update_rc4_password('')
 
 def main():
     if len(sys.argv) < 3:
-        my_stdout.write("Usage: uploader.py <appids> <email> [password]\r\n")
+        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
         my_stdout.write("== END ==\n")
