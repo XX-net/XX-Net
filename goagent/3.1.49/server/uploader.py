@@ -221,7 +221,7 @@ def uploads(appids, email, password, rc4_password):
 
 def main():
     if len(sys.argv) < 3:
-        my_stdout.write("Usage: uploader.py <appids> <email> [password]\r\n")
+        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
         my_stdout.write("== END ==\n")
