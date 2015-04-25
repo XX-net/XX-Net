@@ -30,7 +30,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 from config import config
 import gae_handler
-
+import direct_handler
 
 
 class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -112,7 +112,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        """handle CONNECT cmmand, socket forward or deploy a fake cert"""
+        """handle CONNECT command, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
         #return self.do_CONNECT_AGENT()
@@ -120,12 +120,14 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.do_CONNECT_AGENT()
 
         if host in config.HOSTS_FWD:
+            return self.do_CONNECT_DIRECT()
             return self.do_CONNECT_FWD()
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_CONNECT_AGENT()
 
         if host.endswith(config.HOSTS_FWD_ENDSWITH):
+            return self.do_CONNECT_DIRECT()
             return self.do_CONNECT_FWD()
         else:
             return self.do_CONNECT_AGENT()
@@ -256,6 +258,97 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 finally:
                     self.__realconnection = None
 
+
+    def do_CONNECT_DIRECT(self):
+        """deploy fake cert to client"""
+        host, _, port = self.path.rpartition(':')
+        port = int(port)
+        if port != 443:
+            logging.warn("CONNECT %s port:%d not support", host, port)
+            return
+
+        certfile = CertUtil.get_cert(host)
+        logging.info('GAE %s %s:%d ', self.command, host, port)
+        self.__realconnection = None
+        self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
+
+        try:
+            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
+        except ssl.SSLError as e:
+            logging.info('ssl error: %s, create full domain cert for host:%s', e, host)
+            certfile = CertUtil.get_cert(host, full_name=True)
+            return
+        except Exception as e:
+            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
+                logging.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+            return
+
+        self.__realconnection = self.connection
+        self.__realwfile = self.wfile
+        self.__realrfile = self.rfile
+        self.connection = ssl_sock
+        self.rfile = self.connection.makefile('rb', self.bufsize)
+        self.wfile = self.connection.makefile('wb', 0)
+
+        try:
+            self.raw_requestline = self.rfile.readline(65537)
+            if len(self.raw_requestline) > 65536:
+                self.requestline = ''
+                self.request_version = ''
+                self.command = ''
+                self.send_error(414)
+                return
+            if not self.raw_requestline:
+                self.close_connection = 1
+                return
+            if not self.parse_request():
+                return
+        except NetWorkIOError as e:
+            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
+                raise
+        if self.path[0] == '/' and host:
+            self.path = 'https://%s%s' % (self.headers['Host'], self.path)
+        logging.debug('GAE CONNECT %s %s', self.command, self.path)
+
+        try:
+            if self.path[0] == '/' and host:
+                self.path = 'http://%s%s' % (host, self.path)
+            elif not host and '://' in self.path:
+                host = urlparse.urlparse(self.path).netloc
+
+            self.parsed_url = urlparse.urlparse(self.path)
+            if len(self.parsed_url[4]):
+                path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
+            else:
+                path = self.parsed_url[2]
+
+            request_headers = dict((k.title(), v) for k, v in self.headers.items())
+
+            payload = b''
+            if 'Content-Length' in request_headers:
+                try:
+                    payload_len = int(request_headers.get('Content-Length', 0))
+                    #logging.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
+                    payload = self.rfile.read(payload_len)
+                except NetWorkIOError as e:
+                    logging.error('handle_method_urlfetch read payload failed:%s', e)
+                    return
+
+            direct_handler.handler(self.command, host, path, request_headers, payload, self.wfile)
+
+
+        except NetWorkIOError as e:
+            if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
+                raise
+        finally:
+            if self.__realconnection:
+                try:
+                    self.__realconnection.shutdown(socket.SHUT_WR)
+                    self.__realconnection.close()
+                except NetWorkIOError:
+                    pass
+                finally:
+                    self.__realconnection = None
 
 if __name__ == "__main__":
     pass

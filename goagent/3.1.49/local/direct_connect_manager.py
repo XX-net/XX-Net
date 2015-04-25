@@ -38,7 +38,6 @@ if config.PROXY_ENABLE:
 
 
 from google_ip import google_ip
-from appids_manager import appid_manager
 from openssl_wrap import SSLConnection
 
 NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
@@ -160,7 +159,7 @@ def random_hostname():
     gltd = random.choice(['org', 'com', 'net', 'gov', 'cn'])
     return 'www.%s.%s' % (word, gltd)
 
-class Https_connection_manager(object):
+class Direct_connect_manager(object):
 
     thread_num_lock = threading.Lock()
     keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #0
@@ -172,13 +171,14 @@ class Https_connection_manager(object):
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
         self.timeout = 2
-        self.max_timeout = 15
+        self.max_timeout = 60
         self.thread_num = 0
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
         self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max") #20/30
         self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min") #20/30
 
-        self.conn_pool = Connect_pool() #Queue.PriorityQueue()
+        self.new_conn_pool = Connect_pool()
+        self.host_conn_pool = {}
 
         self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile)
 
@@ -187,93 +187,20 @@ class Https_connection_manager(object):
         if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
-        if self.keep_alive:
-            p = threading.Thread(target = self.keep_alive_thread)
-            p.daemon = True
-            p.start()
 
 
-    def head_request(self, ssl_sock):
-        if ssl_sock.host == '':
-            ssl_sock.appid = appid_manager.get_appid()
-            if not ssl_sock.appid:
-                logging.error("no appid can use")
-                return False
-            host = ssl_sock.appid + ".appspot.com"
-            ssl_sock.host = host
-        else:
-            host = ssl_sock.host
 
-        # public appid don't keep alive, for quota limit.
-        if ssl_sock.appid.startswith("xxnet-") and ssl_sock.appid[7:].isdigit():
-            #logging.info("public appid don't keep alive")
-            self.keep_alive = False
-            return False
-
-        #logging.debug("head request %s", host)
-
-        request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
-
-        response = None
-        try:
-            ssl_sock.settimeout(3)
-            ssl_sock.sock.settimeout(3)
-
-            data = request_data.encode()
-            ret = ssl_sock.send(data)
-            if ret != len(data):
-                logging.warn("head send len:%d %d", ret, len(data))
-            response = httplib.HTTPResponse(ssl_sock, buffering=True)
-
-            response.begin()
-
-            status = response.status
-            if status != 200:
-                logging.debug("app head fail status:%d", status)
-                raise Exception("app check fail")
-            return True
-        except httplib.BadStatusLine as e:
-            return False
-        except Exception as e:
-            logging.debug("head request fail:%r", e)
-            return False
-        finally:
-            if response:
-                response.close()
-
-    def keep_alive_thread(self):
-        while self.keep_alive:
-            time.sleep(2)
-            try:
-                sock_list = self.conn_pool.get_need_keep_alive(maxtime=200)
-                for ssl_sock in sock_list:
-
-                    # only keep little alive link.
-                    # if you have 25 appid, you can keep 5 alive link.
-                    if self.conn_pool.qsize() > max(1, len(appid_manager.working_appid_list)/5):
-                        ssl_sock.close()
-                        continue
-
-                    #inactive_time = time.time() -ssl_sock.last_use_time
-                    #logging.debug("inactive_time:%d", inactive_time)
-                    if self.head_request(ssl_sock):
-                        self.save_ssl_connection_for_reuse(ssl_sock)
-                    else:
-                        ssl_sock.close()
-
-                #self.create_more_connection()
-            except Exception as e:
-                logging.warn("keep alive except:%r", e)
-
-    def save_ssl_connection_for_reuse(self, ssl_sock):
+    def save_ssl_connection_for_reuse(self, ssl_sock, host):
         ssl_sock.last_use_time = time.time()
-        self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+        if host not in self.host_conn_pool:
+            self.host_conn_pool[host] = Connect_pool()
+        self.host_conn_pool[host].put( (ssl_sock.handshake_time, ssl_sock) )
 
-        while self.conn_pool.qsize() > self.connection_pool_max_num:
-            t, ssl_sock = self.conn_pool.get_slowest()
+        while self.host_conn_pool[host].qsize() > self.connection_pool_max_num:
+            t, ssl_sock = self.host_conn_pool[host].get_slowest()
 
             if t < 200:
-                self.conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
+                self.host_conn_pool[host].put( (ssl_sock.handshake_time, ssl_sock) )
                 #ssl_sock.close()
                 return
             else:
@@ -281,8 +208,8 @@ class Https_connection_manager(object):
 
 
     def create_more_connection(self):
-        target_thread_num = min(self.max_thread_num, (self.connection_pool_min_num - self.conn_pool.qsize()))
-        while self.thread_num < target_thread_num and self.conn_pool.qsize() < self.connection_pool_min_num:
+        target_thread_num = min(self.max_thread_num, (self.connection_pool_min_num - self.new_conn_pool.qsize()))
+        while self.thread_num < target_thread_num and self.new_conn_pool.qsize() < self.connection_pool_min_num:
             self.thread_num_lock.acquire()
             self.thread_num += 1
             self.thread_num_lock.release()
@@ -375,7 +302,7 @@ class Https_connection_manager(object):
 
     def connect_thread(self):
         try:
-            while self.conn_pool.qsize() < self.connection_pool_min_num:
+            while self.new_conn_pool.qsize() < self.connection_pool_min_num:
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
                     logging.warning("no gws ip")
@@ -386,7 +313,7 @@ class Https_connection_manager(object):
                 ssl_sock = self._create_ssl_connection( (ip_str, port) )
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
-                    self.conn_pool.put((ssl_sock.handshake_time, ssl_sock))
+                    self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
                 time.sleep(1)
         finally:
             self.thread_num_lock.acquire()
@@ -395,8 +322,25 @@ class Https_connection_manager(object):
 
     def create_ssl_connection(self, host=''):
 
+        if host in self.host_conn_pool:
+            while True:
+                ret = self.host_conn_pool[host].get_nowait()
+                if ret:
+                    handshake_time, ssl_sock = ret
+                else:
+                    ssl_sock = None
+                    break
+
+                if time.time() - ssl_sock.last_use_time < 225: # gws ssl connection can keep for 230s after created
+                    logging.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
+                    return ssl_sock
+                    break
+                else:
+                    ssl_sock.close()
+                    continue
+
         while True:
-            ret = self.conn_pool.get_nowait()
+            ret = self.new_conn_pool.get_nowait()
             if ret:
                 handshake_time, ssl_sock = ret
             else:
@@ -404,21 +348,21 @@ class Https_connection_manager(object):
                 break
 
             if time.time() - ssl_sock.last_use_time < 225: # gws ssl connection can keep for 230s after created
-                logging.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                logging.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                 break
             else:
                 ssl_sock.close()
                 continue
 
-        conn_num = self.conn_pool.qsize()
-        logging.debug("ssl conn_num:%d", conn_num)
+        conn_num = self.new_conn_pool.qsize()
+        logging.debug("new_conn_pool conn_num:%d", conn_num)
         if conn_num < self.connection_pool_min_num:
             self.create_more_connection()
 
         if ssl_sock:
             return ssl_sock
         else:
-            ret = self.conn_pool.get(True, self.max_timeout)
+            ret = self.new_conn_pool.get(True, self.max_timeout)
             if ret:
                 handshake_time, ssl_sock = ret
                 return ssl_sock
@@ -428,193 +372,9 @@ class Https_connection_manager(object):
 
 
 
+direct_connect_manager = Direct_connect_manager()
 
 
-class Forward_connection_manager():
-    timeout = 1
-    max_timeout = 60
-    tcp_connection_cache = Queue.PriorityQueue()
-    thread_num_lock = threading.Lock()
-    thread_num = 0
-    max_thread_num = config.CONFIG.getint("connect_manager", "forward_max_connect_thread") #10
-
-    def create_connection(self, host="", port=443, sock_life=5):
-        if port != 443:
-            logging.warn("forward port %d not supported.", port)
-            return None
-
-        def _create_connection(ip_port, delay=0):
-            time.sleep(delay)
-            ip = ip_port[0]
-            sock = None
-            # start connection time record
-            start_time = time.time()
-            conn_time = 0
-            try:
-                # create a ipv4/ipv6 socket object
-                if config.PROXY_ENABLE:
-                    sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-                else:
-                    sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-                # set reuseaddr option to avoid 10048 socket error
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                # resize socket recv buffer 8K->32K to improve browser releated application performance
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
-                # disable negal algorithm to send http request quickly.
-                sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-                # set a short timeout to trigger timeout retry more quickly.
-                sock.settimeout(self.timeout)
-
-                # TCP connect
-                sock.connect(ip_port)
-
-                # record TCP connection time
-                conn_time = time.time() - start_time
-                logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
-                if conn_time * 1000 < 400:
-                    google_ip.report_bad_ip(ip)
-                    logging.warn("ip:%s conn_time:%d", ip, conn_time * 1000)
-                    sock.close()
-                    return
-
-                google_ip.update_ip(ip, conn_time * 2000)
-                #logging.info("create_tcp update ip:%s time:%d", ip, conn_time * 2000)
-
-                # put ssl socket object to output queobj
-                #sock.ip = ip
-                self.tcp_connection_cache.put((time.time(), sock))
-            except Exception as e:
-                conn_time = int((time.time() - start_time) * 1000)
-                logging.debug("tcp conn %s fail t:%d", ip, conn_time)
-                google_ip.report_connect_fail(ip)
-                #logging.info("create_tcp report fail ip:%s", ip)
-                if sock:
-                    sock.close()
-            finally:
-                self.thread_num_lock.acquire()
-                self.thread_num -= 1
-                self.thread_num_lock.release()
-
-
-        if host != "appengine.google.com":
-            while True:
-                try:
-                    ctime, sock = self.tcp_connection_cache.get_nowait()
-                    if time.time() - ctime < sock_life:
-                        return sock
-                    else:
-                        sock.close()
-                        continue
-                except Queue.Empty:
-                    break
-
-        start_time = time.time()
-        while time.time() - start_time < self.max_timeout:
-
-            if self.thread_num < self.max_thread_num:
-                if host == "appengine.google.com":
-                    ip = google_ip.get_host_ip("*.google.com")
-                else:
-                    ip = google_ip.get_gws_ip()
-                if not ip:
-                    logging.error("no gws ip.")
-                    return
-                addr = (ip, port)
-                self.thread_num_lock.acquire()
-                self.thread_num += 1
-                self.thread_num_lock.release()
-                p = threading.Thread(target=_create_connection, args=(addr,))
-                p.daemon = True
-                p.start()
-
-            try:
-                ctime, sock = self.tcp_connection_cache.get(timeout=0.2)
-                return sock
-            except:
-                continue
-        logging.warning('create tcp connection fail.')
-
-
-    def forward_socket(self, local, remote, timeout=60, tick=2, bufsize=8192):
-        try:
-            timecount = timeout
-            while 1:
-                timecount -= tick
-                if timecount <= 0:
-                    break
-                (ins, _, errors) = select.select([local, remote], [], [local, remote], tick)
-                if errors:
-                    break
-                if not ins:
-                    continue
-
-                for sock in ins:
-                    data = sock.recv(bufsize)
-                    if not data:
-                        if sock is remote:
-                            logging.debug("forward remote disconnected.")
-                        else:
-                            logging.debug("forward local disconnected.")
-                        return
-
-                    if sock is remote:
-                        local.sendall(data)
-                        timecount = timeout
-                    else:
-                        remote.sendall(data)
-                        timecount = timeout
-        except Exception as e:
-            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.ENOTCONN, errno.EPIPE):
-                logging.exception("forward except:%s.", e)
-        finally:
-            if local:
-                local.close()
-            if remote:
-                remote.close()
-
-
-
-
-https_manager = Https_connection_manager()
-forwork_manager = Forward_connection_manager()
-
-
-def test_pool():
-    pool = Connect_pool()
-    pool.put((3, "c"))
-    pool.put((1, "a"))
-    pool.put((2, "b"))
-
-    t, s = pool.get()
-    print s
-
-    t, s = pool.get()
-    print s
-
-    t, s = pool.get()
-    print s
-
-
-def test_pool_speed():
-    pool = Connect_pool()
-    for i in range(100):
-        pool.put((i, "%d"%i))
-
-    start = time.time()
-    t, s = pool.get()
-    print time.time() - start
-    print s
-    # sort time is 5ms for 10000
-    # sort time is 0ms for 100
 
 if __name__ == "__main__":
-    #test_pool_speed()
-    #sock = forwork_manager.create_connection()
-    #print sock
-    appid = "xxnet-a23"
-    le = appid[7:]
-    print le
-    if appid.startswith("xxnet-") and le.isdigit():
-        print "is dig"
-    else:
-        print "not dig"
+    pass

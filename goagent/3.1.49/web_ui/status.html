@@ -160,7 +160,12 @@
                 }
             },
             error: function(result) {
-                $('#alert-box').html('状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。<br>');
+                form_val = $('#sys-platform').html();
+                if(form_val == ""){
+                    $('#alert-box').html('状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。<br>');
+                }else{
+                    $('#alert-box').html('GoAgent进程无响应，可能已退出。');
+                }
                 $('#alert-box').removeClass("hide");
             }
         });

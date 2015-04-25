@@ -274,7 +274,7 @@ def handler(method, url, headers, body, wfile):
     response = None
     while True:
         if time.time() - time_request > 30: #time out
-            html = generate_message_html('504 GoAgent Proxy Time out', u'GoAgent代理处理超时，请查看日志！')
+            html = generate_message_html('504 GoAgent Proxy Time out', u'墙太高了，翻不过去，先休息一会再来！')
             send_response(wfile, 504, body=html.encode('utf-8'))
             return
 

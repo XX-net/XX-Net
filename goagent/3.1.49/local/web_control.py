@@ -40,6 +40,7 @@ from appids_manager import appid_manager
 from google_ip import google_ip
 import connect_manager
 import ConfigParser
+import direct_connect_manager
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -433,7 +434,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "connected_link":"%d" % len(connect_manager.https_manager.conn_pool.pool),
+                   "connected_link":"%d,%d" % (len(connect_manager.https_manager.conn_pool.pool), len(direct_connect_manager.direct_connect_manager.new_conn_pool.pool)),
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
