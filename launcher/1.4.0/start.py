@@ -2,6 +2,7 @@
 # coding:utf-8
 
 import os, sys
+import logging
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -27,10 +28,10 @@ elif sys.platform == "darwin":
     except:
         from non_tray import sys_tray
 else:
+    logging.warn("detect platform fail:%s", sys.platform)
     from non_tray import sys_tray
 
 import atexit
-import logging
 import webbrowser
 import web_control
 import module_init

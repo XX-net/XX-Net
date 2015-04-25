@@ -1,14 +1,11 @@
 XX-Net
 ========
 
-公告：
-========
-  目前GAE ip基本封完，GoAgent工作很不稳定，大家可以研究PHP方式实现翻墙。    
-  新的方案正在加紧研究中，预计2周后发布测试版。
+
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.10.1
+https://codeload.github.com/XX-net/XX-Net/zip/1.11.2
 
 (1.8.3之前的用户，请重新部署服务端)
 

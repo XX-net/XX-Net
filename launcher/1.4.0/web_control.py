@@ -64,6 +64,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def load_module_menus(self):
         global module_menus
+        module_menus = {}
         #config.load()
         modules = config.get(['modules'], None)
         for module in modules:
@@ -166,8 +167,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            target_module = 'goagent'
-            target_menu = 'status'
+            if config.get(['modules', 'goagent', 'auto_start'], 0) == 1:
+                target_module = 'goagent'
+                target_menu = 'status'
+            else:
+                target_module = 'launcher'
+                target_menu = 'about'
+
 
         if len(module_menus) == 0:
             self.load_module_menus()
@@ -254,6 +260,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     config.set(["modules", "goagent", "auto_start"], goagent_enable)
                     config.save()
+                    if goagent_enable:
+                        module_init.start("goagent")
+                    else:
+                        module_init.stop("goagent")
+                    self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'php_enable' in reqs :
                 php_enable = int(reqs['php_enable'][0])
@@ -262,6 +273,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     config.set(["modules", "php_proxy", "auto_start"], php_enable)
                     config.save()
+                    if php_enable:
+                        module_init.start("php_proxy")
+                    else:
+                        module_init.stop("php_proxy")
+                    self.load_module_menus()
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'

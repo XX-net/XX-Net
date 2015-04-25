@@ -91,11 +91,10 @@ div#content form div.row-fluid {
     margin-bottom: 10px;
 }
 
-div#content form div.row-fluid > div.span4 > label {
+div#content div.row-fluid > div.span4 > label {
     font-weight: bold;
     margin: 10px 0 0;
 }
-
 
 div#content form div.row-fluid > div.span4 > label > a {
     font-weight: normal;
@@ -109,8 +108,8 @@ div#content input[type=password] {
             box-sizing: border-box;
 }
 
-/* Style for config.html in GoAgent */
-div#content form#goagent-config div#advanced-options {
+div#content div#advanced-options,
+div#content div#module-switch {
     padding-left: 20px;
 }
 

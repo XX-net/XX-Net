@@ -69,6 +69,13 @@ if config.PROXY_ENABLE:
     default_socket = socket.socket
 
 
+class HoneypotError(Exception):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def __new__(S, *more):
+        pass
 
 class Check_result():
     def __init__(self):
@@ -131,7 +138,7 @@ class Check_frame(object):
         ssl_sock.sock = sock
         return ssl_sock
 
-    def check(self, callback=None, check_ca=False, close_ssl=True):
+    def check(self, callback=None, check_ca=True, close_ssl=True):
 
         ssl_sock = None
         try:
@@ -141,11 +148,11 @@ class Check_frame(object):
             def check_ssl_cert(ssl_sock):
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
-                    raise socket.error(' certficate is none')
+                    raise HoneypotError(' certficate is none')
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if self.check_cert and not issuer_commonname.startswith('Google'):
-                    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+                    raise HoneypotError(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
 
                 ssl_cert = cert_util.SSLCert(cert)
@@ -158,7 +165,9 @@ class Check_frame(object):
                 return callback(ssl_sock, self.ip)
 
             return True
-
+        except HoneypotError as e:
+            logging.warn("honeypot %s", self.ip)
+            raise e
         except SSLError as e:
             logging.debug("Check_appengine %s SSLError:%s", self.ip, e)
             pass
@@ -337,7 +346,7 @@ def test_with_app(ip_str):
 
 def test(ip_str, loop=1):
     logging.info("==>%s", ip_str)
-    check = Check_frame(ip_str)
+    check = Check_frame(ip_str, check_cert=False)
 
     for i in range(loop):
         result = check.check(callback=test_server_type, check_ca=True)
@@ -456,8 +465,8 @@ if __name__ == "__main__":
     #print network_is_ok()
     #test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    #test("194.78.99.84")
-    test_multi_thread_search_ip()
+    test("64.233.163.117")
+    #     test_multi_thread_search_ip()
     #check_all_exist_ip()
     #test_gws("210.158.146.245")
 
