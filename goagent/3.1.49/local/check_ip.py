@@ -337,7 +337,7 @@ def test_with_app(ip_str):
 
 def test(ip_str, loop=1):
     logging.info("==>%s", ip_str)
-    check = Check_frame(ip_str)
+    check = Check_frame(ip_str, check_cert=False)
 
     for i in range(loop):
         result = check.check(callback=test_server_type, check_ca=True)
@@ -456,8 +456,8 @@ if __name__ == "__main__":
     #print network_is_ok()
     #test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    #test("194.78.99.84")
-    test_multi_thread_search_ip()
+    test("64.233.163.117")
+    #     test_multi_thread_search_ip()
     #check_all_exist_ip()
     #test_gws("210.158.146.245")
 

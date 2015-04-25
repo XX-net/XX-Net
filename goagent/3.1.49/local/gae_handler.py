@@ -322,7 +322,7 @@ def handler(method, url, headers, body, wfile):
 
         except GAE_Exception as e:
             errors.append(e)
-            logging.exception("gae_exception:%s %r", e, url)
+            logging.warn("gae_exception:%r %s", e, url)
         except Exception as e:
             errors.append(e)
             logging.exception('gae_handler.handler %r %s , retry...', e, url)

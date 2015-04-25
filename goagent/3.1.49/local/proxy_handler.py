@@ -115,6 +115,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """handle CONNECT cmmand, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
+        #return self.do_CONNECT_AGENT()
         if host in config.HOSTS_GAE:
             return self.do_CONNECT_AGENT()
 

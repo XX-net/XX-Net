@@ -21,7 +21,7 @@ import traceback
 current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
-default_good_ip_fie = os.path.join(current_path, "good_ip.txt")
+default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
 # get value from config:
 max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
@@ -45,6 +45,7 @@ class Check_ip():
                  # }
 
     gws_ip_list = [] # gererate from ip_dict, sort by handshake_time, when get_batch_ip
+    bad_ip_pool = {}
     ip_lock = threading.Lock()
     iplist_need_save = 0
     iplist_saved_time = 0
@@ -77,7 +78,7 @@ class Check_ip():
         if os.path.isfile(good_ip_file):
             file_path = good_ip_file
         else:
-            file_path = default_good_ip_fie
+            file_path = default_good_ip_file
 
 
         with open(file_path, "r") as fd:
@@ -176,6 +177,9 @@ class Check_ip():
                     self.gws_ip_pointer_reset_time = time.time()
 
                 ip_str = self.gws_ip_list[self.gws_ip_pointer]
+                if self.is_bad_ip(ip_str):
+                    self.gws_ip_pointer += 1
+                    continue
                 get_time = self.ip_dict[ip_str]["get_time"]
                 if time.time() - get_time < ip_connect_interval:
                     self.gws_ip_pointer += 1
@@ -293,7 +297,18 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
+    def report_bad_ip(self, ip_str):
+        #ip_bin = ip_utils.ip_string_to_num(ip_str)
+        #ip_bin = ip_bin & 0xffffff00
+        #ip_mask = ip_utils.ip_num_to_string(ip_bin)
+        ip_mask = ip_utils.get_ip_maskc(ip_str)
+        self.bad_ip_pool[ip_mask] = ip_str
 
+    def is_bad_ip(self, ip_str):
+        ip_mask = ip_utils.get_ip_maskc(ip_str)
+        if ip_mask in self.bad_ip_pool:
+            return True
+        return False
 
     def report_connect_fail(self, ip_str, force_remove=False):
         # ignore if system network is disconnected.
@@ -463,7 +478,6 @@ class Check_ip():
             p.start()
 
     def check_exist_ip(self):
-
         self.ip_lock.acquire()
         tmp_ip_list = [x for x in self.gws_ip_list]
         self.ip_lock.release()
@@ -539,8 +553,20 @@ def test_random():
     for k in result:
         print k, result[k]
 
+def test_mask():
+
+    def report_bad_ip(ip_str):
+        ip_bin = ip_utils.ip_string_to_num(ip_str)
+        ip_bin = ip_bin & 0xffffff00
+        ip_mask = ip_utils.ip_num_to_string(ip_bin)
+        return ip_mask
+
+    print report_bad_ip("64.233.163.117")
+
 if __name__ == '__main__':
-    test_random()
+    #test_random()
+    test_mask()
+
 # test cast
 # 1. good_ip.txt not exist when startup, auto scan good ip, then save
 # 2. good_ip.txt exist, load ip list, and check it.
@@ -550,5 +576,5 @@ if __name__ == '__main__':
 # google ip study about gvs
 # each xx.googlevideo.com only have one ip
 # and there is many many googlevideo ip and many many xx.googlevideo.com domain
-# if GFW block some of the ip, direct connect to these domain if fail.
+# if GFW block some of the ip, direct connect to these domain if fail.test_mask
 # There for, gvs can't direct connect if GFW block some some of it.

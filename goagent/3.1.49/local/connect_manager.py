@@ -13,6 +13,7 @@ import logging
 import threading
 import operator
 import httplib
+import random
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 import OpenSSL
@@ -153,10 +154,16 @@ class Connect_pool():
         return str
 
 
+def random_hostname():
+    word = ''.join(random.choice(('bcdfghjklmnpqrstvwxyz', 'aeiou')[x&1]) for x in xrange(random.randint(6, 10)))
+    return "%s.appspot.com" % word
+    gltd = random.choice(['org', 'com', 'net', 'gov', 'cn'])
+    return 'www.%s.%s' % (word, gltd)
+
 class Https_connection_manager(object):
 
     thread_num_lock = threading.Lock()
-    keep_alive = False
+    keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #0
 
     def __init__(self):
         # http://docs.python.org/dev/library/ssl.html
@@ -164,8 +171,7 @@ class Https_connection_manager(object):
         # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
-        self.max_retry = 3
-        self.timeout = 1.5
+        self.timeout = 2
         self.max_timeout = 15
         self.thread_num = 0
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
@@ -186,7 +192,6 @@ class Https_connection_manager(object):
             p.daemon = True
             p.start()
 
-        self.keep_alive = True
 
     def head_request(self, ssl_sock):
         if ssl_sock.host == '':
@@ -242,6 +247,13 @@ class Https_connection_manager(object):
             try:
                 sock_list = self.conn_pool.get_need_keep_alive(maxtime=200)
                 for ssl_sock in sock_list:
+
+                    # only keep little alive link.
+                    # if you have 25 appid, you can keep 5 alive link.
+                    if self.conn_pool.qsize() > max(1, len(appid_manager.working_appid_list)/5):
+                        ssl_sock.close()
+                        continue
+
                     #inactive_time = time.time() -ssl_sock.last_use_time
                     #logging.debug("inactive_time:%d", inactive_time)
                     if self.head_request(ssl_sock):
@@ -249,7 +261,7 @@ class Https_connection_manager(object):
                     else:
                         ssl_sock.close()
 
-                self.create_more_connection()
+                #self.create_more_connection()
             except Exception as e:
                 logging.warn("keep alive except:%r", e)
 
@@ -288,6 +300,7 @@ class Https_connection_manager(object):
 
         connect_time = 0
         handshake_time = 0
+        time_begin = time.time()
         try:
             if config.PROXY_ENABLE:
                 sock = socks.socksocket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
@@ -310,11 +323,11 @@ class Https_connection_manager(object):
             ssl_sock.set_connect_state()
 
             # pick up the certificate
-            #server_hostname = random_hostname() if (cache_key or '').startswith('google_') or hostname.endswith('.appspot.com') else None
-            #if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
-            #    ssl_sock.set_tlsext_host_name(server_hostname)
+            server_hostname = random_hostname()
+            if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
+                ssl_sock.set_tlsext_host_name(server_hostname)
 
-            time_begin = time.time()
+
             ssl_sock.connect(ip_port)
             time_connected = time.time()
             ssl_sock.do_handshake()
@@ -345,7 +358,11 @@ class Https_connection_manager(object):
 
             return ssl_sock
         except Exception as e:
-            logging.debug("create_ssl %s fail:%s c:%d h:%d", ip, e, connect_time, handshake_time)
+            time_cost = time.time() - time_begin
+            logging.debug("create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
+            if time_cost < self.timeout:
+                google_ip.report_bad_ip(ip)
+
             google_ip.report_connect_fail(ip)
 
 
@@ -453,9 +470,15 @@ class Forward_connection_manager():
 
                 # record TCP connection time
                 conn_time = time.time() - start_time
+                logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
+                if conn_time * 1000 < 300:
+                    google_ip.report_bad_ip(ip)
+                    logging.warn("ip:%s conn_time:%d", ip, conn_time * 1000)
+                    sock.close()
+                    return
+
                 google_ip.update_ip(ip, conn_time * 2000)
                 #logging.info("create_tcp update ip:%s time:%d", ip, conn_time * 2000)
-                logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
 
                 # put ssl socket object to output queobj
                 #sock.ip = ip
