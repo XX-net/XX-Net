@@ -21,6 +21,7 @@ import traceback
 current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
+bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip.txt"))
 default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
 # get value from config:
@@ -79,11 +80,8 @@ class Check_ip():
             file_path = good_ip_file
         else:
             file_path = default_good_ip_file
-
-
         with open(file_path, "r") as fd:
             lines = fd.readlines()
-
         for line in lines:
             try:
                 str_l = line.split(' ')
@@ -103,6 +101,19 @@ class Check_ip():
         logging.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_ip_by_handshake_time(force=True)
 
+        if os.path.isfile(bad_ip_file):
+            with open(bad_ip_file, "r") as fd:
+                for line in fd.readlines():
+                    try:
+                        str_l = line.split(' ')
+                        if len(str_l) != 2:
+                            logging.warning("bad_ip line err: %s", line)
+                            continue
+                        mask = str_l[0]
+                        ip = str_l[1]
+                        self.bad_ip_pool[mask] = ip
+                    except Exception as e:
+                        logging.exception("parse bad_ip.txt err:%r", e)
         if False:
             p = threading.Thread(target = self.check_exist_ip)
             p.daemon = True
@@ -122,6 +133,12 @@ class Check_ip():
             with open(good_ip_file, "w") as fd:
                 for ip_str, property in self.ip_dict.items():
                     fd.write( "%s %s %s %d\n" % (ip_str, property['domain'], property['server'], property['handshake_time']) )
+
+            with open(bad_ip_file, "w") as fd:
+                for mask in self.bad_ip_pool:
+                    ip = self.bad_ip_pool[mask]
+                    fd.write("%s %s\n" % (mask, ip))
+
             self.iplist_need_save = 0
         except Exception as e:
             logging.error("save good_ip.txt fail %s", e)
@@ -298,11 +315,9 @@ class Check_ip():
             self.ip_lock.release()
 
     def report_bad_ip(self, ip_str):
-        #ip_bin = ip_utils.ip_string_to_num(ip_str)
-        #ip_bin = ip_bin & 0xffffff00
-        #ip_mask = ip_utils.ip_num_to_string(ip_bin)
         ip_mask = ip_utils.get_ip_maskc(ip_str)
         self.bad_ip_pool[ip_mask] = ip_str
+        self.save_ip_list(force=True)
 
     def is_bad_ip(self, ip_str):
         ip_mask = ip_utils.get_ip_maskc(ip_str)

@@ -82,13 +82,13 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if host in config.HOSTS_GAE:
             return self.do_AGENT()
 
-        if host in config.HOSTS_FWD:
+        if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
 
-        if host.endswith(config.HOSTS_FWD_ENDSWITH):
+        if host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_DIRECT_ENDSWITH):
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         return self.do_AGENT()
@@ -112,25 +112,24 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        """handle CONNECT command, socket forward or deploy a fake cert"""
         host, _, port = self.path.rpartition(':')
 
-        #return self.do_CONNECT_AGENT()
         if host in config.HOSTS_GAE:
             return self.do_CONNECT_AGENT()
-
-        if host in config.HOSTS_FWD:
+        if host in config.HOSTS_DIRECT:
             return self.do_CONNECT_DIRECT()
+        if host in config.HOSTS_FWD:
             return self.do_CONNECT_FWD()
+
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_CONNECT_AGENT()
-
-        if host.endswith(config.HOSTS_FWD_ENDSWITH):
+        if host.endswith(config.HOSTS_DIRECT_ENDSWITH):
             return self.do_CONNECT_DIRECT()
+        if host.endswith(config.HOSTS_FWD_ENDSWITH):
             return self.do_CONNECT_FWD()
-        else:
-            return self.do_CONNECT_AGENT()
+
+        return self.do_CONNECT_AGENT()
 
     def do_CONNECT_FWD(self):
         """socket forward for http CONNECT command"""

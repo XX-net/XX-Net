@@ -60,6 +60,8 @@ class Config(object):
 
         fwd_endswith = []
         fwd_hosts = []
+        direct_endswith = []
+        direct_hosts = []
         gae_endswith = []
         gae_hosts = []
         for k, v in self.CONFIG.items('hosts'):
@@ -68,7 +70,12 @@ class Config(object):
                     fwd_endswith.append(k)
                 else:
                     fwd_hosts.append(k)
-            else:
+            elif v == "direct":
+                if k.startswith('.'):
+                    direct_endswith.append(k)
+                else:
+                    direct_hosts.append(k)
+            elif v == "gae":
                 if k.startswith('.'):
                     gae_endswith.append(k)
                 else:
@@ -77,6 +84,8 @@ class Config(object):
         self.HOSTS_FWD = tuple(fwd_hosts)
         self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
         self.HOSTS_GAE = tuple(gae_hosts)
+        self.HOSTS_DIRECT_ENDSWITH = tuple(direct_endswith)
+        self.HOSTS_DIRECT = tuple(direct_hosts)
 
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
         self.AUTORANGE_WAITSIZE = self.CONFIG.getint('autorange', 'waitsize')

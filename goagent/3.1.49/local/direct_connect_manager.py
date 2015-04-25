@@ -2,17 +2,13 @@
 # coding:utf-8
 
 import os
-import errno
 import binascii
 import time
 import socket
-import select
-import Queue
 import struct
 import logging
 import threading
 import operator
-import httplib
 import random
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -44,120 +40,8 @@ NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 
-
-class Connect_pool():
-    pool_lock = threading.Lock()
-    not_empty = threading.Condition(pool_lock)
-    pool = {}
-
-    def qsize(self):
-        return len(self.pool)
-
-    def put(self, item):
-        handshake_time, sock = item
-        self.not_empty.acquire()
-        try:
-            self.pool[sock] = handshake_time
-            self.not_empty.notify()
-        finally:
-            self.not_empty.release()
-
-    def get(self, block=True, timeout=None):
-        self.not_empty.acquire()
-        try:
-            if not block:
-                if not self.qsize():
-                    return None
-            elif timeout is None:
-                while not self.qsize():
-                    self.not_empty.wait()
-            elif timeout < 0:
-                raise ValueError("'timeout' must be a positive number")
-            else:
-                end_time = time.time() + timeout
-                while not self.qsize():
-                    remaining = end_time - time.time()
-                    if remaining <= 0.0:
-                        return None
-                    self.not_empty.wait(remaining)
-
-            item = self._get()
-            return item
-        finally:
-            self.not_empty.release()
-
-    def get_nowait(self):
-        return self.get(block=False)
-
-    def _get(self):
-        fastest_time = 9999
-        fastest_sock = None
-        for sock in self.pool:
-            time = self.pool[sock]
-            if time < fastest_time or not fastest_sock:
-                fastest_time = time
-                fastest_sock = sock
-
-        self.pool.pop(fastest_sock)
-        return (fastest_time, fastest_sock)
-
-    def get_slowest(self):
-        self.not_empty.acquire()
-        try:
-            if not self.qsize():
-                raise ValueError("no item")
-
-            slowest_time = 0
-            slowest_sock = None
-            for sock in self.pool:
-                time = self.pool[sock]
-                if time > slowest_time:
-                    slowest_time = time
-                    slowest_sock = sock
-
-            self.pool.pop(slowest_sock)
-            return (slowest_time, slowest_sock)
-        finally:
-            self.not_empty.release()
-
-    def get_need_keep_alive(self, maxtime=200):
-        return_list = []
-        self.pool_lock.acquire()
-        try:
-            pool = tuple(self.pool)
-            for sock in pool:
-                inactive_time = time.time() -sock.last_use_time
-                #logging.debug("inactive_time:%d", inactive_time * 1000)
-                if inactive_time >= maxtime:
-                    if inactive_time <= 230:
-                        return_list.append(sock)
-                    del self.pool[sock]
-
-            return return_list
-        finally:
-            self.pool_lock.release()
-
-    def to_string(self):
-        str = ''
-        self.pool_lock.acquire()
-        try:
-            pool = sorted(self.pool.items(), key=operator.itemgetter(1))
-            i = 0
-            for item in pool:
-                sock,t = item
-                str += "%d \t %s handshake:%d create:%d\r\n" % (i, sock.ip, t, time.time() -sock.last_use_time)
-                i += 1
-        finally:
-            self.pool_lock.release()
-
-        return str
-
-
-def random_hostname():
-    word = ''.join(random.choice(('bcdfghjklmnpqrstvwxyz', 'aeiou')[x&1]) for x in xrange(random.randint(6, 10)))
-    #return "%s.appspot.com" % word
-    gltd = random.choice(['org', 'com', 'net', 'gov', 'cn'])
-    return 'www.%s.%s' % (word, gltd)
+from connect_manager import Connect_pool, random_hostname
+from connect_manager import connect_allow_time, connect_fail_time
 
 class Direct_connect_manager(object):
 
@@ -221,6 +105,10 @@ class Direct_connect_manager(object):
 
 
     def _create_ssl_connection(self, ip_port):
+        global connect_allow_time, connect_fail_time
+        if time.time() < connect_allow_time:
+            return False
+
         sock = None
         ssl_sock = None
         ip = ip_port[0]
@@ -252,7 +140,8 @@ class Direct_connect_manager(object):
             # pick up the certificate
             server_hostname = random_hostname()
             if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
-                ssl_sock.set_tlsext_host_name(server_hostname)
+                #ssl_sock.set_tlsext_host_name(server_hostname)
+                pass
 
 
             ssl_sock.connect(ip_port)
@@ -264,7 +153,7 @@ class Direct_connect_manager(object):
             handshake_time = int((time_handshaked - time_connected) * 1000)
 
             google_ip.update_ip(ip, handshake_time)
-            logging.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
+            logging.debug("direct create_ssl update ip:%s time:%d", ip, handshake_time)
             # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
             ssl_sock.ip = ip
             ssl_sock.sock = sock
@@ -273,22 +162,34 @@ class Direct_connect_manager(object):
             ssl_sock.host = ''
 
             def verify_SSL_certificate_issuer(ssl_sock):
+                global connect_allow_time
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
+                    google_ip.report_bad_ip(ip)
+                    connect_allow_time = time.time() + (60 * 5)
                     raise socket.error(' certficate is none')
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
+                    google_ip.report_bad_ip(ip)
+                    connect_allow_time = time.time() + (60 * 5)
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
+            connect_fail_time = 0
 
             return ssl_sock
         except Exception as e:
             time_cost = time.time() - time_begin
-            logging.debug("create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
+            logging.debug("direct_create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
             if time_cost < self.timeout:
                 google_ip.report_bad_ip(ip)
+
+            if connect_fail_time == 0:
+                connect_fail_time = time.time()
+            else:
+                if time.time() - connect_fail_time > 30:
+                    connect_allow_time = time.time() + (60 * 5)
 
             google_ip.report_connect_fail(ip)
 
@@ -301,6 +202,7 @@ class Direct_connect_manager(object):
 
 
     def connect_thread(self):
+        global connect_allow_time
         try:
             while self.new_conn_pool.qsize() < self.connection_pool_min_num:
                 ip_str = google_ip.get_gws_ip()
@@ -314,6 +216,8 @@ class Direct_connect_manager(object):
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
                     self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
+                elif time.time() < connect_allow_time:
+                    break
                 time.sleep(1)
         finally:
             self.thread_num_lock.acquire()
@@ -367,7 +271,7 @@ class Direct_connect_manager(object):
                 handshake_time, ssl_sock = ret
                 return ssl_sock
             else:
-                logging.debug("create ssl timeout fail.")
+                logging.debug("create ssl for direct timeout.")
                 return None
 
 
