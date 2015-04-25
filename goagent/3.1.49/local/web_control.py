@@ -41,6 +41,7 @@ from google_ip import google_ip
 import connect_manager
 import ConfigParser
 import direct_connect_manager
+import connect_control
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -439,7 +440,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
                    "pac_url":config.pac_url,
-                   "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval")
+                   "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
+                   "block_stat":connect_control.block_stat()
                    }
         data = json.dumps(res_arr)
         self.send_response('text/html', data)

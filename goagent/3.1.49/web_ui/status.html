@@ -100,6 +100,10 @@
             <td>ip-connect-interval</td>
             <td id="ip-connect-interval"></td>
         </tr>
+        <tr>
+            <td>block stat</td>
+            <td id="block-stat"></td>
+        </tr>
     </tbody>
 </table>
 <div id="tip">
@@ -154,6 +158,7 @@
                 $('#out-of-quota-appids').html(result['out_of_quota_appids']);
                 $('#not-exist-appids').html(result['not_exist_appids']);
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
+                $('#block-stat').html(result['block_stat']);
 
                 if(!$('#alert-box').hasClass("hide")){
                     $('#alert-box').addClass("hide");
