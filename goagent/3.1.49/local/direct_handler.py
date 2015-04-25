@@ -12,7 +12,8 @@ import httplib
 from direct_connect_manager import direct_connect_manager
 
 from gae_handler import generate_message_html, send_response
-from connect_manager import connect_allow_time
+from connect_control import connect_allow_time, connect_fail_time
+
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 

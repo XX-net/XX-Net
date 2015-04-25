@@ -31,7 +31,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 from config import config
 import gae_handler
 import direct_handler
-
+from connect_control import connect_allow_time, connect_fail_time
 
 class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     gae_support_methods = tuple(["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])

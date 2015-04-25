@@ -5,7 +5,7 @@ import sys
 import config
 
 import web_control
-
+import time
 proc_handler = {}
 
 
@@ -58,8 +58,11 @@ def start_all_auto():
         if module == "launcher":
             continue
         if "auto_start" in config.config['modules'][module] and config.config['modules'][module]["auto_start"]:
+            start_time = time.time()
             start(module)
             web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
+            finished_time = time.time()
+            logging.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
 
 def stop_all():
     running_modules = [k for k in proc_handler]

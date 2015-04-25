@@ -44,9 +44,7 @@ from openssl_wrap import SSLConnection
 NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
-
-connect_allow_time = 0
-connect_fail_time = 0
+import connect_control
 
 class Connect_pool():
     pool_lock = threading.Lock()
@@ -285,6 +283,9 @@ class Https_connection_manager(object):
     def create_more_connection(self):
         target_thread_num = min(self.max_thread_num, (self.connection_pool_min_num - self.conn_pool.qsize()))
         while self.thread_num < target_thread_num and self.conn_pool.qsize() < self.connection_pool_min_num:
+            if not connect_control.allow_connect():
+                break
+
             self.thread_num_lock.acquire()
             self.thread_num += 1
             self.thread_num_lock.release()
@@ -296,8 +297,7 @@ class Https_connection_manager(object):
 
 
     def _create_ssl_connection(self, ip_port):
-        global connect_allow_time, connect_fail_time
-        if time.time() < connect_allow_time:
+        if not connect_control.allow_connect():
             return False
 
         sock = None
@@ -352,35 +352,28 @@ class Https_connection_manager(object):
             ssl_sock.host = ''
 
             def verify_SSL_certificate_issuer(ssl_sock):
-                global connect_allow_time
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
                     google_ip.report_bad_ip(ip)
-                    connect_allow_time = time.time() + (60 * 5)
+                    connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is none')
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
                     google_ip.report_bad_ip(ip)
-                    connect_allow_time = time.time() + (60 * 5)
+                    connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
 
-            connect_fail_time = 0
+            connect_control.report_connect_success()
             return ssl_sock
         except Exception as e:
             time_cost = time.time() - time_begin
             logging.debug("create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
-            if time_cost < self.timeout:
-                google_ip.report_bad_ip(ip)
 
             google_ip.report_connect_fail(ip)
-            if connect_fail_time == 0:
-                connect_fail_time = time.time()
-            else:
-                if time.time() - connect_fail_time > 30:
-                    connect_allow_time = time.time() + (60 * 5)
+            connect_control.report_connect_fail()
 
             if ssl_sock:
                 ssl_sock.close()
@@ -390,7 +383,6 @@ class Https_connection_manager(object):
 
 
     def connect_thread(self):
-        global connect_allow_time
         try:
             while self.conn_pool.qsize() < self.connection_pool_min_num:
                 ip_str = google_ip.get_gws_ip()
@@ -404,7 +396,7 @@ class Https_connection_manager(object):
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
                     self.conn_pool.put((ssl_sock.handshake_time, ssl_sock))
-                elif time.time() < connect_allow_time:
+                elif not connect_control.allow_connect():
                     break
                 time.sleep(1)
         finally:

@@ -6,7 +6,7 @@
 import threading
 import operator
 import time
-
+import socket
 import ip_utils
 import check_ip
 from google_ip_range import ip_range
@@ -17,6 +17,7 @@ import math
 import os
 from config import config
 import traceback
+import connect_control
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
@@ -454,27 +455,32 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-    def check_ip(self, ip_str):
-        result = check_ip.test_gws(ip_str)
-        if not result:
-            return False
-
-        if self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type):
-            #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip_str,
-            #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
-            logging.info("check_ip add ip:%s time:%d", ip_str, result.handshake_time)
-
-        return True
-
     def runJob(self):
         while True: #not self.is_ip_enough() and self.searching_thread_count < 2:
+            if not connect_control.allow_connect():
+                break
+
             try:
                 time.sleep(1)
                 ip_int = ip_range.get_ip()
                 ip_str = ip_utils.ip_num_to_string(ip_int)
-                if self.check_ip(ip_str):
+                if self.is_bad_ip(ip_str):
+                    continue
+
+                result = check_ip.test_gws(ip_str)
+                if not result:
+                    continue
+
+                if self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type):
+                    #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip_str,
+                    #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
+                    logging.info("check_ip add ip:%s time:%d", ip_str, result.handshake_time)
                     self.remove_slowest_ip()
                     self.save_ip_list()
+            except check_ip.HoneypotError as e:
+                self.report_bad_ip(ip_str)
+                connect_control.fall_into_honeypot()
+                break
             except Exception as e:
                 logging.exception("google_ip.runJob fail:%s", e)
 
@@ -483,11 +489,11 @@ class Check_ip():
         self.ncount_lock.release()
 
     def search_more_google_ip(self):
-
         while self.searching_thread_count < max_check_ip_thread_num:
             self.ncount_lock.acquire()
             self.searching_thread_count += 1
             self.ncount_lock.release()
+
             p = threading.Thread(target = self.runJob)
             p.daemon = True
             p.start()
@@ -498,8 +504,22 @@ class Check_ip():
         self.ip_lock.release()
 
         for ip_str in tmp_ip_list:
+            if not connect_control.allow_connect():
+                break
 
-            result = check_ip.test_gws(ip_str)
+            if self.is_bad_ip(ip_str):
+                self.report_connect_fail(ip_str, force_remove=True)
+                continue
+
+            try:
+                result = check_ip.test_gws(ip_str)
+            except check_ip.HoneypotError as e:
+                self.report_bad_ip(ip_str)
+                connect_control.fall_into_honeypot()
+                break
+            except Exception as e:
+                logging.exception("check_exist_ip fail:%s", e)
+
             if not result:
                 if not self.network_is_ok():
                     logging.warn("check_exist_ip network is fail, check your network connection.")
