@@ -12,7 +12,7 @@
             <input id="gae-appid" type="text" placeholder="默认使用公共AppID"/>
             <div id="gae-appid-tip" class="hide">
                 <p>
-                    <span color="red">公共AppID不能看视频、下载文件.</span>
+                    <span color="red">公共AppID不能看视频、下载文件。</span>
                     <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">(怎么申请)</a>
                 </p>
             </div>
@@ -181,7 +181,7 @@
                 $('#proxy-password').val(result['proxy_passwd']);
             },
             error: function(){
-                    $('.alert').html('读取设置失败.');
+                    $('.alert').html('读取设置失败。');
                     $('.alert').addClass('alert-error');
                     $('.alert').removeClass('alert-success');
                     $('.alert').removeClass('hide');
@@ -229,12 +229,12 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    $('.alert').html('设置已成功保存.');
+                    $('.alert').html('设置已成功保存。');
                     $('.alert').addClass('alert-success');
                     $('.alert').removeClass('alert-error');
                     $('.alert').removeClass('hide');
                 } else {
-                    $('.alert').html('发生未知错误.');
+                    $('.alert').html('发生未知错误。');
                     $('.alert').addClass('alert-error');
                     $('.alert').removeClass('alert-success');
                     $('.alert').removeClass('hide');

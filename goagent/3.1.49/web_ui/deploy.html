@@ -14,7 +14,7 @@
                     <label for="gae-appid">GAE AppID (<a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">如何申请</a>)</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
-                    <input id="gae-appid" type="text" placeholder="批量部署多个AppID, 请用|分割."/>
+                    <input id="gae-appid" type="text" placeholder="批量部署多个AppID, 请用|分割。"/>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
@@ -62,7 +62,7 @@
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
-        <p class="tip">* XX-Net 1.8.3之前的服务端, 请重新部署.</p>
+        <p class="tip">* XX-Net 1.8.3之前的服务端, 请重新部署。</p>
     </div> <!-- #authentication -->
     <div id="logs" class="tab-pane fade">
         <div id="log" class="span12"></div>
@@ -182,13 +182,13 @@
                         updateLog(result['log']);
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
+                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
                         updateLog(result['log']);
                     }
                 } else if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
-                        $('.alert').html('当前状态: XX-Net被重置.');
+                        $('.alert').html('当前状态: XX-Net被重置。');
 
                         changeButtonStatus('start');
                     } else if ( result['status'] == 'running' ) {
@@ -196,18 +196,18 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成. <br>请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效.');
+                        $('.alert').html('当前状态: 部署完成。 <br>请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效。');
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
+                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
                         updateLog(result['log']);
                     }
                 } else {
                     window.timer.stop();
-                    $('.alert').html('当前状态: 发生异常.<br>异常信息:' + result['status']);
+                    $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
                     updateLog(result['log']);
                 }
                 if(window.isAutoScrollLog == true){
@@ -270,10 +270,10 @@
             dataType: 'JSON',
             success: function(result) {
                 changeButtonStatus('start');
-                $('.alert').html("当前状态: 部署已取消.");
+                $('.alert').html("当前状态: 部署已取消。");
             },
             error: function(result){
-                $('.alert').html("当前状态: 发生异常.<br>异常信息:" + result);
+                $('.alert').html("当前状态: 发生异常。<br>异常信息:" + result);
             }
         });
     }
@@ -283,13 +283,13 @@
         var errorMessage = '';
 
         if ( appId.length == 0 || !isAppIdValid(appId) ) {
-            errorMessage += 'AppID为空或无效.<br>';
+            errorMessage += 'AppID为空或无效。<br>';
         }
         if ( email.length == 0 || !isEmailValid(email) ) {
-            errorMessage += 'Email为空或无效.<br>';
+            errorMessage += 'Email为空或无效。<br>';
         }
         if ( password.length == 0 ) {
-            errorMessage += '请填写您账户的密码.<br>'
+            errorMessage += '请填写您账户的密码。<br>'
         }
 
         return errorMessage;
