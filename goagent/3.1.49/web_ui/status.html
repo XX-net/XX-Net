@@ -5,9 +5,8 @@
     我们建议您使用最新版本的Chrome浏览器。
 </div>
 <![endif]-->
-<div class="alert hide" id="alert-box">
+<div id="alert-box" class="alert alert-warning hide"></div>
 
-</div>
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -160,18 +159,22 @@
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
                 $('#block-stat').html(result['block_stat']);
 
-                if(!$('#alert-box').hasClass("hide")){
+                if ( !$('#alert-box').hasClass("hide") ) {
                     $('#alert-box').addClass("hide");
                 }
             },
             error: function(result) {
-                form_val = $('#sys-platform').html();
-                if(form_val == ""){
-                    $('#alert-box').html('状态页显示空白，很可能GoAgent启动失败，请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因。<br>');
-                }else{
-                    $('#alert-box').html('GoAgent进程无响应，可能已退出。');
+                var formValue = $('#sys-platform').html();
+                if ( formValue == '' ) {
+                    $('#alert-box').html('状态页显示空白, 很可能GoAgent启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>');
+                } else {
+                    $('#alert-box').html('GoAgent进程无响应, 可能已退出.');
                 }
-                $('#alert-box').removeClass("hide");
+
+                $('html, body').animate({
+                    scrollTop:0
+                }, 'slow');
+                $('#alert-box').removeClass('hide');
             }
         });
     }

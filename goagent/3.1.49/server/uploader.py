@@ -122,7 +122,7 @@ def upload(appid, email, password):
                     my_stdout.write("Retry %d time...\n\n" % (i + 1))
                     time.sleep(1)
                 else:
-                    my_stdout.write("Retry max time, failed.\n\n" ))
+                    my_stdout.write("Retry max time, failed.\n\n" )
         return False
 
     finally:
