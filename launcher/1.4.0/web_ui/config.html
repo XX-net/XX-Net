@@ -26,25 +26,25 @@
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">
-            <label for="module-switch">
-                <i class="icon icon-chevron-right"></i> 模块开关
+            <label for="advanced-options">
+                <i class="icon icon-chevron-right"></i> 高级选项
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
-    <div id="module-switch" style="display: none;">
+    <div id="advanced-options" style="display: none;">
         <div class="row-fluid">
-            <div class="span4">Goagent模块开关</div> <!-- .span4 -->
+            <div class="span4">启用Goagent</div> <!-- .span4 -->
             <div class="span8">
                 <input id="goagent-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
-            <div class="span4">PHP模块开关</div> <!-- .span4 -->
+            <div class="span4">启用PHP代理</div> <!-- .span4 -->
             <div class="span8">
                 <input id="php-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
-    </div> <!-- #module-switch -->
+    </div> <!-- #advanced-options -->
 </div> <!-- #options -->
 
 <!-- JavaScript -->
@@ -55,6 +55,11 @@
 </script>
 <script type="text/javascript">
     $(function() {
+        getStatus();
+    });
+</script>
+<script type="text/javascript">
+    function getStatus() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -83,34 +88,37 @@
 
                     $( "#popup-webui").prop('checked', true);
                 }
-                if ( result['php_enable'] != 0 ) {
-                    $( "#php-enable").parent().removeClass('switch-off');
-                    $( "#php-enable").parent().addClass('switch-on');
-
-                    $( "#php-enable").prop('checked', true);
-                }
                 if ( result['goagent_enable'] != 0 ) {
                     $( "#goagent-enable").parent().removeClass('switch-off');
                     $( "#goagent-enable").parent().addClass('switch-on');
 
                     $( "#goagent-enable").prop('checked', true);
                 }
+                if ( result['php_enable'] != 0 ) {
+                    $( "#php-enable").parent().removeClass('switch-off');
+                    $( "#php-enable").parent().addClass('switch-on');
+
+                    $( "#php-enable").prop('checked', true);
+                }
+            },
+            error: function() {
+                displayErrorMessage();
             }
-        });     
-    });
+        });
+    }
 </script>
 <script type="text/javascript">
-    $('label[for=module-switch]').click(function() {
-        var isAdvancedOptionsShown = $('#module-switch').is(':visible');
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
 
         if ( !isAdvancedOptionsShown ) {
             $('i.icon', this).removeClass('icon-chevron-right');
             $('i.icon', this).addClass('icon-chevron-down');
-            $('#module-switch').slideDown();            
+            $('#advanced-options').slideDown();            
         } else {
             $('i.icon', this).removeClass('icon-chevron-down');
             $('i.icon', this).addClass('icon-chevron-right');
-            $('#module-switch').slideUp();
+            $('#advanced-options').slideUp();
         }
     });
 </script>
@@ -139,20 +147,20 @@
         return setConfig(key, value);
     });
 
-    $('#php-enable').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'php_enable',
-            value     = isChecked ? 1 : 0;
-
-        return setConfig(key, value);
-    });
-
     $('#goagent-enable').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'goagent_enable',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        setConfig(key, value);
+    });
+
+    $('#php-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'php_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
     });
 </script>
 <script type="text/javascript">
@@ -169,17 +177,54 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    $('.alert').html('设置已成功保存.');
-                    $('.alert').addClass('alert-success');
+                    if ( key == 'goagent_enable' || key == 'php_enable' ) {
+                        restatingService(key);
+                        $('.alert').addClass('alert-warning');
+                        $('.alert').removeClass('alert-success');
+                    } else {
+                        $('.message', '.alert').html('设置已成功保存.');
+                        $('.alert').addClass('alert-success');
+                        $('.alert').removeClass('alert-warning');
+                    }
+
                     $('.alert').removeClass('alert-error');
                     $('.alert').removeClass('hide');
                 } else {
-                    $('.alert').html('发生未知错误.');
-                    $('.alert').addClass('alert-error');
-                    $('.alert').removeClass('alert-success');
-                    $('.alert').removeClass('hide');
+                    displayErrorMessage();
                 }
+            }, 
+            error: function() {
+                displayErrorMessage();
             }
         });
+    }
+</script>
+<script type="text/javascript">
+    function displayErrorMessage() {
+        $('.message', '.alert').html('发生未知错误, 请刷新页面重试.');
+        $('.alert').addClass('alert-error');
+        $('.alert').removeClass('alert-success');
+        $('.alert').removeClass('alert-warning');
+        $('.alert').removeClass('hide');
+    }
+</script>
+<script type="text/javascript">
+    function restatingService(serviceNameSlug) {
+        var serviceName     = '',
+            restatingTime   = 5,
+            messageTemplate = '正在重启服务[%s], 页面将在%s秒内刷新.';
+
+        if ( serviceNameSlug == 'goagent_enable' ) {
+            serviceName     = 'GoAgent';
+        } else if ( serviceNameSlug == 'php_enable' ) {
+            serviceName     = 'PHP代理';
+        } else {
+            serviceName     = 'Unknown';
+        }
+        $('.message', '.alert').html(messageTemplate.format(serviceName, restatingTime));
+
+        setTimeout(function () {
+            location.reload();
+        }, restatingTime * 1000);
     }
 </script>
