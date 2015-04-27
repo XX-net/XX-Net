@@ -62,6 +62,12 @@
                     $('.alert').addClass('alert-success');
                     $('.alert').removeClass('alert-error');
                     $('.alert').removeClass('hide');
+                },
+                error: function(){
+                    $('.alert').html('导入IP失败.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
+                    $('.alert').removeClass('hide');
                 }
             });
         } else { //导出
@@ -79,6 +85,12 @@
                     $('.alert').html('导出成功.');
                     $('.alert').addClass('alert-success');
                     $('.alert').removeClass('alert-error');
+                    $('.alert').removeClass('hide');
+                },
+                error: function(){
+                    $('.alert').html('导出IP失败.');
+                    $('.alert').addClass('alert-error');
+                    $('.alert').removeClass('alert-success');
                     $('.alert').removeClass('hide');
                 }
             });
