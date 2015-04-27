@@ -230,7 +230,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if reqs['cmd'] == ['get_config']:
                 data = json.dumps(user_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
-                user_config.php_enable = self.postvars['php_enable'][0]
                 user_config.php_password = self.postvars['php_password'][0]
                 user_config.php_server = self.postvars['php_server'][0]
                 user_config.proxy_enable = self.postvars['proxy_enable'][0]
