@@ -257,6 +257,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             self.send_file(file_path, mimetype)
             return
+        elif path.startswith("/importip"):
+            return self.req_importip_handler()
         else:
             logging.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -530,6 +532,19 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     status = 'finished'
 
             data = json.dumps({'status':status,'log':content, 'time':time_now})
+
+        self.send_response('text/html', data)
+
+    def req_importip_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        if reqs['cmd'] == ['importip']:
+            pass #暂时没做
+
+        elif reqs['cmd'] == ['exportip']:
+            pass #暂时没做
 
         self.send_response('text/html', data)
 

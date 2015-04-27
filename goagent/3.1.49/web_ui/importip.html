@@ -3,23 +3,23 @@
     <button type="button" class="close" data-dismiss="alert">×</button>
     <p class="message"></p>
 </div> <!-- .alert -->
-<form id="import-export-ip" method="POST" onSubmit="importIP(); return false;">
+<form id="import-export-ip" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span4">
-            <label for="ip-type">任务类型</label>
+            <label>任务类型</label>
         </div> <!-- .span4 -->
         <div class="span8">
-            <input type="radio" name="fruit" value="import" checked>导入
-            <input type="radio" name="fruit" value="export">导出
+            <input type="radio" name="type" value="import" checked>导入
+            <input type="radio" name="type" value="export">导出
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
     <div class="row-fluid">
         <div class="span4">
-            <label for="ip-type">导入/导出格式</label>
+            <label for="ip-format">导入/导出格式</label>
         </div> <!-- .span4 -->
         <div class="span8">
-            <select id="ip-type" name="ip-type"> 
+            <select id="ip-format"> 
                 <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
             </select> 
         </div> <!-- .span8 -->
@@ -27,10 +27,10 @@
 
     <div class="row-fluid">
         <div class="span4">
-            <label for="ip-type">IP列表</label>
+            <label for="ip-list">IP列表</label>
         </div> <!-- .span4 -->
         <div class="span8">
-            <textarea id="" rows="10"></textarea>
+            <textarea id="ip-list" rows="10"></textarea>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
@@ -39,4 +39,41 @@
             <button class="btn btn-primary btn-block" type="submit">执行</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
-</form> <!-- #import-ip-form -->
+</form> <!-- #import-export-ip -->
+<script>
+    function onSubmit(){
+        var type = $("input[name='type']:checked").val(),
+        ipFormat = $("#ip-format").find("option:selected").val(),
+        ipList   = $('#ip-list').val();
+
+        if(type == 'import') {
+            var data = {
+                'ipList': ipList
+            };
+            $.ajax({
+                type: 'POST',
+                url: 'http://127.0.0.1:8084/importip?cmd=import',
+                data: data,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] == 'success' ) {
+                        $('.alert').html('导入成功.');
+                        $('.alert').addClass('alert-success');
+                        $('.alert').removeClass('alert-error');
+                        $('.alert').removeClass('hide');
+                    } else {
+                        $('.alert').html('发生未知错误.');
+                        $('.alert').addClass('alert-error');
+                        $('.alert').removeClass('alert-success');
+                        $('.alert').removeClass('hide');
+                    }
+                }
+            });
+        } else {
+            $('.alert').html('导出暂未制作.');
+            $('.alert').addClass('alert-error');
+            $('.alert').removeClass('alert-success');
+            $('.alert').removeClass('hide');
+        }
+    }
+</script>
