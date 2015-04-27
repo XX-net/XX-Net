@@ -3,43 +3,54 @@
     <button type="button" class="close" data-dismiss="alert">×</button>
     <p class="message"></p>
 </div> <!-- .alert -->
-<form id="import-export-ip" method="POST" onSubmit="onSubmit(); return false;">
-    <div class="row-fluid">
-        <div class="span4">
-            <label>任务类型</label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <input type="radio" name="type" value="import" checked>导入
-            <input type="radio" name="type" value="export">导出
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#import-export-ip" data-toggle="tab">导入/导出</a></li>
+    <li><a href="#logs" data-toggle="tab">日志</a></li>
+</ul>
+<div id="tab-switch" class="tab-content">
+    <div id="import-export-ip" class="tab-pane fade in active">
+        <form method="POST" onSubmit="onSubmit(); return false;">
+            <div class="row-fluid">
+                <div class="span4">
+                    <label>任务类型</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input type="radio" name="type" value="import" checked>导入
+                    <input type="radio" name="type" value="export">导出
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
-        <div class="span4">
-            <label for="ip-format">导入/导出格式</label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <select id="ip-format"> 
-                <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
-            </select> 
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="ip-format">导入/导出格式</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <select id="ip-format"> 
+                        <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
+                    </select> 
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
-        <div class="span4">
-            <label for="ip-list">IP列表</label>
-        </div> <!-- .span4 -->
-        <div class="span8">
-            <textarea id="ip-list" rows="10"></textarea>
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="ip-list">IP列表</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <textarea id="ip-list" rows="10"></textarea>
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
-        <div class="span12">
-            <button class="btn btn-primary btn-block" type="submit">执行</button>
-        </div> <!-- .span12 -->
-    </div> <!-- .row-fluid -->
-</form> <!-- #import-export-ip -->
+            <div class="row-fluid">
+                <div class="span12">
+                    <button class="btn btn-primary btn-block" type="submit">执行</button>
+                </div> <!-- .span12 -->
+            </div> <!-- .row-fluid -->
+        </form> <!-- #import-export-ip -->
+    </div> <!-- #authentication -->
+    <div id="logs" class="tab-pane fade">
+        <div id="log" class="span12"></div>
+    </div> <!-- #log -->
+</div> <!-- #tab-content -->
 <script>
     function onSubmit(){
         //从页面元素取出需要的东西
