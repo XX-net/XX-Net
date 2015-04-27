@@ -43,6 +43,7 @@ import ConfigParser
 import direct_connect_manager
 import connect_control
 import ip_utils
+import check_ip
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -234,6 +235,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_ssl_pool_handler()
         elif path == "/is_ready":
             return self.req_is_ready_handler()
+        elif path == "/test_ip":
+            return self.req_test_ip_handler()
         elif path == "/quit":
             config.keep_run = False
             data = "Quit"
@@ -558,6 +561,21 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data += "%s|" % ip
             data = data[0 : len(data) - 1]
             data += '"}'
+
+        self.send_response('text/html', data)
+
+    def req_test_ip_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        ip = reqs['ip'][0]
+        result = check_ip.test_gws(ip)
+        if not result:
+            data = "{'res':'fail'}"
+        else:
+            data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %
+                  (ip, result.handshake_time, result.server_type, result.domain))
 
         self.send_response('text/html', data)
 
