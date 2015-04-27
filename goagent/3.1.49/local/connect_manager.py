@@ -356,13 +356,13 @@ class Https_connection_manager(object):
             def verify_SSL_certificate_issuer(ssl_sock):
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
-                    google_ip.report_bad_ip(ip)
+                    google_ip.report_bad_ip(ssl_sock.ip)
                     connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is none')
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
-                    google_ip.report_bad_ip(ip)
+                    google_ip.report_bad_ip(ssl_sock.ip)
                     connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 

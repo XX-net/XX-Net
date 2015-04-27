@@ -138,6 +138,7 @@ class Check_ip():
 
             with open(bad_ip_file, "w") as fd:
                 for ip in self.bad_ip_pool:
+                    logging.debug("save bad ip:%s", ip)
                     fd.write("%s\n" % (ip))
 
             self.iplist_need_save = 0
@@ -316,6 +317,9 @@ class Check_ip():
             self.ip_lock.release()
 
     def report_bad_ip(self, ip_str):
+        logging.debug("report_bad_ip %s", ip_str)
+        if not ip_utils.check_ip_valid(ip_str):
+            return
         self.bad_ip_pool.add(ip_str)
         self.save_ip_list(force=True)
 
