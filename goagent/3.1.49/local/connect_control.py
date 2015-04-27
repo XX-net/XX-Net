@@ -1,8 +1,13 @@
 
 import time
 
+import logging
+
 connect_allow_time = 0
 connect_fail_time = 0
+
+block_delay = (60 * 5)
+
 
 def allow_connect():
     global connect_allow_time
@@ -12,17 +17,17 @@ def allow_connect():
         return True
 
 def fall_into_honeypot():
+    logging.warn("fall_into_honeypot.")
     global connect_allow_time
-    connect_allow_time = time.time() + (60 * 5)
-
+    #connect_allow_time = time.time() + block_delay
 
 def report_connect_fail():
     global connect_allow_time, connect_fail_time
     if connect_fail_time == 0:
         connect_fail_time = time.time()
     else:
-        if time.time() - connect_fail_time > 30:
-            connect_allow_time = time.time() + (60 * 5)
+        if time.time() - connect_fail_time > 60:
+            connect_allow_time = time.time() + block_delay
 
 def report_connect_success():
     global connect_fail_time
