@@ -58,17 +58,10 @@
                 data: {'ipList': ipList},
                 dataType: 'JSON',
                 success: function(result) {
-                    if (result['res'] == 'success') {
-                        $('.alert').html('导入成功.');
-                        $('.alert').addClass('alert-success');
-                        $('.alert').removeClass('alert-error');
-                        $('.alert').removeClass('hide');
-                    } else {
-                        $('.alert').html('发生未知错误.');
-                        $('.alert').addClass('alert-error');
-                        $('.alert').removeClass('alert-success');
-                        $('.alert').removeClass('hide');
-                    }
+                    $('.alert').html('成功导入' + result['res'] + '个IP.');
+                    $('.alert').addClass('alert-success');
+                    $('.alert').removeClass('alert-error');
+                    $('.alert').removeClass('hide');
                 }
             });
         } else { //导出

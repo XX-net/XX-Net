@@ -542,13 +542,15 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         data = ''
 
         if reqs['cmd'] == ['importip']:
+            count = 0
             ip_list = self.postvars['ipList'][0]
             addresses = ip_list.split('|')
             for ip in addresses:
                 if not ip_utils.check_ip_valid(ip):
                     continue
-                google_ip.add_ip(ip, 100, "google.com", "gws")
-            data = '{"res":"success"}'
+                if google_ip.add_ip(ip, 100, "google.com", "gws"):
+                    count += 1
+            data = '{"res":"%s"}' % count
 
         elif reqs['cmd'] == ['exportip']:
             data = '{"res":"'
@@ -558,7 +560,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data += '"}'
 
         self.send_response('text/html', data)
-
 
     def req_ip_list_handler(self):
         data = ""
@@ -580,10 +581,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data += "%d \t %s      \t %d \t %d \t %s\r\n" % (i, ip, handshake_time, timeout, str)
             i += 1
 
-
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
-
 
     def req_ssl_pool_handler(self):
         data = connect_manager.https_manager.conn_pool.to_string()
