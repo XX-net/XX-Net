@@ -14,6 +14,10 @@ sub_menus: {
     url: deploy
   },
   4:{
+    title: 导入IP,
+    url: importip
+  },
+  5:{
     title: 日志,
     url: logging
   }

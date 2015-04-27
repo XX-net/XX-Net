@@ -1,0 +1,42 @@
+<h2>导入导出IP</h2>
+<div class="alert fade in hide">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    <p class="message"></p>
+</div> <!-- .alert -->
+<form id="import-export-ip" method="POST" onSubmit="importIP(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="ip-type">任务类型</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input type="radio" name="fruit" value="import" checked>导入
+            <input type="radio" name="fruit" value="export">导出
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="ip-type">导入/导出格式</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <select id="ip-type" name="ip-type"> 
+                <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
+            </select> 
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="ip-type">IP列表</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <textarea id="" rows="10"></textarea>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">执行</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form> <!-- #import-ip-form -->
