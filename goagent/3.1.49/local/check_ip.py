@@ -148,7 +148,8 @@ class Check_frame(object):
             def check_ssl_cert(ssl_sock):
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
-                    raise HoneypotError(' certficate is none')
+                    #raise HoneypotError(' certficate is none')
+                    raise SSLError("no cert")
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if self.check_cert and not issuer_commonname.startswith('Google'):
