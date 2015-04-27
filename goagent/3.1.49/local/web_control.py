@@ -42,6 +42,7 @@ import connect_manager
 import ConfigParser
 import direct_connect_manager
 import connect_control
+import ip_utils
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -257,8 +258,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             self.send_file(file_path, mimetype)
             return
-        elif path.startswith("/importip"):
-            return self.req_importip_handler()
         else:
             logging.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -313,6 +312,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_deploy_handler()
         elif path == "/config":
             return self.req_config_handler()
+        elif path.startswith("/importip"):
+            return self.req_importip_handler()
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
@@ -542,13 +543,22 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['importip']:
             ip_list = self.postvars['ipList'][0]
-            for i in range(0, len(ip_list)):
-                #
+            addresses = ip_list.split('|')
+            for ip in addresses:
+                if not ip_utils.check_ip_valid(ip):
+                    continue
+                google_ip.add_ip(ip, 100, "google.com", "gws")
+            data = '{"res":"success"}'
 
         elif reqs['cmd'] == ['exportip']:
-            pass #暂时没做
+            data = '{"res":"'
+            for ip in google_ip.gws_ip_list:
+                data += "%s|" % ip
+            data = data[0 : len(data) - 1]
+            data += '"}'
 
         self.send_response('text/html', data)
+
 
     def req_ip_list_handler(self):
         data = ""
