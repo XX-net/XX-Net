@@ -155,9 +155,11 @@ class Connect_pool():
 
 
 def random_hostname():
+    return False
+    #return "cache.google.com"
     word = ''.join(random.choice(('bcdfghjklmnpqrstvwxyz', 'aeiou')[x&1]) for x in xrange(random.randint(6, 10)))
     #return "%s.appspot.com" % word
-    gltd = random.choice(['org', 'com', 'net', 'gov', 'cn'])
+    gltd = random.choice(['org', 'com', 'net', 'gov'])
     return 'www.%s.%s' % (word, gltd)
 
 class Https_connection_manager(object):
@@ -250,7 +252,7 @@ class Https_connection_manager(object):
 
                     # only keep little alive link.
                     # if you have 25 appid, you can keep 5 alive link.
-                    if self.conn_pool.qsize() > max(1, len(appid_manager.working_appid_list)/5):
+                    if self.conn_pool.qsize() > max(1, len(appid_manager.working_appid_list)/2):
                         ssl_sock.close()
                         continue
 
@@ -261,7 +263,7 @@ class Https_connection_manager(object):
                     else:
                         ssl_sock.close()
 
-                #self.create_more_connection()
+                self.create_more_connection()
             except Exception as e:
                 logging.warn("keep alive except:%r", e)
 
@@ -331,7 +333,7 @@ class Https_connection_manager(object):
             # pick up the certificate
             server_hostname = random_hostname()
             if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
-                #ssl_sock.set_tlsext_host_name(server_hostname)
+                ssl_sock.set_tlsext_host_name(server_hostname)
                 pass
 
             ssl_sock.connect(ip_port)
