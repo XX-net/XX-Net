@@ -541,7 +541,9 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         data = ''
 
         if reqs['cmd'] == ['importip']:
-            pass #暂时没做
+            ip_list = self.postvars['ipList'][0]
+            for i in range(0, len(ip_list)):
+                #
 
         elif reqs['cmd'] == ['exportip']:
             pass #暂时没做

@@ -1,4 +1,4 @@
-<h2>导入导出IP</h2>
+<h2>IP导入导出</h2>
 <div class="alert fade in hide">
     <button type="button" class="close" data-dismiss="alert">×</button>
     <p class="message"></p>
@@ -42,14 +42,24 @@
 </form> <!-- #import-export-ip -->
 <script>
     function onSubmit(){
+        //从页面元素取出需要的东西
         var type = $("input[name='type']:checked").val(),
         ipFormat = $("#ip-format").find("option:selected").val(),
         ipList   = $('#ip-list').val();
 
+        //导入
         if(type == 'import') {
+            //根据ipFormat处理ipList
+            if(ipFormat == 1) {
+                ipList = ipList.split('|');
+            }
+
+            //准备要提交的数据
             var data = {
                 'ipList': ipList
             };
+
+            //提交数据
             $.ajax({
                 type: 'POST',
                 url: 'http://127.0.0.1:8084/importip?cmd=import',
@@ -69,7 +79,7 @@
                     }
                 }
             });
-        } else {
+        } else { //导出
             $('.alert').html('导出暂未制作.');
             $('.alert').addClass('alert-error');
             $('.alert').removeClass('alert-success');
