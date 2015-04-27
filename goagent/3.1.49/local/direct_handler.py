@@ -9,13 +9,17 @@ import logging
 import socket
 import ssl
 import httplib
+
+import OpenSSL
+NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+
+
 from direct_connect_manager import direct_connect_manager
 
 from gae_handler import generate_message_html, send_response
 from connect_control import connect_allow_time, connect_fail_time
+from gae_handler import return_fail_message
 
-import OpenSSL
-NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 from config import config
 
@@ -84,9 +88,7 @@ def handler(method, host, url, headers, body, wfile):
     response = None
     while True:
         if time.time() - time_request > 30 or time.time() < connect_allow_time:
-            html = generate_message_html('504 GoAgent Proxy Time out', u'翻不上去，先休息2分钟再来！')
-            send_response(wfile, 504, body=html.encode('utf-8'))
-            return
+            return return_fail_message(wfile)
 
         try:
             response = fetch(method, host, url, headers, body)
