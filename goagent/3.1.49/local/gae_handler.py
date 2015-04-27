@@ -267,6 +267,11 @@ def send_response(wfile, status=404, headers={}, body=''):
     wfile.write("\r\n")
     wfile.write(body)
 
+def return_fail_message(wfile):
+    html = generate_message_html('504 GoAgent Proxy Time out', u'连接超时，先休息一会再来！')
+    send_response(wfile, 504, body=html.encode('utf-8'))
+    return
+
 def handler(method, url, headers, body, wfile):
     time_request = time.time()
 
@@ -274,9 +279,7 @@ def handler(method, url, headers, body, wfile):
     response = None
     while True:
         if time.time() - time_request > 30: #time out
-            html = generate_message_html('504 GoAgent Proxy Time out', u'墙太高了，翻不过去，先休息一会再来！')
-            send_response(wfile, 504, body=html.encode('utf-8'))
-            return
+            return return_fail_message(wfile)
 
         try:
             response = fetch(method, url, headers, body)
