@@ -22,7 +22,7 @@ import connect_control
 current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
 good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
-bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip.txt"))
+bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip2.txt"))
 default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
 # get value from config:
@@ -47,7 +47,7 @@ class Check_ip():
                  # }
 
     gws_ip_list = [] # gererate from ip_dict, sort by handshake_time, when get_batch_ip
-    bad_ip_pool = {}
+    bad_ip_pool = set()
     ip_lock = threading.Lock()
     iplist_need_save = 0
     iplist_saved_time = 0
@@ -106,13 +106,14 @@ class Check_ip():
             with open(bad_ip_file, "r") as fd:
                 for line in fd.readlines():
                     try:
-                        str_l = line.split(' ')
-                        if len(str_l) != 2:
+                        if line == "\n":
+                            continue
+                        str_l = line.replace('\n', '')
+                        if not ip_utils.check_ip_valid(str_l):
                             logging.warning("bad_ip line err: %s", line)
                             continue
-                        mask = str_l[0]
                         ip = str_l[1]
-                        self.bad_ip_pool[mask] = ip
+                        self.bad_ip_pool.add(ip)
                     except Exception as e:
                         logging.exception("parse bad_ip.txt err:%r", e)
         if False:
@@ -136,9 +137,8 @@ class Check_ip():
                     fd.write( "%s %s %s %d\n" % (ip_str, property['domain'], property['server'], property['handshake_time']) )
 
             with open(bad_ip_file, "w") as fd:
-                for mask in self.bad_ip_pool:
-                    ip = self.bad_ip_pool[mask]
-                    fd.write("%s %s\n" % (mask, ip))
+                for ip in self.bad_ip_pool:
+                    fd.write("%s\n" % (ip))
 
             self.iplist_need_save = 0
         except Exception as e:
@@ -316,13 +316,11 @@ class Check_ip():
             self.ip_lock.release()
 
     def report_bad_ip(self, ip_str):
-        ip_mask = ip_utils.get_ip_maskc(ip_str)
-        self.bad_ip_pool[ip_mask] = ip_str
+        self.bad_ip_pool.add(ip_str)
         self.save_ip_list(force=True)
 
     def is_bad_ip(self, ip_str):
-        ip_mask = ip_utils.get_ip_maskc(ip_str)
-        if ip_mask in self.bad_ip_pool:
+        if ip_str in self.bad_ip_pool:
             return True
         return False
 
