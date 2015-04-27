@@ -69,7 +69,12 @@ class PacUtil(object):
 
         try:
             logging.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
-            autoproxy_content = base64.b64decode(opener.open(config.PAC_GFWLIST).read())
+            try:
+                content = opener.open(config.PAC_GFWLIST).read()
+            except Exception as e:
+                logging.warn("update_pacfile fail:%r", e)
+                return
+            autoproxy_content = base64.b64decode(content)
             logging.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
             jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
             content += '\r\n' + jsrule + '\r\n'

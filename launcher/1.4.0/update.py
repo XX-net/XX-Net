@@ -213,7 +213,12 @@ def check_update():
             return
 
         req_url = update_url + "?uuid=" + get_uuid()
-        update_content = opener.open(req_url).read()
+        try:
+            update_content = opener.open(req_url).read()
+        except Exception as e:
+            logging.warn("check_update fail:%r", e)
+            return False
+
         update_dict = json.loads(update_content)
 
         for module in update_dict["modules"]:
