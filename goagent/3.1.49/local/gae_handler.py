@@ -286,6 +286,12 @@ def handler(method, url, headers, body, wfile):
             if response.app_status != 200:
                 logging.debug("fetch gae status:%s url:%s", response.app_status, url)
 
+            if response.app_status == 403:
+                # google have changed from gws to gvs, need to remove.
+                google_ip.report_connect_fail(response.ssl_sock, force_remove=True)
+                response.close()
+                continue
+
             if response.app_status == 404:
                 logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
                 appid_manager.report_not_exist(response.ssl_sock.appid)
