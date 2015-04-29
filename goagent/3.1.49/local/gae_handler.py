@@ -286,11 +286,6 @@ def handler(method, url, headers, body, wfile):
             if response.app_status != 200:
                 logging.debug("fetch gae status:%s url:%s", response.app_status, url)
 
-            if response.app_status == 403:
-                # google have changed from gws to gvs, need to remove.
-                google_ip.report_connect_fail(response.ssl_sock, force_remove=True)
-                response.close()
-                continue
 
             if response.app_status == 404:
                 logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
@@ -306,7 +301,8 @@ def handler(method, url, headers, body, wfile):
                     response.close()
                     continue
 
-            if response.app_status == 405: #Method not allowed
+            if response.app_status == 403 or response.app_status == 405: #Method not allowed
+                # google have changed from gws to gvs, need to remove.
                 logging.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
                 google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                 response.close()
