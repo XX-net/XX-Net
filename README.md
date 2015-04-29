@@ -7,6 +7,9 @@ XX-Net
 ==========
 https://codeload.github.com/XX-net/XX-Net/zip/1.12.3
 
+测试版：
+https://codeload.github.com/XX-net/XX-Net/zip/1.12.4
+
 (1.8.3之前的用户，请重新部署服务端)
 
 
