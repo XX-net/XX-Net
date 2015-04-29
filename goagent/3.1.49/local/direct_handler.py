@@ -42,7 +42,7 @@ def send_header(wfile, keyword, value):
         try:
             wfile.write("%s: %s\r\n" % (keyword, value))
         except Exception as e:
-            logging.exception("e:%r header: %s: %s ", e, keyword, value)
+            logging.warn("send_header e:%r header: %s: %s ", e, keyword, value)
             raise e
 
 
@@ -116,7 +116,11 @@ def handler(method, host, url, headers, body, wfile):
         if 'Transfer-Encoding' in response_headers:
             length = 0
             while True:
-                data = response.read(8192)
+                try:
+                    data = response.read(8192)
+                except httplib.IncompleteRead, e:
+                    data = e.partial
+
                 if not data:
                     wfile.write('0\r\n\r\n')
                     break
