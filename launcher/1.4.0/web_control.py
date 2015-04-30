@@ -27,6 +27,7 @@ import logging
 import module_init
 import config
 import autorun
+import update_from_github
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -145,6 +146,9 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response('text/html', '{"status":"success"}')
             module_init.stop_all()
             os._exit(0)
+        elif url_path == '/restart':
+            self.send_response('text/html', '{"status":"success"}')
+            update_from_github.restart_xxnet()
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
@@ -211,21 +215,29 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
+        current_version = update_from_github.current_version()
+
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "check_update": "%d", "popup_webui": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
-                   (config.get(["update", "check_update"], 1)
+            check_update = config.get(["update", "check_update"], 1)
+            if check_update == 0:
+                check_update = "dont-check"
+            elif check_update == 1:
+                check_update = "long-term-stable"
+
+            data = '{ "check_update": "%s", "popup_webui": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
+                   (check_update
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "goagent", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
-                check_update = int(reqs['check_update'][0])
-                if check_update != 0 and check_update != 1:
+                check_update = reqs['check_update'][0]
+                if check_update not in ["dont-check", "long-term-stable", "stable", "test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
-                    config.set(["update", "check_update"], int(check_update))
+                    config.set(["update", "check_update"], check_update)
                     config.save()
 
                     data = '{"res":"success"}'
@@ -281,6 +293,18 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
+        elif reqs['cmd'] == ['get_new_version']:
+            versions = update_from_github.get_github_versions()
+            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
+            logging.info("%s", data)
+        elif reqs['cmd'] == ['update_version']:
+            version = reqs['version'][0]
+            try:
+                update_from_github.update_version(version)
+                data = '{"res":"success"}'
+            except Exception as e:
+                logging.info("update_test_version fail:%r", e)
+                data = '{"res":"fail", "error":"%s"}' % e
 
         self.send_response('text/html', data)
 

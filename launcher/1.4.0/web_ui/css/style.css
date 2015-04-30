@@ -95,6 +95,10 @@ div#content div.row-fluid > div.span4 > label {
     font-weight: bold;
     margin: 10px 0 0;
 }
+div#content div.row-fluid > div.span2 > label {
+    font-weight: bold;
+    margin: 10px 0 0;
+}
 
 div#content form div.row-fluid > div.span4 > label > a {
     font-weight: normal;
