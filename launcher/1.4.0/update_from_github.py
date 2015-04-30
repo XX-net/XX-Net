@@ -143,7 +143,7 @@ def restart_xxnet():
     module_init.stop_all()
     import web_control
     web_control.stop()
-    
+
     current_path = os.path.dirname(os.path.abspath(__file__))
     start_sript = os.path.abspath( os.path.join(current_path, os.pardir, "start.py"))
 

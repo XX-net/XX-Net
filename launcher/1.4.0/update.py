@@ -8,12 +8,14 @@ import time
 import threading
 import zipfile
 import sys
+from distutils.version import LooseVersion
 
 import logging
 import config
 import uuid
 import platform
 
+import update_from_github
 
 autoproxy = '127.0.0.1:8087'
 opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
@@ -205,12 +207,30 @@ def general_gtk_callback(widget=None, data=None):
 
 
 def check_update():
+    update_rule = config.get(["update", "check_update"], "dont-check")
+    if update_rule == "dont-check":
+        return
 
+    check_push_update()
+
+    if update_rule != "stable" and update_rule != "test":
+        return
+
+    versions = update_from_github.get_github_versions()
+    current_version = update_from_github.current_version()
+    if update_rule == "test":
+        if LooseVersion(current_version) < LooseVersion(versions[0][1]):
+            logging.info("update to test version %s", versions[0][1])
+            update_from_github.update_version(versions[0][1])
+    elif update_rule == "stable":
+        if LooseVersion(current_version) < LooseVersion(versions[1][1]):
+            logging.info("update to stable version %s", versions[1][1])
+            update_from_github.update_version(versions[1][1])
+
+def check_push_update():
     global update_content, update_dict
     try:
         #config.load()
-        if not config.get(["update", "check_update"], 1):
-            return
 
         req_url = update_url + "?uuid=" + get_uuid()
         try:

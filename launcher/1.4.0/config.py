@@ -4,7 +4,7 @@ import logging
 
 
 import yaml
-from distutils.version import LooseVersion, StrictVersion
+from distutils.version import LooseVersion
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
