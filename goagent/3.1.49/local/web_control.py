@@ -38,9 +38,8 @@ import logging
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
-import connect_manager
+from connect_manager import https_manager
 import ConfigParser
-import direct_connect_manager
 import connect_control
 import ip_utils
 import check_ip
@@ -464,7 +463,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "connected_link":"%d,%d" % (len(connect_manager.https_manager.conn_pool.pool), len(direct_connect_manager.direct_connect_manager.new_conn_pool.pool)),
+                   "connected_link":"%d,%d" % (len(https_manager.new_conn_pool.pool), len(https_manager.gae_conn_pool.pool)),
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
@@ -627,7 +626,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(mimetype, data)
 
     def req_ssl_pool_handler(self):
-        data = connect_manager.https_manager.conn_pool.to_string()
+        data = https_manager.gae_conn_pool.to_string()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

@@ -14,7 +14,7 @@ import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
-from direct_connect_manager import direct_connect_manager
+from connect_manager import https_manager
 
 from gae_handler import generate_message_html, send_response
 from connect_control import connect_allow_time, connect_fail_time
@@ -52,7 +52,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
     request_data += '\r\n'
 
-    ssl_sock = direct_connect_manager.create_ssl_connection(host)
+    ssl_sock = https_manager.create_ssl_connection(host)
     if not ssl_sock:
         return
 
@@ -109,7 +109,7 @@ def handler(method, host, url, headers, body, wfile):
 
         if method == 'HEAD' or response.status in (204, 304):
             logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
-            direct_connect_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
+            https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
             return
 
@@ -164,7 +164,7 @@ def handler(method, host, url, headers, body, wfile):
                     send_to_broswer = False
 
             if start >= end:
-                direct_connect_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
+                https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
                 logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
 
