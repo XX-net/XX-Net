@@ -113,6 +113,16 @@ div#content div#module-switch {
     padding-left: 20px;
 }
 
+div#content textarea {
+    color: #34495e;
+    height: 285px;
+    max-width: 100%;
+    resize: none;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
 /* Style for config.html in PHP-Proxy */
 div#content form#goagent-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
     margin-top: 5px;
@@ -146,16 +156,6 @@ div#log {
 div#log > p {
     margin-bottom: 0;
     word-wrap: break-word;
-}
-
-textarea#log {
-    color: #34495e;
-    height: 285px;
-    max-width: 100%;
-    resize: none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
 }
 
 /* Styles for deploy.html */
