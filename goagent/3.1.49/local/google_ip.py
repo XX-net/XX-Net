@@ -53,8 +53,6 @@ class Check_ip():
     iplist_saved_time = 0
     last_sort_time_for_gws = 0  # keep status for avoid wast too many cpu
 
-    network_fail_time = 0 # keep status for avoid retry too frequently
-
     # algorithm to get ip:
     # scan start from fastest ip
     # always use the fastest ip.
@@ -176,8 +174,8 @@ class Check_ip():
 
         self.ip_lock.acquire()
         try:
-            while True:
-                ip_num = len(self.gws_ip_list)
+            ip_num = len(self.gws_ip_list)
+            for i in range(ip_num):
                 if ip_num == 0:
                     #logging.warning("no gws ip")
                     time.sleep(1)
@@ -319,6 +317,7 @@ class Check_ip():
     def report_bad_ip(self, ip_str):
         logging.debug("report_bad_ip %s", ip_str)
         if not ip_utils.check_ip_valid(ip_str):
+
             return
         self.bad_ip_pool.add(ip_str)
         self.save_ip_list(force=True)
@@ -331,10 +330,7 @@ class Check_ip():
     def report_connect_fail(self, ip_str, force_remove=False):
         # ignore if system network is disconnected.
         if not force_remove:
-            if time.time() - self.network_fail_time < 3:
-                logging.debug("report_connect_fail network fail recently")
-                return
-            if not self.network_is_ok():
+            if not check_ip.network_is_ok():
                 logging.debug("report_connect_fail network fail")
                 return
 
@@ -403,7 +399,7 @@ class Check_ip():
                     logging.debug("remove ip process, restore ip:%s", ip_str)
                     continue
 
-                if not self.network_is_ok():
+                if not check_ip.network_is_ok():
                     self.to_remove_ip_list.put(ip_str)
                     logging.warn("network is unreachable. check your network connection.")
                     return
@@ -415,18 +411,6 @@ class Check_ip():
             self.remove_ip_thread_num_lock.acquire()
             self.remove_ip_thread_num -= 1
             self.remove_ip_thread_num_lock.release()
-
-    def network_is_ok(self):
-        if time.time() - self.network_fail_time < 3:
-            return False
-
-        if check_ip.network_is_ok():
-            logging.debug("network is ok")
-            return True
-
-        self.network_fail_time = time.time()
-        logging.debug("network is fail")
-        return False
 
     def remove_slowest_ip(self):
         if len(self.gws_ip_list) <= max_good_ip_num:
@@ -523,7 +507,7 @@ class Check_ip():
                 logging.exception("check_exist_ip fail:%s", e)
 
             if not result:
-                if not self.network_is_ok():
+                if not check_ip.network_is_ok():
                     logging.warn("check_exist_ip network is fail, check your network connection.")
                     return
 

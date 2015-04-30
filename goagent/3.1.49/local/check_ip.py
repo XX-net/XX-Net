@@ -31,6 +31,9 @@ from config import config
 import cert_util
 from openssl_wrap import SSLConnection
 
+from google_ip_range import ip_range
+import ip_utils
+
 if __name__ == "__main__":
     import logging
 else:
@@ -273,10 +276,16 @@ def test_app_check(ssl_sock, ip):
 
 checking_lock = threading.Lock()
 checking_num = 0
+network_ok = False
+last_check_time = 0
+check_network_interval = 10
 def network_is_ok():
-    global checking_lock, checking_num
+    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+    if time.time() - last_check_time < check_network_interval:
+        return network_ok
+
     if checking_num > 0:
-        return False
+        return network_ok
 
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
@@ -286,7 +295,7 @@ def network_is_ok():
     checking_num += 1
     checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("www.baidu.com", 443, timeout=3)
+        conn = httplib.HTTPSConnection("code.jquery.com", 443, timeout=8)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -296,6 +305,9 @@ def network_is_ok():
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
+            logging.debug("network is ok")
+            network_ok = True
+            last_check_time = time.time()
             return True
     except:
         pass
@@ -308,8 +320,22 @@ def network_is_ok():
             socket.socket = default_socket
             logging.debug("restore socket")
 
-    logging.warn("network check to github fail.")
+    logging.warn("network fail.")
+    network_ok = False
+    last_check_time = time.time()
     return False
+
+def test_gae(ip_str):
+    logging.info("==>%s", ip_str)
+    check = Check_frame(ip_str)
+
+    result = check.check(callback=test_app_check, check_ca=True)
+    if not result:
+        return False
+
+    check.result.server_type = result
+
+    return check.result
 
 def test_gws(ip_str):
     logging.info("==>%s", ip_str)
@@ -350,32 +376,36 @@ def test(ip_str, loop=1):
     check = Check_frame(ip_str, check_cert=False)
 
     for i in range(loop):
-        result = check.check(callback=test_server_type, check_ca=True)
-        if not result:
-            logging.debug("test server type fail")
-            continue
-        check.result.server_type = result
 
         result = check.check(callback=test_app_check)
         if not result:
             if "gws" in check.result.server_type:
                 logging.warn("ip:%s server_type:%s but appengine check fail.", ip_str, check.result.server_type)
             continue
+        logging.debug("=======app check ok: %s", ip_str)
         check.result.appspot_ok = result
+
+
+        result = check.check(callback=test_server_type, check_ca=True)
+        if not result:
+            logging.debug("test server type fail")
+            continue
+
+        check.result.server_type = result
+        logging.info("========== %s type:%s domain:%s handshake:%d", ip_str, check.result.server_type,
+                     check.result.domain, check.result.handshake_time)
 
     return check.result
 
-import google_ip_range
-import ip_utils
+
 def test_main():
-    ip_range_manager = google_ip_range.ip_range()
+    #ip_range_manager = google_ip_range.ip_range()
     while True:
         time.sleep(1)
-        ip_int = ip_range_manager.get_ip()
+        ip_int = ip_range.get_ip()
         ip_str = ip_utils.ip_num_to_string(ip_int)
         test(ip_str, 1)
 
-from google_ip_range import ip_range
 import threading
 class fast_search_ip():
     check_num = 0
@@ -462,14 +492,17 @@ def check_all_exist_ip():
 
 
 if __name__ == "__main__":
+    #test_main()
+    network_is_ok()
     #print network_is_ok()
     #print network_is_ok()
     #test("216.58.220.86", 10) #gws
     #test('208.117.224.213', 10)
-    test("64.233.163.117")
+    #test("216.239.38.123")
     #     test_multi_thread_search_ip()
     #check_all_exist_ip()
     #test_gws("210.158.146.245")
+    pass
 
 # about ip connect time and handshake time
 # handshake time is double of connect time in common case.
