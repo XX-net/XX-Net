@@ -4,6 +4,7 @@ import logging
 
 
 import yaml
+from distutils.version import LooseVersion, StrictVersion
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -53,15 +54,22 @@ def set(path, val):
     _set(config, path, val)
 
 
+
 def scan_module_version(module):
     module_path = os.path.join(root_path, module)
     if not os.path.isdir(module_path):
         return False
 
+    version = '0.0.0'
     for filename in os.listdir(module_path):
         if os.path.isdir(os.path.join(module_path, filename)):
-            return filename
-    return False
+            if LooseVersion(version) < LooseVersion(filename):
+                version = filename
+
+    if version == "0.0.0":
+        return False
+    else:
+        return version
 
 def recheck_module_path():
     need_save_config = False
