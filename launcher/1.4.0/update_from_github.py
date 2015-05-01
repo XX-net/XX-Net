@@ -151,6 +151,10 @@ def restart_xxnet():
 
 
 def update_version(version):
-    download_overwrite_new_version(version)
-    update_config(version)
-    restart_xxnet()
+    try:
+        download_overwrite_new_version(version)
+        update_config(version)
+        restart_xxnet()
+    except Exception as e:
+        logging.exception("update version %d fail:%r", version, e)
+
