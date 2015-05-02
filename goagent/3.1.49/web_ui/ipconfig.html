@@ -141,7 +141,7 @@
         } else if( sf == 2 ) {
             ipList = ss.split("\n");
         } else if( sf == 3 ) {
-            ipList = ss.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g);
+            ipList = ss.match(/(\d{1,3}\.){3}\d{1,3}/g);
         }
 
         var result;
