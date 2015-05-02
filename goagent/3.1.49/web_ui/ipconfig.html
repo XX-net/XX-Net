@@ -113,7 +113,7 @@
             success: function(result) {
                 var ipList = result['res'];
                 ipList = conversionFormat('1', ipFormat, ipList);
-                
+
                 $('#ip-list').val(ipList);
                 $('.message', '.alert').html('导出成功.');
                 $('.alert').addClass('alert-success');
