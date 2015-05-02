@@ -66,7 +66,7 @@ def get_XXNet():
     xxnet_url, xxnet_version = get_xxnet_url_version(readme_targe)
     xxnet_unzip_path = os.path.join(download_path, "XX-Net-%s" % xxnet_version)
     xxnet_zip_file = os.path.join(download_path, "XX-Net-%s.zip" % xxnet_version)
-    
+
 
     if not download_file(xxnet_url, xxnet_zip_file):
         raise "download xxnet zip fail:" % download_path

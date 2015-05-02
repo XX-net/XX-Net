@@ -15,7 +15,7 @@
                       the protocol handling to 'get_reply'. This decodes
                       packet, hands off a DNSRecord to the Resolver instance, 
                       and encodes the returned DNSRecord. 
-                      
+
                       In most cases you dont need to change DNSHandler unless
                       you need to get hold of the raw protocol data in the
                       Resolver
@@ -27,7 +27,7 @@
 
         Resolver    - Instance implementing a 'resolve' method that receives 
                       the decodes request packet and returns a response. 
-                        
+
                       To implement a custom resolver in most cases all you need
                       is to implement this interface.
 
@@ -330,7 +330,7 @@ class DNSServer(object):
         self.server = server((address,port),handler)
         self.server.resolver = resolver
         self.server.logger = logger or DNSLogger()
-    
+
     def start(self):
         self.server.serve_forever()
 

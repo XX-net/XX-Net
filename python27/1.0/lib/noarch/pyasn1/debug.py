@@ -25,10 +25,10 @@ class Debug:
                 raise error.PyAsn1Error('bad debug flag %s' % (f,))
             self._flags = self._flags | flagMap[f]
             self('debug category \'%s\' enabled' % f)
-        
+
     def __str__(self):
         return 'logger %s, flags %x' % (self._printer, self._flags)
-    
+
     def __call__(self, msg):
         self._printer('DBG: %s\n' % msg)
 

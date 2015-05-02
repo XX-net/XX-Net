@@ -325,7 +325,7 @@ class DNSRecord(object):
         """
             Return truncated copy of DNSRecord (with TC flag set)
             (removes all Questions & RRs and just returns header)
-            
+
             >>> q = DNSRecord.question("abc.com")
             >>> a = q.reply()
             >>> a.add_answer(*RR.fromZone('abc.com IN TXT %s' % ('x' * 255)))
@@ -371,7 +371,7 @@ class DNSRecord(object):
             response,server = sock.recvfrom(8192)
             sock.close()
         return response
-        
+
     def format(self,prefix="",sort=False):
         """
             Formatted 'repr'-style representation of record
@@ -509,7 +509,7 @@ class DNSHeader(object):
                 self.ra = v
             elif k.lower() == "rcode":
                 self.rcode = v
-    
+
     # Accessors for header properties (automatically pack/unpack
     # into bitmap)
     def get_qr(self):
@@ -535,7 +535,7 @@ class DNSHeader(object):
         self.bitmap = set_bits(self.bitmap,val,10)
 
     aa = property(get_aa,set_aa)
-        
+
     def get_tc(self):
         return get_bits(self.bitmap,9)
 
@@ -543,7 +543,7 @@ class DNSHeader(object):
         self.bitmap = set_bits(self.bitmap,val,9)
 
     tc = property(get_tc,set_tc)
-        
+
     def get_rd(self):
         return get_bits(self.bitmap,8)
 
@@ -551,7 +551,7 @@ class DNSHeader(object):
         self.bitmap = set_bits(self.bitmap,val,8)
 
     rd = property(get_rd,set_rd)
-        
+
     def get_ra(self):
         return get_bits(self.bitmap,7)
 
@@ -624,11 +624,11 @@ class DNSHeader(object):
             return all([getattr(self,x) == getattr(other,x) for x in attrs])
 
 class DNSQuestion(object):
-    
+
     """
         DNSQuestion section
     """
-        
+
     @classmethod
     def parse(cls,buffer):
         try:
@@ -680,7 +680,7 @@ class DNSQuestion(object):
             # List of attributes to compare when diffing
             attrs = ('qname','qtype','qclass')
             return all([getattr(self,x) == getattr(other,x) for x in attrs])
-            
+
 class EDNSOption(object):
 
     """
@@ -1038,7 +1038,7 @@ def _format_ipv6(a):
         return ":".join(left) + "::" + ":".join(right)
     else:
         return ":".join(left)
-    
+
 class AAAA(RD):
 
     """
@@ -1109,14 +1109,14 @@ class MX(RD):
     def pack(self,buffer):
         buffer.pack("!H",self.preference)
         buffer.encode_name(self.label)
-        
+
     def __repr__(self):
         return "%d %s" % (self.preference,self.label)
 
     attrs = ('preference','label')
 
 class CNAME(RD):
-        
+
     @classmethod
     def parse(cls,buffer,length):
         try:
@@ -1159,7 +1159,7 @@ class NS(CNAME):
     pass
 
 class SOA(RD):
-        
+
     times = ntuple_range('times',5,0,4294967295)
     @classmethod
     def parse(cls,buffer,length):
@@ -1215,7 +1215,7 @@ class SOA(RD):
     attrs = ('mname','rname','times')
 
 class SRV(RD):
-        
+
     priority = H('priority')
     weight = H('weight')
     port = H('port')
@@ -1250,7 +1250,7 @@ class SRV(RD):
         return self._target
 
     target = property(get_target,set_target)
-    
+
     def pack(self,buffer):
         buffer.pack("!HHH",self.priority,self.weight,self.port)
         buffer.encode_name(self.target)
@@ -1357,7 +1357,7 @@ class DNSKEY(RD):
     def pack(self,buffer):
         buffer.pack("!HBB",self.flags,self.protocol,self.algorithm)
         buffer.append(self.key)
-        
+
     def __repr__(self):
         return "%d %d %d %s" % (self.flags,self.protocol,self.algorithm,
                                 base64.b64encode(self.key).decode())
@@ -1414,7 +1414,7 @@ class RRSIG(RD):
                                self.key_tag)
         buffer.encode_name_nocompress(self.name)
         buffer.append(self.sig)
-        
+
     def __repr__(self):
         return "%s %d %d %d %s %s %d %s %s" % (
                         QTYPE.get(self.covered),

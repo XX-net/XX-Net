@@ -45,7 +45,7 @@ def get_bits(data,offset,bits=1):
         '0b1'
         >>> bin(get_bits(0b0011100,0,4))
         '0b1100'
-        
+
     """
     mask = ((1 << bits) - 1) << offset
     return (data & mask) >> offset 

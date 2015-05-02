@@ -100,7 +100,7 @@
 	 			this.setTimer();
 	 		}
 	 	};
-	 	
+
 	 	if(this.init) {
 	 		return new $.timer(func, time, autostart);
 	 	} else {

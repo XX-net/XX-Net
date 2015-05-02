@@ -51,7 +51,7 @@ class DNSLabel(object):
     >>> l3.matchGlob("*.[abc]xx.bbb.ccc")
     False
 
-    # Too hard to get unicode doctests to work on Python 3.2  
+    # Too hard to get unicode doctests to work on Python 3.2
     # (works on 3.3)
     # >>> u1 = DNSLabel(u'\u2295.com')
     # >>> u1.__str__() == u'\u2295.com.'

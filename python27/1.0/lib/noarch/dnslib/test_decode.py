@@ -24,7 +24,7 @@
     failed tests (--debug) 
 
     New test data files can be automatically created using the:
-    
+
         --new <domain> <type>
 
     option. The data is checked against dig output and an error raised if

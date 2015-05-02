@@ -3,7 +3,7 @@
 """
     InterceptResolver - proxy requests to upstream server 
                         (optionally intercepting)
-        
+
 """
 from __future__ import print_function
 
@@ -17,7 +17,7 @@ class InterceptResolver(BaseResolver):
 
     """
         Intercepting resolver 
-        
+
         Proxy requests to upstream server optionally intercepting requests
         matching local records
     """

@@ -106,7 +106,7 @@ class DigParser:
         self.l.commentchars = ';'
         self.l.nltok = ('NL',None)
         self.i = iter(self.l)
-        
+
     def parseHeader(self,l1,l2):
         _,_,_,opcode,_,status,_,_id = l1.split()
         _,flags,_ = l2.split(';')

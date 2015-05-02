@@ -77,7 +77,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             menu_path = os.path.join(root_path, module, version, "web_ui", "menu.yaml")
             if not os.path.isfile(menu_path):
                 continue
-                
+
             module_menu = yaml.load(file(menu_path, 'r'))
             module_menus[module] = module_menu
 
@@ -101,7 +101,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
         except:
             pass
-        
+
         logging.debug ('launcher web_control %s "%s %s ', self.address_string(), self.command, self.path)
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:

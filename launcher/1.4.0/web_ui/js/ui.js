@@ -12,7 +12,7 @@ function tip(message, type, allowOff) {
     $('#tip').addClass('alert-' + type);
 
     $('#tip-message').html(message);
-    
+
     if( allowOff === undefined || allowOff === true ) {
         $('#tip-close').css('display', '');
     } else {

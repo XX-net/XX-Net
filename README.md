@@ -15,9 +15,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.12.5
 
 
 版本： https://github.com/XX-net/XX-Net/releases
-   
-  
-  
+
+
+
 
 主要特性
 ========
@@ -28,7 +28,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.12.5
 * 设置开机启动
 
 ## XX-Net不是匿名工具 
-详情请看：  
+详情请看：
 https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 
 

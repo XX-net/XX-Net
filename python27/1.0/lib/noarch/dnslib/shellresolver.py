@@ -25,7 +25,7 @@ class ShellResolver(BaseResolver):
         of the 'uptime' command.
 
         For non-absolute labels the 'origin' parameter is prepended
-        
+
     """
     def __init__(self,routes,origin,ttl):
         self.origin = DNSLabel(origin)

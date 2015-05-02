@@ -21,7 +21,7 @@ class TeletexString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
         tag.Tag(tag.tagClassUniversal, tag.tagFormatSimple, 20)
         )
-    
+
 
 class VideotexString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
