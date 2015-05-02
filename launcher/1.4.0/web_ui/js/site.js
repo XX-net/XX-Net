@@ -7,8 +7,11 @@ String.prototype.format = function() {
     return newStr;
 }
 
-/* alert */
-function alert(message, type) {
+function title(title) {
+    $('#title').text(title);
+}
+
+function tip(message, type) {
     $('.message', '.alert').html(message);
     $('.alert').removeClass('alert-error');
     $('.alert').removeClass('alert-success');

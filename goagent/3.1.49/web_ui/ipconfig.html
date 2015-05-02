@@ -1,9 +1,3 @@
-<h2>IP导入导出</h2>
-<div class="alert fade in hide">
-    <button type="button" class="close" data-dismiss="alert">×</button>
-    <p class="message"></p>
-</div> <!-- .alert -->
-
 <form method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span2">
@@ -50,6 +44,9 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
+    title('IP导入导出');
+</script>
+<script type="text/javascript">
     function onSubmit() {
         var action   = $('#action:checked').val(),
             ipFormat = $('#ip-format').val(),
@@ -90,10 +87,10 @@
             data: postData,
             dataType: 'JSON',
             success: function(result) {
-                alert('成功导入' + result['res'] + '个IP.', 'success');
+                tip('成功导入' + result['res'] + '个IP.', 'success');
             },
             error: function() {
-                alert('导入IP失败');
+                tip('导入IP失败');
             }
         });
     }
@@ -109,10 +106,10 @@
                 ipList = conversionFormat('1', ipFormat, ipList);
 
                 $('#ip-list').val(ipList);
-                alert('导出成功.', 'success');
+                tip('导出成功.', 'success');
             },
             error: function() {
-                alert('导出IP失败.', 'error');
+                tip('导出IP失败.', 'error');
             }
         });
     }
