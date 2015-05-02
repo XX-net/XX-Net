@@ -26,7 +26,9 @@
         </div> <!-- .span4 -->
         <div class="span10">
             <select id="ip-format"> 
-                <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
+                <option value="1" selected>IP|IP|IP (Gogo-Tester/Goagent格式)</option>
+                <option value="2">换行分割</option>
+                <option value="3">智能正则匹配</option>
             </select> 
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
@@ -53,14 +55,27 @@
             ipFormat = $('#ip-format').val(),
             ipList   = $('#ip-list').val();
 
-        console.log(action);
-
         if ( action == 'import' ) {
             return doImportAction(ipFormat, ipList);
         } else if ( action == 'export' ) {
             return doExportAction(ipFormat, ipList);
         }
     }
+</script>
+<script type="text/javascript">
+    $('input[name="action"]').click(function() {
+        var action = $('#action:checked').val();
+        var option = $('option[value=3]');
+
+        if( action == 'import' ) {
+            option.css('display', '');
+        } else if ( action == 'export' ) {
+            option.css('display', 'none');
+            if( $('#ip-format').val() == 3 ) {
+                $('#ip-format').val("1");
+            }
+        }
+    });
 </script>
 <script type="text/javascript">
     function doImportAction(ipFormat, ipList) {
@@ -114,6 +129,53 @@
 </script>    
 <script type="text/javascript">
     function conversionFormat(sf, tf, ss) {
-        return ss;
+        //如果源格式与目标格式相同则直接返回
+        if( sf == tf ) {
+            return ss;
+        }
+
+        //先把IP列表转换为数组
+        var ipList;
+        if( sf == 1 ) {
+            ipList = ss.split("|");
+        } else if( sf == 2 ) {
+            ipList = ss.split("\n");
+        } else if( sf == 3 ) {
+            ipList = ss.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g);
+        }
+
+        //然后转换到需要的格式
+        var result;
+        if( tf == 1 ) {
+            result = '';
+            for(var id in ipList) {
+                result += ipList[id] + '|';
+            }
+            result = result.substr(0, result.length - 1);
+        } else if( tf == 2 ) {
+            result = '';
+            for(var id in ipList) {
+                result += ipList[id] + '\n';
+            }
+        }
+
+        //最后返回结果
+        return result;
+
+        // //导入时用的转换
+        // if( tf == 1 ) {
+        //     if( sf == 2 ) {
+        //         return ss.replace(/\n/g, "|");
+        //     } else if( sf == 3 ) {
+        //         return ss.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g);
+        //     }
+        // }
+
+        // //导出时用的转换
+        // if( sf == 1 ) {
+        //     if( tf == 2 ) {
+        //         return ss.replace(/\|/g, "\n");
+        //     }
+        // }
     }
 </script>
