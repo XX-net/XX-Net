@@ -47,7 +47,7 @@ def get_XXNet():
         try:
             fd = open(readme_file, "r")
             lines = fd.readlines()
-            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') 
+            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
             for line in lines:
                 m = p.match(line)
                 if m:

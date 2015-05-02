@@ -13,7 +13,7 @@ from dnslib.server import DNSServer,DNSHandler,BaseResolver,DNSLogger
 
 class ShellResolver(BaseResolver):
     """
-        Example dynamic resolver. 
+        Example dynamic resolver.
         Maps DNS labels to shell commands and returns result as TXT record
         (Note: No context is passed to the shell command)
 

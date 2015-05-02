@@ -402,7 +402,7 @@ class OctetString(base.AbstractSimpleAsn1Item):
             if self.__intValue is None:
                 self.__intValue = tuple(self._value)
             return self.__intValue
- 
+
     # Immutable sequence object protocol
 
     def __len__(self):

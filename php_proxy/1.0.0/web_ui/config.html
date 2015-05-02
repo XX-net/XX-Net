@@ -122,20 +122,20 @@
             proxyUsername    = $('#proxy-username').val(),
             proxyPassword    = $('#proxy-password').val();
 
-        return setConfig(phpServer, phpPassword, enableFrontProxy, 
+        return setConfig(phpServer, phpPassword, enableFrontProxy,
                             proxyHost, proxyPort, proxyUsername, proxyPassword);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(phpServer, phpPassword, enableFrontProxy, 
+    function setConfig(phpServer, phpPassword, enableFrontProxy,
                         proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
-            'php_server': phpServer, 
-            'php_password': phpPassword, 
-            'proxy_enable': enableFrontProxy, 
-            'proxy_host': proxyHost, 
-            'proxy_port': proxyPort, 
-            'proxy_username': proxyUsername, 
+            'php_server': phpServer,
+            'php_password': phpPassword,
+            'proxy_enable': enableFrontProxy,
+            'proxy_host': proxyHost,
+            'proxy_port': proxyPort,
+            'proxy_username': proxyUsername,
             'proxy_password': proxyPassword
         };
 

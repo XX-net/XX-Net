@@ -2,9 +2,9 @@
 
 """
     Wrapper around property builtin to restrict attribute to defined
-    integer value range (throws ValueError). 
+    integer value range (throws ValueError).
 
-    Intended to ensure that values packed with struct are in the 
+    Intended to ensure that values packed with struct are in the
     correct range
 
     >>> class T(object):
@@ -44,7 +44,7 @@ def range_property(attr,min,max):
         if isinstance(val,int_types) and min <= val <= max:
             setattr(obj,"_%s" % attr,val)
         else:
-            raise ValueError("Attribute '%s' must be between %d-%d [%s]" % 
+            raise ValueError("Attribute '%s' must be between %d-%d [%s]" %
                                         (attr,min,max,val))
     return property(getter,setter)
 
@@ -72,12 +72,12 @@ def ntuple_range(attr,n,min,max):
         return getattr(obj,"_%s" % attr)
     def setter(obj,val):
         if len(val) != n:
-            raise ValueError("Attribute '%s' must be tuple with %d elements [%s]" % 
+            raise ValueError("Attribute '%s' must be tuple with %d elements [%s]" %
                                         (attr,n,val))
         if all(map(f,val)):
             setattr(obj,"_%s" % attr,val)
         else:
-            raise ValueError("Attribute '%s' elements must be between %d-%d [%s]" % 
+            raise ValueError("Attribute '%s' elements must be between %d-%d [%s]" %
                                         (attr,min,max,val))
     return property(getter,setter)
 

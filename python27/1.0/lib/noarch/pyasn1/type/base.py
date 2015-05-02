@@ -192,7 +192,7 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
 
     def _cloneComponentValues(self, myClone, cloneValueFlag): pass
 
-    def clone(self, tagSet=None, subtypeSpec=None, sizeSpec=None, 
+    def clone(self, tagSet=None, subtypeSpec=None, sizeSpec=None,
               cloneValueFlag=None):
         if tagSet is None:
             tagSet = self._tagSet

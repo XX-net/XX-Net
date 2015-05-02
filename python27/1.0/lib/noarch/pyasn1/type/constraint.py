@@ -142,7 +142,7 @@ class InnerTypeConstraint(AbstractConstraint):
                 self.__singleTypeConstraint = v
         AbstractConstraint._setValues(self, values)
 
-# Boolean ops on constraints 
+# Boolean ops on constraints
 
 class ConstraintsExclusion(AbstractConstraint):
     """Value must not fit the single constraint"""

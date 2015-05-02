@@ -189,7 +189,7 @@ class ObjectIdentifierEncoder(AbstractItemEncoder):
                 subid = subid >> 7
                 while subid > 0:
                     res = (0x80 | (subid & 0x7f),) + res
-                    subid = subid >> 7 
+                    subid = subid >> 7
                 # Add packed Sub-Object ID to resulted Object ID
                 octets += res
 
