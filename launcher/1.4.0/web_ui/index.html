@@ -51,10 +51,10 @@
                 </div> <!-- #sidebar -->
                 <div class="span9">
                     <h2 id="title"></h2>
-                    <div class="alert fade in hide">
-                        <button type="button" class="close" data-dismiss="alert">×</button>
-                        <p class="message"></p>
-                    </div> <!-- .alert -->
+                    <div id="tip" class="alert fade in hide">
+                        <button id="tip-close" type="button" class="close">×</button>
+                        <p id="tip-message" class="message"></p>
+                    </div> <!-- #tip -->
                     %s
                 </div>
             </div> <!-- .row-fluid -->
@@ -80,6 +80,30 @@
                 $('.container-fluid').addClass('container');
                 $('.container-fluid').removeClass('container-fluid');
             }
+        });
+    </script>
+    <script type="text/javascript">
+        function title(title) {
+            $('#title').text(title);
+        }
+    </script>
+    <script type="text/javascript">
+        function tip(message, type, allowOff) {
+            $('#tip-message').html(message);
+            $('#tip').removeClass('alert-error');
+            $('#tip').removeClass('alert-success');
+            $('#tip').removeClass('hide');
+            $('#tip').addClass('alert-' + type);
+            if( allowOff === undefined || allowOff === true ) {
+                $('#tip-close').css('display', '');
+            } else {
+                $('#tip-close').css('display', 'none');
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        $('#tip-close').click(function() {
+            $('#tip').addClass('hide');
         });
     </script>
 </body>
