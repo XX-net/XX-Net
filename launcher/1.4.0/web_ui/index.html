@@ -16,6 +16,7 @@
     <script type="text/javascript" src="/js/flat-ui.min.js"></script>
     <script type="text/javascript" src="/js/jquery.timer.js"></script>
     <script type="text/javascript" src="/js/site.js"></script>
+    <script type="text/javascript" src="/js/ui.js"></script>
     <!--[if lte IE 9]>
         <script type="text/javascript" src="/js/jquery.placeholder.js"></script>
         <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
@@ -80,30 +81,6 @@
                 $('.container-fluid').addClass('container');
                 $('.container-fluid').removeClass('container-fluid');
             }
-        });
-    </script>
-    <script type="text/javascript">
-        function title(title) {
-            $('#title').text(title);
-        }
-    </script>
-    <script type="text/javascript">
-        function tip(message, type, allowOff) {
-            $('#tip-message').html(message);
-            $('#tip').removeClass('alert-error');
-            $('#tip').removeClass('alert-success');
-            $('#tip').removeClass('hide');
-            $('#tip').addClass('alert-' + type);
-            if( allowOff === undefined || allowOff === true ) {
-                $('#tip-close').css('display', '');
-            } else {
-                $('#tip-close').css('display', 'none');
-            }
-        }
-    </script>
-    <script type="text/javascript">
-        $('#tip-close').click(function() {
-            $('#tip').addClass('hide');
         });
     </script>
 </body>
