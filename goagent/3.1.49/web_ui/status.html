@@ -171,7 +171,7 @@
                     $('#alert-box').html('GoAgent进程无响应, 可能已退出.');
                 }
 
-                if(!$('#alert-box').hasClass('hide')) {
+                if($('#alert-box').hasClass('hide')) {
                     $('html, body').animate({
                         scrollTop:0
                     }, 'slow');
