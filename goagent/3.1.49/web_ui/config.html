@@ -189,11 +189,8 @@
                 $('#proxy-username').val(result['proxy_user']);
                 $('#proxy-password').val(result['proxy_passwd']);
             },
-            error: function(){
-                $('.alert').html('读取设置失败.');
-                $('.alert').addClass('alert-error');
-                $('.alert').removeClass('alert-success');
-                $('.alert').removeClass('hide');
+            error: function() {
+                alert('读取设置失败.', 'error');
             }
         });     
     });
@@ -240,15 +237,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    $('.alert').html('设置已成功保存。');
-                    $('.alert').addClass('alert-success');
-                    $('.alert').removeClass('alert-error');
-                    $('.alert').removeClass('hide');
+                    alert('设置已成功保存.', 'success');
                 } else {
-                    $('.alert').html('发生未知错误。');
-                    $('.alert').addClass('alert-error');
-                    $('.alert').removeClass('alert-success');
-                    $('.alert').removeClass('hide');
+                    alert('发生未知错误.', 'error');
                 }
             }
         });

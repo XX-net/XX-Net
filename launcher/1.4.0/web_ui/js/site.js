@@ -6,3 +6,12 @@ String.prototype.format = function() {
     }
     return newStr;
 }
+
+/* alert */
+function alert(message, type) {
+    $('.message', '.alert').html(message);
+    $('.alert').removeClass('alert-error');
+    $('.alert').removeClass('alert-success');
+    $('.alert').removeClass('hide');
+    $('.alert').addClass('alert-' + type);
+}
