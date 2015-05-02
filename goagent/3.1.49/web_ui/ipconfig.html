@@ -25,11 +25,11 @@
             <label for="ip-format">导入/导出格式</label>
         </div> <!-- .span2 -->
         <div class="span10">
-            <select id="ip-format"> 
+            <select id="ip-format">
                 <option value="1" selected>IP|IP|IP (Gogo-Tester/Goagent格式)</option>
                 <option value="2">换行分割</option>
                 <option value="3">智能正则匹配</option>
-            </select> 
+            </select>
         </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
@@ -90,16 +90,10 @@
             data: postData,
             dataType: 'JSON',
             success: function(result) {
-                $('.message', '.alert').html('成功导入' + result['res'] + '个IP.');
-                $('.alert').addClass('alert-success');
-                $('.alert').removeClass('alert-error');
-                $('.alert').removeClass('hide');
+                alert('成功导入' + result['res'] + '个IP.', 'success');
             },
-            error: function(){
-                $('.alert').html('导入IP失败.');
-                $('.alert').addClass('alert-error');
-                $('.alert').removeClass('alert-success');
-                $('.alert').removeClass('hide');
+            error: function() {
+                alert('导入IP失败');
             }
         });
     }
@@ -115,20 +109,14 @@
                 ipList = conversionFormat('1', ipFormat, ipList);
 
                 $('#ip-list').val(ipList);
-                $('.message', '.alert').html('导出成功.');
-                $('.alert').addClass('alert-success');
-                $('.alert').removeClass('alert-error');
-                $('.alert').removeClass('hide');
+                alert('导出成功.', 'success');
             },
-            error: function(){
-                $('.message', '.alert').html('导出IP失败.');
-                $('.alert').addClass('alert-error');
-                $('.alert').removeClass('alert-success');
-                $('.alert').removeClass('hide');
+            error: function() {
+                alert('导出IP失败.', 'error');
             }
         });
     }
-</script>    
+</script>
 <script type="text/javascript">
     function conversionFormat(sf, tf, ss) {
         if( sf == tf ) {
@@ -139,7 +127,7 @@
         if( sf == 1 ) {
             ipList = ss.split("|");
         } else if( sf == 2 ) {
-            ipList = ss.split("\n");
+            ipList = ss.split("\n");  
         } else if( sf == 3 ) {
             ipList = ss.match(/(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])/g);
         }
@@ -159,5 +147,14 @@
         }
 
         return result;
+    }
+</script>
+<script type="text/javascript">
+    function alert(message, type) {
+        $('.message', '.alert').html(message);
+        $('.alert').removeClass('alert-error');
+        $('.alert').removeClass('alert-success');
+        $('.alert').removeClass('hide');
+        $('.alert').addClass('alert-' + type);
     }
 </script>
