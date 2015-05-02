@@ -21,6 +21,8 @@ function tipHasHide() {
     return $('#tip').hasClass('hide');
 }
 
-$('#tip-close').click(function() {
-    $('#tip').addClass('hide');
+$(document).ready(function() {
+    $('#tip-close').click(function() {
+        $('#tip').addClass('hide');
+    });
 });
