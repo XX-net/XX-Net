@@ -159,8 +159,8 @@
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
                 $('#block-stat').html(result['block_stat']);
 
-                if ( !tipHasHide() ) {
-                    tipHide();
+                if ( !tipHasClose() ) {
+                    tipClose();
                 }
             },
             error: function(result) {

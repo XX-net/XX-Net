@@ -19,15 +19,15 @@ function tip(message, type, allowOff) {
         $('#tip-close').css('display', 'none');
     }
 }
-function tipHide() {
+function tipClose() {
     $('#tip').addClass('hide');
 }
-function tipHasHide() {
+function tipHasClose() {
     return $('#tip').hasClass('hide');
 }
 
 $(document).ready(function() {
     $('#tip-close').click(function() {
-        $('#tip').addClass('hide');
+        tipClose();
     });
 });
