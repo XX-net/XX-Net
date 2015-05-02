@@ -267,6 +267,11 @@ def send_response(wfile, status=404, headers={}, body=''):
     wfile.write("\r\n")
     wfile.write(body)
 
+def return_fail_message(wfile):
+    html = generate_message_html('504 GoAgent Proxy Time out', u'连接超时，先休息一会再来！')
+    send_response(wfile, 504, body=html.encode('utf-8'))
+    return
+
 def handler(method, url, headers, body, wfile):
     time_request = time.time()
 
@@ -274,14 +279,13 @@ def handler(method, url, headers, body, wfile):
     response = None
     while True:
         if time.time() - time_request > 30: #time out
-            html = generate_message_html('504 GoAgent Proxy Time out', u'墙太高了，翻不过去，先休息一会再来！')
-            send_response(wfile, 504, body=html.encode('utf-8'))
-            return
+            return return_fail_message(wfile)
 
         try:
             response = fetch(method, url, headers, body)
             if response.app_status != 200:
                 logging.debug("fetch gae status:%s url:%s", response.app_status, url)
+
 
             if response.app_status == 404:
                 logging.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
@@ -297,7 +301,8 @@ def handler(method, url, headers, body, wfile):
                     response.close()
                     continue
 
-            if response.app_status == 405: #Method not allowed
+            if response.app_status == 403 or response.app_status == 405: #Method not allowed
+                # google have changed from gws to gvs, need to remove.
                 logging.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
                 google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                 response.close()

@@ -9,13 +9,17 @@ import logging
 import socket
 import ssl
 import httplib
-from direct_connect_manager import direct_connect_manager
-
-from gae_handler import generate_message_html, send_response
-from connect_control import connect_allow_time, connect_fail_time
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+
+
+from connect_manager import https_manager
+
+from gae_handler import generate_message_html, send_response
+from connect_control import connect_allow_time, connect_fail_time
+from gae_handler import return_fail_message
+
 
 from config import config
 
@@ -38,7 +42,7 @@ def send_header(wfile, keyword, value):
         try:
             wfile.write("%s: %s\r\n" % (keyword, value))
         except Exception as e:
-            logging.exception("e:%r header: %s: %s ", e, keyword, value)
+            logging.warn("send_header e:%r header: %s: %s ", e, keyword, value)
             raise e
 
 
@@ -48,7 +52,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
     request_data += '\r\n'
 
-    ssl_sock = direct_connect_manager.create_ssl_connection(host)
+    ssl_sock = https_manager.create_ssl_connection(host)
     if not ssl_sock:
         return
 
@@ -84,9 +88,7 @@ def handler(method, host, url, headers, body, wfile):
     response = None
     while True:
         if time.time() - time_request > 30 or time.time() < connect_allow_time:
-            html = generate_message_html('504 GoAgent Proxy Time out', u'翻不上去，先休息2分钟再来！')
-            send_response(wfile, 504, body=html.encode('utf-8'))
-            return
+            return return_fail_message(wfile)
 
         try:
             response = fetch(method, host, url, headers, body)
@@ -107,14 +109,18 @@ def handler(method, host, url, headers, body, wfile):
 
         if method == 'HEAD' or response.status in (204, 304):
             logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
-            direct_connect_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
+            https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
             return
 
         if 'Transfer-Encoding' in response_headers:
             length = 0
             while True:
-                data = response.read(8192)
+                try:
+                    data = response.read(8192)
+                except httplib.IncompleteRead, e:
+                    data = e.partial
+
                 if not data:
                     wfile.write('0\r\n\r\n')
                     break
@@ -158,7 +164,7 @@ def handler(method, host, url, headers, body, wfile):
                     send_to_broswer = False
 
             if start >= end:
-                direct_connect_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
+                https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
                 logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
 

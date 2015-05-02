@@ -5,11 +5,14 @@ XX-Net
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.11.3
+测试版：
+https://codeload.github.com/XX-net/XX-Net/zip/1.13.3
+
+稳定版：
+https://codeload.github.com/XX-net/XX-Net/zip/1.12.5
+
 (1.8.3之前的用户，请重新部署服务端)
 
-最近新版不稳定，可以试试老的版本：
-https://codeload.github.com/XX-net/XX-Net/zip/1.9.4
 
 版本： https://github.com/XX-net/XX-Net/releases
    
@@ -71,7 +74,9 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * checkgoogleip
 
 
-
+如何参与贡献
+==========
+https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
 
 附图

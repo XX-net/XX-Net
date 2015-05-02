@@ -38,11 +38,11 @@ import logging
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
-import connect_manager
+from connect_manager import https_manager
 import ConfigParser
-import direct_connect_manager
 import connect_control
 import ip_utils
+import check_ip
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -50,55 +50,75 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.
 
 import yaml
 
-class User_config(object):
-    appid = ''
-    password = ''
-
-    proxy_enable = "0"
-    proxy_type = "HTTP"
-    proxy_host = ""
-    proxy_port = ""
-    proxy_user = ""
-    proxy_passwd = ""
-
+class User_special(object):
     def __init__(self):
+        self.appid = ''
+        self.password = ''
+
+        self.proxy_enable = "0"
+        self.proxy_type = "HTTP"
+        self.proxy_host = ""
+        self.proxy_port = ""
+        self.proxy_user = ""
+        self.proxy_passwd = ""
+
         self.host_appengine_mode = "gae"
         self.ip_connect_interval = ""
+        self.scan_ip_thread_num = 0
+
+class User_config(object):
+    user_special = User_special()
+
+    def __init__(self):
         self.load()
 
     def load(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-        CONFIG = ConfigParser.ConfigParser()
+
+        self.USER_CONFIG = ConfigParser.ConfigParser()
         CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
+
+        self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
+        DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
         try:
             if os.path.isfile(CONFIG_USER_FILENAME):
-                CONFIG.read(CONFIG_USER_FILENAME)
+                self.USER_CONFIG.read(CONFIG_USER_FILENAME)
+            else:
+                return
+
+            if os.path.isfile(DEFAULT_CONFIG_FILENAME):
+                self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
             else:
                 return
 
             try:
-                self.appid = CONFIG.get('gae', 'appid')
-                self.password = CONFIG.get('gae', 'password')
+                self.user_special.appid = self.USER_CONFIG.get('gae', 'appid')
+                self.user_special.password = self.USER_CONFIG.get('gae', 'password')
             except:
                 pass
 
             try:
-                self.host_appengine_mode = CONFIG.get('hosts', 'appengine.google.com')
+                self.user_special.host_appengine_mode = self.USER_CONFIG.get('hosts', 'appengine.google.com')
             except:
                 pass
 
             try:
-                self.ip_connect_interval = CONFIG.getint('google_ip', 'ip_connect_interval')
+                self.user_special.ip_connect_interval = config.CONFIG.getint('google_ip', 'ip_connect_interval')
             except:
                 pass
 
-            self.proxy_enable = CONFIG.get('proxy', 'enable')
-            self.proxy_type = CONFIG.get('proxy', 'type')
-            self.proxy_host = CONFIG.get('proxy', 'host')
-            self.proxy_port = CONFIG.get('proxy', 'port')
-            self.proxy_user = CONFIG.get('proxy', 'user')
-            self.proxy_passwd = CONFIG.get('proxy', 'passwd')
+            try:
+                self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_check_ip_thread_num')
+            except:
+                pass
+
+            self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
+            self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
+            self.user_special.proxy_host = self.USER_CONFIG.get('proxy', 'host')
+            self.user_special.proxy_port = self.USER_CONFIG.get('proxy', 'port')
+            self.user_special.proxy_user = self.USER_CONFIG.get('proxy', 'user')
+            self.user_special.proxy_passwd = self.USER_CONFIG.get('proxy', 'passwd')
 
         except Exception as e:
             logging.warn("User_config.load except:%s", e)
@@ -107,27 +127,30 @@ class User_config(object):
         CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
         try:
             f = open(CONFIG_USER_FILENAME, 'w')
-            if self.appid != "":
+            if self.user_special.appid != "":
                 f.write("[gae]\n")
-                f.write("appid = %s\n" % self.appid)
-                f.write("password = %s\n\n" % self.password)
+                f.write("appid = %s\n" % self.user_special.appid)
+                f.write("password = %s\n\n" % self.user_special.password)
 
             f.write("[proxy]\n")
-            f.write("enable = %s\n" % self.proxy_enable)
-            f.write("type = %s\n" % self.proxy_type)
-            f.write("host = %s\n" % self.proxy_host)
-            f.write("port = %s\n" % self.proxy_port)
-            f.write("user = %s\n" % self.proxy_user)
-            f.write("passwd = %s\n\n" % self.proxy_passwd)
+            f.write("enable = %s\n" % self.user_special.proxy_enable)
+            f.write("type = %s\n" % self.user_special.proxy_type)
+            f.write("host = %s\n" % self.user_special.proxy_host)
+            f.write("port = %s\n" % self.user_special.proxy_port)
+            f.write("user = %s\n" % self.user_special.proxy_user)
+            f.write("passwd = %s\n\n" % self.user_special.proxy_passwd)
 
-            if self.host_appengine_mode != "gae":
+            if self.user_special.host_appengine_mode != "gae":
                 f.write("[hosts]\n")
-                f.write("appengine.google.com = %s\n\n" % self.host_appengine_mode)
-                f.write(".google.com = %s\n\n" % self.host_appengine_mode)
+                f.write("appengine.google.com = %s\n" % self.user_special.host_appengine_mode)
+                f.write("www.google.com = %s\n\n" % self.user_special.host_appengine_mode)
 
-            if self.ip_connect_interval != "":
-                f.write("[google_ip]\n")
-                f.write("ip_connect_interval = %d\n\n" % int(self.ip_connect_interval))
+            f.write("[google_ip]\n")
+            if self.user_special.ip_connect_interval != self.DEFAULT_CONFIG.getint('google_ip', 'ip_connect_interval'):
+                f.write("ip_connect_interval = %d\n" % int(self.user_special.ip_connect_interval))
+
+            if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_check_ip_thread_num'):
+                f.write("max_check_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
 
             f.close()
         except:
@@ -234,6 +257,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_ssl_pool_handler()
         elif path == "/is_ready":
             return self.req_is_ready_handler()
+        elif path == "/test_ip":
+            return self.req_test_ip_handler()
         elif path == "/quit":
             config.keep_run = False
             data = "Quit"
@@ -438,7 +463,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "python_version": config.python_version,
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "connected_link":"%d,%d" % (len(connect_manager.https_manager.conn_pool.pool), len(direct_connect_manager.direct_connect_manager.new_conn_pool.pool)),
+                   "connected_link":"%d,%d" % (len(https_manager.new_conn_pool.pool), len(https_manager.gae_conn_pool.pool)),
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
@@ -456,18 +481,19 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         try:
             if reqs['cmd'] == ['get_config']:
-                data = json.dumps(user_config, default=lambda o: o.__dict__)
+                data = json.dumps(user_config.user_special, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
-                user_config.appid = self.postvars['appid'][0]
-                user_config.password = self.postvars['password'][0]
-                user_config.proxy_enable = self.postvars['proxy_enable'][0]
-                user_config.proxy_type = self.postvars['proxy_type'][0]
-                user_config.proxy_host = self.postvars['proxy_host'][0]
-                user_config.proxy_port = self.postvars['proxy_port'][0]
-                user_config.proxy_user = self.postvars['proxy_user'][0]
-                user_config.proxy_passwd = self.postvars['proxy_passwd'][0]
-                user_config.host_appengine_mode = self.postvars['host_appengine_mode'][0]
-                user_config.ip_connect_interval = self.postvars['ip_connect_interval'][0]
+                user_config.user_special.appid = self.postvars['appid'][0]
+                user_config.user_special.password = self.postvars['password'][0]
+                user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
+                user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
+                user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
+                user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
+                user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
+                user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
+                user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
+                user_config.user_special.ip_connect_interval = int(self.postvars['ip_connect_interval'][0])
+                user_config.user_special.scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
                 user_config.save()
 
                 data = '{"res":"success"}'
@@ -561,6 +587,21 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.send_response('text/html', data)
 
+    def req_test_ip_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        ip = reqs['ip'][0]
+        result = check_ip.test_gws(ip)
+        if not result:
+            data = "{'res':'fail'}"
+        else:
+            data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %
+                  (ip, result.handshake_time, result.server_type, result.domain))
+
+        self.send_response('text/html', data)
+
     def req_ip_list_handler(self):
         data = ""
         i = 1
@@ -585,7 +626,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(mimetype, data)
 
     def req_ssl_pool_handler(self):
-        data = connect_manager.https_manager.conn_pool.to_string()
+        data = https_manager.gae_conn_pool.to_string()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

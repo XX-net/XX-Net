@@ -95,6 +95,10 @@ div#content div.row-fluid > div.span4 > label {
     font-weight: bold;
     margin: 10px 0 0;
 }
+div#content div.row-fluid > div.span2 > label {
+    font-weight: bold;
+    margin: 10px 0 0;
+}
 
 div#content form div.row-fluid > div.span4 > label > a {
     font-weight: normal;
@@ -111,6 +115,16 @@ div#content input[type=password] {
 div#content div#advanced-options,
 div#content div#module-switch {
     padding-left: 20px;
+}
+
+div#content textarea {
+    color: #34495e;
+    height: 285px;
+    max-width: 100%;
+    resize: none;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 /* Style for config.html in PHP-Proxy */
@@ -146,16 +160,6 @@ div#log {
 div#log > p {
     margin-bottom: 0;
     word-wrap: break-word;
-}
-
-textarea#log {
-    color: #34495e;
-    height: 285px;
-    max-width: 100%;
-    resize: none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
 }
 
 /* Styles for deploy.html */

@@ -104,7 +104,7 @@ def upload(appid, email, password):
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
     try:
-        for i in range(10):
+        for i in range(100):
             try:
                 result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
@@ -118,11 +118,12 @@ def upload(appid, email, password):
                 raise e
             except Exception as e:
                 my_stdout.write("upload  fail: %s\n\n" % e)
-                if i < 9:
+                if i < 99:
                     my_stdout.write("Retry %d time...\n\n" % (i + 1))
-                    time.sleep(1)
+                    time.sleep(i)
                 else:
                     my_stdout.write("Retry max time, failed.\n\n" )
+
         return False
 
     finally:

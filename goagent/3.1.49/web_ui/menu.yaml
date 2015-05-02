@@ -14,7 +14,7 @@ sub_menus: {
     url: deploy
   },
   4:{
-    title: 导入IP,
+    title: 导入导出IP,
     url: importip
   },
   5:{

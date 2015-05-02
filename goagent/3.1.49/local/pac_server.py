@@ -17,29 +17,47 @@ import urlparse
 from config import config
 
 default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)
-
 user_pacfile = os.path.join(config.DATA_PATH, config.PAC_FILE)
 
-serving_pacfile = user_pacfile
-if not os.path.isfile(serving_pacfile):
-    serving_pacfile = default_pacfile
+def get_serving_pacfile():
+    if not os.path.isfile(user_pacfile):
+        serving_pacfile = default_pacfile
+    else:
+        serving_pacfile = user_pacfile
+    return serving_pacfile
 
 class PacUtil(object):
     """GoAgent Pac Util"""
 
     @staticmethod
     def update_pacfile(filename):
-        global serving_pacfile, user_pacfile
+
         listen_ip = config.LISTEN_IP
         autoproxy = '%s:%s' % (listen_ip, config.LISTEN_PORT)
         blackhole = '%s:%s' % (listen_ip, config.PAC_PORT)
-
         default = 'DIRECT'
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+
+        if config.PAC_ADBLOCK:
+            try:
+                logging.info('try download %r to update_pacfile(%r)', config.PAC_ADBLOCK, filename)
+                adblock_content = opener.open(config.PAC_ADBLOCK).read()
+            except Exception as e:
+                logging.warn("pac_update download adblock fail:%r", e)
+                return
+
+        try:
+            logging.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
+            pac_content = opener.open(config.PAC_GFWLIST).read()
+        except Exception as e:
+            logging.warn("pac_update download gfwlist fail:%r", e)
+            return
+
         content = ''
         need_update = True
-        with open(serving_pacfile, 'rb') as fp:
+        with open(get_serving_pacfile(), 'rb') as fp:
             content = fp.read()
+
         try:
             placeholder = '// AUTO-GENERATED RULES, DO NOT MODIFY!'
             content = content[:content.index(placeholder)+len(placeholder)]
@@ -53,8 +71,6 @@ class PacUtil(object):
 
         try:
             if config.PAC_ADBLOCK:
-                logging.info('try download %r to update_pacfile(%r)', config.PAC_ADBLOCK, filename)
-                adblock_content = opener.open(config.PAC_ADBLOCK).read()
                 logging.info('%r downloaded, try convert it with adblock2pac', config.PAC_ADBLOCK)
                 jsrule = PacUtil.adblock2pac(adblock_content, 'FindProxyForURLByAdblock', blackhole, default)
                 content += '\r\n' + jsrule + '\r\n'
@@ -64,12 +80,10 @@ class PacUtil(object):
         except Exception as e:
             need_update = False
             logging.exception('update_pacfile failed: %r', e)
-        except:
             return
 
         try:
-            logging.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
-            autoproxy_content = base64.b64decode(opener.open(config.PAC_GFWLIST).read())
+            autoproxy_content = base64.b64decode(pac_content)
             logging.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
             jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
             content += '\r\n' + jsrule + '\r\n'
@@ -77,8 +91,8 @@ class PacUtil(object):
         except Exception as e:
             need_update = False
             logging.exception('update_pacfile failed: %r', e)
-        except:
             return
+
         if need_update:
             with open(user_pacfile, 'wb') as fp:
                 fp.write(content)
@@ -251,7 +265,6 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        global serving_pacfile, user_pacfile
         logging.info('PAC from:%s %s %s ', self.address_string(), self.command, self.path)
 
         path = urlparse.urlparse(self.path).path # '/proxy.pac'
@@ -280,9 +293,9 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         mimetype = 'text/plain'
-        if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(serving_pacfile) > config.PAC_EXPIRED:
+        if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(get_serving_pacfile()) > config.PAC_EXPIRED:
             thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
-        self.send_file(serving_pacfile, mimetype)
+        self.send_file(get_serving_pacfile(), mimetype)
 
     def send_file(self, filename, mimetype):
         with open(filename, 'rb') as fp:

@@ -3,34 +3,39 @@
     <button type="button" class="close" data-dismiss="alert">×</button>
     <p class="message"></p>
 </div> <!-- .alert -->
+
 <form method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
-        <div class="span4">
-            <label>任务类型</label>
+        <div class="span2">
+            <label for="action">任务类型</label>
         </div> <!-- .span4 -->
         <div class="span8">
-            <input type="radio" name="type" value="import" checked>导入
-            <input type="radio" name="type" value="export">导出
+            <div class="row-fluid">
+                <div class="span6">
+                    <input id="action" name="action" type="radio" value="import" checked />导入
+                </div> <!-- .span6 -->
+                <div class="span6">
+                    <input id="action" name="action" type="radio" value="export" />导出
+                </div> <!-- .span6 -->
+            </div> <!-- .row-fluid -->
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span2">
             <label for="ip-format">导入/导出格式</label>
         </div> <!-- .span4 -->
-        <div class="span8">
+        <div class="span10">
             <select id="ip-format"> 
                 <option value="1" selected>IP|IP|IP (Gogo-Tester格式)</option> 
             </select> 
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span2">
             <label for="ip-list">IP列表</label>
         </div> <!-- .span4 -->
-        <div class="span8">
-            <textarea id="ip-list" rows="10" style="width: 95%!important;"></textarea>
+        <div class="span10">
+            <textarea id="ip-list" rows="10"></textarea>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
@@ -40,64 +45,74 @@
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 </form> <!-- #import-export-ip -->
-<script>
-    function onSubmit(){
-        //从页面元素取出需要的东西
-        var type = $("input[name='type']:checked").val(),
-        ipFormat = $("#ip-format").find("option:selected").val(),
-        ipList   = $('#ip-list').val();
 
-        //导入
-        if(type == 'import') {
-            //根据ipFormat处理ipList
-            ipList = conversionFormat(ipFormat, '1', ipList);
-            //提交数据
-            $.ajax({
-                type: 'POST',
-                url: 'http://127.0.0.1:8084/importip?cmd=importip',
-                data: {'ipList': ipList},
-                dataType: 'JSON',
-                success: function(result) {
-                    $('.alert').html('成功导入' + result['res'] + '个IP.');
-                    $('.alert').addClass('alert-success');
-                    $('.alert').removeClass('alert-error');
-                    $('.alert').removeClass('hide');
-                },
-                error: function(){
-                    $('.alert').html('导入IP失败.');
-                    $('.alert').addClass('alert-error');
-                    $('.alert').removeClass('alert-success');
-                    $('.alert').removeClass('hide');
-                }
-            });
-        } else { //导出
-            $.ajax({
-                type: 'POST',
-                url: 'http://127.0.0.1:8084/importip?cmd=exportip',
-                data: '',
-                dataType: 'JSON',
-                success: function(result) {
-                    var ipList = result['res'];
-                    //根据ipFormat处理ipList
-                    ipList = conversionFormat('1', ipFormat, ipList);
-                    //显示结果
-                    $('#ip-list').val(ipList);
-                    $('.alert').html('导出成功.');
-                    $('.alert').addClass('alert-success');
-                    $('.alert').removeClass('alert-error');
-                    $('.alert').removeClass('hide');
-                },
-                error: function(){
-                    $('.alert').html('导出IP失败.');
-                    $('.alert').addClass('alert-error');
-                    $('.alert').removeClass('alert-success');
-                    $('.alert').removeClass('hide');
-                }
-            });
+<!-- JavaScript -->
+<script type="text/javascript">
+    function onSubmit() {
+        var action   = $('#action:checked').val(),
+            ipFormat = $('#ip-format').val(),
+            ipList   = $('#ip-list').val();
+
+        console.log(action);
+
+        if ( action == 'import' ) {
+            return doImportAction(ipFormat, ipList);
+        } else if ( action == 'export' ) {
+            return doExportAction(ipFormat, ipList);
         }
     }
+</script>
+<script type="text/javascript">
+    function doImportAction(ipFormat, ipList) {
+        var ipList = conversionFormat(ipFormat, '1', ipList);
 
-    //IP格式转换
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8084/importip?cmd=importip',
+            data: {'ipList': ipList},
+            dataType: 'JSON',
+            success: function(result) {
+                $('.message', '.alert').html('成功导入' + result['res'] + '个IP.');
+                $('.alert').addClass('alert-success');
+                $('.alert').removeClass('alert-error');
+                $('.alert').removeClass('hide');
+            },
+            error: function(){
+                $('.alert').html('导入IP失败.');
+                $('.alert').addClass('alert-error');
+                $('.alert').removeClass('alert-success');
+                $('.alert').removeClass('hide');
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    function doExportAction(ipFormat, ipList) {
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8084/importip?cmd=exportip',
+            data: '',
+            dataType: 'JSON',
+            success: function(result) {
+                var ipList = result['res'];
+                ipList = conversionFormat('1', ipFormat, ipList);
+                
+                $('#ip-list').val(ipList);
+                $('.message', '.alert').html('导出成功.');
+                $('.alert').addClass('alert-success');
+                $('.alert').removeClass('alert-error');
+                $('.alert').removeClass('hide');
+            },
+            error: function(){
+                $('.message', '.alert').html('导出IP失败.');
+                $('.alert').addClass('alert-error');
+                $('.alert').removeClass('alert-success');
+                $('.alert').removeClass('hide');
+            }
+        });
+    }
+</script>    
+<script type="text/javascript">
     function conversionFormat(sf, tf, ss) {
         return ss;
     }
