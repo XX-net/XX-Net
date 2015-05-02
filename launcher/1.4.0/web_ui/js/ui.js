@@ -3,11 +3,16 @@ function title(title) {
 }
 
 function tip(message, type, allowOff) {
-    $('#tip-message').html(message);
-    $('#tip').removeClass('alert-error');
+    $('#tip').removeClass('alert-info');
+    $('#tip').removeClass('alert-warning');
     $('#tip').removeClass('alert-success');
+    $('#tip').removeClass('alert-error');
     $('#tip').removeClass('hide');
+
     $('#tip').addClass('alert-' + type);
+
+    $('#tip-message').html(message);
+    
     if( allowOff === undefined || allowOff === true ) {
         $('#tip-close').css('display', '');
     } else {
