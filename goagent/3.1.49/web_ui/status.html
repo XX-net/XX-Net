@@ -171,10 +171,12 @@
                     $('#alert-box').html('GoAgent进程无响应, 可能已退出.');
                 }
 
-                $('html, body').animate({
-                    scrollTop:0
-                }, 'slow');
-                $('#alert-box').removeClass('hide');
+                if(!$('#alert-box').hasClass('hide')) {
+                    $('html, body').animate({
+                        scrollTop:0
+                    }, 'slow');
+                    $('#alert-box').removeClass('hide');
+                }
             }
         });
     }
