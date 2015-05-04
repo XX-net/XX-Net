@@ -77,8 +77,11 @@ def recheck_module_path():
     modules = ["goagent", "launcher", "php_proxy"]
     for module in modules:
         current_version = get(["modules", module, "current_version"], "_")
-        if os.path.isdir(os.path.join(root_path, module, current_version)):
-            continue
+        try:
+            if current_version and os.path.isdir(os.path.join(root_path, module, current_version)):
+                continue
+        except:
+            pass
 
         logging.info("module %s version %s not exist", module, current_version)
         current_version = scan_module_version(module)
