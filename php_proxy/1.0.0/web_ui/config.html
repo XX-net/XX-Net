@@ -1,8 +1,3 @@
-<h2>配置PHP代理</h2>
-<div class="alert fade in hide">
-    <button type="button" class="close" data-dismiss="alert">×</button>
-    <p class="message"></p>
-</div> <!-- .alert -->
 <form id="goagent-php-config" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span4">
@@ -71,6 +66,9 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
+    title('配置PHP代理');
+</script>
+<script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
@@ -109,11 +107,7 @@
                 $('#proxy-password').val(result['proxy_password']);
             },
             error: function() {
-                $('.alert').html('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.');
-                $('.alert').addClass('alert-warning');
-                $('.alert').removeClass('alert-error');
-                $('.alert').removeClass('alert-success');
-                $('.alert').removeClass('hide');
+                tip('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.', 'warning');
             }
         });
     });
@@ -127,21 +121,21 @@
             proxyPort        = $('#proxy-port').val(),
             proxyUsername    = $('#proxy-username').val(),
             proxyPassword    = $('#proxy-password').val();
-        
-        return setConfig(phpServer, phpPassword, enableFrontProxy, 
+
+        return setConfig(phpServer, phpPassword, enableFrontProxy,
                             proxyHost, proxyPort, proxyUsername, proxyPassword);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(phpServer, phpPassword, enableFrontProxy, 
+    function setConfig(phpServer, phpPassword, enableFrontProxy,
                         proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
-            'php_server': phpServer, 
-            'php_password': phpPassword, 
-            'proxy_enable': enableFrontProxy, 
-            'proxy_host': proxyHost, 
-            'proxy_port': proxyPort, 
-            'proxy_username': proxyUsername, 
+            'php_server': phpServer,
+            'php_password': phpPassword,
+            'proxy_enable': enableFrontProxy,
+            'proxy_host': proxyHost,
+            'proxy_port': proxyPort,
+            'proxy_username': proxyUsername,
             'proxy_password': proxyPassword
         };
 
@@ -152,25 +146,13 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    $('.alert').html('设置已成功保存.');
-                    $('.alert').addClass('alert-success');
-                    $('.alert').removeClass('alert-error');
-                    $('.alert').removeClass('alert-warning');
-                    $('.alert').removeClass('hide');
+                    tip('设置已成功保存.', 'success');
                 } else {
-                    $('.alert').html('发生未知错误.');
-                    $('.alert').addClass('alert-error');
-                    $('.alert').removeClass('alert-success');
-                    $('.alert').removeClass('alert-warning');
-                    $('.alert').removeClass('hide');
+                    tip('发生未知错误.', 'error');
                 }
             },
             error: function() {
-                $('.alert').html('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.');
-                $('.alert').addClass('alert-warning');
-                $('.alert').removeClass('alert-error');
-                $('.alert').removeClass('alert-success');
-                $('.alert').removeClass('hide');
+                tip('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.', 'warning');
             }
         });
     }

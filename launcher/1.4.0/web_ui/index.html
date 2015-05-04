@@ -16,6 +16,7 @@
     <script type="text/javascript" src="/js/flat-ui.min.js"></script>
     <script type="text/javascript" src="/js/jquery.timer.js"></script>
     <script type="text/javascript" src="/js/site.js"></script>
+    <script type="text/javascript" src="/js/ui.js"></script>
     <!--[if lte IE 9]>
         <script type="text/javascript" src="/js/jquery.placeholder.js"></script>
         <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
@@ -49,7 +50,14 @@
                         <ul class="nav nav-list">%s</ul>
                     </div> <!-- .sidebar-nav -->
                 </div> <!-- #sidebar -->
-                <div class="span9">%s</div>
+                <div class="span9">
+                    <h2 id="title"></h2>
+                    <div id="tip" class="alert fade in hide">
+                        <button id="tip-close" type="button" class="close">×</button>
+                        <p id="tip-message" class="message"></p>
+                    </div> <!-- #tip -->
+                    %s
+                </div>
             </div> <!-- .row-fluid -->
         </div> <!-- .container -->
     </div> <!-- #content -->

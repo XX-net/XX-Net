@@ -15,7 +15,7 @@ sub_menus: {
   },
   4:{
     title: 导入导出IP,
-    url: importip
+    url: ipconfig
   },
   5:{
     title: 日志,

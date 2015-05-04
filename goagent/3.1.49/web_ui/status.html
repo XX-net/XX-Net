@@ -1,12 +1,9 @@
-<h2>GoAgent状态信息</h2>
 <!--[if lte IE 9]>
 <div class="alert alert-warning">
     您的浏览器版本过低, 部分功能将无法使用。<br>
     我们建议您使用最新版本的Chrome浏览器。
 </div>
 <![endif]-->
-<div id="alert-box" class="alert alert-warning hide"></div>
-
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -113,14 +110,17 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
+    title('GoAgent状态信息');
+</script>
+<script type="text/javascript">
     $(function() {
         var timer = $.timer(function() {
             getStatus();
         });
 
-        timer.set({ 
-            time: 1000, 
-            autostart: true 
+        timer.set({
+            time: 1000,
+            autostart: true
         });
     });
 </script>
@@ -159,22 +159,23 @@
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
                 $('#block-stat').html(result['block_stat']);
 
-                if ( !$('#alert-box').hasClass("hide") ) {
-                    $('#alert-box').addClass("hide");
+                if ( !tipHasClose() ) {
+                    tipClose();
                 }
             },
             error: function(result) {
                 var formValue = $('#sys-platform').html();
                 if ( formValue == '' ) {
-                    $('#alert-box').html('状态页显示空白, 很可能GoAgent启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>');
+                    tip('状态页显示空白, 很可能GoAgent启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
                 } else {
-                    $('#alert-box').html('GoAgent进程无响应, 可能已退出.');
+                    tip('GoAgent进程无响应, 可能已退出.', 'warning', false);
                 }
 
-                $('html, body').animate({
-                    scrollTop:0
-                }, 'slow');
-                $('#alert-box').removeClass('hide');
+                if($('#alert-box').hasClass('hide')) {
+                    $('html, body').animate({
+                        scrollTop:0
+                    }, 'slow');
+                }
             }
         });
     }

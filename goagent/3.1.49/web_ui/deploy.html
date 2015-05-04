@@ -1,7 +1,3 @@
-<h2>部署XX-Net至GAE</h2>
-<div class="alert alert-info fade in">
-    <p class="message">当前状态: 空闲</p>
-</div> <!-- .alert -->
 <ul class="nav nav-tabs">
     <li class="active"><a href="#authentication" data-toggle="tab">授权</a></li>
     <li><a href="#logs" data-toggle="tab">日志</a></li>
@@ -71,6 +67,9 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
+    title('部署服务端');
+</script>
+<script type="text/javascript">
     $(function() {
         window.status = 'init';
         window.isAutoScrollLog = true;
@@ -92,7 +91,7 @@
         if ( !isAdvancedOptionsShown ) {
             $('i.icon', this).removeClass('icon-chevron-right');
             $('i.icon', this).addClass('icon-chevron-down');
-            $('#advanced-options').slideDown();            
+            $('#advanced-options').slideDown();
         } else {
             $('i.icon', this).removeClass('icon-chevron-down');
             $('i.icon', this).addClass('icon-chevron-right');
@@ -167,28 +166,28 @@
                 if ( window.status == 'init' || window.status == 'finished' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 空闲');
+                        tip('当前状态: 空闲', 'info', false);
                     } else if ( result['status'] == 'running' ) {
                         window.status = 'running';
-                        $('.alert').html('当前状态: 正在部署...');
-                        
+                        tip('当前状态: 正在部署...', 'info', false);
+
                         updateLog(result['log']);
                         changeButtonStatus('cancel');
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成');
+                        tip('当前状态: 部署完成', 'info', false);
 
                         updateLog(result['log']);
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                        tip('当前状态: 发生异常。<br>异常信息:' + result['status'], 'warning', false);
                         updateLog(result['log']);
                     }
                 } else if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
-                        $('.alert').html('当前状态: XX-Net被重置。');
+                        tip('当前状态: XX-Net被重置。', 'info', false);
 
                         changeButtonStatus('start');
                     } else if ( result['status'] == 'running' ) {
@@ -196,18 +195,18 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成。 <br>请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效。');
+                        tip('当前状态: 部署完成。 <br>请在<a href="http://127.0.0.1:8085/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效。', 'success', false);
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                        tip('当前状态: 发生异常。<br>异常信息:' + result['status'], 'warning', false);
                         updateLog(result['log']);
                     }
                 } else {
                     window.timer.stop();
-                    $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                    tip('当前状态: 发生异常。<br>异常信息:' + result['status'], 'warning', false);
                     updateLog(result['log']);
                 }
                 if(window.isAutoScrollLog == true){
@@ -247,16 +246,7 @@
             rc4Password  = $('#rc4-password').val();
         var errorMessage = getErrorMessage(appId, email, password);
 
-        if ( errorMessage.length != 0 ) {
-            $('.alert').removeClass('alert-info');
-            $('.alert').addClass('alert-error');
-            
-            $('.alert').html(errorMessage);
-            return;
-        } else {
-            $('.alert').removeClass('alert-error');
-            $('.alert').addClass('alert-info');
-        }
+        tip(errorMessage, 'error', false);
 
         deployProcess(appId, email, password, rc4Password);
         changeButtonStatus('cancel');
@@ -270,10 +260,10 @@
             dataType: 'JSON',
             success: function(result) {
                 changeButtonStatus('start');
-                $('.alert').html("当前状态: 部署已取消。");
+                tip('当前状态: 部署已取消。', 'info', false);
             },
-            error: function(result){
-                $('.alert').html("当前状态: 发生异常。<br>异常信息:" + result);
+            error: function(result) {
+                tip("当前状态: 发生异常。<br>异常信息:" + result, 'warning', false);
             }
         });
     }

@@ -10,7 +10,7 @@ class BimapError(Exception):
 class Bimap(object):
 
     """
-        Bi-directional mapping between code/value. 
+        Bi-directional mapping between code/value.
 
         Initialised using:
 
@@ -19,15 +19,15 @@ class Bimap(object):
             error:  Error type to raise if key not found
 
         The class provides:
-        
-            * A 'forward' map (code->text) which is accessed through 
-              __getitem__ (bimap[code]) 
-            * A 'reverse' map (code>value) which is accessed through 
+
+            * A 'forward' map (code->text) which is accessed through
+              __getitem__ (bimap[code])
+            * A 'reverse' map (code>value) which is accessed through
               __getattr__ (bimap.text)
             * A 'get' method which does a forward lookup (code->text)
               and returns a textual version of code if there is no
               explicit mapping (or default provided)
-        
+
         >>> class TestError(Exception):
         ...     pass
 
@@ -46,7 +46,7 @@ class Bimap(object):
         TestError: TEST: Invalid forward lookup: [99]
         >>> TEST.get(99)
         '99'
-    
+
     """
 
     def __init__(self,name,forward,error=KeyError):
