@@ -6,7 +6,7 @@ import logging
 connect_allow_time = 0
 connect_fail_time = 0
 
-block_delay = (60 * 5)
+block_delay = 10 # (60 * 5)
 
 
 def allow_connect():
@@ -28,6 +28,7 @@ def report_connect_fail():
     else:
         if time.time() - connect_fail_time > 60:
             connect_allow_time = time.time() + block_delay
+            connect_fail_time = 0
 
 def report_connect_success():
     global connect_fail_time

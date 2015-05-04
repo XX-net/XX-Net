@@ -1,12 +1,12 @@
 XX-Net
 ========
-项目状态：目前在某些地区、网络下无法翻墙，目前正在加紧研究中。
+项目状态：目前在某些地区、网络下无法翻墙，如果使用有问题，请反馈具体地区和网络接入商。
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.13.3
+https://codeload.github.com/XX-net/XX-Net/zip/1.13.4
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.12.5

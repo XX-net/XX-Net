@@ -6,18 +6,16 @@
 import threading
 import operator
 import time
-import socket
 import ip_utils
 import check_ip
 from google_ip_range import ip_range
 import logging
-import random
 import Queue
-import math
 import os
 from config import config
 import traceback
 import connect_control
+from scan_ip_log import scan_ip_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 good_ip_file_name = "good_ip.txt"
@@ -114,10 +112,6 @@ class Check_ip():
                         self.bad_ip_pool.add(ip)
                     except Exception as e:
                         logging.exception("parse bad_ip.txt err:%r", e)
-        if False:
-            p = threading.Thread(target = self.check_exist_ip)
-            p.daemon = True
-            p.start()
 
     def save_ip_list(self, force=False):
         if not force:
@@ -349,7 +343,7 @@ class Check_ip():
             self.ip_dict[ip_str]['history'].append([time.time(), "fail"])
             self.ip_dict[ip_str]["fail_time"] = time.time()
 
-            if force_remove or self.ip_dict[ip_str]['timeout'] >= 2:
+            if force_remove or self.ip_dict[ip_str]['timeout'] >= 50:
                 property = self.ip_dict[ip_str]
                 server = property['server']
                 del self.ip_dict[ip_str]
@@ -441,7 +435,7 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-    def runJob(self):
+    def scan_ip_worker(self):
         while True: #not self.is_ip_enough() and self.searching_thread_count < 2:
             if not connect_control.allow_connect():
                 break
@@ -460,7 +454,8 @@ class Check_ip():
                 if self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type):
                     #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip_str,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
-                    logging.info("check_ip add ip:%s time:%d", ip_str, result.handshake_time)
+                    logging.info("scan_ip add ip:%s time:%d", ip_str, result.handshake_time)
+                    scan_ip_log.info("Add %s time:%d CN:%s type:%s", ip_str, result.handshake_time, result.domain, result.server_type)
                     self.remove_slowest_ip()
                     self.save_ip_list()
             except check_ip.HoneypotError as e:
@@ -480,113 +475,24 @@ class Check_ip():
             self.searching_thread_count += 1
             self.ncount_lock.release()
 
-            p = threading.Thread(target = self.runJob)
+            p = threading.Thread(target = self.scan_ip_worker)
             p.daemon = True
             p.start()
 
-    def check_exist_ip(self):
-        self.ip_lock.acquire()
-        tmp_ip_list = [x for x in self.gws_ip_list]
-        self.ip_lock.release()
 
-        for ip_str in tmp_ip_list:
-            if not connect_control.allow_connect():
-                break
 
-            if self.is_bad_ip(ip_str):
-                self.report_connect_fail(ip_str, force_remove=True)
-                continue
-
-            try:
-                result = check_ip.test_gws(ip_str)
-            except check_ip.HoneypotError as e:
-                self.report_bad_ip(ip_str)
-                connect_control.fall_into_honeypot()
-                break
-            except Exception as e:
-                logging.exception("check_exist_ip fail:%s", e)
-
-            if not result:
-                if not check_ip.network_is_ok():
-                    logging.warn("check_exist_ip network is fail, check your network connection.")
-                    return
-
-                logging.info("check_exist_ip fail ip:%s ", ip_str)
-                self.report_connect_fail(ip_str)
-            else:
-                self.update_ip(ip_str, result.handshake_time)
-                logging.info("check_exist_ip update ip:%s server:%s time:%d", ip_str, result.server_type, result.handshake_time)
-
-            time.sleep(1)
-
-        self.save_ip_list()
-
-if __name__ != "__main__":
-    google_ip = Check_ip()
+google_ip = Check_ip()
 
 
 def test():
-    check = Check_ip()
-    check.search_more_google_ip()
+    google_ip.search_more_google_ip()
     #check.test_ip("74.125.130.98", print_result=True)
-    while not check.is_ip_enough():
+    while not google_ip.is_ip_enough():
         time.sleep(10)
 
-def test_profile():
-    do_profile = True
-    if do_profile:
-        import cProfile, pstats
-        pr = cProfile.Profile()
-        pr.enable()
-
-    test()
-
-    if do_profile:
-        pr.disable()
-        pr.print_stats(sort="cum")
-
-def test_network():
-    check = Check_ip()
-    res = check.network_is_ok()
-    print res
-
-def get_random_pr(num):
-    n0 = num
-    r = 2
-
-    for i in range(r):
-        n0 = n0 * n0
-
-    n1 = random.randint(0, n0)
-    for i in range(r):
-        n1 = math.sqrt(n1)
-
-    n2 = num - n1
-    return int(n2 )
-
-def test_random():
-    result = {}
-    for i in range(300):
-        v = get_random_pr(30)
-        if not v in result:
-            result[v] = 0
-        result[v] += 1
-    for k in result:
-        print k, result[k]
-
-def test_mask():
-
-    def report_bad_ip(ip_str):
-        ip_bin = ip_utils.ip_string_to_num(ip_str)
-        ip_bin = ip_bin & 0xffffff00
-        ip_mask = ip_utils.ip_num_to_string(ip_bin)
-        return ip_mask
-
-    print report_bad_ip("64.233.163.117")
 
 if __name__ == '__main__':
-    #test_random()
-    test_mask()
+    pass
 
 # test cast
 # 1. good_ip.txt not exist when startup, auto scan good ip, then save

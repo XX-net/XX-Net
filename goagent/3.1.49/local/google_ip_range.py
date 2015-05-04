@@ -44,7 +44,8 @@ class Ip_range(object):
             nbegin = ip_utils.ip_string_to_num(begin)
             nend = ip_utils.ip_string_to_num(end)
             if not nbegin or not nend or nend < nbegin:
-                logging.error("load ip range:%s", line)
+                logging.warn("load ip range:%s fail", line)
+                continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
             self.ip_range_list.append( [nbegin, nend] )
@@ -62,7 +63,7 @@ class Ip_range(object):
             print "[",id,"]:", self.ip_range_map[id]
 
     def random_get_ip(self):
-
+        # this function have bug, not fixed, and proved to be not a good idea.
         while True:
             index = random.randint(0, self.candidate_amount_ip)
             id = bisect.bisect_left(self.ip_range_index, index)

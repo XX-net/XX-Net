@@ -123,11 +123,12 @@ def _request(sock, headers, payload, bufsize=8192):
     response = httplib.HTTPResponse(sock, buffering=True)
     try:
         orig_timeout = sock.gettimeout()
-        sock.settimeout(90)
+        sock.settimeout(100)
         response.begin()
         sock.settimeout(orig_timeout)
     except httplib.BadStatusLine as e:
         logging.warn("_request bad status line:%r", e)
+        response.close()
         response = None
     except Exception as e:
         logging.warn("_request:%r", e)
@@ -161,6 +162,7 @@ def request(headers={}, payload=None):
 
             response = _request(ssl_sock, headers, payload)
             if not response:
+                ssl_sock.close()
                 continue
 
             response.ssl_sock = ssl_sock
@@ -246,7 +248,6 @@ def fetch(method, url, headers, body):
     return response
 
 
-max_retry = 3
 normcookie = functools.partial(re.compile(', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
 normattachment = functools.partial(re.compile(r'filename=(.+?)').sub, 'filename="\\1"')
 
@@ -278,7 +279,7 @@ def handler(method, url, headers, body, wfile):
     errors = []
     response = None
     while True:
-        if time.time() - time_request > 30: #time out
+        if time.time() - time_request > 90: #time out
             return return_fail_message(wfile)
 
         try:
@@ -332,23 +333,6 @@ def handler(method, url, headers, body, wfile):
             errors.append(e)
             logging.exception('gae_handler.handler %r %s , retry...', e, url)
 
-    if len(errors) == max_retry:
-        if response and response.app_status >= 500:
-            status = response.app_status
-            headers = dict(response.getheaders())
-            content = response.read()
-        else:
-            status = 502
-            headers = {'Content-Type': 'text/html'}
-            content = generate_message_html('502 URLFetch failed', 'Local URLFetch %r failed' % url, '<br>'.join(repr(x) for x in errors))
-
-        if response:
-            response.close()
-
-        send_response(wfile, status, headers, content.encode('utf-8'))
-
-        logging.warn("GAE %d %s %s", status, method, url)
-        return
 
     if response.status == 206:
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
@@ -419,8 +403,10 @@ def handler(method, url, headers, body, wfile):
                 return
 
     except NetWorkIOError as e:
+        time_except = time.time()
+        time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            logging.warn("gae_handler err:%r %s ", e, url)
+            logging.warn("gae_handler err:%r time:%d %s ", e, time_cost, url)
         else:
             logging.exception("gae_handler except:%r %s", e, url)
     except Exception as e:

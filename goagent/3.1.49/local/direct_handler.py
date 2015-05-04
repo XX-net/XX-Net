@@ -39,11 +39,7 @@ def send_header(wfile, keyword, value):
         return
     else:
         #logging.debug("Head1 %s: %s", keyword, value)
-        try:
-            wfile.write("%s: %s\r\n" % (keyword, value))
-        except Exception as e:
-            logging.warn("send_header e:%r header: %s: %s ", e, keyword, value)
-            raise e
+        wfile.write("%s: %s\r\n" % (keyword, value))
 
 
 
@@ -169,8 +165,10 @@ def handler(method, host, url, headers, body, wfile):
                 return
 
     except NetWorkIOError as e:
+        time_except = time.time()
+        time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            logging.warn("direct_handler err:%r %s %s", e, host, url)
+            logging.warn("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
         else:
             logging.exception("direct_handler except:%r %s %s", e, host, url)
     except Exception as e:

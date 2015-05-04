@@ -90,7 +90,7 @@ def recheck_module_path():
         logging.info("module %s auto upgrade to version %s", module, current_version)
         need_save_config = True
 
-        if module not in ["launcher"]:
+        if module not in ["launcher", "php_proxy"]:
             if get(["modules", module, "auto_start"], -1) == -1:
                 set(["modules", module, "auto_start"], 1)
 

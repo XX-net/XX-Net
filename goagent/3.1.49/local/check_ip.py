@@ -278,7 +278,7 @@ checking_lock = threading.Lock()
 checking_num = 0
 network_ok = False
 last_check_time = 0
-check_network_interval = 10
+check_network_interval = 100
 def network_is_ok():
     global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
     if time.time() - last_check_time < check_network_interval:
@@ -295,7 +295,7 @@ def network_is_ok():
     checking_num += 1
     checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("code.jquery.com", 443, timeout=8)
+        conn = httplib.HTTPSConnection("code.jquery.com", 443, timeout=30)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
