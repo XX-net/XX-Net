@@ -154,7 +154,7 @@ class CertUtil(object):
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
-    ca_digest = 'sha1' if sys.platform == 'win32' and sys.getwindowsversion() < (6,) else 'sha256'
+    ca_digest = 'sha256'
     ca_lock = threading.Lock()
 
     @staticmethod
