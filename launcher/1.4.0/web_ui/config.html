@@ -389,8 +389,7 @@ function versionCompare(v1, v2, options) {
         }else if(id == 'update-stable-version'){
             pageRequests['version'] = $('#stable-version-no').html();
         }
-
-        return false;
+          
         $.ajax({
             type: 'GET',
             url: '/config',
