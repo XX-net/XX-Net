@@ -188,17 +188,19 @@ def application(environ, start_response):
     # https://www.freebsdchina.org/forum/viewtopic.php?t=54269
     accept_encoding = headers.get('Accept-Encoding', '') or headers.get('Bccept-Encoding', '')
     errors = []
+    allow_truncated = False
     for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
-            response = urlfetch.fetch(url, body, fetchmethod, headers, allow_truncated=True, follow_redirects=False, deadline=timeout, validate_certificate=validate_certificate)
+            response = urlfetch.fetch(url, body, fetchmethod, headers, allow_truncated=allow_truncated, follow_redirects=False, deadline=timeout, validate_certificate=validate_certificate)
             break
         except apiproxy_errors.OverQuotaError as e:
             time.sleep(5)
         except urlfetch.DeadlineExceededError as e:
             errors.append('%r, timeout=%s' % (e, timeout))
             logging.error('DeadlineExceededError(timeout=%s, url=%r)', timeout, url)
-            #time.sleep(1)
+            time.sleep(1)
 
+            allow_truncated = True
             m = re.search(r'=\s*(\d+)-', headers.get('Range') or headers.get('range') or '')
             if m is None:
                 headers['Range'] = 'bytes=0-%d' % (maxsize or URLFETCH_MAXSIZE)
@@ -218,6 +220,8 @@ def application(environ, start_response):
             errors.append('%r, timeout=%s' % (e, timeout))
             response = e.response
             logging.error('ResponseTooLargeError(timeout=%s, url=%r) response(%r)', timeout, url, response)
+
+            allow_truncated = True
             m = re.search(r'=\s*(\d+)-', headers.get('Range') or headers.get('range') or '')
             if m is None:
                 headers['Range'] = 'bytes=0-%d' % (maxsize or URLFETCH_MAXSIZE)
@@ -248,8 +252,12 @@ def application(environ, start_response):
     data = response.content
     response_headers = response.headers
     response_headers['X-Head-Content-Length'] = response_headers.get('Content-Length', '')
+    #for k in response_headers:
+    #    v = response_headers[k]
+    #    logging.debug("Head:%s: %s", k, v)
     content_type = response_headers.get('content-type', '')
     if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get('accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
+        logging.debug("data len:%d max:%d", len(data), maxsize)
         status_code = 206
         response_headers['Content-Range'] = 'bytes 0-%d/%d' % (maxsize-1, len(data))
         data = data[:maxsize]
