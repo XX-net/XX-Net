@@ -40,10 +40,9 @@
                 </select>
             </div>
             <div class="span2">
-                <button class="btn btn-primary " id="check-new-version">检查最新版本</button>
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">检查最新版本</button>
             </div>
             <div class="span1" id="check-new-version-process">
-                <img src="img/loading.gif" class="hide">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
@@ -60,7 +59,7 @@
             <div class="span4" id="test-version-no" style="margin-top:10px">
             </div>
             <div class="span2" >
-                <button class="btn btn-primary update-button" id="update-test-version">立即更新</button>
+                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">立即更新</button>
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
@@ -70,7 +69,7 @@
             <div class="span4" id="stable-version-no" style="margin-top:10px">
             </div>
             <div class="span2">
-                <button class="btn btn-primary update-button" id="update-stable-version">立即更新</button>
+                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">立即更新</button>
             </div>
         </div> <!-- .row-fluid -->
         <hr>
@@ -179,7 +178,7 @@
 
         return setConfig(key, value);
     });
-    
+
     $('#check-update').change(function() {
         var key   = 'check_update',
             value = $(this).val();
@@ -240,7 +239,7 @@
                 } else {
                     displayErrorMessage();
                 }
-            }, 
+            },
             error: function() {
                 displayErrorMessage();
             }
@@ -324,6 +323,9 @@ function versionCompare(v1, v2, options) {
     return 0;
 }
     $('#check-new-version').click(function(){
+        var loading = Ladda.create(this);
+        loading.start();
+
         //$('#check-new-version-process').removeClass('hide');
         var pageRequests = {};
         pageRequests['cmd'] = 'get_new_version';
@@ -360,13 +362,24 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
+            },
+            complete: function () {
+                loading.stop();
             }
         });
     });
 </script>
 
 <script type="text/javascript">
-    $('.update-button').click(function(){
+    var $updateButton = $('.update-button');
+    $updateButton.click(function(){
+        $updateButton
+        .text('正在更新')
+        .not(this).add('#check-new-version').fadeOut('fast');
+
+        var loading = Ladda.create(this);
+        loading.start();
+
         var pageRequests = {};
         pageRequests['cmd'] = 'update_version';
 
@@ -377,6 +390,7 @@ function versionCompare(v1, v2, options) {
             pageRequests['version'] = $('#stable-version-no').html();
         }
 
+        return false;
         $.ajax({
             type: 'GET',
             url: '/config',
@@ -395,6 +409,9 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
+            },
+            complete: function () {
+                loading.stop();
             }
         });
     });
