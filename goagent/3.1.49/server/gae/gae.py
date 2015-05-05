@@ -197,7 +197,17 @@ def application(environ, start_response):
         except urlfetch.DeadlineExceededError as e:
             errors.append('%r, timeout=%s' % (e, timeout))
             logging.error('DeadlineExceededError(timeout=%s, url=%r)', timeout, url)
-            time.sleep(1)
+            #time.sleep(1)
+
+            m = re.search(r'=\s*(\d+)-', headers.get('Range') or headers.get('range') or '')
+            if m is None:
+                headers['Range'] = 'bytes=0-%d' % (maxsize or URLFETCH_MAXSIZE)
+            else:
+                headers.pop('Range', '')
+                headers.pop('range', '')
+                start = int(m.group(1))
+                headers['Range'] = 'bytes=%s-%d' % (start, start+(maxsize or URLFETCH_MAXSIZE))
+
             timeout *= 2
         except urlfetch.DownloadError as e:
             errors.append('%r, timeout=%s' % (e, timeout))
