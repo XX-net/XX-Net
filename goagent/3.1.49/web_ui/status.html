@@ -165,15 +165,18 @@
             },
             error: function(result) {
                 var formValue = $('#sys-platform').html();
+
+                if ( tipHasClose() ) {
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 'slow');
+                }
+
                 if ( formValue == '' ) {
                     tip('状态页显示空白, 很可能GoAgent启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
                 } else {
                     tip('GoAgent进程无响应, 可能已退出.', 'warning', false);
                 }
-
-                $('html, body').animate({
-                    scrollTop:0
-                }, 'slow');
             }
         });
     }
