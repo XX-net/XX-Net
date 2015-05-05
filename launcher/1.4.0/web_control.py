@@ -134,6 +134,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 mimetype = 'image/jpeg'
             elif file_path.endswith('.png'):
                 mimetype = 'image/png'
+            elif file_path.endswith('.gif'):
+                mimetype = 'image/gif'
             else:
                 mimetype = 'text/plain'
 

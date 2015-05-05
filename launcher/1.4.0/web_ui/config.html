@@ -42,8 +42,8 @@
             <div class="span2">
                 <button class="btn btn-primary " id="check-new-version">检查最新版本</button>
             </div>
-            <div class="span1" id="check-new-version-process">
-                <img src="img/loading.gif" class="hide">
+            <div class="span1 hide" id="check-new-version-process">
+                <img src="img/loading.gif">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
@@ -324,7 +324,7 @@ function versionCompare(v1, v2, options) {
     return 0;
 }
     $('#check-new-version').click(function(){
-        //$('#check-new-version-process').removeClass('hide');
+        $('#check-new-version-process').removeClass('hide');
         var pageRequests = {};
         pageRequests['cmd'] = 'get_new_version';
 
