@@ -11,7 +11,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.13.6
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.13.5
 
-(1.8.3之前的用户，请重新部署服务端)
+(1.13.6 之前的用户，请重新部署服务端)
 
 
 版本： https://github.com/XX-net/XX-Net/releases
