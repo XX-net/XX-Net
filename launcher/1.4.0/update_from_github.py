@@ -163,7 +163,7 @@ def restart_xxnet():
     start_sript = os.path.abspath( os.path.join(current_path, os.pardir, "start.py"))
 
     subprocess.Popen([sys.executable, start_sript], shell=False)
-
+    os._exit(0)
 
 def update_version(version):
     try:

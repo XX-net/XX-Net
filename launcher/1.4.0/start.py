@@ -12,16 +12,12 @@ sys.path.append(noarch_lib)
 if sys.platform == "linux" or sys.platform == "linux2":
     from gtk_tray import sys_tray
 elif sys.platform == "win32":
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(current_path)
     from win_tray import sys_tray
 elif sys.platform == "darwin":
     darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
     sys.path.append(darwin_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
-    osx_lib = os.path.join(python_path, 'lib', 'osx')
-    sys.path.append(osx_lib)
 
     try:
         import mac_tray as sys_tray
