@@ -60,23 +60,33 @@
     }
 </script>
 <script type="text/javascript">
-    $('input[name="action"]').click(function() {
+    $('input[name="action"]').click(onActionChange);
+
+    function onActionChange() {
         var action = $('#action:checked').val();
-        var option = $('option[value=3]');
 
         if( action == 'import' ) {
-            option.css('display', '');
+            $('option[value=1]').css('display', 'none');
+            $('option[value=2]').css('display', 'none');
+            $('option[value=3]').css('display', '');
+            $('#ip-format').val("3")
         } else if ( action == 'export' ) {
-            option.css('display', 'none');
+            $('option[value=1]').css('display', '');
+            $('option[value=2]').css('display', '');
+            $('option[value=3]').css('display', 'none');
+            
             if( $('#ip-format').val() == 3 ) {
                 $('#ip-format').val("1");
             }
         }
-    });
+    }
+
+    onActionChange();
 </script>
 <script type="text/javascript">
     function doImportAction(ipFormat, ipList) {
-        var ipList = conversionFormat(ipFormat, '1', ipList);
+        ipList = conversionFormat(ipFormat, '1', ipList);
+        console.log('尝试导入 ', ipList.split('|').length, ' 个IP.');
 
         var postData = {
             'ipList': ipList
@@ -104,10 +114,11 @@
             dataType: 'JSON',
             success: function(result) {
                 var ipList = result['res'];
-                ipList = conversionFormat('1', ipFormat, ipList);
 
+                tip('成功导出' + ipList.split('|').length + '个IP.', 'success');
+
+                ipList = conversionFormat('1', ipFormat, ipList);
                 $('#ip-list').val(ipList);
-                tip('导出成功.', 'success');
             },
             error: function() {
                 tip('导出IP失败.', 'error');
@@ -116,23 +127,27 @@
     }
 </script>
 <script type="text/javascript">
-    function conversionFormat(sf, tf, ss) {
-        if( sf == tf ) {
-            return ss;
+    function conversionFormat(originalFormat, targetFormat, sourceData) {
+        if( originalFormat == targetFormat ) {
+            return sourceData;
         }
 
         var ipList;
-        if( sf == 1 ) {
-            ipList = ss.split("|");
-        } else if( sf == 2 ) {
-            ipList = ss.split("\n");
-        } else if( sf == 3 ) {
+        switch(originalFormat) { //由源数据转换为中间格式
+        case '1': //IP|IP|IP
+            ipList = sourceData.split("|");
+            break;
+        case '2': //换行分割
+            ipList = sourceData.split("\n");
+            break;
+        case '3': //智能正则匹配
+            var tmp = ' ' + sourceData;
             var regex = /(?!\d)[^\d](([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}(?!\d))/gm;
 
             var regexResult;
             ipList = [];
             while(true) {
-                regexResult = regex.exec(ss);
+                regexResult = regex.exec(tmp);
 
                 if(regexResult === null) {
                     break;
@@ -140,20 +155,24 @@
 
                 ipList.push(regexResult[1]);
             }
+            break;
         }
 
         var result;
-        if( tf == 1 ) {
+        switch(targetFormat) { //由中间格式转换为目标格式
+        case '1': //IP|IP|IP
             result = '';
             for(var id in ipList) {
                 result += ipList[id] + '|';
             }
             result = result.substr(0, result.length - 1);
-        } else if( tf == 2 ) {
+            break;
+        case '2': //换行分割
             result = '';
             for(var id in ipList) {
                 result += ipList[id] + '\n';
             }
+            break;
         }
 
         return result;
