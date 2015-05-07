@@ -374,8 +374,8 @@ function versionCompare(v1, v2, options) {
     var $updateButton = $('.update-button');
     $updateButton.click(function(){
         $updateButton
-        .text('正在更新')
-        .not(this).add('#check-new-version').fadeOut('fast');
+        .text('正在更新中..')
+        .not(this).add('#check-new-version').hide();
 
         var loading = Ladda.create(this);
         loading.start();
@@ -389,7 +389,7 @@ function versionCompare(v1, v2, options) {
         }else if(id == 'update-stable-version'){
             pageRequests['version'] = $('#stable-version-no').html();
         }
-          
+
         $.ajax({
             type: 'GET',
             url: '/config',
@@ -397,7 +397,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    $('.message', '.alert').html("更新进行中。。。");
+                    $('.message', '.alert').html("更新完毕！");
                     $('.alert').removeClass('alert-error');
                     $('.alert').removeClass('hide');
                 } else {
@@ -408,10 +408,61 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
+
+                $updateButton.text('更新异常');
             },
             complete: function () {
                 loading.stop();
             }
         });
+
+        getDownloadProgress(function (status, progress) {
+            switch (status) {
+                case 'downloading':
+                    loading.setProgress(progress);
+                    break;
+
+                case 'finished':
+                    loading.setProgress(progress);
+                    loading.stop();
+
+                    $updateButton.text('更新完毕').prop('disabled', true);
+                    break;
+
+                default:
+                    loading.stop();
+
+                    $updateButton.text('发生未知错误');
+            }
+        });
     });
+
+
+    /**
+     * 轮询获取下载进度
+     * @param cb(status, progress)
+     * @param [delay = 500] 延迟时间
+     */
+    function getDownloadProgress (cb, delay) {
+        setTimeout(function () {
+            $.getJSON('download?cmd=get_progress', function(rst) {
+                var data = rst[0];
+
+                switch (data.status) {
+                    case 'downloading':
+                        cb('downloading', +data.downloaded / +data.size);
+
+                        getDownloadProgress(cb, delay);
+                        break;
+
+                    case 'finished':
+                        cb('finished', 1);
+                        break;
+
+                    default:
+                        // do nothing
+                }
+            });
+        }, delay || 500);
+    }
 </script>
