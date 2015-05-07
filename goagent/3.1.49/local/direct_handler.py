@@ -69,10 +69,10 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
         response.begin()
         ssl_sock.settimeout(orig_timeout)
     except httplib.BadStatusLine as e:
-        logging.warn("_request bad status line:%r", e)
+        logging.warn("direct_handler.fetch bad status line:%r", e)
         response = None
     except Exception as e:
-        logging.warn("_request:%r", e)
+        logging.warn("direct_handler.fetch:%r", e)
     return response
 
 
@@ -90,18 +90,25 @@ def handler(method, host, url, headers, body, wfile):
             response = fetch(method, host, url, headers, body)
             if response:
                 break
-
+        except OpenSSL.SysCallError as e:
+            errors.append(e)
+            logging.warn("direct_handler.handler err:%r %s/%s", e, host, url)
         except Exception as e:
             errors.append(e)
             logging.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
 
     try:
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-        response_headers = dict((k.title(), v) for k, v in response.getheaders())
-        for key, value in response.getheaders():
-            send_header(wfile, key, value)
-            #logging.debug("Head- %s: %s", key, value)
-        wfile.write("\r\n")
+        send_to_broswer = True
+        try:
+            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
+            response_headers = dict((k.title(), v) for k, v in response.getheaders())
+            for key, value in response.getheaders():
+                send_header(wfile, key, value)
+                #logging.debug("Head- %s: %s", key, value)
+            wfile.write("\r\n")
+        except Exception as e:
+            send_to_broswer = False
+            logging.warn("direct_handler.handler send response fail. t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
 
         if method == 'HEAD' or response.status in (204, 304):
             logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
@@ -117,13 +124,22 @@ def handler(method, host, url, headers, body, wfile):
                 except httplib.IncompleteRead, e:
                     data = e.partial
 
-                if not data:
-                    wfile.write('0\r\n\r\n')
-                    break
-                length += len(data)
-                wfile.write('%x\r\n' % len(data))
-                wfile.write(data)
-                wfile.write('\r\n')
+                if send_to_broswer:
+                    try:
+                        if not data:
+                            wfile.write('0\r\n\r\n')
+                            break
+                        length += len(data)
+                        wfile.write('%x\r\n' % len(data))
+                        wfile.write(data)
+                        wfile.write('\r\n')
+                    except Exception as e:
+                        send_to_broswer = False
+                        logging.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                else:
+                    if not data:
+                        break
+
             response.close()
             logging.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
             return
@@ -136,7 +152,6 @@ def handler(method, host, url, headers, body, wfile):
             start, end, length = 0, content_length-1, content_length
 
         time_start = time.time()
-        send_to_broswer = True
         while True:
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data and time.time() - time_start > 120:
@@ -168,7 +183,7 @@ def handler(method, host, url, headers, body, wfile):
         time_except = time.time()
         time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            logging.warn("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
+            logging.exception("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
         else:
             logging.exception("direct_handler except:%r %s %s", e, host, url)
     except Exception as e:

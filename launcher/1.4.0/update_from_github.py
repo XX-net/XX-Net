@@ -17,7 +17,8 @@ import zipfile
 import config
 import shutil
 
-opener = urllib2.build_opener()
+autoproxy = '127.0.0.1:8087'
+opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 
@@ -28,6 +29,8 @@ if not os.path.isdir(data_root):
 download_path = os.path.join(data_root, 'downloads')
 if not os.path.isdir(download_path):
     os.mkdir(download_path)
+
+download_progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished}
 
 def current_version():
     readme_file = os.path.join(root_path, "README.md")
@@ -47,18 +50,29 @@ def current_version():
     return "get_version_fail"
 
 def download_file(url, file):
+    if url not in download_progress:
+        download_progress[url] = {}
+        download_progress[url]["status"] = "downloading"
+
     try:
         logging.info("download %s to %s", url, file)
         req = opener.open(url)
+        download_progress[url]["size"] = int(req.headers.get('content-length') or 0)
+
         CHUNK = 16 * 1024
+        downloaded = 0
         with open(file, 'wb') as fp:
             while True:
                 chunk = req.read(CHUNK)
                 if not chunk: break
                 fp.write(chunk)
+                downloaded += len(chunk)
+                download_progress[url]["downloaded"] = downloaded
+
+        download_progress[url]["status"] = "finished"
         return True
-    except:
-        logging.info("download %s to %s fail", url, file)
+    except Exception as e:
+        logging.exception("download %s to %s fail:%r", url, file, e)
         return False
 
 def get_xxnet_url_version(readme_file):
@@ -114,6 +128,7 @@ def download_overwrite_new_version(xxnet_version):
     with zipfile.ZipFile(xxnet_zip_file, "r") as dz:
         dz.extractall(download_path)
         dz.close()
+    #return #TODO: test only
 
     for root, subdirs, files in os.walk(xxnet_unzip_path):
         #print "root:", root
@@ -148,7 +163,7 @@ def restart_xxnet():
     start_sript = os.path.abspath( os.path.join(current_path, os.pardir, "start.py"))
 
     subprocess.Popen([sys.executable, start_sript], shell=False)
-
+    os._exit(0)
 
 def update_version(version):
     try:

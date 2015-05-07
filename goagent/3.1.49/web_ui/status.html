@@ -89,12 +89,16 @@
             <td id="gws-ip-num"></td>
         </tr>
         <tr>
-            <td>connected link</td>
+            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
             <td id="connected-link"></td>
         </tr>
         <tr>
             <td>ip-connect-interval</td>
             <td id="ip-connect-interval"></td>
+        </tr>
+        <tr>
+            <td>scan ip thread num</td>
+            <td id="scan-ip-thread-num"></td>
         </tr>
         <tr>
             <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
@@ -157,6 +161,7 @@
                 $('#out-of-quota-appids').html(result['out_of_quota_appids']);
                 $('#not-exist-appids').html(result['not_exist_appids']);
                 $('#ip-connect-interval').html(result['ip_connect_interval']);
+                $('#scan-ip-thread-num').html(result['scan_ip_thread_num']);
                 $('#block-stat').html(result['block_stat']);
 
                 if ( !tipHasClose() ) {

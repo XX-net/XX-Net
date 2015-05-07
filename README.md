@@ -1,20 +1,20 @@
 XX-Net
 ========
-项目状态：目前在某些地区、网络下无法翻墙，如果使用有问题，请反馈具体地区和网络接入商。
+项目状态：目前可用性恢复正常，刚下载可能需要跑一个晚上不关闭，系统会找到好用的ip，使用起来才更流畅。
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.13.5
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.1
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.12.5
+https://codeload.github.com/XX-net/XX-Net/zip/1.13.6
 
-(1.8.3之前的用户，请重新部署服务端)
+(1.13.6 之前的用户，请重新部署服务端)
 
 
-版本： https://github.com/XX-net/XX-Net/releases
+版本历史和说明： https://github.com/XX-net/XX-Net/releases
    
   
   

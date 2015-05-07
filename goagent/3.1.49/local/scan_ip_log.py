@@ -11,10 +11,18 @@ class Scan_ip_log():
     max_lines_per_log_file = 3000
 
     def __init__(self):
+        self.log_path = os.path.join(config.DATA_PATH, "scan_ip.log")
         self.open_log()
 
+    def get_log_content(self):
+        if not os.path.isfile(self.log_path):
+            return ""
+
+        with open(self.log_path, "r") as fd:
+            content = fd.read()
+            return content
+
     def open_log(self):
-        self.log_path = os.path.join(config.DATA_PATH, "scan_ip.log")
         if os.path.isfile(self.log_path):
             with open(self.log_path, "r") as fd:
                 lines = fd.readlines()

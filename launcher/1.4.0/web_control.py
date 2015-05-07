@@ -22,6 +22,7 @@ import datetime
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
 import yaml
+import json
 
 import logging
 import module_init
@@ -140,6 +141,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
+        elif url_path == '/download':
+            self.req_download_handler()
         elif url_path == '/init_module':
             self.req_init_module_handler()
         elif url_path == '/quit':
@@ -305,6 +308,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             except Exception as e:
                 logging.info("update_test_version fail:%r", e)
                 data = '{"res":"fail", "error":"%s"}' % e
+
+        self.send_response('text/html', data)
+
+    def req_download_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        if reqs['cmd'] == ['get_progress']:
+            data = json.dumps(update_from_github.download_progress)
 
         self.send_response('text/html', data)
 

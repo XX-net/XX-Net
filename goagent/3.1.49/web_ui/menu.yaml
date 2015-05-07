@@ -18,6 +18,10 @@ sub_menus: {
     url: ipconfig
   },
   5:{
+    title: 扫描IP,
+    url: scan_ip
+  },
+  6:{
     title: 日志,
     url: logging
   }

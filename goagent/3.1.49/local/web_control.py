@@ -38,7 +38,9 @@ import logging
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
+from google_ip_range import ip_range
 from connect_manager import https_manager
+from scan_ip_log import scan_ip_log
 import ConfigParser
 import connect_control
 import ip_utils
@@ -253,6 +255,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_deploy_handler()
         elif path == "/ip_list":
             return self.req_ip_list_handler()
+        elif path == "/scan_ip":
+            return self.req_scan_ip_handler()
         elif path == "/ssl_pool":
             return self.req_ssl_pool_handler()
         elif path == "/is_ready":
@@ -337,6 +341,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_deploy_handler()
         elif path == "/config":
             return self.req_config_handler()
+        elif path == "/scan_ip":
+            return self.req_scan_ip_handler()
         elif path.startswith("/importip"):
             return self.req_importip_handler()
         else:
@@ -469,6 +475,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
                    "pac_url":config.pac_url,
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
+                   "scan_ip_thread_num":google_ip.searching_thread_count,
                    "block_stat":connect_control.block_stat()
                    }
         data = json.dumps(res_arr)
@@ -604,6 +611,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def req_ip_list_handler(self):
         data = ""
+        data += "pointer:%d\r\n" % google_ip.gws_ip_pointer
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
@@ -621,6 +629,30 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 str += "%d(%s) " % (time_per, v)
             data += "%d \t %s      \t %d \t %d \t %s\r\n" % (i, ip, handshake_time, timeout, str)
             i += 1
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+
+    def req_scan_ip_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ""
+        if reqs['cmd'] == ['get_range']:
+            data = ip_range.load_range_content()
+        elif reqs['cmd'] == ['set_range']:
+            content = self.postvars['ip_range'][0]
+            ip_range.update_range_content(content)
+            ip_range.load_ip_range()
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['set_scan_thread_num']:
+            user_config.user_special.scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
+            user_config.save()
+
+            scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
+            google_ip.update_scan_thread_num(scan_ip_thread_num)
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['get_scan_ip_log']:
+            data = scan_ip_log.get_log_content()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
