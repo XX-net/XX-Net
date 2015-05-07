@@ -90,7 +90,9 @@ def handler(method, host, url, headers, body, wfile):
             response = fetch(method, host, url, headers, body)
             if response:
                 break
-
+        except OpenSSL.SysCallError as e:
+            errors.append(e)
+            logging.warn("direct_handler.handler err:%r %s/%s", e, host, url)
         except Exception as e:
             errors.append(e)
             logging.exception('direct_handler.handler %r %s %s , retry...', e, host, url)

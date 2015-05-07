@@ -604,6 +604,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def req_ip_list_handler(self):
         data = ""
+        data += "pointer:%d\r\n" % google_ip.gws_ip_pointer
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]

@@ -86,6 +86,7 @@ skip_headers = frozenset(['Vary',
 def send_header(wfile, keyword, value):
     keyword = keyword.title()
     if keyword == 'Set-Cookie':
+        # https://cloud.google.com/appengine/docs/python/urlfetch/responseobjects
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
             #logging.debug("Head1 %s: %s", keyword, cookie)
@@ -285,7 +286,7 @@ def handler(method, url, headers, body, wfile):
         try:
             response = fetch(method, url, headers, body)
             if response.app_status != 200:
-                logging.debug("fetch gae status:%s url:%s", response.app_status, url)
+                logging.warn("fetch gae status:%s url:%s", response.app_status, url)
 
 
             if response.app_status == 404:
@@ -373,9 +374,10 @@ def handler(method, url, headers, body, wfile):
         else:
             start, end, length = 0, content_length-1, content_length
 
-        time_start = time.time()
+
         send_to_broswer = True
         while True:
+            time_start = time.time()
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data and time.time() - time_start > 20:
                 response.close()

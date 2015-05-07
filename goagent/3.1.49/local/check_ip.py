@@ -210,7 +210,7 @@ def test_keepalive(ip_str, interval=5):
 # therefor, different host need new ssl connection.
 
 def test_server_type(ssl_sock, ip):
-    request_data = "GET / HTTP/1.1\r\nAccept: */*\r\nHost: %s\r\nConnection: Keep-Alive\r\n\r\n" % ip
+    request_data = "HEAD / HTTP/1.1\r\nAccept: */*\r\nHost: %s\r\n\r\n" % ip
     time_start = time.time()
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)

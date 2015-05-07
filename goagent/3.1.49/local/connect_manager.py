@@ -250,9 +250,12 @@ class Https_connection_manager(object):
         while self.keep_alive:
             time.sleep(2)
             try:
+                sock_list = self.new_conn_pool.get_need_keep_alive(maxtime=230)
+                for ssl_sock in sock_list:
+                    ssl_sock.close()
+
                 sock_list = self.gae_conn_pool.get_need_keep_alive(maxtime=200)
                 for ssl_sock in sock_list:
-
                     # only keep little alive link.
                     # if you have 25 appid, you can keep 5 alive link.
                     if self.gae_conn_pool.qsize() > max(1, len(appid_manager.working_appid_list)/2):
@@ -511,11 +514,6 @@ class Forward_connection_manager():
                 # record TCP connection time
                 conn_time = time.time() - start_time
                 logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
-                if conn_time * 1000 < 400:
-                    google_ip.report_bad_ip(ip)
-                    logging.warn("ip:%s conn_time:%d", ip, conn_time * 1000)
-                    sock.close()
-                    return
 
                 google_ip.update_ip(ip, conn_time * 2000)
                 #logging.info("create_tcp update ip:%s time:%d", ip, conn_time * 2000)
