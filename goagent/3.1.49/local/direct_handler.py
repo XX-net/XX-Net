@@ -108,7 +108,7 @@ def handler(method, host, url, headers, body, wfile):
             wfile.write("\r\n")
         except Exception as e:
             send_to_broswer = False
-            logging.warn("direct_handler.hanler send response fail. t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+            logging.warn("direct_handler.handler send response fail. t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
 
         if method == 'HEAD' or response.status in (204, 304):
             logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
@@ -125,13 +125,21 @@ def handler(method, host, url, headers, body, wfile):
                     data = e.partial
 
                 if send_to_broswer:
+                    try:
+                        if not data:
+                            wfile.write('0\r\n\r\n')
+                            break
+                        length += len(data)
+                        wfile.write('%x\r\n' % len(data))
+                        wfile.write(data)
+                        wfile.write('\r\n')
+                    except Exception as e:
+                        send_to_broswer = False
+                        logging.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                else:
                     if not data:
-                        wfile.write('0\r\n\r\n')
                         break
-                    length += len(data)
-                    wfile.write('%x\r\n' % len(data))
-                    wfile.write(data)
-                    wfile.write('\r\n')
+
             response.close()
             logging.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
             return
