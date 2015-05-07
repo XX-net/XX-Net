@@ -341,9 +341,10 @@ function versionCompare(v1, v2, options) {
                     var stableVersion = result['stable_version'];
                     var currentVersion = result['current_version'];
 
-                    $('#current-version-no').html(currentVersion);
-                    $('#test-version-no').html(testVersion);
-                    $('#stable-version-no').html(stableVersion);
+                    $('#current-version-no').html(currentVersion).next().find('.btn').data('ver', currentVersion);
+                    $('#test-version-no').html(testVersion).next().find('.btn').data('ver', testVersion);
+                    $('#stable-version-no').html(stableVersion).next().find('.btn').data('ver', stableVersion);
+
                     if(versionCompare(testVersion, currentVersion) <= 0){
                         $('#update-test-version').addClass("hide");
                     }
@@ -416,7 +417,7 @@ function versionCompare(v1, v2, options) {
             }
         });
 
-        getDownloadProgress(function (status, progress) {
+        getDownloadProgress($(this).data('ver'), function (status, progress) {
             switch (status) {
                 case 'downloading':
                     loading.setProgress(progress);
@@ -443,16 +444,19 @@ function versionCompare(v1, v2, options) {
      * @param cb(status, progress)
      * @param [delay = 500] 延迟时间
      */
-    function getDownloadProgress (cb, delay) {
+    function getDownloadProgress (ver, cb, delay) {
+        var jsonUrl = 'download?cmd=get_progress',
+            verUrl = 'https://codeload.github.com/XX-net/XX-Net/zip/' + ver;
+
         setTimeout(function () {
-            $.getJSON('download?cmd=get_progress', function(rst) {
-                var data = rst[0];
+            $.getJSON(jsonUrl, function(rst) {
+                var data = rst[verUrl];
 
                 switch (data.status) {
                     case 'downloading':
                         cb('downloading', +data.downloaded / +data.size);
 
-                        getDownloadProgress(cb, delay);
+                        getDownloadProgress(ver, cb, delay);
                         break;
 
                     case 'finished':
