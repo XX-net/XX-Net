@@ -12,31 +12,43 @@ import logging
 
 random.seed(time.time()* 1000000)
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+default_range_file = os.path.join(current_path, "ip_range.txt")
+user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
+
 class Ip_range(object):
     def __init__(self):
-
-        self.range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
-        if not os.path.isfile(self.range_file):
-            current_path = os.path.dirname(os.path.abspath(__file__))
-            default_range_file = os.path.join(current_path, "ip_range.txt")
-            self.range_file = default_range_file
-            #shutil.copy(default_range_file, self.range_file)
-
         self.load_ip_range()
 
+    def load_range_content(self):
+        if os.path.isfile(user_range_file):
+            self.range_file = user_range_file
+        else:
+            self.range_file = default_range_file
 
-    def load_ip_range(self):
         logging.info("load ip range file:%s", self.range_file)
         fd = open(self.range_file, "r")
         if not fd:
-            print "open ip_range.txt fail."
-            exit()
+            logging.error("load ip range %s fail", self.range_file)
+            return
 
+        content = fd.read()
+        fd.close()
+        return content
+
+    def update_range_content(self, content):
+        with open(user_range_file, "w") as fd:
+            fd.write(content)
+
+    def load_ip_range(self):
         self.ip_range_map = {}
         self.ip_range_list = []
         self.ip_range_index = []
         self.candidate_amount_ip = 0
-        for line in fd.readlines():
+
+        content = self.load_range_content()
+        lines = content.splitlines()
+        for line in lines:
             if len(line) == 0 or line[0] == '#':
                 continue
 
@@ -55,7 +67,6 @@ class Ip_range(object):
             # print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
 
         self.ip_range_index.sort()
-        fd.close()
         #print "amount ip num:", self.candidate_amount_ip
 
     def show_ip_range(self):

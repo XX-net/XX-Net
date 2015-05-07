@@ -23,12 +23,14 @@ good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name
 bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip2.txt"))
 default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
-# get value from config:
-max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
-max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # stop scan ip when enough
-ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
 class Check_ip():
+
+    # get value from config:
+    max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
+    max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # stop scan ip when enough
+    ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
+
     searching_thread_count = 0
     ncount_lock = threading.Lock()
 
@@ -61,7 +63,7 @@ class Check_ip():
     gws_ip_pointer_reset_time = 0
 
     def is_ip_enough(self):
-        if len(self.gws_ip_list) >= max_good_ip_num:
+        if len(self.gws_ip_list) >= self.max_good_ip_num:
             return True
         else:
             return False
@@ -192,7 +194,7 @@ class Check_ip():
                     self.gws_ip_pointer += 1
                     continue
                 get_time = self.ip_dict[ip_str]["get_time"]
-                if time.time() - get_time < ip_connect_interval:
+                if time.time() - get_time < self.ip_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
                 handshake_time = self.ip_dict[ip_str]["handshake_time"]
@@ -407,7 +409,7 @@ class Check_ip():
             self.remove_ip_thread_num_lock.release()
 
     def remove_slowest_ip(self):
-        if len(self.gws_ip_list) <= max_good_ip_num:
+        if len(self.gws_ip_list) <= self.max_good_ip_num:
             return
 
         self.try_sort_ip_by_handshake_time(force=True)
@@ -415,7 +417,7 @@ class Check_ip():
         self.ip_lock.acquire()
         try:
             ip_num = len(self.gws_ip_list)
-            while ip_num > max_good_ip_num:
+            while ip_num > self.max_good_ip_num:
 
                 ip_str = self.gws_ip_list[ip_num - 1]
 
@@ -436,7 +438,7 @@ class Check_ip():
             self.ip_lock.release()
 
     def scan_ip_worker(self):
-        while True: #not self.is_ip_enough() and self.searching_thread_count < 2:
+        while self.searching_thread_count <= self.max_check_ip_thread_num:
             if not connect_control.allow_connect():
                 break
 
@@ -470,7 +472,7 @@ class Check_ip():
         self.ncount_lock.release()
 
     def search_more_google_ip(self):
-        while self.searching_thread_count < max_check_ip_thread_num:
+        while self.searching_thread_count < self.max_check_ip_thread_num:
             self.ncount_lock.acquire()
             self.searching_thread_count += 1
             self.ncount_lock.release()
@@ -479,6 +481,9 @@ class Check_ip():
             p.daemon = True
             p.start()
 
+    def update_scan_thread_num(self, num):
+        self.max_check_ip_thread_num = num
+        self.search_more_google_ip()
 
 
 google_ip = Check_ip()
