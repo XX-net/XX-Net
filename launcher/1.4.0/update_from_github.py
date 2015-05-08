@@ -53,6 +53,10 @@ def download_file(url, file):
     if url not in download_progress:
         download_progress[url] = {}
         download_progress[url]["status"] = "downloading"
+    else:
+        if download_progress[url]["status"] == "downloading":
+            logging.error("url in downloading, %s", url)
+            return False
 
     try:
         logging.info("download %s to %s", url, file)
@@ -128,7 +132,9 @@ def download_overwrite_new_version(xxnet_version):
     with zipfile.ZipFile(xxnet_zip_file, "r") as dz:
         dz.extractall(download_path)
         dz.close()
-    #return #TODO: test only
+
+    if config.get(["update", "uuid"], '') == 'test':
+        return
 
     for root, subdirs, files in os.walk(xxnet_unzip_path):
         #print "root:", root

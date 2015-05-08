@@ -33,10 +33,9 @@
                 </select>
             </div>
             <div class="span2">
-                <button class="btn btn-primary " id="check-new-version">检查最新版本</button>
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">检查最新版本</button>
             </div>
             <div class="span1" id="check-new-version-process">
-                <img src="img/loading.gif" class="hide">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
@@ -53,7 +52,7 @@
             <div class="span4" id="test-version-no" style="margin-top:10px">
             </div>
             <div class="span2" >
-                <button class="btn btn-primary update-button" id="update-test-version">立即更新</button>
+                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">立即更新</button>
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
@@ -63,7 +62,7 @@
             <div class="span4" id="stable-version-no" style="margin-top:10px">
             </div>
             <div class="span2">
-                <button class="btn btn-primary update-button" id="update-stable-version">立即更新</button>
+                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">立即更新</button>
             </div>
         </div> <!-- .row-fluid -->
         <hr>
@@ -175,7 +174,7 @@
 
         return setConfig(key, value);
     });
-    
+
     $('#check-update').change(function() {
         var key   = 'check_update',
             value = $(this).val();
@@ -230,7 +229,7 @@
                 } else {
                     displayErrorMessage();
                 }
-            }, 
+            },
             error: function() {
                 displayErrorMessage();
             }
@@ -311,6 +310,9 @@ function versionCompare(v1, v2, options) {
     return 0;
 }
     $('#check-new-version').click(function(){
+        var loading = Ladda.create(this);
+        loading.start();
+
         //$('#check-new-version-process').removeClass('hide');
         var pageRequests = {};
         pageRequests['cmd'] = 'get_new_version';
@@ -326,9 +328,10 @@ function versionCompare(v1, v2, options) {
                     var stableVersion = result['stable_version'];
                     var currentVersion = result['current_version'];
 
-                    $('#current-version-no').html(currentVersion);
-                    $('#test-version-no').html(testVersion);
-                    $('#stable-version-no').html(stableVersion);
+                    $('#current-version-no').html(currentVersion).next().find('.btn').data('ver', currentVersion);
+                    $('#test-version-no').html(testVersion).next().find('.btn').data('ver', testVersion);
+                    $('#stable-version-no').html(stableVersion).next().find('.btn').data('ver', stableVersion);
+
                     if(versionCompare(testVersion, currentVersion) <= 0){
                         $('#update-test-version').addClass("hide");
                     }
@@ -347,13 +350,24 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
+            },
+            complete: function () {
+                loading.stop();
             }
         });
     });
 </script>
 
 <script type="text/javascript">
-    $('.update-button').click(function(){
+    var $updateButton = $('.update-button');
+    $updateButton.click(function(){
+        $updateButton
+        .text('正在更新中..')
+        .not(this).add('#check-new-version').hide();
+
+        var loading = Ladda.create(this);
+        loading.start();
+
         var pageRequests = {};
         pageRequests['cmd'] = 'update_version';
 
@@ -371,7 +385,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('更新进行中。。。.', 'success');
+                    tip('更新进行中。。。.', "更新完毕！");
                 } else {
                     displayErrorMessage();
                 }
@@ -380,7 +394,64 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
+
+                $updateButton.text('更新异常');
+            },
+            complete: function () {
+                loading.stop();
+            }
+        });
+
+        getDownloadProgress($(this).data('ver'), function (status, progress) {
+            switch (status) {
+                case 'downloading':
+                    loading.setProgress(progress);
+                    break;
+
+                case 'finished':
+                    loading.setProgress(progress);
+                    loading.stop();
+
+                    $updateButton.text('更新完毕').prop('disabled', true);
+                    break;
+
+                default:
+                    loading.stop();
+
+                    $updateButton.text('发生未知错误');
             }
         });
     });
+
+
+    /**
+     * 轮询获取下载进度
+     * @param cb(status, progress)
+     * @param [delay = 500] 延迟时间
+     */
+    function getDownloadProgress (ver, cb, delay) {
+        var jsonUrl = 'download?cmd=get_progress',
+            verUrl = 'https://codeload.github.com/XX-net/XX-Net/zip/' + ver;
+
+        setTimeout(function () {
+            $.getJSON(jsonUrl, function(rst) {
+                var data = rst[verUrl];
+
+                switch (data.status) {
+                    case 'downloading':
+                        cb('downloading', +data.downloaded / +data.size);
+
+                        getDownloadProgress(ver, cb, delay);
+                        break;
+
+                    case 'finished':
+                        cb('finished', 1);
+                        break;
+
+                    default:
+                        // do nothing
+                }
+            });
+        }, delay || 500);
+    }
 </script>
