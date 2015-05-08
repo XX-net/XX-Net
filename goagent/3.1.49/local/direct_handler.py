@@ -20,7 +20,6 @@ from gae_handler import generate_message_html, send_response
 from connect_control import connect_allow_time, connect_fail_time
 from gae_handler import return_fail_message
 
-
 from config import config
 
 
@@ -77,13 +76,12 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
 
 
 def handler(method, host, url, headers, body, wfile):
-    global connect_allow_time
     time_request = time.time()
 
     errors = []
     response = None
     while True:
-        if time.time() - time_request > 30 or time.time() < connect_allow_time:
+        if time.time() - time_request > 30:
             return return_fail_message(wfile)
 
         try:
@@ -98,17 +96,18 @@ def handler(method, host, url, headers, body, wfile):
             logging.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
 
     try:
-        send_to_broswer = True
+        send_to_browser = True
         try:
             wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             response_headers = dict((k.title(), v) for k, v in response.getheaders())
             for key, value in response.getheaders():
                 send_header(wfile, key, value)
-                #logging.debug("Head- %s: %s", key, value)
             wfile.write("\r\n")
         except Exception as e:
-            send_to_broswer = False
-            logging.warn("direct_handler.handler send response fail. t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+            send_to_browser = False
+            wait_time = time.time()-time_request
+            logging.warn("direct_handler.handler send response fail. t:%d e:%r %s%s", wait_time, e, host, url)
+
 
         if method == 'HEAD' or response.status in (204, 304):
             logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
@@ -124,7 +123,7 @@ def handler(method, host, url, headers, body, wfile):
                 except httplib.IncompleteRead, e:
                     data = e.partial
 
-                if send_to_broswer:
+                if send_to_browser:
                     try:
                         if not data:
                             wfile.write('0\r\n\r\n')
@@ -134,7 +133,7 @@ def handler(method, host, url, headers, body, wfile):
                         wfile.write(data)
                         wfile.write('\r\n')
                     except Exception as e:
-                        send_to_broswer = False
+                        send_to_browser = False
                         logging.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
                 else:
                     if not data:
@@ -151,17 +150,27 @@ def handler(method, host, url, headers, body, wfile):
         else:
             start, end, length = 0, content_length-1, content_length
 
-        time_start = time.time()
+        time_last_read = time.time()
         while True:
-            data = response.read(config.AUTORANGE_BUFSIZE)
-            if not data and time.time() - time_start > 120:
-                response.close()
-                logging.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
+            if start >= end:
+                https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
+                logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
 
+            data = response.read(config.AUTORANGE_BUFSIZE)
+            if not data:
+                if time.time() - time_last_read > 20:
+                    response.close()
+                    logging.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
+                    return
+                else:
+                    time.sleep(0.1)
+                    continue
+
+            time_last_read = time.time()
             data_len = len(data)
             start += data_len
-            if send_to_broswer:
+            if send_to_browser:
                 try:
                     ret = wfile.write(data)
                     if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
@@ -172,12 +181,8 @@ def handler(method, host, url, headers, body, wfile):
                         logging.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
                     else:
                         logging.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
-                    send_to_broswer = False
+                    send_to_browser = False
 
-            if start >= end:
-                https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
-                logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
-                return
 
     except NetWorkIOError as e:
         time_except = time.time()
