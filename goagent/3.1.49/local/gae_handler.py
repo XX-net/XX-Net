@@ -280,7 +280,7 @@ def handler(method, url, headers, body, wfile):
     errors = []
     response = None
     while True:
-        if time.time() - time_request > 90: #time out
+        if time.time() - time_request > 30: #time out
             return return_fail_message(wfile)
 
         try:
@@ -355,11 +355,17 @@ def handler(method, url, headers, body, wfile):
                 response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
             del response_headers['X-Head-Content-Length']
 
-        for key in response_headers:
-            value = response_headers[key]
-            send_header(wfile, key, value)
-            #logging.debug("Head- %s: %s", key, value)
-        wfile.write("\r\n")
+        send_to_browser = True
+        try:
+            for key in response_headers:
+                value = response_headers[key]
+                send_header(wfile, key, value)
+                #logging.debug("Head- %s: %s", key, value)
+            wfile.write("\r\n")
+        except Exception as e:
+            send_to_browser = False
+            logging.warn("gae_handler.handler send response fail. t:%d e:%r %s", time.time()-time_request, e, url)
+
 
         if len(response.app_msg):
             logging.warn("APPID error:%d url:%s", response.status, url)
@@ -374,19 +380,27 @@ def handler(method, url, headers, body, wfile):
         else:
             start, end, length = 0, content_length-1, content_length
 
-
-        send_to_broswer = True
+        last_read_time = time.time()
         while True:
-            time_start = time.time()
-            data = response.read(config.AUTORANGE_BUFSIZE)
-            if not data and time.time() - time_start > 20:
-                response.close()
-                logging.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
+            if start >= end:
+                https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
+                logging.info("GAE t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
                 return
 
+            data = response.read(config.AUTORANGE_BUFSIZE)
+            if not data:
+                if time.time() - last_read_time > 20:
+                    response.close()
+                    logging.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
+                    return
+                else:
+                    time.sleep(0.1)
+                    continue
+
+            last_read_time = time.time()
             data_len = len(data)
             start += data_len
-            if send_to_broswer:
+            if send_to_browser:
                 try:
                     ret = wfile.write(data)
                     if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
@@ -397,12 +411,7 @@ def handler(method, url, headers, body, wfile):
                         logging.warn('gae_handler send to browser return %r %r', e_b, url)
                     else:
                         logging.warn('gae_handler send to browser return %r %r', e_b, url)
-                    send_to_broswer = False
-
-            if start >= end:
-                https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
-                logging.info("GAE t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
-                return
+                    send_to_browser = False
 
     except NetWorkIOError as e:
         time_except = time.time()
@@ -446,19 +455,23 @@ class RangeFetch(object):
 
         logging.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d', self.url, start, end)
 
-        self.wfile.write("HTTP/1.1 200 OK\r\n")
-        for key in response_headers:
-            if key == 'Transfer-Encoding':
-                continue
-            if key == 'X-Head-Content-Length':
-                continue
-            if key in skip_headers:
-                continue
-            value = response_headers[key]
-            #logging.debug("Head %s: %s", key.title(), value)
-            send_header(self.wfile, key, value)
-        self.wfile.write("\r\n")
-
+        try:
+            self.wfile.write("HTTP/1.1 200 OK\r\n")
+            for key in response_headers:
+                if key == 'Transfer-Encoding':
+                    continue
+                if key == 'X-Head-Content-Length':
+                    continue
+                if key in skip_headers:
+                    continue
+                value = response_headers[key]
+                #logging.debug("Head %s: %s", key.title(), value)
+                send_header(self.wfile, key, value)
+            self.wfile.write("\r\n")
+        except Exception as e:
+            self._stopped = True
+            logging.warn("RangeFetch send response fail:%r %s", e, self.url)
+            return
 
         data_queue = Queue.PriorityQueue()
         range_queue = Queue.PriorityQueue()
@@ -581,21 +594,21 @@ class RangeFetch(object):
                     content_length = int(response.getheader('Content-Length', 0))
                     logging.info('>>>>>>>>>>>>>>> [thread %s] %s %s', threading.currentThread().ident, content_length, content_range)
 
-                    time_start = time.time()
+                    time_last_read = time.time()
                     while start < end + 1:
                         try:
                             data = response.read(self.bufsize)
                             if not data:
-                                if time.time() - time_start > 20:
+                                if time.time() - time_last_read > 20:
                                     break
                                 else:
                                     time.sleep(0.1)
                                     continue
 
+                            time_last_read = time.time()
                             data_len = len(data)
                             data_queue.put((start, data))
                             start += data_len
-
 
                         except Exception as e:
                             logging.warning('RangeFetch "%s %s" %s failed: %s', self.method, self.url, headers['Range'], e)
