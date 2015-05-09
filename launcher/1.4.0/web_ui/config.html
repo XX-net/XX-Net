@@ -385,7 +385,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('更新进行中。。。.', "更新完毕！");
+                    tip('更新完毕！', "success");
                 } else {
                     displayErrorMessage();
                 }
