@@ -134,6 +134,7 @@
                     $( "#goagent-enable").parent().removeClass('switch-off');
                     $( "#goagent-enable").parent().addClass('switch-on');
 
+
                     $( "#goagent-enable").prop('checked', true);
                 }
                 if ( result['php_enable'] != 0 ) {
@@ -313,7 +314,6 @@ function versionCompare(v1, v2, options) {
         var loading = Ladda.create(this);
         loading.start();
 
-        //$('#check-new-version-process').removeClass('hide');
         var pageRequests = {};
         pageRequests['cmd'] = 'get_new_version';
 
@@ -324,24 +324,10 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    var testVersion = result['test_version'];
-                    var stableVersion = result['stable_version'];
-                    var currentVersion = result['current_version'];
-
-                    $('#current-version-no').html(currentVersion).next().find('.btn').data('ver', currentVersion);
-                    $('#test-version-no').html(testVersion).next().find('.btn').data('ver', testVersion);
-                    $('#stable-version-no').html(stableVersion).next().find('.btn').data('ver', stableVersion);
-
-                    if(versionCompare(testVersion, currentVersion) <= 0){
-                        $('#update-test-version').addClass("hide");
-                    }
-                    if(versionCompare(stableVersion, currentVersion) <= 0){
-                        $('#update-stable-version').addClass("hide");
-                    }
+                    createVerInfo(result);
 
                     $('.version-line').removeClass('hide');
-                    $('.alert').removeClass('alert-error');
-                    $('.alert').addClass('hide');
+                    $('.alert').removeClass('alert-error').addClass('hide');
                 } else {
                     displayErrorMessage();
                 }
@@ -359,15 +345,34 @@ function versionCompare(v1, v2, options) {
 </script>
 
 <script type="text/javascript">
-    var $updateButton = $('.update-button');
-    $updateButton.click(function(){
-        $updateButton
-        .text('正在更新中..')
-        .not(this).add('#check-new-version').hide();
+    var dtd         = $.Deferred();
+    var configUrl   = '/config?cmd=get_new_version';
+    var progressUrl = 'download?cmd=get_progress';
 
-        var loading = Ladda.create(this);
-        loading.start();
+    // 检测下载状态
+    $.getJSON(progressUrl, function (rst) {
+        Object.keys(rst).forEach(function (v) {
+            if (rst[v].status === 'downloading' && v.indexOf('XX-Net/zip') > -1) {
+                dtd.resolve((v.split('XX-Net/zip/'))[1]);
+            }
+        });
+    });
 
+    // 展示下载状态
+    dtd.promise().done(function (ver) {
+        $.getJSON(configUrl, function(rst) {
+            createVerInfo(rst);
+
+            $('#check-new-version').hide();
+            $('#update-options').slideDown('fast', function() {
+                $('.version-line').slideDown('fast');
+
+                showDownloadProgress(ver);
+            });
+        });
+    });
+
+    $('.update-button').click(function(){
         var pageRequests = {};
         pageRequests['cmd'] = 'update_version';
 
@@ -378,6 +383,9 @@ function versionCompare(v1, v2, options) {
             pageRequests['version'] = $('#stable-version-no').html();
         }
 
+        var ver = $(this).attr('data-ver');
+        showDownloadProgress(ver);
+
         $.ajax({
             type: 'GET',
             url: '/config',
@@ -385,7 +393,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('更新进行中。。。.', "更新完毕！");
+                    tip('更新进行中。。。.', "info");
                 } else {
                     displayErrorMessage();
                 }
@@ -394,15 +402,54 @@ function versionCompare(v1, v2, options) {
             error: function() {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
-
-                $updateButton.text('更新异常');
-            },
-            complete: function () {
-                loading.stop();
             }
         });
+    });
 
-        getDownloadProgress($(this).data('ver'), function (status, progress) {
+
+    /**
+     * 生成版本信息
+     * @param rst 来自 url /config 的json
+     */
+    function createVerInfo (rst) {
+        var $updateTestVersion = $('#update-test-version');
+        var $updateStableVersion = $('#update-stable-version');
+
+        var testVersion = rst['test_version'];
+        var stableVersion = rst['stable_version'];
+        var currentVersion = rst['current_version'];
+
+        $updateTestVersion.attr('data-ver', testVersion);
+        $updateStableVersion.attr('data-ver', stableVersion);
+
+        $('#current-version-no').html(currentVersion);
+        $('#test-version-no').html(testVersion);
+        $('#stable-version-no').html(stableVersion);
+
+        if(versionCompare(testVersion, currentVersion) <= 0){
+            $updateTestVersion.addClass("hide");
+        }
+        if(versionCompare(stableVersion, currentVersion) <= 0){
+            $updateStableVersion.addClass("hide");
+        }
+    }
+
+
+    /**
+     * 展示按钮的下载状态
+     * @param ver
+     */
+    function showDownloadProgress (ver) {
+        var $btn = $('.update-button')
+                .add('#check-new-version').hide()
+                .filter('[data-ver="'+ ver +'"]').show();
+
+        $btn.text('正在更新中..');
+
+        var loading = Ladda.create($btn[0]);
+        loading.start();
+
+        getDownloadProgress(ver, function (status, progress) {
             switch (status) {
                 case 'downloading':
                     loading.setProgress(progress);
@@ -412,29 +459,30 @@ function versionCompare(v1, v2, options) {
                     loading.setProgress(progress);
                     loading.stop();
 
-                    $updateButton.text('更新完毕').prop('disabled', true);
+                    $btn.text('更新完毕').prop('disabled', true);
                     break;
 
                 default:
                     loading.stop();
 
-                    $updateButton.text('发生未知错误');
+                    $btn.text('发生未知错误');
             }
         });
-    });
+    }
 
 
     /**
      * 轮询获取下载进度
+     * @param ver
      * @param cb(status, progress)
      * @param [delay = 500] 延迟时间
      */
     function getDownloadProgress (ver, cb, delay) {
-        var jsonUrl = 'download?cmd=get_progress',
-            verUrl = 'https://codeload.github.com/XX-net/XX-Net/zip/' + ver;
+        var progressUrl = 'download?cmd=get_progress',
+            verUrl      = 'https://codeload.github.com/XX-net/XX-Net/zip/' + ver;
 
         setTimeout(function () {
-            $.getJSON(jsonUrl, function(rst) {
+            $.getJSON(progressUrl, function(rst) {
                 var data = rst[verUrl];
 
                 switch (data.status) {
@@ -449,9 +497,10 @@ function versionCompare(v1, v2, options) {
                         break;
 
                     default:
-                        // do nothing
+                    // do nothing
                 }
             });
         }, delay || 500);
     }
 </script>
+
