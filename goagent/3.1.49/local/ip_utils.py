@@ -32,6 +32,17 @@ def check_ip_valid(ip):
     else:
         return 0
 
+def check_ip_valid6(ip):
+    """检查ipv4地址的合法性"""
+    ret = g_ip_check.match(ip)
+    if ret is not None:
+        "each item range: [0,255]"
+        for item in ret.groups():
+            if int(item) > 255:
+                return 0
+        return 1
+    else:
+        return 0
 
 def split_ip(strline):
     """从每组地址中分离出起始IP以及结束IP"""

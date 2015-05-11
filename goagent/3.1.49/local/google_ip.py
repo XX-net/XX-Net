@@ -18,13 +18,13 @@ import connect_control
 from scan_ip_log import scan_ip_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-good_ip_file_name = "good_ip.txt"
-good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
-bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip2.txt"))
-default_good_ip_file = os.path.join(current_path, "good_ip.txt")
-
 
 class Check_ip():
+
+    good_ip_file_name = "good_ip.txt"
+    good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
+    bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip2.txt"))
+    default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
     # get value from config:
     max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
@@ -75,10 +75,10 @@ class Check_ip():
         self.search_more_google_ip()
 
     def load_ip(self):
-        if os.path.isfile(good_ip_file):
-            file_path = good_ip_file
+        if os.path.isfile(self.good_ip_file):
+            file_path = self.good_ip_file
         else:
-            file_path = default_good_ip_file
+            file_path = self.default_good_ip_file
         with open(file_path, "r") as fd:
             lines = fd.readlines()
         for line in lines:
@@ -100,8 +100,8 @@ class Check_ip():
         logging.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_ip_by_handshake_time(force=True)
 
-        if os.path.isfile(bad_ip_file):
-            with open(bad_ip_file, "r") as fd:
+        if os.path.isfile(self.bad_ip_file):
+            with open(self.bad_ip_file, "r") as fd:
                 for line in fd.readlines():
                     try:
                         if line == "\n":
@@ -126,11 +126,11 @@ class Check_ip():
 
         try:
             self.ip_lock.acquire()
-            with open(good_ip_file, "w") as fd:
+            with open(self.good_ip_file, "w") as fd:
                 for ip_str, property in self.ip_dict.items():
                     fd.write( "%s %s %s %d\n" % (ip_str, property['domain'], property['server'], property['handshake_time']) )
 
-            with open(bad_ip_file, "w") as fd:
+            with open(self.bad_ip_file, "w") as fd:
                 for ip in self.bad_ip_pool:
                     logging.debug("save bad ip:%s", ip)
                     fd.write("%s\n" % (ip))
@@ -485,8 +485,11 @@ class Check_ip():
         self.max_check_ip_thread_num = num
         self.search_more_google_ip()
 
-
-google_ip = Check_ip()
+if config.USE_IPV6:
+    from google_ipv6 import Check_ipv6
+    google_ip = Check_ipv6()
+else:
+    google_ip = Check_ip()
 
 
 def test():

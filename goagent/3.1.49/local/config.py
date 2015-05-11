@@ -119,6 +119,8 @@ class Config(object):
         self.LOVE_ENABLE = self.CONFIG.getint('love', 'enable')
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
 
+        self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
+
         # change to False when require http://127.0.0.1:8084/quit
         # then GoAgent will quit
         self.keep_run = True

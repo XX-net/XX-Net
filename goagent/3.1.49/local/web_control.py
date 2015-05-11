@@ -67,6 +67,7 @@ class User_special(object):
         self.host_appengine_mode = "gae"
         self.ip_connect_interval = ""
         self.scan_ip_thread_num = 0
+        self.use_ipv6 = 0
 
 class User_config(object):
     user_special = User_special()
@@ -115,6 +116,11 @@ class User_config(object):
             except:
                 pass
 
+            try:
+                self.user_special.use_ipv6 = config.CONFIG.getint('google_ip', 'use_ipv6')
+            except:
+                pass
+
             self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
             self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
             self.user_special.proxy_host = self.USER_CONFIG.get('proxy', 'host')
@@ -153,6 +159,9 @@ class User_config(object):
 
             if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_check_ip_thread_num'):
                 f.write("max_check_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
+
+            if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
+                f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
 
             f.close()
         except:
@@ -500,7 +509,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
                 user_config.user_special.ip_connect_interval = int(self.postvars['ip_connect_interval'][0])
-                user_config.user_special.scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
+                user_config.user_special.use_ipv6 = int(self.postvars['use_ipv6'][0])
                 user_config.save()
 
                 data = '{"res":"success"}'
@@ -583,7 +592,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     continue
                 if google_ip.add_ip(ip, 100, "google.com", "gws"):
                     count += 1
-            google_ip.save_ip_list(force=True)
             data = '{"res":"%s"}' % count
 
         elif reqs['cmd'] == ['exportip']:
