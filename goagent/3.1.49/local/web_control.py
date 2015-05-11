@@ -583,6 +583,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     continue
                 if google_ip.add_ip(ip, 100, "google.com", "gws"):
                     count += 1
+            google_ip.save_ip_list(force=True)
             data = '{"res":"%s"}' % count
 
         elif reqs['cmd'] == ['exportip']:
