@@ -6,7 +6,7 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.14.1
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.2
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.13.6
@@ -26,6 +26,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.13.6
 * 内置了公共 appid, 上千可用ip, 开箱即用
 * 自动导入证书
 * 设置开机启动
+* 可设置自动升级
+* 支持导入、导出ip
+* 自定义扫描IP的线程和IP范围
 
 ## XX-Net不是匿名工具 
 详情请看：  
