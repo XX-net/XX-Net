@@ -207,7 +207,7 @@
                     }
                 } else {
                     window.timer.stop();
-                    $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                    $('.alert').html('当前状态:' + window.status + ', 异常。<br>异常信息:' + result['status']);
                     updateLog(result['log']);
                 }
                 if(window.isAutoScrollLog == true){
