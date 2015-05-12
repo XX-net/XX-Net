@@ -382,7 +382,7 @@ def handler(method, url, headers, body, wfile):
 
         last_read_time = time.time()
         while True:
-            if start >= end:
+            if start > end:
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
                 logging.info("GAE t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
                 return

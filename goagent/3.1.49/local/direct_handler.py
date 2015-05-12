@@ -152,7 +152,7 @@ def handler(method, host, url, headers, body, wfile):
 
         time_last_read = time.time()
         while True:
-            if start >= end:
+            if start > end:
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
                 logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
