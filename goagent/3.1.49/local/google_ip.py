@@ -302,6 +302,7 @@ class Check_ip():
                 self.ip_dict[ip_str]['timeout'] = 0
                 self.ip_dict[ip_str]['history'].append([time.time(), handshake_time])
                 self.ip_dict[ip_str]["fail_time"] = 0
+                self.iplist_need_save = 1
                 return
 
             #logging.debug("update ip:%s not exist", ip_str)
@@ -358,6 +359,8 @@ class Check_ip():
                 if not force_remove:
                     self.to_remove_ip_list.put(ip_str)
                     self.try_remove_thread()
+
+            self.iplist_need_save = 1
         except Exception as e:
             logging.exception("set_ip err:%s", e)
         finally:
@@ -402,12 +405,6 @@ class Check_ip():
 
                 logging.info("real remove ip:%s ", ip_str)
                 self.iplist_need_save = 1
-                del self.ip_dict[ip_str]
-                if ip_str in self.gws_ip_list:
-                    self.gws_ip_list.remove(ip_str)
-                self.save_ip_list()
-
-            #self.check_all_exist_ip()
         finally:
             self.remove_ip_thread_num_lock.acquire()
             self.remove_ip_thread_num -= 1
