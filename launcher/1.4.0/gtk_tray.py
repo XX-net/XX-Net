@@ -15,8 +15,12 @@ pygtk.require('2.0')
 import gtk
 gtk.gdk.threads_init()
 
-import pynotify
-pynotify.init('XX-Net Notify')
+try:
+    import pynotify
+    pynotify.init('XX-Net Notify')
+except:
+    logging.warn("import pynotify fail, please install python-notify if possiable.")
+    pynotify = None
 
 import module_init
 
@@ -51,6 +55,9 @@ class Gtk_tray():
 
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
+        if not pynotify:
+            return False
+
         n = pynotify.Notification('Test', msg)
         for k in buttons:
             data = buttons[k]["data"]
@@ -60,6 +67,7 @@ class Gtk_tray():
         n.set_timeout(timeout)
         n.show()
         self.notify_list.append(n)
+        return True
 
     def show_control_web(self, widget=None, data=None):
         webbrowser.open_new("http://127.0.0.1:8085/")
