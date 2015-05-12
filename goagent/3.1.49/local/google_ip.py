@@ -28,7 +28,7 @@ class Check_ip():
 
     # get value from config:
     max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
-    max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # stop scan ip when enough
+    max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #3000  # stop scan ip when enough
     ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
     searching_thread_count = 0
@@ -401,8 +401,13 @@ class Check_ip():
                     return
 
                 logging.info("real remove ip:%s ", ip_str)
+                self.iplist_need_save = 1
+                del self.ip_dict[ip_str]
+                if ip_str in self.gws_ip_list:
+                    self.gws_ip_list.remove(ip_str)
+                self.save_ip_list()
 
-            #self.check_exist_ip()
+            #self.check_all_exist_ip()
         finally:
             self.remove_ip_thread_num_lock.acquire()
             self.remove_ip_thread_num -= 1
