@@ -28,7 +28,7 @@ class Check_ip():
 
     # get value from config:
     max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
-    max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #4000  # stop scan ip when enough
+    max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #3000  # stop scan ip when enough
     ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
     searching_thread_count = 0
@@ -302,6 +302,7 @@ class Check_ip():
                 self.ip_dict[ip_str]['timeout'] = 0
                 self.ip_dict[ip_str]['history'].append([time.time(), handshake_time])
                 self.ip_dict[ip_str]["fail_time"] = 0
+                self.iplist_need_save = 1
                 return
 
             #logging.debug("update ip:%s not exist", ip_str)
@@ -358,6 +359,8 @@ class Check_ip():
                 if not force_remove:
                     self.to_remove_ip_list.put(ip_str)
                     self.try_remove_thread()
+
+            self.iplist_need_save = 1
         except Exception as e:
             logging.exception("set_ip err:%s", e)
         finally:
@@ -401,8 +404,7 @@ class Check_ip():
                     return
 
                 logging.info("real remove ip:%s ", ip_str)
-
-            #self.check_exist_ip()
+                self.iplist_need_save = 1
         finally:
             self.remove_ip_thread_num_lock.acquire()
             self.remove_ip_thread_num -= 1
