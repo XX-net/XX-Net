@@ -1,12 +1,12 @@
 XX-Net
 ========
-项目状态：目前可用性恢复正常，刚下载可能需要跑一个晚上不关闭，系统会找到好用的ip，使用起来才更流畅。
+项目状态：目前部分地区需要重新搜索ip，刚下载需要跑一个晚上不关闭，待系统找到好用的ip，使用起来才更流畅。
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.14.2
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.3
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.13.6
@@ -40,7 +40,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
 * Win7/8/10
 * Ubuntu （不显示系统托盘）
-* Debian
+* Debian （debian 8 php_proxy无法工作）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
 
 ## 链接
@@ -77,7 +77,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * checkgoogleip
 
 
-如何参与贡献
+如何帮助项目
 ==========
 https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
