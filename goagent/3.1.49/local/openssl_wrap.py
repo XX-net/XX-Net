@@ -109,7 +109,12 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
     @staticmethod
-    def context_builder(ssl_version='SSLv23', ca_certs=None, cipher_suites=('ALL', '!aNULL', '!eNULL')):
+    def context_builder(ca_certs=None, cipher_suites=('ALL', '!aNULL', '!eNULL')):
+        if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
+            ssl_version = "TLSv1_2"
+        else:
+            ssl_version = "TLSv1"
+
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
         if ca_certs:

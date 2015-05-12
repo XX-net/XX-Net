@@ -96,9 +96,9 @@ class Check_frame(object):
         self.timeout = 5
         self.check_cert = check_cert
         if check_cert:
-            self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
+            self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
         else:
-            self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1") #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
+            self.openssl_context = SSLConnection.context_builder() #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
 
     def connect_ssl(self, ip):
         import struct

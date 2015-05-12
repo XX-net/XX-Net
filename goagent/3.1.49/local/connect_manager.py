@@ -174,7 +174,7 @@ class Https_connection_manager(object):
         # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
-        self.timeout = 2
+        self.timeout = 4
         self.max_timeout = 15
         self.thread_num = 0
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
@@ -185,7 +185,7 @@ class Https_connection_manager(object):
         self.gae_conn_pool = Connect_pool()
         self.host_conn_pool = {}
 
-        self.openssl_context = SSLConnection.context_builder(ssl_version="TLSv1", ca_certs=g_cacertfile)
+        self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
 
         # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
         self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
