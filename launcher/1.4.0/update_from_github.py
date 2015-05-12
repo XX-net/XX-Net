@@ -76,7 +76,7 @@ def download_file(url, file):
         download_progress[url]["status"] = "finished"
         return True
     except Exception as e:
-        logging.exception("download %s to %s fail:%r", url, file, e)
+        logging.warn("download %s to %s fail:%r", url, file, e)
         return False
 
 def get_xxnet_url_version(readme_file):
