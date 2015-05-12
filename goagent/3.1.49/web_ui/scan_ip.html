@@ -60,6 +60,12 @@
             }
         });
     }
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var target = e.target.attributes.href.value;
+        if(target == "#logs"){
+            $('#log').scrollTop($('#log')[0].scrollHeight);
+        }
+    })
 </script>
 <script type="text/javascript">
     $(function() {
