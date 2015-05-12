@@ -306,6 +306,9 @@ def handler(method, url, headers, body, wfile):
             if response.app_status == 403 or response.app_status == 405: #Method not allowed
                 # google have changed from gws to gvs, need to remove.
                 logging.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
+                # some ip can connect, and server type is gws
+                # but can't use as GAE server
+                # so we need remove it immediately
                 google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                 response.close()
                 continue

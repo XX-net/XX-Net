@@ -117,8 +117,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         if len(url_path.split('/')) >= 3 and url_path.split('/')[1] == "modules":
             module = url_path.split('/')[2]
             #config.load()
-            modules_versoin = config.get(['modules', module, 'current_version'], None)
-            file_path = os.path.join(root_path, module, modules_versoin, url_path.split('/')[3:].join('/'))
+            modules_version = config.get(['modules', module, 'current_version'], None)
+            file_path = os.path.join(root_path, module, modules_version, url_path.split('/')[3:].join('/'))
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
@@ -329,7 +329,6 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             module = reqs['module'][0]
             config.load()
-            modules_versoin = config.get(['modules', module, 'current_version'], None)
 
             if reqs['cmd'] == ['start']:
                 result = module_init.start(module)
