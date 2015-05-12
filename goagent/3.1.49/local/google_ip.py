@@ -71,7 +71,6 @@ class Check_ip():
     def __init__(self):
         self.load_ip()
 
-        #if not self.is_ip_enough():
         self.search_more_google_ip()
 
     def load_ip(self):
@@ -442,7 +441,8 @@ class Check_ip():
     def scan_ip_worker(self):
         while self.searching_thread_count <= self.max_check_ip_thread_num:
             if not connect_control.allow_connect():
-                break
+                time.sleep(10)
+                continue
 
             try:
                 time.sleep(1)
@@ -465,13 +465,14 @@ class Check_ip():
             except check_ip.HoneypotError as e:
                 self.report_bad_ip(ip_str)
                 connect_control.fall_into_honeypot()
-                break
+                continue
             except Exception as e:
                 logging.exception("google_ip.runJob fail:%s", e)
 
         self.ncount_lock.acquire()
         self.searching_thread_count -= 1
         self.ncount_lock.release()
+        logging.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
         while self.searching_thread_count < self.max_check_ip_thread_num:
