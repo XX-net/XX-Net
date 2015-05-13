@@ -53,6 +53,10 @@
             <td id="pac-url"></td>
         </tr>
         <tr>
+            <td>IPv6</td>
+            <td id="ipv6-status"></td>
+        </tr>
+        <tr>
             <td>Google IP</td>
             <td id="gws-ip-num"></td>
         </tr>
@@ -165,6 +169,7 @@
                 $('#python-version').html(result['python_version']);
                 $('#proxy-listen').html(result['proxy_listen']);
                 $('#pac-url').html(result['pac_url']);
+                $("#ipv6-status").html(result['use_ipv6']);
                 $("#gws-ip-num").html(result['gws_ip_num']);
                 $("#connected-link").html(result['connected_link']);
                 $('#gae-appid').html(result['gae_appid']);
