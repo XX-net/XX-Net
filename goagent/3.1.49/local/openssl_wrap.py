@@ -11,6 +11,9 @@ SSLError = OpenSSL.SSL.WantReadError
 import select
 import time
 import socket
+import logging
+
+ssl_version = ''
 
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
@@ -110,10 +113,18 @@ class SSLConnection(object):
 
     @staticmethod
     def context_builder(ca_certs=None, cipher_suites=('ALL', '!aNULL', '!eNULL')):
-        if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
-            ssl_version = "TLSv1_2"
-        else:
-            ssl_version = "TLSv1"
+        global  ssl_version
+
+        if not ssl_version:
+            if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
+                ssl_version = "TLSv1_2"
+            elif hasattr(OpenSSL.SSL, "TLSv1_1_METHOD"):
+                ssl_version = "TLSv1_1"
+            elif hasattr(OpenSSL.SSL, "TLSv1_METHOD"):
+                ssl_version = "TLSv1"
+            else:
+                ssl_version = "SSLv23"
+            logging.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
