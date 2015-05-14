@@ -430,45 +430,47 @@ function versionCompare(v1, v2, options) {
             $updateTestVersion.addClass("hide");
         }
         if(versionCompare(stableVersion, currentVersion) <= 0){
-            $updateStableVersion.addClass("hide");
-        }
-    }
+          $updateStableVersion.addClass("hide");
+      }
+  }
 
 
-    /**
-     * 展示按钮的下载状态
-     * @param ver
-     */
-    function showDownloadProgress (ver) {
-        var $btn = $('.update-button')
-                .add('#check-new-version').hide()
-                .filter('[data-ver="'+ ver +'"]').show();
+  /**
+   * 展示按钮的下载状态
+   * @param ver
+   */
+  function showDownloadProgress (ver) {
+      var $btn = $('.update-button')
+              .add('#check-new-version').hide()
+              .filter('[data-ver="'+ ver +'"]').show();
 
-        $btn.text('正在更新中..');
+      var loading = Ladda.create($btn[0]),
+          label   = $btn.find('.ladda-label');
 
-        var loading = Ladda.create($btn[0]);
-        loading.start();
+      loading.start();
 
-        getDownloadProgress(ver, function (status, progress) {
-            switch (status) {
-                case 'downloading':
-                    loading.setProgress(progress);
-                    break;
+      getDownloadProgress(ver, function (status, progress) {
+          switch (status) {
+              case 'downloading':
+                  loading.setProgress(progress);
+                  progress && label.text('正在更新.. ' + parseInt(progress * 100) + '%');
+                  break;
 
-                case 'finished':
-                    loading.setProgress(progress);
-                    loading.stop();
+              case 'finished':
+                  loading.setProgress(progress);
+                  loading.stop();
 
-                    $btn.text('更新完毕').prop('disabled', true);
-                    break;
+                  label.text('更新完毕');
+                  $btn.prop('disabled', true);
+                  break;
 
-                default:
-                    loading.stop();
+              default:
+                  loading.stop();
 
-                    $btn.text('发生未知错误');
-            }
-        });
-    }
+                  $btn.text('发生未知错误');
+          }
+      });
+  }
 
 
     /**
@@ -503,4 +505,3 @@ function versionCompare(v1, v2, options) {
         }, delay || 500);
     }
 </script>
-
