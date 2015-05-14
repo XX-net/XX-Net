@@ -79,6 +79,7 @@ class Win_tray():
 
     def show_control_web(self, widget=None, data=None):
         webbrowser.open("http://127.0.0.1:8085/")
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
         pass
@@ -96,6 +97,7 @@ class Win_tray():
 sys_tray = Win_tray()
 
 def main():
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     sys_tray.serve_forever()
 
 if __name__ == '__main__':
