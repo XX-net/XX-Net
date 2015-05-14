@@ -195,15 +195,17 @@ class Check_frame(object):
 
         return False
 
-def test_keepalive(ip_str, interval=5):
-    logging.info("==>%s", ip_str)
+def test_keep_alive(ip_str, interval=5):
+    logging.info("==>%s, time:%d", ip_str, interval)
     check = Check_frame(ip_str)
     ssl = check.connect_ssl(ip_str)
     result = test_app_head(ssl, ip_str)
-    print result
+    logging.info("first:%r", result)
+    #print result
     time.sleep(interval)
     result = test_app_head(ssl, ip_str)
-    print result
+    #print result
+    logging.info("result:%r", result)
 
 
 # each ssl connection must reuse by same host
@@ -490,10 +492,14 @@ def check_all_exist_ip():
             logging.exception("load_ip line:%s err:%s", line, e)
 
 
+def test_alive():
+    for i in range(60, 250, 50):
+        test_keep_alive("64.15.114.41", i)
 
 if __name__ == "__main__":
     #test_main()
-    network_is_ok()
+    #network_is_ok()
+    test_alive()
     #print network_is_ok()
     #print network_is_ok()
     #test("216.58.220.86", 10) #gws

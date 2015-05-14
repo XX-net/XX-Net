@@ -250,7 +250,7 @@ class Https_connection_manager(object):
         while self.keep_alive:
             time.sleep(2)
             try:
-                sock_list = self.new_conn_pool.get_need_keep_alive(maxtime=230)
+                sock_list = self.new_conn_pool.get_need_keep_alive(maxtime=220)
                 for ssl_sock in sock_list:
                     ssl_sock.close()
 
