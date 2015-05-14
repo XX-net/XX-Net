@@ -124,6 +124,10 @@ class SSLConnection(object):
                 ssl_version = "TLSv1"
             else:
                 ssl_version = "SSLv23"
+
+            if sys.platform == "darwin":
+                ssl_version = "TLSv1"
+                
             logging.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
