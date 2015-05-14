@@ -208,7 +208,7 @@ def general_gtk_callback(widget=None, data=None):
 
 def check_update():
     try:
-        update_rule = config.get(["update", "check_update"], "dont-check")
+        update_rule = config.get(["update", "check_update"], "stable")
         if update_rule == "dont-check":
             return
 
