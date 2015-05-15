@@ -2,6 +2,14 @@
     <div id="log" class="span12"></div> <!-- #log -->
 </div> <!-- #log-container -->
 
+<style type="text/css">
+    .DUMMY { color: #000 }
+    .DEBUG { color: #21610b }
+    .INFO { color: #000 }
+    .WARNING { color: #ff8000 }
+    .ERROR { color: #fe2e2e }
+    .CRITICAL { color: #d7df01 }
+</style>
 <!-- JavaScript -->
 <script type="text/javascript">
     title('GoAgent代理日志');
@@ -79,9 +87,9 @@
                 $.each(result, function(lineNumber, log) {
                     window.offset = lineNumber;
 
-                    var logTemplate = '<p style="color: %s;">%s</p>';
+                    var logTemplate = '<p class="%s">%s</p>';
                     if ( window.previousOffset != window.offset ) {
-                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log));
+                        $('#log').append(logTemplate.format(getLogLevel(log), log));
                         scrollLog();
                     }
                 });
@@ -104,19 +112,5 @@
             return 'CRITICAL';
         }
         return 'DUMMY';
-    }
-</script>
-<script type="text/javascript">
-    function getLogColor(logLevel) {
-        var colors = {
-            'DUMMY': '#000',
-            'DEBUG': '#21610b',
-            'INFO': '#000',
-            'WARNING': '#ff8000',
-            'ERROR': '#fe2e2e',
-            'CRITICAL': '#d7df01'
-        };
-
-        return colors[logLevel];
     }
 </script>
