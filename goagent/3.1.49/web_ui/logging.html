@@ -81,7 +81,7 @@
 
                     var logTemplate = '<p style="color: %s;">%s</p>';
                     if ( window.previousOffset != window.offset ) {
-                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log.replace(/\n/g, '<br>')));
+                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log));
                         scrollLog();
                     }
                 });
