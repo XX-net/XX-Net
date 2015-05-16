@@ -11,6 +11,13 @@ import logging
 
 import pygtk
 
+if __name__ == "__main__":
+    import os, sys
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
 pygtk.require('2.0')
 import gtk
 gtk.gdk.threads_init()
@@ -80,7 +87,9 @@ class Gtk_tray():
         gtk.main_quit()
 
     def serve_forever(self):
+        gtk.gdk.threads_enter()
         gtk.main()
+        gtk.gdk.threads_leave()
 
 sys_tray = Gtk_tray()
 
