@@ -164,28 +164,7 @@
             url: 'http://127.0.0.1:8084/deploy?cmd=get_log',
             dataType: 'JSON',
             success: function(result) {
-                if ( window.status == 'init' || window.status == 'finished' ) {
-                    if ( result['status'] == 'init' ) {
-                        window.timer.stop();
-                        $('.alert').html('当前状态: 空闲');
-                    } else if ( result['status'] == 'running' ) {
-                        window.status = 'running';
-                        $('.alert').html('当前状态: 正在部署...');
-                        
-                        updateLog(result['log']);
-                        changeButtonStatus('cancel');
-                    } else if ( result['status'] == 'finished' ) {
-                        window.timer.stop();
-                        window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成');
-
-                        updateLog(result['log']);
-                    } else {
-                        window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
-                        updateLog(result['log']);
-                    }
-                } else if ( window.status == 'running' ) {
+                if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
                         $('.alert').html('当前状态: XX-Net被重置。');
@@ -205,10 +184,27 @@
                         $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
                         updateLog(result['log']);
                     }
-                } else {
-                    window.timer.stop();
-                    $('.alert').html('当前状态:' + window.status + ', 异常。<br>异常信息:' + result['status']);
-                    updateLog(result['log']);
+                } else { // window.status == 'init' || window.status == 'finished' || undefined
+                    if ( result['status'] == 'init' ) {
+                        window.timer.stop();
+                        $('.alert').html('当前状态: 空闲');
+                    } else if ( result['status'] == 'running' ) {
+                        window.status = 'running';
+                        $('.alert').html('当前状态: 正在部署...');
+
+                        updateLog(result['log']);
+                        changeButtonStatus('cancel');
+                    } else if ( result['status'] == 'finished' ) {
+                        window.timer.stop();
+                        window.status = 'finished';
+                        $('.alert').html('当前状态: 部署完成');
+
+                        updateLog(result['log']);
+                    } else {
+                        window.timer.stop();
+                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                        updateLog(result['log']);
+                    }
                 }
                 if(window.isAutoScrollLog == true){
                     $('#log').scrollTop($('#log')[0].scrollHeight);
