@@ -166,7 +166,7 @@ def random_hostname():
 class Https_connection_manager(object):
 
     thread_num_lock = threading.Lock()
-    keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #0
+    keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #1
 
     def __init__(self):
         # http://docs.python.org/dev/library/ssl.html
