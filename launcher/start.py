@@ -21,9 +21,9 @@ def get_launcher_version_from_config():
         launcher_version = config["modules"]["launcher"]["current_version"]
         return launcher_version
     except yaml.YAMLError as exc:
-        print "Error in configuration file:", exc
+        print( "Error in configuration file:", exc )
     except Exception as e:
-        print "get_launcher_version_from_config:", e
+        print("get_launcher_version_from_config:", e)
 
     return False
 
@@ -52,7 +52,7 @@ def main():
     launcher_version = get_launcher_version_from_config()
     if not launcher_version or not os.path.isdir(os.path.join(current_path, launcher_version)):
         launcher_version = scan_launcher_version()
-    print "launcher version:", launcher_version
+    print( "launcher version:", launcher_version)
     launcher_path = os.path.join(current_path, launcher_version)
     sys.path.insert(0, launcher_path)
     from start import main as launcher_main
