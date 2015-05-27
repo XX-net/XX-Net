@@ -27,7 +27,7 @@ class Check_ip():
     default_good_ip_file = os.path.join(current_path, "good_ip.txt")
 
     # get value from config:
-    max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #5
+    max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #20
     max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #3000  # stop scan ip when enough
     ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
 
