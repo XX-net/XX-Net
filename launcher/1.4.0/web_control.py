@@ -160,8 +160,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             with open(filename, 'rb') as fp:
                 data = fp.read()
-            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%H:%M:%S-%a/%d/%b/%Y')
-            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nexpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (tme, mimetype, len(data))).encode())
+            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nExpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (tme, mimetype, len(data))).encode())
             self.wfile.write(data)
         except:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')

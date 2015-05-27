@@ -14,12 +14,12 @@ sub_menus: {
     url: deploy
   },
   4:{
-    title: 导入导出IP,
-    url: ipconfig
-  },
-  5:{
     title: 扫描IP,
     url: scan_ip
+  },
+  5:{
+    title: 导入导出IP,
+    url: ipconfig
   },
   6:{
     title: 日志,

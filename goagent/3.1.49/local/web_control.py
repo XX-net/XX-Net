@@ -485,7 +485,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "pac_url":config.pac_url,
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
                    "scan_ip_thread_num":google_ip.searching_thread_count,
-                   "block_stat":connect_control.block_stat()
+                   "block_stat":connect_control.block_stat(),
+                   "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
                    }
         data = json.dumps(res_arr)
         self.send_response('text/html', data)
