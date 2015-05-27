@@ -89,8 +89,8 @@ def recheck_module_path():
             logging.error("recheck_module_path %s get version fail", module)
             continue
 
-        set(["modules", module, "current_version"], current_version)
         logging.info("module %s auto upgrade to version %s", module, current_version)
+        set(["modules", module, "current_version"], current_version)
         need_save_config = True
 
         if module not in ["launcher", "php_proxy"]:

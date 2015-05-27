@@ -27,6 +27,7 @@ else:
     logging.warn("detect platform fail:%s", sys.platform)
     from non_tray import sys_tray
 
+import time
 import atexit
 import webbrowser
 import web_control
@@ -68,8 +69,11 @@ def main():
 
     update.start()
 
-
-    sys_tray.serve_forever()
+    if config.get(["modules", "launcher", "show_systray"], 1):
+        sys_tray.serve_forever()
+    else:
+        while True:
+            time.sleep(100)
 
     module_init.stop_all()
     sys.exit()

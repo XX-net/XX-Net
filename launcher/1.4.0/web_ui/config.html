@@ -12,6 +12,12 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
+        <div class="span4">显示托盘图标(需要重启XX-Net)</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="show-systray" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
         <div class="span4">
             <label for="update-options" class="pull-down-control">
                 <i class="icon icon-chevron-right"></i> 升级管理
@@ -130,6 +136,12 @@
 
                     $( "#popup-webui").prop('checked', true);
                 }
+                if ( result['show_systray'] != 0 ) {
+                    $( "#show-systray").parent().removeClass('switch-off');
+                    $( "#show-systray").parent().addClass('switch-on');
+
+                    $( "#show-systray").prop('checked', true);
+                }
                 if ( result['goagent_enable'] != 0 ) {
                     $( "#goagent-enable").parent().removeClass('switch-off');
                     $( "#goagent-enable").parent().addClass('switch-on');
@@ -171,6 +183,14 @@
     $('#auto-start').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'auto_start',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#show-systray').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'show_systray',
             value     = isChecked ? 1 : 0;
 
         return setConfig(key, value);

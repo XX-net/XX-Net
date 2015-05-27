@@ -228,9 +228,10 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif check_update == 1:
                 check_update = "long-term-stable"
 
-            data = '{ "check_update": "%s", "popup_webui": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
+            data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
                    (check_update
                     , config.get(["modules", "launcher", "popup_webui"], 1)
+                    , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "goagent", "auto_start"], 0))
@@ -251,6 +252,15 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
                 else:
                     config.set(["modules", "launcher", "popup_webui"], popup_webui)
+                    config.save()
+
+                    data = '{"res":"success"}'
+            elif 'show_systray' in reqs :
+                show_systray = int(reqs['show_systray'][0])
+                if show_systray != 0 and show_systray != 1:
+                    data = '{"res":"fail, show_systray:%s"}' % show_systray
+                else:
+                    config.set(["modules", "launcher", "show_systray"], show_systray)
                     config.save()
 
                     data = '{"res":"success"}'
