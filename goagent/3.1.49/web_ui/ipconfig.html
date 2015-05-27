@@ -6,10 +6,12 @@
         <div class="span8">
             <div class="row-fluid">
                 <div class="span6">
-                    <input id="action" name="action" type="radio" value="import" checked />导入
+                    <input id="action-import" name="action" class="action" type="radio" value="import" checked />
+                    <label for="action-import" style="display: inline">导入</label>
                 </div> <!-- .span6 -->
                 <div class="span6">
-                    <input id="action" name="action" type="radio" value="export" />导出
+                    <input id="action-export" name="action" class="action" class="action" type="radio" value="export" />
+                    <label for="action-export" style="display: inline">导出</label>
                 </div> <!-- .span6 -->
             </div> <!-- .row-fluid -->
         </div> <!-- .span8 -->
@@ -48,7 +50,7 @@
 </script>
 <script type="text/javascript">
     function onSubmit() {
-        var action   = $('#action:checked').val(),
+        var action   = $('.action:checked').val(),
             ipFormat = $('#ip-format').val(),
             ipList   = $('#ip-list').val();
 
@@ -63,7 +65,7 @@
     $('input[name="action"]').click(onActionChange);
 
     function onActionChange() {
-        var action = $('#action:checked').val();
+        var action = $('.action:checked').val();
 
         if( action == 'import' ) {
             $('option[value=1]').css('display', 'none');
