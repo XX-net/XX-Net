@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # based on checkgoogleip 'moonshawdo@gmail.com'
 
-
 import threading
 import operator
 import time
@@ -20,11 +19,17 @@ from scan_ip_log import scan_ip_log
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 class Check_ip():
-
-    good_ip_file_name = "good_ip.txt"
+    if config.USE_IPV6:
+        good_ip_file_name = "good_ipv6.txt"
+        bad_ip_file_name = "bad_ip2v6.txt"
+        default_good_ip_file_name = "good_ipv6.txt"
+    else:
+        good_ip_file_name = "good_ip.txt"
+        bad_ip_file_name = "bad_ip2.txt"
+        default_good_ip_file_name = "good_ip.txt"
     good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
-    bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, "bad_ip2.txt"))
-    default_good_ip_file = os.path.join(current_path, "good_ip.txt")
+    bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, bad_ip_file_name))
+    default_good_ip_file = os.path.join(current_path, default_good_ip_file_name)
 
     # get value from config:
     max_check_ip_thread_num = config.CONFIG.getint("google_ip", "max_check_ip_thread_num") #20
@@ -175,7 +180,6 @@ class Check_ip():
                     #logging.warning("no gws ip")
                     time.sleep(1)
                     return None
-
 
                 if self.gws_ip_pointer >= ip_num:
                     if time.time() - self.gws_ip_pointer_reset_time < 1:
@@ -365,10 +369,8 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-
         if not self.is_ip_enough():
             self.search_more_google_ip()
-
 
     def try_remove_thread(self):
         if self.remove_ip_thread_num > 0:
@@ -488,20 +490,13 @@ class Check_ip():
         self.max_check_ip_thread_num = num
         self.search_more_google_ip()
 
-if config.USE_IPV6:
-    from google_ipv6 import Check_ipv6
-    google_ip = Check_ipv6()
-else:
-    google_ip = Check_ip()
-
-
 def test():
     google_ip.search_more_google_ip()
     #check.test_ip("74.125.130.98", print_result=True)
     while not google_ip.is_ip_enough():
         time.sleep(10)
 
-
+google_ip = Check_ip()
 if __name__ == '__main__':
     pass
 
