@@ -181,7 +181,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
-            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, ciphers='ECDHE-RSA-AES128-SHA',certfile=certfile, server_side=True)
+            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
         except ssl.SSLError as e:
             logging.info('ssl error: %s, create full domain cert for host:%s', e, host)
             certfile = CertUtil.get_cert(host, full_name=True)
@@ -272,7 +272,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
-            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, ciphers='ECDHE-RSA-AES128-SHA',certfile=certfile, server_side=True)
+            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
         except ssl.SSLError as e:
             logging.info('ssl error: %s, create full domain cert for host:%s', e, host)
             certfile = CertUtil.get_cert(host, full_name=True)
