@@ -6,10 +6,10 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.14.10
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.11
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.14.9
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.10
 
 (1.13.6 之前的用户，请重新部署服务端)
 
@@ -100,3 +100,13 @@ GoAgent 部署服务端页面
 GoAgent 查看日志页面
 
 ![goagent_log](https://cloud.githubusercontent.com/assets/10395528/5849288/f72138cc-a1b9-11e4-94df-d0b7ab160f0c.png)
+
+集成XX-Net的项目
+===============
+* ChromeGAE
+  主页：http://www.ccav1.com/chromegae
+  集成Google Chrome和XX-Net的自动翻墙浏览器
+  维护人：Yanu
+* plusburg
+  主页：https://github.com/Plusburg/Plusburg
+  集成XX-Net的启动光盘镜像
