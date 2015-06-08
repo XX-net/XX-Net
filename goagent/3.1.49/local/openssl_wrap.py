@@ -127,7 +127,7 @@ class SSLConnection(object):
 
             if sys.platform == "darwin":
                 ssl_version = "TLSv1"
-                
+
             logging.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
@@ -137,6 +137,7 @@ class SSLConnection(object):
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
-        ssl_context.set_cipher_list(':'.join(cipher_suites))
+        #ssl_context.set_cipher_list(':'.join(cipher_suites))
+        ssl_context.set_cipher_list('ECDHE-RSA-AES128-SHA')
         return ssl_context
 
