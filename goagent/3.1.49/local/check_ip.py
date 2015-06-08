@@ -33,6 +33,7 @@ from openssl_wrap import SSLConnection
 
 from google_ip_range import ip_range
 import ip_utils
+from appids_manager import appid_manager
 
 if __name__ == "__main__":
     import logging
@@ -47,6 +48,9 @@ else:
             pass
         @staticmethod
         def warn(fmt, *args, **kwargs):
+            pass
+        @staticmethod
+        def exception(fmt, *args, **kwargs):
             pass
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
@@ -188,7 +192,7 @@ class Check_frame(object):
                 errno_str = e.args[0]
             else:
                 errno_str = e.message
-            logging.debug('check_appengine %s %s err:%s', self.ip, errno_str, e)
+            logging.exception('check_appengine %s %s err:%s', self.ip, errno_str, e)
         finally:
             if ssl_sock and close_ssl:
                 ssl_sock.close()
@@ -199,11 +203,11 @@ def test_keep_alive(ip_str, interval=5):
     logging.info("==>%s, time:%d", ip_str, interval)
     check = Check_frame(ip_str)
     ssl = check.connect_ssl(ip_str)
-    result = test_app_head(ssl, ip_str)
+    result = test_app_check(ssl, ip_str)
     logging.info("first:%r", result)
     #print result
     time.sleep(interval)
-    result = test_app_head(ssl, ip_str)
+    result = test_app_check(ssl, ip_str)
     #print result
     logging.info("result:%r", result)
 
@@ -232,7 +236,8 @@ def test_server_type(ssl_sock, ip):
 
 
 def test_app_head(ssl_sock, ip):
-    request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: xxnet-100.appspot.com\r\n\r\n'
+    appid = appid_manager.get_appid()
+    request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     time_start = time.time()
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
@@ -242,11 +247,10 @@ def test_app_head(ssl_sock, ip):
         if status != 200:
             logging.debug("app check %s status:%d", ip, status)
             raise Exception("app check fail")
-        return True
-        content = response.read()
-        if not content == "CHECK_OK":
-            logging.debug("app check %s content:%s", ip, content)
-            #raise Exception("content fail")
+
+    except Exception as e:
+        logging.exception("test_app_head except:%r", e)
+        return False
     finally:
         response.close()
     time_stop = time.time()
@@ -331,7 +335,7 @@ def test_gae(ip_str):
     logging.info("==>%s", ip_str)
     check = Check_frame(ip_str)
 
-    result = check.check(callback=test_app_check, check_ca=True)
+    result = check.check(callback=test_app_head, check_ca=True)
     if not result:
         return False
 
@@ -379,13 +383,16 @@ def test(ip_str, loop=1):
 
     for i in range(loop):
 
-        result = check.check(callback=test_app_check)
+        result = check.check(callback=test_app_head)
         if not result:
             if "gws" in check.result.server_type:
                 logging.warn("ip:%s server_type:%s but appengine check fail.", ip_str, check.result.server_type)
-            continue
-        logging.debug("=======app check ok: %s", ip_str)
-        check.result.appspot_ok = result
+
+            logging.warn("check fail")
+            #continue
+        else:
+            logging.debug("=======app check ok: %s", ip_str)
+            check.result.appspot_ok = result
 
 
         result = check.check(callback=test_server_type, check_ca=True)
@@ -499,14 +506,16 @@ def test_alive():
 if __name__ == "__main__":
     #test_main()
     #network_is_ok()
-    test_alive()
+    #test_alive()
     #print network_is_ok()
     #print network_is_ok()
-    #test("216.58.220.86", 10) #gws
+    #test("74.125.216.36", 10) #gvs
+    #result = test_gws("139.175.107.212")
+    #print result
     #test('208.117.224.213', 10)
     #test("216.239.38.123")
     #     test_multi_thread_search_ip()
-    #check_all_exist_ip()
+    check_all_exist_ip()
     #test_gws("210.158.146.245")
     pass
 
