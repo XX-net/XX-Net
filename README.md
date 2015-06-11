@@ -1,15 +1,20 @@
 XX-Net
 ========
-
+项目状态：目前部分地区需要重新搜索ip，刚下载需要跑一个晚上不关闭，待系统找到好用的ip，使用起来才更流畅。
 
 
 下载链接：
 ==========
-https://codeload.github.com/XX-net/XX-Net/zip/1.8.12
+测试版：
+https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
 
-(1.8.3之前的用户，请重新部署服务端)
+稳定版：
+https://codeload.github.com/XX-net/XX-Net/zip/1.14.10
 
-版本历史： https://github.com/XX-net/XX-Net/releases
+(1.13.6 之前的用户，请重新部署服务端)
+
+
+版本历史和说明： https://github.com/XX-net/XX-Net/releases
    
   
   
@@ -21,6 +26,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.8.12
 * 内置了公共 appid, 上千可用ip, 开箱即用
 * 自动导入证书
 * 设置开机启动
+* 可设置自动升级
+* 支持导入、导出ip
+* 自定义扫描IP的线程和IP范围
 
 ## XX-Net不是匿名工具 
 详情请看：  
@@ -32,7 +40,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
 * Win7/8/10
 * Ubuntu （不显示系统托盘）
-* Debian
+* Debian （debian 8 php_proxy无法工作）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
 
 ## 链接
@@ -44,7 +52,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 
 使用方法：
 ========
-* Windows下, 双击 start.lnk/start.bat/start.vbs 快捷方式
+* Windows下, 双击 start.lnk/start.vbs
   - 启动弹出浏览器： 访问 http://localhost:8085/
   - 托盘图标：点击可弹出Web管理界面, 右键可显示常用功能菜单。
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
@@ -69,7 +77,9 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 * checkgoogleip
 
 
-
+如何帮助项目
+==========
+https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
 
 附图
@@ -90,3 +100,13 @@ GoAgent 部署服务端页面
 GoAgent 查看日志页面
 
 ![goagent_log](https://cloud.githubusercontent.com/assets/10395528/5849288/f72138cc-a1b9-11e4-94df-d0b7ab160f0c.png)
+
+集成XX-Net的项目
+===============
+* ChromeGAE
+  主页：http://www.ccav1.com/chromegae
+  集成Google Chrome和XX-Net的自动翻墙浏览器
+  维护人：Yanu
+* plusburg
+  主页：https://github.com/Plusburg/Plusburg
+  集成XX-Net的启动光盘镜像

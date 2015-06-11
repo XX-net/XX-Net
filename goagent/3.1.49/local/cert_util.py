@@ -16,7 +16,7 @@ import logging
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'python27', '1.0'))
-data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'php_proxy'))
+data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'goagent'))
 if not os.path.isdir(data_path):
     data_path = current_path
 
@@ -41,10 +41,10 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
+from config import config
+
+
 def get_cmd_out(cmd):
-    return []
-    #old gevent conflict with subprocess
-    # need gevent 1.0.1
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out = proc.stdout
     lines = out.readlines()
@@ -150,12 +150,12 @@ class SSLCert:
 class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
 
-    ca_vendor = 'PHP_proxy' #TODO: here should be XX-Net
+    ca_vendor = 'GoAgent' #TODO: here should be XX-Net
     ca_keyfile = os.path.join(data_path, 'CA.crt')
     ca_thumbprint = ''
     ca_certdir = os.path.join(data_path, 'certs')
+    ca_digest = 'sha256'
     ca_lock = threading.Lock()
-    ca_digest = 'sha1' if sys.platform == 'win32' and sys.getwindowsversion() < (6,) else 'sha256'
 
     @staticmethod
     def create_ca():
@@ -168,7 +168,7 @@ class CertUtil(object):
         subj.localityName = 'Cernet'
         subj.organizationName = CertUtil.ca_vendor
         subj.organizationalUnitName = '%s Root' % CertUtil.ca_vendor
-        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be PHP_proxy
+        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be GoAgent
         req.set_pubkey(key)
         req.sign(key, CertUtil.ca_digest)
         ca = OpenSSL.crypto.X509()
@@ -179,10 +179,13 @@ class CertUtil(object):
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
         ca.sign(key, CertUtil.ca_digest)
+        #logging.debug("CA key:%s", key)
+        logging.info("create ca")
         return key, ca
 
     @staticmethod
     def generate_ca_file():
+        logging.info("generate CA file:%s", CertUtil.ca_keyfile)
         key, ca = CertUtil.create_ca()
         with open(CertUtil.ca_keyfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
@@ -305,13 +308,15 @@ class CertUtil(object):
 
 
             if not ret and __name__ != "__main__":
-                #res = CertUtil.win32_notify(msg=u'Import PHP_proxy Ca?', title=u'Authority need')
+                #res = CertUtil.win32_notify(msg=u'Import GoAgent Ca?', title=u'Authority need')
                 #if res == 2:
                 #    return -1
 
                 import win32elevate
                 win32elevate.elevateAdminRun(os.path.abspath(__file__))
                 return True
+            else:
+                CertUtil.win32_notify(msg=u'已经导入GoAgent证书，请重启浏览器.', title=u'Restart browser need.')
 
             return True if ret else False
 
@@ -363,10 +368,10 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            logging.warning('please install *libnss3-tools* package to import PHP_proxy root ca')
+            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
-        cmd_line = 'certutil -L -d %s |grep "PHP_proxy" &&certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
+        cmd_line = 'certutil -L -d %s |grep "GoAgent" &&certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
         os.system(cmd_line) # remove old cert first
 
         cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, common_name, ca_file)
@@ -377,7 +382,7 @@ class CertUtil(object):
     def import_debian_ca(common_name, ca_file):
 
         def get_debian_ca_sha1(nss_path):
-            commonname = "PHP_proxy XX-Net - PHP_proxy" # TODO: here should be PHP_proxy - XX-Net
+            commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
 
             cmd = ['certutil', '-L','-d', 'sql:%s' % nss_path, '-n', commonname]
             lines = get_cmd_out(cmd)
@@ -404,20 +409,21 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            logging.warning('please install *libnss3-tools* package to import PHP_proxy root ca')
+            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
         sha1 = get_debian_ca_sha1(nss_path)
         ca_hash = CertUtil.ca_thumbprint.replace(':', '')
         if sha1 == ca_hash:
-            logging.info("php_proxy system cert exist")
+            logging.info("system cert exist")
             return
+
 
         # shell command to list all cert
         # certutil -L -d sql:$HOME/.pki/nssdb
 
         # remove old cert first
-        cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "PHP_proxy" && certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
+        cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" && certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
         os.system(cmd_line)
 
         # install new cert
@@ -464,7 +470,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_mac_ca(common_name, certfile):
-        commonname = "PHP_proxy XX-Net"
+        commonname = "GoAgent XX-Net" #TODO: need check again
         ca_hash = CertUtil.ca_thumbprint.replace(':', '')
 
         def get_exist_ca_sha1():
@@ -477,10 +483,10 @@ class CertUtil(object):
 
         exist_ca_sha1 = get_exist_ca_sha1()
         if exist_ca_sha1 == ca_hash:
-            logging.info("PHP_proxy CA exist")
+            logging.info("GoAgent CA exist")
             return
 
-        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../../data/php_proxy/CA.crt'# % certfile.decode('utf-8')
+        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../../data/goagent/CA.crt'# % certfile.decode('utf-8')
         if exist_ca_sha1:
             delete_ca_command = 'security delete-certificate -Z %s' % exist_ca_sha1
             exec_command = "%s;%s" % (delete_ca_command, import_command)
@@ -494,7 +500,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_ca(certfile):
-        commonname = "PHP_proxy XX-Net - PHP_proxy" #TODO: here should be PHP_proxy - XX-Net
+        commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
         if sys.platform.startswith('win'):
             CertUtil.import_windows_ca(commonname, certfile)
         elif sys.platform == 'darwin':
@@ -507,14 +513,15 @@ class CertUtil(object):
 
     @staticmethod
     def init_ca():
-        logging.debug("init_ca")
         #Check Certs Dir
         if not os.path.exists(CertUtil.ca_certdir):
             os.makedirs(CertUtil.ca_certdir)
 
-        # Confirmed PHP_proxy CA exist
+        # Confirmed GoAgent CA exist
         if not os.path.exists(CertUtil.ca_keyfile):
-            # clean old site certs
+            logging.info("no CA file exist")
+
+            logging.info("clean old site certs")
             any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
 
             if os.name == 'nt':
@@ -522,7 +529,7 @@ class CertUtil(object):
 
             CertUtil.generate_ca_file()
 
-        # Load PHP_proxy CA
+        # Load GoAgent CA
         with open(CertUtil.ca_keyfile, 'rb') as fp:
             CertUtil.ca_thumbprint = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read()).digest('sha1')
 
@@ -538,7 +545,18 @@ class CertUtil(object):
 
         CertUtil.import_ca(CertUtil.ca_keyfile)
 
+        # change the status,
+        # web_control /cert_import_status will return True, else return False
+        # launcher will wait ready to open browser and check update
+        config.cert_import_ready = True
+
+
 
 
 if __name__ == '__main__':
     CertUtil.init_ca()
+
+
+#TODO:
+# CA commaon should be GoAgent, vander should be XX-Net
+# need change and test on all support platform: Windows/Mac/Ubuntu/Debian

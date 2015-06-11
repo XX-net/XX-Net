@@ -2,9 +2,17 @@
     <div id="log" class="span12"></div> <!-- #log -->
 </div> <!-- #log-container -->
 
+<style type="text/css">
+    .DUMMY { color: black }
+    .DEBUG { color: #21610b }
+    .INFO { color: blue }
+    .WARNING { color: #ff8000 }
+    .ERROR { color: #fe2e2e }
+    .CRITICAL { color: #d7df01 }
+</style>
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('PHP代理日志');
+    title('GoAgent代理日志');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -18,7 +26,7 @@
 <script type="text/javascript">
     function resizeLogWindow() {
         var windowHeight    = $(window).height(),
-            preservedHeight = 220;
+            preservedHeight = 170;
 
         $('#log').css('height', windowHeight - preservedHeight);
     }
@@ -33,7 +41,7 @@
             getLog();
         });
         timer.set({
-            time: 2500,
+            time: 500,
             autostart: true
         });
     });
@@ -72,16 +80,16 @@
 
         $.ajax({
             type: 'GET',
-            url: 'http://127.0.0.1:8083/log',
+            url: 'http://127.0.0.1:8084/log',
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
                 $.each(result, function(lineNumber, log) {
                     window.offset = lineNumber;
 
-                    var logTemplate = '<p style="color: %s;">%s</p>';
+                    var logTemplate = '<p class="%s">%s</p>';
                     if ( window.previousOffset != window.offset ) {
-                        $('#log').append(logTemplate.format(getLogColor(getLogLevel(log)), log.replace(/\n/g, '<br>')));
+                        $('#log').append(logTemplate.format(getLogLevel(log), log));
                         scrollLog();
                     }
                 });
@@ -104,19 +112,5 @@
             return 'CRITICAL';
         }
         return 'DUMMY';
-    }
-</script>
-<script type="text/javascript">
-    function getLogColor(logLevel) {
-        var colors = {
-            'DUMMY': '#000',
-            'DEBUG': '#21610b',
-            'INFO': '#000',
-            'WARNING': '#ff8000',
-            'ERROR': '#fe2e2e',
-            'CRITICAL': '#d7df01'
-        };
-
-        return colors[logLevel];
     }
 </script>

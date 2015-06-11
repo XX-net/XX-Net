@@ -126,7 +126,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
@@ -155,7 +155,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
-            if not "127.0.0.1" in netloc:
+            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 logging.warn("web control ref:%s refuse", netloc)
                 return
         except:
@@ -230,7 +230,6 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if reqs['cmd'] == ['get_config']:
                 data = json.dumps(user_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
-                user_config.php_enable = self.postvars['php_enable'][0]
                 user_config.php_password = self.postvars['php_password'][0]
                 user_config.php_server = self.postvars['php_server'][0]
                 user_config.proxy_enable = self.postvars['proxy_enable'][0]
@@ -241,14 +240,14 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 user_config.save()
 
                 data = '{"res":"success"}'
-                self.send_response('application/json', data)
+                self.send_response('text/html', data)
 
                 http_request("http://127.0.0.1:8085/init_module?module=php_proxy&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response('application/json', data)
+        self.send_response('text/html', data)
 
 
     def req_is_ready_handler(self):
