@@ -149,36 +149,48 @@
     });
 </script>
 <script type="text/javascript">
+    function updateStatus(selector, content) {
+        var previousContent = $(selector).html();
+        //console.log(selector, previousContent, content)
+        if (String(previousContent) != String(content)) {
+            $(selector).html(content);
+        }
+    }
     function getStatus() {
         $.ajax({
             type: 'GET',
             url: 'http://127.0.0.1:8084/status',
             dataType: 'JSON',
             success: function(result) {
-                $('#sys-platform').html(result['sys_platform']);
-                $('#os-system').html(result['os_system']);
-                $('#os-version').html(result['os_version']);
-                $('#os-release').html(result['os_release']);
-                $('#os-detail').html(result['os_detail']);
-                $('#language').html(result['language']);
-                $('#architecture').html(result['architecture']);
-                $('#browser').html(result['browser']);
-                $('#xxnet-version').html(result['xxnet_version']);
-                $('#launcher-version').html(result['launcher_version']);
-                $('#goagent-version').html(result['goagent_version']);
-                $('#python-version').html(result['python_version']);
-                $('#proxy-listen').html(result['proxy_listen']);
-                $('#pac-url').html(result['pac_url']);
-                $("#ipv6-status").html(result['use_ipv6']);
-                $("#gws-ip-num").html(result['gws_ip_num']);
-                $("#connected-link").html(result['connected_link']);
-                $('#gae-appid').html(result['gae_appid']);
-                $('#working-appid').html(result['working_appid']);
-                $('#out-of-quota-appids').html(result['out_of_quota_appids']);
-                $('#not-exist-appids').html(result['not_exist_appids']);
-                $('#ip-connect-interval').html(result['ip_connect_interval']);
-                $('#scan-ip-thread-num').html(result['scan_ip_thread_num']);
-                $('#block-stat').html(result['block_stat']);
+                var updates = {
+                    '#sys-platform': result['sys_platform'],
+                    '#os-system': result['os_system'],
+                    '#os-version': result['os_version'],
+                    '#os-release': result['os_release'],
+                    '#os-detail': result['os_detail'],
+                    '#language': result['language'],
+                    '#architecture': String(result['architecture'].concat()),
+                    '#browser': result['browser'],
+                    '#xxnet-version': result['xxnet_version'],
+                    '#launcher-version': result['launcher_version'],
+                    '#goagent-version': result['goagent_version'],
+                    '#python-version': result['python_version'],
+                    '#proxy-listen': result['proxy_listen'],
+                    '#pac-url': result['pac_url'],
+                    '#ipv6-status': result['use_ipv6'],
+                    '#gws-ip-num': result['gws_ip_num'],
+                    '#connected-link': result['connected_link'],
+                    '#gae-appid': result['gae_appid'],
+                    '#working-appid': result['working_appid'],
+                    '#out-of-quota-appids': result['out_of_quota_appids'],
+                    '#not-exist-appids': result['not_exist_appids'],
+                    '#ip-connect-interval': result['ip_connect_interval'],
+                    '#scan-ip-thread-num': result['scan_ip_thread_num'],
+                    '#block-stat': result['block_stat'],
+                }
+                for (item in updates) {
+                    updateStatus(item, updates[item]);
+                }
 
                 if ( !tipHasClose() ) {
                     tipClose();
