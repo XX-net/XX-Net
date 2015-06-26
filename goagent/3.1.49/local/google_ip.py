@@ -458,7 +458,7 @@ class Check_ip():
 
     def scan_ip_worker(self):
         while self.searching_thread_count <= self.max_check_ip_thread_num:
-            if not connect_control.allow_connect():
+            if not connect_control.allow_scan():
                 time.sleep(10)
                 continue
 
