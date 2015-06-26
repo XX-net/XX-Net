@@ -103,8 +103,10 @@
     <thead>
         <tr>
             <th width="25%">Property</th>
-            <th >Value</th>
+            <th>Value</th>
         </tr>
+    </thead>
+    <tbody>
         <tr>
             <td>working appids</td>
             <td id="working-appid"></td>
@@ -117,8 +119,6 @@
             <td>Not Exist appids</td>
             <td id="not-exist-appids"></td>
         </tr>
-    </thead>
-    <tbody>
     </tbody>
 </table>
 <div id="tip">
@@ -151,7 +151,6 @@
 <script type="text/javascript">
     function updateStatus(selector, content) {
         var previousContent = $(selector).html();
-        //console.log(selector, previousContent, content)
         if (String(previousContent) != String(content)) {
             $(selector).html(content);
         }
@@ -191,7 +190,6 @@
                 for (item in updates) {
                     updateStatus(item, updates[item]);
                 }
-
                 if ( !tipHasClose() ) {
                     tipClose();
                 }
