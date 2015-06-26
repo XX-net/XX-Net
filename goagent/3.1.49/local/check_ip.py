@@ -31,6 +31,7 @@ from config import config
 import cert_util
 from openssl_wrap import SSLConnection
 
+from connect_control import scan_sleep
 from google_ip_range import ip_range
 import ip_utils
 from appids_manager import appid_manager
@@ -226,8 +227,12 @@ def test_server_type(ssl_sock, ip):
         time_stop = time.time()
         time_cost = (time_stop - time_start)*1000
 
-        server_type = server_type.replace(" ", "_")
-        if server_type == '':
+        server_type = server_type.replace(" ", "_") # gvs 1.0
+        if server_type == 'HTTP_server_(unknown)':
+            res_url = response.msg.dict["location"]
+            if "google.com/sorry/IndexRedirect?" in res_url:
+                scan_sleep()
+        if server_type == '': # for avoid csv split
             server_type = '_'
         logging.info("server_type:%s time:%d", server_type, time_cost)
         return server_type
