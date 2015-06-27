@@ -147,7 +147,7 @@ def get_new_lines(from_no):
     first_no = last_no - len(buffer) + 1
     if from_no < first_no:
         from_no = first_no
-    if last_no >= from_no:
+    if last_no > from_no:
         for i in range(from_no, last_no+1):
             jd[i] = buffer[i]
     buffer_lock.release()
