@@ -127,7 +127,7 @@ def set_buffer_size(set_size):
     buffer_len = len(buffer)
     buffer_lock.release()
 
-def get_last_lines(max_lines):
+def get_last_lines(max_lines): # Unused?
     global buffer_size, buffer, buffer_lock
 
     buffer_lock.acquire()
