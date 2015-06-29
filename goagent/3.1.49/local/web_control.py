@@ -257,7 +257,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif path == "/status":
             return self.req_status_handler()
         else:
-            logging.debug('GoAgent Web_control %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.debug('GoAgent Web_control %s %s %s ', self.address_string(), self.command, self.path)
 
 
         if path == '/deploy':
@@ -394,7 +394,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             last_no = int(reqs["last_no"][0])
             data = logging.get_new_lines(last_no)
         else:
-            logging.error('PAC %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

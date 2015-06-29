@@ -147,7 +147,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             sys.exit()
             return
         else:
-            logging.debug('PHP Web_control %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.debug('PHP Web_control %s %s %s ', self.address_string(), self.command, self.path)
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
@@ -216,7 +216,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             last_no = int(reqs["last_no"][0])
             data = logging.get_new_lines(last_no)
         else:
-            logging.error('PAC %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

@@ -103,7 +103,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         except:
             pass
         
-        logging.debug ('launcher web_control %s "%s %s ', self.address_string(), self.command, self.path)
+        logging.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
