@@ -53,18 +53,13 @@
             dataType: 'html',
             success: function(result) {
                 $('#log').html(result.replace(/\n/g, '<br>'));
+                $('#log').scrollTop($('#log')[0].scrollHeight);
             },
             error: function(){
                 tip('读取日志失败.', 'error');
             }
         });
     }
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        var target = e.target.attributes.href.value;
-        if(target == "#logs"){
-            $('#log').scrollTop($('#log')[0].scrollHeight);
-        }
-    })
 </script>
 <script type="text/javascript">
     $(function() {
