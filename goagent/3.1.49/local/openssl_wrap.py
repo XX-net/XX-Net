@@ -112,7 +112,8 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
     @staticmethod
-    def context_builder(ca_certs=None, cipher_suites=('ALL', '!aNULL', '!eNULL')):
+    def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA',)):
+        # 'ALL', '!aNULL', '!eNULL'
         global  ssl_version
 
         if not ssl_version:
@@ -137,7 +138,6 @@ class SSLConnection(object):
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
-        #ssl_context.set_cipher_list(':'.join(cipher_suites))
-        ssl_context.set_cipher_list('ECDHE-RSA-AES128-SHA')
+        ssl_context.set_cipher_list(':'.join(cipher_suites))
         return ssl_context
 
