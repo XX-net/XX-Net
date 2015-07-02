@@ -9,7 +9,7 @@ XX-Net
 https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.14.10
+https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
 
 (1.13.6 之前的用户，请重新部署服务端)
 
@@ -110,3 +110,6 @@ GoAgent 查看日志页面
 * plusburg
   主页：https://github.com/Plusburg/Plusburg
   集成XX-Net的启动光盘镜像
+* appifed-xx-net
+  https://github.com/binarydist/appified-xx-net
+  Mac OSX 环境下，变成一个标准的app
