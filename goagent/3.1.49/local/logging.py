@@ -127,7 +127,7 @@ def set_buffer_size(set_size):
     buffer_len = len(buffer)
     buffer_lock.release()
 
-def get_last_lines(max_lines):
+def get_last_lines(max_lines): # Unused?
     global buffer_size, buffer, buffer_lock
 
     buffer_lock.acquire()
@@ -137,7 +137,7 @@ def get_last_lines(max_lines):
         for i in range(last_no - buffer_len + 1, last_no+1):
             jd[i] = buffer[i]
     buffer_lock.release()
-    return json.dumps(jd)
+    return json.dumps(jd, sort_keys=True)
 
 def get_new_lines(from_no):
     global buffer_size, buffer, buffer_lock
@@ -147,8 +147,8 @@ def get_new_lines(from_no):
     first_no = last_no - len(buffer) + 1
     if from_no < first_no:
         from_no = first_no
-    if last_no >= from_no:
+    if last_no > from_no:
         for i in range(from_no, last_no+1):
             jd[i] = buffer[i]
     buffer_lock.release()
-    return json.dumps(jd)
+    return json.dumps(jd, sort_keys=True)
