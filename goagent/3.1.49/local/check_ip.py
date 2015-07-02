@@ -31,6 +31,7 @@ from config import config
 import cert_util
 from openssl_wrap import SSLConnection
 
+from connect_control import scan_sleep
 from google_ip_range import ip_range
 import ip_utils
 from appids_manager import appid_manager
@@ -76,6 +77,50 @@ if config.PROXY_ENABLE:
     default_socket = socket.socket
 
 
+def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
+    import struct
+    ip_port = (ip, port)
+
+    if not openssl_context:
+        openssl_context = SSLConnection.context_builder()
+
+    if config.PROXY_ENABLE:
+        sock = socks.socksocket(socket.AF_INET)
+    else:
+        sock = socket.socket(socket.AF_INET)
+    # set reuseaddr option to avoid 10048 socket error
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
+    # resize socket recv buffer 8K->32K to improve browser releated application performance
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
+    # disable negal algorithm to send http request quickly.
+    sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
+    # set a short timeout to trigger timeout retry more quickly.
+    sock.settimeout(timeout)
+
+    ssl_sock = SSLConnection(openssl_context, sock)
+    ssl_sock.set_connect_state()
+
+    # pick up the certificate
+    #server_hostname = random_hostname() if (cache_key or '').startswith('google_') or hostname.endswith('.appspot.com') else None
+    #if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
+    #    ssl_sock.set_tlsext_host_name(server_hostname)
+
+    time_begin = time.time()
+    ssl_sock.connect(ip_port)
+    time_connected = time.time()
+    ssl_sock.do_handshake()
+    time_handshaked = time.time()
+
+    connct_time = int((time_connected - time_begin) * 1000)
+    handshake_time = int((time_handshaked - time_connected) * 1000)
+    logging.debug("conn: %d  handshake:%d", connct_time, handshake_time)
+
+    # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
+    ssl_sock.sock = sock
+    return ssl_sock, connct_time, handshake_time
+
 class HoneypotError(Exception):
     def __init__(self, *args, **kwargs):
         pass
@@ -104,52 +149,11 @@ class Check_frame(object):
         else:
             self.openssl_context = SSLConnection.context_builder() #, ca_certs=g_cacertfile) # check cacert cost too many cpu, 100 check thread cost 60%.
 
-    def connect_ssl(self, ip):
-        import struct
-        ip_port = (ip, 443)
-
-        if config.PROXY_ENABLE:
-            sock = socks.socksocket(socket.AF_INET)
-        else:
-            sock = socket.socket(socket.AF_INET)
-        # set reuseaddr option to avoid 10048 socket error
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
-        # resize socket recv buffer 8K->32K to improve browser releated application performance
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
-        # disable negal algorithm to send http request quickly.
-        sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-        # set a short timeout to trigger timeout retry more quickly.
-        sock.settimeout(self.timeout)
-
-        ssl_sock = SSLConnection(self.openssl_context, sock)
-        ssl_sock.set_connect_state()
-
-        # pick up the certificate
-        #server_hostname = random_hostname() if (cache_key or '').startswith('google_') or hostname.endswith('.appspot.com') else None
-        #if server_hostname and hasattr(ssl_sock, 'set_tlsext_host_name'):
-        #    ssl_sock.set_tlsext_host_name(server_hostname)
-
-        time_begin = time.time()
-        ssl_sock.connect(ip_port)
-        time_connected = time.time()
-        ssl_sock.do_handshake()
-        time_handshaked = time.time()
-
-        self.result.connct_time = int((time_connected - time_begin) * 1000)
-        self.result.handshake_time = int((time_handshaked - time_connected) * 1000)
-        logging.debug("conn: %d  handshake:%d", self.result.connct_time, self.result.handshake_time)
-
-        # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
-        ssl_sock.sock = sock
-        return ssl_sock
-
     def check(self, callback=None, check_ca=True, close_ssl=True):
 
         ssl_sock = None
         try:
-            ssl_sock = self.connect_ssl(self.ip)
+            ssl_sock,self.result.connct_time,self.result.handshake_time = connect_ssl(self.ip, timeout=self.timeout, openssl_context=self.openssl_context)
 
             # verify SSL certificate issuer.
             def check_ssl_cert(ssl_sock):
@@ -201,8 +205,7 @@ class Check_frame(object):
 
 def test_keep_alive(ip_str, interval=5):
     logging.info("==>%s, time:%d", ip_str, interval)
-    check = Check_frame(ip_str)
-    ssl = check.connect_ssl(ip_str)
+    ssl = connect_ssl(ip_str)
     result = test_app_check(ssl, ip_str)
     logging.info("first:%r", result)
     #print result
@@ -226,8 +229,12 @@ def test_server_type(ssl_sock, ip):
         time_stop = time.time()
         time_cost = (time_stop - time_start)*1000
 
-        server_type = server_type.replace(" ", "_")
-        if server_type == '':
+        server_type = server_type.replace(" ", "_") # gvs 1.0
+        if server_type == 'HTTP_server_(unknown)':
+            res_url = response.msg.dict["location"]
+            if "google.com/sorry/IndexRedirect?" in res_url:
+                scan_sleep()
+        if server_type == '': # for avoid csv split
             server_type = '_'
         logging.info("server_type:%s time:%d", server_type, time_cost)
         return server_type
@@ -503,6 +510,54 @@ def test_alive():
     for i in range(60, 250, 50):
         test_keep_alive("64.15.114.41", i)
 
+class Test_cipher():
+    ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:SRP-DSS-AES-256-CBC-SHA:SRP-RSA-AES-256-CBC-SHA:SRP-AES-256-CBC-SHA:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA256:DHE-RSA-AES256-SHA:DHE-DSS-AES256-SHA:DHE-RSA-CAMELLIA256-SHA:DHE-DSS-CAMELLIA256-SHA:ECDH-RSA-AES256-GCM-SHA384:ECDH-ECDSA-AES256-GCM-SHA384:ECDH-RSA-AES256-SHA384:ECDH-ECDSA-AES256-SHA384:ECDH-RSA-AES256-SHA:ECDH-ECDSA-AES256-SHA:AES256-GCM-SHA384:AES256-SHA256:AES256-SHA:CAMELLIA256-SHA:PSK-AES256-CBC-SHA:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:SRP-DSS-AES-128-CBC-SHA:SRP-RSA-AES-128-CBC-SHA:SRP-AES-128-CBC-SHA:DHE-DSS-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-SHA256:DHE-DSS-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA:DHE-RSA-SEED-SHA:DHE-DSS-SEED-SHA:DHE-RSA-CAMELLIA128-SHA:DHE-DSS-CAMELLIA128-SHA:ECDH-RSA-AES128-GCM-SHA256:ECDH-ECDSA-AES128-GCM-SHA256:ECDH-RSA-AES128-SHA256:ECDH-ECDSA-AES128-SHA256:ECDH-RSA-AES128-SHA:ECDH-ECDSA-AES128-SHA:AES128-GCM-SHA256:AES128-SHA256:AES128-SHA:SEED-SHA:CAMELLIA128-SHA:PSK-AES128-CBC-SHA:ECDHE-RSA-RC4-SHA:ECDHE-ECDSA-RC4-SHA:ECDH-RSA-RC4-SHA:ECDH-ECDSA-RC4-SHA:RC4-SHA:RC4-MD5:PSK-RC4-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:SRP-DSS-3DES-EDE-CBC-SHA:SRP-RSA-3DES-EDE-CBC-SHA:SRP-3DES-EDE-CBC-SHA:EDH-RSA-DES-CBC3-SHA:EDH-DSS-DES-CBC3-SHA:ECDH-RSA-DES-CBC3-SHA:ECDH-ECDSA-DES-CBC3-SHA:DES-CBC3-SHA:PSK-3DES-EDE-CBC-SHA:EDH-RSA-DES-CBC-SHA:EDH-DSS-DES-CBC-SHA:DES-CBC-SHA"
+    cipher_list = ciphers.split(":")
+    ip = "74.125.216.36"
+
+    def test(self):
+        for cipher in self.cipher_list:
+            logging.debug("%s", cipher)
+
+            openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile, cipher_suites=(cipher,))
+            try:
+                ssl, _, _ = connect_ssl(self.ip, openssl_context=openssl_context)
+                server_type = test_server_type(ssl, self.ip)
+                logging.debug("%s", server_type)
+            except Exception as e:
+                logging.warn("err:%s", e)
+
+
+    def test2(self):
+        work_ciphers = ["AES128-SHA"]
+        for cipher in self.cipher_list:
+            if cipher in work_ciphers:
+                continue
+            else:
+                work_ciphers.append(cipher)
+
+            logging.debug("%s", cipher)
+            cipher_suites = (work_ciphers)
+
+            openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile, cipher_suites=cipher_suites)
+            try:
+                ssl, _, _ = connect_ssl(self.ip, openssl_context=openssl_context)
+                server_type = test_server_type(ssl, self.ip)
+                logging.debug("%s", server_type)
+                if "gws" not in server_type:
+                    work_ciphers.remove(cipher)
+            except Exception as e:
+                logging.warn("err:%s", e)
+                try:
+                    work_ciphers.remove(cipher)
+                except:
+                    pass
+
+        work_str = ""
+        for cipher in work_ciphers:
+            work_str += cipher + ":"
+        logging.info("work ciphers:%s", work_str)
+
 if __name__ == "__main__":
     #test_main()
     #network_is_ok()
@@ -515,8 +570,10 @@ if __name__ == "__main__":
     #test('208.117.224.213', 10)
     #test("216.239.38.123")
     #     test_multi_thread_search_ip()
-    check_all_exist_ip()
-    #test_gws("210.158.146.245")
+    #check_all_exist_ip()
+    test_gws("74.125.216.36")
+    #test = Test_cipher()
+    #test.test2()
     pass
 
 # about ip connect time and handshake time

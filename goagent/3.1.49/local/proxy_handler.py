@@ -34,6 +34,7 @@ import direct_handler
 from connect_control import connect_allow_time, connect_fail_time
 
 class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    protocol_version = 'HTTP/1.1'
     gae_support_methods = tuple(["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])
     bufsize = 256*1024
     max_retry = 3

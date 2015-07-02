@@ -98,8 +98,8 @@ def handler(method, host, url, headers, body, wfile):
     try:
         send_to_browser = True
         try:
-            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             response_headers = dict((k.title(), v) for k, v in response.getheaders())
+            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             for key, value in response.getheaders():
                 send_header(wfile, key, value)
             wfile.write("\r\n")

@@ -36,6 +36,7 @@
         window.previousOffset  = 0;
         window.offset          = 1;
         window.isAutoScrollLog = true;
+        window.isgetLogProcessing = false;
 
         var timer = $.timer(function() {
             getLog();
@@ -73,6 +74,8 @@
 </script>
 <script type="text/javascript">
     function getLog() {
+        if ( window.isgetLogProcessing ) { return }
+        window.isgetLogProcessing = true;
         var pageRequests = {
             'cmd': 'get_new',
             'last_no': offset
@@ -84,16 +87,24 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
+                var newlines = document.createDocumentFragment();
                 $.each(result, function(lineNumber, log) {
                     window.offset = lineNumber;
 
                     var logTemplate = '<p class="%s">%s</p>';
                     if ( window.previousOffset != window.offset ) {
-                        $('#log').append(logTemplate.format(getLogLevel(log), log));
-                        scrollLog();
+                        var newline = $(logTemplate.format(getLogLevel(log), log));
+                        $(newlines).append(newline);
                     }
                 });
+                // $('#log > p').slice(0,-1000).remove();
+                $('#log').append(newlines);
+                scrollLog();
                 window.previousOffset = window.offset;
+                window.isgetLogProcessing = false;
+            },
+            error: function(xml, info, obj) {
+                window.isgetLogProcessing = false;
             }
         });
     }

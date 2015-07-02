@@ -45,6 +45,7 @@ import ConfigParser
 import connect_control
 import ip_utils
 import check_ip
+import cert_util
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -257,7 +258,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif path == "/status":
             return self.req_status_handler()
         else:
-            logging.debug('GoAgent Web_control %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.debug('GoAgent Web_control %s %s %s ', self.address_string(), self.command, self.path)
 
 
         if path == '/deploy':
@@ -268,6 +269,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_scan_ip_handler()
         elif path == "/ssl_pool":
             return self.req_ssl_pool_handler()
+        elif path == "/download_cert":
+            return self.req_download_cert_handler()
         elif path == "/is_ready":
             return self.req_is_ready_handler()
         elif path == "/test_ip":
@@ -394,7 +397,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             last_no = int(reqs["last_no"][0])
             data = logging.get_new_lines(last_no)
         else:
-            logging.error('PAC %s "%s %s ', self.address_string(), self.command, self.path)
+            logging.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
@@ -548,7 +551,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     email = self.postvars['email'][0]
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
-                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd], stdout=subprocess.PIPE)
+                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
                     logging.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
@@ -673,6 +676,15 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
+
+    def req_download_cert_handler(self):
+        filename = cert_util.CertUtil.ca_keyfile
+        with open(filename, 'rb') as fp:
+            data = fp.read()
+        mimetype = "text/plain"
+
+        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: attachment; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(data)
 
     def req_is_ready_handler(self):
         data = "%s" % config.cert_import_ready

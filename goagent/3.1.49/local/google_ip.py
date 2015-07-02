@@ -183,7 +183,8 @@ class Check_ip():
             self.ip_lock.release()
 
         time_cost = (( time.time() - self.last_sort_time_for_gws) * 1000)
-        logging.debug("sort ip time:%d", time_cost) # 5ms for 1000 ip.
+        if time_cost < 30: return
+        logging.debug("sort ip time:%dms", time_cost) # 5ms for 1000 ip. 70~150ms for 30000 ip.
 
     def get_gws_ip(self):
         self.try_sort_ip_by_handshake_time()
@@ -458,7 +459,7 @@ class Check_ip():
 
     def scan_ip_worker(self):
         while self.searching_thread_count <= self.max_check_ip_thread_num:
-            if not connect_control.allow_connect():
+            if not connect_control.allow_scan():
                 time.sleep(10)
                 continue
 

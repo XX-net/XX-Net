@@ -29,7 +29,6 @@
                     <button class="btn btn-primary btn-block" id="submit-ip-range" type="submit">提交</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
-
         </form>
     </div> <!-- #authentication -->
     <div id="logs" class="tab-pane fade">
@@ -47,25 +46,20 @@
 </script>
 
 <script type="text/javascript">
-    function load_scan_ip_log(){
+    function loadScanIpLog(){
         $.ajax({
             type: 'GET',
             url: 'http://127.0.0.1:8084/scan_ip?cmd=get_scan_ip_log',
             dataType: 'html',
             success: function(result) {
                 $('#log').html(result.replace(/\n/g, '<br>'));
+                $('#log').scrollTop($('#log')[0].scrollHeight);
             },
             error: function(){
                 tip('读取日志失败.', 'error');
             }
         });
     }
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        var target = e.target.attributes.href.value;
-        if(target == "#logs"){
-            $('#log').scrollTop($('#log')[0].scrollHeight);
-        }
-    })
 </script>
 <script type="text/javascript">
     $(function() {
@@ -84,11 +78,11 @@
 
     $('#ip-range-content').load('http://127.0.0.1:8084/scan_ip?cmd=get_range');
 
-    load_scan_ip_log();
+    loadScanIpLog();
 </script>
 <script type="text/javascript">
     $('#reload-scan-ip-log').click(function(){
-        load_scan_ip_log();
+        loadScanIpLog();
     });
 </script>
 <script type="text/javascript">
