@@ -551,7 +551,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     email = self.postvars['email'][0]
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
-                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd], stdout=subprocess.PIPE)
+                    RemoteContralServerHandler.deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
                     logging.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
