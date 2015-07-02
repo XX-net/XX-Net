@@ -45,6 +45,7 @@ import ConfigParser
 import connect_control
 import ip_utils
 import check_ip
+import cert_util
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -268,6 +269,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.req_scan_ip_handler()
         elif path == "/ssl_pool":
             return self.req_ssl_pool_handler()
+        elif path == "/download_cert":
+            return self.req_download_cert_handler()
         elif path == "/is_ready":
             return self.req_is_ready_handler()
         elif path == "/test_ip":
@@ -673,6 +676,15 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
+
+    def req_download_cert_handler(self):
+        filename = cert_util.CertUtil.ca_keyfile
+        with open(filename, 'rb') as fp:
+            data = fp.read()
+        mimetype = "text/plain"
+
+        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: attachment; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(data)
 
     def req_is_ready_handler(self):
         data = "%s" % config.cert_import_ready
