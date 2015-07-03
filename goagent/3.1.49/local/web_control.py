@@ -67,6 +67,7 @@ class User_special(object):
 
         self.host_appengine_mode = "gae"
         self.ip_connect_interval = ""
+        self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
         self.use_ipv6 = 0
 
@@ -113,7 +114,11 @@ class User_config(object):
                 pass
 
             try:
-                self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_check_ip_thread_num')
+                self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
+            except:
+                pass
+            try:
+                self.user_special.auto_adjust_scan_ip_thread_num = config.CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num')
             except:
                 pass
 
@@ -158,8 +163,10 @@ class User_config(object):
             if self.user_special.ip_connect_interval != self.DEFAULT_CONFIG.getint('google_ip', 'ip_connect_interval'):
                 f.write("ip_connect_interval = %d\n" % int(self.user_special.ip_connect_interval))
 
-            if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_check_ip_thread_num'):
-                f.write("max_check_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
+            if int(self.user_special.auto_adjust_scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num'):
+                f.write("auto_adjust_scan_ip_thread_num = %d\n\n" % int(self.user_special.auto_adjust_scan_ip_thread_num))
+            if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num'):
+                f.write("max_scan_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
 
             if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
@@ -657,6 +664,12 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             content = self.postvars['ip_range'][0]
             ip_range.update_range_content(content)
             ip_range.load_ip_range()
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['set_auto_adjust_scan_ip_thread_num']:
+            user_config.user_special.auto_adjust_scan_ip_thread_num = int(self.postvars['auto_adjust_scan_ip_thread_num'][0])
+            user_config.save()
+
+            google_ip.auto_adjust_scan_ip_thread_num = user_config.user_special.auto_adjust_scan_ip_thread_num
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['set_scan_thread_num']:
             user_config.user_special.scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
