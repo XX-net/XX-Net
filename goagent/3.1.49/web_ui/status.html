@@ -187,7 +187,7 @@
                     '#scan-ip-thread-num': result['scan_ip_thread_num'],
                     '#block-stat': result['block_stat'],
                 }
-                for (item in updates) {
+                for (var item in updates) {
                     updateStatus(item, updates[item]);
                 }
                 if ( !tipHasClose() ) {
