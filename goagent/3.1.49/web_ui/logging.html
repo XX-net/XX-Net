@@ -35,6 +35,7 @@
     $(function() {
         window.previousOffset  = 0;
         window.offset          = 1;
+        window.logLineNum      = 0;
         window.isAutoScrollLog = true;
         window.isgetLogProcessing = false;
 
@@ -88,17 +89,31 @@
             dataType: 'JSON',
             success: function(result) {
                 var newlines = document.createDocumentFragment();
+                var newlineNum = 0;
                 $.each(result, function(lineNumber, log) {
                     window.offset = lineNumber;
 
-                    var logTemplate = '<p class="%s">%s</p>';
+                    var logTemplate = '<p class="%s">%s</p>\n';
                     if ( window.previousOffset != window.offset ) {
                         var newline = $(logTemplate.format(getLogLevel(log), log));
                         $(newlines).append(newline);
+                        newlineNum += 1;
                     }
                 });
-                // $('#log > p').slice(0,-1000).remove();
+                window.logLineNum += newlineNum;
                 $('#log').append(newlines);
+                var maxLineNum = 1000;
+                var cutStep = 10;
+                if(window.logLineNum > maxLineNum + cutStep){
+                    var numToCut = window.logLineNum - maxLineNum;
+                    var textblock = $('#log').html();
+                    var lines = textblock.split('\n');
+                    lines.splice(0,numToCut);
+                    var newtext = lines.join('\n');
+                    $('#log').html(newtext);
+                    window.logLineNum -= numToCut;
+                }
+
                 scrollLog();
                 window.previousOffset = window.offset;
                 window.isgetLogProcessing = false;
