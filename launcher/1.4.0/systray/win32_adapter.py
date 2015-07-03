@@ -68,6 +68,13 @@ SM_CYSMICON = 50
 COLOR_MENU = 4
 DI_NORMAL = 3
 
+class fState:
+    MFS_DEFAULT = 0x1000
+    MFS_ENABLED = 0
+    MFS_DISABLED = 0x3
+    MFS_CHECKED = 0x8
+    MFS_HILITE = 0x80
+
 # WPARAM is defined as UINT_PTR (unsigned type)
 # LPARAM is defined as LONG_PTR (signed type)
 if ctypes.sizeof(ctypes.c_long) == ctypes.sizeof(ctypes.c_void_p):
@@ -149,10 +156,13 @@ class NOTIFYICONDATA(ctypes.Structure):
                 ("hBalloonIcon", HANDLE),
                ]
 
-def PackMENUITEMINFO(text=None, hbmpItem=None, wID=None, hSubMenu=None):
+def PackMENUITEMINFO(text=None, hbmpItem=None, wID=None, hSubMenu=None, fState=fState.MFS_ENABLED):
     res = MENUITEMINFO()
     res.cbSize = ctypes.sizeof(res)
-    res.fMask = 0
+    res.fMask = 1
+
+
+    res.fState  = fState
     if hbmpItem is not None:
         res.fMask |= MIIM_BITMAP
         res.hbmpItem = hbmpItem
