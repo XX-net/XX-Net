@@ -44,7 +44,7 @@ def create_url_opener():
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
     else:
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
-    return openergit
+    return opener
 
 opener = create_url_opener()
 
