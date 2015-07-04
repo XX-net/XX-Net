@@ -495,7 +495,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                    "pac_url":config.pac_url,
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
                    "scan_ip_thread_num":google_ip.searching_thread_count,
-                   "ip_handshake_100":google_ip.ip_handshake_100(),
+                   "ip_handshake_100":google_ip.ip_handshake_th(100),
                    "block_stat":connect_control.block_stat(),
                    "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
                    }
