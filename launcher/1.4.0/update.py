@@ -32,14 +32,19 @@ root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_root = os.path.join(root_path, 'data')
 
 def create_url_opener():
-    import ssl
-    cafile = os.path.join(data_root, "goagent", "CA.crt")
-    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
-                                         cafile=cafile)
-    https_handler = urllib2.HTTPSHandler(context=context)
     autoproxy = '127.0.0.1:8087'
-    opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
-    return opener
+
+    import ssl
+    if getattr(ssl, "create_default_context", None):
+        cafile = os.path.join(data_root, "goagent", "CA.crt")
+        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                             cafile=cafile)
+        https_handler = urllib2.HTTPSHandler(context=context)
+
+        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+    else:
+        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+    return openergit
 
 opener = create_url_opener()
 

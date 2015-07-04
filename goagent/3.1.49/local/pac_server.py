@@ -34,13 +34,18 @@ def get_serving_pacfile():
     return serving_pacfile
 
 def create_url_opener():
-    import ssl
-    cafile = os.path.join(data_root, "goagent", "CA.crt")
-    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
-                                         cafile=cafile)
-    https_handler = urllib2.HTTPSHandler(context=context)
     autoproxy = '127.0.0.1:8087'
-    opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+
+    import ssl
+    if getattr(ssl, "create_default_context", None):
+        cafile = os.path.join(data_root, "goagent", "CA.crt")
+        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                             cafile=cafile)
+        https_handler = urllib2.HTTPSHandler(context=context)
+
+        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+    else:
+        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
 opener = create_url_opener()
