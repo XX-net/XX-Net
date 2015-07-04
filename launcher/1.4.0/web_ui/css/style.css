@@ -166,6 +166,10 @@ div#log > p {
     word-wrap: break-word;
 }
 
+td#working-appid {
+    word-wrap: break-word;
+    word-break: break-all;
+}
 /* Styles for deploy.html */
 div#content div#deploy p.tip {
     font-size: 13px;
