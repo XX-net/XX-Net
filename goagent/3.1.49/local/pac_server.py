@@ -23,6 +23,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_root = os.path.join(root_path, 'data')
 
+goagent_listen = config.LISTEN_IP + ":" + str(config.LISTEN_PORT)
+pac_listen = config.PAC_IP + ":" + str(config.PAC_PORT)
+
 def get_serving_pacfile():
     if not os.path.isfile(user_pacfile):
         serving_pacfile = default_pacfile
@@ -115,7 +118,7 @@ class PacUtil(object):
             serving_pacfile = user_pacfile
 
     @staticmethod
-    def autoproxy2pac(content, func_name='FindProxyForURLByAutoProxy', proxy='127.0.0.1:8087', default='DIRECT', indent=4):
+    def autoproxy2pac(content, func_name='FindProxyForURLByAutoProxy', proxy=goagent_listen, default='DIRECT', indent=4):
         """Autoproxy to Pac, based on https://github.com/iamamac/autoproxy2pac"""
         jsLines = []
         for line in content.splitlines()[1:]:
