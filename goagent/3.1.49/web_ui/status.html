@@ -4,7 +4,9 @@
     我们建议您使用最新版本的Chrome浏览器。
 </div>
 <![endif]-->
-<table id="status" class="table table-bordered table-striped">
+
+<div>系统版本</div>
+<table id="version" class="table table-bordered table-striped">
     <thead>
         <tr>
             <th width="25%">Property</th>
@@ -27,42 +29,6 @@
         <tr>
             <td>Python Version</td>
             <td id="python-version"></td>
-        </tr>
-        <tr>
-            <td>Proxy Listen</td>
-            <td id="proxy-listen"></td>
-        </tr>
-        <tr hidden="true">
-            <td>Set appids</td>
-            <td id="gae-appid"></td>
-        </tr>
-        <tr>
-            <td>PAC URL</td>
-            <td id="pac-url"></td>
-        </tr>
-        <tr>
-            <td>IPv6</td>
-            <td id="ipv6-status"></td>
-        </tr>
-        <tr>
-            <td>Google IP</td>
-            <td id="gws-ip-num"></td>
-        </tr>
-        <tr>
-            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
-            <td id="connected-link"></td>
-        </tr>
-        <tr>
-            <td>ip-connect-interval</td>
-            <td id="ip-connect-interval"></td>
-        </tr>
-        <tr>
-            <td>scan ip thread num</td>
-            <td id="scan-ip-thread-num"></td>
-        </tr>
-        <tr>
-            <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
-            <td id="block-stat"></td>
         </tr>
         <tr>
             <td>Sys Platform</td>
@@ -98,8 +64,9 @@
         </tr>
     </tbody>
 </table>
-<hr />
-<table id="sys-info" class="table table-bordered table-striped">
+
+<div>设置</div>
+<table id="setting" class="table table-bordered table-striped">
     <thead>
         <tr>
             <th width="25%">Property</th>
@@ -107,6 +74,70 @@
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>Proxy Listen</td>
+            <td id="proxy-listen"></td>
+        </tr>
+        <tr>
+            <td>PAC URL</td>
+            <td id="pac-url"></td>
+        </tr>
+        <tr>
+            <td>IPv6</td>
+            <td id="ipv6-status"></td>
+        </tr>
+        <tr>
+            <td>ip-connect-interval</td>
+            <td id="ip-connect-interval"></td>
+        </tr>
+    </tbody>
+</table>
+
+<div>状态</div>
+<table id="status" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Google IP num</td>
+            <td id="gws-ip-num"></td>
+        </tr>
+        <tr>
+            <td>100th IP handshake(ms)</td>
+            <td id="ip-handshake-100"></td>
+        </tr>
+        <tr>
+            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
+            <td id="connected-link"></td>
+        </tr>
+        <tr>
+            <td>scaning ip thread num</td>
+            <td id="scan-ip-thread-num"></td>
+        </tr>
+        <tr>
+            <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
+            <td id="block-stat"></td>
+        </tr>
+    </tbody>
+</table>
+
+<div>Appid</div>
+<table id="appids" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th width="75%">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr hidden="true">
+            <td>Set appids</td>
+            <td id="gae-appid"></td>
+        </tr>
         <tr>
             <td>working appids</td>
             <td id="working-appid"></td>
@@ -185,6 +216,7 @@
                     '#not-exist-appids': result['not_exist_appids'],
                     '#ip-connect-interval': result['ip_connect_interval'],
                     '#scan-ip-thread-num': result['scan_ip_thread_num'],
+                    '#ip-handshake-100': result['ip_handshake_100'],
                     '#block-stat': result['block_stat'],
                 }
                 for (var item in updates) {
