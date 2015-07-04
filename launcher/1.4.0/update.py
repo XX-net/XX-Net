@@ -17,8 +17,6 @@ import platform
 
 import update_from_github
 
-autoproxy = '127.0.0.1:8087'
-opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
 #opener = urllib2.build_opener()
 #update_url = "http://127.0.0.1:8080/update.json"
 update_url = "https://xxnet-update.appspot.com/update.json"
@@ -29,6 +27,21 @@ update_dict = {}
 new_goagent_version = ""
 goagent_path = ""
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+data_root = os.path.join(root_path, 'data')
+
+def create_url_opener():
+    import ssl
+    cafile = os.path.join(data_root, "goagent", "CA.crt")
+    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                         cafile=cafile)
+    https_handler = urllib2.HTTPSHandler(context=context)
+    autoproxy = '127.0.0.1:8087'
+    opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+    return opener
+
+opener = create_url_opener()
 
 def version_to_bin(s):
     return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))

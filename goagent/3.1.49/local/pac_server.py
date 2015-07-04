@@ -19,12 +19,28 @@ from config import config
 default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)
 user_pacfile = os.path.join(config.DATA_PATH, config.PAC_FILE)
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+data_root = os.path.join(root_path, 'data')
+
 def get_serving_pacfile():
     if not os.path.isfile(user_pacfile):
         serving_pacfile = default_pacfile
     else:
         serving_pacfile = user_pacfile
     return serving_pacfile
+
+def create_url_opener():
+    import ssl
+    cafile = os.path.join(data_root, "goagent", "CA.crt")
+    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                         cafile=cafile)
+    https_handler = urllib2.HTTPSHandler(context=context)
+    autoproxy = '127.0.0.1:8087'
+    opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+    return opener
+
+opener = create_url_opener()
 
 class PacUtil(object):
     """GoAgent Pac Util"""
@@ -36,7 +52,6 @@ class PacUtil(object):
         autoproxy = '%s:%s' % (listen_ip, config.LISTEN_PORT)
         blackhole = '%s:%s' % (listen_ip, config.PAC_PORT)
         default = 'DIRECT'
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
 
         if config.PAC_ADBLOCK:
             try:

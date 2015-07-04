@@ -17,8 +17,7 @@ import zipfile
 import config
 import shutil
 
-autoproxy = '127.0.0.1:8087'
-opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+from update import opener
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 
@@ -31,6 +30,7 @@ if not os.path.isdir(download_path):
     os.mkdir(download_path)
 
 download_progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished}
+
 
 def current_version():
     readme_file = os.path.join(root_path, "README.md")
@@ -76,7 +76,7 @@ def download_file(url, file):
         download_progress[url]["status"] = "finished"
         return True
     except Exception as e:
-        logging.warn("download %s to %s fail:%r", url, file, e)
+        logging.exception("download %s to %s fail:%r", url, file, e)
         return False
 
 def get_xxnet_url_version(readme_file):
@@ -133,25 +133,26 @@ def download_overwrite_new_version(xxnet_version):
         dz.extractall(download_path)
         dz.close()
 
-    if config.get(["update", "uuid"], '') == 'test':
-        return
+    if config.get(["update", "uuid"], '') != 'test':
+        for root, subdirs, files in os.walk(xxnet_unzip_path):
+            #print "root:", root
+            relate_path = root[len(xxnet_unzip_path)+1:]
+            for subdir in subdirs:
 
-    for root, subdirs, files in os.walk(xxnet_unzip_path):
-        #print "root:", root
-        relate_path = root[len(xxnet_unzip_path)+1:]
-        for subdir in subdirs:
+                target_path = os.path.join(root_path, relate_path, subdir)
+                if not os.path.isdir(target_path):
+                    logging.info("mkdir %s", target_path)
+                    os.mkdir(target_path)
 
-            target_path = os.path.join(root_path, relate_path, subdir)
-            if not os.path.isdir(target_path):
-                logging.info("mkdir %s", target_path)
-                os.mkdir(target_path)
+            for filename in files:
+                src_file = os.path.join(root, filename)
+                dst_file = os.path.join(root_path, relate_path, filename)
+                if not os.path.isfile(dst_file) or sha1_file(src_file) != sha1_file(dst_file):
+                    shutil.copy(src_file, dst_file)
+                    logging.info("copy %s => %s", src_file, dst_file)
 
-        for filename in files:
-            src_file = os.path.join(root, filename)
-            dst_file = os.path.join(root_path, relate_path, filename)
-            if not os.path.isfile(dst_file) or sha1_file(src_file) != sha1_file(dst_file):
-                shutil.copy(src_file, dst_file)
-                logging.info("copy %s => %s", src_file, dst_file)
+    os.remove(xxnet_zip_file)
+    shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
 
 def update_config(version):
     config.config["modules"]["goagent"]["current_version"] = ""
@@ -178,4 +179,3 @@ def update_version(version):
         restart_xxnet()
     except Exception as e:
         logging.exception("update version %d fail:%r", version, e)
-
