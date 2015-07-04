@@ -1,12 +1,12 @@
 XX-Net
 ========
-项目状态：目前部分地区需要重新搜索ip，刚下载需要跑一个晚上不关闭，待系统找到好用的ip，使用起来才更流畅。
+项目状态：新下载需要搜索ip，大约20分钟后可以开始使用，后面越用会越快。
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
+https://codeload.github.com/XX-net/XX-Net/zip/1.16.0
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
@@ -21,14 +21,12 @@ https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
 
 主要特性
 ========
-* GoAgent 稳定快速
+* 大量改良过的GoAgent 稳定快速
 * Web界面，傻瓜易用
-* 内置了公共 appid, 上千可用ip, 开箱即用
-* 自动导入证书
-* 设置开机启动
-* 可设置自动升级
-* 支持导入、导出ip
-* 自定义扫描IP的线程和IP范围
+* 内置了公共 appid, 方便新手
+* 自动导入证书，减少大量手动工作
+* 可设置开机启动
+* 支持自动升级，保留辛苦找到的ip资源
 
 ## XX-Net不是匿名工具 
 详情请看：  
@@ -62,9 +60,11 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - 自动导入证书，需安装 libnss3-tools 包
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
+    推荐Chrome + SwitchyOmega
 * Mac下，双击 start.command
   - 会自动导入证书，如果还有提示非安全连接，请手动导入data/goagent/CA.crt证书
   - 命令行启动方式：./start.sh
+    推荐Chrome + SwitchyOmega
 * 服务端
   - 协议采用3.3的版本，请重新部署服务端，服务端兼容3.1.x/3.2.x的客户端
   - 虽然系统内置了公共appid, 还是建议部署自己的appid，公共appid限制看视频
