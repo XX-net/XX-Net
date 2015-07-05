@@ -149,6 +149,14 @@ def get_new_lines(from_no):
         from_no = first_no
     if last_no > from_no:
         for i in range(from_no, last_no+1):
-            jd[i] = buffer[i]
+            jd[i] = unicode(buffer[i], errors='replace')
     buffer_lock.release()
     return json.dumps(jd, sort_keys=True)
+
+if __name__ == "__main__":
+    st = "\xce\xce"
+    str = st #unicode(st, errors='replace')
+    jd={}
+    jd[0]=str
+    st2 = json.dumps(jd)
+    print st2
