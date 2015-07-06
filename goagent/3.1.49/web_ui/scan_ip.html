@@ -6,31 +6,31 @@
     <div id="setup" class="tab-pane fade in active">
         <form method="POST" onSubmit="return false;">
             <div class="row-fluid">
-                <div class="span4">
+                <div class="span3">
                     <label for="auto-adjust-scan-ip-thread-num">自动调整扫描线程数<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Auto-adjust-scan-ip-thread-num" target="_blank">(帮助)</a></label>
-                </div> <!-- .span4 -->
-                <div class="span8">
+                </div> <!-- .span3 -->
+                <div class="span9">
                     <input id="auto-adjust-scan-ip-thread-num" type="checkbox" data-toggle="switch" />
-                </div> <!-- .span8 -->
+                </div> <!-- .span9 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
-                <div class="span2">
+                <div class="span3">
                     <label for="scan-ip-thread-num">最大扫描线程数</label>
-                </div> <!-- .span4 -->
-                <div class="span4">
+                </div> <!-- .span3 -->
+                <div class="span6">
                     <input id="scan-ip-thread-num" type="text" />
-                </div> <!-- .span8 -->
-                <div class="span2" >
+                </div> <!-- .span6 -->
+                <div class="span3" >
                     <button class="btn btn-primary " id="update-thread-num">更新</button>
-                </div>
+                </div> <!-- .span3 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
-                <div class="span2">
+                <div class="span3">
                     <label for="ip-range-content">IP段列表(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Scan-Ip-Range-Format" target="_blank">支持格式</a>)</label>
-                </div> <!-- .span2 -->
-                <div class="span10">
+                </div> <!-- .span3 -->
+                <div class="span9">
                     <textarea id="ip-range-content" rows="10"></textarea>
-                </div> <!-- .span10 -->
+                </div> <!-- .span9 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span12">
@@ -52,12 +52,12 @@
 <script type="text/javascript">
     title('扫描IP设置(一般不需要改动)');
 </script>
-
 <script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
-
+</script>
+<script type="text/javascript">
     $('#auto-adjust-scan-ip-thread-num').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'auto_adjust_scan_ip_thread_num',
@@ -65,10 +65,11 @@
 
         return setConfig(key, value);
     });
+</script>
+<script type="text/javascript">
     function setConfig(key, value) {
-        var pageRequests = {};
-
-        pageRequests[key]   = value;
+        var pageRequests = {},
+            pageRequests[key]   = value;
 
         $.ajax({
             type: 'POST',
@@ -112,7 +113,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['auto_adjust_scan_ip_thread_num'] != 0 ) {
-                    $( "auto-adjust-scan-ip-thread-num").parent().removeClass('switch-off');
+                    $( "#auto-adjust-scan-ip-thread-num").parent().removeClass('switch-off');
                     $( "#auto-adjust-scan-ip-thread-num").parent().addClass('switch-on');
 
                     $( "#auto-adjust-scan-ip-thread-num").prop('checked', true);
@@ -124,7 +125,6 @@
             }
         });
     });
-
     $('#ip-range-content').load('http://127.0.0.1:8084/scan_ip?cmd=get_range');
 
     loadScanIpLog();
