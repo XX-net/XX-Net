@@ -212,17 +212,15 @@ class Check_ip():
             self.scan_ip_thread_num = scan_ip_thread_num
             self.search_more_google_ip()
 
-    def ip_handshake_100(self):
-        if len(self.gws_ip_list) == 0:
-            return 0
-        elif len(self.gws_ip_list) < 100:
-            last_ip = self.gws_ip_list[len(self.gws_ip_list)]
+    def ip_handshake_th(self, num):
+        try:
+            iplist_length = len(self.gws_ip_list)
+            ip_index = iplist_length if iplist_length < num else num
+            last_ip = self.gws_ip_list[ip_index]
             handshake_time = self.ip_dict[last_ip]['handshake_time']
             return handshake_time
-        else:
-            the_100th_ip = self.gws_ip_list[100]
-            the_100th_handshake_time = self.ip_dict[the_100th_ip]['handshake_time']
-            return the_100th_handshake_time
+        except:
+            return -1
 
     def get_gws_ip(self):
         self.try_sort_ip_by_handshake_time()
