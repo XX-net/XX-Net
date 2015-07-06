@@ -68,8 +68,8 @@
 </script>
 <script type="text/javascript">
     function setConfig(key, value) {
-        var pageRequests = {},
-            pageRequests[key]   = value;
+        var pageRequests = {};
+        pageRequests[key]   = value;
 
         $.ajax({
             type: 'POST',
