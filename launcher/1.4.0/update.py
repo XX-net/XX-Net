@@ -31,7 +31,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_root = os.path.join(root_path, 'data')
 
-def create_url_opener():
+def get_opener():
     autoproxy = '127.0.0.1:8087'
 
     import ssl
@@ -46,7 +46,6 @@ def create_url_opener():
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
-opener = create_url_opener()
 
 def version_to_bin(s):
     return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
@@ -54,6 +53,7 @@ def version_to_bin(s):
 def download_file(url, file):
     try:
         logging.info("download %s to %s", url, file)
+        opener = get_opener()
         req = opener.open(url, cafile="")
         CHUNK = 16 * 1024
         with open(file, 'wb') as fp:

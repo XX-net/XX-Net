@@ -17,7 +17,7 @@ import zipfile
 import config
 import shutil
 
-from update import opener
+from update import get_opener
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 
@@ -60,6 +60,7 @@ def download_file(url, file):
 
     try:
         logging.info("download %s to %s", url, file)
+        opener = get_opener()
         req = opener.open(url)
         download_progress[url]["size"] = int(req.headers.get('content-length') or 0)
 
