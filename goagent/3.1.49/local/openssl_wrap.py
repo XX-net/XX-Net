@@ -112,7 +112,7 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
     @staticmethod
-    def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA',)):
+    def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)):
         # 'ALL', '!aNULL', '!eNULL'
         global  ssl_version
 
