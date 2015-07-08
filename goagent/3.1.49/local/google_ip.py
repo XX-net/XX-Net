@@ -199,7 +199,7 @@ class Check_ip():
             try:
                 the_100th_ip = self.gws_ip_list[100]
                 the_100th_handshake_time = self.ip_dict[the_100th_ip]['handshake_time']
-                scan_ip_thread_num = int( (the_100th_handshake_time - 200)/10 * self.max_scan_ip_thread_num/50 )
+                scan_ip_thread_num = int( (the_100th_handshake_time - 200)/2 * self.max_scan_ip_thread_num/50 )
             except Exception as e:
                 logging.warn("adjust_scan_thread_num fail:%r", e)
                 return
