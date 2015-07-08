@@ -33,7 +33,7 @@ def get_serving_pacfile():
         serving_pacfile = user_pacfile
     return serving_pacfile
 
-def create_url_opener():
+def get_opener():
     autoproxy = '127.0.0.1:8087'
 
     import ssl
@@ -48,14 +48,13 @@ def create_url_opener():
         opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
-opener = create_url_opener()
 
 class PacUtil(object):
     """GoAgent Pac Util"""
-
+ 
     @staticmethod
     def update_pacfile(filename):
-
+        opener = get_opener()
         listen_ip = config.LISTEN_IP
         autoproxy = '%s:%s' % (listen_ip, config.LISTEN_PORT)
         blackhole = '%s:%s' % (listen_ip, config.PAC_PORT)
