@@ -30,6 +30,11 @@ warn_color = None
 debug_color = None
 reset_color = None
 set_console_color = lambda x: None
+
+# from https://bugs.python.org/issue706263, for Python 2.7 on Windows
+if sys.executable.endswith("pythonw.exe"):
+    sys.stdout = sys.stdout = None
+
 if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
     if os.name == 'nt':
         err_color = 0x04
