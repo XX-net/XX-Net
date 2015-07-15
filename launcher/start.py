@@ -1,65 +1,98 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # coding:utf-8
 
 import os, sys
+import time
+import atexit
+import webbrowser
+
+import logging
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-import yaml
+if sys.platform.startswith("linux"):
+    def X_is_running():
+        from subprocess import Popen, PIPE
+        p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+        p.communicate()
+        return p.returncode == 0
 
+    if X_is_running():
+        from gtk_tray import sys_tray
+    else:
+        from non_tray import sys_tray
 
-def get_launcher_version_from_config():
-    config_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher', 'config.yaml'))
-    if not os.path.isfile(config_path):
-        return False
+elif sys.platform == "win32":
+    from win_tray import sys_tray
+elif sys.platform == "darwin":
+    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+    sys.path.append(darwin_lib)
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
+    sys.path.append(extra_lib)
 
     try:
-        config = yaml.load(open(config_path, 'r'))
-        launcher_version = config["modules"]["launcher"]["current_version"]
-        return launcher_version
-    except yaml.YAMLError as exc:
-        print( "Error in configuration file:", exc )
-    except Exception as e:
-        print("get_launcher_version_from_config:", e)
+        import mac_tray as sys_tray
+    except:
+        from non_tray import sys_tray
+else:
+    print("detect platform fail:%s" % sys.platform)
+    from non_tray import sys_tray
 
-    return False
+import config
+import web_control
+import module_init
+import update
+import setup_win_python
 
-def scan_launcher_version():
-    for filename in os.listdir(current_path):
-        if os.path.isdir(os.path.join(current_path, filename)):
-            return filename
-    return False
+def exit_handler():
+    print 'Stopping all modules before exit!'
+    module_init.stop_all()
+    web_control.stop()
 
-def create_data_path():
-    data_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data'))
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
+atexit.register(exit_handler)
 
-    data_launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'launcher'))
-    if not os.path.isdir(data_launcher_path):
-        os.mkdir(data_launcher_path)
 
-    data_goagent_path = os.path.abspath( os.path.join(current_path, os.pardir, 'data', 'goagent'))
-    if not os.path.isdir(data_goagent_path):
-        os.mkdir(data_goagent_path)
+
 
 def main():
-    create_data_path()
 
-    launcher_version = get_launcher_version_from_config()
-    if not launcher_version or not os.path.isdir(os.path.join(current_path, launcher_version)):
-        launcher_version = scan_launcher_version()
-    print( "launcher version:", launcher_version)
-    launcher_path = os.path.join(current_path, launcher_version)
-    sys.path.insert(0, launcher_path)
-    from start import main as launcher_main
-    launcher_main()
+    # change path to launcher
+    global __file__
+    __file__ = os.path.abspath(__file__)
+    if os.path.islink(__file__):
+        __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    web_control.confirm_xxnet_exit()
+
+    setup_win_python.check_setup()
+
+    module_init.start_all_auto()
+
+    web_control.start()
+
+
+    if config.get(["modules", "launcher", "popup_webui"], 1) == 1:
+        webbrowser.open("http://127.0.0.1:8085/")
+
+    update.start()
+
+    if config.get(["modules", "launcher", "show_systray"], 1):
+        sys_tray.serve_forever()
+    else:
+        while True:
+            time.sleep(100)
+
+    module_init.stop_all()
+    sys.exit()
+
+
 
 if __name__ == '__main__':
     try:
         main()
-    except KeyboardInterrupt:
-        sys.exit()
+    except KeyboardInterrupt: # Ctrl + C on console
+        sys.exit
