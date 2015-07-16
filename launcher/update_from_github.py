@@ -157,7 +157,7 @@ def download_overwrite_new_version(xxnet_version):
     shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
 
 def update_config(version):
-    config.config["modules"]["goagent"]["current_version"] = ""
+    config.config["modules"]["gae_proxy"]["current_version"] = ""
     config.config["modules"]["launcher"]["current_version"] = ""
     config.save()
 

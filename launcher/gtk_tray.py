@@ -47,7 +47,7 @@ class Gtk_tray():
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
-                    ('restart goagent', self.on_restart_goagent),
+                    ('restart gae_proxy', self.on_restart_gae_proxy),
                     (u'Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
@@ -79,9 +79,9 @@ class Gtk_tray():
     def show_control_web(self, widget=None, data=None):
         webbrowser.open_new("http://127.0.0.1:8085/")
 
-    def on_restart_goagent(self, widget=None, data=None):
-        module_init.stop("goagent")
-        module_init.start("goagent")
+    def on_restart_gae_proxy(self, widget=None, data=None):
+        module_init.stop("gae_proxy")
+        module_init.start("gae_proxy")
 
     def on_quit(self, widget, data=None):
         gtk.main_quit()

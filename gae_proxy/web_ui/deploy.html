@@ -51,7 +51,7 @@
                     <div id="rc4-password-field" class="span8">
                         <input id="rc4-password" type="password" placeholder="一般无须填写" />
                         <p id="rc4-password-tip" class="tip hide">
-                            如果使用RC4密码, 请在配置GoAgent时同样在高级设置中配置RC4密码。<br>
+                            如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。<br>
                         </p>
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
@@ -161,7 +161,7 @@
     function getDeployStatus() {
         $.ajax({
             type: 'GET',
-            url: '/module/goagent/control/deploy?cmd=get_log',
+            url: '/module/gae_proxy/control/deploy?cmd=get_log',
             dataType: 'JSON',
             success: function(result) {
                 if ( window.status == 'running' ) {
@@ -175,7 +175,7 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成。 <br>请在<a href="/?module=goagent&menu=config">配置页面</a>中设置AppID, 方会生效。');
+                        $('.alert').html('当前状态: 部署完成。 <br>请在<a href="/?module=gae_proxy&menu=config">配置页面</a>中设置AppID, 方会生效。');
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
@@ -262,7 +262,7 @@
     function onCancel() {
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/deploy?cmd=cancel',
+            url: '/module/gae_proxy/control/deploy?cmd=cancel',
             dataType: 'JSON',
             success: function(result) {
                 changeButtonStatus('start');
@@ -302,7 +302,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/deploy?cmd=deploy',
+            url: '/module/gae_proxy/control/deploy?cmd=deploy',
             data: authentication,
             dataType: 'JSON',
             success: function(result) {

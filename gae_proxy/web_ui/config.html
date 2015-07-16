@@ -1,4 +1,4 @@
-<form id="goagent-config" method="POST" onSubmit="onSubmit(); return false;">
+<form id="gae_proxy-config" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span4">
             <label for="gae-appid">GAE AppID </label>
@@ -116,11 +116,11 @@
             <button class="btn btn-primary btn-block" type="submit">保存</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
-</form> <!-- #goagent-config -->
+</form> <!-- #gae_proxy-config -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('配置GoAgent');
+    title('配置GAEProxy');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -157,7 +157,7 @@
     $(function() {
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/config?cmd=get_config',
+            url: '/module/gae_proxy/control/config?cmd=get_config',
             dataType: 'JSON',
             success: function(result) {
                 $('#gae-appid').val(result['appid']);
@@ -234,7 +234,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/config?cmd=set_config',
+            url: '/module/gae_proxy/control/config?cmd=set_config',
             data: config,
             dataType: 'JSON',
             success: function(result) {

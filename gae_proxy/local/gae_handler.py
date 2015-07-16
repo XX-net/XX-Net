@@ -137,6 +137,7 @@ def _request(sock, headers, payload, bufsize=8192):
 
 class GAE_Exception(BaseException):
     def __init__(self, type, message):
+        logging.debug("GAE_Exception %r %r", type, message)
         self.type = type
         self.message = message
 
@@ -270,13 +271,29 @@ def send_response(wfile, status=404, headers={}, body=''):
     wfile.write(body)
 
 def return_fail_message(wfile):
-    html = generate_message_html('504 GoAgent Proxy Time out', u'连接超时，先休息一会再来！')
+    html = generate_message_html('504 GAEProxy Proxy Time out', u'连接超时，先休息一会再来！')
     send_response(wfile, 504, body=html.encode('utf-8'))
     return
+
+# fix bug for android market app: Mobogenie
+# GAE url_fetch refuse empty value in header.
+def clean_empty_header(headers):
+    remove_list = []
+    for key in headers:
+        value = headers[key]
+        if value == "":
+            remove_list.append(key)
+
+    for key in remove_list:
+        del headers[key]
+
+    return headers
+
 
 def handler(method, url, headers, body, wfile):
     time_request = time.time()
 
+    headers = clean_empty_header(headers)
     errors = []
     response = None
     while True:

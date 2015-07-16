@@ -1,6 +1,6 @@
 XX-Net
 ========
-项目状态：新下载需要搜索ip，大约20分钟后可以开始使用，后面越用会越快。
+项目状态：目前大部分ip被封锁，GAE模式不可用，会启用新方案，请各位等2周
 
 
 下载链接：
@@ -55,14 +55,14 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - 托盘图标：点击可弹出Web管理界面, 右键可显示常用功能菜单。
   - Win7/8/10：提示请求管理员权限, 安装CA证书。请点击同意。
   - 推荐用Chrome浏览器, 安装SwichySharp, 可在swichysharp目录下找到插件和配置文件
-  - Firefox 需手动导入证书 data/goagent/CA.crt 启动后生成
+  - Firefox 需手动导入证书 data/gae_proxy/CA.crt 启动后生成
 * Linux下, 执行 start.sh
   - 自动导入证书，需安装 libnss3-tools 包
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
     推荐Chrome + SwitchyOmega
 * Mac下，双击 start.command
-  - 会自动导入证书，如果还有提示非安全连接，请手动导入data/goagent/CA.crt证书
+  - 会自动导入证书，如果还有提示非安全连接，请手动导入data/gae_proxy/CA.crt证书
   - 命令行启动方式：./start.sh
     推荐Chrome + SwitchyOmega
 * 服务端
@@ -85,19 +85,19 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 附图
 ======
 
-GoAgent状态页面
+GAEProxy状态页面
 
 ![goagent_status](https://cloud.githubusercontent.com/assets/10395528/5849287/f71c62fc-a1b9-11e4-9ae0-b33fc78ed5fd.png)
 
-GoAgent 配置页面
+GAEProxy 配置页面
 
 ![goagent_config](https://cloud.githubusercontent.com/assets/10395528/5849285/f68ac84c-a1b9-11e4-808a-5ec78f2fd3af.png)
 
-GoAgent 部署服务端页面
+GAEProxy 部署服务端页面
 
 ![goagent_deploy](https://cloud.githubusercontent.com/assets/10395528/5849286/f6e81dda-a1b9-11e4-94f8-2b9d2492bd39.png)
 
-GoAgent 查看日志页面
+GAEProxy 查看日志页面
 
 ![goagent_log](https://cloud.githubusercontent.com/assets/10395528/5849288/f72138cc-a1b9-11e4-94df-d0b7ab160f0c.png)
 

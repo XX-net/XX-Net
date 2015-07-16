@@ -85,7 +85,7 @@
         <div class="row-fluid">
             <div class="span4">启用Goagent</div> <!-- .span4 -->
             <div class="span8">
-                <input id="goagent-enable" type="checkbox" data-toggle="switch" />
+                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" hidden>
@@ -142,12 +142,12 @@
 
                     $( "#show-systray").prop('checked', true);
                 }
-                if ( result['goagent_enable'] != 0 ) {
-                    $( "#goagent-enable").parent().removeClass('switch-off');
-                    $( "#goagent-enable").parent().addClass('switch-on');
+                if ( result['gae_proxy_enable'] != 0 ) {
+                    $( "#gae_proxy-enable").parent().removeClass('switch-off');
+                    $( "#gae_proxy-enable").parent().addClass('switch-on');
 
 
-                    $( "#goagent-enable").prop('checked', true);
+                    $( "#gae_proxy-enable").prop('checked', true);
                 }
                 if ( result['php_enable'] != 0 ) {
                     $( "#php-enable").parent().removeClass('switch-off');
@@ -211,9 +211,9 @@
         return setConfig(key, value);
     });
 
-    $('#goagent-enable').change(function() {
+    $('#gae_proxy-enable').change(function() {
         var isChecked = $(this).is(':checked'),
-            key       = 'goagent_enable',
+            key       = 'gae_proxy_enable',
             value     = isChecked ? 1 : 0;
 
         setConfig(key, value);
@@ -241,7 +241,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    if ( key == 'goagent_enable' || key == 'php_enable' ) {
+                    if ( key == 'gae_proxy_enable' || key == 'php_enable' ) {
                         restartingService(key);
                     } else {
                         tip('设置已成功保存.', 'success');
@@ -268,8 +268,8 @@
             restatingTime   = 5,
             messageTemplate = '正在重启服务[%s], 页面将在%s秒内刷新.';
 
-        if ( serviceNameSlug == 'goagent_enable' ) {
-            serviceName     = 'GoAgent';
+        if ( serviceNameSlug == 'gae_proxy_enable' ) {
+            serviceName     = 'GAEProxy';
         } else if ( serviceNameSlug == 'php_enable' ) {
             serviceName     = 'PHP代理';
         } else {

@@ -91,7 +91,7 @@ def process_data_files():
     #TODO: fix bug
     #new_config = get_new_new_config()
     #config.load()
-    #config.config["modules"]["goagent"]["current_version"] = new_config["modules"]["goagent"]["current_version"]
+    #config.config["modules"]["gae_proxy"]["current_version"] = new_config["modules"]["gae_proxy"]["current_version"]
     #config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
     config.save()
 
@@ -124,7 +124,7 @@ def install_xxnet_files():
                 os.mkdir(target_path)
 
         for filename in files:
-            if relate_path == os.path.join("data", "goagent") and filename == "config.ini":
+            if relate_path == os.path.join("data", "gae_proxy") and filename == "config.ini":
                 continue
             if relate_path == os.path.join("data", "launcher") and filename == "config.yaml":
                 continue

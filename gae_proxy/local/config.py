@@ -27,11 +27,11 @@ class Config(object):
         self.CONFIG = ConfigParser.ConfigParser()
         self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
-        self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'goagent'))
+        self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
         if not os.path.isdir(self.DATA_PATH):
             self.DATA_PATH = current_path
 
-        # load ../../../data/goagent/config.ini, set by web_ui
+        # load ../../../data/gae_proxy/config.ini, set by web_ui
         self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
         self.CONFIG.read(self.CONFIG_FILENAME)
         if os.path.isfile(self.CONFIG_USER_FILENAME):
@@ -39,7 +39,7 @@ class Config(object):
                 content = fp.read()
                 self.CONFIG.readfp(io.BytesIO(content))
 
-        # load ../../../data/goagent/manual.ini, set by manual
+        # load ../../../data/gae_proxy/manual.ini, set by manual
         self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
         if os.path.isfile(self.CONFIG_MANUAL_FILENAME):
             with open(self.CONFIG_MANUAL_FILENAME, 'rb') as fp:
@@ -48,7 +48,7 @@ class Config(object):
                     self.CONFIG.readfp(io.BytesIO(content))
                     logging.info("load manual.ini success")
                 except Exception as e:
-                    logging.exception("data/goagent/manual.ini load error:%s", e)
+                    logging.exception("data/gae_proxy/manual.ini load error:%s", e)
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
@@ -132,7 +132,7 @@ class Config(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'GoAgent Version    : %s (python/%s )\n' % (self.__version__, sys.version[:5])
+        info += 'GAEProxy Version    : %s (python/%s )\n' % (self.__version__, sys.version[:5])
         info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)

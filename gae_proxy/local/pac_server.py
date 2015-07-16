@@ -23,9 +23,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_root = os.path.join(root_path, 'data')
 
-#goagent_listen = config.LISTEN_IP + ":" + str(config.LISTEN_PORT)
+#gae_proxy_listen = config.LISTEN_IP + ":" + str(config.LISTEN_PORT)
 #pac_listen = config.PAC_IP + ":" + str(config.PAC_PORT)
-goagent_listen = "GOAGENT_LISTEN"
+gae_proxy_listen = "GOAGENT_LISTEN"
 pac_listen = "PAC_LISTEN"
 
 def get_serving_pacfile():
@@ -40,7 +40,7 @@ def get_opener():
 
     import ssl
     if getattr(ssl, "create_default_context", None):
-        cafile = os.path.join(data_root, "goagent", "CA.crt")
+        cafile = os.path.join(data_root, "gae_proxy", "CA.crt")
         context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
                                              cafile=cafile)
         https_handler = urllib2.HTTPSHandler(context=context)
@@ -52,7 +52,7 @@ def get_opener():
 
 
 class PacUtil(object):
-    """GoAgent Pac Util"""
+    """GAEProxy Pac Util"""
 
     @staticmethod
     def update_pacfile(filename):
@@ -125,7 +125,7 @@ class PacUtil(object):
             serving_pacfile = user_pacfile
 
     @staticmethod
-    def autoproxy2pac(content, func_name='FindProxyForURLByAutoProxy', proxy=goagent_listen, default='DIRECT', indent=4):
+    def autoproxy2pac(content, func_name='FindProxyForURLByAutoProxy', proxy=gae_proxy_listen, default='DIRECT', indent=4):
         """Autoproxy to Pac, based on https://github.com/iamamac/autoproxy2pac"""
         jsLines = []
         for line in content.splitlines()[1:]:
@@ -326,9 +326,9 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = fp.read()
 
         host, _, port = self.path.rpartition(':')
-        goagent_proxy = host + ":" + str(config.LISTEN_PORT)
+        gae_proxy_proxy = host + ":" + str(config.LISTEN_PORT)
         pac_proxy = host + ":" + str(config.PAC_PORT)
-        data = data.replace(goagent_listen, goagent_proxy)
+        data = data.replace(gae_proxy_listen, gae_proxy_proxy)
         data = data.replace(pac_listen, pac_proxy)
         self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)

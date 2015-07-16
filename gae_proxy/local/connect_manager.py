@@ -254,13 +254,13 @@ class Https_connection_manager(object):
 
     def keep_alive_thread(self):
         while self.keep_alive:
-            time.sleep(2)
+            time.sleep(1)
             try:
-                sock_list = self.new_conn_pool.get_need_keep_alive(maxtime=self.keep_alive)
+                sock_list = self.new_conn_pool.get_need_keep_alive(maxtime=self.keep_alive-3)
                 for ssl_sock in sock_list:
                     ssl_sock.close()
 
-                sock_list = self.gae_conn_pool.get_need_keep_alive(maxtime=self.keep_alive)
+                sock_list = self.gae_conn_pool.get_need_keep_alive(maxtime=self.keep_alive-3)
                 for ssl_sock in sock_list:
                     # only keep little alive link.
                     # if you have 25 appid, you can keep 5 alive link.
@@ -439,7 +439,7 @@ class Https_connection_manager(object):
                         ssl_sock = None
                         break
 
-                    if time.time() - ssl_sock.last_use_time < self.keep_alive: # gws ssl connection can keep for 230s after created
+                    if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
                         logging.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
                         return ssl_sock
                         break
@@ -455,7 +455,7 @@ class Https_connection_manager(object):
                     ssl_sock = None
                     break
 
-                if time.time() - ssl_sock.last_use_time < self.keep_alive: # gws ssl connection can keep for 230s after created
+                if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
                     logging.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                     break
                 else:

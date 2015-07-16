@@ -172,7 +172,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         port = int(port)
         logging.info('FWD %s %s:%d ', self.command, host, port)
         if host == "appengine.google.com" or host == "www.google.com":
-            connected_in_s = 5 # goagent upload to appengine is slow, it need more 'fresh' connection.
+            connected_in_s = 5 # gae_proxy upload to appengine is slow, it need more 'fresh' connection.
         else:
             connected_in_s = 10  # gws connect can be used after tcp connection created 15 s
 
@@ -267,7 +267,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 logging.warn("Method %s not support in GAE, Redirect to FWD for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path).encode())
             else:
-                logging.warn("Method %s not support in GoAgent for %s", self.command, self.path)
+                logging.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
         try:

@@ -203,7 +203,7 @@ def pre_start():
                 error = u'某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
                 ctypes.windll.user32.MessageBoxW(None, error, title, 0)
                 #sys.exit(0)
-    if config.GAE_APPIDS[0] == 'goagent':
+    if config.GAE_APPIDS[0] == 'gae_proxy':
         logging.critical('please edit %s to add your appid to [gae] !', config.CONFIG_FILENAME)
         sys.exit(-1)
     if config.PAC_ENABLE:
@@ -214,7 +214,7 @@ def pre_start():
 
 def main():
     global ready
-    # to profile goagent, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
+    # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
     do_profile = False
     if do_profile:
         import cProfile, pstats
@@ -248,7 +248,7 @@ def main():
     while config.keep_run:
         time.sleep(1)
 
-    logging.info("Exiting goagent module...")
+    logging.info("Exiting gae_proxy module...")
     proxy_daemon.shutdown()
     proxy_daemon.server_close()
     proxy_thread.join()
@@ -257,7 +257,7 @@ def main():
         pac_daemon.server_close()
         pac_thread.join()
     ready = False
-    logging.info("Finished Exiting goagent module...")
+    logging.info("Finished Exiting gae_proxy module...")
 
     if do_profile:
         pr.disable()

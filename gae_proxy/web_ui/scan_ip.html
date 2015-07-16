@@ -69,7 +69,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/scan_ip?cmd=set_auto_adjust_scan_ip_thread_num',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_auto_adjust_scan_ip_thread_num',
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
@@ -89,7 +89,7 @@
     function loadScanIpLog(){
         $.ajax({
             type: 'GET',
-            url: '/module/goagent/control/scan_ip?cmd=get_scan_ip_log',
+            url: '/module/gae_proxy/control/scan_ip?cmd=get_scan_ip_log',
             dataType: 'html',
             success: function(result) {
                 $('#log').html(result.replace(/\n/g, '<br>'));
@@ -105,7 +105,7 @@
     $(function() {
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/config?cmd=get_config',
+            url: '/module/gae_proxy/control/config?cmd=get_config',
             dataType: 'JSON',
             success: function(result) {
                 if ( result['auto_adjust_scan_ip_thread_num'] != 0 ) {
@@ -122,7 +122,7 @@
         });
     });
 
-    $('#ip-range-content').load('/module/goagent/control/scan_ip?cmd=get_range');
+    $('#ip-range-content').load('/module/gae_proxy/control/scan_ip?cmd=get_range');
 
     loadScanIpLog();
 </script>
@@ -140,7 +140,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/scan_ip?cmd=set_scan_thread_num',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_scan_thread_num',
             data: config,
             dataType: 'JSON',
             success: function(result) {
@@ -162,7 +162,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/scan_ip?cmd=set_range',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_range',
             data: config,
             dataType: 'JSON',
             success: function(result) {

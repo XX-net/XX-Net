@@ -1,4 +1,4 @@
-module_title: GoAgent
+module_title: GAEProxy
 menu_sort_id: 1
 sub_menus: {
   1:{

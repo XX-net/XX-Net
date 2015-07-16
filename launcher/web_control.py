@@ -201,8 +201,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            if config.get(['modules', 'goagent', 'auto_start'], 0) == 1:
-                target_module = 'goagent'
+            if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
+                target_module = 'gae_proxy'
                 target_menu = 'status'
             else:
                 target_module = 'launcher'
@@ -255,13 +255,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif check_update == 1:
                 check_update = "long-term-stable"
 
-            data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "goagent_enable": %d }' %\
+            data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
-                    , config.get(["modules", "goagent", "auto_start"], 0))
+                    , config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
@@ -305,17 +305,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'goagent_enable' in reqs :
-                goagent_enable = int(reqs['goagent_enable'][0])
-                if goagent_enable != 0 and goagent_enable != 1:
-                    data = '{"res":"fail, goagent_enable:%s"}' % goagent_enable
+            elif 'gae_proxy_enable' in reqs :
+                gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
+                if gae_proxy_enable != 0 and gae_proxy_enable != 1:
+                    data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
                 else:
-                    config.set(["modules", "goagent", "auto_start"], goagent_enable)
+                    config.set(["modules", "gae_proxy", "auto_start"], gae_proxy_enable)
                     config.save()
-                    if goagent_enable:
-                        module_init.start("goagent")
+                    if gae_proxy_enable:
+                        module_init.start("gae_proxy")
                     else:
-                        module_init.stop("goagent")
+                        module_init.stop("gae_proxy")
                     self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'php_enable' in reqs :

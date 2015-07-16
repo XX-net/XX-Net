@@ -146,13 +146,13 @@
 </table>
 <div id="tip">
     <p>
-        <a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=goagent&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=goagent&menu=logging" target="-blank">日志页</a>内容, 方便分析问题。<br><br>
+        <a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=logging" target="-blank">日志页</a>内容, 方便分析问题。<br><br>
     </p>
 </div>
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('GoAgent状态信息');
+    title('GAEProxy状态信息');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -181,7 +181,7 @@
     function getStatus() {
         $.ajax({
             type: 'GET',
-            url: '/module/goagent/control/status',
+            url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
                 var updates = {
@@ -226,9 +226,9 @@
                 }
 
                 if ( formValue == '' ) {
-                    tip('状态页显示空白, 很可能GoAgent启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
+                    tip('状态页显示空白, 很可能GAEProxy启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
                 } else {
-                    tip('GoAgent进程无响应, 可能已退出.', 'warning', false);
+                    tip('GAEProxy进程无响应, 可能已退出.', 'warning', false);
                 }
             }
         });

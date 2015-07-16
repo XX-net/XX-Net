@@ -95,7 +95,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/importip?cmd=importip',
+            url: '/module/gae_proxy/control/importip?cmd=importip',
             data: postData,
             dataType: 'JSON',
             success: function(result) {
@@ -111,7 +111,7 @@
     function doExportAction(ipFormat, ipList) {
         $.ajax({
             type: 'POST',
-            url: '/module/goagent/control/importip?cmd=exportip',
+            url: '/module/gae_proxy/control/importip?cmd=exportip',
             dataType: 'JSON',
             success: function(result) {
                 var ipList = result['res'];

@@ -132,11 +132,11 @@ div#content textarea {
 }
 
 /* Style for config.html in PHP-Proxy */
-div#content form#goagent-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
+div#content form#gae_proxy-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
     margin-top: 5px;
 }
 
-div#content form#goagent-php-config div.row-fluid div.span4 label[for=enable-php-proxy] > a {
+div#content form#gae_proxy-php-config div.row-fluid div.span4 label[for=enable-php-proxy] > a {
     font-weight: normal;
     text-decoration: none;
 }

@@ -60,7 +60,7 @@ class MacTrayObject(NSObject):
         self.menu.addItem_(menuitem)
 
         # Rest Menu Item
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GoAgent', 'resetGoagent:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
         # Default event
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
@@ -85,8 +85,8 @@ class MacTrayObject(NSObject):
     #Note: the function name for action can include '_'
     # limited by Mac cocoa
     def resetGoagent_(self, _):
-        module_init.stop("goagent")
-        module_init.start("goagent")
+        module_init.stop("gae_proxy")
+        module_init.start("gae_proxy")
 
     def enableProxy_(self, _):
         cmd1 = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"

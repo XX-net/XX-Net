@@ -16,7 +16,7 @@ import logging
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
-data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'goagent'))
+data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
 if not os.path.isdir(data_path):
     data_path = current_path
 
@@ -486,7 +486,7 @@ class CertUtil(object):
             logging.info("GoAgent CA exist")
             return
 
-        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../../data/goagent/CA.crt'# % certfile.decode('utf-8')
+        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../../data/gae_proxy/CA.crt'# % certfile.decode('utf-8')
         if exist_ca_sha1:
             delete_ca_command = 'security delete-certificate -Z %s' % exist_ca_sha1
             exec_command = "%s;%s" % (delete_ca_command, import_command)

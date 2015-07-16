@@ -81,7 +81,7 @@ class User_config(object):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
 
         self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
 
         self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
         DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
@@ -138,7 +138,7 @@ class User_config(object):
             logging.warn("User_config.load except:%s", e)
 
     def save(self):
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'goagent', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
         try:
             f = open(CONFIG_USER_FILENAME, 'w')
             if self.user_special.appid != "":
@@ -273,7 +273,7 @@ class ControlHandler():
         elif path == "/status":
             return self.req_status_handler()
         else:
-            logging.debug('GoAgent Web_control %s %s %s ', self.address_string(), self.command, self.path)
+            logging.debug('GAEProxy Web_control %s %s %s ', self.address_string(), self.command, self.path)
 
 
         if path == '/deploy':
@@ -353,7 +353,7 @@ class ControlHandler():
                 return
         except:
             pass
-        logging.debug ('GoAgent web_control %s %s %s ', self.address_string(), self.command, self.path)
+        logging.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
@@ -544,7 +544,7 @@ class ControlHandler():
 
                 data = '{"res":"success"}'
                 self.send_response('text/html', data)
-                #http_request("http://127.0.0.1:8085/init_module?module=goagent&cmd=restart")
+                #http_request("http://127.0.0.1:8085/init_module?module=gae_proxy&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)

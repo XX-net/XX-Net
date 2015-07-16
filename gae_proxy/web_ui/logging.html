@@ -12,7 +12,7 @@
 </style>
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('GoAgent代理日志');
+    title('GAEProxy代理日志');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -85,7 +85,7 @@
 
         $.ajax({
             type: 'GET',
-            url: '/module/goagent/control/log',
+            url: '/module/gae_proxy/control/log',
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {

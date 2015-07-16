@@ -61,23 +61,23 @@ class Win_tray():
 
         if lang_code == "zh_CN":
             menu_options = ((u"设置", None, self.on_show, 0),
-                        (u"全局通过GoAgent代理", None, self.on_enable_proxy, enable_checked),
+                        (u"全局通过GAEProxy代理", None, self.on_enable_proxy, enable_checked),
                         (u"全局PAC智能代理", None, self.on_enable_pac, auto_checked),
                         (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                        (u"重启 GoAgent", None, self.on_restart_goagent, 0))
+                        (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0))
         else:
             menu_options = ((u"Config", None, self.on_show, 0),
-                        (u"Set Global GoAgent Proxy", None, self.on_enable_proxy, enable_checked),
+                        (u"Set Global GAEProxy Proxy", None, self.on_enable_proxy, enable_checked),
                         (u"Set Global PAC Proxy", None, self.on_enable_pac, auto_checked),
                         (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
-                        (u"Reset GoAgent", None, self.on_restart_goagent, 0))
+                        (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0))
         return menu_options
 
     def on_show(self, widget=None, data=None):
         self.show_control_web()
 
 
-    def on_restart_goagent(self, widget=None, data=None):
+    def on_restart_gae_proxy(self, widget=None, data=None):
         module_init.stop_all()
         module_init.start_all_auto()
 
@@ -96,11 +96,11 @@ class Win_tray():
         self.set_register(self.INTERNET_SETTINGS, 'ProxyServer', 1, '127.0.0.1:8087')
 
     def on_enable_pac(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable goagent proxy
+        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable gae_proxy proxy
         self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "http://127.0.0.1:8086/proxy.pac")
 
     def on_disable_proxy(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable goagent proxy
+        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable gae_proxy proxy
         self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy
 
     def show_control_web(self, widget=None, data=None):

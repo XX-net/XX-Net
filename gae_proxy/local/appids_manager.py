@@ -11,7 +11,7 @@ class APPID_manager(object):
 
     def get_appid(self):
         if len(self.working_appid_list) == 0:
-            logging.error("No usable appid left, add new appid to continue use GoAgent")
+            logging.error("No usable appid left, add new appid to continue use GAEProxy")
             return None
         else:
             return random.choice(self.working_appid_list)

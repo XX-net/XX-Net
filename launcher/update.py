@@ -24,8 +24,8 @@ update_url = "https://xxnet-update.appspot.com/update.json"
 
 update_content = ""
 update_dict = {}
-new_goagent_version = ""
-goagent_path = ""
+new_gae_proxy_version = ""
+gae_proxy_path = ""
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
@@ -36,7 +36,7 @@ def get_opener():
 
     import ssl
     if getattr(ssl, "create_default_context", None):
-        cafile = os.path.join(data_root, "goagent", "CA.crt")
+        cafile = os.path.join(data_root, "gae_proxy", "CA.crt")
         if not os.path.isfile(cafile):
             cafile = None
         context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
@@ -203,7 +203,7 @@ def download_module(module, new_version):
             break
 
     except Exception as e:
-        logging.warn("get goagent source fail, content:%s err:%s", update_content, e)
+        logging.warn("get gae_proxy source fail, content:%s err:%s", update_content, e)
 
 def ignore_module(module, new_version):
     config.set(["modules", module, "ignore_version"], str(new_version))
@@ -362,8 +362,8 @@ def check_new_machine():
 def check_loop():
     check_new_machine()
 
-    #wait goagent to start
-    #update need goagent as proxy
+    #wait gae_proxy to start
+    #update need gae_proxy as proxy
     time.sleep(1)
 
     while True:
