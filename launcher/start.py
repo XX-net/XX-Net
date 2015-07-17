@@ -26,6 +26,8 @@ if sys.platform.startswith("linux"):
         from non_tray import sys_tray
 
 elif sys.platform == "win32":
+    win32_lib = os.path.join(python_path, 'lib', 'win32')
+    sys.path.append(win32_lib)
     from win_tray import sys_tray
 elif sys.platform == "darwin":
     darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
