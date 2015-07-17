@@ -1,12 +1,13 @@
 XX-Net
 ========
-项目状态：目前大部分ip被封锁，GAE模式不可用，会启用新方案，请各位等2周
+项目状态：新用户启动后，需要等待一段时间（十分钟到1小时），扫描到足够ip之后会比较流畅  
+老用户升级， 请更新ip段范围（删除data/gae_proxy/ip_range.txt 或合并gae_proxy/local/ip_range.txt 到data/gae_proxy/ip_range.txt）  
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.16.4
+https://codeload.github.com/XX-net/XX-Net/zip/2.0.0
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/1.15.2

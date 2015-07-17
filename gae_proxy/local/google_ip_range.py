@@ -73,20 +73,17 @@ class Ip_range(object):
         for id in self.ip_range_map:
             print "[",id,"]:", self.ip_range_map[id]
 
-    def random_get_ip(self):
-        # this function have bug, not fixed, and proved to be not a good idea.
+    def get_real_random_ip(self):
         while True:
-            index = random.randint(0, self.candidate_amount_ip)
-            id = bisect.bisect_left(self.ip_range_index, index)
-            range_index = self.ip_range_index[id-1]
-            ip_range = self.ip_range_map[range_index]
-            ip = ip_range[0] + (index - id)
-            add_last_byte = ip % 255
+            ip_int = random.randint(0, 4294967294)
+            add_last_byte = ip_int % 255
             if add_last_byte == 0 or add_last_byte == 255:
                 continue
-            return ip
+
+            return ip_int
 
     def get_ip(self):
+        #return self.get_real_random_ip()
         while True:
             index = random.randint(0, len(self.ip_range_list) - 1)
             ip_range = self.ip_range_list[index]
