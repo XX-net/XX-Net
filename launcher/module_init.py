@@ -18,7 +18,6 @@ if root_path not in sys.path:
 def start(module):
 
     try:
-        #config.load()
         if not module in config.config["modules"]:
             launcher_log.error("module not exist %s", module)
             raise
@@ -27,25 +26,25 @@ def start(module):
             launcher_log.error("module %s is running", module)
             return "module is running"
 
-
-        #script_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, module, version, 'start.py'))
-        #proc_handler[module] = subprocess.Popen([sys.executable, script_path], shell=False)
-
         if module not in proc_handler:
             proc_handler[module] = {}
 
-            #script_path = os.path.abspath( os.path.join(current_path, os.pardir, module))
-            #sys.path.insert(0, script_path)
-            proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], -1)
+        if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
+            if "imp" not in proc_handler[module]:
+                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], -1)
 
-        _start = proc_handler[module]["imp"].start
-        p = threading.Thread(target = _start.main)
-        p.daemon = True
-        p.start()
-        proc_handler[module]["proc"] = p
+            _start = proc_handler[module]["imp"].start
+            p = threading.Thread(target = _start.main)
+            p.daemon = True
+            p.start()
+            proc_handler[module]["proc"] = p
 
-        while not _start.client.ready:
-            time.sleep(0.1)
+            while not _start.client.ready:
+                time.sleep(0.1)
+        else:
+            script_path = os.path.join(root_path, module, 'start.py')
+            proc_handler[module]["proc"] = subprocess.Popen([sys.executable, script_path], shell=False)
+
 
         launcher_log.info("%s started", module)
 
@@ -60,13 +59,16 @@ def stop(module):
             launcher_log.error("module %s not running", module)
             return
 
-        #proc_handler[module].terminate()  # Sends SIGTERM
-        #proc_handler[module].wait()
-        _start = proc_handler[module]["imp"].start
-        _start.client.config.keep_run = False
-        launcher_log.debug("module %s stopping", module)
-        while _start.client.ready:
-            time.sleep(0.1)
+        if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
+
+            _start = proc_handler[module]["imp"].start
+            _start.client.config.keep_run = False
+            launcher_log.debug("module %s stopping", module)
+            while _start.client.ready:
+                time.sleep(0.1)
+        else:
+            proc_handler[module]["proc"].terminate()  # Sends SIGTERM
+            proc_handler[module]["proc"].wait()
 
         del proc_handler[module]
 
@@ -77,7 +79,6 @@ def stop(module):
     return "stop success."
 
 def start_all_auto():
-    #config.load()
     for module in config.config["modules"]:
         if module == "launcher":
             continue
