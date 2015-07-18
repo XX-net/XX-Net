@@ -10,7 +10,7 @@ XX-Net
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.4
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/1.15.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.0.2
 
 (1.13.6 之前的用户，请重新部署服务端)
 
