@@ -5,7 +5,7 @@
 import errno
 import time
 import re
-import logging
+import xlog
 import socket
 import ssl
 import httplib
@@ -68,10 +68,10 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
         response.begin()
         ssl_sock.settimeout(orig_timeout)
     except httplib.BadStatusLine as e:
-        logging.warn("direct_handler.fetch bad status line:%r", e)
+        xlog.warn("direct_handler.fetch bad status line:%r", e)
         response = None
     except Exception as e:
-        logging.warn("direct_handler.fetch:%r", e)
+        xlog.warn("direct_handler.fetch:%r", e)
     return response
 
 
@@ -90,10 +90,10 @@ def handler(method, host, url, headers, body, wfile):
                 break
         except OpenSSL.SysCallError as e:
             errors.append(e)
-            logging.warn("direct_handler.handler err:%r %s/%s", e, host, url)
+            xlog.warn("direct_handler.handler err:%r %s/%s", e, host, url)
         except Exception as e:
             errors.append(e)
-            logging.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
+            xlog.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
 
     try:
         send_to_browser = True
@@ -106,11 +106,11 @@ def handler(method, host, url, headers, body, wfile):
         except Exception as e:
             send_to_browser = False
             wait_time = time.time()-time_request
-            logging.warn("direct_handler.handler send response fail. t:%d e:%r %s%s", wait_time, e, host, url)
+            xlog.warn("direct_handler.handler send response fail. t:%d e:%r %s%s", wait_time, e, host, url)
 
 
         if method == 'HEAD' or response.status in (204, 304):
-            logging.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
+            xlog.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
             https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
             return
@@ -134,13 +134,13 @@ def handler(method, host, url, headers, body, wfile):
                         wfile.write('\r\n')
                     except Exception as e:
                         send_to_browser = False
-                        logging.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                        xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
                 else:
                     if not data:
                         break
 
             response.close()
-            logging.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
+            xlog.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
             return
 
         content_length = int(response.getheader('Content-Length', 0))
@@ -154,14 +154,14 @@ def handler(method, host, url, headers, body, wfile):
         while True:
             if start > end:
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
-                logging.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
+                xlog.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
 
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data:
                 if time.time() - time_last_read > 20:
                     response.close()
-                    logging.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
+                    xlog.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
                     return
                 else:
                     time.sleep(0.1)
@@ -174,13 +174,13 @@ def handler(method, host, url, headers, body, wfile):
                 try:
                     ret = wfile.write(data)
                     if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                        logging.debug("send to browser wfile.write ret:%d", ret)
+                        xlog.debug("send to browser wfile.write ret:%d", ret)
                         ret = wfile.write(data)
                 except Exception as e_b:
                     if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                        logging.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
+                        xlog.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
                     else:
-                        logging.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
+                        xlog.warn('direct_handler send to browser return %r %s %r', e_b, host, url)
                     send_to_browser = False
 
 
@@ -188,8 +188,8 @@ def handler(method, host, url, headers, body, wfile):
         time_except = time.time()
         time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            logging.exception("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
+            xlog.exception("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
         else:
-            logging.exception("direct_handler except:%r %s %s", e, host, url)
+            xlog.exception("direct_handler except:%r %s %s", e, host, url)
     except Exception as e:
-        logging.exception("direct_handler except:%r %s %s", e, host, url)
+        xlog.exception("direct_handler except:%r %s %s", e, host, url)

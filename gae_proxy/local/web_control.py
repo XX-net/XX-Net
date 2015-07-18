@@ -34,7 +34,7 @@ import datetime
 import locale
 
 
-import logging
+import xlog
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
@@ -135,7 +135,7 @@ class User_config(object):
             self.user_special.proxy_passwd = self.USER_CONFIG.get('proxy', 'passwd')
 
         except Exception as e:
-            logging.warn("User_config.load except:%s", e)
+            xlog.warn("User_config.load except:%s", e)
 
     def save(self):
         CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
@@ -173,7 +173,7 @@ class User_config(object):
 
             f.close()
         except:
-            logging.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
+            xlog.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
 
 
 user_config = User_config()
@@ -236,7 +236,7 @@ def http_request(url, method="GET"):
     try:
         req = opener.open(url)
     except Exception as e:
-        logging.exception("web_control http_request:%s fail:%s", url, e)
+        xlog.exception("web_control http_request:%s fail:%s", url, e)
     return
 
 deploy_proc = None
@@ -262,7 +262,7 @@ class ControlHandler():
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                logging.warn("web control ref:%s refuse", netloc)
+                xlog.warn("web control ref:%s refuse", netloc)
                 return
         except:
             pass
@@ -273,7 +273,7 @@ class ControlHandler():
         elif path == "/status":
             return self.req_status_handler()
         else:
-            logging.debug('GAEProxy Web_control %s %s %s ', self.address_string(), self.command, self.path)
+            xlog.debug('GAEProxy Web_control %s %s %s ', self.address_string(), self.command, self.path)
 
 
         if path == '/deploy':
@@ -303,7 +303,7 @@ class ControlHandler():
             file_path = os.path.abspath(os.path.join(web_ui_path, '/'.join(path.split('/')[1:])))
             if not os.path.isfile(file_path):
                 self.wfile.write(b'HTTP/1.1 404 Not Found\r\n\r\n')
-                logging.warn('%s %s %s wizard file %s not found', self.address_string(), self.command, self.path, file_path)
+                xlog.warn('%s %s %s wizard file %s not found', self.address_string(), self.command, self.path, file_path)
                 return
 
             if file_path.endswith('.html'):
@@ -318,12 +318,12 @@ class ControlHandler():
             self.send_file(file_path, mimetype)
             return
         else:
-            logging.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
+            xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            logging.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
 
@@ -333,7 +333,7 @@ class ControlHandler():
 
             data += b'\r\n'
             self.wfile.write(data)
-            logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
+            xlog.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
         elif os.path.isfile(filename):
             if filename.endswith('.pac'):
                 mimetype = 'text/plain'
@@ -342,18 +342,18 @@ class ControlHandler():
             #self.send_file(filename, mimetype)
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_POST(self):
         try:
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                logging.warn("web control ref:%s refuse", netloc)
+                xlog.warn("web control ref:%s refuse", netloc)
                 return
         except:
             pass
-        logging.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
+        xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
@@ -377,7 +377,7 @@ class ControlHandler():
             return self.req_importip_handler()
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def send_response(self, mimetype, data):
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
@@ -407,15 +407,15 @@ class ControlHandler():
                 return
 
             buffer_size = reqs["buffer_size"][0]
-            logging.set_buffer_size(buffer_size)
+            xlog.set_buffer_size(buffer_size)
         elif cmd == "get_last":
             max_line = int(reqs["max_line"][0])
-            data = logging.get_last_lines(max_line)
+            data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
             last_no = int(reqs["last_no"][0])
-            data = logging.get_new_lines(last_no)
+            data = xlog.get_new_lines(last_no)
         else:
-            logging.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+            xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
@@ -445,7 +445,7 @@ class ControlHandler():
                     version = m.group(1) + "." + m.group(2) + "." + m.group(3)
                     return version
         except Exception as e:
-            logging.exception("xxnet_version fail")
+            xlog.exception("xxnet_version fail")
         return "get_version_fail"
 
     def get_os_language(self):
@@ -547,7 +547,7 @@ class ControlHandler():
                 #http_request("http://127.0.0.1:8085/init_module?module=gae_proxy&cmd=restart")
                 return
         except Exception as e:
-            logging.exception("req_config_handler except:%s", e)
+            xlog.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
         self.send_response('text/html', data)
 
@@ -565,7 +565,7 @@ class ControlHandler():
             appid = self.postvars['appid'][0]
 
             if deploy_proc and deploy_proc.poll() == None:
-                logging.warn("deploy is running, request denied.")
+                xlog.warn("deploy is running, request denied.")
                 data = '{"res":"deploy is running", "time":"%s"}' % (time_now)
 
             else:
@@ -578,7 +578,7 @@ class ControlHandler():
                     passwd = self.postvars['passwd'][0]
                     rc4_passwd = self.postvars['rc4_passwd'][0]
                     deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
-                    logging.info("deploy begin.")
+                    xlog.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
                     data = '{"res":"%s", "time":"%s"}' % (e, time_now)

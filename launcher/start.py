@@ -6,7 +6,7 @@ import time
 import atexit
 import webbrowser
 
-import logging
+import launcher_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))

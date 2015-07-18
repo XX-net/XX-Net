@@ -8,7 +8,7 @@ import os
 import shutil
 import ip_utils
 from config import config
-import logging
+import xlog
 
 random.seed(time.time()* 1000000)
 
@@ -26,10 +26,10 @@ class Ip_range(object):
         else:
             self.range_file = default_range_file
 
-        logging.info("load ip range file:%s", self.range_file)
+        xlog.info("load ip range file:%s", self.range_file)
         fd = open(self.range_file, "r")
         if not fd:
-            logging.error("load ip range %s fail", self.range_file)
+            xlog.error("load ip range %s fail", self.range_file)
             return
 
         content = fd.read()
@@ -56,7 +56,7 @@ class Ip_range(object):
             nbegin = ip_utils.ip_string_to_num(begin)
             nend = ip_utils.ip_string_to_num(end)
             if not nbegin or not nend or nend < nbegin:
-                logging.warn("load ip range:%s fail", line)
+                xlog.warn("load ip range:%s fail", line)
                 continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
@@ -94,7 +94,7 @@ class Ip_range(object):
             try:
                 id_2 = random.randint(0, ip_range[1] - ip_range[0])
             except Exception as e:
-                logging.exception("random.randint:%r %d - %d, %d", e, ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
+                xlog.exception("random.randint:%r %d - %d, %d", e, ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
 
             ip = ip_range[0] + id_2
             add_last_byte = ip % 255

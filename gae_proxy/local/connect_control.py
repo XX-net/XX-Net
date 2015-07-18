@@ -1,7 +1,7 @@
 
 import time
 
-import logging
+import xlog
 
 connect_allow_time = 0
 connect_fail_time = 0
@@ -28,12 +28,12 @@ def allow_scan():
         return True
 
 def fall_into_honeypot():
-    logging.warn("fall_into_honeypot.")
+    xlog.warn("fall_into_honeypot.")
     global connect_allow_time
     #connect_allow_time = time.time() + block_delay
 
 def scan_sleep():
-    logging.warn("Scan Blocked, due to exceeds Google's frequency limit. Please reduce the number of scan threads.")
+    xlog.warn("Scan Blocked, due to exceeds Google's frequency limit. Please reduce the number of scan threads.")
     global scan_allow_time
     scan_allow_time = time.time() + scan_sleep_time
     # DOTO: Auto-reduce the setting?

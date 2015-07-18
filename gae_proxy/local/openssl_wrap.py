@@ -11,7 +11,7 @@ SSLError = OpenSSL.SSL.WantReadError
 import select
 import time
 import socket
-import logging
+import xlog
 
 ssl_version = ''
 
@@ -129,7 +129,7 @@ class SSLConnection(object):
             if sys.platform == "darwin":
                 ssl_version = "TLSv1"
 
-            logging.info("SSL use version:%s", ssl_version)
+            xlog.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)

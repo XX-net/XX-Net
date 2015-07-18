@@ -7,7 +7,7 @@ import os
 import sys
 import re
 import io
-import logging
+import xlog
 
 
 
@@ -46,9 +46,9 @@ class Config(object):
                 content = fp.read()
                 try:
                     self.CONFIG.readfp(io.BytesIO(content))
-                    logging.info("load manual.ini success")
+                    xlog.info("load manual.ini success")
                 except Exception as e:
-                    logging.exception("data/gae_proxy/manual.ini load error:%s", e)
+                    xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')

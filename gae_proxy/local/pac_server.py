@@ -7,7 +7,7 @@ import glob
 import base64
 import time
 import re
-import logging
+import xlog
 import thread
 import BaseHTTPServer
 import urllib2
@@ -65,17 +65,17 @@ class PacUtil(object):
 
         if config.PAC_ADBLOCK:
             try:
-                logging.info('try download %r to update_pacfile(%r)', config.PAC_ADBLOCK, filename)
+                xlog.info('try download %r to update_pacfile(%r)', config.PAC_ADBLOCK, filename)
                 adblock_content = opener.open(config.PAC_ADBLOCK).read()
             except Exception as e:
-                logging.warn("pac_update download adblock fail:%r", e)
+                xlog.warn("pac_update download adblock fail:%r", e)
                 return
 
         try:
-            logging.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
+            xlog.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
             pac_content = opener.open(config.PAC_GFWLIST).read()
         except Exception as e:
-            logging.warn("pac_update download gfwlist fail:%r", e)
+            xlog.warn("pac_update download gfwlist fail:%r", e)
             return
 
         content = ''
@@ -96,32 +96,32 @@ class PacUtil(object):
 
         try:
             if config.PAC_ADBLOCK:
-                logging.info('%r downloaded, try convert it with adblock2pac', config.PAC_ADBLOCK)
+                xlog.info('%r downloaded, try convert it with adblock2pac', config.PAC_ADBLOCK)
                 jsrule = PacUtil.adblock2pac(adblock_content, 'FindProxyForURLByAdblock', blackhole, default)
                 content += '\r\n' + jsrule + '\r\n'
-                logging.info('%r downloaded and parsed', config.PAC_ADBLOCK)
+                xlog.info('%r downloaded and parsed', config.PAC_ADBLOCK)
             else:
                 content += '\r\nfunction FindProxyForURLByAdblock(url, host) {return "DIRECT";}\r\n'
         except Exception as e:
             need_update = False
-            logging.exception('update_pacfile failed: %r', e)
+            xlog.exception('update_pacfile failed: %r', e)
             return
 
         try:
             autoproxy_content = base64.b64decode(pac_content)
-            logging.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
+            xlog.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
             jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
             content += '\r\n' + jsrule + '\r\n'
-            logging.info('%r downloaded and parsed', config.PAC_GFWLIST)
+            xlog.info('%r downloaded and parsed', config.PAC_GFWLIST)
         except Exception as e:
             need_update = False
-            logging.exception('update_pacfile failed: %r', e)
+            xlog.exception('update_pacfile failed: %r', e)
             return
 
         if need_update:
             with open(user_pacfile, 'wb') as fp:
                 fp.write(content)
-            logging.info('%r successfully updated', user_pacfile)
+            xlog.info('%r successfully updated', user_pacfile)
             serving_pacfile = user_pacfile
 
     @staticmethod
@@ -290,7 +290,7 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        logging.info('PAC from:%s %s %s ', self.address_string(), self.command, self.path)
+        xlog.info('PAC from:%s %s %s ', self.address_string(), self.command, self.path)
 
         path = urlparse.urlparse(self.path).path # '/proxy.pac'
         filename = os.path.normpath('./' + path) # proxy.pac
@@ -302,18 +302,18 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 data += b'\r\n This is the Pac server, not proxy port, use 8087 as proxy port.'
             self.wfile.write(data)
-            logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
+            xlog.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
             return
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            logging.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
 
         if filename != 'proxy.pac':
-            logging.warn("pac_server GET %s fail", filename)
+            xlog.warn("pac_server GET %s fail", filename)
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
             return
 

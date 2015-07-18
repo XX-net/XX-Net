@@ -62,7 +62,7 @@ import traceback
 
 
 import errno
-import logging
+import xlog
 import random
 import threading
 import SocketServer
@@ -168,12 +168,12 @@ def pre_start():
                 import psutil
                 process_list = psutil.get_process_list()
             except Exception as e:
-                logging.exception('psutil.get_windows_running_process_list() failed: %r', e)
+                xlog.exception('psutil.get_windows_running_process_list() failed: %r', e)
         return process_list
 
 
     if sys.platform == 'cygwin':
-        logging.info('cygwin is not officially supported, please continue at your own risk :)')
+        xlog.info('cygwin is not officially supported, please continue at your own risk :)')
         #sys.exit(-1)
     elif os.name == 'posix':
         try:
@@ -204,7 +204,7 @@ def pre_start():
                 ctypes.windll.user32.MessageBoxW(None, error, title, 0)
                 #sys.exit(0)
     if config.GAE_APPIDS[0] == 'gae_proxy':
-        logging.critical('please edit %s to add your appid to [gae] !', config.CONFIG_FILENAME)
+        xlog.critical('please edit %s to add your appid to [gae] !', config.CONFIG_FILENAME)
         sys.exit(-1)
     if config.PAC_ENABLE:
         pac_ip = config.PAC_IP
@@ -226,9 +226,9 @@ def main():
     if os.path.islink(__file__):
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    logging.basicConfig(level=logging.DEBUG if config.LISTEN_DEBUGINFO else logging.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
+    xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
     pre_start()
-    logging.info(config.info())
+    xlog.info(config.info())
 
     CertUtil.init_ca()
 
@@ -248,7 +248,7 @@ def main():
     while config.keep_run:
         time.sleep(1)
 
-    logging.info("Exiting gae_proxy module...")
+    xlog.info("Exiting gae_proxy module...")
     proxy_daemon.shutdown()
     proxy_daemon.server_close()
     proxy_thread.join()
@@ -257,7 +257,7 @@ def main():
         pac_daemon.server_close()
         pac_thread.join()
     ready = False
-    logging.info("Finished Exiting gae_proxy module...")
+    xlog.info("Finished Exiting gae_proxy module...")
 
     if do_profile:
         pr.disable()

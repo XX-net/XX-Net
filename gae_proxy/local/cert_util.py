@@ -12,7 +12,7 @@ import hashlib
 import threading
 import subprocess
 
-import logging
+import xlog
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -180,12 +180,12 @@ class CertUtil(object):
         ca.set_pubkey(req.get_pubkey())
         ca.sign(key, CertUtil.ca_digest)
         #logging.debug("CA key:%s", key)
-        logging.info("create ca")
+        xlog.info("create ca")
         return key, ca
 
     @staticmethod
     def generate_ca_file():
-        logging.info("generate CA file:%s", CertUtil.ca_keyfile)
+        xlog.info("generate CA file:%s", CertUtil.ca_keyfile)
         key, ca = CertUtil.create_ca()
         with open(CertUtil.ca_keyfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
@@ -346,7 +346,7 @@ class CertUtil(object):
                     crypt32.CertDeleteCertificateFromStore(crypt32.CertDuplicateCertificateContext(pCertCtx))
                 pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
         except Exception as e:
-            logging.warning('CertUtil.remove_windows_ca failed: %r', e)
+            xlog.warning('CertUtil.remove_windows_ca failed: %r', e)
 
 
     @staticmethod
@@ -368,7 +368,7 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
         cmd_line = 'certutil -L -d %s |grep "GoAgent" &&certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
@@ -409,13 +409,13 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            logging.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
         sha1 = get_debian_ca_sha1(nss_path)
         ca_hash = CertUtil.ca_thumbprint.replace(':', '')
         if sha1 == ca_hash:
-            logging.info("system cert exist")
+            xlog.info("system cert exist")
             return
 
 
@@ -443,7 +443,7 @@ class CertUtil(object):
         new_certfile = "/usr/local/share/ca-certificates/CA.crt"
         if not os.path.exists(pemfile) or not CertUtil.file_is_same(certfile, new_certfile):
             if os.system('cp "%s" "%s" && update-ca-certificates' % (certfile, new_certfile)) != 0:
-                logging.warning('install root certificate failed, Please run as administrator/root/sudo')
+                xlog.warning('install root certificate failed, Please run as administrator/root/sudo')
 
     @staticmethod
     def file_is_same(file1, file2):
@@ -483,7 +483,7 @@ class CertUtil(object):
 
         exist_ca_sha1 = get_exist_ca_sha1()
         if exist_ca_sha1 == ca_hash:
-            logging.info("GoAgent CA exist")
+            xlog.info("GoAgent CA exist")
             return
 
         import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../data/gae_proxy/CA.crt'# % certfile.decode('utf-8')
@@ -495,7 +495,7 @@ class CertUtil(object):
 
         admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
         cmd = admin_command.encode('utf-8')
-        logging.info("try auto import CA command:%s", cmd)
+        xlog.info("try auto import CA command:%s", cmd)
         os.system(cmd)
 
     @staticmethod
@@ -519,9 +519,9 @@ class CertUtil(object):
 
         # Confirmed GoAgent CA exist
         if not os.path.exists(CertUtil.ca_keyfile):
-            logging.info("no CA file exist")
+            xlog.info("no CA file exist")
 
-            logging.info("clean old site certs")
+            xlog.info("clean old site certs")
             any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
 
             if os.name == 'nt':

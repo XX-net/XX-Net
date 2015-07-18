@@ -4,7 +4,7 @@ import sys
 import shutil
 import time
 
-import logging
+import xlog
 from config import config
 
 class Scan_ip_log():
@@ -38,7 +38,7 @@ class Scan_ip_log():
             if os.path.isfile(file_name):
                 continue
 
-            logging.info("scan_ip_log roll %s -> %s", self.log_path, file_name)
+            xlog.info("scan_ip_log roll %s -> %s", self.log_path, file_name)
             shutil.move(self.log_path, file_name)
             return
 

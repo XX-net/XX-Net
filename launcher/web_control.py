@@ -24,7 +24,7 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 import yaml
 import json
 
-import logging
+import launcher_log
 import module_init
 import config
 import autorun
@@ -101,7 +101,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
-                    logging.warn("request %s no module in path", self.path)
+                    launcher_log.warn("request %s no module in path", self.path)
                     self.send_not_found()
                     return
 
@@ -115,7 +115,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             refer = self.headers.getheader('Referer')
             netloc = urlparse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                logging.warn("web control ref:%s refuse", netloc)
+                launcher_log.warn("web control ref:%s refuse", netloc)
                 return
         except:
             pass
@@ -123,7 +123,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            logging.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            launcher_log.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
         url_path = urlparse.urlparse(self.path).path
@@ -135,7 +135,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
-                    logging.warn("request %s no module in path", url_path)
+                    launcher_log.warn("request %s no module in path", url_path)
                     self.send_not_found()
                     return
 
@@ -149,7 +149,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
 
-        logging.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
+        launcher_log.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
             if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
@@ -181,7 +181,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             update_from_github.restart_xxnet()
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            launcher_log.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def send_file(self, filename, mimetype):
         try:
@@ -336,14 +336,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif reqs['cmd'] == ['get_new_version']:
             versions = update_from_github.get_github_versions()
             data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
-            logging.info("%s", data)
+            launcher_log.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
             try:
                 update_from_github.update_version(version)
                 data = '{"res":"success"}'
             except Exception as e:
-                logging.info("update_test_version fail:%r", e)
+                launcher_log.info("update_test_version fail:%r", e)
                 data = '{"res":"fail", "error":"%s"}' % e
 
         self.send_response('text/html', data)
@@ -378,7 +378,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 result_start = module_init.start(module)
                 data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (module, result_stop, result_start)
         except Exception as e:
-            logging.exception("init_module except:%s", e)
+            launcher_log.exception("init_module except:%s", e)
 
         self.send_response("text/html", data)
 
@@ -396,11 +396,11 @@ def stop():
     if process == 0:
         return
 
-    logging.info("begin to exit web control")
+    launcher_log.info("begin to exit web control")
     server.shutdown()
     server.server_close()
     process.join()
-    logging.info("launcher web control exited.")
+    launcher_log.info("launcher web control exited.")
     process = 0
 
 
@@ -415,7 +415,7 @@ def http_request(url, method="GET"):
         return False
 
 def confirm_xxnet_exit():
-    logging.debug("start confirm_xxnet_exit")
+    launcher_log.debug("start confirm_xxnet_exit")
     for i in range(30):
         if http_request("http://127.0.0.1:8087/quit") == False:
             return True
@@ -424,12 +424,12 @@ def confirm_xxnet_exit():
         if http_request("http://127.0.0.1:8085/quit") == False:
             return True
         time.sleep(1)
-    logging.debug("finished confirm_xxnet_exit")
+    launcher_log.debug("finished confirm_xxnet_exit")
     return False
 
 def confirm_module_ready(port):
     if port == 0:
-        logging.error("confirm_module_ready with port 0")
+        launcher_log.error("confirm_module_ready with port 0")
         time.sleep(1)
         return False
 

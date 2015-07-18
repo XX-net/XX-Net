@@ -1,6 +1,6 @@
 import subprocess
 import threading
-import logging
+import launcher_log
 import os
 import sys
 import config
@@ -20,11 +20,11 @@ def start(module):
     try:
         #config.load()
         if not module in config.config["modules"]:
-            logging.error("module not exist %s", module)
+            launcher_log.error("module not exist %s", module)
             raise
 
         if module in proc_handler:
-            logging.error("module %s is running", module)
+            launcher_log.error("module %s is running", module)
             return "module is running"
 
 
@@ -47,32 +47,32 @@ def start(module):
         while not _start.client.ready:
             time.sleep(0.1)
 
-        logging.info("%s started", module)
+        launcher_log.info("%s started", module)
 
     except Exception as e:
-        logging.exception("start module %s fail:%s", module, e)
+        launcher_log.exception("start module %s fail:%s", module, e)
         return "Except:%s" % e
     return "start success."
 
 def stop(module):
     try:
         if not module in proc_handler:
-            logging.error("module %s not running", module)
+            launcher_log.error("module %s not running", module)
             return
 
         #proc_handler[module].terminate()  # Sends SIGTERM
         #proc_handler[module].wait()
         _start = proc_handler[module]["imp"].start
         _start.client.config.keep_run = False
-        logging.debug("module %s stopping", module)
+        launcher_log.debug("module %s stopping", module)
         while _start.client.ready:
             time.sleep(0.1)
 
         del proc_handler[module]
 
-        logging.info("module %s stopped", module)
+        launcher_log.info("module %s stopped", module)
     except Exception as e:
-        logging.exception("stop module %s fail:%s", module, e)
+        launcher_log.exception("stop module %s fail:%s", module, e)
         return "Except:%s" % e
     return "stop success."
 
@@ -86,7 +86,7 @@ def start_all_auto():
             start(module)
             #web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
             finished_time = time.time()
-            logging.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
+            launcher_log.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
 
 def stop_all():
     running_modules = [k for k in proc_handler]

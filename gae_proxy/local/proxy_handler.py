@@ -9,7 +9,7 @@ import zlib
 import functools
 import re
 import io
-import logging
+import xlog
 import string
 import threading
 import socket
@@ -76,7 +76,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif self.command == "POST":
                 return controler.do_POST()
             else:
-                logging.warn("method not defined: %s", self.command)
+                xlog.warn("method not defined: %s", self.command)
                 return
 
         if self.path[0] == '/' and host:
@@ -85,7 +85,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             host = urlparse.urlparse(self.path).netloc
 
         if host.startswith("127.0.0.1") or host.startswith("localhost"):
-            logging.warn("Your browser forward localhost to proxy.")
+            xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
         self.parsed_url = urlparse.urlparse(self.path)
@@ -111,7 +111,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         def get_crlf(rfile):
             crlf = rfile.readline(2)
             if crlf != "\r\n":
-                logging.warn("chunk header read fail crlf")
+                xlog.warn("chunk header read fail crlf")
 
         request_headers = dict((k.title(), v) for k, v in self.headers.items())
 
@@ -122,7 +122,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 #logging.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
                 payload = self.rfile.read(payload_len)
             except NetWorkIOError as e:
-                logging.error('handle_method_urlfetch read payload failed:%s', e)
+                xlog.error('handle_method_urlfetch read payload failed:%s', e)
                 return
         elif 'Transfer-Encoding' in request_headers:
             # chunked, used by facebook android client
@@ -132,14 +132,14 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 chunk_size_list = chunk_size_str.split(";")
                 chunk_size = int("0x"+chunk_size_list[0], 0)
                 if len(chunk_size_list) > 1 and chunk_size_list[1] != "\r\n":
-                    logging.warn("chunk ext: %s", chunk_size_str)
+                    xlog.warn("chunk ext: %s", chunk_size_str)
                 if chunk_size == 0:
                     while True:
                         line = self.rfile.readline(65537)
                         if line == "\r\n":
                             break
                         else:
-                            logging.warn("entity header:%s", line)
+                            xlog.warn("entity header:%s", line)
                     break
                 payload += self.rfile.read(chunk_size)
                 get_crlf(self.rfile)
@@ -170,7 +170,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """socket forward for http CONNECT command"""
         host, _, port = self.path.rpartition(':')
         port = int(port)
-        logging.info('FWD %s %s:%d ', self.command, host, port)
+        xlog.info('FWD %s %s:%d ', self.command, host, port)
         if host == "appengine.google.com" or host == "www.google.com":
             connected_in_s = 5 # gae_proxy upload to appengine is slow, it need more 'fresh' connection.
         else:
@@ -181,21 +181,21 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
             data = self.connection.recv(1024)
         except Exception as e:
-            logging.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
+            xlog.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
             self.connection.close()
             return
 
         remote = forwork_manager.create_connection(host=host, port=port, sock_life=connected_in_s)
         if remote is None:
             self.connection.close()
-            logging.warn('FWD %s %s:%d create_connection fail', self.command, host, port)
+            xlog.warn('FWD %s %s:%d create_connection fail', self.command, host, port)
             return
 
         try:
             if data:
                 remote.send(data)
         except Exception as e:
-            logging.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
+            xlog.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
             self.connection.close()
             remote.close()
             return
@@ -204,7 +204,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         remote.settimeout(None)
 
         forwork_manager.forward_socket(self.connection, remote, bufsize=self.bufsize)
-        logging.debug('FWD %s %s:%d with closed', self.command, host, port)
+        xlog.debug('FWD %s %s:%d with closed', self.command, host, port)
 
     def do_CONNECT_AGENT(self):
         """deploy fake cert to client"""
@@ -212,19 +212,19 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         host, _, port = self.path.rpartition(':')
         port = int(port)
         certfile = CertUtil.get_cert(host)
-        logging.info('GAE %s %s:%d ', self.command, host, port)
+        xlog.info('GAE %s %s:%d ', self.command, host, port)
         self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
             ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
         except ssl.SSLError as e:
-            logging.info('ssl error: %s, create full domain cert for host:%s', e, host)
+            xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
             certfile = CertUtil.get_cert(host, full_name=True)
             return
         except Exception as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
-                logging.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
             return
 
         self.__realconnection = self.connection
@@ -249,11 +249,11 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
         except NetWorkIOError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                logging.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-        logging.debug('GAE CONNECT %s %s', self.command, self.path)
+        xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
             if host.endswith(".google.com") or host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
                 if host in config.HOSTS_GAE:
@@ -264,10 +264,10 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     fwd_set = [s for s in config.HOSTS_FWD]
                     fwd_set.append(host)
                     config.HOSTS_FWD = tuple(fwd_set)
-                logging.warn("Method %s not support in GAE, Redirect to FWD for %s", self.command, self.path)
+                xlog.warn("Method %s not support in GAE, Redirect to FWD for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path).encode())
             else:
-                logging.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
+                xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
         try:
@@ -300,23 +300,23 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         host, _, port = self.path.rpartition(':')
         port = int(port)
         if port != 443:
-            logging.warn("CONNECT %s port:%d not support", host, port)
+            xlog.warn("CONNECT %s port:%d not support", host, port)
             return
 
         certfile = CertUtil.get_cert(host)
-        logging.info('GAE %s %s:%d ', self.command, host, port)
+        xlog.info('GAE %s %s:%d ', self.command, host, port)
         self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
             ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
         except ssl.SSLError as e:
-            logging.info('ssl error: %s, create full domain cert for host:%s', e, host)
+            xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
             certfile = CertUtil.get_cert(host, full_name=True)
             return
         except Exception as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
-                logging.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
             return
 
         self.__realconnection = self.connection
@@ -344,7 +344,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-        logging.debug('GAE CONNECT %s %s', self.command, self.path)
+        xlog.debug('GAE CONNECT %s %s', self.command, self.path)
 
         try:
             if self.path[0] == '/' and host:
@@ -367,7 +367,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     #logging.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
                     payload = self.rfile.read(payload_len)
                 except NetWorkIOError as e:
-                    logging.error('handle_method_urlfetch read payload failed:%s', e)
+                    xlog.error('handle_method_urlfetch read payload failed:%s', e)
                     return
 
             direct_handler.handler(self.command, host, path, request_headers, payload, self.wfile)

@@ -27,7 +27,7 @@ if __name__ == "__main__":
 import ip_utils
 import check_ip
 from google_ip_range import ip_range
-import logging
+import xlog
 from config import config
 import connect_control
 from scan_ip_log import scan_ip_log
@@ -110,7 +110,7 @@ class Check_ip():
             try:
                 str_l = line.split(' ')
                 if len(str_l) != 4:
-                    logging.warning("line err: %s", line)
+                    xlog.warning("line err: %s", line)
                     continue
                 ip_str = str_l[0]
                 domain = str_l[1]
@@ -120,9 +120,9 @@ class Check_ip():
                 #logging.info("load ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
                 self.add_ip(ip_str, handshake_time, domain, server)
             except Exception as e:
-                logging.exception("load_ip line:%s err:%s", line, e)
+                xlog.exception("load_ip line:%s err:%s", line, e)
 
-        logging.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
+        xlog.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_ip_by_handshake_time(force=True)
 
         if os.path.isfile(self.bad_ip_file):
@@ -133,12 +133,12 @@ class Check_ip():
                             continue
                         str_l = line.replace('\n', '')
                         if not ip_utils.check_ip_valid(str_l):
-                            logging.warning("bad_ip line err: %s", line)
+                            xlog.warning("bad_ip line err: %s", line)
                             continue
                         ip = str_l[1]
                         self.bad_ip_pool.add(ip)
                     except Exception as e:
-                        logging.exception("parse bad_ip.txt err:%r", e)
+                        xlog.exception("parse bad_ip.txt err:%r", e)
 
     def save_ip_list(self, force=False):
         if not force:
@@ -158,12 +158,12 @@ class Check_ip():
 
             with open(self.bad_ip_file, "w") as fd:
                 for ip in self.bad_ip_pool:
-                    logging.debug("save bad ip:%s", ip)
+                    xlog.debug("save bad ip:%s", ip)
                     fd.write("%s\n" % (ip))
 
             self.iplist_need_save = 0
         except Exception as e:
-            logging.error("save good_ip.txt fail %s", e)
+            xlog.error("save good_ip.txt fail %s", e)
         finally:
             self.ip_lock.release()
 
@@ -184,13 +184,13 @@ class Check_ip():
             self.gws_ip_list = [ip_str for ip_str,handshake_time in ip_time]
 
         except Exception as e:
-            logging.error("try_sort_ip_by_handshake_time:%s", e)
+            xlog.error("try_sort_ip_by_handshake_time:%s", e)
         finally:
             self.ip_lock.release()
 
         time_cost = (( time.time() - self.last_sort_time_for_gws) * 1000)
         if time_cost > 30:
-            logging.debug("sort ip time:%dms", time_cost) # 5ms for 1000 ip. 70~150ms for 30000 ip.
+            xlog.debug("sort ip time:%dms", time_cost) # 5ms for 1000 ip. 70~150ms for 30000 ip.
 
         self.adjust_scan_thread_num()
 
@@ -205,14 +205,14 @@ class Check_ip():
                 the_100th_handshake_time = self.ip_dict[the_100th_ip]['handshake_time']
                 scan_ip_thread_num = int( (the_100th_handshake_time - 200)/2 * self.max_scan_ip_thread_num/50 )
             except Exception as e:
-                logging.warn("adjust_scan_thread_num fail:%r", e)
+                xlog.warn("adjust_scan_thread_num fail:%r", e)
                 return
 
             if scan_ip_thread_num > self.max_scan_ip_thread_num:
                 scan_ip_thread_num = self.max_scan_ip_thread_num
 
         if scan_ip_thread_num != self.scan_ip_thread_num:
-            logging.info("Adjust scan thread num from %d to %d", self.scan_ip_thread_num, scan_ip_thread_num)
+            xlog.info("Adjust scan thread num from %d to %d", self.scan_ip_thread_num, scan_ip_thread_num)
             self.scan_ip_thread_num = scan_ip_thread_num
             self.search_more_google_ip()
 
@@ -263,13 +263,13 @@ class Check_ip():
                     self.gws_ip_pointer += 1
                     continue
 
-                logging.debug("get ip:%s t:%d", ip_str, handshake_time)
+                xlog.debug("get ip:%s t:%d", ip_str, handshake_time)
                 self.ip_dict[ip_str]['history'].append([time.time(), "get"])
                 self.ip_dict[ip_str]['get_time'] = time.time()
                 self.gws_ip_pointer += 1
                 return ip_str
         except Exception as e:
-            logging.error("get_gws_ip fail:%s", e)
+            xlog.error("get_gws_ip fail:%s", e)
             traceback.print_exc()
         finally:
             self.ip_lock.release()
@@ -298,19 +298,19 @@ class Check_ip():
                 if time.time() - fail_time < 300:
                     continue
 
-                logging.debug("get host:%s ip:%s t:%d", host, ip_str, handshake_time)
+                xlog.debug("get host:%s ip:%s t:%d", host, ip_str, handshake_time)
                 self.ip_dict[ip_str]['history'].append([time.time(), "get"])
                 self.ip_dict[ip_str]['get_time'] = time.time()
                 return ip_str
         except Exception as e:
-            logging.error("get_gws_ip fail:%s", e)
+            xlog.error("get_gws_ip fail:%s", e)
             traceback.print_exc()
         finally:
             self.ip_lock.release()
 
     def add_ip(self, ip_str, handshake_time, domain=None, server=None):
         if not isinstance(ip_str, basestring):
-            logging.error("add_ip input")
+            xlog.error("add_ip input")
 
         handshake_time = int(handshake_time)
 
@@ -332,14 +332,14 @@ class Check_ip():
                 self.gws_ip_list.append(ip_str)
             return True
         except Exception as e:
-            logging.error("set_ip err:%s", e)
+            xlog.error("set_ip err:%s", e)
         finally:
             self.ip_lock.release()
         return False
 
     def update_ip(self, ip_str, handshake_time):
         if not isinstance(ip_str, basestring):
-            logging.error("set_ip input")
+            xlog.error("set_ip input")
 
         handshake_time = int(handshake_time)
         if handshake_time < 5: # this is impossible
@@ -367,12 +367,12 @@ class Check_ip():
 
             #logging.debug("update ip:%s not exist", ip_str)
         except Exception as e:
-            logging.error("update_ip err:%s", e)
+            xlog.error("update_ip err:%s", e)
         finally:
             self.ip_lock.release()
 
     def report_bad_ip(self, ip_str):
-        logging.debug("report_bad_ip %s", ip_str)
+        xlog.debug("report_bad_ip %s", ip_str)
         if not ip_utils.check_ip_valid(ip_str):
 
             return
@@ -388,7 +388,7 @@ class Check_ip():
         # ignore if system network is disconnected.
         if not force_remove:
             if not check_ip.network_is_ok():
-                logging.debug("report_connect_fail network fail")
+                xlog.debug("report_connect_fail network fail")
                 return
 
         self.ip_lock.acquire()
@@ -414,7 +414,7 @@ class Check_ip():
                 if 'gws' in server and ip_str in self.gws_ip_list:
                     self.gws_ip_list.remove(ip_str)
 
-                logging.info("remove ip:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
+                xlog.info("remove ip:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
 
                 if not force_remove:
                     self.to_remove_ip_list.put(ip_str)
@@ -422,7 +422,7 @@ class Check_ip():
 
             self.iplist_need_save = 1
         except Exception as e:
-            logging.exception("set_ip err:%s", e)
+            xlog.exception("set_ip err:%s", e)
         finally:
             self.ip_lock.release()
 
@@ -453,15 +453,15 @@ class Check_ip():
                 result = check_ip.test(ip_str)
                 if result and result.appspot_ok:
                     self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type)
-                    logging.debug("remove ip process, restore ip:%s", ip_str)
+                    xlog.debug("remove ip process, restore ip:%s", ip_str)
                     continue
 
                 if not check_ip.network_is_ok():
                     self.to_remove_ip_list.put(ip_str)
-                    logging.warn("network is unreachable. check your network connection.")
+                    xlog.warn("network is unreachable. check your network connection.")
                     return
 
-                logging.info("real remove ip:%s ", ip_str)
+                xlog.info("real remove ip:%s ", ip_str)
                 self.iplist_need_save = 1
         finally:
             self.remove_ip_thread_num_lock.acquire()
@@ -484,7 +484,7 @@ class Check_ip():
                 property = self.ip_dict[ip_str]
                 server = property['server']
                 handshake_time = property['handshake_time']
-                logging.info("remove_slowest_ip:%s handshake_time:%d", ip_str, handshake_time)
+                xlog.info("remove_slowest_ip:%s handshake_time:%d", ip_str, handshake_time)
                 del self.ip_dict[ip_str]
 
                 if 'gws' in server and ip_str in self.gws_ip_list:
@@ -493,7 +493,7 @@ class Check_ip():
                 ip_num -= 1
 
         except Exception as e:
-            logging.exception("remove_slowest_ip err:%s", e)
+            xlog.exception("remove_slowest_ip err:%s", e)
         finally:
             self.ip_lock.release()
 
@@ -517,7 +517,7 @@ class Check_ip():
                 if self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type):
                     #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip_str,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
-                    logging.info("scan_ip add ip:%s time:%d", ip_str, result.handshake_time)
+                    xlog.info("scan_ip add ip:%s time:%d", ip_str, result.handshake_time)
                     scan_ip_log.info("Add %s time:%d CN:%s type:%s", ip_str, result.handshake_time, result.domain, result.server_type)
                     self.remove_slowest_ip()
                     self.save_ip_list()
@@ -526,12 +526,12 @@ class Check_ip():
                 connect_control.fall_into_honeypot()
                 continue
             except Exception as e:
-                logging.exception("google_ip.runJob fail:%s", e)
+                xlog.exception("google_ip.runJob fail:%s", e)
 
         self.ncount_lock.acquire()
         self.searching_thread_count -= 1
         self.ncount_lock.release()
-        logging.info("scan_ip_worker exit")
+        xlog.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
         while self.searching_thread_count < self.scan_ip_thread_num:

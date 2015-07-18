@@ -19,7 +19,7 @@ import _winreg as winreg
 
 import module_init
 import update
-import logging
+import launcher_log
 
 
 class Win_tray():
@@ -87,7 +87,7 @@ class Win_tray():
     def set_register(self, reg_path, name, reg_type, value):
         #_, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, name)
         winreg.SetValueEx(reg_path, name, 0, reg_type, value)
-        logging.info("set register path:%r name:%s type:%d value:%s", reg_path, name, reg_type, value)
+        launcher_log.info("set register path:%r name:%s type:%d value:%s", reg_path, name, reg_type, value)
 
     def on_enable_proxy(self, widget=None, data=None):
         self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy

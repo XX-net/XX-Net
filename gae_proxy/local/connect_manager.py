@@ -9,7 +9,7 @@ import socket
 import select
 import Queue
 import struct
-import logging
+import xlog
 import threading
 import operator
 import httplib
@@ -31,7 +31,7 @@ def load_sock():
         elif config.PROXY_TYPE == "SOCKS5":
             proxy_type = socks.SOCKS5
         else:
-            logging.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
             config.PROXY_ENABLE = 0
 
     if config.PROXY_ENABLE:
@@ -208,7 +208,7 @@ class Https_connection_manager(object):
         if ssl_sock.host == '':
             ssl_sock.appid = appid_manager.get_appid()
             if not ssl_sock.appid:
-                logging.error("no appid can use")
+                xlog.error("no appid can use")
                 return False
             host = ssl_sock.appid + ".appspot.com"
             ssl_sock.host = host
@@ -233,20 +233,20 @@ class Https_connection_manager(object):
             data = request_data.encode()
             ret = ssl_sock.send(data)
             if ret != len(data):
-                logging.warn("head send len:%d %d", ret, len(data))
+                xlog.warn("head send len:%d %d", ret, len(data))
             response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
             response.begin()
 
             status = response.status
             if status != 200:
-                logging.debug("app head fail status:%d", status)
+                xlog.debug("app head fail status:%d", status)
                 raise Exception("app check fail")
             return True
         except httplib.BadStatusLine as e:
             return False
         except Exception as e:
-            logging.debug("head request fail:%r", e)
+            xlog.debug("head request fail:%r", e)
             return False
         finally:
             if response:
@@ -277,7 +277,7 @@ class Https_connection_manager(object):
 
                 self.create_more_connection()
             except Exception as e:
-                logging.warn("keep alive except:%r", e)
+                xlog.warn("keep alive except:%r", e)
 
     def save_ssl_connection_for_reuse(self, ssl_sock, host=None):
         ssl_sock.last_use_time = time.time()
@@ -366,7 +366,7 @@ class Https_connection_manager(object):
             handshake_time = int((time_handshaked - time_connected) * 1000)
 
             google_ip.update_ip(ip, handshake_time)
-            logging.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
+            xlog.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
             # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
             ssl_sock.ip = ip
             ssl_sock.sock = sock
@@ -393,7 +393,7 @@ class Https_connection_manager(object):
             return ssl_sock
         except Exception as e:
             time_cost = time.time() - time_begin
-            logging.debug("create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
+            xlog.debug("create_ssl %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
 
             google_ip.report_connect_fail(ip)
             connect_control.report_connect_fail()
@@ -410,7 +410,7 @@ class Https_connection_manager(object):
             while self.new_conn_pool.qsize() < self.connection_pool_min_num:
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
-                    logging.warning("no gws ip")
+                    xlog.warning("no gws ip")
                     break
 
                 port = 443
@@ -440,7 +440,7 @@ class Https_connection_manager(object):
                         break
 
                     if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
-                        logging.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
+                        xlog.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
                         return ssl_sock
                         break
                     else:
@@ -456,7 +456,7 @@ class Https_connection_manager(object):
                     break
 
                 if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
-                    logging.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                    xlog.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                     break
                 else:
                     ssl_sock.close()
@@ -472,7 +472,7 @@ class Https_connection_manager(object):
                 handshake_time, ssl_sock = ret
                 return ssl_sock
             else:
-                logging.debug("create ssl timeout fail.")
+                xlog.debug("create ssl timeout fail.")
                 return None
 
 
@@ -494,7 +494,7 @@ class Forward_connection_manager():
 
     def create_connection(self, host="", port=443, sock_life=5):
         if port != 443:
-            logging.warn("forward port %d not supported.", port)
+            xlog.warn("forward port %d not supported.", port)
             return None
 
         def _create_connection(ip_port, delay=0):
@@ -524,7 +524,7 @@ class Forward_connection_manager():
 
                 # record TCP connection time
                 conn_time = time.time() - start_time
-                logging.debug("tcp conn %s time:%d", ip, conn_time * 1000)
+                xlog.debug("tcp conn %s time:%d", ip, conn_time * 1000)
 
                 google_ip.update_ip(ip, conn_time * 2000)
                 #logging.info("create_tcp update ip:%s time:%d", ip, conn_time * 2000)
@@ -534,7 +534,7 @@ class Forward_connection_manager():
                 self.tcp_connection_cache.put((time.time(), sock))
             except Exception as e:
                 conn_time = int((time.time() - start_time) * 1000)
-                logging.debug("tcp conn %s fail t:%d", ip, conn_time)
+                xlog.debug("tcp conn %s fail t:%d", ip, conn_time)
                 google_ip.report_connect_fail(ip)
                 #logging.info("create_tcp report fail ip:%s", ip)
                 if sock:
@@ -566,7 +566,7 @@ class Forward_connection_manager():
                 else:
                     ip = google_ip.get_gws_ip()
                 if not ip:
-                    logging.error("no gws ip.")
+                    xlog.error("no gws ip.")
                     return
                 addr = (ip, port)
                 self.thread_num_lock.acquire()
@@ -581,7 +581,7 @@ class Forward_connection_manager():
                 return sock
             except:
                 continue
-        logging.warning('create tcp connection fail.')
+        xlog.warning('create tcp connection fail.')
 
 
     def forward_socket(self, local, remote, timeout=60, tick=2, bufsize=8192):
@@ -601,9 +601,9 @@ class Forward_connection_manager():
                     data = sock.recv(bufsize)
                     if not data:
                         if sock is remote:
-                            logging.debug("forward remote disconnected.")
+                            xlog.debug("forward remote disconnected.")
                         else:
-                            logging.debug("forward local disconnected.")
+                            xlog.debug("forward local disconnected.")
                         return
 
                     if sock is remote:
@@ -614,7 +614,7 @@ class Forward_connection_manager():
                         timecount = timeout
         except Exception as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.ENOTCONN, errno.EPIPE):
-                logging.exception("forward except:%s.", e)
+                xlog.exception("forward except:%s.", e)
         finally:
             if local:
                 local.close()

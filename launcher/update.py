@@ -10,7 +10,7 @@ import zipfile
 import sys
 from distutils.version import LooseVersion
 
-import logging
+import launcher_log
 import config
 import uuid
 import platform
@@ -55,7 +55,7 @@ def version_to_bin(s):
 
 def download_file(url, file):
     try:
-        logging.info("download %s to %s", url, file)
+        launcher_log.info("download %s to %s", url, file)
         opener = get_opener()
         req = opener.open(url, cafile="")
         CHUNK = 16 * 1024
@@ -66,7 +66,7 @@ def download_file(url, file):
                 fp.write(chunk)
         return True
     except:
-        logging.info("download %s to %s fail", url, file)
+        launcher_log.info("download %s to %s fail", url, file)
         return False
 
 def sha1_file(filename):
@@ -93,13 +93,13 @@ def install_module(module, new_version):
 
     #check path exist
     if not os.path.isdir(new_module_version_path):
-        logging.error("install module %s dir %s not exist", module, new_module_version_path)
+        launcher_log.error("install module %s dir %s not exist", module, new_module_version_path)
         return
 
     #call setup.py
     setup_script = os.path.join(new_module_version_path, "setup.py")
     if not os.path.isfile(setup_script):
-        logging.warn("update %s fail. setup script %s not exist", module, setup_script)
+        launcher_log.warn("update %s fail. setup script %s not exist", module, setup_script)
         return
 
 
@@ -117,17 +117,17 @@ def install_module(module, new_version):
         os._exit(0)
 
     else:
-        logging.info("Setup %s version %s ...", module, new_version)
+        launcher_log.info("Setup %s version %s ...", module, new_version)
         try:
             module_init.stop(module)
 
             subprocess.call([sys.executable, setup_script], shell=False)
-            logging.info("Finished new version setup.")
+            launcher_log.info("Finished new version setup.")
 
-            logging.info("Restarting new version ...")
+            launcher_log.info("Restarting new version ...")
             module_init.start(module)
         except Exception as e:
-            logging.error("install module %s %s fail:%s", module, new_version, e)
+            launcher_log.error("install module %s %s fail:%s", module, new_version, e)
 
 def download_module(module, new_version):
     import os
@@ -150,12 +150,12 @@ def download_module(module, new_version):
             if os.path.isfile(file_path) and sha1_file(file_path) == update_dict["modules"][module]["versions"][new_version]["sha1"]:
                 pass
             elif not download_file(url, file_path):
-                logging.warn("download %s fail", url)
+                launcher_log.warn("download %s fail", url)
                 continue
 
             sha1 = sha1_file(file_path)
             if update_dict["modules"][module]["versions"][new_version]["sha1"] != sha1:
-                logging.warn("download %s sha1 wrong", url)
+                launcher_log.warn("download %s sha1 wrong", url)
                 continue
 
             module_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, module))
@@ -164,7 +164,7 @@ def download_module(module, new_version):
 
             version_path = os.path.join(module_path, new_version)
             if os.path.isdir(version_path):
-                logging.error("module dir exist:%s, download exist.", version_path)
+                launcher_log.error("module dir exist:%s, download exist.", version_path)
                 return
 
             with zipfile.ZipFile(file_path, "r") as dz:
@@ -203,7 +203,7 @@ def download_module(module, new_version):
             break
 
     except Exception as e:
-        logging.warn("get gae_proxy source fail, content:%s err:%s", update_content, e)
+        launcher_log.warn("get gae_proxy source fail, content:%s err:%s", update_content, e)
 
 def ignore_module(module, new_version):
     config.set(["modules", module, "ignore_version"], str(new_version))
@@ -212,7 +212,7 @@ def ignore_module(module, new_version):
 def general_gtk_callback(widget=None, data=None):
     args = data.split('|')
     if len(args) != 3:
-        logging.error("general_gtk_callback data:%s", data)
+        launcher_log.error("general_gtk_callback data:%s", data)
         return
 
     module = args[0]
@@ -242,14 +242,14 @@ def check_update():
         current_version = update_from_github.current_version()
         if update_rule == "test":
             if LooseVersion(current_version) < LooseVersion(versions[0][1]):
-                logging.info("update to test version %s", versions[0][1])
+                launcher_log.info("update to test version %s", versions[0][1])
                 update_from_github.update_version(versions[0][1])
         elif update_rule == "stable":
             if LooseVersion(current_version) < LooseVersion(versions[1][1]):
-                logging.info("update to stable version %s", versions[1][1])
+                launcher_log.info("update to stable version %s", versions[1][1])
                 update_from_github.update_version(versions[1][1])
     except Exception as e:
-        logging.exception("check_update fail:%r", e)
+        launcher_log.exception("check_update fail:%r", e)
 
 def check_push_update():
     global update_content, update_dict
@@ -260,7 +260,7 @@ def check_push_update():
         try:
             update_content = opener.open(req_url).read()
         except Exception as e:
-            logging.warn("check_update fail:%r", e)
+            launcher_log.warn("check_update fail:%r", e)
             return False
 
         update_dict = json.loads(update_content)
@@ -289,7 +289,7 @@ def check_push_update():
                 continue
 
             if version_to_bin(new_version) > version_to_bin(current_version):
-                logging.info("new %s version:%s", module, new_version)
+                launcher_log.info("new %s version:%s", module, new_version)
 
 
                 if sys.platform == "linux" or sys.platform == "linux2":
@@ -319,7 +319,7 @@ def check_push_update():
                     download_module(module, new_version)
 
     except Exception as e:
-        logging.exception("check_update except:%s", e)
+        launcher_log.exception("check_update except:%s", e)
         return
 
 def create_desktop_shortcut():
@@ -354,7 +354,7 @@ def check_new_machine():
         if sys.platform == "win32" and platform.release() == "XP":
             notify_install_tcpz_for_winXp()
 
-        logging.info("generate desktop shortcut")
+        launcher_log.info("generate desktop shortcut")
         create_desktop_shortcut()
 
 
@@ -377,14 +377,14 @@ def start():
 
 def need_new_uuid():
     if not config.get(["update", "uuid"]):
-        logging.info("need_new_uuid: uuid is empty")
+        launcher_log.info("need_new_uuid: uuid is empty")
         return True
     return False
 
 def generate_new_uuid():
     xx_net_uuid = str(uuid.uuid4())
     config.set(["update", "uuid"], xx_net_uuid)
-    logging.info("generate uuid:%s", xx_net_uuid)
+    launcher_log.info("generate uuid:%s", xx_net_uuid)
     config.save()
 
 
@@ -393,7 +393,7 @@ def get_uuid():
         generate_new_uuid()
 
     xx_net_uuid = config.get(["update", "uuid"])
-    logging.info("get uuid:%s", xx_net_uuid)
+    launcher_log.info("get uuid:%s", xx_net_uuid)
     return xx_net_uuid
 
 if __name__ == "__main__":

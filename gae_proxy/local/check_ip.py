@@ -38,10 +38,10 @@ import ip_utils
 from appids_manager import appid_manager
 
 if __name__ == "__main__":
-    import logging
+    import xlog
 else:
     # hide log in working mode.
-    class logging():
+    class xlog():
         @staticmethod
         def debug(fmt, *args, **kwargs):
             pass
@@ -72,7 +72,7 @@ def load_sock():
         elif config.PROXY_TYPE == "SOCKS5":
             proxy_type = socks.SOCKS5
         else:
-            logging.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
+            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
             raise
 
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
@@ -117,7 +117,7 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
 
     connct_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
-    logging.debug("conn: %d  handshake:%d", connct_time, handshake_time)
+    xlog.debug("conn: %d  handshake:%d", connct_time, handshake_time)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
     ssl_sock.sock = sock
@@ -170,7 +170,7 @@ class Check_frame(object):
 
 
                 ssl_cert = cert_util.SSLCert(cert)
-                logging.info("%s CN:%s", self.ip, ssl_cert.cn)
+                xlog.info("%s CN:%s", self.ip, ssl_cert.cn)
                 self.result.domain = ssl_cert.cn
             if check_ca:
                 check_ssl_cert(ssl_sock)
@@ -180,13 +180,13 @@ class Check_frame(object):
 
             return True
         except HoneypotError as e:
-            logging.warn("honeypot %s", self.ip)
+            xlog.warn("honeypot %s", self.ip)
             raise e
         except SSLError as e:
-            logging.debug("Check_appengine %s SSLError:%s", self.ip, e)
+            xlog.debug("Check_appengine %s SSLError:%s", self.ip, e)
             pass
         except IOError as e:
-            logging.warn("Check %s IOError:%s", self.ip, e)
+            xlog.warn("Check %s IOError:%s", self.ip, e)
             pass
         except httplib.BadStatusLine:
             #logging.debug('Check_appengine http.bad status line ip:%s', ip)
@@ -198,7 +198,7 @@ class Check_frame(object):
                 errno_str = e.args[0]
             else:
                 errno_str = e.message
-            logging.exception('check_appengine %s %s err:%s', self.ip, errno_str, e)
+            xlog.exception('check_appengine %s %s err:%s', self.ip, errno_str, e)
         finally:
             if ssl_sock and close_ssl:
                 ssl_sock.close()
@@ -226,7 +226,7 @@ def test_server_type(ssl_sock, ip):
                 scan_sleep()
         if server_type == '': # for avoid csv split
             server_type = '_'
-        logging.info("server_type:%s time:%d", server_type, time_cost)
+        xlog.info("server_type:%s time:%d", server_type, time_cost)
         return server_type
     finally:
         response.close()
@@ -242,17 +242,17 @@ def test_app_head(ssl_sock, ip):
         response.begin()
         status = response.status
         if status != 200:
-            logging.debug("app check %s status:%d", ip, status)
+            xlog.debug("app check %s status:%d", ip, status)
             raise Exception("app check fail")
 
     except Exception as e:
-        logging.exception("test_app_head except:%r", e)
+        xlog.exception("test_app_head except:%r", e)
         return False
     finally:
         response.close()
     time_stop = time.time()
     time_cost = (time_stop - time_start)*1000
-    logging.debug("app check time:%d", time_cost)
+    xlog.debug("app check time:%d", time_cost)
     return True
 
 def test_app_check(ssl_sock, ip):
@@ -264,17 +264,17 @@ def test_app_check(ssl_sock, ip):
         response.begin()
         status = response.status
         if status != 200:
-            logging.debug("app check %s status:%d", ip, status)
+            xlog.debug("app check %s status:%d", ip, status)
             raise Exception("app check fail")
         content = response.read()
         if not content == "CHECK_OK":
-            logging.debug("app check %s content:%s", ip, content)
+            xlog.debug("app check %s content:%s", ip, content)
             raise Exception("content fail")
     finally:
         response.close()
     time_stop = time.time()
     time_cost = (time_stop - time_start)*1000
-    logging.debug("app check time:%d", time_cost)
+    xlog.debug("app check time:%d", time_cost)
     return True
 
 checking_lock = threading.Lock()
@@ -292,7 +292,7 @@ def network_is_ok():
 
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
-        logging.debug("patch socks")
+        xlog.debug("patch socks")
 
     checking_lock.acquire()
     checking_num += 1
@@ -308,7 +308,7 @@ def network_is_ok():
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
-            logging.debug("network is ok")
+            xlog.debug("network is ok")
             network_ok = True
             last_check_time = time.time()
             return True
@@ -321,15 +321,15 @@ def network_is_ok():
 
         if config.PROXY_ENABLE:
             socket.socket = default_socket
-            logging.debug("restore socket")
+            xlog.debug("restore socket")
 
-    logging.warn("network fail.")
+    xlog.warn("network fail.")
     network_ok = False
     last_check_time = time.time()
     return False
 
 def test_gae(ip_str):
-    logging.info("==>%s", ip_str)
+    xlog.info("==>%s", ip_str)
     check = Check_frame(ip_str)
 
     result = check.check(callback=test_app_head, check_ca=True)
@@ -341,7 +341,7 @@ def test_gae(ip_str):
     return check.result
 
 def test_gws(ip_str):
-    logging.info("==>%s", ip_str)
+    xlog.info("==>%s", ip_str)
     check = Check_frame(ip_str)
 
     result = check.check(callback=test_server_type, check_ca=True)
@@ -370,12 +370,12 @@ def test_with_app(ip_str):
     check = Check_frame(ip_str)
 
     result = check.check(callback=test_app_check, check_ca=True)
-    logging.info("test_with_app %s app %s", ip_str, result)
+    xlog.info("test_with_app %s app %s", ip_str, result)
 
 
 
 def test(ip_str, loop=1):
-    logging.info("==>%s", ip_str)
+    xlog.info("==>%s", ip_str)
     check = Check_frame(ip_str, check_cert=False)
 
     for i in range(loop):
@@ -383,22 +383,22 @@ def test(ip_str, loop=1):
         result = check.check(callback=test_app_head)
         if not result:
             if "gws" in check.result.server_type:
-                logging.warn("ip:%s server_type:%s but appengine check fail.", ip_str, check.result.server_type)
+                xlog.warn("ip:%s server_type:%s but appengine check fail.", ip_str, check.result.server_type)
 
-            logging.warn("check fail")
+            xlog.warn("check fail")
             #continue
         else:
-            logging.debug("=======app check ok: %s", ip_str)
+            xlog.debug("=======app check ok: %s", ip_str)
             check.result.appspot_ok = result
 
 
         result = check.check(callback=test_server_type, check_ca=True)
         if not result:
-            logging.debug("test server type fail")
+            xlog.debug("test server type fail")
             continue
 
         check.result.server_type = result
-        logging.info("========== %s type:%s domain:%s handshake:%d", ip_str, check.result.server_type,
+        xlog.info("========== %s type:%s domain:%s handshake:%d", ip_str, check.result.server_type,
                      check.result.domain, check.result.handshake_time)
 
     return check.result
@@ -442,7 +442,7 @@ class fast_search_ip():
                 ip_str = ip_utils.ip_num_to_string(ip_int)
                 self.check_ip(ip_str)
             except Exception as e:
-                logging.warn("google_ip.runJob fail:%s", e)
+                xlog.warn("google_ip.runJob fail:%s", e)
 
 
 
@@ -481,31 +481,31 @@ def check_all_exist_ip():
         try:
             str_l = line.split(' ')
             if len(str_l) != 4:
-                logging.warning("line err: %s", line)
+                xlog.warning("line err: %s", line)
                 continue
             ip_str = str_l[0]
             domain = str_l[1]
             server = str_l[2]
             handshake_time = int(str_l[3])
 
-            logging.info("test ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
+            xlog.info("test ip: %s time:%d domain:%s server:%s", ip_str, handshake_time, domain, server)
             #test_with_app(ip_str)
             test_gws(ip_str)
             #self.add_ip(ip_str, handshake_time, domain, server)
         except Exception as e:
-            logging.exception("load_ip line:%s err:%s", line, e)
+            xlog.exception("load_ip line:%s err:%s", line, e)
 
 
 def test_keep_alive(ip_str, interval=5):
-    logging.info("==>%s, time:%d", ip_str, interval)
+    xlog.info("==>%s, time:%d", ip_str, interval)
     sslsock, _, _ = connect_ssl(ip_str)
     result = test_app_check(sslsock, ip_str)
-    logging.info("first:%r", result)
+    xlog.info("first:%r", result)
     #print result
     time.sleep(interval)
     result = test_app_check(sslsock, ip_str)
     #print result
-    logging.info("result:%r", result)
+    xlog.info("result:%r", result)
 
 def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
 
@@ -529,9 +529,9 @@ def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
         time_now = time.time()
         try:
             result = test_app_check(sslsock, ip_str)
-            logging.info("time alive:%d", time_now - stat["start_time"])
+            xlog.info("time alive:%d", time_now - stat["start_time"])
         except:
-            logging.info("time alive fail")
+            xlog.info("time alive fail")
             break
 
 
@@ -542,15 +542,15 @@ class Test_cipher():
 
     def test(self):
         for cipher in self.cipher_list:
-            logging.debug("%s", cipher)
+            xlog.debug("%s", cipher)
 
             openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile, cipher_suites=(cipher,))
             try:
                 ssl, _, _ = connect_ssl(self.ip, openssl_context=openssl_context)
                 server_type = test_server_type(ssl, self.ip)
-                logging.debug("%s", server_type)
+                xlog.debug("%s", server_type)
             except Exception as e:
-                logging.warn("err:%s", e)
+                xlog.warn("err:%s", e)
 
 
     def test2(self):
@@ -561,18 +561,18 @@ class Test_cipher():
             else:
                 work_ciphers.append(cipher)
 
-            logging.debug("%s", cipher)
+            xlog.debug("%s", cipher)
             cipher_suites = (work_ciphers)
 
             openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile, cipher_suites=cipher_suites)
             try:
                 ssl, _, _ = connect_ssl(self.ip, openssl_context=openssl_context)
                 server_type = test_server_type(ssl, self.ip)
-                logging.debug("%s", server_type)
+                xlog.debug("%s", server_type)
                 if "gws" not in server_type:
                     work_ciphers.remove(cipher)
             except Exception as e:
-                logging.warn("err:%s", e)
+                xlog.warn("err:%s", e)
                 try:
                     work_ciphers.remove(cipher)
                 except:
@@ -581,7 +581,7 @@ class Test_cipher():
         work_str = ""
         for cipher in work_ciphers:
             work_str += cipher + ":"
-        logging.info("work ciphers:%s", work_str)
+        xlog.info("work ciphers:%s", work_str)
 
 if __name__ == "__main__":
     #test_main()

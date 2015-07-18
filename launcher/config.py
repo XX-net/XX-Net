@@ -1,6 +1,6 @@
 
 import os
-import logging
+import launcher_log
 
 
 import yaml
@@ -27,7 +27,7 @@ def save():
     try:
         yaml.dump(config, file(config_path, "w"))
     except Exception as e:
-        logging.warn("save config %s fail %s", config_path, e)
+        launcher_log.warn("save config %s fail %s", config_path, e)
 
 def get(path, default_val=""):
     global config

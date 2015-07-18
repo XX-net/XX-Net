@@ -7,7 +7,7 @@ import webbrowser
 import os
 import base64
 
-import logging
+import launcher_log
 
 import pygtk
 
@@ -26,7 +26,7 @@ try:
     import pynotify
     pynotify.init('XX-Net Notify')
 except:
-    logging.warn("import pynotify fail, please install python-notify if possiable.")
+    launcher_log.warn("import pynotify fail, please install python-notify if possiable.")
     pynotify = None
 
 import module_init
