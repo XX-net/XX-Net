@@ -480,7 +480,7 @@ class CertUtil(object):
             logging.info("PHP_proxy CA exist")
             return
 
-        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../../data/php_proxy/CA.crt'# % certfile.decode('utf-8')
+        import_command = 'security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../../data/php_proxy/CA.crt'# % certfile.decode('utf-8')
         if exist_ca_sha1:
             delete_ca_command = 'security delete-certificate -Z %s' % exist_ca_sha1
             exec_command = "%s;%s" % (delete_ca_command, import_command)
