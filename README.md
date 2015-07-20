@@ -7,10 +7,10 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.0.4
+https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.0.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.0.4
 
 (1.13.6 之前的用户，请重新部署服务端)
 
