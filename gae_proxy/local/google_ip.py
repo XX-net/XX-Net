@@ -354,8 +354,8 @@ class Check_ip():
                 # this ip will not return back to good ip front until all become bad
                 # There for, prevent handshake time increase too quickly.
                 org_time = self.ip_dict[ip_str]['handshake_time']
-                if handshake_time - org_time > 100:
-                    self.ip_dict[ip_str]['handshake_time'] = org_time + 100
+                if handshake_time - org_time > 500:
+                    self.ip_dict[ip_str]['handshake_time'] = org_time + 500
                 else:
                     self.ip_dict[ip_str]['handshake_time'] = handshake_time
 
@@ -370,6 +370,8 @@ class Check_ip():
             xlog.error("update_ip err:%s", e)
         finally:
             self.ip_lock.release()
+
+        self.save_ip_list()
 
     def report_bad_ip(self, ip_str):
         xlog.debug("report_bad_ip %s", ip_str)
@@ -398,15 +400,16 @@ class Check_ip():
 
             fail_time = self.ip_dict[ip_str]["fail_time"]
             if not force_remove and time.time() - fail_time < 1:
+                xlog.debug("fail time too near")
                 return
 
             # increase handshake_time to make it can be used in lower probability
-            self.ip_dict[ip_str]['handshake_time'] += 200
+            self.ip_dict[ip_str]['handshake_time'] += 300
             self.ip_dict[ip_str]['timeout'] += 1
             self.ip_dict[ip_str]['history'].append([time.time(), "fail"])
             self.ip_dict[ip_str]["fail_time"] = time.time()
 
-            if force_remove or self.ip_dict[ip_str]['timeout'] >= 50:
+            if force_remove or self.ip_dict[ip_str]['timeout'] >= 5:
                 property = self.ip_dict[ip_str]
                 server = property['server']
                 del self.ip_dict[ip_str]
