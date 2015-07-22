@@ -176,7 +176,7 @@ class Https_connection_manager(object):
         # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
-        self.timeout = 4
+        self.timeout = 2
         self.max_timeout = 15
         self.thread_num = 0
 
@@ -302,10 +302,10 @@ class Https_connection_manager(object):
 
 
     def create_more_connection(self):
-        need_conn_num = self.connection_pool_min_num - self.new_conn_pool.qsize()
+        #need_conn_num = self.connection_pool_min_num - self.new_conn_pool.qsize()
 
-        target_thread_num = min(self.max_thread_num, need_conn_num)
-        while self.thread_num < target_thread_num and self.new_conn_pool.qsize() < self.connection_pool_min_num:
+        #target_thread_num = min(self.max_thread_num, need_conn_num)
+        while self.thread_num < self.max_thread_num and self.new_conn_pool.qsize() < self.connection_pool_min_num:
             if not connect_control.allow_connect():
                 break
 
@@ -385,7 +385,7 @@ class Https_connection_manager(object):
                 if not issuer_commonname.startswith('Google'):
                     google_ip.report_bad_ip(ssl_sock.ip)
                     connect_control.fall_into_honeypot()
-                    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+                    raise socket.error(' certificate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
 
