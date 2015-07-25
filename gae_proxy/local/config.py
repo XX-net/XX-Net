@@ -133,7 +133,7 @@ class Config(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'GAEProxy Version   : %s (python/%s )\n' % (self.__version__, self.python_version)
+        info += 'GAEProxy Version   : %s (python/%s)\n' % (self.__version__, self.python_version)
         info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)
