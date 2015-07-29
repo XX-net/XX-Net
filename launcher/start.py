@@ -13,17 +13,22 @@ python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27',
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
+has_desktop = True
 if sys.platform.startswith("linux"):
     def X_is_running():
-        from subprocess import Popen, PIPE
-        p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
-        p.communicate()
-        return p.returncode == 0
+        try:
+            from subprocess import Popen, PIPE
+            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+            p.communicate()
+            return p.returncode == 0
+        except:
+            return False
 
     if X_is_running():
         from gtk_tray import sys_tray
     else:
         from non_tray import sys_tray
+        has_desktop = False
 
 elif sys.platform == "win32":
     win32_lib = os.path.join(python_path, 'lib', 'win32')
@@ -42,6 +47,7 @@ elif sys.platform == "darwin":
 else:
     print("detect platform fail:%s" % sys.platform)
     from non_tray import sys_tray
+    has_desktop = False
 
 import config
 import web_control
@@ -77,7 +83,7 @@ def main():
     web_control.start()
 
 
-    if config.get(["modules", "launcher", "popup_webui"], 1) == 1:
+    if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         webbrowser.open("http://127.0.0.1:8085/")
 
     update.start()
