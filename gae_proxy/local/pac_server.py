@@ -59,8 +59,8 @@ class PacUtil(object):
         opener = get_opener()
 
         listen_ip = config.LISTEN_IP
-        autoproxy = '%s:%s' % (listen_ip, config.LISTEN_PORT)
-        blackhole = '%s:%s' % (listen_ip, config.PAC_PORT)
+        autoproxy = gae_proxy_listen
+        blackhole = pac_listen
         default = 'DIRECT'
 
         if config.PAC_ADBLOCK:
@@ -325,7 +325,8 @@ class PACServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         with open(pac_filename, 'rb') as fp:
             data = fp.read()
 
-        host, _, port = self.path.rpartition(':')
+        host = self.headers.getheader('Host')
+        host, _, port = host.rpartition(":")
         gae_proxy_proxy = host + ":" + str(config.LISTEN_PORT)
         pac_proxy = host + ":" + str(config.PAC_PORT)
         data = data.replace(gae_proxy_listen, gae_proxy_proxy)
