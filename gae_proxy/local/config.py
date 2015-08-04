@@ -8,6 +8,7 @@ import sys
 import re
 import io
 import xlog
+import platform
 
 
 
@@ -17,7 +18,7 @@ class Config(object):
     version = current_path.split(os.path.sep)[-2]
 
     __version__ = version
-    python_version = sys.version[:5]
+    python_version = platform.python_version()
 
 
     def load(self):
@@ -132,7 +133,7 @@ class Config(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'GAEProxy Version    : %s (python/%s )\n' % (self.__version__, sys.version[:5])
+        info += 'GAEProxy Version   : %s (python/%s)\n' % (self.__version__, self.python_version)
         info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)
