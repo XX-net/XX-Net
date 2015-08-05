@@ -17,7 +17,6 @@ import zipfile
 import config
 import shutil
 
-from update import get_opener
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 
@@ -31,6 +30,10 @@ if not os.path.isdir(download_path):
 
 download_progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished}
 
+
+def get_opener():
+    opener = urllib2.build_opener()
+    return opener
 
 def current_version():
     readme_file = os.path.join(root_path, "README.md")
