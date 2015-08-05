@@ -103,7 +103,7 @@ class Win_tray():
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
-         win32_proxy_manager.disable_proxy()
+        win32_proxy_manager.disable_proxy()
 
     def serve_forever(self):
         self.systray._message_loop_func()
