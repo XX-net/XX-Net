@@ -39,7 +39,7 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
 
 class User_config(object):
-    php_enable = '0'
+    php_enable = '1'
     php_password = '123456'
     php_server = ''
 
