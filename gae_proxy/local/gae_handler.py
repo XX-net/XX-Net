@@ -147,7 +147,7 @@ def request(headers={}, payload=None):
     for i in range(max_retry):
         ssl_sock = None
         try:
-            ssl_sock = https_manager.create_ssl_connection()
+            ssl_sock = https_manager.get_ssl_connection()
             if not ssl_sock:
                 xlog.debug('create_ssl_connection fail')
                 continue

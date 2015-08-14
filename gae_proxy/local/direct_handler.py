@@ -47,7 +47,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
     request_data += '\r\n'
 
-    ssl_sock = https_manager.create_ssl_connection(host)
+    ssl_sock = https_manager.get_ssl_connection(host)
     if not ssl_sock:
         return
 

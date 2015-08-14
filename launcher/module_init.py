@@ -68,7 +68,7 @@ def stop(module):
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
 
             _start = proc_handler[module]["imp"].start
-            _start.client.config.keep_run = False
+            _start.client.terminate()
             launcher_log.debug("module %s stopping", module)
             while _start.client.ready:
                 time.sleep(0.1)

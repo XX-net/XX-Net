@@ -31,7 +31,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 from config import config
 import gae_handler
 import direct_handler
-from connect_control import connect_allow_time, connect_fail_time
+from connect_control import connect_allow_time, connect_fail_time, touch_active
 import web_control
 
 class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -67,6 +67,8 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
     def do_METHOD(self):
+        touch_active()
+
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
         if host_ip == "127.0.0.1" and port == str(config.LISTEN_PORT):

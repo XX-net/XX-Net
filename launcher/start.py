@@ -103,4 +103,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt: # Ctrl + C on console
+        module_init.stop_all()
         sys.exit

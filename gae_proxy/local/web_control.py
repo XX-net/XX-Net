@@ -292,7 +292,7 @@ class ControlHandler():
         elif path == "/test_ip":
             return self.req_test_ip_handler()
         elif path == "/quit":
-            config.keep_run = False
+            connect_control.keep_running = False
             data = "Quit"
             self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
             self.wfile.write(data)

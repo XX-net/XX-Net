@@ -3,13 +3,32 @@ import time
 
 import xlog
 
+# change to False when exit: system tray exit menu, or Ctrl+C in console
+# then GoAgent will quit
+# Every long running thread should check it and exit when False
+keep_running = True
+
 connect_allow_time = 0
 connect_fail_time = 0
 scan_allow_time = 0
 
 block_delay = 10 # (60 * 5)
 scan_sleep_time = 600 # Need examination
+last_request_time = 0
 
+def touch_active():
+    global last_request_time
+    last_request_time = time.time()
+
+def inactive_time():
+    global last_request_time
+    return time.time() - last_request_time
+
+def is_active(timeout=60):
+    if inactive_time() < timeout:
+        return True
+    else:
+        return False
 
 def allow_connect():
     global connect_allow_time

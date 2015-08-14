@@ -342,7 +342,7 @@ class Check_ip():
             xlog.error("set_ip input")
 
         handshake_time = int(handshake_time)
-        if handshake_time < 5: # this is impossible
+        if handshake_time < 5: # that's impossible
             return
 
         self.ip_lock.acquire()
@@ -363,7 +363,6 @@ class Check_ip():
                 self.ip_dict[ip_str]['history'].append([time.time(), handshake_time])
                 self.ip_dict[ip_str]["fail_time"] = 0
                 self.iplist_need_save = 1
-                return
 
             #logging.debug("update ip:%s not exist", ip_str)
         except Exception as e:
@@ -409,7 +408,7 @@ class Check_ip():
             self.ip_dict[ip_str]['history'].append([time.time(), "fail"])
             self.ip_dict[ip_str]["fail_time"] = time.time()
 
-            if force_remove or self.ip_dict[ip_str]['timeout'] >= 5:
+            if force_remove or self.ip_dict[ip_str]['timeout'] >= 50:
                 property = self.ip_dict[ip_str]
                 server = property['server']
                 del self.ip_dict[ip_str]
@@ -441,12 +440,11 @@ class Check_ip():
         self.remove_ip_thread_num_lock.release()
 
         p = threading.Thread(target=self.remove_ip_process)
-        p.daemon = True
         p.start()
 
     def remove_ip_process(self):
         try:
-            while True:
+            while connect_control.keep_running:
 
                 try:
                     ip_str = self.to_remove_ip_list.get_nowait()
@@ -501,7 +499,7 @@ class Check_ip():
             self.ip_lock.release()
 
     def scan_ip_worker(self):
-        while self.searching_thread_count <= self.scan_ip_thread_num:
+        while self.searching_thread_count <= self.scan_ip_thread_num and connect_control.keep_running:
             if not connect_control.allow_scan():
                 time.sleep(10)
                 continue
@@ -543,7 +541,6 @@ class Check_ip():
             self.ncount_lock.release()
 
             p = threading.Thread(target = self.scan_ip_worker)
-            p.daemon = True
             p.start()
 
     def update_scan_thread_num(self, num):
