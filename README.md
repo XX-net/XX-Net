@@ -61,6 +61,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - Firefox 需手动导入证书 data/gae_proxy/CA.crt 启动后生成
 * Linux下, 执行 start.sh
   - 自动导入证书，需安装 libnss3-tools 包
+  - 没有安装PyGtk的，需要先安装gtk：sudo apt-get install python-gtk2
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
     推荐Chrome + SwitchyOmega
