@@ -179,6 +179,8 @@ class CertUtil(object):
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
         ca.sign(key, CertUtil.ca_digest)
+        v3 = OpenSSL.crypto.X509Extension('basicConstraints', False, 'CA:TRUE')
+        ca.add_extensions([v3])
         return key, ca
 
     @staticmethod
