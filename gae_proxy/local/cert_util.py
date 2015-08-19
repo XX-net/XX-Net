@@ -172,15 +172,18 @@ class CertUtil(object):
         req.set_pubkey(key)
         req.sign(key, CertUtil.ca_digest)
         ca = OpenSSL.crypto.X509()
+        ca.set_version(2)
         ca.set_serial_number(0)
         ca.gmtime_adj_notBefore(0)
         ca.gmtime_adj_notAfter(24 * 60 * 60 * 3652)
         ca.set_issuer(req.get_subject())
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
+        ca.add_extensions([
+            OpenSSL.crypto.X509Extension(
+                'basicConstraints', False, 'CA:TRUE', ca, ca)
+            ])
         ca.sign(key, CertUtil.ca_digest)
-        v3 = OpenSSL.crypto.X509Extension('basicConstraints', False, 'CA:TRUE')
-        ca.add_extensions([v3])
         #logging.debug("CA key:%s", key)
         xlog.info("create ca")
         return key, ca
