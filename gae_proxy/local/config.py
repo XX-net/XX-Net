@@ -121,6 +121,7 @@ class Config(object):
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
 
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
+        self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
 
 
         # change to True when finished import CA cert to browser

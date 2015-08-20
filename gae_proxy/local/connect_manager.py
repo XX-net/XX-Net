@@ -185,7 +185,7 @@ class Https_connection_manager(object):
             p.start()
 
     def load_config(self):
-        self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
+        self.max_thread_num = config.https_max_connect_thread #10
         self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max") #20/30
         self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min") #20/30
         self.keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #1
@@ -423,7 +423,9 @@ class Https_connection_manager(object):
 
                 port = 443
                 #logging.debug("create ssl conn %s", ip_str)
+                connect_control.start_connect_register(True)
                 ssl_sock = self._create_ssl_connection( (ip_str, port) )
+                connect_control.end_connect_register(True)
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
                     self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
@@ -510,6 +512,8 @@ class Forward_connection_manager():
             return None
 
         def _create_connection(ip_port, delay=0):
+
+            connect_control.start_connect_register(True)
             time.sleep(delay)
             ip = ip_port[0]
             sock = None
@@ -555,6 +559,7 @@ class Forward_connection_manager():
                 self.thread_num_lock.acquire()
                 self.thread_num -= 1
                 self.thread_num_lock.release()
+                connect_control.end_connect_register(True)
 
 
         if host != "appengine.google.com":

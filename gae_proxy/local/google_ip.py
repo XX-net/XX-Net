@@ -511,7 +511,9 @@ class Check_ip():
                 if self.is_bad_ip(ip_str):
                     continue
 
+                connect_control.start_connect_register()
                 result = check_ip.test_gws(ip_str)
+                connect_control.end_connect_register()
                 if not result:
                     continue
 
@@ -535,7 +537,14 @@ class Check_ip():
         xlog.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
-        while self.searching_thread_count < self.scan_ip_thread_num:
+        if config.USE_IPV6:
+            return
+
+        new_thread_num = self.scan_ip_thread_num - self.searching_thread_count
+        if new_thread_num < 1:
+            return
+
+        for i in range(0, new_thread_num):
             self.ncount_lock.acquire()
             self.searching_thread_count += 1
             self.ncount_lock.release()

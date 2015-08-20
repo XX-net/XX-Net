@@ -88,7 +88,7 @@ def handler(method, host, url, headers, body, wfile):
             response = fetch(method, host, url, headers, body)
             if response:
                 break
-        except OpenSSL.SysCallError as e:
+        except OpenSSL.SSL.SysCallError as e:
             errors.append(e)
             xlog.warn("direct_handler.handler err:%r %s/%s", e, host, url)
         except Exception as e:
