@@ -9,15 +9,14 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.0.7
+https://codeload.github.com/XX-net/XX-Net/zip/2.1.0
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
 
-(1.13.6 之前的用户，请重新部署服务端)
 
-
-版本历史和说明： https://github.com/XX-net/XX-Net/releases
+查看历史版本：  
+https://github.com/XX-net/XX-Net/releases
    
   
   
@@ -30,10 +29,6 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
 * 自动导入证书，减少大量手动工作
 * 可设置开机启动
 * 支持自动升级，保留辛苦找到的ip资源
-
-## XX-Net不是匿名工具 
-详情请看：  
-https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
 
 
 平台支持情况
