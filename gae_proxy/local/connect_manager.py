@@ -311,6 +311,8 @@ class Https_connection_manager(object):
         for i in range(0, target_thread_num):
             if not connect_control.allow_connect():
                 break
+            if self.thread_num > self.max_thread_num:
+                break
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
