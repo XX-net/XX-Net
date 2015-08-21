@@ -9,7 +9,7 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.1.0
+https://codeload.github.com/XX-net/XX-Net/zip/2.1.1
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
@@ -23,20 +23,16 @@ https://github.com/XX-net/XX-Net/releases
 
 主要特性
 ========
-* 大量改良过的GoAgent 稳定快速
-* Web界面，傻瓜易用
+* 集成GoAgent、GoGoTest等自动扫描IP，省事省力
+* Web界面，人性化交互，傻瓜易用
 * 内置了公共 appid, 方便新手
-* 自动导入证书，减少大量手动工作
-* 可设置开机启动
-* 支持自动升级，保留辛苦找到的ip资源
+* 方便易用的细节、细节提示
 
 
 平台支持情况
 ================
-* Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
-* Win7/8/10
-* Ubuntu （不显示系统托盘）
-* Debian （debian 8 php_proxy无法工作）
+* Windows 7/8/10 （xp 需要 tcpip.sys 补丁, 比如用 tcp-z）
+* Linux （Ubuntu不显示系统托盘）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
 
 ## 链接
