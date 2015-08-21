@@ -346,6 +346,7 @@ def test_gws(ip_str):
 
     result = check.check(callback=test_server_type, check_ca=True)
     if not result or not "gws" in result:
+        xlog.warn("Server:%s not gws", result)
         return False
 
     check.result.server_type = result
@@ -586,13 +587,13 @@ class Test_cipher():
 if __name__ == "__main__":
     #test_main()
     #network_is_ok()
-    test_alive()
+    #test_alive()
     #print network_is_ok()
     #print network_is_ok()
-    #test("74.125.216.36", 10) #gvs
+    #test_gws("216.58.196.176") #gvs
     #result = test_gws("139.175.107.212")
     #print result
-    #test('208.117.224.213', 10)
+    test('203.210.2.25', 1)
     #test("216.239.38.123")
     #     test_multi_thread_search_ip()
     #check_all_exist_ip()

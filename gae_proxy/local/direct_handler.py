@@ -19,7 +19,7 @@ from connect_manager import https_manager
 from gae_handler import generate_message_html, send_response
 from connect_control import connect_allow_time, connect_fail_time
 from gae_handler import return_fail_message
-
+from google_ip import google_ip
 from config import config
 
 
@@ -72,6 +72,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
         response = None
     except Exception as e:
         xlog.warn("direct_handler.fetch:%r", e)
+        response = None
     return response
 
 
@@ -87,6 +88,13 @@ def handler(method, host, url, headers, body, wfile):
         try:
             response = fetch(method, host, url, headers, body)
             if response:
+                if response.status == 404:
+                    server_type = response.getheader('Server', "")
+                    if "gws" not in server_type:
+                        xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
+                        google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                        response.close()
+                        continue
                 break
         except OpenSSL.SSL.SysCallError as e:
             errors.append(e)
