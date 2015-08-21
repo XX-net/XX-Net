@@ -81,7 +81,7 @@ import socket, ssl
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 import proxy_handler
-import web_control
+import connect_control
 
 from config import config
 
@@ -243,9 +243,9 @@ def main():
         pac_thread.setDaemon(True)
         pac_thread.start()
 
-    ready = True
+    ready = True #checked by launcher.module_init
 
-    while config.keep_run:
+    while connect_control.keep_running:
         time.sleep(1)
 
     xlog.info("Exiting gae_proxy module...")
@@ -256,12 +256,15 @@ def main():
         pac_daemon.shutdown()
         pac_daemon.server_close()
         pac_thread.join()
-    ready = False
+    ready = False #checked by launcher.module_init
     xlog.info("Finished Exiting gae_proxy module...")
 
     if do_profile:
         pr.disable()
         pr.print_stats()
+
+def terminate():
+    connect_control.keep_running = False
 
 if __name__ == '__main__':
     try:
@@ -269,4 +272,5 @@ if __name__ == '__main__':
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
+        terminate()
         sys.exit()

@@ -16,6 +16,8 @@ if root_path not in sys.path:
     sys.path.append(root_path)
 
 def start(module):
+    if not os.path.isdir(os.path.join(root_path, module)):
+        return
 
     try:
         if not module in config.config["modules"]:
@@ -43,6 +45,10 @@ def start(module):
                 time.sleep(0.1)
         else:
             script_path = os.path.join(root_path, module, 'start.py')
+            if not os.path.isfile(script_path):
+                launcher_log.warn("start module script not exist:%s", script_path)
+                return "fail"
+
             proc_handler[module]["proc"] = subprocess.Popen([sys.executable, script_path], shell=False)
 
 
@@ -62,7 +68,7 @@ def stop(module):
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
 
             _start = proc_handler[module]["imp"].start
-            _start.client.config.keep_run = False
+            _start.client.terminate()
             launcher_log.debug("module %s stopping", module)
             while _start.client.ready:
                 time.sleep(0.1)
@@ -81,6 +87,8 @@ def stop(module):
 def start_all_auto():
     for module in config.config["modules"]:
         if module == "launcher":
+            continue
+        if not os.path.isdir(os.path.join(root_path, module)):
             continue
         if "auto_start" in config.config['modules'][module] and config.config['modules'][module]["auto_start"]:
             start_time = time.time()

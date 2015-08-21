@@ -8,6 +8,7 @@ import sys
 import re
 import io
 import xlog
+import platform
 
 
 
@@ -17,7 +18,7 @@ class Config(object):
     version = current_path.split(os.path.sep)[-2]
 
     __version__ = version
-    python_version = sys.version[:5]
+    python_version = platform.python_version()
 
 
     def load(self):
@@ -120,10 +121,8 @@ class Config(object):
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
 
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
+        self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
 
-        # change to False when require http://127.0.0.1:8084/quit
-        # then GoAgent will quit
-        self.keep_run = True
 
         # change to True when finished import CA cert to browser
         # launcher will wait import ready then open browser to show status, check update etc
@@ -132,7 +131,7 @@ class Config(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'GAEProxy Version    : %s (python/%s )\n' % (self.__version__, sys.version[:5])
+        info += 'GAEProxy Version   : %s (python/%s)\n' % (self.__version__, self.python_version)
         info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
         if self.CONTROL_ENABLE:
             info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)

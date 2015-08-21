@@ -147,7 +147,7 @@ def request(headers={}, payload=None):
     for i in range(max_retry):
         ssl_sock = None
         try:
-            ssl_sock = https_manager.create_ssl_connection()
+            ssl_sock = https_manager.get_ssl_connection()
             if not ssl_sock:
                 xlog.debug('create_ssl_connection fail')
                 continue
@@ -307,6 +307,13 @@ def handler(method, url, headers, body, wfile):
 
 
             if response.app_status == 404:
+                server_type = response.getheader('Server', "")
+                if "gws" not in server_type:
+                    xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
+                    google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                    response.close()
+                    continue
+
                 xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
                 appid_manager.report_not_exist(response.ssl_sock.appid)
                 appid = appid_manager.get_appid()

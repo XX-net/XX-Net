@@ -58,18 +58,23 @@ def set(path, val):
 
 
 def recheck_module_path():
+    global config
     need_save_config = False
 
     modules = ["gae_proxy", "launcher", "php_proxy"]
     for module in modules:
         if module not in ["launcher", "php_proxy"]:
+            if not os.path.isdir(os.path.join(root_path, module)):
+                del config[module]
+                continue
+
             if get(["modules", module, "auto_start"], -1) == -1:
                 set(["modules", module, "auto_start"], 1)
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         set(["modules", "launcher", "control_port"], 8085)
-    if get(["modules", "gae_proxy", "control_port"], 0) == 0:
-        set(["modules", "gae_proxy", "control_port"], 8084)
+    #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
+    #    set(["modules", "gae_proxy", "control_port"], 8084)
     if get(["modules", "php_proxy", "control_port"], 0) == 0:
         set(["modules", "php_proxy", "control_port"], 8083)
 

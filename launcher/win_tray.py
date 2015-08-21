@@ -8,6 +8,8 @@ if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
 
 import webbrowser
 from systray import SysTrayIcon
@@ -15,7 +17,7 @@ import systray.win32_adapter as win32_adapter
 import os
 import ctypes
 import _winreg as winreg
-
+import win32_proxy_manager
 
 import module_init
 import update
@@ -39,6 +41,10 @@ class Win_tray():
             AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
             if AutoConfigURL:
                 return "auto"
+        except Exception as e:
+            pass
+
+        try:
             ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
             if ProxyEnable:
                 return "enable"
@@ -76,7 +82,6 @@ class Win_tray():
     def on_show(self, widget=None, data=None):
         self.show_control_web()
 
-
     def on_restart_gae_proxy(self, widget=None, data=None):
         module_init.stop_all()
         module_init.start_all_auto()
@@ -84,31 +89,21 @@ class Win_tray():
     def on_check_update(self, widget=None, data=None):
         update.check_update()
 
-    def set_register(self, reg_path, name, reg_type, value):
-        #_, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, name)
-        winreg.SetValueEx(reg_path, name, 0, reg_type, value)
-        launcher_log.info("set register path:%r name:%s type:%d value:%s", reg_path, name, reg_type, value)
-
     def on_enable_proxy(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 1)
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyOverride', 1, '*.local;<local>')  # Bypass the proxy for localhost
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyServer', 1, '127.0.0.1:8087')
+        win32_proxy_manager.set_proxy_server("127.0.0.1", 8087)
 
     def on_enable_pac(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable gae_proxy proxy
-        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "http://127.0.0.1:8086/proxy.pac")
+        win32_proxy_manager.set_proxy_auto("http://127.0.0.1:8086/proxy.pac")
 
     def on_disable_proxy(self, widget=None, data=None):
-        self.set_register(self.INTERNET_SETTINGS, 'ProxyEnable', 4, 0) # disable gae_proxy proxy
-        self.set_register(self.INTERNET_SETTINGS, 'AutoConfigURL', 1, "") # disable auto proxy
+        win32_proxy_manager.disable_proxy()
 
     def show_control_web(self, widget=None, data=None):
         webbrowser.open("http://127.0.0.1:8085/")
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
-        pass
+        win32_proxy_manager.disable_proxy()
 
     def serve_forever(self):
         self.systray._message_loop_func()

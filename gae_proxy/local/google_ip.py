@@ -342,7 +342,7 @@ class Check_ip():
             xlog.error("set_ip input")
 
         handshake_time = int(handshake_time)
-        if handshake_time < 5: # this is impossible
+        if handshake_time < 5: # that's impossible
             return
 
         self.ip_lock.acquire()
@@ -354,8 +354,8 @@ class Check_ip():
                 # this ip will not return back to good ip front until all become bad
                 # There for, prevent handshake time increase too quickly.
                 org_time = self.ip_dict[ip_str]['handshake_time']
-                if handshake_time - org_time > 100:
-                    self.ip_dict[ip_str]['handshake_time'] = org_time + 100
+                if handshake_time - org_time > 500:
+                    self.ip_dict[ip_str]['handshake_time'] = org_time + 500
                 else:
                     self.ip_dict[ip_str]['handshake_time'] = handshake_time
 
@@ -363,13 +363,14 @@ class Check_ip():
                 self.ip_dict[ip_str]['history'].append([time.time(), handshake_time])
                 self.ip_dict[ip_str]["fail_time"] = 0
                 self.iplist_need_save = 1
-                return
 
             #logging.debug("update ip:%s not exist", ip_str)
         except Exception as e:
             xlog.error("update_ip err:%s", e)
         finally:
             self.ip_lock.release()
+
+        self.save_ip_list()
 
     def report_bad_ip(self, ip_str):
         xlog.debug("report_bad_ip %s", ip_str)
@@ -398,10 +399,11 @@ class Check_ip():
 
             fail_time = self.ip_dict[ip_str]["fail_time"]
             if not force_remove and time.time() - fail_time < 1:
+                xlog.debug("fail time too near")
                 return
 
             # increase handshake_time to make it can be used in lower probability
-            self.ip_dict[ip_str]['handshake_time'] += 200
+            self.ip_dict[ip_str]['handshake_time'] += 300
             self.ip_dict[ip_str]['timeout'] += 1
             self.ip_dict[ip_str]['history'].append([time.time(), "fail"])
             self.ip_dict[ip_str]["fail_time"] = time.time()
@@ -438,12 +440,11 @@ class Check_ip():
         self.remove_ip_thread_num_lock.release()
 
         p = threading.Thread(target=self.remove_ip_process)
-        p.daemon = True
         p.start()
 
     def remove_ip_process(self):
         try:
-            while True:
+            while connect_control.keep_running:
 
                 try:
                     ip_str = self.to_remove_ip_list.get_nowait()
@@ -498,7 +499,7 @@ class Check_ip():
             self.ip_lock.release()
 
     def scan_ip_worker(self):
-        while self.searching_thread_count <= self.scan_ip_thread_num:
+        while self.searching_thread_count <= self.scan_ip_thread_num and connect_control.keep_running:
             if not connect_control.allow_scan():
                 time.sleep(10)
                 continue
@@ -510,7 +511,9 @@ class Check_ip():
                 if self.is_bad_ip(ip_str):
                     continue
 
+                connect_control.start_connect_register()
                 result = check_ip.test_gws(ip_str)
+                connect_control.end_connect_register()
                 if not result:
                     continue
 
@@ -534,13 +537,19 @@ class Check_ip():
         xlog.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
-        while self.searching_thread_count < self.scan_ip_thread_num:
+        if config.USE_IPV6:
+            return
+
+        new_thread_num = self.scan_ip_thread_num - self.searching_thread_count
+        if new_thread_num < 1:
+            return
+
+        for i in range(0, new_thread_num):
             self.ncount_lock.acquire()
             self.searching_thread_count += 1
             self.ncount_lock.release()
 
             p = threading.Thread(target = self.scan_ip_worker)
-            p.daemon = True
             p.start()
 
     def update_scan_thread_num(self, num):

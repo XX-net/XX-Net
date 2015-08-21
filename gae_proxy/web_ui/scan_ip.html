@@ -114,7 +114,7 @@
 
                     $( "#auto-adjust-scan-ip-thread-num").prop('checked', true);
                 }
-                $('#scan-ip-thread-num').val(result['scan_ip_thread_num'] || 5);
+                $('#scan-ip-thread-num').val(result['scan_ip_thread_num']);
             },
             error: function(){
                 tip('读取设置失败.', 'error');

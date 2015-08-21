@@ -1,3 +1,6 @@
+
+翻墙软件
+
 XX-Net
 ========
 项目状态：新用户启动后，需要等待一段时间（十分钟到1小时），扫描到足够ip之后会比较流畅   
@@ -6,39 +9,30 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
+https://codeload.github.com/XX-net/XX-Net/zip/2.1.1
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.0.4
-
-(1.13.6 之前的用户，请重新部署服务端)
+https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
 
 
-版本历史和说明： https://github.com/XX-net/XX-Net/releases
+查看历史版本：  
+https://github.com/XX-net/XX-Net/releases
    
   
   
 
 主要特性
 ========
-* 大量改良过的GoAgent 稳定快速
-* Web界面，傻瓜易用
+* 集成GoAgent、GoGoTest等自动扫描IP，省事省力
+* Web界面，人性化交互，傻瓜易用
 * 内置了公共 appid, 方便新手
-* 自动导入证书，减少大量手动工作
-* 可设置开机启动
-* 支持自动升级，保留辛苦找到的ip资源
-
-## XX-Net不是匿名工具 
-详情请看：  
-https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
+* 方便易用的细节、细节提示
 
 
 平台支持情况
 ================
-* Windows XP （需要 tcpip.sys 补丁, 比如用 tcp-z）
-* Win7/8/10
-* Ubuntu （不显示系统托盘）
-* Debian （debian 8 php_proxy无法工作）
+* Windows 7/8/10 （xp 需要 tcpip.sys 补丁, 比如用 tcp-z）
+* Linux （Ubuntu不显示系统托盘）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
 
 ## 链接
@@ -58,6 +52,7 @@ https://github.com/XX-net/XX-Net/wiki/Anonymous-and-Security
   - Firefox 需手动导入证书 data/gae_proxy/CA.crt 启动后生成
 * Linux下, 执行 start.sh
   - 自动导入证书，需安装 libnss3-tools 包
+  - 没有安装PyGtk的，需要先安装gtk：sudo apt-get install python-gtk2
   - 第一次启动, 请用sudo ./start.sh, 以安装CA证书
   - 配置http代理 localhost 8087, 勾选全部协议使用这个代理。
     推荐Chrome + SwitchyOmega

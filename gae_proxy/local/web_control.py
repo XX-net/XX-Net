@@ -66,7 +66,7 @@ class User_special(object):
         self.proxy_passwd = ""
 
         self.host_appengine_mode = "gae"
-        self.ip_connect_interval = ""
+        self.ip_connect_interval = 10
         self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
         self.use_ipv6 = 0
@@ -80,20 +80,23 @@ class User_config(object):
     def load(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
 
-        self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
-
         self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
         DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
+
+        self.USER_CONFIG = ConfigParser.ConfigParser()
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
+
         try:
-            if os.path.isfile(CONFIG_USER_FILENAME):
-                self.USER_CONFIG.read(CONFIG_USER_FILENAME)
+            if os.path.isfile(DEFAULT_CONFIG_FILENAME):
+                self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
+                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
+                self.ip_connect_interval = self.DEFAULT_CONFIG.getint('google_ip', 'ip_connect_interval')
             else:
                 return
 
-            if os.path.isfile(DEFAULT_CONFIG_FILENAME):
-                self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
+            if os.path.isfile(CONFIG_USER_FILENAME):
+                self.USER_CONFIG.read(CONFIG_USER_FILENAME)
             else:
                 return
 
@@ -116,7 +119,8 @@ class User_config(object):
             try:
                 self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
             except:
-                pass
+                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
+
             try:
                 self.user_special.auto_adjust_scan_ip_thread_num = config.CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num')
             except:
@@ -278,6 +282,8 @@ class ControlHandler():
 
         if path == '/deploy':
             return self.req_deploy_handler()
+        elif path == "/config":
+            return self.req_config_handler()
         elif path == "/ip_list":
             return self.req_ip_list_handler()
         elif path == "/scan_ip":
@@ -291,7 +297,7 @@ class ControlHandler():
         elif path == "/test_ip":
             return self.req_test_ip_handler()
         elif path == "/quit":
-            config.keep_run = False
+            connect_control.keep_running = False
             data = "Quit"
             self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
             self.wfile.write(data)
@@ -506,8 +512,12 @@ class ControlHandler():
                    "ip_handshake_100":google_ip.ip_handshake_th(100),
                    "block_stat":connect_control.block_stat(),
                    "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
+                   "high_prior_connecting_num":connect_control.high_prior_connecting_num,
+                   "low_prior_connecting_num":connect_control.low_prior_connecting_num,
+                   "high_prior_lock":len(connect_control.high_prior_lock),
+                   "low_prior_lock":len(connect_control.low_prior_lock),
                    }
-        data = json.dumps(res_arr)
+        data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response('text/html', data)
 
     def req_config_handler(self):
