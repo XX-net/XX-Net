@@ -52,9 +52,12 @@ high_prior_lock = []
 low_prior_lock = []
 high_prior_connecting_num = 0
 low_prior_connecting_num = 0
+last_connect_time = 0
+
+min_connect_interval = 0.03
 
 def start_connect_register(high_prior=False):
-    global high_prior_connecting_num, low_prior_connecting_num
+    global high_prior_connecting_num, low_prior_connecting_num, last_connect_time
     if not is_win10:
         return
 
@@ -72,11 +75,21 @@ def start_connect_register(high_prior=False):
 
             ccc_lock.acquire()
 
+        last_connect_interval = time.time() - last_connect_time
+        if last_connect_interval < 0:
+            xlog.error("last_connect_interval:%f", last_connect_interval)
+            return
+
+        if last_connect_interval < min_connect_interval:
+            wait_time = min_connect_interval - last_connect_interval
+            time.sleep(wait_time)
+
         if high_prior:
             high_prior_connecting_num += 1
         else:
             low_prior_connecting_num += 1
     finally:
+        last_connect_time = time.time()
         ccc_lock.release()
 
 
