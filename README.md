@@ -9,7 +9,7 @@ XX-Net
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.1.1
+https://codeload.github.com/XX-net/XX-Net/zip/2.1.2
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
@@ -102,6 +102,8 @@ GAEProxy 查看日志页面
   主页：http://www.ccav1.com/chromegae
   集成Google Chrome和XX-Net的自动翻墙浏览器
   维护人：Yanu
+* 集成Chrome和XX-Net
+  https://github.com/yeahwu/chrome
 * plusburg
   主页：https://github.com/Plusburg/Plusburg
   集成XX-Net的启动光盘镜像
