@@ -305,15 +305,14 @@ def handler(method, url, headers, body, wfile):
             if response.app_status != 200:
                 xlog.warn("fetch gae status:%s url:%s", response.app_status, url)
 
+            server_type = response.getheader('Server', "")
+            if "gws" not in server_type:
+                xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
+                google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                response.close()
+                continue
 
             if response.app_status == 404:
-                server_type = response.getheader('Server', "")
-                if "gws" not in server_type:
-                    xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
-                    google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
-                    response.close()
-                    continue
-
                 xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
                 appid_manager.report_not_exist(response.ssl_sock.appid)
                 appid = appid_manager.get_appid()

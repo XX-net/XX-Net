@@ -88,7 +88,7 @@ def handler(method, host, url, headers, body, wfile):
         try:
             response = fetch(method, host, url, headers, body)
             if response:
-                if response.status == 404:
+                if response.status == 404 or response.status == 400:
                     server_type = response.getheader('Server', "")
                     if "gws" not in server_type:
                         xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
