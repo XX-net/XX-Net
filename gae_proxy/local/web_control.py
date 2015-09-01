@@ -70,6 +70,7 @@ class User_special(object):
         self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
         self.use_ipv6 = 0
+        self.connect_interval = 200
 
 class User_config(object):
     user_special = User_special()
@@ -131,6 +132,11 @@ class User_config(object):
             except:
                 pass
 
+            try:
+                self.user_special.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
+            except:
+                pass
+
             self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
             self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
             self.user_special.proxy_host = self.USER_CONFIG.get('proxy', 'host')
@@ -174,6 +180,10 @@ class User_config(object):
 
             if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
+
+            f.write("[connect_manager]\n")
+            if int(self.user_special.connect_interval) != self.DEFAULT_CONFIG.getint('connect_manager', 'connect_interval'):
+                f.write("connect_interval = %d\n\n" % int(self.user_special.connect_interval))
 
             f.close()
         except:
@@ -540,6 +550,7 @@ class ControlHandler():
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
                 user_config.user_special.ip_connect_interval = int(self.postvars['ip_connect_interval'][0])
                 user_config.user_special.use_ipv6 = int(self.postvars['use_ipv6'][0])
+                user_config.user_special.connect_interval = int(self.postvars['connect_interval'][0])
                 user_config.save()
 
                 config.load()

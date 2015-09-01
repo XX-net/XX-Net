@@ -45,7 +45,7 @@ def check_win10():
 
     return False
 
-is_win10 = check_win10()
+is_win10 = check_win10() or True
 
 ccc_lock = threading.Lock()
 high_prior_lock = []
@@ -54,7 +54,6 @@ high_prior_connecting_num = 0
 low_prior_connecting_num = 0
 last_connect_time = 0
 
-min_connect_interval = 0.03
 
 def start_connect_register(high_prior=False):
     global high_prior_connecting_num, low_prior_connecting_num, last_connect_time
@@ -80,8 +79,8 @@ def start_connect_register(high_prior=False):
             xlog.error("last_connect_interval:%f", last_connect_interval)
             return
 
-        if last_connect_interval < min_connect_interval:
-            wait_time = min_connect_interval - last_connect_interval
+        if last_connect_interval < config.connect_interval/1000.0:
+            wait_time = config.connect_interval/1000.0 - last_connect_interval
             time.sleep(wait_time)
 
         if high_prior:
@@ -132,7 +131,7 @@ def inactive_time():
     global last_request_time
     return time.time() - last_request_time
 
-def is_active(timeout=60):
+def is_active(timeout=600):
     if inactive_time() < timeout:
         return True
     else:
