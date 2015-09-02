@@ -3,8 +3,7 @@
 
 XX-Net
 ========
-项目状态：新用户启动后，需要等待一段时间（十分钟到1小时），扫描到足够ip之后会比较流畅   
-        2015.9.1 更新：部分地区间歇性不稳定。
+项目状态：2015.9.1，各地情况不同，请尝试 2.0.5, 2.1.2, 2.2.0
 
 
 下载链接：
@@ -14,6 +13,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.2.0
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
+
+另一版：
+https://codeload.github.com/XX-net/XX-Net/zip/2.1.2
 
 
 查看历史版本：  
