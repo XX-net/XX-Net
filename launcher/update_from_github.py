@@ -58,7 +58,7 @@ def download_file(url, file):
         download_progress[url]["status"] = "downloading"
     else:
         if download_progress[url]["status"] == "downloading":
-            launcher_log.error("url in downloading, %s", url)
+            launcher_log.warn("url in downloading, %s", url)
             return False
 
     try:
@@ -79,6 +79,9 @@ def download_file(url, file):
 
         download_progress[url]["status"] = "finished"
         return True
+    except urllib2.URLError as e:
+        launcher_log.warn("download %s to %s fail:%r", url, file, e)
+        return False
     except Exception as e:
         download_progress[url]["status"] = "fail"
         launcher_log.exception("download %s to %s fail:%r", url, file, e)
