@@ -174,7 +174,7 @@ class Https_connection_manager(object):
         # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
-        self.timeout = 2
+        self.timeout = 4
         self.max_timeout = 15
         self.thread_num = 0
 
@@ -241,6 +241,7 @@ class Https_connection_manager(object):
                 raise Exception("app check fail")
             return True
         except httplib.BadStatusLine as e:
+            xlog.debug("head request BadStatusLine fail:%r", e)
             return False
         except Exception as e:
             xlog.debug("head request fail:%r", e)
@@ -254,6 +255,7 @@ class Https_connection_manager(object):
             self.save_ssl_connection_for_reuse(sock)
         else:
             sock.close()
+            self.create_more_connection()
 
     def start_keep_alive(self, sock):
         work_thread = threading.Thread(target=self.keep_alive_worker, args=(sock,))
@@ -274,6 +276,7 @@ class Https_connection_manager(object):
                 inactive_time = time.time() - ssl_sock.last_use_time
                 if inactive_time > self.keep_alive:
                     ssl_sock.close()
+                    self.create_more_connection()
                 else:
                     self.start_keep_alive(ssl_sock)
 
@@ -310,7 +313,9 @@ class Https_connection_manager(object):
         #while self.thread_num < self.max_thread_num and connect_control.keep_running:
         for i in range(0, target_thread_num):
             if not connect_control.allow_connect():
-                break
+                xlog.warn("create more connect, control not allow")
+                time.sleep(10)
+                continue
             if self.thread_num > self.max_thread_num:
                 break
 
@@ -413,9 +418,11 @@ class Https_connection_manager(object):
             while connect_control.keep_running:
                 if type == "gae":
                     if (self.new_conn_pool.qsize() + self.gae_conn_pool.qsize()) >= self.connection_pool_min_num:
+                        xlog.debug("get enough conn for gae")
                         break
                 else:
                     if self.new_conn_pool.qsize() >= self.connection_pool_min_num:
+                        xlog.debug("get enough conn for %s", type)
                         break
 
                 ip_str = google_ip.get_gws_ip()
@@ -432,7 +439,8 @@ class Https_connection_manager(object):
                     ssl_sock.last_use_time = time.time()
                     self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
                 elif not connect_control.allow_connect():
-                    break
+                    xlog.debug("create_connection_worker, control not allow")
+                    time.sleep(10)
                 time.sleep(1)
         finally:
             self.thread_num_lock.acquire()

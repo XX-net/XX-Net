@@ -131,7 +131,7 @@ def inactive_time():
     global last_request_time
     return time.time() - last_request_time
 
-def is_active(timeout=600):
+def is_active(timeout=60 * 30):
     if inactive_time() < timeout:
         return True
     else:

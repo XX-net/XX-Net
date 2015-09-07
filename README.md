@@ -3,13 +3,13 @@
 
 XX-Net
 ========
-项目状态：2015.9.1，各地情况不同，请尝试 2.0.5, 2.1.2, 2.2.0
+项目状态：2015.9.7  根据各地情况不同，启动后需要扫描ip 二十分钟到1个小时。
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.1.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.3.0
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.0.5
