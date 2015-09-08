@@ -53,6 +53,14 @@
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
+                <label for="connect-interval">TCP连接间隔ms<a href="https://github.com/XX-net/XX-Net/wiki/GAE-connect-interval" target="_blank">(帮助)</a></label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="connect-interval" type="text" value="200" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
                 <label for="enable-proxy">局域网代理(一般无需配置) <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">(帮助)</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
@@ -172,6 +180,7 @@
                     $('#deploy-via-gae').prop('checked', true);
                 }
                 $('#ip-connect-interval').val(result['ip_connect_interval'] || 10);
+                $('#connect-interval').val(result['connect_interval'] || 200);
 
                 if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
                     $('#enable-proxy').parent().removeClass('switch-off');
@@ -203,6 +212,7 @@
             gaePassword       = $('#gae-password').val(),
             hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct',
             ipConnectInterval = $('#ip-connect-interval').val(),
+            connectInterval = $('#connect-interval').val(),
             useIpv6           = $('#use-ipv6').is(':checked') ? 1 : 0,
             enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
             proxyType         = $('#proxy-type').val(),
@@ -211,18 +221,19 @@
             proxyUsername     = $('#proxy-username').val(),
             proxyPassword     = $('#proxy-password').val();
 
-        return setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, useIpv6,
+        return setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, connectInterval, useIpv6,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, useIpv6,
+    function setConfig(gaeAppId, gaePassword, hostAppEngine, ipConnectInterval, connectInterval, useIpv6,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
             'appid': gaeAppId,
             'password': gaePassword,
             'host_appengine_mode': hostAppEngine,
             'ip_connect_interval': ipConnectInterval,
+            'connect_interval': connectInterval,
             'use_ipv6': useIpv6,
             'proxy_enable': enableProxy,
             'proxy_type': proxyType,

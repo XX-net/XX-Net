@@ -149,6 +149,7 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
+        touch_active()
         host, _, port = self.path.rpartition(':')
 
         if host in config.HOSTS_GAE:
@@ -243,11 +244,13 @@ class GAEProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.request_version = ''
                 self.command = ''
                 self.send_error(414)
+                xlog.warn("read request line len:%d", len(self.raw_requestline))
                 return
             if not self.raw_requestline:
-                self.close_connection = 1
+                xlog.warn("read request line empty")
                 return
             if not self.parse_request():
+                xlog.warn("parse request fail:%s", self.raw_requestline)
                 return
         except NetWorkIOError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):

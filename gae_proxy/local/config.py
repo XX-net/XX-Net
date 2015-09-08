@@ -122,6 +122,7 @@ class Config(object):
 
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
+        self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
 
 
         # change to True when finished import CA cert to browser

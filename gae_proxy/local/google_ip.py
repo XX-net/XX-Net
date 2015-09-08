@@ -257,12 +257,17 @@ class Check_ip():
                 if time.time() - get_time < self.ip_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
-                handshake_time = self.ip_dict[ip_str]["handshake_time"]
+
+                if time.time() - self.ip_dict[ip_str]['success_time'] > 300: # 5 min
+                    fail_connect_interval = 1800 # 30 min
+                else:
+                    fail_connect_interval = 120 # 2 min
                 fail_time = self.ip_dict[ip_str]["fail_time"]
-                if time.time() - fail_time < 300:
+                if time.time() - fail_time < fail_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
 
+                handshake_time = self.ip_dict[ip_str]["handshake_time"]
                 xlog.debug("get ip:%s t:%d", ip_str, handshake_time)
                 self.ip_dict[ip_str]['history'].append([time.time(), "get"])
                 self.ip_dict[ip_str]['get_time'] = time.time()
@@ -326,7 +331,7 @@ class Check_ip():
 
             self.ip_dict[ip_str] = {'handshake_time':handshake_time, 'domain':domain, 'server':server,
                                     'timeout':0, "history":[[time.time(), handshake_time]], "fail_time":0,
-                                    "get_time":0}
+                                    "success_time":0, "get_time":0}
 
             if 'gws' in server:
                 self.gws_ip_list.append(ip_str)
