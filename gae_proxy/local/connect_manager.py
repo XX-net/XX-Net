@@ -262,7 +262,6 @@ class Https_connection_manager(object):
         work_thread.start()
 
     def keep_alive_thread(self):
-
         while self.keep_alive and connect_control.keep_running:
             if not connect_control.is_active():
                 time.sleep(1)
@@ -276,14 +275,19 @@ class Https_connection_manager(object):
                 inactive_time = time.time() - ssl_sock.last_use_time
                 if inactive_time > self.keep_alive:
                     ssl_sock.close()
-                    self.create_more_connection()
-                else:
+                    continue
+
+                if self.new_conn_pool.qsize() + self.gae_conn_pool.qsize() < self.connection_pool_max_num:
                     self.start_keep_alive(ssl_sock)
+                else:
+                    ssl_sock.close()
+
+            if self.new_conn_pool.qsize() < self.connection_pool_min_num:
+                self.create_more_connection()
 
             time.sleep(1)
 
     def save_ssl_connection_for_reuse(self, ssl_sock, host=None):
-
         if host:
             if host not in self.host_conn_pool:
                 self.host_conn_pool[host] = Connect_pool()
@@ -303,14 +307,10 @@ class Https_connection_manager(object):
                     ssl_sock.close()
 
 
-    def create_more_connection(self, type="gae"):
-        if type == "gae":
-            need_conn_num = self.connection_pool_min_num - self.new_conn_pool.qsize() - self.gae_conn_pool.qsize()
-        else:
-            need_conn_num = self.connection_pool_min_num - self.new_conn_pool.qsize()
+    def create_more_connection(self):
+        need_conn_num = self.connection_pool_min_num - self.new_conn_pool.qsize()
 
         target_thread_num = min(self.max_thread_num, need_conn_num)
-        #while self.thread_num < self.max_thread_num and connect_control.keep_running:
         for i in range(0, target_thread_num):
             if not connect_control.allow_connect():
                 xlog.warn("create more connect, control not allow")
@@ -322,9 +322,8 @@ class Https_connection_manager(object):
             self.thread_num_lock.acquire()
             self.thread_num += 1
             self.thread_num_lock.release()
-            p = threading.Thread(target = self.create_connection_worker, args=(type,))
+            p = threading.Thread(target=self.create_connection_worker)
             p.start()
-            #time.sleep(0.3)
 
     def _create_ssl_connection(self, ip_port):
         if not connect_control.allow_connect():
@@ -392,7 +391,7 @@ class Https_connection_manager(object):
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
                     google_ip.report_bad_ip(ssl_sock.ip)
-                    connect_control.fall_into_honeypot()
+                    #connect_control.fall_into_honeypot()
                     raise socket.error(' certificate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
@@ -413,17 +412,14 @@ class Https_connection_manager(object):
             return False
 
 
-    def create_connection_worker(self, type="gae"):
+    def create_connection_worker(self):
         try:
             while connect_control.keep_running:
-                if type == "gae":
-                    if (self.new_conn_pool.qsize() + self.gae_conn_pool.qsize()) >= self.connection_pool_min_num:
-                        xlog.debug("get enough conn for gae")
-                        break
-                else:
-                    if self.new_conn_pool.qsize() >= self.connection_pool_min_num:
-                        xlog.debug("get enough conn for %s", type)
-                        break
+                if self.new_conn_pool.qsize() >= self.connection_pool_min_num:
+                    #xlog.debug("get enough conn")
+                    break
+                if self.thread_num > self.connection_pool_min_num - self.new_conn_pool.qsize():
+                    break
 
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
@@ -481,10 +477,7 @@ class Https_connection_manager(object):
                     ssl_sock.close()
                     continue
 
-        if host:
-            self.create_more_connection(type="host")
-        else:
-            self.create_more_connection(type="gae")
+        self.create_more_connection()
 
         if ssl_sock:
             return ssl_sock
