@@ -19,7 +19,7 @@ if sys.platform.startswith("linux"):
     def X_is_running():
         try:
             from subprocess import Popen, PIPE
-            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE, shell=True)
             p.communicate()
             return p.returncode == 0
         except:
