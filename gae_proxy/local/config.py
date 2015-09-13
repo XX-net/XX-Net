@@ -4,22 +4,14 @@
 
 import ConfigParser
 import os
-import sys
 import re
 import io
 import xlog
-import platform
 
 
 
 class Config(object):
     current_path = os.path.dirname(os.path.abspath(__file__))
-
-    version = current_path.split(os.path.sep)[-2]
-
-    __version__ = version
-    python_version = platform.python_version()
-
 
     def load(self):
         """load config from proxy.ini"""
@@ -124,37 +116,12 @@ class Config(object):
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
 
-
         # change to True when finished import CA cert to browser
         # launcher will wait import ready then open browser to show status, check update etc
         self.cert_import_ready = False
 
-    def info(self):
-        info = ''
-        info += '------------------------------------------------------\n'
-        info += 'GAEProxy Version   : %s (python/%s)\n' % (self.__version__, self.python_version)
-        info += 'Listen Address     : %s:%d\n' % (self.LISTEN_IP, self.LISTEN_PORT)
-        if self.CONTROL_ENABLE:
-            info += 'Control Address    : %s:%d\n' % (self.CONTROL_IP, self.CONTROL_PORT)
-        if self.PROXY_ENABLE:
-            info += '%s Proxy    : %s:%s\n' % (self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
-        info += 'Debug INFO         : %s\n' % self.LISTEN_DEBUGINFO if self.LISTEN_DEBUGINFO else ''
-        info += 'GAE APPID          : %s\n' % '|'.join(self.GAE_APPIDS)
-        if self.PAC_ENABLE:
-            info += 'Pac Server         : http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
-            #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
-        info += '------------------------------------------------------\n'
-        return info
 
 
 config = Config()
 config.load()
 
-
-def test():
-    hosts = ['google.com']
-    if 'www.google.com' in hosts:
-        print "in ."
-
-if __name__ == "__main__":
-    test()
