@@ -41,7 +41,7 @@ class Check_ip():
     else:
         good_ip_file_name = "good_ip.txt"
         bad_ip_file_name = "bad_ip2.txt"
-        default_good_ip_file_name = "good_ip.txt"
+        default_good_ip_file_name = "good_ip_default.txt"
     good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
     bad_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, bad_ip_file_name))
     default_good_ip_file = os.path.join(current_path, default_good_ip_file_name)
