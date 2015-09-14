@@ -7,6 +7,7 @@ import atexit
 import webbrowser
 
 import launcher_log
+import update_from_github
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
@@ -66,13 +67,14 @@ atexit.register(exit_handler)
 
 
 def main():
-
     # change path to launcher
     global __file__
     __file__ = os.path.abspath(__file__)
     if os.path.islink(__file__):
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    launcher_log.info("start XX-Net %s", update_from_github.current_version())
 
     web_control.confirm_xxnet_exit()
 

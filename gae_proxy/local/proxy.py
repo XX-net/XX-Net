@@ -59,7 +59,7 @@ elif sys.platform == "darwin":
 
 import time
 import traceback
-
+import platform
 
 import errno
 import xlog
@@ -82,7 +82,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 import proxy_handler
 import connect_control
-
+import env_info
 from config import config
 
 from gae_handler import spawn_later
@@ -183,7 +183,7 @@ def pre_start():
             pass
     elif os.name == 'nt':
         import ctypes
-        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % config.__version__)
+        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent ')
         if not config.LISTEN_VISIBLE:
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
         else:
@@ -211,6 +211,20 @@ def pre_start():
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
         spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
 
+def log_info():
+    xlog.info('------------------------------------------------------')
+    xlog.info('Python Version     : %s', platform.python_version())
+    xlog.info('OS                 : %s', env_info.os_detail())
+    xlog.info('Listen Address     : %s:%d', config.LISTEN_IP, config.LISTEN_PORT)
+    if config.CONTROL_ENABLE:
+        xlog.info('Control Address    : %s:%d', config.CONTROL_IP, config.CONTROL_PORT)
+    if config.PROXY_ENABLE:
+        xlog.info('%s Proxy    : %s:%s', config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+    xlog.info('GAE APPID          : %s', '|'.join(config.GAE_APPIDS))
+    if config.PAC_ENABLE:
+        xlog.info('Pac Server         : http://%s:%d/%s', config.PAC_IP, config.PAC_PORT, config.PAC_FILE)
+        #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
+    xlog.info('------------------------------------------------------')
 
 def main():
     global ready
@@ -228,7 +242,7 @@ def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
     pre_start()
-    xlog.info(config.info())
+    log_info()
 
     CertUtil.init_ca()
 

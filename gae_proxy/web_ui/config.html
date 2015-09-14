@@ -3,12 +3,17 @@
         <div class="span4">
             <label for="gae-appid">GAE AppID </label>
         </div> <!-- .span4 -->
-        <div class="span8">
+        <div id="gae-appid-field" class="span8">
             <input id="gae-appid" type="text" placeholder="默认使用公共AppID"/>
-            <div id="gae-appid-tip" class="hide">
+            <div id="public-appid-tip" class="hide">
                 <p>
                     <span color="red">公共AppID不能看视频、下载文件。</span>
                     <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">(怎么申请)</a>
+                </p>
+            </div>
+            <div id="gae-appid-tip" class="hide">
+                <p>
+                    <span >注意：appid部署之前无法使用。</span>
                 </p>
             </div>
         </div> <!-- .span8 -->
@@ -162,6 +167,17 @@
     });
 </script>
 <script type="text/javascript">
+    $('#gae-appid-field').click(function(){
+        $('#gae-appid-tip').removeClass('hide');
+    });
+    $('#gae-appid-field').click(function(event){
+        event.stopPropagation();
+    });
+    $('html').click(function() {
+        $('#gae-appid-tip').addClass('hide');
+    });
+</script>
+<script type="text/javascript">
     $(function() {
         $.ajax({
             type: 'POST',
@@ -170,7 +186,7 @@
             success: function(result) {
                 $('#gae-appid').val(result['appid']);
                 if( !result['appid'] || result['appid'] == '' ){
-                    $('#gae-appid-tip').removeClass("hide");
+                    $('#public-appid-tip').removeClass("hide");
                 }
                 $('#gae-password').val(result['password']);
 
