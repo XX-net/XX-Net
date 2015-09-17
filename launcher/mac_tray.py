@@ -8,8 +8,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(
+        current_path, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
     osx_lib = os.path.join(python_path, 'lib', 'darwin')
     sys.path.append(osx_lib)
@@ -23,7 +24,9 @@ import launcher_log
 from PyObjCTools import AppHelper
 from AppKit import *
 
+
 class MacTrayObject(NSObject):
+
     def __init__(self):
         pass
 
@@ -33,7 +36,9 @@ class MacTrayObject(NSObject):
 
     def setupUI(self):
         self.statusbar = NSStatusBar.systemStatusBar()
-        self.statusitem = self.statusbar.statusItemWithLength_(NSSquareStatusItemLength) #NSSquareStatusItemLength #NSVariableStatusItemLength
+        # NSSquareStatusItemLength #NSVariableStatusItemLength
+        self.statusitem = self.statusbar.statusItemWithLength_(
+            NSSquareStatusItemLength)
 
         # Set initial image icon
         icon_path = os.path.join(current_path, "web_ui", "favicon_MAC.ico")
@@ -50,20 +55,25 @@ class MacTrayObject(NSObject):
         # Build a very simple menu
         self.menu = NSMenu.alloc().init()
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            'Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global Goagent Proxy', 'enableProxy:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            'Enable Global Goagent Proxy', 'enableProxy:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable Global Goagent Proxy', 'disableProxy:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            'Disable Global Goagent Proxy', 'disableProxy:', '')
         self.menu.addItem_(menuitem)
 
         # Rest Menu Item
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            'Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
         # Default event
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            'Quit', 'windowWillClose:', '')
         self.menu.addItem_(menuitem)
         # Bind it to the status item
         self.statusitem.setMenu_(self.menu)
@@ -73,7 +83,8 @@ class MacTrayObject(NSObject):
 
     def registerObserver(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
-        nc.addObserver_selector_name_object_(self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
+        nc.addObserver_selector_name_object_(
+            self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
 
     def windowWillClose_(self, notification):
         module_init.stop_all()
@@ -82,7 +93,7 @@ class MacTrayObject(NSObject):
     def config_(self, notification):
         webbrowser.open_new("http://127.0.0.1:8085/")
 
-    #Note: the function name for action can include '_'
+    # Note: the function name for action can include '_'
     # limited by Mac cocoa
     def resetGoagent_(self, _):
         module_init.stop("gae_proxy")
@@ -97,7 +108,8 @@ class MacTrayObject(NSObject):
         cmd6 = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
         cmd7 = "networksetup -setsecurewebproxystate Ethernet on"
         cmd8 = "networksetup -setsecurewebproxystate Wi-Fi on"
-        exec_command = "%s;%s;%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
+        exec_command = "%s;%s;%s;%s;%s;%s;%s;%s" % (
+            cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
         admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
         cmd = admin_command.encode('utf-8')
         launcher_log.info("try enable proxy:%s", cmd)
@@ -115,8 +127,8 @@ class MacTrayObject(NSObject):
         os.system(cmd)
 
 
-
 class Mac_tray():
+
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
         msg = unicode(msg)
         title = unicode(title)
@@ -143,11 +155,14 @@ class Mac_tray():
 sys_tray = Mac_tray()
 
 # Note: the following code can't run in class
+
+
 def serve_forever():
     app = NSApplication.sharedApplication()
     delegate = MacTrayObject.alloc().init()
     app.setDelegate_(delegate)
     AppHelper.runEventLoop()
+
 
 def main():
     serve_forever()
@@ -155,4 +170,3 @@ def main():
 if __name__ == '__main__':
     main()
     #sys_tray.dialog_yes_no("test", "test message")
-

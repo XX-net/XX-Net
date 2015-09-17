@@ -16,7 +16,6 @@
 #
 
 
-
 """Runs a development application server for an application.
 
 %(script)s [options] <application root>
@@ -106,33 +105,6 @@ Options:
 """
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 from google.appengine.tools import os_compat
 
 import getopt
@@ -142,8 +114,6 @@ import signal
 import sys
 import tempfile
 import traceback
-
-
 
 
 logging.basicConfig(
@@ -156,9 +126,6 @@ from google.appengine.tools import appcfg
 from google.appengine.tools import appengine_rpc
 from google.appengine.tools import dev_appserver
 from google.appengine.tools import dev_appserver_multiprocess as multiprocess
-
-
-
 
 
 DEFAULT_ADMIN_CONSOLE_SERVER = 'appengine.google.com'
@@ -212,471 +179,470 @@ ARG_USE_SQLITE = 'use_sqlite'
 
 
 SDK_PATH = os.path.dirname(
-             os.path.dirname(
-               os.path.dirname(
-                 os.path.dirname(os_compat.__file__)
-               )
-             )
-           )
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(os_compat.__file__)
+        )
+    )
+)
 
 
 PRODUCTION_VERSION = (2, 5)
 WARN_ABOUT_PYTHON_VERSION = True
 
 DEFAULT_ARGS = {
-  ARG_ADDRESS: 'localhost',
-  ARG_ADMIN_CONSOLE_HOST: None,
-  ARG_ADMIN_CONSOLE_SERVER: DEFAULT_ADMIN_CONSOLE_SERVER,
-  ARG_ALLOW_SKIPPED_FILES: False,
-  ARG_AUTH_DOMAIN: 'gmail.com',
-  ARG_BLOBSTORE_PATH: os.path.join(tempfile.gettempdir(),
-                                   'dev_appserver.blobstore'),
-  ARG_CLEAR_DATASTORE: False,
-  ARG_CLEAR_PROSPECTIVE_SEARCH: False,
-  ARG_DATASTORE_PATH: os.path.join(tempfile.gettempdir(),
-                                   'dev_appserver.datastore'),
-  ARG_DEFAULT_PARTITION: 'dev',
-  ARG_DISABLE_TASK_RUNNING: False,
-  ARG_ENABLE_SENDMAIL: False,
-  ARG_HIGH_REPLICATION: False,
-  ARG_HISTORY_PATH: os.path.join(tempfile.gettempdir(),
-                                 'dev_appserver.datastore.history'),
-  ARG_LOGIN_URL: '/_ah/login',
-  ARG_LOG_LEVEL: logging.INFO,
-  ARG_MYSQL_HOST: 'localhost',
-  ARG_MYSQL_PASSWORD: '',
-  ARG_MYSQL_PORT: 3306,
-  ARG_MYSQL_SOCKET: '',
-  ARG_MYSQL_USER: '',
-  ARG_PORT: 8080,
-  ARG_PROSPECTIVE_SEARCH_PATH: os.path.join(tempfile.gettempdir(),
-                                            'dev_appserver.prospective_search'),
-  ARG_REQUIRE_INDEXES: False,
-  ARG_SHOW_MAIL_BODY: False,
-  ARG_SKIP_SDK_UPDATE_CHECK: False,
-  ARG_SMTP_HOST: '',
-  ARG_SMTP_PASSWORD: '',
-  ARG_SMTP_PORT: 25,
-  ARG_SMTP_USER: '',
-  ARG_STATIC_CACHING: True,
-  ARG_TASK_RETRY_SECONDS: 30,
-  ARG_TRUSTED: False,
-  ARG_USE_SQLITE: False,
+    ARG_ADDRESS: 'localhost',
+    ARG_ADMIN_CONSOLE_HOST: None,
+    ARG_ADMIN_CONSOLE_SERVER: DEFAULT_ADMIN_CONSOLE_SERVER,
+    ARG_ALLOW_SKIPPED_FILES: False,
+    ARG_AUTH_DOMAIN: 'gmail.com',
+    ARG_BLOBSTORE_PATH: os.path.join(tempfile.gettempdir(),
+                                     'dev_appserver.blobstore'),
+    ARG_CLEAR_DATASTORE: False,
+    ARG_CLEAR_PROSPECTIVE_SEARCH: False,
+    ARG_DATASTORE_PATH: os.path.join(tempfile.gettempdir(),
+                                     'dev_appserver.datastore'),
+    ARG_DEFAULT_PARTITION: 'dev',
+    ARG_DISABLE_TASK_RUNNING: False,
+    ARG_ENABLE_SENDMAIL: False,
+    ARG_HIGH_REPLICATION: False,
+    ARG_HISTORY_PATH: os.path.join(tempfile.gettempdir(),
+                                   'dev_appserver.datastore.history'),
+    ARG_LOGIN_URL: '/_ah/login',
+    ARG_LOG_LEVEL: logging.INFO,
+    ARG_MYSQL_HOST: 'localhost',
+    ARG_MYSQL_PASSWORD: '',
+    ARG_MYSQL_PORT: 3306,
+    ARG_MYSQL_SOCKET: '',
+    ARG_MYSQL_USER: '',
+    ARG_PORT: 8080,
+    ARG_PROSPECTIVE_SEARCH_PATH: os.path.join(tempfile.gettempdir(),
+                                              'dev_appserver.prospective_search'),
+    ARG_REQUIRE_INDEXES: False,
+    ARG_SHOW_MAIL_BODY: False,
+    ARG_SKIP_SDK_UPDATE_CHECK: False,
+    ARG_SMTP_HOST: '',
+    ARG_SMTP_PASSWORD: '',
+    ARG_SMTP_PORT: 25,
+    ARG_SMTP_USER: '',
+    ARG_STATIC_CACHING: True,
+    ARG_TASK_RETRY_SECONDS: 30,
+    ARG_TRUSTED: False,
+    ARG_USE_SQLITE: False,
 }
 
 
 def PrintUsageExit(code):
-  """Prints usage information and exits with a status code.
+    """Prints usage information and exits with a status code.
 
-  Args:
-    code: Status code to pass to sys.exit() after displaying usage information.
-  """
-  render_dict = DEFAULT_ARGS.copy()
-  render_dict['script'] = os.path.basename(sys.argv[0])
-  print sys.modules['__main__'].__doc__ % render_dict
-  sys.stdout.flush()
-  sys.exit(code)
+    Args:
+      code: Status code to pass to sys.exit() after displaying usage information.
+    """
+    render_dict = DEFAULT_ARGS.copy()
+    render_dict['script'] = os.path.basename(sys.argv[0])
+    print sys.modules['__main__'].__doc__ % render_dict
+    sys.stdout.flush()
+    sys.exit(code)
 
 
 def ParseArguments(argv):
-  """Parses command-line arguments.
+    """Parses command-line arguments.
 
-  Args:
-    argv: Command-line arguments, including the executable name, used to
-      execute this application.
+    Args:
+      argv: Command-line arguments, including the executable name, used to
+        execute this application.
 
-  Returns:
-    Tuple (args, option_dict) where:
-      args: List of command-line arguments following the executable name.
-      option_dict: Dictionary of parsed flags that maps keys from DEFAULT_ARGS
-        to their values, which are either pulled from the defaults, or from
-        command-line flags.
-  """
-  option_dict = DEFAULT_ARGS.copy()
+    Returns:
+      Tuple (args, option_dict) where:
+        args: List of command-line arguments following the executable name.
+        option_dict: Dictionary of parsed flags that maps keys from DEFAULT_ARGS
+          to their values, which are either pulled from the defaults, or from
+          command-line flags.
+    """
+    option_dict = DEFAULT_ARGS.copy()
 
-  try:
-    opts, args = getopt.gnu_getopt(
-      argv[1:],
-      'a:cdhp:',
-      [ 'address=',
-        'admin_console_host=',
-        'admin_console_server=',
-        'allow_skipped_files',
-        'auth_domain=',
-        'backends',
-        'blobstore_path=',
-        'clear_datastore',
-        'clear_prospective_search',
-        'datastore_path=',
-        'debug',
-        'debug_imports',
-        'default_partition=',
-        'disable_static_caching',
-        'disable_task_running',
-        'enable_sendmail',
-        'help',
-        'high_replication',
-        'history_path=',
-        'multiprocess',
-        'multiprocess_api_port=',
-        'multiprocess_api_server',
-        'multiprocess_app_instance_id=',
-        'multiprocess_backend_id=',
-        'multiprocess_backend_instance_id=',
-        'multiprocess_min_port=',
-        'mysql_host=',
-        'mysql_password=',
-        'mysql_port=',
-        'mysql_socket=',
-        'mysql_user=',
-        'port=',
-        'require_indexes',
-        'show_mail_body',
-        'skip_sdk_update_check',
-        'smtp_host=',
-        'smtp_password=',
-        'smtp_port=',
-        'smtp_user=',
-        'task_retry_seconds=',
-        'trusted',
-        'use_sqlite',
-      ])
-  except getopt.GetoptError, e:
-    print >>sys.stderr, 'Error: %s' % e
-    PrintUsageExit(1)
-
-  for option, value in opts:
-    if option in ('-h', '--help'):
-      PrintUsageExit(0)
-
-    if option in ('-d', '--debug'):
-      option_dict[ARG_LOG_LEVEL] = logging.DEBUG
-
-    if option in ('-p', '--port'):
-      try:
-        option_dict[ARG_PORT] = int(value)
-        if not (65535 > option_dict[ARG_PORT] > 0):
-          raise ValueError
-      except ValueError:
-        print >>sys.stderr, 'Invalid value supplied for port'
+    try:
+        opts, args = getopt.gnu_getopt(
+            argv[1:],
+            'a:cdhp:',
+            ['address=',
+                'admin_console_host=',
+                'admin_console_server=',
+                'allow_skipped_files',
+                'auth_domain=',
+                'backends',
+                'blobstore_path=',
+                'clear_datastore',
+                'clear_prospective_search',
+                'datastore_path=',
+                'debug',
+                'debug_imports',
+                'default_partition=',
+                'disable_static_caching',
+                'disable_task_running',
+                'enable_sendmail',
+                'help',
+                'high_replication',
+                'history_path=',
+                'multiprocess',
+                'multiprocess_api_port=',
+                'multiprocess_api_server',
+                'multiprocess_app_instance_id=',
+                'multiprocess_backend_id=',
+                'multiprocess_backend_instance_id=',
+                'multiprocess_min_port=',
+                'mysql_host=',
+                'mysql_password=',
+                'mysql_port=',
+                'mysql_socket=',
+                'mysql_user=',
+                'port=',
+                'require_indexes',
+                'show_mail_body',
+                'skip_sdk_update_check',
+                'smtp_host=',
+                'smtp_password=',
+                'smtp_port=',
+                'smtp_user=',
+                'task_retry_seconds=',
+                'trusted',
+                'use_sqlite',
+             ])
+    except getopt.GetoptError, e:
+        print >>sys.stderr, 'Error: %s' % e
         PrintUsageExit(1)
 
-    def expand_path(s):
-      return os.path.abspath(os.path.expanduser(s))
+    for option, value in opts:
+        if option in ('-h', '--help'):
+            PrintUsageExit(0)
 
-    if option in ('-a', '--address'):
-      option_dict[ARG_ADDRESS] = value
+        if option in ('-d', '--debug'):
+            option_dict[ARG_LOG_LEVEL] = logging.DEBUG
 
-    if option == '--blobstore_path':
-      option_dict[ARG_BLOBSTORE_PATH] = expand_path(value)
+        if option in ('-p', '--port'):
+            try:
+                option_dict[ARG_PORT] = int(value)
+                if not (65535 > option_dict[ARG_PORT] > 0):
+                    raise ValueError
+            except ValueError:
+                print >>sys.stderr, 'Invalid value supplied for port'
+                PrintUsageExit(1)
 
-    if option == '--datastore_path':
-      option_dict[ARG_DATASTORE_PATH] = expand_path(value)
+        def expand_path(s):
+            return os.path.abspath(os.path.expanduser(s))
 
-    if option == '--prospective_search_path':
-      option_dict[ARG_PROSPECTIVE_SEARCH_PATH] = expand_path(value)
+        if option in ('-a', '--address'):
+            option_dict[ARG_ADDRESS] = value
 
-    if option == '--skip_sdk_update_check':
-      option_dict[ARG_SKIP_SDK_UPDATE_CHECK] = True
+        if option == '--blobstore_path':
+            option_dict[ARG_BLOBSTORE_PATH] = expand_path(value)
 
-    if option == '--use_sqlite':
-      option_dict[ARG_USE_SQLITE] = True
+        if option == '--datastore_path':
+            option_dict[ARG_DATASTORE_PATH] = expand_path(value)
 
-    if option == '--high_replication':
-      option_dict[ARG_HIGH_REPLICATION] = True
+        if option == '--prospective_search_path':
+            option_dict[ARG_PROSPECTIVE_SEARCH_PATH] = expand_path(value)
 
-    if option == '--history_path':
-      option_dict[ARG_HISTORY_PATH] = expand_path(value)
+        if option == '--skip_sdk_update_check':
+            option_dict[ARG_SKIP_SDK_UPDATE_CHECK] = True
 
-    if option in ('-c', '--clear_datastore'):
-      option_dict[ARG_CLEAR_DATASTORE] = True
+        if option == '--use_sqlite':
+            option_dict[ARG_USE_SQLITE] = True
 
-    if option == '--clear_prospective_search':
-      option_dict[ARG_CLEAR_PROSPECTIVE_SEARCH] = True
+        if option == '--high_replication':
+            option_dict[ARG_HIGH_REPLICATION] = True
 
-    if option == '--require_indexes':
-      option_dict[ARG_REQUIRE_INDEXES] = True
+        if option == '--history_path':
+            option_dict[ARG_HISTORY_PATH] = expand_path(value)
 
-    if option == '--mysql_host':
-      option_dict[ARG_MYSQL_HOST] = value
+        if option in ('-c', '--clear_datastore'):
+            option_dict[ARG_CLEAR_DATASTORE] = True
 
-    if option == '--mysql_port':
-      option_dict[ARG_MYSQL_PORT] = _ParsePort(value, '--mysql_port')
+        if option == '--clear_prospective_search':
+            option_dict[ARG_CLEAR_PROSPECTIVE_SEARCH] = True
 
-    if option == '--mysql_user':
-      option_dict[ARG_MYSQL_USER] = value
+        if option == '--require_indexes':
+            option_dict[ARG_REQUIRE_INDEXES] = True
 
-    if option == '--mysql_password':
-      option_dict[ARG_MYSQL_PASSWORD] = value
+        if option == '--mysql_host':
+            option_dict[ARG_MYSQL_HOST] = value
 
-    if option == '--mysql_socket':
-      option_dict[ARG_MYSQL_SOCKET] = value
+        if option == '--mysql_port':
+            option_dict[ARG_MYSQL_PORT] = _ParsePort(value, '--mysql_port')
 
-    if option == '--smtp_host':
-      option_dict[ARG_SMTP_HOST] = value
+        if option == '--mysql_user':
+            option_dict[ARG_MYSQL_USER] = value
 
-    if option == '--smtp_port':
-      option_dict[ARG_SMTP_PORT] = _ParsePort(value, '--smtp_port')
+        if option == '--mysql_password':
+            option_dict[ARG_MYSQL_PASSWORD] = value
 
-    if option == '--smtp_user':
-      option_dict[ARG_SMTP_USER] = value
+        if option == '--mysql_socket':
+            option_dict[ARG_MYSQL_SOCKET] = value
 
-    if option == '--smtp_password':
-      option_dict[ARG_SMTP_PASSWORD] = value
+        if option == '--smtp_host':
+            option_dict[ARG_SMTP_HOST] = value
 
-    if option == '--enable_sendmail':
-      option_dict[ARG_ENABLE_SENDMAIL] = True
+        if option == '--smtp_port':
+            option_dict[ARG_SMTP_PORT] = _ParsePort(value, '--smtp_port')
 
-    if option == '--show_mail_body':
-      option_dict[ARG_SHOW_MAIL_BODY] = True
+        if option == '--smtp_user':
+            option_dict[ARG_SMTP_USER] = value
 
-    if option == '--auth_domain':
-      option_dict['_DEFAULT_ENV_AUTH_DOMAIN'] = value
+        if option == '--smtp_password':
+            option_dict[ARG_SMTP_PASSWORD] = value
 
-    if option == '--debug_imports':
-      option_dict['_ENABLE_LOGGING'] = True
+        if option == '--enable_sendmail':
+            option_dict[ARG_ENABLE_SENDMAIL] = True
 
-    if option == '--admin_console_server':
-      option_dict[ARG_ADMIN_CONSOLE_SERVER] = value.strip()
+        if option == '--show_mail_body':
+            option_dict[ARG_SHOW_MAIL_BODY] = True
 
-    if option == '--admin_console_host':
-      option_dict[ARG_ADMIN_CONSOLE_HOST] = value
+        if option == '--auth_domain':
+            option_dict['_DEFAULT_ENV_AUTH_DOMAIN'] = value
 
-    if option == '--allow_skipped_files':
-      option_dict[ARG_ALLOW_SKIPPED_FILES] = True
+        if option == '--debug_imports':
+            option_dict['_ENABLE_LOGGING'] = True
 
-    if option == '--disable_static_caching':
-      option_dict[ARG_STATIC_CACHING] = False
+        if option == '--admin_console_server':
+            option_dict[ARG_ADMIN_CONSOLE_SERVER] = value.strip()
 
-    if option == '--disable_task_running':
-      option_dict[ARG_DISABLE_TASK_RUNNING] = True
+        if option == '--admin_console_host':
+            option_dict[ARG_ADMIN_CONSOLE_HOST] = value
 
-    if option == '--task_retry_seconds':
-      try:
-        option_dict[ARG_TASK_RETRY_SECONDS] = int(value)
-        if option_dict[ARG_TASK_RETRY_SECONDS] < 0:
-          raise ValueError
-      except ValueError:
-        print >>sys.stderr, 'Invalid value supplied for task_retry_seconds'
-        PrintUsageExit(1)
+        if option == '--allow_skipped_files':
+            option_dict[ARG_ALLOW_SKIPPED_FILES] = True
 
-    if option == '--trusted':
-      option_dict[ARG_TRUSTED] = True
+        if option == '--disable_static_caching':
+            option_dict[ARG_STATIC_CACHING] = False
 
-    if option == '--backends':
-      option_dict[ARG_BACKENDS] = value
-    if option == '--multiprocess':
-      option_dict[ARG_MULTIPROCESS] = value
-    if option == '--multiprocess_min_port':
-      option_dict[ARG_MULTIPROCESS_MIN_PORT] = value
-    if option == '--multiprocess_api_server':
-      option_dict[ARG_MULTIPROCESS_API_SERVER] = value
-    if option == '--multiprocess_api_port':
-      option_dict[ARG_MULTIPROCESS_API_PORT] = value
-    if option == '--multiprocess_app_instance_id':
-      option_dict[ARG_MULTIPROCESS_APP_INSTANCE_ID] = value
-    if option == '--multiprocess_backend_id':
-      option_dict[ARG_MULTIPROCESS_BACKEND_ID] = value
-    if option == '--multiprocess_backend_instance_id':
-      option_dict[ARG_MULTIPROCESS_BACKEND_INSTANCE_ID] = value
+        if option == '--disable_task_running':
+            option_dict[ARG_DISABLE_TASK_RUNNING] = True
 
-    if option == '--default_partition':
-      option_dict[ARG_DEFAULT_PARTITION] = value
+        if option == '--task_retry_seconds':
+            try:
+                option_dict[ARG_TASK_RETRY_SECONDS] = int(value)
+                if option_dict[ARG_TASK_RETRY_SECONDS] < 0:
+                    raise ValueError
+            except ValueError:
+                print >>sys.stderr, 'Invalid value supplied for task_retry_seconds'
+                PrintUsageExit(1)
 
-  return args, option_dict
+        if option == '--trusted':
+            option_dict[ARG_TRUSTED] = True
+
+        if option == '--backends':
+            option_dict[ARG_BACKENDS] = value
+        if option == '--multiprocess':
+            option_dict[ARG_MULTIPROCESS] = value
+        if option == '--multiprocess_min_port':
+            option_dict[ARG_MULTIPROCESS_MIN_PORT] = value
+        if option == '--multiprocess_api_server':
+            option_dict[ARG_MULTIPROCESS_API_SERVER] = value
+        if option == '--multiprocess_api_port':
+            option_dict[ARG_MULTIPROCESS_API_PORT] = value
+        if option == '--multiprocess_app_instance_id':
+            option_dict[ARG_MULTIPROCESS_APP_INSTANCE_ID] = value
+        if option == '--multiprocess_backend_id':
+            option_dict[ARG_MULTIPROCESS_BACKEND_ID] = value
+        if option == '--multiprocess_backend_instance_id':
+            option_dict[ARG_MULTIPROCESS_BACKEND_INSTANCE_ID] = value
+
+        if option == '--default_partition':
+            option_dict[ARG_DEFAULT_PARTITION] = value
+
+    return args, option_dict
 
 
 def _ParsePort(port, description):
-  """Parses a port number from a string.
+    """Parses a port number from a string.
 
-  Args:
-    port: string
-    description: string to use in error messages.
+    Args:
+      port: string
+      description: string to use in error messages.
 
-  Returns: integer between 0 and 65535
+    Returns: integer between 0 and 65535
 
-  Raises:
-    ValueError if port is not a valid port number.
-  """
-  try:
-    port = int(port)
-    if not (65535 > port > 0):
-      raise ValueError
-    return port
-  except ValueError:
-    print >>sys.stderr, 'Invalid value %s supplied for %s' % (port, description)
-    PrintUsageExit(1)
+    Raises:
+      ValueError if port is not a valid port number.
+    """
+    try:
+        port = int(port)
+        if not (65535 > port > 0):
+            raise ValueError
+        return port
+    except ValueError:
+        print >>sys.stderr, 'Invalid value %s supplied for %s' % (
+            port, description)
+        PrintUsageExit(1)
 
 
 def MakeRpcServer(option_dict):
-  """Create a new HttpRpcServer.
+    """Create a new HttpRpcServer.
 
-  Creates a new HttpRpcServer to check for updates to the SDK.
+    Creates a new HttpRpcServer to check for updates to the SDK.
 
-  Args:
-    option_dict: The dict of command line options.
+    Args:
+      option_dict: The dict of command line options.
 
-  Returns:
-    A HttpRpcServer.
-  """
-  server = appengine_rpc.HttpRpcServer(
-      option_dict[ARG_ADMIN_CONSOLE_SERVER],
-      lambda: ('unused_email', 'unused_password'),
-      appcfg.GetUserAgent(),
-      appcfg.GetSourceName(),
-      host_override=option_dict[ARG_ADMIN_CONSOLE_HOST])
+    Returns:
+      A HttpRpcServer.
+    """
+    server = appengine_rpc.HttpRpcServer(
+        option_dict[ARG_ADMIN_CONSOLE_SERVER],
+        lambda: ('unused_email', 'unused_password'),
+        appcfg.GetUserAgent(),
+        appcfg.GetSourceName(),
+        host_override=option_dict[ARG_ADMIN_CONSOLE_HOST])
 
-  server.authenticated = True
-  return server
+    server.authenticated = True
+    return server
 
 
 def SigTermHandler(signum, frame):
-  """Handler for TERM signal.
+    """Handler for TERM signal.
 
-  Raises a KeyboardInterrupt to perform a graceful shutdown on SIGTERM signal.
-  """
-  raise KeyboardInterrupt()
+    Raises a KeyboardInterrupt to perform a graceful shutdown on SIGTERM signal.
+    """
+    raise KeyboardInterrupt()
 
 
 def main(argv):
-  """Runs the development application server."""
-  args, option_dict = ParseArguments(argv)
+    """Runs the development application server."""
+    args, option_dict = ParseArguments(argv)
 
-  if len(args) != 1:
-    print >>sys.stderr, 'Invalid arguments'
-    PrintUsageExit(1)
+    if len(args) != 1:
+        print >>sys.stderr, 'Invalid arguments'
+        PrintUsageExit(1)
 
-  root_path = args[0]
+    root_path = args[0]
 
-  if '_DEFAULT_ENV_AUTH_DOMAIN' in option_dict:
-    auth_domain = option_dict['_DEFAULT_ENV_AUTH_DOMAIN']
-    dev_appserver.DEFAULT_ENV['AUTH_DOMAIN'] = auth_domain
-  if '_ENABLE_LOGGING' in option_dict:
-    enable_logging = option_dict['_ENABLE_LOGGING']
-    dev_appserver.HardenedModulesHook.ENABLE_LOGGING = enable_logging
+    if '_DEFAULT_ENV_AUTH_DOMAIN' in option_dict:
+        auth_domain = option_dict['_DEFAULT_ENV_AUTH_DOMAIN']
+        dev_appserver.DEFAULT_ENV['AUTH_DOMAIN'] = auth_domain
+    if '_ENABLE_LOGGING' in option_dict:
+        enable_logging = option_dict['_ENABLE_LOGGING']
+        dev_appserver.HardenedModulesHook.ENABLE_LOGGING = enable_logging
 
-  log_level = option_dict[ARG_LOG_LEVEL]
+    log_level = option_dict[ARG_LOG_LEVEL]
 
+    option_dict['root_path'] = os.path.realpath(root_path)
 
+    logging.getLogger().setLevel(log_level)
 
-  option_dict['root_path'] = os.path.realpath(root_path)
-
-
-  logging.getLogger().setLevel(log_level)
-
-  default_partition = option_dict[ARG_DEFAULT_PARTITION]
-  appinfo = None
-  try:
-    appinfo, matcher, _ = dev_appserver.LoadAppConfig(
-        root_path, {}, default_partition=default_partition)
-  except yaml_errors.EventListenerError, e:
-    logging.error('Fatal error when loading application configuration:\n%s', e)
-    return 1
-  except dev_appserver.InvalidAppConfigError, e:
-    logging.error('Application configuration file invalid:\n%s', e)
-    return 1
-
-  version_tuple = tuple(sys.version_info[:2])
-  expected_version = PRODUCTION_VERSION
-  if appinfo.runtime == 'python27':
-    expected_version = (2, 7)
-
-  if ARG_MULTIPROCESS not in option_dict and WARN_ABOUT_PYTHON_VERSION:
-    if version_tuple < expected_version:
-      sys.stderr.write('Warning: You are using a Python runtime (%d.%d) that '
-                       'is older than the production runtime environment '
-                       '(%d.%d). Your application may be dependent on Python '
-                       'behaviors that have changed and may not work correctly '
-                       'when deployed to production.\n' % (
-                           version_tuple[0], version_tuple[1],
-                           expected_version[0], expected_version[1]))
-
-    if version_tuple > expected_version:
-      sys.stderr.write('Warning: You are using a Python runtime (%d.%d) that '
-                       'is more recent than the production runtime environment '
-                       '(%d.%d). Your application may use features that are '
-                       'not available in the production environment and may '
-                       'not work correctly when deployed to production.\n' % (
-                           version_tuple[0], version_tuple[1],
-                           expected_version[0], expected_version[1]))
-
-  multiprocess.Init(argv, option_dict, root_path, appinfo)
-  dev_process = multiprocess.GlobalProcess()
-  port = option_dict[ARG_PORT]
-  login_url = option_dict[ARG_LOGIN_URL]
-  address = option_dict[ARG_ADDRESS]
-  require_indexes = option_dict[ARG_REQUIRE_INDEXES]
-  allow_skipped_files = option_dict[ARG_ALLOW_SKIPPED_FILES]
-  static_caching = option_dict[ARG_STATIC_CACHING]
-  skip_sdk_update_check = option_dict[ARG_SKIP_SDK_UPDATE_CHECK]
-
-  if (option_dict[ARG_ADMIN_CONSOLE_SERVER] != '' and
-      not dev_process.IsSubprocess()):
-
-    server = MakeRpcServer(option_dict)
-    if skip_sdk_update_check:
-      logging.info('Skipping update check.')
-    else:
-      update_check = appcfg.UpdateCheck(server, appinfo)
-      update_check.CheckSupportedVersion()
-      if update_check.AllowedToCheckForUpdates():
-        update_check.CheckForUpdates()
-
-  if dev_process.IsSubprocess():
-    logging.getLogger().setLevel(logging.WARNING)
-
-  try:
-    dev_appserver.SetupStubs(appinfo.application, **option_dict)
-  except:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    logging.error(str(exc_type) + ': ' + str(exc_value))
-    logging.debug(''.join(traceback.format_exception(
-          exc_type, exc_value, exc_traceback)))
-    return 1
-
-  http_server = dev_appserver.CreateServer(
-      root_path,
-      login_url,
-      port,
-      sdk_dir=SDK_PATH,
-      serve_address=address,
-      require_indexes=require_indexes,
-      allow_skipped_files=allow_skipped_files,
-      static_caching=static_caching,
-      default_partition=default_partition)
-
-  signal.signal(signal.SIGTERM, SigTermHandler)
-
-  dev_process.PrintStartMessage(appinfo.application, address, port)
-
-  if dev_process.IsInstance():
-    logging.getLogger().setLevel(logging.INFO)
-
-  try:
+    default_partition = option_dict[ARG_DEFAULT_PARTITION]
+    appinfo = None
     try:
-      http_server.serve_forever()
-    except KeyboardInterrupt:
-      if not dev_process.IsSubprocess():
-        logging.info('Server interrupted by user, terminating')
+        appinfo, matcher, _ = dev_appserver.LoadAppConfig(
+            root_path, {}, default_partition=default_partition)
+    except yaml_errors.EventListenerError, e:
+        logging.error(
+            'Fatal error when loading application configuration:\n%s', e)
+        return 1
+    except dev_appserver.InvalidAppConfigError, e:
+        logging.error('Application configuration file invalid:\n%s', e)
+        return 1
+
+    version_tuple = tuple(sys.version_info[:2])
+    expected_version = PRODUCTION_VERSION
+    if appinfo.runtime == 'python27':
+        expected_version = (2, 7)
+
+    if ARG_MULTIPROCESS not in option_dict and WARN_ABOUT_PYTHON_VERSION:
+        if version_tuple < expected_version:
+            sys.stderr.write('Warning: You are using a Python runtime (%d.%d) that '
+                             'is older than the production runtime environment '
+                             '(%d.%d). Your application may be dependent on Python '
+                             'behaviors that have changed and may not work correctly '
+                             'when deployed to production.\n' % (
+                                 version_tuple[0], version_tuple[1],
+                                 expected_version[0], expected_version[1]))
+
+        if version_tuple > expected_version:
+            sys.stderr.write('Warning: You are using a Python runtime (%d.%d) that '
+                             'is more recent than the production runtime environment '
+                             '(%d.%d). Your application may use features that are '
+                             'not available in the production environment and may '
+                             'not work correctly when deployed to production.\n' % (
+                                 version_tuple[0], version_tuple[1],
+                                 expected_version[0], expected_version[1]))
+
+    multiprocess.Init(argv, option_dict, root_path, appinfo)
+    dev_process = multiprocess.GlobalProcess()
+    port = option_dict[ARG_PORT]
+    login_url = option_dict[ARG_LOGIN_URL]
+    address = option_dict[ARG_ADDRESS]
+    require_indexes = option_dict[ARG_REQUIRE_INDEXES]
+    allow_skipped_files = option_dict[ARG_ALLOW_SKIPPED_FILES]
+    static_caching = option_dict[ARG_STATIC_CACHING]
+    skip_sdk_update_check = option_dict[ARG_SKIP_SDK_UPDATE_CHECK]
+
+    if (option_dict[ARG_ADMIN_CONSOLE_SERVER] != '' and
+            not dev_process.IsSubprocess()):
+
+        server = MakeRpcServer(option_dict)
+        if skip_sdk_update_check:
+            logging.info('Skipping update check.')
+        else:
+            update_check = appcfg.UpdateCheck(server, appinfo)
+            update_check.CheckSupportedVersion()
+            if update_check.AllowedToCheckForUpdates():
+                update_check.CheckForUpdates()
+
+    if dev_process.IsSubprocess():
+        logging.getLogger().setLevel(logging.WARNING)
+
+    try:
+        dev_appserver.SetupStubs(appinfo.application, **option_dict)
     except:
-      exc_info = sys.exc_info()
-      info_string = '\n'.join(traceback.format_exception(*exc_info))
-      logging.error('Error encountered:\n%s\nNow terminating.', info_string)
-      return 1
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logging.error(str(exc_type) + ': ' + str(exc_value))
+        logging.debug(''.join(traceback.format_exception(
+            exc_type, exc_value, exc_traceback)))
+        return 1
+
+    http_server = dev_appserver.CreateServer(
+        root_path,
+        login_url,
+        port,
+        sdk_dir=SDK_PATH,
+        serve_address=address,
+        require_indexes=require_indexes,
+        allow_skipped_files=allow_skipped_files,
+        static_caching=static_caching,
+        default_partition=default_partition)
+
+    signal.signal(signal.SIGTERM, SigTermHandler)
+
+    dev_process.PrintStartMessage(appinfo.application, address, port)
+
+    if dev_process.IsInstance():
+        logging.getLogger().setLevel(logging.INFO)
+
+    try:
+        try:
+            http_server.serve_forever()
+        except KeyboardInterrupt:
+            if not dev_process.IsSubprocess():
+                logging.info('Server interrupted by user, terminating')
+        except:
+            exc_info = sys.exc_info()
+            info_string = '\n'.join(traceback.format_exception(*exc_info))
+            logging.error(
+                'Error encountered:\n%s\nNow terminating.', info_string)
+            return 1
+        finally:
+            http_server.server_close()
     finally:
-      http_server.server_close()
-  finally:
-    done = False
-    while not done:
-      try:
-        multiprocess.Shutdown()
-        done = True
-      except KeyboardInterrupt:
-        pass
+        done = False
+        while not done:
+            try:
+                multiprocess.Shutdown()
+                done = True
+            except KeyboardInterrupt:
+                pass
 
-  return 0
-
+    return 0
 
 
 if __name__ == '__main__':
-  sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv))

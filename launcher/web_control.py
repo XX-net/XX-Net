@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import os, sys
+import os
+import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(
+        current_path, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
 import re
-import SocketServer, socket, ssl
+import SocketServer
+import socket
+import ssl
 import BaseHTTPServer
 import errno
 import urlparse
@@ -31,7 +35,6 @@ import autorun
 import update_from_github
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
-
 
 
 class LocalServer(SocketServer.ThreadingTCPServer):
@@ -60,14 +63,15 @@ class LocalServer(SocketServer.ThreadingTCPServer):
             SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
 module_menus = {}
+
+
 class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
-
 
     def load_module_menus(self):
         global module_menus
         module_menus = {}
-        #config.load()
+        # config.load()
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
@@ -78,22 +82,27 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")
             if not os.path.isfile(menu_path):
                 continue
-                
+
             module_menu = yaml.load(file(menu_path, 'r'))
             module_menus[module] = module_menu
 
-        module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
-        #for k,v in self.module_menus:
+        module_menus = sorted(module_menus.iteritems(),
+                              key=lambda (k, v): (v['menu_sort_id']))
+        # for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
 
     def send_response(self, mimetype, data):
-        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(
+            ('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)
+
     def send_not_found(self):
-        self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+        self.wfile.write(
+            b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+
     def do_POST(self):
         #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
@@ -101,12 +110,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
-                    launcher_log.warn("request %s no module in path", self.path)
+                    launcher_log.warn(
+                        "request %s no module in path", self.path)
                     self.send_not_found()
                     return
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(
+                    self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_POST()
                 return
 
@@ -123,7 +134,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            launcher_log.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            launcher_log.warn('%s %s %s haking',
+                              self.address_string(), self.command, self.path)
             return
 
         url_path = urlparse.urlparse(self.path).path
@@ -140,16 +152,18 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     return
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(
+                    self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_GET()
                 return
             else:
-                file_path = os.path.join(root_path, module, url_path_list[3:].join('/'))
+                file_path = os.path.join(
+                    root_path, module, url_path_list[3:].join('/'))
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
-
-        launcher_log.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
+        launcher_log.debug('launcher web_control %s %s %s ',
+                           self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
             if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
@@ -163,7 +177,6 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 mimetype = 'image/png'
             else:
                 mimetype = 'text/plain'
-
 
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
@@ -180,18 +193,23 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response('text/html', '{"status":"success"}')
             update_from_github.restart_xxnet()
         else:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            launcher_log.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            self.wfile.write(
+                b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+            launcher_log.info('%s "%s %s HTTP/1.1" 404 -',
+                              self.address_string(), self.command, self.path)
 
     def send_file(self, filename, mimetype):
         try:
             with open(filename, 'rb') as fp:
                 data = fp.read()
-            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
-            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nExpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (tme, mimetype, len(data))).encode())
+            tme = (datetime.datetime.today() + datetime.timedelta(minutes=330)
+                   ).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nExpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' %
+                              (tme, mimetype, len(data))).encode())
             self.wfile.write(data)
         except:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
+            self.wfile.write(
+                b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
 
     def req_index_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -208,7 +226,6 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 target_module = 'launcher'
                 target_menu = 'about'
 
-
         if len(module_menus) == 0:
             self.load_module_menus()
 
@@ -217,7 +234,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             index_content = f.read()
 
         menu_content = ''
-        for module,v in module_menus:
+        for module, v in module_menus:
             #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += '<li class="nav-header">%s</li>\n' % title
@@ -228,16 +245,19 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     active = 'class="active"'
                 else:
                     active = ''
-                menu_content += '<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % (active, module, sub_url, sub_title)
+                menu_content += '<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % (
+                    active, module, sub_url, sub_title)
 
-        right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
+        right_content_file = os.path.join(
+            root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
             with open(right_content_file, "r") as f:
                 right_content = f.read()
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = (index_content.decode('utf-8') %
+                (menu_content, right_content.decode('utf-8'))).encode('utf-8')
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -256,12 +276,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 check_update = "long-term-stable"
 
             data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
-                   (check_update
-                    , config.get(["modules", "launcher", "popup_webui"], 1)
-                    , config.get(["modules", "launcher", "show_systray"], 1)
-                    , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "php_proxy", "auto_start"], 0)
-                    , config.get(["modules", "gae_proxy", "auto_start"], 0))
+                   (check_update, config.get(["modules", "launcher", "popup_webui"], 1), config.get(["modules", "launcher", "show_systray"], 1), config.get(
+                       ["modules", "launcher", "auto_start"], 0), config.get(["modules", "php_proxy", "auto_start"], 0), config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
@@ -273,25 +289,27 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     data = '{"res":"success"}'
 
-            elif 'popup_webui' in reqs :
+            elif 'popup_webui' in reqs:
                 popup_webui = int(reqs['popup_webui'][0])
                 if popup_webui != 0 and popup_webui != 1:
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
                 else:
-                    config.set(["modules", "launcher", "popup_webui"], popup_webui)
+                    config.set(
+                        ["modules", "launcher", "popup_webui"], popup_webui)
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'show_systray' in reqs :
+            elif 'show_systray' in reqs:
                 show_systray = int(reqs['show_systray'][0])
                 if show_systray != 0 and show_systray != 1:
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
-                    config.set(["modules", "launcher", "show_systray"], show_systray)
+                    config.set(
+                        ["modules", "launcher", "show_systray"], show_systray)
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'auto_start' in reqs :
+            elif 'auto_start' in reqs:
                 auto_start = int(reqs['auto_start'][0])
                 if auto_start != 0 and auto_start != 1:
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
@@ -301,16 +319,18 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     else:
                         autorun.disable()
 
-                    config.set(["modules", "launcher", "auto_start"], auto_start)
+                    config.set(
+                        ["modules", "launcher", "auto_start"], auto_start)
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'gae_proxy_enable' in reqs :
+            elif 'gae_proxy_enable' in reqs:
                 gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:
                     data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
                 else:
-                    config.set(["modules", "gae_proxy", "auto_start"], gae_proxy_enable)
+                    config.set(["modules", "gae_proxy",
+                                "auto_start"], gae_proxy_enable)
                     config.save()
                     if gae_proxy_enable:
                         module_init.start("gae_proxy")
@@ -318,12 +338,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                         module_init.stop("gae_proxy")
                     self.load_module_menus()
                     data = '{"res":"success"}'
-            elif 'php_enable' in reqs :
+            elif 'php_enable' in reqs:
                 php_enable = int(reqs['php_enable'][0])
                 if php_enable != 0 and php_enable != 1:
                     data = '{"res":"fail, php_enable:%s"}' % php_enable
                 else:
-                    config.set(["modules", "php_proxy", "auto_start"], php_enable)
+                    config.set(["modules", "php_proxy",
+                                "auto_start"], php_enable)
                     config.save()
                     if php_enable:
                         module_init.start("php_proxy")
@@ -335,7 +356,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = '{"res":"fail"}'
         elif reqs['cmd'] == ['get_new_version']:
             versions = update_from_github.get_github_versions()
-            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
+            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (
+                versions[0][1], versions[1][1], current_version)
             launcher_log.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
@@ -369,14 +391,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             if reqs['cmd'] == ['start']:
                 result = module_init.start(module)
-                data = '{ "module": "%s", "cmd": "start", "result": "%s" }' % (module, result)
+                data = '{ "module": "%s", "cmd": "start", "result": "%s" }' % (
+                    module, result)
             elif reqs['cmd'] == ['stop']:
                 result = module_init.stop(module)
-                data = '{ "module": "%s", "cmd": "stop", "result": "%s" }' % (module, result)
+                data = '{ "module": "%s", "cmd": "stop", "result": "%s" }' % (
+                    module, result)
             elif reqs['cmd'] == ['restart']:
                 result_stop = module_init.stop(module)
                 result_start = module_init.start(module)
-                data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (module, result_stop, result_start)
+                data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (
+                    module, result_stop, result_start)
         except Exception as e:
             launcher_log.exception("init_module except:%s", e)
 
@@ -384,12 +409,15 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 process = 0
 server = 0
+
+
 def start():
     global process, server
     server = LocalServer(("0.0.0.0", 8085), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
+
 
 def stop():
     global process, server
@@ -414,6 +442,7 @@ def http_request(url, method="GET"):
         #logging.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
+
 def confirm_xxnet_exit():
     launcher_log.debug("start confirm_xxnet_exit")
     for i in range(30):
@@ -426,6 +455,7 @@ def confirm_xxnet_exit():
         time.sleep(1)
     launcher_log.debug("finished confirm_xxnet_exit")
     return False
+
 
 def confirm_module_ready(port):
     if port == 0:
@@ -449,5 +479,5 @@ def confirm_module_ready(port):
     return False
 
 if __name__ == "__main__":
-    #confirm_xxnet_exit()
+    # confirm_xxnet_exit()
     http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

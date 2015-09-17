@@ -10,13 +10,15 @@ import ip_utils
 from config import config
 import xlog
 
-random.seed(time.time()* 1000000)
+random.seed(time.time() * 1000000)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_range_file = os.path.join(current_path, "ip_range.txt")
 user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
 
+
 class Ip_range(object):
+
     def __init__(self):
         self.load_ip_range()
 
@@ -60,18 +62,19 @@ class Ip_range(object):
                 continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
-            self.ip_range_list.append( [nbegin, nend] )
+            self.ip_range_list.append([nbegin, nend])
             self.ip_range_index.append(self.candidate_amount_ip)
             num = nend - nbegin
             self.candidate_amount_ip += num
-            # print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
+            # print ip_utils.ip_num_to_string(nbegin),
+            # ip_utils.ip_num_to_string(nend), num
 
         self.ip_range_index.sort()
-        #print "amount ip num:", self.candidate_amount_ip
+        # print "amount ip num:", self.candidate_amount_ip
 
     def show_ip_range(self):
         for id in self.ip_range_map:
-            print "[",id,"]:", self.ip_range_map[id]
+            print "[", id, "]:", self.ip_range_map[id]
 
     def get_real_random_ip(self):
         while True:
@@ -83,7 +86,7 @@ class Ip_range(object):
             return ip_int
 
     def get_ip(self):
-        #return self.get_real_random_ip()
+        # return self.get_real_random_ip()
         while True:
             index = random.randint(0, len(self.ip_range_list) - 1)
             ip_range = self.ip_range_list[index]
@@ -94,7 +97,8 @@ class Ip_range(object):
             try:
                 id_2 = random.randint(0, ip_range[1] - ip_range[0])
             except Exception as e:
-                xlog.exception("random.randint:%r %d - %d, %d", e, ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
+                xlog.exception("random.randint:%r %d - %d, %d", e,
+                               ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
 
             ip = ip_range[0] + id_2
             add_last_byte = ip % 255
@@ -105,6 +109,7 @@ class Ip_range(object):
 
 ip_range = Ip_range()
 
+
 def test():
     proxy = ip_range()
     # proxy.show_ip_range()
@@ -113,8 +118,9 @@ def test():
         ip_addr = ip_utils.ip_num_to_string(ip)
         print "ip:", ip_addr
 
+
 def test_random():
-    #random.seed(time.time())
+    # random.seed(time.time())
     for i in range(1000):
         index = random.randint(0, 1000 - 1)
         print index

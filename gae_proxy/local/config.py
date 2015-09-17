@@ -9,23 +9,26 @@ import io
 import xlog
 
 
-
 class Config(object):
     current_path = os.path.dirname(os.path.abspath(__file__))
 
     def load(self):
         """load config from proxy.ini"""
         current_path = os.path.dirname(os.path.abspath(__file__))
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+        ConfigParser.RawConfigParser.OPTCRE = re.compile(
+            r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
         self.CONFIG = ConfigParser.ConfigParser()
-        self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
+        self.CONFIG_FILENAME = os.path.abspath(
+            os.path.join(current_path, 'proxy.ini'))
 
-        self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
+        self.DATA_PATH = os.path.abspath(os.path.join(
+            current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
         if not os.path.isdir(self.DATA_PATH):
             self.DATA_PATH = current_path
 
         # load ../../../data/gae_proxy/config.ini, set by web_ui
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
+        self.CONFIG_USER_FILENAME = os.path.abspath(
+            os.path.join(self.DATA_PATH, 'config.ini'))
         self.CONFIG.read(self.CONFIG_FILENAME)
         if os.path.isfile(self.CONFIG_USER_FILENAME):
             with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
@@ -33,7 +36,8 @@ class Config(object):
                 self.CONFIG.readfp(io.BytesIO(content))
 
         # load ../../../data/gae_proxy/manual.ini, set by manual
-        self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
+        self.CONFIG_MANUAL_FILENAME = os.path.abspath(
+            os.path.join(self.DATA_PATH, 'manual.ini'))
         if os.path.isfile(self.CONFIG_MANUAL_FILENAME):
             with open(self.CONFIG_MANUAL_FILENAME, 'rb') as fp:
                 content = fp.read()
@@ -41,14 +45,16 @@ class Config(object):
                     self.CONFIG.readfp(io.BytesIO(content))
                     xlog.info("load manual.ini success")
                 except Exception as e:
-                    xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
+                    xlog.exception(
+                        "data/gae_proxy/manual.ini load error:%s", e)
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
         self.LISTEN_VISIBLE = self.CONFIG.getint('listen', 'visible')
         self.LISTEN_DEBUGINFO = self.CONFIG.getint('listen', 'debuginfo')
 
-        self.GAE_APPIDS = re.findall(r'[\w\-\.]+', self.CONFIG.get('gae', 'appid').replace('.appspot.com', ''))
+        self.GAE_APPIDS = re.findall(
+            r'[\w\-\.]+', self.CONFIG.get('gae', 'appid').replace('.appspot.com', ''))
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
 
         fwd_endswith = []
@@ -90,9 +96,11 @@ class Config(object):
         self.PAC_PORT = self.CONFIG.getint('pac', 'port')
         self.PAC_FILE = self.CONFIG.get('pac', 'file').lstrip('/')
         self.PAC_GFWLIST = self.CONFIG.get('pac', 'gfwlist')
-        self.PAC_ADBLOCK = self.CONFIG.get('pac', 'adblock') if self.CONFIG.has_option('pac', 'adblock') else ''
+        self.PAC_ADBLOCK = self.CONFIG.get(
+            'pac', 'adblock') if self.CONFIG.has_option('pac', 'adblock') else ''
         self.PAC_EXPIRED = self.CONFIG.getint('pac', 'expired')
-        self.pac_url = 'http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
+        self.pac_url = 'http://%s:%d/%s\n' % (self.PAC_IP,
+                                              self.PAC_PORT, self.PAC_FILE)
 
         self.CONTROL_ENABLE = self.CONFIG.getint('control', 'enable')
         self.CONTROL_IP = self.CONFIG.get('control', 'ip')
@@ -110,18 +118,20 @@ class Config(object):
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
         self.LOVE_ENABLE = self.CONFIG.getint('love', 'enable')
-        self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
+        self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode(
+            'utf8').decode('unicode-escape').split('|')
 
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
-        self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
-        self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
+        self.https_max_connect_thread = config.CONFIG.getint(
+            "connect_manager", "https_max_connect_thread")
+        self.connect_interval = config.CONFIG.getint(
+            "connect_manager", "connect_interval")
 
         # change to True when finished import CA cert to browser
-        # launcher will wait import ready then open browser to show status, check update etc
+        # launcher will wait import ready then open browser to show status,
+        # check update etc
         self.cert_import_ready = False
-
 
 
 config = Config()
 config.load()
-

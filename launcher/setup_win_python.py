@@ -6,7 +6,9 @@ import launcher_log
 import time
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath(os.path.join(
+    current_path, os.pardir, 'python27', '1.0'))
+
 
 def copy_VCR_files():
     src_path = os.path.join(python_path, "WinSxS")
@@ -18,18 +20,20 @@ def copy_VCR_files():
             sep_path = path.split(os.path.sep)
             home_path_depth = len(python_path.split(os.path.sep))
             relate_path = os.path.sep.join(sep_path[home_path_depth + 1:])
-            #print relate_path
+            # print relate_path
             dest_path = os.path.join(win_dst_path, relate_path)
             if not os.path.isdir(dest_path):
                 launcher_log.info("setup win python, mkdir:%s", dest_path)
                 os.mkdir(dest_path)
-            #print "root:", path
-            #print "file:", file
+            # print "root:", path
+            # print "file:", file
             src_path = os.path.join(path, file)
             target_file = os.path.join(dest_path, file)
             if not os.path.isfile(target_file):
-                launcher_log.info("setup win python, copy:%s %s", src_path, target_file)
+                launcher_log.info(
+                    "setup win python, copy:%s %s", src_path, target_file)
                 shutil.copyfile(src_path, target_file)
+
 
 def is_winxp():
     if sys.platform != "win32":
@@ -38,17 +42,19 @@ def is_winxp():
         return False
     return True
 
-def check_setup(): #40ms
+
+def check_setup():  # 40ms
     if is_winxp():
         try:
             copy_VCR_files()
         except Exception as e:
             launcher_log.exception("setup win python except:%s", e)
 
-def smart_check(): #400 ms
+
+def smart_check():  # 400 ms
     import uuid
     import config
-    #config.load()
+    # config.load()
 
     if current_path != config.get(["update", "last_path"]):
         check_setup()

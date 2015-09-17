@@ -4,8 +4,9 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+python_path = os.path.abspath(os.path.join(
+    current_path, os.pardir, 'python27', '1.0'))
+noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
 import urllib2
@@ -19,14 +20,15 @@ import shutil
 
 opener = urllib2.build_opener()
 
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-download_path = os.path.abspath( os.path.join(root_path, 'data', 'downloads'))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
+download_path = os.path.abspath(os.path.join(root_path, 'data', 'downloads'))
 
 xxnet_unzip_path = ""
 
 
 def get_XXNet():
     global xxnet_unzip_path
+
     def download_file(url, file):
         try:
             launcher_log.info("download %s to %s", url, file)
@@ -35,7 +37,8 @@ def get_XXNet():
             with open(file, 'wb') as fp:
                 while True:
                     chunk = req.read(CHUNK)
-                    if not chunk: break
+                    if not chunk:
+                        break
                     fp.write(chunk)
             return True
         except:
@@ -47,7 +50,8 @@ def get_XXNet():
         try:
             fd = open(readme_file, "r")
             lines = fd.readlines()
-            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') 
+            p = re.compile(
+                r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
             for line in lines:
                 m = p.match(line)
                 if m:
@@ -65,8 +69,8 @@ def get_XXNet():
         raise "get README fail:" % readme_url
     xxnet_url, xxnet_version = get_xxnet_url_version(readme_targe)
     xxnet_unzip_path = os.path.join(download_path, "XX-Net-%s" % xxnet_version)
-    xxnet_zip_file = os.path.join(download_path, "XX-Net-%s.zip" % xxnet_version)
-    
+    xxnet_zip_file = os.path.join(
+        download_path, "XX-Net-%s.zip" % xxnet_version)
 
     if not download_file(xxnet_url, xxnet_zip_file):
         raise "download xxnet zip fail:" % download_path
@@ -76,24 +80,26 @@ def get_XXNet():
         dz.close()
 
 
-
 def get_new_new_config():
     global xxnet_unzip_path
     import yaml
-    data_path = os.path.abspath( os.path.join(xxnet_unzip_path, 'data', 'launcher', 'config.yaml'))
+    data_path = os.path.abspath(os.path.join(
+        xxnet_unzip_path, 'data', 'launcher', 'config.yaml'))
     try:
         new_config = yaml.load(file(data_path, 'r'))
         return new_config
     except yaml.YAMLError, exc:
         print "Error in configuration file:", exc
 
+
 def process_data_files():
-    #TODO: fix bug
+    # TODO: fix bug
     #new_config = get_new_new_config()
-    #config.load()
+    # config.load()
     #config.config["modules"]["gae_proxy"]["current_version"] = new_config["modules"]["gae_proxy"]["current_version"]
     #config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
     config.save()
+
 
 def install_xxnet_files():
 
@@ -114,8 +120,8 @@ def install_xxnet_files():
         pass
 
     for root, subdirs, files in os.walk(xxnet_unzip_path):
-        #print "root:", root
-        relate_path = root[len(xxnet_unzip_path)+1:]
+        # print "root:", root
+        relate_path = root[len(xxnet_unzip_path) + 1:]
         for subdir in subdirs:
 
             target_path = os.path.join(root_path, relate_path, subdir)
@@ -140,6 +146,7 @@ def update_environment():
     process_data_files()
     install_xxnet_files()
 
+
 def wait_xxnet_exit():
 
     def http_request(url, method="GET"):
@@ -158,11 +165,13 @@ def wait_xxnet_exit():
         time.sleep(1)
     return False
 
+
 def run_new_start_script():
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    start_sript = os.path.abspath( os.path.join(current_path, "start.py"))
+    start_sript = os.path.abspath(os.path.join(current_path, "start.py"))
     subprocess.Popen([sys.executable, start_sript], shell=False)
+
 
 def main():
     wait_xxnet_exit()

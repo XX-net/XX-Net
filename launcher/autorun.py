@@ -8,15 +8,16 @@ import launcher_log
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
 if sys.platform == 'win32':
     import _winreg
     _registry = _winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
+
     def get_runonce():
         return _winreg.OpenKey(_registry,
-                r"Software\Microsoft\Windows\CurrentVersion\Run", 0,
-        _winreg.KEY_ALL_ACCESS)
+                               r"Software\Microsoft\Windows\CurrentVersion\Run", 0,
+                               _winreg.KEY_ALL_ACCESS)
 
     def add(name, application):
         """add a new autostart entry"""
@@ -30,7 +31,7 @@ if sys.platform == 'win32':
         exists = True
         try:
             _winreg.QueryValueEx(key, name)
-        except : #WindowsError
+        except:  # WindowsError
             exists = False
         _winreg.CloseKey(key)
         return exists
@@ -45,11 +46,12 @@ if sys.platform == 'win32':
         _winreg.CloseKey(key)
 
     run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
-              os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
+              os.path.abspath(os.path.join(
+                  root_path, "launcher", "start.py")) + "\""
 elif sys.platform == 'linux' or sys.platform == 'linux2':
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
     _xdg_user_autostart = os.path.join(os.path.expanduser(_xdg_config_home),
-            "autostart")
+                                       "autostart")
 
     def getfilename(name):
         """get the filename of an autostart (.desktop) file"""
@@ -57,7 +59,8 @@ elif sys.platform == 'linux' or sys.platform == 'linux2':
 
     def add(name, application):
         if not os.path.isdir(os.path.expanduser(_xdg_config_home)):
-            launcher_log.warn("autorun linux config path not found:%s", os.path.expanduser(_xdg_config_home))
+            launcher_log.warn("autorun linux config path not found:%s",
+                              os.path.expanduser(_xdg_config_home))
             return
 
         if not os.path.isdir(_xdg_user_autostart):
@@ -81,7 +84,7 @@ elif sys.platform == 'linux' or sys.platform == 'linux2':
         if(exists(name)):
             os.unlink(getfilename(name))
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath(os.path.join(root_path, "start.sh"))
 elif sys.platform == 'darwin':
     plist_template = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -108,17 +111,19 @@ elif sys.platform == 'darwin':
 </dict>
 </plist>"""
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath(os.path.join(root_path, "start.sh"))
     from os.path import expanduser
     home = expanduser("~")
 
-    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.xxnet.launcher.plist")
+    plist_file_path = os.path.join(
+        home, "Library/LaunchAgents/com.xxnet.launcher.plist")
 
     def add(name, cmd):
         file_content = plist_template % cmd
         launcher_log.info("create file:%s", plist_file_path)
         with open(plist_file_path, "w") as f:
             f.write(file_content)
+
     def remove(name):
         if(os.path.isfile(plist_file_path)):
             os.unlink(plist_file_path)
@@ -126,14 +131,18 @@ elif sys.platform == 'darwin':
 else:
     def add(name, cmd):
         pass
+
     def remove(name):
         pass
+
 
 def enable():
     add("XX-Net", run_cmd)
 
+
 def disable():
     remove("XX-Net")
+
 
 def test():
     assert not exists("test_xxx")

@@ -7,16 +7,17 @@ import os
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+    python_path = os.path.abspath(os.path.join(
+        current_path, os.pardir, os.pardir, 'python27', '1.0'))
 
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'win32'))
         sys.path.append(win32_lib)
     elif sys.platform == "linux" or sys.platform == "linux2":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'linux'))
         sys.path.append(win32_lib)
 
 import platform
@@ -49,16 +50,16 @@ class User_config(object):
     proxy_user = ""
     proxy_passwd = ""
 
-    CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'php_proxy', 'config.ini'))
+    CONFIG_USER_FILENAME = os.path.abspath(os.path.join(
+        root_path, 'data', 'php_proxy', 'config.ini'))
 
     def __init__(self):
         self.load()
 
-
     def load(self):
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+        ConfigParser.RawConfigParser.OPTCRE = re.compile(
+            r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
         CONFIG = ConfigParser.ConfigParser()
-
 
         try:
             if os.path.isfile(self.CONFIG_USER_FILENAME):
@@ -97,7 +98,8 @@ class User_config(object):
             f.write("password = %s\n" % self.proxy_passwd)
             f.close()
         except:
-            logging.exception("PHP config save user config fail:%s", self.CONFIG_USER_FILENAME)
+            logging.exception(
+                "PHP config save user config fail:%s", self.CONFIG_USER_FILENAME)
 
 
 user_config = User_config()
@@ -111,6 +113,7 @@ def http_request(url, method="GET"):
     except Exception as e:
         logging.exception("web_control http_request:%s fail:%s", url, e)
     return
+
 
 class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
@@ -142,14 +145,18 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif path == "/quit":
             common.keep_run = False
             data = "Quit"
-            self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
+            self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' %
+                              ('text/plain', len(data))).encode())
             self.wfile.write(data)
             sys.exit()
             return
         else:
-            logging.debug('PHP Web_control %s %s %s ', self.address_string(), self.command, self.path)
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            logging.debug('PHP Web_control %s %s %s ',
+                          self.address_string(), self.command, self.path)
+            self.wfile.write(
+                b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+            logging.info('%s "%s %s HTTP/1.1" 404 -',
+                         self.address_string(), self.command, self.path)
 
     def do_POST(self):
         try:
@@ -160,14 +167,17 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
         except:
             pass
-        logging.debug ('PHP web_control %s %s %s ', self.address_string(), self.command, self.path)
+        logging.debug('PHP web_control %s %s %s ',
+                      self.address_string(), self.command, self.path)
         try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+            ctype, pdict = cgi.parse_header(
+                self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
                 length = int(self.headers.getheader('content-length'))
-                self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                self.postvars = urlparse.parse_qs(
+                    self.rfile.read(length), keep_blank_values=1)
             else:
                 self.postvars = {}
         except:
@@ -177,11 +187,14 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if path == "/config":
             return self.req_config_handler()
         else:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            logging.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            self.wfile.write(
+                b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+            logging.info('%s "%s %s HTTP/1.1" 404 -',
+                         self.address_string(), self.command, self.path)
 
     def send_response(self, mimetype, data):
-        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(
+            ('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)
 
     def send_file(self, filename, mimetype):
@@ -200,7 +213,7 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         cmd = "get_last"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        if cmd == "set_buffer_size" :
+        if cmd == "set_buffer_size":
             if not reqs["buffer_size"]:
                 data = '{"res":"fail", "reason":"size not set"}'
                 mimetype = 'text/plain'
@@ -216,7 +229,8 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             last_no = int(reqs["last_no"][0])
             data = logging.get_new_lines(last_no)
         else:
-            logging.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+            logging.error('PAC %s %s %s ', self.address_string(),
+                          self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
@@ -242,13 +256,13 @@ class RemoteContralServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = '{"res":"success"}'
                 self.send_response('text/html', data)
 
-                http_request("http://127.0.0.1:8085/init_module?module=php_proxy&cmd=restart")
+                http_request(
+                    "http://127.0.0.1:8085/init_module?module=php_proxy&cmd=restart")
                 return
         except Exception as e:
             logging.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
         self.send_response('text/html', data)
-
 
     def req_is_ready_handler(self):
         data = "True"

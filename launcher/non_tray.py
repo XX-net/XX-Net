@@ -3,7 +3,9 @@
 
 import time
 
+
 class None_tray():
+
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         pass
 
@@ -16,9 +18,9 @@ class None_tray():
 
 sys_tray = None_tray()
 
+
 def main():
     sys_tray.serve_forever()
 
 if __name__ == '__main__':
     main()
-

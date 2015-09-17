@@ -16,8 +16,6 @@
 #
 
 
-
-
 """Channel support classes.
 
 Classes:
@@ -28,11 +26,9 @@ Classes:
 """
 
 
-
 import cgi
 import os
 import urlparse
-
 
 
 CHANNEL_POLL_PATTERN = '/_ah/channel/dev(?:/.*)?'
@@ -42,79 +38,78 @@ CHANNEL_JSAPI_PATTERN = '/_ah/channel/jsapi'
 
 
 def CreateChannelDispatcher(channel_service_stub):
-  """Function to create channel dispatcher.
+    """Function to create channel dispatcher.
 
-  Args:
-    channel_service_stub: The service stub responsible for creating channels and
-      sending messages. This stub stores messages destined for channels, so we
-      query it when the client polls the _ah/channel/ dispatcher.
+    Args:
+      channel_service_stub: The service stub responsible for creating channels and
+        sending messages. This stub stores messages destined for channels, so we
+        query it when the client polls the _ah/channel/ dispatcher.
 
-  Returns:
-    New dispatcher capable of handling client polls for channel messages.
-  """
+    Returns:
+      New dispatcher capable of handling client polls for channel messages.
+    """
 
+    from google.appengine.tools import dev_appserver
 
+    class ChannelDispatcher(dev_appserver.URLDispatcher):
+        """Dispatcher that handles channel polls."""
 
-  from google.appengine.tools import dev_appserver
+        def __init__(self, channel_service_stub):
+            """Constructor.
 
-  class ChannelDispatcher(dev_appserver.URLDispatcher):
-    """Dispatcher that handles channel polls."""
+            Args:
+              channel_service_stub: The channel service that receives channel messages
+              from the application.
+            """
+            self._channel_service_stub = channel_service_stub
 
-    def __init__(self, channel_service_stub):
-      """Constructor.
+        def Dispatch(self,
+                     request,
+                     outfile,
+                     base_env_dict=None):
+            """Handle post dispatch.
 
-      Args:
-        channel_service_stub: The channel service that receives channel messages
-        from the application.
-      """
-      self._channel_service_stub = channel_service_stub
+            This dispatcher handles requests under the /_ah/channel/ path. Currently
+            it handles 3 sub-paths:
+              connect: place-holder for parity with the java dev channel.
+              poll:    return pending messages for the channel identified by the
+                       channel parameter.
+              jsapi:   return the javascript library to retrieve messages for the
+                       channel.
 
+            Args:
+              request: The HTTP request.
+              outfile: The response file.
+              base_env_dict: Dictionary of CGI environment parameters if available.
+                Defaults to None.
+            """
 
-    def Dispatch(self,
-                 request,
-                 outfile,
-                 base_env_dict=None):
-      """Handle post dispatch.
+            outfile.write('Status: 200\r\n')
 
-      This dispatcher handles requests under the /_ah/channel/ path. Currently
-      it handles 3 sub-paths:
-        connect: place-holder for parity with the java dev channel.
-        poll:    return pending messages for the channel identified by the
-                 channel parameter.
-        jsapi:   return the javascript library to retrieve messages for the
-                 channel.
+            (unused_scheme, unused_netloc,
+             path, query,
+             unused_fragment) = urlparse.urlsplit(request.relative_url)
+            param_dict = cgi.parse_qs(query, True)
 
-      Args:
-        request: The HTTP request.
-        outfile: The response file.
-        base_env_dict: Dictionary of CGI environment parameters if available.
-          Defaults to None.
-      """
+            page = path.rsplit('/', 1)[-1]
 
-      outfile.write('Status: 200\r\n')
+            if page == 'jsapi':
+                path = os.path.join(os.path.dirname(
+                    __file__), 'dev-channel-js.js')
+                outfile.write('Content-type: text/javascript\r\n\r\n')
+                outfile.write(open(path).read())
+            elif page == 'dev':
+                outfile.write('\r\n')
+                id = param_dict['channel'][0]
+                command = param_dict['command'][0]
 
-      (unused_scheme, unused_netloc,
-       path, query,
-       unused_fragment) = urlparse.urlsplit(request.relative_url)
-      param_dict = cgi.parse_qs(query, True)
+                if command == 'connect':
+                    self._channel_service_stub.connect_channel(id)
+                    outfile.write('1')
+                elif command == 'poll':
+                    self._channel_service_stub.connect_channel(id)
+                    if self._channel_service_stub.has_channel_messages(id):
+                        outfile.write(
+                            self._channel_service_stub.pop_first_message(id))
 
-      page = path.rsplit('/', 1)[-1]
-
-      if page == 'jsapi':
-        path = os.path.join(os.path.dirname(__file__), 'dev-channel-js.js')
-        outfile.write('Content-type: text/javascript\r\n\r\n')
-        outfile.write(open(path).read())
-      elif page == 'dev':
-        outfile.write('\r\n')
-        id = param_dict['channel'][0]
-        command = param_dict['command'][0]
-
-        if command == 'connect':
-          self._channel_service_stub.connect_channel(id)
-          outfile.write('1')
-        elif command == 'poll':
-          self._channel_service_stub.connect_channel(id)
-          if self._channel_service_stub.has_channel_messages(id):
-            outfile.write(self._channel_service_stub.pop_first_message(id))
-
-  return ChannelDispatcher(channel_service_stub)
+    return ChannelDispatcher(channel_service_stub)

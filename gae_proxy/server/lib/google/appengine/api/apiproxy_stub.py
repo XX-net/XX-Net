@@ -16,16 +16,7 @@
 #
 
 
-
-
 """Base class for implementing API proxy stubs."""
-
-
-
-
-
-
-
 
 
 from google.appengine.api import apiproxy_rpc
@@ -36,52 +27,52 @@ MAX_REQUEST_SIZE = 1 << 20
 
 
 class APIProxyStub(object):
-  """Base class for implementing API proxy stub classes.
+    """Base class for implementing API proxy stub classes.
 
-  To implement an API proxy stub:
-    - Extend this class.
-    - Override __init__ to pass in appropriate default service name.
-    - Implement service methods as _Dynamic_<method>(request, response).
-  """
-
-  def __init__(self, service_name, max_request_size=MAX_REQUEST_SIZE):
-    """Constructor.
-
-    Args:
-      service_name: Service name expected for all calls.
-      max_request_size: int, maximum allowable size of the incoming request.  A
-        apiproxy_errors.RequestTooLargeError will be raised if the inbound
-        request exceeds this size.  Default is 1 MB.
+    To implement an API proxy stub:
+      - Extend this class.
+      - Override __init__ to pass in appropriate default service name.
+      - Implement service methods as _Dynamic_<method>(request, response).
     """
-    self.__service_name = service_name
-    self.__max_request_size = max_request_size
 
-  def CreateRPC(self):
-    """Creates RPC object instance.
+    def __init__(self, service_name, max_request_size=MAX_REQUEST_SIZE):
+        """Constructor.
 
-    Returns:
-      a instance of RPC.
-    """
-    return apiproxy_rpc.RPC(stub=self)
+        Args:
+          service_name: Service name expected for all calls.
+          max_request_size: int, maximum allowable size of the incoming request.  A
+            apiproxy_errors.RequestTooLargeError will be raised if the inbound
+            request exceeds this size.  Default is 1 MB.
+        """
+        self.__service_name = service_name
+        self.__max_request_size = max_request_size
 
-  def MakeSyncCall(self, service, call, request, response):
-    """The main RPC entry point.
+    def CreateRPC(self):
+        """Creates RPC object instance.
 
-    Args:
-      service: Must be name as provided to service_name of constructor.
-      call: A string representing the rpc to make.  Must be part of
-        the underlying services methods and impemented by _Dynamic_<call>.
-      request: A protocol buffer of the type corresponding to 'call'.
-      response: A protocol buffer of the type corresponding to 'call'.
-    """
-    assert service == self.__service_name, ('Expected "%s" service name, '
-                                            'was "%s"' % (self.__service_name,
-                                                          service))
-    if request.ByteSize() > self.__max_request_size:
-      raise apiproxy_errors.RequestTooLargeError(
-          'The request to API call %s.%s() was too large.' % (service, call))
-    messages = []
-    assert request.IsInitialized(messages), messages
+        Returns:
+          a instance of RPC.
+        """
+        return apiproxy_rpc.RPC(stub=self)
 
-    method = getattr(self, '_Dynamic_' + call)
-    method(request, response)
+    def MakeSyncCall(self, service, call, request, response):
+        """The main RPC entry point.
+
+        Args:
+          service: Must be name as provided to service_name of constructor.
+          call: A string representing the rpc to make.  Must be part of
+            the underlying services methods and impemented by _Dynamic_<call>.
+          request: A protocol buffer of the type corresponding to 'call'.
+          response: A protocol buffer of the type corresponding to 'call'.
+        """
+        assert service == self.__service_name, ('Expected "%s" service name, '
+                                                'was "%s"' % (self.__service_name,
+                                                              service))
+        if request.ByteSize() > self.__max_request_size:
+            raise apiproxy_errors.RequestTooLargeError(
+                'The request to API call %s.%s() was too large.' % (service, call))
+        messages = []
+        assert request.IsInitialized(messages), messages
+
+        method = getattr(self, '_Dynamic_' + call)
+        method(request, response)

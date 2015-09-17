@@ -7,6 +7,7 @@ import time
 import xlog
 from config import config
 
+
 class Scan_ip_log():
     max_lines_per_log_file = 3000
 
@@ -44,8 +45,8 @@ class Scan_ip_log():
 
     def log(self, level, fmt, *args, **kwargs):
         string = '%s - [%s] %s\n' % (time.ctime()[4:-5], level, fmt % args)
-        #print string
-        #sys.stderr.write(string)
+        # print string
+        # sys.stderr.write(string)
         self.log_fd.write(string)
         try:
             self.log_fd.flush()
