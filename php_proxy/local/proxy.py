@@ -58,6 +58,7 @@ __version__ = '3.2.3'
 import os
 import sys
 import sysconfig
+import platform
 
 #reload(sys).setdefaultencoding('UTF-8')
 sys.dont_write_bytecode = True
@@ -1089,7 +1090,7 @@ class Common(object):
     def info(self):
         info = ''
         info += '------------------------------------------------------\n'
-        info += 'PHP proxy Version    : %s (python/%s gevent/%s pyopenssl/%s)\n' % (__version__, sys.version[:5], gevent.__version__, OpenSSL.__version__)
+        info += 'PHP Proxy Version    : %s (python/%s gevent/%s pyopenssl/%s)\n' % (__version__, platform.python_version(), gevent.__version__, OpenSSL.__version__)
         info += 'Uvent Version      : %s (pyuv/%s libuv/%s)\n' % (__import__('uvent').__version__, __import__('pyuv').__version__, __import__('pyuv').LIBUV_VERSION) if all(x in sys.modules for x in ('pyuv', 'uvent')) else ''
 
         info += 'Local Proxy        : %s:%s\n' % (self.PROXY_HOST, self.PROXY_PORT) if self.PROXY_ENABLE else ''
