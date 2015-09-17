@@ -40,7 +40,9 @@ except Exception:
     socket = select = None
 
 
-normcookie = functools.partial(re.compile(', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
+normcookie = functools.partial(re.compile(
+    ', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
+
 
 def message_html(title, banner, detail=''):
     MESSAGE_TEMPLATE = '''
@@ -75,16 +77,19 @@ def message_html(title, banner, detail=''):
 
 class XORCipher(object):
     """XOR Cipher Class"""
+
     def __init__(self, key):
         self.__key_gen = itertools.cycle([ord(x) for x in key]).next
-        self.__key_xor = lambda s: ''.join(chr(ord(x) ^ self.__key_gen()) for x in s)
+        self.__key_xor = lambda s: ''.join(
+            chr(ord(x) ^ self.__key_gen()) for x in s)
         if len(key) == 1:
             try:
                 from Crypto.Util.strxor import strxor_c
                 c = ord(key)
                 self.__key_xor = lambda s: strxor_c(s, c)
             except ImportError:
-                sys.stderr.write('Load Crypto.Util.strxor Failed, Use Pure Python Instead.\n')
+                sys.stderr.write(
+                    'Load Crypto.Util.strxor Failed, Use Pure Python Instead.\n')
 
     def encrypt(self, data):
         return self.__key_xor(data)
@@ -92,8 +97,8 @@ class XORCipher(object):
 
 def decode_request(data):
     payload_length, = struct.unpack('!h', data[:2])
-    payload = zlib.decompress(data[2:2+payload_length], -zlib.MAX_WBITS)
-    body = data[2+payload_length:]
+    payload = zlib.decompress(data[2:2 + payload_length], -zlib.MAX_WBITS)
+    body = data[2 + payload_length:]
     raw_response_line, payload = payload.split('\r\n', 1)
     method, url = raw_response_line.split()[:2]
     headers = {}
@@ -103,7 +108,8 @@ def decode_request(data):
         key, value = line.split(':', 1)
         headers[key.title()] = value.strip()
     kwargs = {}
-    any(kwargs.__setitem__(x[11:].lower(), headers.pop(x)) for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
+    any(kwargs.__setitem__(x[11:].lower(), headers.pop(x))
+        for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
     if headers.get('Content-Encoding', '') == 'deflate':
         body = zlib.decompress(body, -zlib.MAX_WBITS)
         headers['Content-Length'] = str(len(body))
@@ -113,12 +119,14 @@ def decode_request(data):
 
 HTTP_CONNECTION_CACHE = collections.defaultdict(Queue.PriorityQueue)
 
+
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET':
         start_response('302 Found', [('Location', 'https://www.google.com')])
         raise StopIteration
 
-    post_data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH') or -1))
+    post_data = environ['wsgi.input'].read(
+        int(environ.get('CONTENT_LENGTH') or -1))
     method, url, headers, kwargs, body = decode_request(post_data)
     scheme, netloc, path, _, query, _ = urlparse.urlparse(url)
     cipher = XORCipher(__password__[0])
@@ -145,7 +153,8 @@ def application(environ, start_response):
             try:
                 while True:
                     try:
-                        mtime, connection = HTTP_CONNECTION_CACHE[(scheme, netloc)].get_nowait()
+                        mtime, connection = HTTP_CONNECTION_CACHE[
+                            (scheme, netloc)].get_nowait()
                         if time.time() - mtime < 16:
                             break
                         else:
@@ -153,18 +162,23 @@ def application(environ, start_response):
                     except Queue.Empty:
                         connection = ConnectionType(netloc, timeout=timeout)
                         break
-                connection.request(method, '%s?%s' % (path, query) if query else path, body=body, headers=headers)
+                connection.request(method, '%s?%s' % (
+                    path, query) if query else path, body=body, headers=headers)
                 response = connection.getresponse(buffering=True)
                 break
             except Exception as e:
                 if i == fetchmax - 1:
                     raise
-        need_encrypt = not response.getheader('Content-Type', '').startswith(('audio/', 'image/', 'video/', 'application/octet-stream'))
-        start_response('200 OK', [('Content-Type', __content_type__ if need_encrypt else 'image/x-png')])
+        need_encrypt = not response.getheader(
+            'Content-Type', '').startswith(('audio/', 'image/', 'video/', 'application/octet-stream'))
+        start_response('200 OK', [
+                       ('Content-Type', __content_type__ if need_encrypt else 'image/x-png')])
         header_sent = True
         if response.getheader('Set-Cookie'):
-            response.msg['Set-Cookie'] = normcookie(response.getheader('Set-Cookie'))
-        content = 'HTTP/1.1 %s %s\r\n%s\r\n' % (response.status, httplib.responses.get(response.status, 'Unknown'), ''.join('%s: %s\r\n' % (k.title(), v) for k, v in response.getheaders() if k.title() != 'Transfer-Encoding'))
+            response.msg[
+                'Set-Cookie'] = normcookie(response.getheader('Set-Cookie'))
+        content = 'HTTP/1.1 %s %s\r\n%s\r\n' % (response.status, httplib.responses.get(response.status, 'Unknown'), ''.join(
+            '%s: %s\r\n' % (k.title(), v) for k, v in response.getheaders() if k.title() != 'Transfer-Encoding'))
         if need_encrypt:
             content = cipher.encrypt(content)
         yield content
@@ -175,7 +189,8 @@ def application(environ, start_response):
             if not data:
                 response.close()
                 if connection.sock:
-                    HTTP_CONNECTION_CACHE[(scheme, netloc)].put((time.time(), connection))
+                    HTTP_CONNECTION_CACHE[(scheme, netloc)].put(
+                        (time.time(), connection))
                 return
             if need_encrypt:
                 data = cipher.encrypt(data)
@@ -205,11 +220,14 @@ except ImportError:
 def run_wsgi_app(address, app):
     try:
         from gunicorn.app.wsgiapp import WSGIApplication
+
         class GunicornApplication(WSGIApplication):
+
             def init(self, parser, opts, args):
                 return {'bind': '%s:%d' % (address[0], int(address[1])),
                         'workers': 2,
                         'worker_class': 'gevent'}
+
             def load(self):
                 return application
         GunicornApplication().run()
@@ -219,7 +237,8 @@ def run_wsgi_app(address, app):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
+    logging.basicConfig(
+        level=logging.INFO, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
     host, _, port = sys.argv[1].rpartition(':')
     logging.info('local python application serving at %s:%s', host, port)
     run_wsgi_app((host, int(port)), application)

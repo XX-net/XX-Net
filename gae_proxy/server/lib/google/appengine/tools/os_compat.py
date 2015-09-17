@@ -16,7 +16,6 @@
 #
 
 
-
 """OS cross-platform compatibility tweaks.
 
 This module will, on import, change some parts of the running evironment so
@@ -28,31 +27,20 @@ always import this module first.
 """
 
 
-
-
-
-
-
 import os
 os.environ['TZ'] = 'UTC'
 import time
 if hasattr(time, 'tzset'):
-  time.tzset()
+    time.tzset()
 
 import __builtin__
 
 
-
-
-
-
 if 'WindowsError' in __builtin__.__dict__:
-  WindowsError = WindowsError
+    WindowsError = WindowsError
 else:
-  class WindowsError(Exception):
-    """A fake Windows Error exception which should never be thrown."""
-
-
+    class WindowsError(Exception):
+        """A fake Windows Error exception which should never be thrown."""
 
 
 ERROR_PATH_NOT_FOUND = 3

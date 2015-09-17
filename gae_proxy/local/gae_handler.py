@@ -29,6 +29,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 from config import config
 from google_ip import google_ip
 
+
 def generate_message_html(title, banner, detail=''):
     MESSAGE_TEMPLATE = '''
     <html><head>
@@ -83,6 +84,7 @@ skip_headers = frozenset(['Vary',
                           'Cache-Control'
                           ])
 
+
 def send_header(wfile, keyword, value):
     keyword = keyword.title()
     if keyword == 'Set-Cookie':
@@ -98,9 +100,11 @@ def send_header(wfile, keyword, value):
         wfile.write("%s: %s\r\n" % (keyword, value))
         #logging.debug("Head1 %s: %s", keyword, value)
 
+
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    request_data += ''.join('%s: %s\r\n' % (k, v)
+                            for k, v in headers.items() if k not in skip_headers)
     request_data += '\r\n'
 
     if isinstance(payload, bytes):
@@ -109,7 +113,7 @@ def _request(sock, headers, payload, bufsize=8192):
         start = 0
         while start < payload_len:
             send_size = min(payload_len - start, 65535)
-            sended = sock.send(payload[start:start+send_size])
+            sended = sock.send(payload[start:start + send_size])
             start += sended
     elif hasattr(payload, 'read'):
         sock.send(request_data)
@@ -119,7 +123,8 @@ def _request(sock, headers, payload, bufsize=8192):
                 break
             sock.send(data)
     else:
-        raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
+        raise TypeError(
+            '_request(payload) must be a string or buffer, not %r' % type(payload))
 
     response = httplib.HTTPResponse(sock, buffering=True)
     try:
@@ -135,7 +140,9 @@ def _request(sock, headers, payload, bufsize=8192):
         xlog.warn("_request:%r", e)
     return response
 
+
 class GAE_Exception(BaseException):
+
     def __init__(self, type, message):
         xlog.debug("GAE_Exception %r %r", type, message)
         self.type = type
@@ -161,7 +168,6 @@ def request(headers={}, payload=None):
             else:
                 headers['Host'] = ssl_sock.host
 
-
             response = _request(ssl_sock, headers, payload)
             if not response:
                 ssl_sock.close()
@@ -180,8 +186,10 @@ def request(headers={}, payload=None):
 def inflate(data):
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
+
 def deflate(data):
     return zlib.compress(data)[2:-4]
+
 
 def fetch(method, url, headers, body):
     if isinstance(body, basestring) and body:
@@ -202,16 +210,18 @@ def fetch(method, url, headers, body):
     if config.GAE_PASSWORD:
         kwargs['password'] = config.GAE_PASSWORD
 
-    #kwargs['options'] =
-    #kwargs['validate'] =
+    # kwargs['options'] =
+    # kwargs['validate'] =
     kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
     kwargs['timeout'] = '19'
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
-    #for k, v in headers.items():
+    payload += ''.join('%s: %s\r\n' % (k, v)
+                       for k, v in headers.items() if k not in skip_headers)
+    # for k, v in headers.items():
     #    logging.debug("Send %s: %s", k, v)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
+    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v)
+                       for k, v in kwargs.items() if v)
 
     request_headers = {}
     payload = deflate(payload)
@@ -230,15 +240,18 @@ def fetch(method, url, headers, body):
     if len(data) < 2:
         xlog.warn("fetch too short lead byte len:%d %s", len(data), url)
         response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
+        response.fp = io.BytesIO(
+            b'connection aborted. too short lead byte data=' + data)
         response.read = response.fp.read
         return response
     headers_length, = struct.unpack('!h', data)
     data = response.read(headers_length)
     if len(data) < headers_length:
-        xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
+        xlog.warn("fetch too short header need:%d get:%d %s",
+                  headers_length, len(data), url)
         response.status = 502
-        response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
+        response.fp = io.BytesIO(
+            b'connection aborted. too short headers data=' + data)
         response.read = response.fp.read
         return response
     raw_response_line, headers_data = inflate(data).split('\r\n', 1)
@@ -250,8 +263,10 @@ def fetch(method, url, headers, body):
     return response
 
 
-normcookie = functools.partial(re.compile(', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
-normattachment = functools.partial(re.compile(r'filename=(.+?)').sub, 'filename="\\1"')
+normcookie = functools.partial(re.compile(
+    ', ([^ =]+(?:=|$))').sub, '\\r\\nSet-Cookie: \\1')
+normattachment = functools.partial(
+    re.compile(r'filename=(.+?)').sub, 'filename="\\1"')
 
 
 def send_response(wfile, status=404, headers={}, body=''):
@@ -270,13 +285,17 @@ def send_response(wfile, status=404, headers={}, body=''):
     wfile.write("\r\n")
     wfile.write(body)
 
+
 def return_fail_message(wfile):
-    html = generate_message_html('504 GAEProxy Proxy Time out', u'连接超时，先休息一会再来！')
+    html = generate_message_html(
+        '504 GAEProxy Proxy Time out', u'连接超时，先休息一会再来！')
     send_response(wfile, 504, body=html.encode('utf-8'))
     return
 
 # fix bug for android market app: Mobogenie
 # GAE url_fetch refuse empty value in header.
+
+
 def clean_empty_header(headers):
     remove_list = []
     for key in headers:
@@ -297,28 +316,33 @@ def handler(method, url, headers, body, wfile):
     errors = []
     response = None
     while True:
-        if time.time() - time_request > 30: #time out
+        if time.time() - time_request > 30:  # time out
             return return_fail_message(wfile)
 
         try:
             response = fetch(method, url, headers, body)
             if response.app_status != 200:
-                xlog.warn("fetch gae status:%s url:%s", response.app_status, url)
+                xlog.warn("fetch gae status:%s url:%s",
+                          response.app_status, url)
 
                 server_type = response.getheader('Server', "")
                 if "gws" not in server_type:
-                    xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
-                    google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                    xlog.warn("IP:%s not support GAE, server type:%s",
+                              response.ssl_sock.ip, server_type)
+                    google_ip.report_connect_fail(
+                        response.ssl_sock.ip, force_remove=True)
                     response.close()
                     continue
 
             if response.app_status == 404:
-                xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+                xlog.warning('APPID %r not exists, remove it.',
+                             response.ssl_sock.appid)
                 appid_manager.report_not_exist(response.ssl_sock.appid)
                 appid = appid_manager.get_appid()
 
                 if not appid:
-                    html = generate_message_html('404 No usable Appid Exists', u'没有可用appid了，请配置可用的appid')
+                    html = generate_message_html(
+                        '404 No usable Appid Exists', u'没有可用appid了，请配置可用的appid')
                     send_response(wfile, 404, body=html.encode('utf-8'))
                     response.close()
                     return
@@ -326,23 +350,27 @@ def handler(method, url, headers, body, wfile):
                     response.close()
                     continue
 
-            if response.app_status == 403 or response.app_status == 405: #Method not allowed
+            if response.app_status == 403 or response.app_status == 405:  # Method not allowed
                 # google have changed from gws to gvs, need to remove.
-                xlog.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
+                xlog.warning('405 Method not allowed. remove %s ',
+                             response.ssl_sock.ip)
                 # some ip can connect, and server type is gws
                 # but can't use as GAE server
                 # so we need remove it immediately
-                google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                google_ip.report_connect_fail(
+                    response.ssl_sock.ip, force_remove=True)
                 response.close()
                 continue
 
             if response.app_status == 503:
-                xlog.warning('APPID %r out of Quota, remove it.', response.ssl_sock.appid)
+                xlog.warning('APPID %r out of Quota, remove it.',
+                             response.ssl_sock.appid)
                 appid_manager.report_out_of_quota(response.ssl_sock.appid)
                 appid = appid_manager.get_appid()
 
                 if not appid:
-                    html = generate_message_html('503 No usable Appid Exists', u'appid流量不足，请增加appid')
+                    html = generate_message_html(
+                        '503 No usable Appid Exists', u'appid流量不足，请增加appid')
                     send_response(wfile, 503, body=html.encode('utf-8'))
                     response.close()
                     return
@@ -360,7 +388,6 @@ def handler(method, url, headers, body, wfile):
             errors.append(e)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
 
-
     if response.status == 206:
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
     try:
@@ -369,7 +396,7 @@ def handler(method, url, headers, body, wfile):
         for key, value in response.getheaders():
             key = key.title()
             if key == 'Transfer-Encoding':
-                #http://en.wikipedia.org/wiki/Chunked_transfer_encoding
+                # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
                 continue
             if key in skip_headers:
                 continue
@@ -377,7 +404,8 @@ def handler(method, url, headers, body, wfile):
 
         if 'X-Head-Content-Length' in response_headers:
             if method == "HEAD":
-                response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
+                response_headers[
+                    'Content-Length'] = response_headers['X-Head-Content-Length']
             del response_headers['X-Head-Content-Length']
 
         send_to_browser = True
@@ -389,8 +417,8 @@ def handler(method, url, headers, body, wfile):
             wfile.write("\r\n")
         except Exception as e:
             send_to_browser = False
-            xlog.warn("gae_handler.handler send response fail. t:%d e:%r %s", time.time()-time_request, e, url)
-
+            xlog.warn("gae_handler.handler send response fail. t:%d e:%r %s",
+                      time.time() - time_request, e, url)
 
         if len(response.app_msg):
             xlog.warn("APPID error:%d url:%s", response.status, url)
@@ -401,22 +429,25 @@ def handler(method, url, headers, body, wfile):
         content_length = int(response.getheader('Content-Length', 0))
         content_range = response.getheader('Content-Range', '')
         if content_range:
-            start, end, length = tuple(int(x) for x in re.search(r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
+            start, end, length = tuple(int(x) for x in re.search(
+                r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
         else:
-            start, end, length = 0, content_length-1, content_length
+            start, end, length = 0, content_length - 1, content_length
 
         last_read_time = time.time()
         while True:
             if start > end:
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
-                xlog.info("GAE t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
+                xlog.info("GAE t:%d s:%d %d %s", (time.time() -
+                                                  time_request) * 1000, length, response.status, url)
                 return
 
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data:
                 if time.time() - last_read_time > 20:
                     response.close()
-                    xlog.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
+                    xlog.warn("read timeout t:%d len:%d left:%d %s", (time.time(
+                    ) - time_request) * 1000, length, (end - start), url)
                     return
                 else:
                     time.sleep(0.1)
@@ -433,9 +464,11 @@ def handler(method, url, headers, body, wfile):
                         ret = wfile.write(data)
                 except Exception as e_b:
                     if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                        xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                        xlog.warn(
+                            'gae_handler send to browser return %r %r', e_b, url)
                     else:
-                        xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                        xlog.warn(
+                            'gae_handler send to browser return %r %r', e_b, url)
                     send_to_browser = False
 
     except NetWorkIOError as e:
@@ -468,17 +501,21 @@ class RangeFetch(object):
         self.expect_begin = 0
 
     def fetch(self):
-        response_headers = dict((k.title(), v) for k, v in self.response.getheaders())
+        response_headers = dict((k.title(), v)
+                                for k, v in self.response.getheaders())
         content_range = response_headers['Content-Range']
-        start, end, length = tuple(int(x) for x in re.search(r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
+        start, end, length = tuple(int(x) for x in re.search(
+            r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
         if start == 0:
             response_headers['Content-Length'] = str(length)
             del response_headers['Content-Range']
         else:
-            response_headers['Content-Range'] = 'bytes %s-%s/%s' % (start, end, length)
-            response_headers['Content-Length'] = str(length-start)
+            response_headers[
+                'Content-Range'] = 'bytes %s-%s/%s' % (start, end, length)
+            response_headers['Content-Length'] = str(length - start)
 
-        xlog.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d', self.url, start, end)
+        xlog.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d',
+                  self.url, start, end)
 
         try:
             self.wfile.write("HTTP/1.1 200 OK\r\n")
@@ -502,11 +539,13 @@ class RangeFetch(object):
         range_queue = Queue.PriorityQueue()
         range_queue.put((start, end, self.response))
         self.expect_begin = start
-        for begin in range(end+1, length, self.maxsize):
-            range_queue.put((begin, min(begin+self.maxsize-1, length-1), None))
+        for begin in range(end + 1, length, self.maxsize):
+            range_queue.put(
+                (begin, min(begin + self.maxsize - 1, length - 1), None))
         for i in xrange(0, self.threads):
             range_delay_size = i * self.maxsize
-            spawn_later(float(range_delay_size)/self.waitsize, self.__fetchlet, range_queue, data_queue, range_delay_size)
+            spawn_later(float(range_delay_size) / self.waitsize,
+                        self.__fetchlet, range_queue, data_queue, range_delay_size)
 
         has_peek = hasattr(data_queue, 'peek')
         peek_timeout = 120
@@ -520,7 +559,8 @@ class RangeFetch(object):
                         time.sleep(0.1)
                         continue
                     else:
-                        xlog.error('RangeFetch Error: begin(%r) < expect_begin(%r), quit.', begin, self.expect_begin)
+                        xlog.error(
+                            'RangeFetch Error: begin(%r) < expect_begin(%r), quit.', begin, self.expect_begin)
                         break
                 else:
                     begin, data = data_queue.get(timeout=peek_timeout)
@@ -531,7 +571,8 @@ class RangeFetch(object):
                         time.sleep(0.1)
                         continue
                     else:
-                        xlog.error('RangeFetch Error: begin(%r) < expect_begin(%r), quit.', begin, self.expect_begin)
+                        xlog.error(
+                            'RangeFetch Error: begin(%r) < expect_begin(%r), quit.', begin, self.expect_begin)
                         break
             except Queue.Empty:
                 xlog.error('data_queue peek timeout, break')
@@ -540,7 +581,8 @@ class RangeFetch(object):
             try:
                 ret = self.wfile.write(data)
                 if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                    xlog.debug("send to browser wfile.write ret:%d, retry", ret)
+                    xlog.debug(
+                        "send to browser wfile.write ret:%d, retry", ret)
                     ret = self.wfile.write(data)
                     xlog.debug("send to browser wfile.write ret:%d", ret)
                 self.expect_begin += len(data)
@@ -557,29 +599,34 @@ class RangeFetch(object):
             try:
                 try:
                     start, end, response = range_queue.get(timeout=1)
-                    if self.expect_begin < start and data_queue.qsize() * self.bufsize + range_delay_size > 30*1024*1024:
+                    if self.expect_begin < start and data_queue.qsize() * self.bufsize + range_delay_size > 30 * 1024 * 1024:
                         range_queue.put((start, end, response))
                         time.sleep(10)
                         continue
                     headers['Range'] = 'bytes=%d-%d' % (start, end)
                     if not response:
-                        response = fetch(self.method, self.url, headers, self.body)
+                        response = fetch(self.method, self.url,
+                                         headers, self.body)
                 except Queue.Empty:
                     continue
                 except Exception as e:
-                    xlog.warning("RangeFetch fetch response %r in __fetchlet", e)
+                    xlog.warning(
+                        "RangeFetch fetch response %r in __fetchlet", e)
                     range_queue.put((start, end, None))
                     continue
 
                 if not response:
-                    xlog.warning('RangeFetch %s return %r', headers['Range'], response)
+                    xlog.warning('RangeFetch %s return %r',
+                                 headers['Range'], response)
                     range_queue.put((start, end, None))
                     continue
                 if response.app_status != 200:
-                    xlog.warning('Range Fetch return %s "%s %s" %s ', response.app_status, self.method, self.url, headers['Range'])
+                    xlog.warning('Range Fetch return %s "%s %s" %s ',
+                                 response.app_status, self.method, self.url, headers['Range'])
 
                     if response.app_status == 404:
-                        xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+                        xlog.warning(
+                            'APPID %r not exists, remove it.', response.ssl_sock.appid)
                         appid_manager.report_not_exist(response.ssl_sock.appid)
                         appid = appid_manager.get_appid()
                         if not appid:
@@ -589,8 +636,10 @@ class RangeFetch(object):
                             return
 
                     if response.app_status == 503:
-                        xlog.warning('APPID %r out of Quota, remove it temporary.', response.ssl_sock.appid)
-                        appid_manager.report_out_of_quota(response.ssl_sock.appid)
+                        xlog.warning(
+                            'APPID %r out of Quota, remove it temporary.', response.ssl_sock.appid)
+                        appid_manager.report_out_of_quota(
+                            response.ssl_sock.appid)
                         appid = appid_manager.get_appid()
                         if not appid:
                             xlog.error("no appid left")
@@ -603,7 +652,8 @@ class RangeFetch(object):
                     continue
 
                 if response.getheader('Location'):
-                    self.url = urlparse.urljoin(self.url, response.getheader('Location'))
+                    self.url = urlparse.urljoin(
+                        self.url, response.getheader('Location'))
                     xlog.info('RangeFetch Redirect(%r)', self.url)
                     response.close()
                     range_queue.put((start, end, None))
@@ -612,12 +662,15 @@ class RangeFetch(object):
                 if 200 <= response.status < 300:
                     content_range = response.getheader('Content-Range')
                     if not content_range:
-                        xlog.warning('RangeFetch "%s %s" return Content-Range=%r: response headers=%r, retry %s-%s', self.method, self.url, content_range, response.getheaders(), start, end)
+                        xlog.warning('RangeFetch "%s %s" return Content-Range=%r: response headers=%r, retry %s-%s',
+                                     self.method, self.url, content_range, response.getheaders(), start, end)
                         response.close()
                         range_queue.put((start, end, None))
                         continue
-                    content_length = int(response.getheader('Content-Length', 0))
-                    xlog.info('>>>>>>>>>>>>>>> [thread %s] %s %s', threading.currentThread().ident, content_length, content_range)
+                    content_length = int(
+                        response.getheader('Content-Length', 0))
+                    xlog.info('>>>>>>>>>>>>>>> [thread %s] %s %s', threading.currentThread(
+                    ).ident, content_length, content_range)
 
                     time_last_read = time.time()
                     while start < end + 1:
@@ -636,23 +689,27 @@ class RangeFetch(object):
                             start += data_len
 
                         except Exception as e:
-                            xlog.warning('RangeFetch "%s %s" %s failed: %s', self.method, self.url, headers['Range'], e)
+                            xlog.warning('RangeFetch "%s %s" %s failed: %s',
+                                         self.method, self.url, headers['Range'], e)
                             break
 
                     if start < end + 1:
-                        xlog.warning('RangeFetch "%s %s" retry %s-%s', self.method, self.url, start, end)
+                        xlog.warning('RangeFetch "%s %s" retry %s-%s',
+                                     self.method, self.url, start, end)
                         response.close()
                         range_queue.put((start, end, None))
                         continue
 
-                    https_manager.save_ssl_connection_for_reuse(response.ssl_sock)
-                    xlog.info('>>>>>>>>>>>>>>> Successfully reached %d bytes.', start - 1)
+                    https_manager.save_ssl_connection_for_reuse(
+                        response.ssl_sock)
+                    xlog.info(
+                        '>>>>>>>>>>>>>>> Successfully reached %d bytes.', start - 1)
                 else:
-                    xlog.error('RangeFetch %r return %s', self.url, response.status)
+                    xlog.error('RangeFetch %r return %s',
+                               self.url, response.status)
                     response.close()
                     range_queue.put((start, end, None))
                     continue
             except StandardError as e:
                 xlog.exception('RangeFetch._fetchlet error:%s', e)
                 raise
-

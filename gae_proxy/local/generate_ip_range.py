@@ -978,8 +978,10 @@ ip_str_list = '''
 223.196.82.0/24
 '''
 
+
 def PRINT(strlog):
     print (strlog)
+
 
 def merge_ip_range():
     ip_range_list = []
@@ -987,23 +989,23 @@ def merge_ip_range():
     ip_lines_list = re.split("\r|\n", ip_str_list)
     for iplines in ip_lines_list:
         if len(iplines) == 0 or iplines[0] == '#':
-            #print "non:", iplines
+            # print "non:", iplines
             continue
 
         ips = re.split(",|\|", iplines)
         for line in ips:
             if len(line) == 0 or line[0] == '#':
-                #print "non line:", line
+                # print "non line:", line
                 continue
             begin, end = ip_utils.split_ip(line)
             if ip_utils.check_ip_valid(begin) == 0 or ip_utils.check_ip_valid(end) == 0:
-                PRINT("ip format is error,line:%s, begin: %s,end: %s" % (line, begin, end))
+                PRINT("ip format is error,line:%s, begin: %s,end: %s" %
+                      (line, begin, end))
                 continue
             nbegin = ip_utils.ip_string_to_num(begin)
             nend = ip_utils.ip_string_to_num(end)
-            ip_range_list.append([nbegin,nend])
-            #print begin, end
-
+            ip_range_list.append([nbegin, nend])
+            # print begin, end
 
     ip_range_list.sort()
 
@@ -1013,16 +1015,18 @@ def merge_ip_range():
 
     last_begin = ip_range_list[0][0]
     last_end = ip_range_list[0][1]
-    for i in range(1,range_num - 1):
+    for i in range(1, range_num - 1):
         ip_range = ip_range_list[i]
 
         begin = ip_range[0]
         end = ip_range[1]
 
-        #print "now:",ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+        # print "now:",ip_utils.ip_num_to_string(begin),
+        # ip_utils.ip_num_to_string(end)
 
         if begin > last_end + 2:
-            #print "add:",ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+            # print "add:",ip_utils.ip_num_to_string(begin),
+            # ip_utils.ip_num_to_string(end)
             ip_range_list_2.append([last_begin, last_end])
             last_begin = begin
             last_end = end
@@ -1032,7 +1036,6 @@ def merge_ip_range():
                 last_end = end
 
     ip_range_list_2.append([last_begin, last_end])
-
 
     for ip_range in ip_range_list_2:
         begin = ip_range[0]
@@ -1044,12 +1047,15 @@ def merge_ip_range():
     for ip_range in ip_range_list_2:
         begin = ip_range[0]
         end = ip_range[1]
-        #print ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
-        fd.write(ip_utils.ip_num_to_string(begin)+ "-" + ip_utils.ip_num_to_string(end)+"\n")
+        # print ip_utils.ip_num_to_string(begin),
+        # ip_utils.ip_num_to_string(end)
+        fd.write(ip_utils.ip_num_to_string(begin) + "-" +
+                 ip_utils.ip_num_to_string(end) + "\n")
 
     fd.close()
 
 merge_ip_range()
+
 
 def test_load():
 
@@ -1082,9 +1088,3 @@ test_load()
 #-216.58.208.0/20
 #-203.208.32.0/19
 # because google china add new server type that can't work for appid.
-
-
-
-
-
-

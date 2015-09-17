@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import os, sys
+import os
+import sys
 import time
 import atexit
 import webbrowser
@@ -10,8 +11,9 @@ import launcher_log
 import update_from_github
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+python_path = os.path.abspath(os.path.join(
+    current_path, os.pardir, 'python27', '1.0'))
+noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
 has_desktop = True
@@ -36,7 +38,7 @@ elif sys.platform == "win32":
     sys.path.append(win32_lib)
     from win_tray import sys_tray
 elif sys.platform == "darwin":
-    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+    darwin_lib = os.path.abspath(os.path.join(python_path, 'lib', 'darwin'))
     sys.path.append(darwin_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
@@ -56,14 +58,13 @@ import module_init
 import update
 import setup_win_python
 
+
 def exit_handler():
     print 'Stopping all modules before exit!'
     module_init.stop_all()
     web_control.stop()
 
 atexit.register(exit_handler)
-
-
 
 
 def main():
@@ -84,7 +85,6 @@ def main():
 
     web_control.start()
 
-
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         webbrowser.open("http://127.0.0.1:8085/")
 
@@ -100,10 +100,9 @@ def main():
     sys.exit()
 
 
-
 if __name__ == '__main__':
     try:
         main()
-    except KeyboardInterrupt: # Ctrl + C on console
+    except KeyboardInterrupt:  # Ctrl + C on console
         module_init.stop_all()
         sys.exit

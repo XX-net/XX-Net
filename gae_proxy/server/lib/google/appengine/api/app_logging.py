@@ -16,9 +16,6 @@
 #
 
 
-
-
-
 """Logging utilities for use by applications.
 
 Classes defined here:
@@ -26,102 +23,75 @@ Classes defined here:
 """
 
 
-
-
-
-
-
-
-
 import logging
 
 from google.appengine.api import logservice
 
 
-
-
 NEWLINE_REPLACEMENT = "\0"
 
+
 class AppLogsHandler(logging.StreamHandler):
-  """Logging handler that will direct output to a persistent store of
-  application logs.
+    """Logging handler that will direct output to a persistent store of
+    application logs.
 
-  This handler will output log statements to stderr. This handler is
-  automatically initialized and attached to the Python common logging library.
-  """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  def __init__(self, stream=None):
-    """Constructor.
-
-    Args:
-      # stream is optional. it defaults to sys.stderr.
-      stream: destination for output
+    This handler will output log statements to stderr. This handler is
+    automatically initialized and attached to the Python common logging library.
     """
 
+    def __init__(self, stream=None):
+        """Constructor.
 
-    logging.StreamHandler.__init__(self, stream)
+        Args:
+          # stream is optional. it defaults to sys.stderr.
+          stream: destination for output
+        """
 
-  def close(self):
-    """Closes the stream.
+        logging.StreamHandler.__init__(self, stream)
 
-    This implementation based on the implementation of FileHandler.close()."""
-    self.stream.close()
-    logging.StreamHandler.close(self)
+    def close(self):
+        """Closes the stream.
 
-  def emit(self, record):
-    """Emit a record.
+        This implementation based on the implementation of FileHandler.close()."""
+        self.stream.close()
+        logging.StreamHandler.close(self)
 
-    This implementation is based on the implementation of
-    StreamHandler.emit()."""
-    try:
-      message = self._AppLogsMessage(record)
-      if isinstance(message, unicode):
-        message = message.encode("UTF-8")
+    def emit(self, record):
+        """Emit a record.
 
+        This implementation is based on the implementation of
+        StreamHandler.emit()."""
+        try:
+            message = self._AppLogsMessage(record)
+            if isinstance(message, unicode):
+                message = message.encode("UTF-8")
 
+            logservice.write(message)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
+    def _AppLogsMessage(self, record):
+        """Converts the log record into a log line."""
 
-      logservice.write(message)
-    except (KeyboardInterrupt, SystemExit):
-      raise
-    except:
-      self.handleError(record)
+        message = self.format(record).replace("\r\n", NEWLINE_REPLACEMENT)
+        message = message.replace("\r", NEWLINE_REPLACEMENT)
+        message = message.replace("\n", NEWLINE_REPLACEMENT)
 
-  def _AppLogsMessage(self, record):
-    """Converts the log record into a log line."""
+        return "LOG %d %d %s\n" % (self._AppLogsLevel(record.levelno),
+                                   long(record.created * 1000 * 1000),
+                                   message)
 
-
-
-    message = self.format(record).replace("\r\n", NEWLINE_REPLACEMENT)
-    message = message.replace("\r", NEWLINE_REPLACEMENT)
-    message = message.replace("\n", NEWLINE_REPLACEMENT)
-
-    return "LOG %d %d %s\n" % (self._AppLogsLevel(record.levelno),
-                               long(record.created * 1000 * 1000),
-                               message)
-
-  def _AppLogsLevel(self, level):
-    """Converts the logging level used in Python to the API logging level"""
-    if level >= logging.CRITICAL:
-      return 4
-    elif level >= logging.ERROR:
-      return 3
-    elif level >= logging.WARNING:
-      return 2
-    elif level >= logging.INFO:
-      return 1
-    else:
-      return 0
+    def _AppLogsLevel(self, level):
+        """Converts the logging level used in Python to the API logging level"""
+        if level >= logging.CRITICAL:
+            return 4
+        elif level >= logging.ERROR:
+            return 3
+        elif level >= logging.WARNING:
+            return 2
+        elif level >= logging.INFO:
+            return 1
+        else:
+            return 0

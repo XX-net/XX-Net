@@ -1,6 +1,6 @@
 
 __all__ = ['BaseConstructor', 'SafeConstructor', 'Constructor',
-    'ConstructorError']
+           'ConstructorError']
 
 from error import *
 from nodes import *
@@ -12,10 +12,15 @@ try:
 except NameError:
     from sets import Set as set
 
-import binascii, re, sys, types
+import binascii
+import re
+import sys
+import types
+
 
 class ConstructorError(MarkedYAMLError):
     pass
+
 
 class BaseConstructor(object):
 
@@ -58,7 +63,7 @@ class BaseConstructor(object):
             return self.constructed_objects[node]
         if node in self.recursive_objects:
             raise ConstructorError(None, None,
-                    "found unconstructable recursive node", node.start_mark)
+                                   "found unconstructable recursive node", node.start_mark)
         self.recursive_objects[node] = None
         constructor = None
         state_constructor = None
@@ -104,23 +109,23 @@ class BaseConstructor(object):
     def construct_scalar(self, node):
         if not isinstance(node, ScalarNode):
             raise ConstructorError(None, None,
-                    "expected a scalar node, but found %s" % node.id,
-                    node.start_mark)
+                                   "expected a scalar node, but found %s" % node.id,
+                                   node.start_mark)
         return node.value
 
     def construct_sequence(self, node, deep=False):
         if not isinstance(node, SequenceNode):
             raise ConstructorError(None, None,
-                    "expected a sequence node, but found %s" % node.id,
-                    node.start_mark)
+                                   "expected a sequence node, but found %s" % node.id,
+                                   node.start_mark)
         return [self.construct_object(child, deep=deep)
                 for child in node.value]
 
     def construct_mapping(self, node, deep=False):
         if not isinstance(node, MappingNode):
             raise ConstructorError(None, None,
-                    "expected a mapping node, but found %s" % node.id,
-                    node.start_mark)
+                                   "expected a mapping node, but found %s" % node.id,
+                                   node.start_mark)
         mapping = {}
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
@@ -128,7 +133,7 @@ class BaseConstructor(object):
                 hash(key)
             except TypeError, exc:
                 raise ConstructorError("while constructing a mapping", node.start_mark,
-                        "found unacceptable key (%s)" % exc, key_node.start_mark)
+                                       "found unacceptable key (%s)" % exc, key_node.start_mark)
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
         return mapping
@@ -136,8 +141,8 @@ class BaseConstructor(object):
     def construct_pairs(self, node, deep=False):
         if not isinstance(node, MappingNode):
             raise ConstructorError(None, None,
-                    "expected a mapping node, but found %s" % node.id,
-                    node.start_mark)
+                                   "expected a mapping node, but found %s" % node.id,
+                                   node.start_mark)
         pairs = []
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
@@ -156,6 +161,7 @@ class BaseConstructor(object):
             cls.yaml_multi_constructors = cls.yaml_multi_constructors.copy()
         cls.yaml_multi_constructors[tag_prefix] = multi_constructor
     add_multi_constructor = classmethod(add_multi_constructor)
+
 
 class SafeConstructor(BaseConstructor):
 
@@ -181,9 +187,9 @@ class SafeConstructor(BaseConstructor):
                     for subnode in value_node.value:
                         if not isinstance(subnode, MappingNode):
                             raise ConstructorError("while constructing a mapping",
-                                    node.start_mark,
-                                    "expected a mapping for merging, but found %s"
-                                    % subnode.id, subnode.start_mark)
+                                                   node.start_mark,
+                                                   "expected a mapping for merging, but found %s"
+                                                   % subnode.id, subnode.start_mark)
                         self.flatten_mapping(subnode)
                         submerge.append(subnode.value)
                     submerge.reverse()
@@ -191,8 +197,8 @@ class SafeConstructor(BaseConstructor):
                         merge.extend(value)
                 else:
                     raise ConstructorError("while constructing a mapping", node.start_mark,
-                            "expected a mapping or list of mappings for merging, but found %s"
-                            % value_node.id, value_node.start_mark)
+                                           "expected a mapping or list of mappings for merging, but found %s"
+                                           % value_node.id, value_node.start_mark)
             elif key_node.tag == u'tag:yaml.org,2002:value':
                 key_node.tag = u'tag:yaml.org,2002:str'
                 index += 1
@@ -234,27 +240,28 @@ class SafeConstructor(BaseConstructor):
         if value == '0':
             return 0
         elif value.startswith('0b'):
-            return sign*int(value[2:], 2)
+            return sign * int(value[2:], 2)
         elif value.startswith('0x'):
-            return sign*int(value[2:], 16)
+            return sign * int(value[2:], 16)
         elif value[0] == '0':
-            return sign*int(value, 8)
+            return sign * int(value, 8)
         elif ':' in value:
             digits = [int(part) for part in value.split(':')]
             digits.reverse()
             base = 1
             value = 0
             for digit in digits:
-                value += digit*base
+                value += digit * base
                 base *= 60
-            return sign*value
+            return sign * value
         else:
-            return sign*int(value)
+            return sign * int(value)
 
     inf_value = 1e300
-    while inf_value != inf_value*inf_value:
+    while inf_value != inf_value * inf_value:
         inf_value *= inf_value
-    nan_value = -inf_value/inf_value   # Trying to make a quiet NaN (like C99).
+    # Trying to make a quiet NaN (like C99).
+    nan_value = -inf_value / inf_value
 
     def construct_yaml_float(self, node):
         value = str(self.construct_scalar(node))
@@ -265,7 +272,7 @@ class SafeConstructor(BaseConstructor):
         if value[0] in '+-':
             value = value[1:]
         if value == '.inf':
-            return sign*self.inf_value
+            return sign * self.inf_value
         elif value == '.nan':
             return self.nan_value
         elif ':' in value:
@@ -274,11 +281,11 @@ class SafeConstructor(BaseConstructor):
             base = 1
             value = 0.0
             for digit in digits:
-                value += digit*base
+                value += digit * base
                 base *= 60
-            return sign*value
+            return sign * value
         else:
-            return sign*float(value)
+            return sign * float(value)
 
     def construct_yaml_binary(self, node):
         value = self.construct_scalar(node)
@@ -286,10 +293,10 @@ class SafeConstructor(BaseConstructor):
             return str(value).decode('base64')
         except (binascii.Error, UnicodeEncodeError), exc:
             raise ConstructorError(None, None,
-                    "failed to decode base64 data: %s" % exc, node.start_mark) 
+                                   "failed to decode base64 data: %s" % exc, node.start_mark)
 
     timestamp_regexp = re.compile(
-            ur'''^(?P<year>[0-9][0-9][0-9][0-9])
+        ur'''^(?P<year>[0-9][0-9][0-9][0-9])
                 -(?P<month>[0-9][0-9]?)
                 -(?P<day>[0-9][0-9]?)
                 (?:(?:[Tt]|[ \t]+)
@@ -322,7 +329,8 @@ class SafeConstructor(BaseConstructor):
             delta = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
             if values['tz_sign'] == '-':
                 delta = -delta
-        data = datetime.datetime(year, month, day, hour, minute, second, fraction)
+        data = datetime.datetime(
+            year, month, day, hour, minute, second, fraction)
         if delta:
             data -= delta
         return data
@@ -334,16 +342,17 @@ class SafeConstructor(BaseConstructor):
         yield omap
         if not isinstance(node, SequenceNode):
             raise ConstructorError("while constructing an ordered map", node.start_mark,
-                    "expected a sequence, but found %s" % node.id, node.start_mark)
+                                   "expected a sequence, but found %s" % node.id, node.start_mark)
         for subnode in node.value:
             if not isinstance(subnode, MappingNode):
                 raise ConstructorError("while constructing an ordered map", node.start_mark,
-                        "expected a mapping of length 1, but found %s" % subnode.id,
-                        subnode.start_mark)
+                                       "expected a mapping of length 1, but found %s" % subnode.id,
+                                       subnode.start_mark)
             if len(subnode.value) != 1:
                 raise ConstructorError("while constructing an ordered map", node.start_mark,
-                        "expected a single mapping item, but found %d items" % len(subnode.value),
-                        subnode.start_mark)
+                                       "expected a single mapping item, but found %d items" % len(
+                                           subnode.value),
+                                       subnode.start_mark)
             key_node, value_node = subnode.value[0]
             key = self.construct_object(key_node)
             value = self.construct_object(value_node)
@@ -355,16 +364,17 @@ class SafeConstructor(BaseConstructor):
         yield pairs
         if not isinstance(node, SequenceNode):
             raise ConstructorError("while constructing pairs", node.start_mark,
-                    "expected a sequence, but found %s" % node.id, node.start_mark)
+                                   "expected a sequence, but found %s" % node.id, node.start_mark)
         for subnode in node.value:
             if not isinstance(subnode, MappingNode):
                 raise ConstructorError("while constructing pairs", node.start_mark,
-                        "expected a mapping of length 1, but found %s" % subnode.id,
-                        subnode.start_mark)
+                                       "expected a mapping of length 1, but found %s" % subnode.id,
+                                       subnode.start_mark)
             if len(subnode.value) != 1:
                 raise ConstructorError("while constructing pairs", node.start_mark,
-                        "expected a single mapping item, but found %d items" % len(subnode.value),
-                        subnode.start_mark)
+                                       "expected a single mapping item, but found %d items" % len(
+                                           subnode.value),
+                                       subnode.start_mark)
             key_node, value_node = subnode.value[0]
             key = self.construct_object(key_node)
             value = self.construct_object(value_node)
@@ -406,59 +416,61 @@ class SafeConstructor(BaseConstructor):
 
     def construct_undefined(self, node):
         raise ConstructorError(None, None,
-                "could not determine a constructor for the tag %r" % node.tag.encode('utf-8'),
-                node.start_mark)
+                               "could not determine a constructor for the tag %r" % node.tag.encode(
+                                   'utf-8'),
+                               node.start_mark)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:null',
-        SafeConstructor.construct_yaml_null)
+    u'tag:yaml.org,2002:null',
+    SafeConstructor.construct_yaml_null)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:bool',
-        SafeConstructor.construct_yaml_bool)
+    u'tag:yaml.org,2002:bool',
+    SafeConstructor.construct_yaml_bool)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:int',
-        SafeConstructor.construct_yaml_int)
+    u'tag:yaml.org,2002:int',
+    SafeConstructor.construct_yaml_int)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:float',
-        SafeConstructor.construct_yaml_float)
+    u'tag:yaml.org,2002:float',
+    SafeConstructor.construct_yaml_float)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:binary',
-        SafeConstructor.construct_yaml_binary)
+    u'tag:yaml.org,2002:binary',
+    SafeConstructor.construct_yaml_binary)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:timestamp',
-        SafeConstructor.construct_yaml_timestamp)
+    u'tag:yaml.org,2002:timestamp',
+    SafeConstructor.construct_yaml_timestamp)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:omap',
-        SafeConstructor.construct_yaml_omap)
+    u'tag:yaml.org,2002:omap',
+    SafeConstructor.construct_yaml_omap)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:pairs',
-        SafeConstructor.construct_yaml_pairs)
+    u'tag:yaml.org,2002:pairs',
+    SafeConstructor.construct_yaml_pairs)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:set',
-        SafeConstructor.construct_yaml_set)
+    u'tag:yaml.org,2002:set',
+    SafeConstructor.construct_yaml_set)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:str',
-        SafeConstructor.construct_yaml_str)
+    u'tag:yaml.org,2002:str',
+    SafeConstructor.construct_yaml_str)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:seq',
-        SafeConstructor.construct_yaml_seq)
+    u'tag:yaml.org,2002:seq',
+    SafeConstructor.construct_yaml_seq)
 
 SafeConstructor.add_constructor(
-        u'tag:yaml.org,2002:map',
-        SafeConstructor.construct_yaml_map)
+    u'tag:yaml.org,2002:map',
+    SafeConstructor.construct_yaml_map)
 
 SafeConstructor.add_constructor(None,
-        SafeConstructor.construct_undefined)
+                                SafeConstructor.construct_undefined)
+
 
 class Constructor(SafeConstructor):
 
@@ -472,7 +484,7 @@ class Constructor(SafeConstructor):
         return long(self.construct_yaml_int(node))
 
     def construct_python_complex(self, node):
-       return complex(self.construct_scalar(node))
+        return complex(self.construct_scalar(node))
 
     def construct_python_tuple(self, node):
         return tuple(self.construct_sequence(node))
@@ -480,18 +492,18 @@ class Constructor(SafeConstructor):
     def find_python_module(self, name, mark):
         if not name:
             raise ConstructorError("while constructing a Python module", mark,
-                    "expected non-empty name appended to the tag", mark)
+                                   "expected non-empty name appended to the tag", mark)
         try:
             __import__(name)
         except ImportError, exc:
             raise ConstructorError("while constructing a Python module", mark,
-                    "cannot find module %r (%s)" % (name.encode('utf-8'), exc), mark)
+                                   "cannot find module %r (%s)" % (name.encode('utf-8'), exc), mark)
         return sys.modules[name]
 
     def find_python_name(self, name, mark):
         if not name:
             raise ConstructorError("while constructing a Python object", mark,
-                    "expected non-empty name appended to the tag", mark)
+                                   "expected non-empty name appended to the tag", mark)
         if u'.' in name:
             # Python 2.4 only
             #module_name, object_name = name.rsplit('.', 1)
@@ -505,34 +517,37 @@ class Constructor(SafeConstructor):
             __import__(module_name)
         except ImportError, exc:
             raise ConstructorError("while constructing a Python object", mark,
-                    "cannot find module %r (%s)" % (module_name.encode('utf-8'), exc), mark)
+                                   "cannot find module %r (%s)" % (module_name.encode('utf-8'), exc), mark)
         module = sys.modules[module_name]
         if not hasattr(module, object_name):
             raise ConstructorError("while constructing a Python object", mark,
-                    "cannot find %r in the module %r" % (object_name.encode('utf-8'),
-                        module.__name__), mark)
+                                   "cannot find %r in the module %r" % (object_name.encode('utf-8'),
+                                                                        module.__name__), mark)
         return getattr(module, object_name)
 
     def construct_python_name(self, suffix, node):
         value = self.construct_scalar(node)
         if value:
             raise ConstructorError("while constructing a Python name", node.start_mark,
-                    "expected the empty value, but found %r" % value.encode('utf-8'),
-                    node.start_mark)
+                                   "expected the empty value, but found %r" % value.encode(
+                                       'utf-8'),
+                                   node.start_mark)
         return self.find_python_name(suffix, node.start_mark)
 
     def construct_python_module(self, suffix, node):
         value = self.construct_scalar(node)
         if value:
             raise ConstructorError("while constructing a Python module", node.start_mark,
-                    "expected the empty value, but found %r" % value.encode('utf-8'),
-                    node.start_mark)
+                                   "expected the empty value, but found %r" % value.encode(
+                                       'utf-8'),
+                                   node.start_mark)
         return self.find_python_module(suffix, node.start_mark)
 
-    class classobj: pass
+    class classobj:
+        pass
 
     def make_python_instance(self, suffix, node,
-            args=None, kwds=None, newobj=False):
+                             args=None, kwds=None, newobj=False):
         if not args:
             args = []
         if not kwds:
@@ -672,4 +687,3 @@ Constructor.add_multi_constructor(
 Constructor.add_multi_constructor(
     u'tag:yaml.org,2002:python/object/new:',
     Constructor.construct_python_object_new)
-

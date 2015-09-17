@@ -15,13 +15,16 @@ keep_running = True
 # concurrent connect control
 # Windows10 will block sound when too many concurrent connect out in the same time.
 # so when user request web, scan thread will stop to reduce concurrent action.
+
+
 def get_connect_interval():
     if sys.platform != "win32":
         return 0
 
     win_version = env_info.win32_version()
     if win_version == 10:
-        xlog.info("detect Win10, enable connect concurent control, interval:%d", config.connect_interval)
+        xlog.info("detect Win10, enable connect concurent control, interval:%d",
+                  config.connect_interval)
         return config.connect_interval
 
     return 0
@@ -60,8 +63,8 @@ def start_connect_register(high_prior=False):
             xlog.error("last_connect_interval:%f", last_connect_interval)
             return
 
-        if last_connect_interval < connect_interval/1000.0:
-            wait_time = connect_interval/1000.0 - last_connect_interval
+        if last_connect_interval < connect_interval / 1000.0:
+            wait_time = connect_interval / 1000.0 - last_connect_interval
             time.sleep(wait_time)
 
         if high_prior:
@@ -100,18 +103,22 @@ def end_connect_register(high_prior=False):
 
 #=============================================
 # this design is for save resource when browser have no request for long time.
-# when idle, connect pool will not maintain the connect ready link to save resources.
+# when idle, connect pool will not maintain the connect ready link to save
+# resources.
 
 last_request_time = 0
+
 
 def touch_active():
     global last_request_time
     last_request_time = time.time()
 
+
 def inactive_time():
     global last_request_time
     t = time.time() - last_request_time
     return t
+
 
 def is_active(timeout=60 * 30):
     if inactive_time() < timeout:
@@ -125,8 +132,9 @@ connect_allow_time = 0
 connect_fail_time = 0
 scan_allow_time = 0
 
-block_delay = 5 #
-scan_sleep_time = 600 # Need examination
+block_delay = 5
+scan_sleep_time = 600  # Need examination
+
 
 def allow_connect():
     global connect_allow_time
@@ -134,6 +142,7 @@ def allow_connect():
         return False
     else:
         return True
+
 
 def allow_scan():
     global scan_allow_time
@@ -144,16 +153,20 @@ def allow_scan():
     else:
         return True
 
+
 def fall_into_honeypot():
     xlog.warn("fall_into_honeypot.")
     global connect_allow_time
     connect_allow_time = time.time() + block_delay
 
+
 def scan_sleep():
-    xlog.warn("Scan Blocked, due to exceeds Google's frequency limit. Please reduce the number of scan threads.")
+    xlog.warn(
+        "Scan Blocked, due to exceeds Google's frequency limit. Please reduce the number of scan threads.")
     global scan_allow_time
     scan_allow_time = time.time() + scan_sleep_time
     # DOTO: Auto-reduce the setting?
+
 
 def report_connect_fail():
     global connect_allow_time, connect_fail_time
@@ -164,9 +177,11 @@ def report_connect_fail():
             connect_allow_time = time.time() + block_delay
             connect_fail_time = 0
 
+
 def report_connect_success():
     global connect_fail_time
     connect_fail_time = 0
+
 
 def block_stat():
     global connect_allow_time, scan_allow_time

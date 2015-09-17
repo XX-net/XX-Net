@@ -7,7 +7,7 @@ import threading
 import json
 
 
-buffer = {} # id => line
+buffer = {}  # id => line
 buffer_size = 500
 last_no = 0
 buffer_lock = threading.Lock()
@@ -24,7 +24,7 @@ NOTSET = 0
 
 level = INFO
 
-#set_console_color
+# set_console_color
 err_color = None
 warn_color = None
 debug_color = None
@@ -40,7 +40,8 @@ if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
         import ctypes
         SetConsoleTextAttribute = ctypes.windll.kernel32.SetConsoleTextAttribute
         GetStdHandle = ctypes.windll.kernel32.GetStdHandle
-        set_console_color = lambda color: SetConsoleTextAttribute(GetStdHandle(-11), color)
+        set_console_color = lambda color: SetConsoleTextAttribute(
+            GetStdHandle(-11), color)
 
     elif os.name == 'posix':
         err_color = '\033[31m'
@@ -52,13 +53,16 @@ if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
 
 #=================================================================
 
+
 def getLogger(cls, *args, **kwargs):
     return cls(*args, **kwargs)
+
 
 def basicConfig(*args, **kwargs):
     level = int(kwargs.get('level', INFO))
     if level > DEBUG:
         debug = dummy
+
 
 def log(level, console_color, html_color, fmt, *args, **kwargs):
     global last_no, buffer_lock, buffer, buffer_size
@@ -75,7 +79,8 @@ def log(level, console_color, html_color, fmt, *args, **kwargs):
         if buffer_len > buffer_size:
             del buffer[last_no - buffer_size]
     except Exception as e:
-        string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br>' % (time.ctime()[4:-5], level, fmt % args, e)
+        string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br>' % (
+            time.ctime()[4:-5], level, fmt % args, e)
         last_no += 1
         buffer[last_no] = string
         buffer_len = len(buffer)
@@ -85,23 +90,31 @@ def log(level, console_color, html_color, fmt, *args, **kwargs):
         buffer_lock.release()
 
 #=================================================================
+
+
 def dummy(*args, **kwargs):
     pass
+
 
 def debug(fmt, *args, **kwargs):
     log('DEBUG', debug_color, '21610b', fmt, *args, **kwargs)
 
+
 def info(fmt, *args, **kwargs):
     log('INFO', reset_color, '000000', fmt, *args)
+
 
 def warning(fmt, *args, **kwargs):
     log('WARNING', warn_color, 'FF8000', fmt, *args, **kwargs)
 
+
 def warn(fmt, *args, **kwargs):
     warning(fmt, *args, **kwargs)
 
+
 def error(fmt, *args, **kwargs):
     log('ERROR', err_color, 'FE2E2E', fmt, *args, **kwargs)
+
 
 def exception(fmt, *args, **kwargs):
     error(fmt, *args, **kwargs)
@@ -112,6 +125,8 @@ def critical(fmt, *args, **kwargs):
     log('CRITICAL', err_color, 'D7DF01', fmt, *args, **kwargs)
 
 #=================================================================
+
+
 def set_buffer_size(set_size):
     global buffer_size, buffer, buffer_lock
 
@@ -127,6 +142,7 @@ def set_buffer_size(set_size):
     buffer_len = len(buffer)
     buffer_lock.release()
 
+
 def get_last_lines(max_lines):
     global buffer_size, buffer, buffer_lock
 
@@ -134,10 +150,11 @@ def get_last_lines(max_lines):
     buffer_len = len(buffer)
     jd = {}
     if buffer_len > 0:
-        for i in range(last_no - buffer_len + 1, last_no+1):
+        for i in range(last_no - buffer_len + 1, last_no + 1):
             jd[i] = buffer[i]
     buffer_lock.release()
     return json.dumps(jd)
+
 
 def get_new_lines(from_no):
     global buffer_size, buffer, buffer_lock
@@ -148,7 +165,7 @@ def get_new_lines(from_no):
     if from_no < first_no:
         from_no = first_no
     if last_no >= from_no:
-        for i in range(from_no, last_no+1):
+        for i in range(from_no, last_no + 1):
             jd[i] = buffer[i]
     buffer_lock.release()
     return json.dumps(jd)

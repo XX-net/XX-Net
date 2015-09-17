@@ -15,6 +15,7 @@ import xlog
 
 ssl_version = ''
 
+
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
 
@@ -68,7 +69,8 @@ class SSLConnection(object):
             return self.__iowait(self._connection.send, data, flags)
         except OpenSSL.SSL.SysCallError as e:
             if e[0] == -1 and not data:
-                # errors when writing empty strings are expected and can be ignored
+                # errors when writing empty strings are expected and can be
+                # ignored
                 return 0
             raise
 
@@ -89,7 +91,8 @@ class SSLConnection(object):
             return ''
         except OpenSSL.SSL.SysCallError as e:
             if e[0] == -1 and 'Unexpected EOF' in e[1]:
-                # errors when reading empty strings are expected and can be ignored
+                # errors when reading empty strings are expected and can be
+                # ignored
                 return ''
             raise
 
@@ -114,7 +117,7 @@ class SSLConnection(object):
     @staticmethod
     def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)):
         # 'ALL', '!aNULL', '!eNULL'
-        global  ssl_version
+        global ssl_version
 
         if not ssl_version:
             if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
@@ -135,9 +138,10 @@ class SSLConnection(object):
         ssl_context = OpenSSL.SSL.Context(protocol_version)
         if ca_certs:
             ssl_context.load_verify_locations(os.path.abspath(ca_certs))
-            ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+            ssl_context.set_verify(
+                OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
-            ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
+            ssl_context.set_verify(
+                OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
         ssl_context.set_cipher_list(':'.join(cipher_suites))
         return ssl_context
-

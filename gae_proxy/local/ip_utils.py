@@ -4,21 +4,24 @@ __author__ = 'moonshawdo@gamil.com'
 
 import re
 
+
 def ip_string_to_num(s):
     """Convert dotted IPv4 address to integer."""
     return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
 
+
 def get_ip_maskc(ip_str):
     head = ".".join(ip_str.split(".")[:-1])
     return head + ".0"
+
 
 def ip_num_to_string(ip):
     """Convert 32-bit integer to dotted IPv4 address."""
     return ".".join(map(lambda n: str(ip >> n & 0xFF), [24, 16, 8, 0]))
 
 
-
 g_ip_check = re.compile(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
+
 
 def check_ip_valid(ip):
     """检查ipv4地址的合法性"""
@@ -65,12 +68,14 @@ def is_valid_ipv6(ip):
     """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
     return pattern.match(ip) is not None
 
+
 def check_ip_valid6(ip):
     """检查ipv6地址的合法性"""
     if is_valid_ipv6(ip):
         return 1
     else:
         return 0
+
 
 def split_ip(strline):
     """从每组地址中分离出起始IP以及结束IP"""

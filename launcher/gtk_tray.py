@@ -12,10 +12,12 @@ import launcher_log
 import pygtk
 
 if __name__ == "__main__":
-    import os, sys
+    import os
+    import sys
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(
+        current_path, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
 pygtk.require('2.0')
@@ -26,20 +28,25 @@ try:
     import pynotify
     pynotify.init('XX-Net Notify')
 except:
-    launcher_log.warn("import pynotify fail, please install python-notify if possiable.")
+    launcher_log.warn(
+        "import pynotify fail, please install python-notify if possiable.")
     pynotify = None
 
 import module_init
 
+
 class Gtk_tray():
     notify_list = []
+
     def __init__(self):
-        logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
+        logo_filename = os.path.join(os.path.abspath(
+            os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
 
         self.trayicon = gtk.StatusIcon()
         self.trayicon.set_from_file(logo_filename)
 
-        self.trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
+        self.trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(
+            None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
         self.trayicon.connect('activate', self.show_control_web)
         self.trayicon.set_tooltip('XX-Net')
         self.trayicon.set_visible(True)
@@ -59,7 +66,6 @@ class Gtk_tray():
 
     def on_show(self, widget=None, data=None):
         self.show_control_web()
-
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         if not pynotify:
@@ -93,9 +99,9 @@ class Gtk_tray():
 
 sys_tray = Gtk_tray()
 
+
 def main():
     sys_tray.serve_forever()
 
 if __name__ == '__main__':
     main()
-
