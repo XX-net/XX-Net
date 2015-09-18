@@ -451,7 +451,7 @@ class ControlHandler():
 
         gws_ip_num = len(google_ip.gws_ip_list)
         res_arr = {"gws_ip_num": gws_ip_num,
-                   "sys_platform":sys.platform,
+                   "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
                    "os_release":platform.release(),
