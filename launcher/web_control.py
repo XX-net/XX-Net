@@ -415,17 +415,27 @@ def http_request(url, method="GET"):
         return False
 
 def confirm_xxnet_exit():
+    # suppose xxnet is running, try to close it
+    is_xxnet_exit = False
     launcher_log.debug("start confirm_xxnet_exit")
     for i in range(30):
         if http_request("http://127.0.0.1:8087/quit") == False:
-            return True
+            launcher_log.debug("good, xxnet:8087 cleared!")
+            is_xxnet_exit = True
+            break
+        else:
+            launcher_log.debug("<%d>: try to terminate xxnet:8087" % i)
         time.sleep(1)
     for i in range(30):
         if http_request("http://127.0.0.1:8085/quit") == False:
-            return True
+            launcher_log.debug("good, xxnet:8085 clear!")
+            is_xxnet_exit = True
+            break
+        else:
+            launcher_log.debug("<%d>: try to terminate xxnet:8085" % i)
         time.sleep(1)
     launcher_log.debug("finished confirm_xxnet_exit")
-    return False
+    return is_xxnet_exit
 
 def confirm_module_ready(port):
     if port == 0:
