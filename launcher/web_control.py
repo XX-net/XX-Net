@@ -386,7 +386,8 @@ process = 0
 server = 0
 def start():
     global process, server
-    server = LocalServer(("0.0.0.0", 8085), Http_Handler)
+    # should use config.yaml to bing ip
+    server = LocalServer(("127.0.0.1", 8085), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
