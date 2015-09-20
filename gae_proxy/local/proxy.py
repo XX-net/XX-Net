@@ -226,8 +226,11 @@ def log_info():
         #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
     xlog.info('------------------------------------------------------')
 
+
 def main():
     global ready
+    connect_control.keep_running = True
+    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
     # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
     do_profile = False
     if do_profile:
@@ -257,7 +260,7 @@ def main():
         pac_thread.setDaemon(True)
         pac_thread.start()
 
-    ready = True #checked by launcher.module_init
+    ready = True  # checked by launcher.module_init
 
     while connect_control.keep_running:
         time.sleep(1)
@@ -270,15 +273,17 @@ def main():
         pac_daemon.shutdown()
         pac_daemon.server_close()
         pac_thread.join()
-    ready = False #checked by launcher.module_init
-    xlog.info("Finished Exiting gae_proxy module...")
+    ready = False  # checked by launcher.module_init
+    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
 
     if do_profile:
         pr.disable()
         pr.print_stats()
 
+
 def terminate():
     connect_control.keep_running = False
+    xlog.debug("## Set keep_running: %s", connect_control.keep_running)
 
 if __name__ == '__main__':
     try:
