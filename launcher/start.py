@@ -86,7 +86,8 @@ def main():
 
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
-        webbrowser.open("http://127.0.0.1:8085/")
+        host_port = config.config["modules"]["launcher"].get("control_port", 8085)
+        webbrowser.open("http://127.0.0.1:%s/" % host_port)
 
     update.start()
 
