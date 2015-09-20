@@ -73,8 +73,11 @@ def recheck_module_path():
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         set(["modules", "launcher", "control_port"], 8085)
+        set(["modules", "launcher", "allow_remote_connect"], 0)
+
     #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #    set(["modules", "gae_proxy", "control_port"], 8084)
+
     if get(["modules", "php_proxy", "control_port"], 0) == 0:
         set(["modules", "php_proxy", "control_port"], 8083)
 

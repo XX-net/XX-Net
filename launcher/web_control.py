@@ -387,7 +387,15 @@ server = 0
 def start():
     global process, server
     # should use config.yaml to bing ip
-    server = LocalServer(("127.0.0.1", 8085), Http_Handler)
+    allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
+    host_port = config.get(["modules", "launcher", "control_port"], 8085)
+
+    if allow_remote:
+        host_addr = "0.0.0.0"
+    else:
+        host_addr = "127.0.0.1"
+
+    server = LocalServer((host_addr, host_port), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
@@ -416,10 +424,14 @@ def http_request(url, method="GET"):
         return False
 
 def confirm_xxnet_exit():
-    # suppose xxnet is running, try to close it
+    """suppose xxnet is running, try to close it
+
+    """
     is_xxnet_exit = False
     launcher_log.debug("start confirm_xxnet_exit")
+
     for i in range(30):
+        # gae_proxy(default port:8087)
         if http_request("http://127.0.0.1:8087/quit") == False:
             launcher_log.debug("good, xxnet:8087 cleared!")
             is_xxnet_exit = True
@@ -427,13 +439,18 @@ def confirm_xxnet_exit():
         else:
             launcher_log.debug("<%d>: try to terminate xxnet:8087" % i)
         time.sleep(1)
+
+
     for i in range(30):
-        if http_request("http://127.0.0.1:8085/quit") == False:
-            launcher_log.debug("good, xxnet:8085 clear!")
+        # web_control(default port:8085)
+        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
+        if http_request(req_url) == False:
+            launcher_log.debug("good, xxnet:%s clear!" % host_port)
             is_xxnet_exit = True
             break
         else:
-            launcher_log.debug("<%d>: try to terminate xxnet:8085" % i)
+            launcher_log.debug("<%d>: try to terminate xxnet:%s" % (i, host_port))
         time.sleep(1)
     launcher_log.debug("finished confirm_xxnet_exit")
     return is_xxnet_exit
