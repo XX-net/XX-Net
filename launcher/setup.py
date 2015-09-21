@@ -153,7 +153,9 @@ def wait_xxnet_exit():
             return False
 
     for i in range(20):
-        if http_request("http://127.0.0.1:8085/quit") == False:
+        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
+        if http_request(req_url) == False:
             return True
         time.sleep(1)
     return False
