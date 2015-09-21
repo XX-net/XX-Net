@@ -78,7 +78,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")
             if not os.path.isfile(menu_path):
                 continue
-                
+
             module_menu = yaml.load(file(menu_path, 'r'))
             module_menus[module] = module_menu
 
@@ -255,9 +255,10 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif check_update == 1:
                 check_update = "long-term-stable"
 
-            data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
                     , config.get(["modules", "launcher", "popup_webui"], 1)
+                    , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
@@ -273,7 +274,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     data = '{"res":"success"}'
 
-            elif 'popup_webui' in reqs :
+            elif 'popup_webui' in reqs:
                 popup_webui = int(reqs['popup_webui'][0])
                 if popup_webui != 0 and popup_webui != 1:
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
@@ -282,7 +283,24 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'show_systray' in reqs :
+
+            elif 'allow_remote_connect' in reqs:
+                allow_remote_connect = int(reqs['allow_remote_connect'][0])
+                if allow_remote_connect != 0 and allow_remote_connect != 1:
+                    data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_connect
+                else:
+                    config.set(["modules", "launcher", "allow_remote_connect"], allow_remote_connect)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
+                    launcher_log.debug("restart web control.")
+                    stop()
+                    time.sleep(1)
+                    start()
+                    launcher_log.debug("launcher web control restarted.")
+
+            elif 'show_systray' in reqs:
                 show_systray = int(reqs['show_systray'][0])
                 if show_systray != 0 and show_systray != 1:
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
@@ -291,7 +309,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-            elif 'auto_start' in reqs :
+
+            elif 'auto_start' in reqs:
                 auto_start = int(reqs['auto_start'][0])
                 if auto_start != 0 and auto_start != 1:
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
@@ -395,10 +414,12 @@ def start():
     else:
         host_addr = "127.0.0.1"
 
+    launcher_log.info("begin to start web control")
     server = LocalServer((host_addr, host_port), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
+    launcher_log.info("launcher web control started.")
 
 def stop():
     global process, server
