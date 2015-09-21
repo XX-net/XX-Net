@@ -1,0 +1,5 @@
+210.61.221.168 google.com gws 180
+208.117.236.172 *.c.docs.google.com gws 521
+85.182.250.173 google.com gws 534
+64.15.116.148 google.com gws 541
+128.0.169.250 *.googlevideo.com gws 554
