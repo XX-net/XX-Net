@@ -22,6 +22,7 @@ import win32_proxy_manager
 import module_init
 import update
 import launcher_log
+import config
 
 
 class Win_tray():
@@ -99,7 +100,8 @@ class Win_tray():
         win32_proxy_manager.disable_proxy()
 
     def show_control_web(self, widget=None, data=None):
-        webbrowser.open("http://127.0.0.1:8085/")
+        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        webbrowser.open("http://127.0.0.1:%s/" % host_port)
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
