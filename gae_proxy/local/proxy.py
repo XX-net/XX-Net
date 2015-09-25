@@ -88,13 +88,6 @@ from gae_handler import spawn_later
 
 ready = False
 
-
-
-
-
-
-
-
 def pre_start():
 
     def get_windows_running_process_list():
