@@ -61,11 +61,9 @@ import time
 import traceback
 import platform
 
-import errno
 import xlog
 import random
 import threading
-import SocketServer
 import urllib2
 
 __file__ = os.path.abspath(__file__)
@@ -80,6 +78,7 @@ import pac_server
 import socket, ssl
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
+import simple_http_server
 import proxy_handler
 import connect_control
 import env_info
@@ -91,33 +90,6 @@ ready = False
 
 
 
-
-
-class LocalProxyServer(SocketServer.ThreadingTCPServer):
-    """Local Proxy Server"""
-    allow_reuse_address = True
-
-    def close_request(self, request):
-        try:
-            request.close()
-        except Exception:
-            pass
-
-    def finish_request(self, request, client_address):
-        try:
-            self.RequestHandlerClass(request, client_address, self)
-        except NetWorkIOError as e:
-            if e[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                raise
-
-    def handle_error(self, *args):
-        """make ThreadingTCPServer happy"""
-        etype, value = sys.exc_info()[:2]
-        if isinstance(value, NetWorkIOError) and 'bad write retry' in value.args[1]:
-            etype = value = None
-        else:
-            del etype, value
-            SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
 
 
@@ -246,13 +218,13 @@ def main():
 
     CertUtil.init_ca()
 
-    proxy_daemon = LocalProxyServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
+    proxy_daemon = simple_http_server.HTTPServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
     proxy_thread = threading.Thread(target=proxy_daemon.serve_forever)
     proxy_thread.setDaemon(True)
     proxy_thread.start()
 
     if config.PAC_ENABLE:
-        pac_daemon = LocalProxyServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
+        pac_daemon = simple_http_server.HTTPServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
         pac_thread = threading.Thread(target=pac_daemon.serve_forever)
         pac_thread.setDaemon(True)
         pac_thread.start()
@@ -278,6 +250,7 @@ def main():
         pr.print_stats()
 
 def terminate():
+    xlog.info("start to terminate GAE_Proxy")
     connect_control.keep_running = False
 
 if __name__ == '__main__':
