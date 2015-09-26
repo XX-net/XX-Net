@@ -1,6 +1,3 @@
-#from gevent import monkey
-#monkey.patch_all()
-
 import os
 import urlparse
 import datetime
@@ -10,11 +7,8 @@ import socket
 import errno
 import xlog
 import sys
-#import OpenSSL
+import select
 
-#httpd = BaseHTTPServer.HTTPServer(('localhost', 4443), SimpleHTTPServer.SimpleHTTPRequestHandler)
-#httpd.socket = ssl.wrap_socket (httpd.socket, certfile='CA.crt', server_side=True)
-#httpd.serve_forever()
 
 class HttpServerHandler():
     default_request_version = "HTTP/1.1"
@@ -47,7 +41,6 @@ class HttpServerHandler():
                 break
         self.connection.close()
         #xlog.debug("closed from %s:%d", self.client_address[0], self.client_address[1])
-
 
     def send_error(self, code, message=None):
         self.wfile.write('HTTP/1.1 %d\r\n' % code)
@@ -113,11 +106,8 @@ class HttpServerHandler():
             self.close_connection = 0
         return True
 
-
     def handle_one_request(self):
         try:
-            #
-            #sock = self.connection
             try:
                 self.raw_requestline = self.rfile.readline(65537)
             except Exception as e:
@@ -192,6 +182,7 @@ class HttpServerHandler():
 
 class HTTPServer():
     def __init__(self, address, handler, args=()):
+        self.running = True
         self.server_address = address
         self.handler = handler
         self.args = args
@@ -202,15 +193,24 @@ class HTTPServer():
         xlog.info("server %s:%d started.", address[0], address[1])
 
     def serve_forever(self):
-        while True:
-            (sock, address) = self.socket.accept()
-            self.process_connect(sock, address)
+        fdset = [self.socket, ]
+        while self.running:
+            r, w, e = select.select(fdset, [], [], 1)
+            if self.socket in r:
+                (sock, address) = self.socket.accept()
+                self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
         #xlog.debug("connect from %s:%d", address[0], address[1])
         client_obj = self.handler(sock, address, self.args)
         client_thread = threading.Thread(target=client_obj.handle)
         client_thread.start()
+
+    def shutdown(self):
+        self.running = False
+
+    def server_close(self):
+        self.socket.close()
 
 class test_http_server(HttpServerHandler):
 
