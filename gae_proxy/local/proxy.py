@@ -59,13 +59,11 @@ elif sys.platform == "darwin":
 
 import time
 import traceback
-
-
-import errno
+import platform
+import SocketServer
 import xlog
 import random
 import threading
-import SocketServer
 import urllib2
 
 __file__ = os.path.abspath(__file__)
@@ -80,48 +78,15 @@ import pac_server
 import socket, ssl
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
+import simple_http_server
 import proxy_handler
 import connect_control
-
+import env_info
 from config import config
 
 from gae_handler import spawn_later
 
 ready = False
-
-
-
-
-
-class LocalProxyServer(SocketServer.ThreadingTCPServer):
-    """Local Proxy Server"""
-    allow_reuse_address = True
-
-    def close_request(self, request):
-        try:
-            request.close()
-        except Exception:
-            pass
-
-    def finish_request(self, request, client_address):
-        try:
-            self.RequestHandlerClass(request, client_address, self)
-        except NetWorkIOError as e:
-            if e[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                raise
-
-    def handle_error(self, *args):
-        """make ThreadingTCPServer happy"""
-        etype, value = sys.exc_info()[:2]
-        if isinstance(value, NetWorkIOError) and 'bad write retry' in value.args[1]:
-            etype = value = None
-        else:
-            del etype, value
-            SocketServer.ThreadingTCPServer.handle_error(self, *args)
-
-
-
-
 
 def pre_start():
 
@@ -183,7 +148,7 @@ def pre_start():
             pass
     elif os.name == 'nt':
         import ctypes
-        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % config.__version__)
+        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent ')
         if not config.LISTEN_VISIBLE:
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
         else:
@@ -211,9 +176,26 @@ def pre_start():
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
         spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
 
+def log_info():
+    xlog.info('------------------------------------------------------')
+    xlog.info('Python Version     : %s', platform.python_version())
+    xlog.info('OS                 : %s', env_info.os_detail())
+    xlog.info('Listen Address     : %s:%d', config.LISTEN_IP, config.LISTEN_PORT)
+    if config.CONTROL_ENABLE:
+        xlog.info('Control Address    : %s:%d', config.CONTROL_IP, config.CONTROL_PORT)
+    if config.PROXY_ENABLE:
+        xlog.info('%s Proxy    : %s:%s', config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+    xlog.info('GAE APPID          : %s', '|'.join(config.GAE_APPIDS))
+    if config.PAC_ENABLE:
+        xlog.info('Pac Server         : http://%s:%d/%s', config.PAC_IP, config.PAC_PORT, config.PAC_FILE)
+        #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
+    xlog.info('------------------------------------------------------')
+
 
 def main():
     global ready
+    connect_control.keep_running = True
+    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
     # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
     do_profile = False
     if do_profile:
@@ -228,22 +210,22 @@ def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
     pre_start()
-    xlog.info(config.info())
+    log_info()
 
     CertUtil.init_ca()
 
-    proxy_daemon = LocalProxyServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
+    proxy_daemon = simple_http_server.HTTPServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
     proxy_thread = threading.Thread(target=proxy_daemon.serve_forever)
     proxy_thread.setDaemon(True)
     proxy_thread.start()
 
     if config.PAC_ENABLE:
-        pac_daemon = LocalProxyServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
+        pac_daemon = simple_http_server.HTTPServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
         pac_thread = threading.Thread(target=pac_daemon.serve_forever)
         pac_thread.setDaemon(True)
         pac_thread.start()
 
-    ready = True #checked by launcher.module_init
+    ready = True  # checked by launcher.module_init
 
     while connect_control.keep_running:
         time.sleep(1)
@@ -256,15 +238,18 @@ def main():
         pac_daemon.shutdown()
         pac_daemon.server_close()
         pac_thread.join()
-    ready = False #checked by launcher.module_init
-    xlog.info("Finished Exiting gae_proxy module...")
+    ready = False  # checked by launcher.module_init
+    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
 
     if do_profile:
         pr.disable()
         pr.print_stats()
 
+
 def terminate():
+    xlog.info("start to terminate GAE_Proxy")
     connect_control.keep_running = False
+    xlog.debug("## Set keep_running: %s", connect_control.keep_running)
 
 if __name__ == '__main__':
     try:

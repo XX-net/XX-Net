@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import os, sys
+import os
+import sys
 
 
 __file__ = os.path.abspath(__file__)

@@ -21,7 +21,7 @@ if __name__ == "__main__":
         sys.path.append(win32_lib)
 
 import platform
-import BaseHTTPServer
+import env_info
 import urlparse
 import json
 import os
@@ -70,6 +70,7 @@ class User_special(object):
         self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
         self.use_ipv6 = 0
+        self.connect_interval = 200
 
 class User_config(object):
     user_special = User_special()
@@ -131,6 +132,11 @@ class User_config(object):
             except:
                 pass
 
+            try:
+                self.user_special.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
+            except:
+                pass
+
             self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
             self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
             self.user_special.proxy_host = self.USER_CONFIG.get('proxy', 'host')
@@ -175,6 +181,10 @@ class User_config(object):
             if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
 
+            f.write("[connect_manager]\n")
+            if int(self.user_special.connect_interval) != self.DEFAULT_CONFIG.getint('connect_manager', 'connect_interval'):
+                f.write("connect_interval = %d\n\n" % int(self.user_special.connect_interval))
+
             f.close()
         except:
             xlog.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
@@ -182,55 +192,6 @@ class User_config(object):
 
 user_config = User_config()
 
-
-def win32_version():
-
-    import ctypes
-    class OSVERSIONINFOEXW(ctypes.Structure):
-        _fields_ = [('dwOSVersionInfoSize', ctypes.c_ulong),
-                    ('dwMajorVersion', ctypes.c_ulong),
-                    ('dwMinorVersion', ctypes.c_ulong),
-                    ('dwBuildNumber', ctypes.c_ulong),
-                    ('dwPlatformId', ctypes.c_ulong),
-                    ('szCSDVersion', ctypes.c_wchar*128),
-                    ('wServicePackMajor', ctypes.c_ushort),
-                    ('wServicePackMinor', ctypes.c_ushort),
-                    ('wSuiteMask', ctypes.c_ushort),
-                    ('wProductType', ctypes.c_byte),
-                    ('wReserved', ctypes.c_byte)]
-    """
-    Get's the OS major and minor versions.  Returns a tuple of
-    (OS_MAJOR, OS_MINOR).
-    """
-    os_version = OSVERSIONINFOEXW()
-    os_version.dwOSVersionInfoSize = ctypes.sizeof(os_version)
-    retcode = ctypes.windll.Ntdll.RtlGetVersion(ctypes.byref(os_version))
-    if retcode != 0:
-        raise Exception("Failed to get OS version")
-
-    version_string = "Version:%d-%d; Build:%d; Platform:%d; CSD:%s; ServicePack:%d-%d; Suite:%d; ProductType:%d" %  (
-        os_version.dwMajorVersion, os_version.dwMinorVersion,
-        os_version.dwBuildNumber,
-        os_version.dwPlatformId,
-        os_version.szCSDVersion,
-        os_version.wServicePackMajor, os_version.wServicePackMinor,
-        os_version.wSuiteMask,
-        os_version.wReserved
-    )
-
-    return version_string
-
-def os_detail():
-    if sys.platform == "win32":
-        return win32_version()
-    elif sys.platform.startswith("linux"):
-        distname,version,id = platform.linux_distribution()
-        return "Dist:%s; Version:%s; ID:%s" % (distname,version,id)
-    elif sys.platform == "darwin":
-        release, versioninfo, machine = platform.mac_ver()
-        return "Release:%s; Version:%s Machine:%s" % (release, versioninfo, machine)
-    else:
-        return "None"
 
 
 
@@ -490,16 +451,16 @@ class ControlHandler():
 
         gws_ip_num = len(google_ip.gws_ip_list)
         res_arr = {"gws_ip_num": gws_ip_num,
-                   "sys_platform":sys.platform,
+                   "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
                    "os_release":platform.release(),
                    "architecture":platform.architecture(),
-                   "os_detail":os_detail(),
+                   "os_detail":env_info.os_detail(),
                    "language":self.get_os_language(),
                    "browser":user_agent,
                    "xxnet_version":self.xxnet_version(),
-                   "python_version": config.python_version,
+                   "python_version": platform.python_version(),
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
                    "connected_link":"%d,%d" % (len(https_manager.new_conn_pool.pool), len(https_manager.gae_conn_pool.pool)),
@@ -540,6 +501,7 @@ class ControlHandler():
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
                 user_config.user_special.ip_connect_interval = int(self.postvars['ip_connect_interval'][0])
                 user_config.user_special.use_ipv6 = int(self.postvars['use_ipv6'][0])
+                user_config.user_special.connect_interval = int(self.postvars['connect_interval'][0])
                 user_config.save()
 
                 config.load()

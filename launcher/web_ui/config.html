@@ -12,6 +12,12 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
+        <div class="span4">允许远程连接Web控制端<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">(帮助)</a></div> <!-- .span4 -->
+        <div class="span8">
+            <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
         <div class="span4">显示托盘图标(需要重启XX-Net)</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch" />
@@ -136,6 +142,12 @@
 
                     $( "#popup-webui").prop('checked', true);
                 }
+                if ( result['allow_remote_connect'] != 0 ) {
+                    $( "#allow-remote-connect").parent().removeClass('switch-off');
+                    $( "#allow-remote-connect").parent().addClass('switch-on');
+
+                    $( "#allow-remote-connect").prop('checked', true);
+                }
                 if ( result['show_systray'] != 0 ) {
                     $( "#show-systray").parent().removeClass('switch-off');
                     $( "#show-systray").parent().addClass('switch-on');
@@ -211,6 +223,14 @@
         return setConfig(key, value);
     });
 
+    $('#allow-remote-connect').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'allow_remote_connect',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
     $('#gae_proxy-enable').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'gae_proxy_enable',
@@ -266,7 +286,7 @@
     function restartingService(serviceNameSlug) {
         var serviceName     = '',
             restatingTime   = 5,
-            messageTemplate = '正在重启服务[%s], 页面将在%s秒内刷新.';
+            messageTemplate = '正在配置服务[%s], 页面将在%s秒内刷新.';
 
         if ( serviceNameSlug == 'gae_proxy_enable' ) {
             serviceName     = 'GAEProxy';

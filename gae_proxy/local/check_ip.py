@@ -279,7 +279,7 @@ def test_app_check(ssl_sock, ip):
 
 checking_lock = threading.Lock()
 checking_num = 0
-network_ok = False
+network_ok = True
 last_check_time = 0
 check_network_interval = 100
 def network_is_ok():
@@ -298,7 +298,7 @@ def network_is_ok():
     checking_num += 1
     checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("code.jquery.com", 443, timeout=30)
+        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -336,7 +336,7 @@ def test_gae(ip_str):
     if not result:
         return False
 
-    check.result.server_type = result
+    check.result.server_type = "gws"
 
     return check.result
 
@@ -593,7 +593,7 @@ if __name__ == "__main__":
     #test_gws("216.58.196.176") #gvs
     #result = test_gws("139.175.107.212")
     #print result
-    test('203.210.2.25', 1)
+    test('216.239.38.125', 1)
     #test("216.239.38.123")
     #     test_multi_thread_search_ip()
     #check_all_exist_ip()
