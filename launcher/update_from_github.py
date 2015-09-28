@@ -17,6 +17,7 @@ import zipfile
 import config
 import shutil
 
+import update
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 
@@ -28,12 +29,15 @@ download_path = os.path.join(data_root, 'downloads')
 if not os.path.isdir(download_path):
     os.mkdir(download_path)
 
-download_progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished}
+download_progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
 
 
-def get_opener():
-    opener = urllib2.build_opener()
-    return opener
+def get_opener(retry=0):
+    if retry == 0:
+        opener = urllib2.build_opener()
+        return opener
+    else:
+        return update.get_opener()
 
 def current_version():
     readme_file = os.path.join(root_path, "README.md")
@@ -61,31 +65,39 @@ def download_file(url, file):
             launcher_log.warn("url in downloading, %s", url)
             return False
 
-    try:
-        launcher_log.info("download %s to %s", url, file)
-        opener = get_opener()
-        req = opener.open(url)
-        download_progress[url]["size"] = int(req.headers.get('content-length') or 0)
+    for i in range(0, 2):
+        try:
+            launcher_log.info("download %s to %s, retry:%d", url, file, i)
+            opener = get_opener(i)
+            req = opener.open(url)
+            download_progress[url]["size"] = int(req.headers.get('content-length') or 0)
 
-        CHUNK = 16 * 1024
-        downloaded = 0
-        with open(file, 'wb') as fp:
-            while True:
-                chunk = req.read(CHUNK)
-                if not chunk: break
-                fp.write(chunk)
-                downloaded += len(chunk)
-                download_progress[url]["downloaded"] = downloaded
+            CHUNK = 16 * 1024
+            downloaded = 0
+            with open(file, 'wb') as fp:
+                while True:
+                    chunk = req.read(CHUNK)
+                    if not chunk:
+                        break
+                    fp.write(chunk)
+                    downloaded += len(chunk)
+                    download_progress[url]["downloaded"] = downloaded
 
-        download_progress[url]["status"] = "finished"
-        return True
-    except urllib2.URLError as e:
-        launcher_log.warn("download %s to %s fail:%r", url, file, e)
-        return False
-    except Exception as e:
-        download_progress[url]["status"] = "fail"
-        launcher_log.exception("download %s to %s fail:%r", url, file, e)
-        return False
+            if downloaded != download_progress[url]["size"]:
+                launcher_log.warn("download size:%d, need size:%d, download fail.", downloaded, download_progress[url]["size"])
+                continue
+            else:
+                download_progress[url]["status"] = "finished"
+                return True
+        except urllib2.URLError as e:
+            launcher_log.warn("download %s to %s URL fail:%r", url, file, e)
+            continue
+        except Exception as e:
+            launcher_log.exception("download %s to %s fail:%r", url, file, e)
+            continue
+
+    download_progress[url]["status"] = "failed"
+    return False
 
 def get_xxnet_url_version(readme_file):
     versions = []
