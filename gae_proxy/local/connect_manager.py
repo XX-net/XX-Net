@@ -181,10 +181,10 @@ class Https_connection_manager(object):
         p.start()
 
     def load_config(self):
-        self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread") #10
-        self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max") #20/30
-        self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min") #20/30
-        self.keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive") #1
+        self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
+        self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max")
+        self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min")
+        self.keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive")
 
         self.new_conn_pool = Connect_pool()
         self.gae_conn_pool = Connect_pool()
@@ -278,8 +278,12 @@ class Https_connection_manager(object):
 
             time.sleep(1)
 
-    def save_ssl_connection_for_reuse(self, ssl_sock, host=None):
-        ssl_sock.last_use_time = time.time()
+    def save_ssl_connection_for_reuse(self, ssl_sock, host=None, call_time=0):
+        if call_time:
+            ssl_sock.last_use_time = call_time
+        else:
+            ssl_sock.last_use_time = time.time()
+
         if host:
             if host not in self.host_conn_pool:
                 self.host_conn_pool[host] = Connect_pool()
@@ -406,7 +410,10 @@ class Https_connection_manager(object):
             # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
             ssl_sock.ip = ip
             ssl_sock.sock = sock
+            ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin
+            ssl_sock.received_size = 0
+            ssl_sock.load = 0
             ssl_sock.handshake_time = handshake_time
             ssl_sock.host = ''
 
@@ -519,9 +526,6 @@ class Https_connection_manager(object):
             else:
                 xlog.debug("create ssl timeout fail.")
                 return None
-
-
-
 
 
 class Forward_connection_manager():
@@ -668,48 +672,5 @@ class Forward_connection_manager():
                 remote.close()
 
 
-
-
 https_manager = Https_connection_manager()
 forwork_manager = Forward_connection_manager()
-
-
-def test_pool():
-    pool = Connect_pool()
-    pool.put((3, "c"))
-    pool.put((1, "a"))
-    pool.put((2, "b"))
-
-    t, s = pool.get()
-    print s
-
-    t, s = pool.get()
-    print s
-
-    t, s = pool.get()
-    print s
-
-
-def test_pool_speed():
-    pool = Connect_pool()
-    for i in range(100):
-        pool.put((i, "%d"%i))
-
-    start = time.time()
-    t, s = pool.get()
-    print time.time() - start
-    print s
-    # sort time is 5ms for 10000
-    # sort time is 0ms for 100
-
-if __name__ == "__main__":
-    #test_pool_speed()
-    #sock = forwork_manager.create_connection()
-    #print sock
-    appid = "xxnet-a23"
-    le = appid[7:]
-    print le
-    if appid.startswith("xxnet-") and le.isdigit():
-        print "is dig"
-    else:
-        print "not dig"
