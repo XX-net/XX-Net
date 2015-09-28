@@ -156,6 +156,7 @@ def get_new_lines(from_no):
                 print("unicode err:%r" % e)
                 print("line can't decode:%s" % line)
                 print("Except stack:%s" % traceback.format_exc())
+                jd[i] = ""
     buffer_lock.release()
     return json.dumps(jd, sort_keys=True)
 
