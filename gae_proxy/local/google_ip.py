@@ -104,8 +104,10 @@ class Check_ip():
             file_path = self.good_ip_file
         else:
             file_path = self.default_good_ip_file
+
         with open(file_path, "r") as fd:
             lines = fd.readlines()
+
         for line in lines:
             try:
                 str_l = line.split(' ')
@@ -257,12 +259,17 @@ class Check_ip():
                 if time.time() - get_time < self.ip_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
-                handshake_time = self.ip_dict[ip_str]["handshake_time"]
+
+                if time.time() - self.ip_dict[ip_str]['success_time'] > 300: # 5 min
+                    fail_connect_interval = 1800 # 30 min
+                else:
+                    fail_connect_interval = 120 # 2 min
                 fail_time = self.ip_dict[ip_str]["fail_time"]
-                if time.time() - fail_time < 300:
+                if time.time() - fail_time < fail_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
 
+                handshake_time = self.ip_dict[ip_str]["handshake_time"]
                 xlog.debug("get ip:%s t:%d", ip_str, handshake_time)
                 self.ip_dict[ip_str]['history'].append([time.time(), "get"])
                 self.ip_dict[ip_str]['get_time'] = time.time()
@@ -308,7 +315,7 @@ class Check_ip():
         finally:
             self.ip_lock.release()
 
-    def add_ip(self, ip_str, handshake_time, domain=None, server=None):
+    def add_ip(self, ip_str, handshake_time, domain=None, server=''):
         if not isinstance(ip_str, basestring):
             xlog.error("add_ip input")
 
@@ -326,7 +333,7 @@ class Check_ip():
 
             self.ip_dict[ip_str] = {'handshake_time':handshake_time, 'domain':domain, 'server':server,
                                     'timeout':0, "history":[[time.time(), handshake_time]], "fail_time":0,
-                                    "get_time":0}
+                                    "success_time":0, "get_time":0}
 
             if 'gws' in server:
                 self.gws_ip_list.append(ip_str)
@@ -390,6 +397,7 @@ class Check_ip():
         if not force_remove:
             if not check_ip.network_is_ok():
                 xlog.debug("report_connect_fail network fail")
+                #connect_control.fall_into_honeypot()
                 return
 
         self.ip_lock.acquire()
@@ -511,8 +519,11 @@ class Check_ip():
                 if self.is_bad_ip(ip_str):
                     continue
 
+                if ip_str in self.ip_dict:
+                    continue
+
                 connect_control.start_connect_register()
-                result = check_ip.test_gws(ip_str)
+                result = check_ip.test_gae(ip_str)
                 connect_control.end_connect_register()
                 if not result:
                     continue
@@ -526,7 +537,7 @@ class Check_ip():
                     self.save_ip_list()
             except check_ip.HoneypotError as e:
                 self.report_bad_ip(ip_str)
-                connect_control.fall_into_honeypot()
+
                 continue
             except Exception as e:
                 xlog.exception("google_ip.runJob fail:%s", e)

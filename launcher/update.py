@@ -248,6 +248,8 @@ def check_update():
             if LooseVersion(current_version) < LooseVersion(versions[1][1]):
                 launcher_log.info("update to stable version %s", versions[1][1])
                 update_from_github.update_version(versions[1][1])
+    except IOError as e:
+        launcher_log.warn("check update fail:%r", e)
     except Exception as e:
         launcher_log.exception("check_update fail:%r", e)
 

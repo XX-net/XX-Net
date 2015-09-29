@@ -7,6 +7,7 @@ import atexit
 import webbrowser
 
 import launcher_log
+import update_from_github
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
@@ -18,7 +19,7 @@ if sys.platform.startswith("linux"):
     def X_is_running():
         try:
             from subprocess import Popen, PIPE
-            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE, shell=True)
             p.communicate()
             return p.returncode == 0
         except:
@@ -66,13 +67,14 @@ atexit.register(exit_handler)
 
 
 def main():
-
     # change path to launcher
     global __file__
     __file__ = os.path.abspath(__file__)
     if os.path.islink(__file__):
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    launcher_log.info("start XX-Net %s", update_from_github.current_version())
 
     web_control.confirm_xxnet_exit()
 
@@ -84,7 +86,8 @@ def main():
 
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
-        webbrowser.open("http://127.0.0.1:8085/")
+        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        webbrowser.open("http://127.0.0.1:%s/" % host_port)
 
     update.start()
 
