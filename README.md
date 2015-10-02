@@ -3,14 +3,14 @@
 
 XX-Net
 ========
-最新状态（2015.9.28）： 各地情况不同，启动后需要扫描ip 十分钟到1个小时。  
-  上海电信基本无连接。  
+最新状态（2015.10.2）： 各地情况不同，启动后需要扫描ip 十分钟到1个小时。  
+  上海电信连接困难。  
    
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.5.0
+https://codeload.github.com/XX-net/XX-Net/zip/2.5.1
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.3.0

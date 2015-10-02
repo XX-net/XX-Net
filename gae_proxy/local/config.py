@@ -113,6 +113,9 @@ class Config(object):
         self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
 
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
+        self.ip_traffic_quota = self.CONFIG.getint('google_ip', 'ip_traffic_quota')
+        self.ip_traffic_quota_base = self.CONFIG.getint('google_ip', 'ip_traffic_quota_base')
+
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
 
