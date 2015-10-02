@@ -123,14 +123,6 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     ssl_sock.sock = sock
     return ssl_sock, connct_time, handshake_time
 
-class HoneypotError(Exception):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    @staticmethod
-    def __new__(S, *more):
-        pass
-
 class Check_result():
     def __init__(self):
         self.domain = ""
@@ -165,9 +157,6 @@ class Check_frame(object):
                     raise SSLError("no cert")
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-                if self.check_cert and not issuer_commonname.startswith('Google'):
-                    raise HoneypotError(' certficate is issued by %r, not Google' % ( issuer_commonname))
-
 
                 ssl_cert = cert_util.SSLCert(cert)
                 xlog.info("%s CN:%s", self.ip, ssl_cert.cn)
@@ -179,9 +168,6 @@ class Check_frame(object):
                 return callback(ssl_sock, self.ip)
 
             return True
-        except HoneypotError as e:
-            xlog.warn("honeypot %s", self.ip)
-            raise e
         except SSLError as e:
             xlog.debug("Check_appengine %s SSLError:%s", self.ip, e)
             pass

@@ -60,7 +60,6 @@ elif sys.platform == "darwin":
 import time
 import traceback
 import platform
-import SocketServer
 import xlog
 import random
 import threading
@@ -83,7 +82,7 @@ import proxy_handler
 import connect_control
 import env_info
 from config import config
-
+import connect_manager
 from gae_handler import spawn_later
 
 ready = False
@@ -195,6 +194,9 @@ def log_info():
 def main():
     global ready
     connect_control.keep_running = True
+    config.load()
+    connect_manager.https_manager.load_config()
+
     xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
     # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
     do_profile = False

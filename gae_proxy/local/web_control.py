@@ -32,6 +32,7 @@ import urllib2
 import sys
 import datetime
 import locale
+import time
 
 
 import xlog
@@ -622,12 +623,18 @@ class ControlHandler():
         self.send_response('text/html', data)
 
     def req_ip_list_handler(self):
+        time_now = time.time()
         data = ""
         data += "pointer:%d\r\n" % google_ip.gws_ip_pointer
+        data += "N \t IP      \t\t Han \t Fail \t Trans \t Tran_t \t his\r\n"
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
-            timeout = google_ip.ip_dict[ip]["timeout"]
+            fail_times = google_ip.ip_dict[ip]["fail_times"]
+            transfered_data = google_ip.ip_dict[ip]["transfered_data"]
+            data_active = google_ip.ip_dict[ip]["data_active"]
+            if data_active:
+                data_active = time_now - data_active
             history = google_ip.ip_dict[ip]["history"]
             t0 = 0
             str = ''
@@ -639,7 +646,8 @@ class ControlHandler():
                 time_per = int((t - t0) * 1000)
                 t0 = t
                 str += "%d(%s) " % (time_per, v)
-            data += "%d \t %s      \t %d \t %d \t %s\r\n" % (i, ip, handshake_time, timeout, str)
+            data += "%d \t %s      \t %d \t %d \t %d \t %d \t %s\r\n" % \
+                    (i, ip, handshake_time, fail_times, transfered_data, data_active, str)
             i += 1
 
         mimetype = 'text/plain'

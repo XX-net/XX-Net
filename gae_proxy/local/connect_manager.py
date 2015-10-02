@@ -97,6 +97,10 @@ class Connect_pool():
         fastest_time = 9999
         fastest_sock = None
         for sock in self.pool:
+            ip = sock.ip
+            #if not google_ip.is_traffic_quota_allow(ip):
+            #    continue
+
             time = self.pool[sock]
             if time < fastest_time or not fastest_sock:
                 fastest_time = time
@@ -165,6 +169,12 @@ class Https_connection_manager(object):
         # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
         # openssl s_server -accept 443 -key CA.crt -cert CA.crt
 
+        # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
+        self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
+        self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+        if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
+            self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
+
         self.timeout = 4
         self.max_timeout = 15
         self.thread_num = 0
@@ -190,12 +200,6 @@ class Https_connection_manager(object):
         self.gae_conn_pool = Connect_pool()
         self.host_conn_pool = {}
 
-        self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
-
-        # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
-        self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
-        if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
-            self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
     def head_request(self, ssl_sock):
         if ssl_sock.host == '':
@@ -426,8 +430,8 @@ class Https_connection_manager(object):
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
-                    google_ip.report_bad_ip(ssl_sock.ip)
-                    connect_control.fall_into_honeypot()
+                    #google_ip.report_bad_ip(ssl_sock.ip)
+                    #connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
