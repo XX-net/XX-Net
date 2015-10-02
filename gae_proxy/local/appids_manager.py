@@ -26,7 +26,7 @@ class APPID_manager(object):
             self.reset_appid()
 
     def report_not_exist(self, appid):
-        #logging.error("APPID_manager, report_not_exist %s", appid)
+        xlog.warn("APPID_manager, report_not_exist %s", appid)
 
         try:
             config.GAE_APPIDS.remove(appid)
