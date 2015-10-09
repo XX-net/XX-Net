@@ -233,16 +233,16 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
         xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
-            if host.endswith(".google.com") or host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
+            if host.endswith(".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
                 if host in config.HOSTS_GAE:
                     gae_set = [s for s in config.HOSTS_GAE]
                     gae_set.remove(host)
                     config.HOSTS_GAE = tuple(gae_set)
-                if host not in config.HOSTS_FWD:
-                    fwd_set = [s for s in config.HOSTS_FWD]
+                if host not in config.HOSTS_DIRECT:
+                    fwd_set = [s for s in config.HOSTS_DIRECT]
                     fwd_set.append(host)
-                    config.HOSTS_FWD = tuple(fwd_set)
-                xlog.warn("Method %s not support in GAE, Redirect to FWD for %s", self.command, self.path)
+                    config.HOSTS_DIRECT = tuple(fwd_set)
+                xlog.warn("Method %s not support in GAE, Redirect to DIRECT for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path).encode())
             else:
                 xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
