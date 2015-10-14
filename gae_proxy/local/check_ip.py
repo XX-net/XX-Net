@@ -37,6 +37,7 @@ from google_ip_range import ip_range
 import ip_utils
 from appids_manager import appid_manager
 
+
 if __name__ == "__main__":
     import xlog
 else:
@@ -55,12 +56,15 @@ else:
         def exception(fmt, *args, **kwargs):
             pass
 
+
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 max_timeout = 5000
 g_conn_timeout = 1
 g_handshake_timeout = 2
 
 default_socket = None
+
+
 def load_sock():
     global default_socket
     if config.PROXY_ENABLE:
@@ -78,6 +82,76 @@ def load_sock():
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
         default_socket = socket.socket
 load_sock()
+
+
+#####################################
+
+checking_lock = threading.Lock()
+checking_num = 0
+network_ok = True
+last_check_time = 0
+check_network_interval = 100
+
+
+def network_is_ok():
+    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+    if time.time() - last_check_time < check_network_interval:
+        return network_ok
+
+    if checking_num > 0:
+        return network_ok
+
+    if config.PROXY_ENABLE:
+        socket.socket = socks.socksocket
+        xlog.debug("patch socks")
+
+    checking_lock.acquire()
+    checking_num += 1
+    checking_lock.release()
+    try:
+        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
+        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+                  "accept":"application/json, text/javascript, */*; q=0.01",
+                  "accept-encoding":"gzip, deflate, sdch",
+                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+                  "connection":"keep-alive"
+                  }
+        conn.request("HEAD", "/", headers=header)
+        response = conn.getresponse()
+        if response.status:
+            xlog.debug("network is ok")
+            network_ok = True
+            last_check_time = time.time()
+            return True
+    except:
+        pass
+    finally:
+        checking_lock.acquire()
+        checking_num -= 1
+        checking_lock.release()
+
+        if config.PROXY_ENABLE:
+            socket.socket = default_socket
+            xlog.debug("restore socket")
+
+    xlog.warn("network fail.")
+    network_ok = False
+    last_check_time = time.time()
+    return False
+
+######################################
+# about ip connect time and handshake time
+# handshake time is double of connect time in common case.
+# after connect and handshaked, http get time is like connect time
+#
+# connect time is zero if you use socks proxy.
+#
+#
+# most case, connect time is 300ms - 600ms.
+# good case is 60ms
+# bad case is 1300ms and more.
+
+
 
 def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     import struct
@@ -123,6 +197,7 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     ssl_sock.sock = sock
     return ssl_sock, connct_time, handshake_time
 
+
 class Check_result():
     def __init__(self):
         self.domain = ""
@@ -130,6 +205,7 @@ class Check_result():
         self.appspot_ok = False
         self.connect_time = max_timeout
         self.handshake_time = max_timeout
+
 
 class Check_frame(object):
     def __init__(self, ip, check_cert=True):
@@ -244,6 +320,7 @@ def test_app_head(ssl_sock, ip):
     xlog.debug("app check time:%d", time_cost)
     return True
 
+
 def test_app_check(ssl_sock, ip):
     request_data = 'GET /check HTTP/1.1\r\nHost: xxnet-check.appspot.com\r\n\r\n'
     time_start = time.time()
@@ -266,57 +343,6 @@ def test_app_check(ssl_sock, ip):
     xlog.debug("app check time:%d", time_cost)
     return True
 
-checking_lock = threading.Lock()
-checking_num = 0
-network_ok = True
-last_check_time = 0
-check_network_interval = 100
-def network_is_ok():
-    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
-    if time.time() - last_check_time < check_network_interval:
-        return network_ok
-
-    if checking_num > 0:
-        return network_ok
-
-    if config.PROXY_ENABLE:
-        socket.socket = socks.socksocket
-        xlog.debug("patch socks")
-
-    checking_lock.acquire()
-    checking_num += 1
-    checking_lock.release()
-    try:
-        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
-        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                  "accept":"application/json, text/javascript, */*; q=0.01",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                  "connection":"keep-alive"
-                  }
-        conn.request("HEAD", "/", headers=header)
-        response = conn.getresponse()
-        if response.status:
-            xlog.debug("network is ok")
-            network_ok = True
-            last_check_time = time.time()
-            return True
-    except:
-        pass
-    finally:
-        checking_lock.acquire()
-        checking_num -= 1
-        checking_lock.release()
-
-        if config.PROXY_ENABLE:
-            socket.socket = default_socket
-            xlog.debug("restore socket")
-
-    xlog.warn("network fail.")
-    network_ok = False
-    last_check_time = time.time()
-    return False
-
 def test_gae(ip_str):
     xlog.info("==>%s", ip_str)
     check = Check_frame(ip_str)
@@ -324,10 +350,13 @@ def test_gae(ip_str):
     result = check.check(callback=test_app_head, check_ca=True)
     if not result:
         return False
+    else:
+        check.result.appspot_ok = result
 
     check.result.server_type = "gws"
 
     return check.result
+
 
 def test_gws(ip_str):
     xlog.info("==>%s", ip_str)
@@ -341,6 +370,7 @@ def test_gws(ip_str):
     check.result.server_type = result
 
     return check.result
+
 
 def test_gvs(ip_str):
     #logging.info("%s", ip_str)
@@ -362,6 +392,10 @@ def test_with_app(ip_str):
     result = check.check(callback=test_app_check, check_ca=True)
     xlog.info("test_with_app %s app %s", ip_str, result)
 
+
+#####################################################################################
+# Test function for develop, not working code
+#####################################################################################
 
 
 def test(ip_str, loop=1):
@@ -402,7 +436,7 @@ def test_main():
         ip_str = ip_utils.ip_num_to_string(ip_int)
         test(ip_str, 1)
 
-import threading
+
 class fast_search_ip():
     check_num = 0
     gws_num = 0
@@ -497,6 +531,7 @@ def test_keep_alive(ip_str, interval=5):
     #print result
     xlog.info("result:%r", result)
 
+
 def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
 
     test_array = {}
@@ -582,7 +617,7 @@ if __name__ == "__main__":
     #test_gws("216.58.196.176") #gvs
     #result = test_gws("139.175.107.212")
     #print result
-    test('1.255.22.210', 1)
+    result = test_gae('64.15.119.69')
     #test("216.239.38.123")
     #     test_multi_thread_search_ip()
     #check_all_exist_ip()
@@ -590,15 +625,3 @@ if __name__ == "__main__":
     #test = Test_cipher()
     #test.test2()
     pass
-
-# about ip connect time and handshake time
-# handshake time is double of connect time in common case.
-# after connect and handshaked, http get time is like connect time
-#
-# connect time is zero if you use socks proxy.
-#
-#
-# most case, connect time is 300ms - 600ms.
-# good case is 60ms
-# bad case is 1300ms and more.
-

@@ -142,7 +142,7 @@ class Check_ip():
 
         try:
             self.ip_lock.acquire()
-            ip_dict = sorted(self.ip_dict.items(),  key=lambda x: x[1]['handshake_time'])
+            ip_dict = sorted(self.ip_dict.items(),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
             with open(self.good_ip_file, "w") as fd:
                 for ip_str, property in ip_dict:
                     fd.write( "%s %s %s %d %d\n" %
@@ -165,7 +165,7 @@ class Check_ip():
             for ip_str in self.ip_dict:
                 if 'gws' not in self.ip_dict[ip_str]['server']:
                     continue
-                ip_rate[ip_str] = self.ip_dict[ip_str]['handshake_time']
+                ip_rate[ip_str] = self.ip_dict[ip_str]['handshake_time'] + (self.ip_dict[ip_str]['fail_times'] * 1000)
 
             ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
             self.gws_ip_list = [ip_str for ip_str,rate in ip_time]
@@ -594,4 +594,4 @@ def test():
 
 google_ip = Check_ip()
 if __name__ == '__main__':
-    google_ip.save_ip_list(force=True)
+    test()

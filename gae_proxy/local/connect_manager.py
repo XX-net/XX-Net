@@ -251,8 +251,9 @@ class Https_connection_manager(object):
                 response.close()
 
     def keep_alive_worker(self, sock):
+        call_time = time.time()
         if self.head_request(sock):
-            self.save_ssl_connection_for_reuse(sock)
+            self.save_ssl_connection_for_reuse(sock, call_time=call_time)
         else:
             sock.close()
             #self.create_more_connection()
@@ -430,8 +431,7 @@ class Https_connection_manager(object):
 
                 issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
-                    #google_ip.report_bad_ip(ssl_sock.ip)
-                    #connect_control.fall_into_honeypot()
+                    google_ip.report_connect_fail(ip, force_remove=True)
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
