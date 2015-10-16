@@ -308,11 +308,16 @@ def handler(method, url, headers, body, wfile):
             if response.app_status != 200:
                 xlog.warn("fetch gae status:%s url:%s", response.app_status, url)
 
-                server_type = response.getheader('Server', "")
-                if "gws" not in server_type and "Google Frontend" not in server_type:
-                    xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
-                    google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
-                    response.close()
+                try:
+                    server_type = response.getheader('Server', "")
+                    if "gws" not in server_type and "Google Frontend" not in server_type:
+                        xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
+                        google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                        response.close()
+                        continue
+                except Exception as e:
+                    errors.append(e)
+                    xlog.warn('gae_handler.handler %r %s , retry...', e, url):
                     continue
 
             if response.app_status == 404:
