@@ -1,37 +1,33 @@
 
-叉叉翻墙
 
 XX-Net
 ========
-最新状态（2015.10.9）： 各地情况不同，启动后需要扫描ip 十分钟到1个小时。  
-  上海电信连接困难。  
-   
+翻墙工具套件  
+* GAE proxy, 稳定、快速、易用
+* Web界面，人性化交互
+
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.5.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.5.5
 
 稳定版：
 https://codeload.github.com/XX-net/XX-Net/zip/2.5.1
 
 
-历史版本：https://github.com/XX-net/XX-Net/releases
-   
+使用方法：  
+https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
   
   
 
-主要特性
-========
-* 集成GoAgent、GoGoTest等自动扫描IP，省事省力
-* Web界面，人性化交互，傻瓜易用
-* 内置了公共 appid, 方便新手
-* 方便易用的细节、细节提示
+
 
 
 平台支持
 ================
 * Windows 7/8/10 （xp 需要 tcpip.sys 补丁, 比如用 tcp-z）
+  Win10 存在声音卡的问题 
 * Linux （Ubuntu不显示系统托盘）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
 
@@ -40,7 +36,6 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.5.1
 ## 链接
 |   |   |
 | --------   | :----  |
-|使用方法|https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95|
 |问题报告:  |https://github.com/XX-net/XX-Net/issues|
 |讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 

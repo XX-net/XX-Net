@@ -410,12 +410,25 @@ def handler(method, url, headers, body, wfile):
         body_length = end - start + 1
 
         last_read_time = time.time()
+        time_response = time.time()
         while True:
             if start > end:
+                time_finished = time.time()
+                if body_length > 1024 and time_finished - time_response > 0:
+                    speed = body_length / (time_finished - time_response)
+
+
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d Spd:%d %d %s", 
+                        response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000, 
+                        length, response.ssl_sock.handshake_time, int(speed), response.status, url)
+                else:
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d %d %s", 
+                    response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000, 
+                    length, response.ssl_sock.handshake_time, response.status, url)
+
                 response.ssl_sock.received_size += body_length
                 google_ip.report_ip_traffic(response.ssl_sock.ip, body_length)
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, call_time=time_request)
-                xlog.info("GAE %d|%s|%d t:%d s:%d %d %s", response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time.time()-time_request)*1000, length, response.status, url)
                 return
 
             data = response.read(config.AUTORANGE_BUFSIZE)
