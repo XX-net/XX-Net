@@ -95,6 +95,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
     def do_POST(self):
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                launcher_log.warn("web control ref:%s host:%s", refer_loc, host)
+                return
+
         #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
@@ -111,14 +119,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
 
     def do_GET(self):
-        try:
-            refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
-            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                launcher_log.warn("web control ref:%s refuse", netloc)
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                launcher_log.warn("web control ref:%s host:%s", refer_loc, host)
                 return
-        except:
-            pass
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
