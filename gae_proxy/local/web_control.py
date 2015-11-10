@@ -223,16 +223,6 @@ class ControlHandler():
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-
-        try:
-            refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
-            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                xlog.warn("web control ref:%s refuse", netloc)
-                return
-        except:
-            pass
-
         path = urlparse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
@@ -450,8 +440,7 @@ class ControlHandler():
         else:
             user_agent = ""
 
-        gws_ip_num = len(google_ip.gws_ip_list)
-        res_arr = {"gws_ip_num": gws_ip_num,
+        res_arr = {"gws_ip_num": "%d,%d" % (len(google_ip.gws_ip_list), google_ip.good_ip_num),
                    "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
@@ -471,7 +460,7 @@ class ControlHandler():
                    "pac_url":config.pac_url,
                    "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
                    "scan_ip_thread_num":google_ip.searching_thread_count,
-                   "ip_handshake_100":google_ip.ip_handshake_th(100),
+                   "ip_handshake_10":google_ip.ip_handshake_th(10),
                    "block_stat":connect_control.block_stat(),
                    "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
                    "high_prior_connecting_num":connect_control.high_prior_connecting_num,
@@ -508,12 +497,12 @@ class ControlHandler():
                 config.load()
                 appid_manager.reset_appid()
                 import connect_manager
-                connect_manager.load_sock()
+                connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
                 connect_manager.forwork_manager.load_config()
 
-                google_ip.load_config()
-                check_ip.load_sock()
+                google_ip.reset()
+                check_ip.load_proxy_config()
 
                 data = '{"res":"success"}'
                 self.send_response('text/html', data)
@@ -624,17 +613,39 @@ class ControlHandler():
 
     def req_ip_list_handler(self):
         time_now = time.time()
-        data = ""
-        data += "pointer:%d\r\n" % google_ip.gws_ip_pointer
-        data += "N \t IP      \t\t Han \t Fail \t Trans \t Tran_t \t his\r\n"
+        data = "<html><body><div  style='float: left; white-space:nowrap;font-family: monospace;'>"
+        data += "time:%d  pointer:%d<br>\r\n" % (time_now, google_ip.gws_ip_pointer)
+        data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th><th>links</th><th>get_time</th><th>success_time</th><th>fail_time</th>"
+        data += "<th>data_active</th><th>transfered_data</th><th>Trans</th><th>history</th></tr>\n"
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
+
             fail_times = google_ip.ip_dict[ip]["fail_times"]
-            transfered_data = google_ip.ip_dict[ip]["transfered_data"]
+            links = google_ip.ip_dict[ip]["links"]
+
+            get_time = google_ip.ip_dict[ip]["get_time"]
+            if get_time:
+                get_time = time_now - get_time
+
+            success_time = google_ip.ip_dict[ip]["success_time"]
+            if success_time:
+                success_time = time_now - success_time
+
+            fail_time = google_ip.ip_dict[ip]["fail_time"]
+            if fail_time:
+                fail_time = time_now - fail_time
+
             data_active = google_ip.ip_dict[ip]["data_active"]
             if data_active:
-                data_active = time_now - data_active
+                active_time = time_now - data_active
+            else:
+                active_time = 0
+
+            transfered_data = google_ip.ip_dict[ip]["transfered_data"]
+            transfered_quota = transfered_data - (active_time * config.ip_traffic_quota)
+
+
             history = google_ip.ip_dict[ip]["history"]
             t0 = 0
             str = ''
@@ -646,11 +657,14 @@ class ControlHandler():
                 time_per = int((t - t0) * 1000)
                 t0 = t
                 str += "%d(%s) " % (time_per, v)
-            data += "%d \t %s      \t %d \t %d \t %d \t %d \t %s\r\n" % \
-                    (i, ip, handshake_time, fail_times, transfered_data, data_active, str)
+            data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
+                    "<td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
+                    (i, ip, handshake_time, fail_times, links, get_time, success_time, fail_time,
+                    active_time, transfered_data, transfered_quota, str)
             i += 1
 
-        mimetype = 'text/plain'
+        data += "</table></div></body></html>"
+        mimetype = 'text/html'
         self.send_response(mimetype, data)
 
     def req_scan_ip_handler(self):
@@ -684,7 +698,11 @@ class ControlHandler():
         self.send_response(mimetype, data)
 
     def req_ssl_pool_handler(self):
-        data = https_manager.gae_conn_pool.to_string()
+        data = "New conn:\n"
+        data += https_manager.new_conn_pool.to_string()
+
+        data += "\nGAE conn:\n"
+        data += https_manager.gae_conn_pool.to_string()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

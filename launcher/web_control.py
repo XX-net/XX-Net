@@ -146,6 +146,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.send_not_found()
                     return
 
+                if "imp" not in module_init.proc_handler[module]:
+                    launcher_log.warn("request module:%s start fail", module)
+                    self.send_not_found()
+                    return
+
                 path = '/' + '/'.join(url_path_list[4:])
                 controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_GET()

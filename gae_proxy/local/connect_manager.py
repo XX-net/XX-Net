@@ -22,7 +22,7 @@ SSLError = OpenSSL.SSL.WantReadError
 
 from config import config
 
-def load_sock():
+def load_proxy_config():
     if config.PROXY_ENABLE:
         if config.PROXY_TYPE == "HTTP":
             proxy_type = socks.HTTP
@@ -36,7 +36,7 @@ def load_sock():
 
     if config.PROXY_ENABLE:
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_sock()
+load_proxy_config()
 
 
 from google_ip import google_ip
@@ -144,6 +144,16 @@ class Connect_pool():
         finally:
             self.pool_lock.release()
 
+    def clear(self):
+        self.pool_lock.acquire()
+        try:
+            for sock in pool:
+                sock.close()
+
+            self.pool = {}
+        finally:
+            self.pool_lock.release()
+
     def to_string(self):
         str = ''
         self.pool_lock.acquire()
@@ -224,8 +234,8 @@ class Https_connection_manager(object):
 
         response = None
         try:
-            ssl_sock.settimeout(3)
-            ssl_sock.sock.settimeout(3)
+            ssl_sock.settimeout(10)
+            ssl_sock.sock.settimeout(10)
 
             data = request_data.encode()
             ret = ssl_sock.send(data)
@@ -241,7 +251,8 @@ class Https_connection_manager(object):
                 raise Exception("app check fail")
             return True
         except httplib.BadStatusLine as e:
-            xlog.debug("head request BadStatusLine fail:%r", e)
+            inactive_time = time.time() - ssl_sock.last_use_time
+            xlog.debug("%s keep alive fail, time:%d", ssl_sock.ip, inactive_time)
             return False
         except Exception as e:
             xlog.debug("head request fail:%r", e)
@@ -255,6 +266,7 @@ class Https_connection_manager(object):
         if self.head_request(sock):
             self.save_ssl_connection_for_reuse(sock, call_time=call_time)
         else:
+            google_ip.report_connect_closed(sock.ip, "HEAD")
             sock.close()
             #self.create_more_connection()
 
@@ -275,6 +287,7 @@ class Https_connection_manager(object):
             for ssl_sock in to_keep_live_list:
                 inactive_time = time.time() - ssl_sock.last_use_time
                 if inactive_time > self.keep_alive:
+                    google_ip.report_connect_closed(ssl_sock.ip, "alive_timeout")
                     ssl_sock.close()
                 else:
                     self.start_keep_alive(ssl_sock)
@@ -300,6 +313,7 @@ class Https_connection_manager(object):
 
             while self.gae_conn_pool.qsize() > self.connection_pool_max_num:
                 handshake_time, ssl_sock = self.gae_conn_pool.get_slowest()
+                google_ip.report_connect_closed(ssl_sock.ip, "slowest %d" % ssl_sock.handshake_time)
                 ssl_sock.close()
 
 
@@ -467,7 +481,7 @@ class Https_connection_manager(object):
 
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
-                    xlog.warning("no gws ip")
+                    xlog.warning("ip not enough")
                     break
 
                 port = 443
@@ -496,10 +510,11 @@ class Https_connection_manager(object):
                         ssl_sock = None
                         break
 
-                    if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
+                    if time.time() - ssl_sock.last_use_time < self.keep_alive+1: 
                         xlog.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
                         break
                     else:
+                        google_ip.report_connect_closed(ssl_sock.ip, "get_timeout")
                         ssl_sock.close()
                         continue
         else:
@@ -511,10 +526,11 @@ class Https_connection_manager(object):
                     ssl_sock = None
                     break
 
-                if time.time() - ssl_sock.last_use_time < self.keep_alive+1: # gws ssl connection can keep for 230s after created
+                if time.time() - ssl_sock.last_use_time < self.keep_alive+1:
                     xlog.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                     break
                 else:
+                    google_ip.report_connect_closed(ssl_sock.ip, "get_timeout")
                     ssl_sock.close()
                     continue
 
