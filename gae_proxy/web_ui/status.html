@@ -5,6 +5,10 @@
 </div>
 <![endif]-->
 
+<p>
+    遇到问题？你可以在<a href="https://groups.google.com/forum/#!forum/xx-net">论坛</a>求助，或者向开发者<a href="https://github.com/XX-net/XX-Net/issues">反馈问题</a>。</br>
+    记得附上<b><a href="javascript:;" class="OneKey" Jobs="GetReport">诊断信息</a></b>，和相关的<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=logging" target="-blank">日志</a>。已登录的Github用户，可以点此<a href="javascript:;" class="OneKey" Jobs="GithubIssue">一键生成反馈模板</a>。
+</p>
 <h4>系统版本</h4>
 <table id="version" class="table table-bordered table-striped">
     <thead>
@@ -145,9 +149,7 @@
     </tbody>
 </table>
 <div id="tip">
-    <p>
-        <a href="https://github.com/XX-net/XX-Net/issues">报告问题</a>, 请附上<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=status" target="-blank">状态页</a>信息和<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=logging" target="-blank">日志页</a>内容, 方便分析问题。<br><br>
-    </p>
+
 </div>
 
 <!-- JavaScript -->
@@ -165,10 +167,56 @@
             autostart: true
         });
     });
+    function OneKeyReport(Jobs){
+        $.ajax({
+            type: 'GET',
+            url: '/module/gae_proxy/control/status',
+            dataType: 'JSON',
+            success: function(result) {
+                var information = new Array('sys-platform: ' + result['sys_platform'], '\
+os-system: ' + result['os_system'], '\
+os-version: ' + result['os_version'], '\
+os-release: ' + result['os_release'], '\
+os-detail: ' + result['os_detail'], '\
+architecture: ' + String(result['architecture'].concat()), '\
+browser: ' + result['browser'], '\
+xxnet-version: ' + result['xxnet_version'], '\
+python-version: ' + result['python_version'], '\
+', '\
+ipv6-status: ' + result['use_ipv6'], '\
+gws-ip-num: ' + result['gws_ip_num'], '\
+connected-link: ' + result['connected_link'], '\
+ip-connect-interval: ' + result['ip_connect_interval'], '\
+scan-ip-thread-num: ' + result['scan_ip_thread_num'], '\
+ip-handshake-10: ' + result['ip_handshake_10'], '\
+block-stat: ' + result['block_stat'], '\
+Appid_Working: ' + (result['working_appid'].length != 0), '\
+Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), '\
+Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), '\
+Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-').length != 0));
+                if (Jobs == "GithubIssue"){
+                    IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURI(information.join("\n").replace(/;/g,"；")) + ";";
+                    window.open(IssueURL);
+                }
+                else if (Jobs == "GetReport"){
+                    document.write("以下内容是XX-Net的诊断信息。<a onclick='window.location.reload()' style='color:blue;text-decoration:underline;'>点此</a>返回。</br></br><div style='font-family: Times, TimesNR, serif;'>XX-Net Status：</br></br>" + information.join("</br>") + "</br></br></div>");
+                }
+                else{
+                    alert(Jobs)
+                }
+            }
+          })
+        
+    }
 </script>
 <script type="text/javascript">
     $(function() {
         getStatus();
+    });
+    $(document).ready(function(){
+        $("a.OneKey").click(function(){
+            OneKeyReport(this.getAttribute("Jobs"));
+        });
     });
 </script>
 <script type="text/javascript">
