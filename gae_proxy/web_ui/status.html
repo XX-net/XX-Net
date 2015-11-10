@@ -9,6 +9,94 @@
     遇到问题？你可以在<a href="https://groups.google.com/forum/#!forum/xx-net">论坛</a>求助，或者向开发者<a href="https://github.com/XX-net/XX-Net/issues">反馈问题</a>。</br>
     记得附上<b><a href="javascript:;" class="OneKey" Jobs="GetReport">诊断信息</a></b>，和相关的<a href="http://127.0.0.1:8085/?module=gae_proxy&menu=logging" target="-blank">日志</a>。已登录的Github用户，可以点此<a href="javascript:;" class="OneKey" Jobs="GithubIssue">一键生成反馈模板</a>。
 </p>
+<h4>状态</h4>
+<table id="status" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>IP num/good</td>
+            <td id="gws-ip-num"></td>
+        </tr>
+        <tr>
+            <td>10th IP handshake(ms)</td>
+            <td id="ip-handshake-10"></td>
+        </tr>
+        <tr>
+            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
+            <td id="connected-link"></td>
+        </tr>
+        <tr>
+            <td>scaning ip thread num</td>
+            <td id="scan-ip-thread-num"></td>
+        </tr>
+        <tr>
+            <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
+            <td id="block-stat"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>设置</h4>
+<table id="setting" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Proxy Listen</td>
+            <td id="proxy-listen"></td>
+        </tr>
+        <tr>
+            <td>PAC URL</td>
+            <td id="pac-url"></td>
+        </tr>
+        <tr>
+            <td>IPv6</td>
+            <td id="ipv6-status"></td>
+        </tr>
+        <tr>
+            <td>ip-connect-interval</td>
+            <td id="ip-connect-interval"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Appid</h4>
+<table id="appids" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th width="75%">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr hidden="true">
+            <td>Set appids</td>
+            <td id="gae-appid"></td>
+        </tr>
+        <tr>
+            <td>working appids</td>
+            <td id="working-appid"></td>
+        </tr>
+        <tr>
+            <td>Out of Quota appids</td>
+            <td id="out-of-quota-appids"></td>
+        </tr>
+        <tr>
+            <td>Not Exist appids</td>
+            <td id="not-exist-appids"></td>
+        </tr>
+    </tbody>
+</table>
+
 <h4>系统版本</h4>
 <table id="version" class="table table-bordered table-striped">
     <thead>
@@ -61,93 +149,6 @@
     </tbody>
 </table>
 
-<h4>设置</h4>
-<table id="setting" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Proxy Listen</td>
-            <td id="proxy-listen"></td>
-        </tr>
-        <tr>
-            <td>PAC URL</td>
-            <td id="pac-url"></td>
-        </tr>
-        <tr>
-            <td>IPv6</td>
-            <td id="ipv6-status"></td>
-        </tr>
-        <tr>
-            <td>ip-connect-interval</td>
-            <td id="ip-connect-interval"></td>
-        </tr>
-    </tbody>
-</table>
-
-<h4>状态</h4>
-<table id="status" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>IP num/good</td>
-            <td id="gws-ip-num"></td>
-        </tr>
-        <tr>
-            <td>10th IP handshake(ms)</td>
-            <td id="ip-handshake-10"></td>
-        </tr>
-        <tr>
-            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
-            <td id="connected-link"></td>
-        </tr>
-        <tr>
-            <td>scaning ip thread num</td>
-            <td id="scan-ip-thread-num"></td>
-        </tr>
-        <tr>
-            <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
-            <td id="block-stat"></td>
-        </tr>
-    </tbody>
-</table>
-
-<h4>Appid</h4>
-<table id="appids" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th width="75%">Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr hidden="true">
-            <td>Set appids</td>
-            <td id="gae-appid"></td>
-        </tr>
-        <tr>
-            <td>working appids</td>
-            <td id="working-appid"></td>
-        </tr>
-        <tr>
-            <td>Out of Quota appids</td>
-            <td id="out-of-quota-appids"></td>
-        </tr>
-        <tr>
-            <td>Not Exist appids</td>
-            <td id="not-exist-appids"></td>
-        </tr>
-    </tbody>
-</table>
 <div id="tip">
 
 </div>
