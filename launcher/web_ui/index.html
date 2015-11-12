@@ -35,11 +35,14 @@
                             XX-Net
                         </a>
                     </div> <!-- #logo -->
-                    <div class="span8 text-right">
+                    <div id="logo" class="span4">
+                       <a id="Quit" class="hide" href="javascript:void(0);">Quit</a>
+                    </div> <!-- #Quit -->
+                    <div class="span4 text-right">
                         <a id="resize-window-trigger" href="javascript:void(0);">
                             <img src="/img/fixed-width.png" alt="resize-window">
                         </a>
-                    </div> <!-- .span8 -->
+                    </div> <!-- .span4 -->
                 </div> <!-- .row-fluid -->
             </div> <!-- .container -->
         </div> <!-- .navbar-inner -->
@@ -83,6 +86,40 @@
                 $('.container-fluid').addClass('container');
                 $('.container-fluid').removeClass('container-fluid');
             }
+        });
+    </script>
+    <script type="text/javascript">
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['show_systray'] == 0 ) {
+                    $('#Quit').removeClass('hide');
+                }
+            }
+        });
+        
+        $('#Quit').click(function() {
+            $.ajax({
+                type: 'GET',
+                url: '/quit',
+                success: function(result) {
+                    if ( result['status'] == 'success' ) {
+                        tip('退出成功.', 'success');
+                    } else {
+                        tip('退出失败.', 'error');
+                    }
+                },
+                error: function() {
+                    tip('退出失败,网络错误.', 'error');
+                }
+            });
         });
     </script>
 </body>
