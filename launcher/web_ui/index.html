@@ -29,16 +29,16 @@
         <div class="navbar-inner">
             <div class="container">
                 <div class="row-fluid">
-                    <div id="logo" class="span4">
+                    <div id="logo" class="span10">
                         <a href="/">
                             <img src="/img/logo.png" alt="Logo">
                             XX-Net
                         </a>
                     </div> <!-- #logo -->
-                    <div id="logo" class="span4">
-                       <a id="Quit" class="hide" href="javascript:void(0);">Quit</a>
+                    <div id="logo" class="span1 text-right">
+                        <a id="Quit" href="javascript:void(0);">Quit</a>
                     </div> <!-- #Quit -->
-                    <div class="span4 text-right">
+                    <div class="span1 text-right">
                         <a id="resize-window-trigger" href="javascript:void(0);">
                             <img src="/img/fixed-width.png" alt="resize-window">
                         </a>
@@ -109,6 +109,7 @@
             $.ajax({
                 type: 'GET',
                 url: '/quit',
+                dataType: 'JSON',
                 success: function(result) {
                     if ( result['status'] == 'success' ) {
                         tip('退出成功.', 'success');
