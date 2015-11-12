@@ -193,8 +193,7 @@ ip-handshake-10: ' + result['ip_handshake_10'], '\
 block-stat: ' + result['block_stat'], '\
 Appid_Working: ' + (result['working_appid'].length != 0), '\
 Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), '\
-Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), '\
-Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-').length != 0));
+Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0));
                 if (Jobs == "GithubIssue"){
                     IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURI(information.join("\n").replace(/;/g,"；")) + ";";
                     window.open(IssueURL);
