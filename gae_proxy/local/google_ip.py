@@ -456,18 +456,20 @@ class Check_ip():
             self.ip_lock.release()
 
     def report_connect_fail(self, ip_str, force_remove=False):
-        # ignore if system network is disconnected.
-        if not force_remove:
-            if not check_ip.network_is_ok():
-                xlog.debug("report_connect_fail network fail")
-                #connect_control.fall_into_honeypot()
-                return
-
         self.ip_lock.acquire()
         try:
             time_now = time.time()
             if not ip_str in self.ip_dict:
                 return
+
+            self.ip_dict[ip_str]['links'] -= 1
+                
+            # ignore if system network is disconnected.
+            if not force_remove:
+                if not check_ip.network_is_ok():
+                    xlog.debug("report_connect_fail network fail")
+                    #connect_control.fall_into_honeypot()
+                    return
 
             fail_time = self.ip_dict[ip_str]["fail_time"]
             if not force_remove and time_now - fail_time < 1:
@@ -482,7 +484,6 @@ class Check_ip():
             self.ip_dict[ip_str]['fail_times'] += 1
             self.append_ip_history(ip_str, "fail")
             self.ip_dict[ip_str]["fail_time"] = time_now
-            self.ip_dict[ip_str]['links'] -= 1
 
             if force_remove or self.ip_dict[ip_str]['fail_times'] >= 50:
                 property = self.ip_dict[ip_str]
@@ -499,6 +500,9 @@ class Check_ip():
                     xlog.info("remove ip tmp:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
                 else:
                     xlog.info("remove ip:%s left amount:%d gws_num:%d", ip_str, len(self.ip_dict), len(self.gws_ip_list))
+
+                if self.good_ip_num > len(self.ip_dict):
+                    self.good_ip_num = len(self.ip_dict)
 
             self.iplist_need_save = 1
         except Exception as e:
