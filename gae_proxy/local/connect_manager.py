@@ -368,7 +368,8 @@ class Https_connection_manager(object):
         try:
             ip_str = google_ip.get_gws_ip()
             if not ip_str:
-                xlog.warning("no gws ip")
+                time.sleep(10)
+                xlog.warning("no enough ip")
                 return
 
             port = 443
