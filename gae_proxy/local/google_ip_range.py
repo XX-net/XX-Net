@@ -52,12 +52,16 @@ class Ip_range(object):
             if len(line) == 0 or line[0] == '#':
                 continue
 
-            begin, end = ip_utils.split_ip(line)
-            nbegin = ip_utils.ip_string_to_num(begin)
-            nend = ip_utils.ip_string_to_num(end)
-            if not nbegin or not nend or nend < nbegin:
-                xlog.warn("load ip range:%s fail", line)
-                continue
+            try:
+                begin, end = ip_utils.split_ip(line)
+                nbegin = ip_utils.ip_string_to_num(begin)
+                nend = ip_utils.ip_string_to_num(end)
+                if not nbegin or not nend or nend < nbegin:
+                    xlog.warn("load ip range:%s fail", line)
+                    continue
+            except Exception as e:
+                xlog.exception("load ip range:%s fail:%r", line, e)
+                    continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
             self.ip_range_list.append( [nbegin, nend] )
