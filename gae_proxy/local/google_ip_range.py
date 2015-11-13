@@ -61,7 +61,7 @@ class Ip_range(object):
                     continue
             except Exception as e:
                 xlog.exception("load ip range:%s fail:%r", line, e)
-                    continue
+                continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]
             self.ip_range_list.append( [nbegin, nend] )
