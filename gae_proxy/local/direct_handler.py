@@ -51,27 +51,30 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
     if not ssl_sock:
         return
 
-    ssl_sock.send(request_data.encode())
-    payload_len = len(payload)
-    start = 0
-    while start < payload_len:
-        send_size = min(payload_len - start, 65535)
-        sended = ssl_sock.send(payload[start:start+send_size])
-        start += sended
-
-    response = httplib.HTTPResponse(ssl_sock, buffering=True)
-
-    response.ssl_sock = ssl_sock
     try:
+        ssl_sock.send(request_data.encode())
+        payload_len = len(payload)
+        start = 0
+        while start < payload_len:
+            send_size = min(payload_len - start, 65535)
+            sended = ssl_sock.send(payload[start:start+send_size])
+            start += sended
+
+        response = httplib.HTTPResponse(ssl_sock, buffering=True)
+
+        response.ssl_sock = ssl_sock
+
         orig_timeout = ssl_sock.gettimeout()
         ssl_sock.settimeout(90)
         response.begin()
         ssl_sock.settimeout(orig_timeout)
     except httplib.BadStatusLine as e:
         xlog.warn("direct_handler.fetch bad status line:%r", e)
+        google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
         response = None
     except Exception as e:
         xlog.warn("direct_handler.fetch:%r", e)
+        google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
         response = None
     return response
 
@@ -90,7 +93,7 @@ def handler(method, host, url, headers, body, wfile):
             if response:
                 if response.status > 400:
                     server_type = response.getheader('Server', "")
-                    if "gws" not in server_type:
+                    if "gws" not in server_type and "Google Frontend" not in server_type:
                         xlog.warn("IP:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, server_type, response.status)
                         google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                         response.close()
@@ -130,6 +133,11 @@ def handler(method, host, url, headers, body, wfile):
                     data = response.read(8192)
                 except httplib.IncompleteRead, e:
                     data = e.partial
+                except Exception as e:
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
+                    xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                    response.close()
+                    return
 
                 if send_to_browser:
                     try:
@@ -147,6 +155,7 @@ def handler(method, host, url, headers, body, wfile):
                     if not data:
                         break
 
+            https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
             xlog.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
             return
@@ -168,6 +177,7 @@ def handler(method, host, url, headers, body, wfile):
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data:
                 if time.time() - time_last_read > 20:
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
                     response.close()
                     xlog.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
                     return
@@ -193,6 +203,7 @@ def handler(method, host, url, headers, body, wfile):
 
 
     except NetWorkIOError as e:
+        google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
         time_except = time.time()
         time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
@@ -200,4 +211,5 @@ def handler(method, host, url, headers, body, wfile):
         else:
             xlog.exception("direct_handler except:%r %s %s", e, host, url)
     except Exception as e:
+        google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
         xlog.exception("direct_handler except:%r %s %s", e, host, url)
