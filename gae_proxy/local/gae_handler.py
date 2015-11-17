@@ -162,7 +162,6 @@ def request(headers={}, payload=None):
             else:
                 headers['Host'] = ssl_sock.host
 
-
             response = _request(ssl_sock, headers, payload)
             if not response:
                 google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
@@ -173,7 +172,7 @@ def request(headers={}, payload=None):
             return response
 
         except Exception as e:
-            xlog.warn('request failed:%s', e)
+            xlog.exception('request failed:%s', e)
             if ssl_sock:
                 google_ip.report_connect_closed(ssl_sock.ip, "request_except")
                 ssl_sock.close()
