@@ -1,0 +1,26 @@
+application: gae_proxy
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /_gh/.*
+  script: gae.application
+  secure: optional
+
+- url: /2
+  script: wsgi.gae_application
+  secure: optional
+
+- url: /favicon.ico
+  script: gae.application
+  secure: optional
+
+- url: /.*
+  script: legacy.application
+  secure: optional
+
+libraries:
+- name: pycrypto
+  version: "latest"
