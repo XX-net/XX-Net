@@ -35,8 +35,8 @@
                             XX-Net
                         </a>
                     </div> <!-- #logo -->
-                    <div id="logo" class="span1 text-right">
-                        <a id="Quit" href="javascript:void(0);">Quit</a>
+                    <div id="quit" class="span1 text-right">
+                        <a href="javascript:void(0);">Quit</a>
                     </div> <!-- #Quit -->
                     <div class="span1 text-right">
                         <a id="resize-window-trigger" href="javascript:void(0);">
@@ -89,22 +89,6 @@
         });
     </script>
     <script type="text/javascript">
-        var pageRequests = {
-            'cmd': 'get_config'
-        };
-
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['show_systray'] == 0 ) {
-                    $('#Quit').removeClass('hide');
-                }
-            }
-        });
-        
         $('#Quit').click(function() {
             $.ajax({
                 type: 'GET',
