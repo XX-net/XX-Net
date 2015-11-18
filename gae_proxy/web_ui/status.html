@@ -11,23 +11,16 @@
 <div id="PopUpBG" class="invisible" style="top: 0px; left: 0px; position: fixed; width:100%;height:100%; opacity: 0.25; z-index: 60000; background-color: rgb(0, 0, 0);">
     <div style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:-1;">&nbsp;</div>
 </div>
-<div id="PopUp1" class="invisible" style="background-color:rgba(62, 120, 156, 0.42); top:40%; left:40%; width:20%; padding: 5px; position: fixed; z-index: 60001;">
-    <div style="padding: 10px;background-color: white;">
-        <h4>反馈问题</h4></br>
-        <input type="button" value="显示诊断信息" class="OneKey">
-        <p>生成综合诊断信息</p>
-        <input type="button" value="前往Google论坛" class="OneKey">
-        <p>需要登录Google账号</p>
-        <input type="button" value="一键生成Github Issue" class="OneKey">
-        <p>需要登录Github账号</p>
-    </div>
-</div>
-<div id="PopUp2" class="invisible" style="background-color:rgba(62, 120, 156, 0.42); top:20%; left:30%; width:40%; padding: 5px; position: fixed; z-index: 60001;">
+<div id="PopUp1" class="invisible" style="background-color:rgba(62, 120, 156, 0.42); top:20%; left:35%; width:30%; padding: 5px; position: fixed; z-index: 60001;">
     <div style="padding: 10px;background-color: white;">
         <h4>诊断信息</h4></br>
+        <a href="https://github.com/XX-net/XX-Net/issues"  id="OneKeyIssue" class="btn btn-primary " target="_blank">一键反馈</a>
+        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="GotoGGroup" class="btn btn-primary " target="_blank">前往论坛</a>
+        <p> * 一键反馈需要登录Github账号</p>
         <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
     </div>
 </div>
+
 <h4>状态</h4>
 <table id="status" class="table table-bordered table-striped">
     <thead>
@@ -60,34 +53,6 @@
     </tbody>
 </table>
 
-<h4>Appid</h4>
-<table id="appids" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th width="75%">Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr hidden="true">
-            <td>Set appids</td>
-            <td id="gae-appid"></td>
-        </tr>
-        <tr>
-            <td>working appids</td>
-            <td id="working-appid"></td>
-        </tr>
-        <tr>
-            <td>Out of Quota appids</td>
-            <td id="out-of-quota-appids"></td>
-        </tr>
-        <tr>
-            <td>Not Exist appids</td>
-            <td id="not-exist-appids"></td>
-        </tr>
-    </tbody>
-</table>
-
 <h4>设置</h4>
 <table id="setting" class="table table-bordered table-striped">
     <thead>
@@ -112,6 +77,34 @@
         <tr>
             <td>ip-connect-interval</td>
             <td id="ip-connect-interval"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Appid</h4>
+<table id="appids" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="25%">Property</th>
+            <th width="75%">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr hidden="true">
+            <td>Set appids</td>
+            <td id="gae-appid"></td>
+        </tr>
+        <tr>
+            <td>working appids</td>
+            <td id="working-appid"></td>
+        </tr>
+        <tr>
+            <td>Out of Quota appids</td>
+            <td id="out-of-quota-appids"></td>
+        </tr>
+        <tr>
+            <td>Not Exist appids</td>
+            <td id="not-exist-appids"></td>
         </tr>
     </tbody>
 </table>
@@ -188,7 +181,7 @@
             autostart: true
         });
     });
-    function OneKeyReport(Jobs){
+    function OneKeyReport(){
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/status',
@@ -215,23 +208,12 @@ Appid_Working: ' + (result['working_appid'].length != 0), '\
 Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), '\
 Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), '\
 Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
-                if (Jobs == "一键生成Github Issue"){
-                    IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
-
-                    window.open(IssueURL);
-                }
-                else if (Jobs == "显示诊断信息"){
-                    updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
-                    $("div#PopUp1").addClass("invisible");
-                    $("div#PopUp2").removeClass("invisible");
-                }
-                else if (Jobs == "前往Google论坛"){
-                    //有待设计类似Github Issue的一键生成功能;
-                    window.open("https://groups.google.com/forum/#!forum/xx-net");
-                }
-                else{
-                    alert(Jobs)
-                }
+                updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
+                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
+                $("a#OneKeyIssue").attr("href",IssueURL);
+                GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
+                //有待设计类似Github Issue的一键生成功能;
+                $("a#GotoGGroup").attr("href",GGroupURL);
             }
           })
     }
@@ -241,17 +223,14 @@ Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
         getStatus();
     });
     $(document).ready(function(){
-        $("input.OneKey").click(function(){
-            OneKeyReport(this.getAttribute("value"));
-        });
         $("input#PopUpReport").click(function(){
+            OneKeyReport();
             $("div#PopUpBG").removeClass("invisible");
             $("div#PopUp1").removeClass("invisible");
         });
         $("div#PopUpBG").click(function(){
             $("div#PopUpBG").addClass("invisible");
             $("div#PopUp1").addClass("invisible");
-            $("div#PopUp2").addClass("invisible");
         });
     });
 </script>
