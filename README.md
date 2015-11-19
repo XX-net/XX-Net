@@ -78,7 +78,7 @@ GAEProxy 查看日志页面
   集成Google Chrome和XX-Net的自动翻墙浏览器
   维护人：Yanu
 * 集成Chrome和XX-Net
-  https://github.com/yeahwu/chrome
+  https://github.com/yeahwu/chrome-xx
 * plusburg
   主页：https://github.com/Plusburg/Plusburg
   集成XX-Net的启动光盘镜像
