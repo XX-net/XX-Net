@@ -36,10 +36,10 @@ from scan_ip_log import scan_ip_log
 class Check_ip():
     trafic_control = 0
     ncount_lock = threading.Lock()
-    
+
     remove_ip_thread_num = 0
     remove_ip_thread_num_lock = threading.Lock()
-    
+
     ip_lock = threading.Lock()
 
     def __init__(self):
@@ -71,7 +71,7 @@ class Check_ip():
         self.ip_dict = {}
 
         # gererate from ip_dict, sort by handshake_time, when get_batch_ip
-        self.gws_ip_list = [] 
+        self.gws_ip_list = []
         self.to_remove_ip_list = Queue.Queue()
         self.ip_lock.release()
 
@@ -100,7 +100,7 @@ class Check_ip():
 
         self.good_ip_file = os.path.abspath( os.path.join(config.DATA_PATH, good_ip_file_name))
         self.default_good_ip_file = os.path.join(current_path, default_good_ip_file_name)
-        
+
         self.scan_ip_thread_num = self.max_scan_ip_thread_num
         self.max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #3000  # stop scan ip when enough
         self.ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
@@ -463,7 +463,7 @@ class Check_ip():
                 return
 
             self.ip_dict[ip_str]['links'] -= 1
-                
+
             # ignore if system network is disconnected.
             if not force_remove:
                 if not check_ip.network_is_ok():

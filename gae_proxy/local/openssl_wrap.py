@@ -128,7 +128,7 @@ class SSLConnection(object):
 
             if sys.platform == "darwin":
                 ssl_version = "TLSv1"
-            
+
             # freenas openssl support fix from twitter user "himanzero"
             # https://twitter.com/himanzero/status/645231724318748672
             if sys.platform == "freebsd9":

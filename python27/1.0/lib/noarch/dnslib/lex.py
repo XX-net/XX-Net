@@ -12,13 +12,13 @@ except ImportError:
 class Lexer(object):
 
     """
-        Simple Lexer base class. Provides basic lexer framework and 
+        Simple Lexer base class. Provides basic lexer framework and
         helper functionality (read/peek/pushback etc)
 
         Each state is implemented using a method (lexXXXX) which should
         match a single token and return a (token,lexYYYY) tuple, with lexYYYY
         representing the next state. If token is None this is not emitted
-        and if lexYYYY is None or the lexer reaches the end of the 
+        and if lexYYYY is None or the lexer reaches the end of the
         input stream the lexer exits.
 
         The 'parse' method returns a generator that will return tokens
@@ -76,7 +76,7 @@ class Lexer(object):
         while self.state is not None and not self.eof:
             tok = self.next_token()
             if tok:
-                yield tok 
+                yield tok
 
     def read(self,n=1):
         s = ""
@@ -201,7 +201,7 @@ class WordLexer(Lexer):
 
     def lexComment(self):
         s = []
-        tok = lambda n : (('COMMENT',''.join(s)),n) if s else (None,n) 
+        tok = lambda n : (('COMMENT',''.join(s)),n) if s else (None,n)
         start = False
         _ = self.read()
         while not self.eof:
@@ -216,7 +216,7 @@ class WordLexer(Lexer):
 
     def lexWord(self):
         s = []
-        tok = lambda n : (('ATOM',''.join(s)),n) if s else (None,n) 
+        tok = lambda n : (('ATOM',''.join(s)),n) if s else (None,n)
         while not self.eof:
             c = self.peek()
             if c == '"':
@@ -234,7 +234,7 @@ class WordLexer(Lexer):
 
     def lexQuote(self):
         s = []
-        tok = lambda n : (('ATOM',''.join(s)),n) 
+        tok = lambda n : (('ATOM',''.join(s)),n)
         q = self.read(1)
         while not self.eof:
             c = self.readescaped()
@@ -247,7 +247,7 @@ class WordLexer(Lexer):
 class RandomLexer(Lexer):
 
     """
-        Test lexing from infinite stream. 
+        Test lexing from infinite stream.
 
         Extract strings of letters/numbers from /dev/urandom
 

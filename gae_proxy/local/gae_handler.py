@@ -375,7 +375,7 @@ def handler(method, url, headers, body, wfile):
 
     if response.status == 206:
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
-        
+
     try:
         wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
         response_headers = {}
@@ -429,11 +429,11 @@ def handler(method, url, headers, body, wfile):
                     speed = body_length / (time_finished - time_response)
 
 
-                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d Spd:%d %d %s", 
-                        response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000, 
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d Spd:%d %d %s",
+                        response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000,
                         length, response.ssl_sock.handshake_time, int(speed), response.status, url)
                 else:
-                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d %d %s", 
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d %d %s",
                         response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000,
                         length, response.ssl_sock.handshake_time, response.status, url)
 

@@ -285,11 +285,10 @@ if __name__ == "__main__":
         data_path = sys.argv[1]
     else:
         data_path = "."
-        
+
     try:
         main(data_path=data_path)
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
         sys.exit()
-    

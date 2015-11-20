@@ -4,7 +4,7 @@
 dnslib
 ------
 
-A library to encode/decode DNS wire-format packets supporting both 
+A library to encode/decode DNS wire-format packets supporting both
 Python 2.7 and Python 3.2+.
 
 The library provides:
@@ -12,8 +12,8 @@ The library provides:
  * Support for encoding/decoding DNS packets between wire format,
    python objects, and Zone/DiG textual representation (dnslib.dns)
 
- * A server framework allowing the simple creation of custom DNS 
-   resolvers (dnslib.server) and a number of example servers 
+ * A server framework allowing the simple creation of custom DNS
+   resolvers (dnslib.server) and a number of example servers
    created using this frameowork
 
  * A number of utilities for testing (dnslib.client, dnslib.proxy,
@@ -22,11 +22,11 @@ The library provides:
 Python 3 support was added in Version 0.9.0 which represented a fairly
 major update to the library - the key changes include:
 
- * Python 2.7/3.2+ support (the last version supporting Python 2.6 
+ * Python 2.7/3.2+ support (the last version supporting Python 2.6
    or earlier was version 0.8.3)
 
- * The 'Bimap' interface was changed significantly to explicitly 
-   split forward (value->text) lookups via __getitem__ and 
+ * The 'Bimap' interface was changed significantly to explicitly
+   split forward (value->text) lookups via __getitem__ and
    reverse (text->value) lookups via __getattr__. Applications
    using the old interface will need to be updated.
 
@@ -34,18 +34,18 @@ major update to the library - the key changes include:
    line with RFC)
 
  * Most object attributes are now typed in line with the record
-   definitions to make it harder to generate invalid packets 
+   definitions to make it harder to generate invalid packets
 
- * Support for encoding/decoding resource records in 'Zone' (BIND) 
-   file format 
+ * Support for encoding/decoding resource records in 'Zone' (BIND)
+   file format
 
  * Support for encoding/decoding backets in 'DiG' format
 
  * Server framework allowing (in most cases) custom resolvers to
-   be created by just subclassing the DNSResolver class and 
+   be created by just subclassing the DNSResolver class and
    overringing the 'resolve' method
 
- * A lot of fixes to error detection/handling which should make 
+ * A lot of fixes to error detection/handling which should make
    the library much more robust to invalid/unsupported data. The
    library should now either return a valid DNSRecord instance
    when parsing a packet or raise DNSError (tested via fuzzing)
@@ -62,26 +62,26 @@ This is a large release and despite the testing there therefore are likely
 to be some bugs. Once the 0.9 release is sufficiently stable I would expect
 to release as 1.0.0 (and stabilise th api)
 
-The key DNS packet handling classes are in dnslib.dns and map to the 
+The key DNS packet handling classes are in dnslib.dns and map to the
 standard DNS packet sections:
 
  * DNSRecord - container for DNS packet. Contains:
-    - DNSHeader 
-    - Question section containing zero or more DNSQuestion objects 
-    - Answer section containing zero or more RR objects 
-    - Authority section containing zero or more RR objects 
-    - Additional section containing zero or more RR objects 
+    - DNSHeader
+    - Question section containing zero or more DNSQuestion objects
+    - Answer section containing zero or more RR objects
+    - Authority section containing zero or more RR objects
+    - Additional section containing zero or more RR objects
  * DNS RRs (resource records) contain an RR header and an RD object)
  * Specific RD types are implemented as subclasses of RD
  * DNS labels are represented by a DNSLabel class - in most cases
    this handles conversion to/from textual representation however
    does support arbitatry labels via a tuple of bytes objects)
 
-Version 0.9 of the library was a major rewrite to support Python 3.2+ 
-(retaining support for Python 2.7+). As part of the Py3 changes a 
+Version 0.9 of the library was a major rewrite to support Python 3.2+
+(retaining support for Python 2.7+). As part of the Py3 changes a
 number of other significant changes were intrtoduced:
 
-- Much better error handling (packet decoding errors should be 
+- Much better error handling (packet decoding errors should be
   caught and DNSError raised)
 
 Usage:
@@ -206,7 +206,7 @@ format defined in RFC1035 (specifically not $INCLUDE)
 
 To create a skeleton reply to a DNS query:
 
-    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY)) 
+    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY))
     >>> a = q.reply()
     >>> a.add_answer(RR("abc.com",QTYPE.A,rdata=A("1.2.3.4"),ttl=60))
     >>> str(DNSRecord.parse(a.pack())) == str(a)
@@ -238,7 +238,7 @@ Add additional RRs:
 
 It is also possible to create a reply from a string in zone file format:
 
-    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY)) 
+    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY))
     >>> a = q.replyZone("abc.com 60 IN CNAME xxx.abc.com")
     >>> print(a)
     ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: ...
@@ -251,7 +251,7 @@ It is also possible to create a reply from a string in zone file format:
     >>> str(DNSRecord.parse(a.pack())) == str(a)
     True
 
-    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY)) 
+    >>> q = DNSRecord(q=DNSQuestion("abc.com",QTYPE.ANY))
     >>> a = q.replyZone(textwrap.dedent(z))
     >>> print(a)
     ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: ...
@@ -266,19 +266,19 @@ It is also possible to create a reply from a string in zone file format:
 
 
 The library also includes a simple framework for generating custom DNS
-resolvers in dnslib.server (see module docs). In post cases this just 
-requires implementing a custom 'resolve' method which receives a question 
+resolvers in dnslib.server (see module docs). In post cases this just
+requires implementing a custom 'resolve' method which receives a question
 object and returns a response.
 
 A number of sample resolvers are provided as examples (see CLI --help):
 
  * dnslib.fixedresolver    - Respond to all requests with fixed response
- * dnslib.zoneresolver     - Respond from Zone file 
+ * dnslib.zoneresolver     - Respond from Zone file
  * dnslib.shellresolver    - Call shell script to generate response
 
 The library includes a number of client utilities:
 
- * DiG like client library 
+ * DiG like client library
 
         # python -m dnslib.client --help
 

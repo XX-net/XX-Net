@@ -633,7 +633,7 @@ class socksocket(_BaseSocket):
             if not self._proxyconn:
                 self.bind(("", 0))
             dest_addr = socket.gethostbyname(dest_addr)
-            
+
             # If the host address is INADDR_ANY or similar, reset the peer
             # address so that packets are received from any peer
             if dest_addr == "0.0.0.0" and not dest_port:

@@ -511,7 +511,7 @@ class Https_connection_manager(object):
                         ssl_sock = None
                         break
 
-                    if time.time() - ssl_sock.last_use_time < self.keep_alive+1: 
+                    if time.time() - ssl_sock.last_use_time < self.keep_alive+1:
                         xlog.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
                         break
                     else:

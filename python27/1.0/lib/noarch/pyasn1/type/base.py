@@ -8,13 +8,13 @@ class Asn1Item: pass
 class Asn1ItemBase(Asn1Item):
     # Set of tags for this ASN.1 type
     tagSet = ()
-    
+
     # A list of constraint.Constraint instances for checking values
     subtypeSpec = constraint.ConstraintsIntersection()
 
     # Used for ambiguous ASN.1 types identification
     typeId = None
-    
+
     def __init__(self, tagSet=None, subtypeSpec=None):
         if tagSet is None:
             self._tagSet = self.tagSet
@@ -31,13 +31,13 @@ class Asn1ItemBase(Asn1Item):
         except error.PyAsn1Error:
             c, i, t = sys.exc_info()
             raise c('%s at %s' % (i, self.__class__.__name__))
-        
+
     def getSubtypeSpec(self): return self._subtypeSpec
-    
+
     def getTagSet(self): return self._tagSet
     def getEffectiveTagSet(self): return self._tagSet  # used by untagged types
     def getTagMap(self): return tagmap.TagMap({self._tagSet: self})
-    
+
     def isSameTypeWith(self, other):
         return self is other or \
                self._tagSet == other.getTagSet() and \
@@ -52,11 +52,11 @@ class __NoValue:
         raise error.PyAsn1Error('No value for %s()' % attr)
     def __getitem__(self, i):
         raise error.PyAsn1Error('No value')
-    
+
 noValue = __NoValue()
 
 # Base class for "simple" ASN.1 objects. These are immutable.
-class AbstractSimpleAsn1Item(Asn1ItemBase):    
+class AbstractSimpleAsn1Item(Asn1ItemBase):
     defaultValue = noValue
     def __init__(self, value=None, tagSet=None, subtypeSpec=None):
         Asn1ItemBase.__init__(self, tagSet, subtypeSpec)
@@ -70,7 +70,7 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
             self.__hashedValue = hash(value)
         self._value = value
         self._len = None
-        
+
     def __repr__(self):
         if self._value is noValue:
             return self.__class__.__name__ + '()'
@@ -128,7 +128,7 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
 
     # XXX Compatibility stub
     def prettyPrinter(self, scope=0): return self.prettyPrint(scope)
-    
+
 #
 # Constructed types:
 # * There are five of them: Sequence, SequenceOf/SetOf, Set and Choice
@@ -192,7 +192,7 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
 
     def _cloneComponentValues(self, myClone, cloneValueFlag): pass
 
-    def clone(self, tagSet=None, subtypeSpec=None, sizeSpec=None, 
+    def clone(self, tagSet=None, subtypeSpec=None, sizeSpec=None,
               cloneValueFlag=None):
         if tagSet is None:
             tagSet = self._tagSet
@@ -241,7 +241,7 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
     def __setitem__(self, idx, value): self.setComponentByPosition(idx, value)
 
     def __len__(self): return len(self._componentValues)
-    
+
     def clear(self):
         self._componentValues = []
         self._componentValuesSet = 0
