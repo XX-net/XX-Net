@@ -182,22 +182,39 @@ class HttpServerHandler():
 
 class HTTPServer():
     def __init__(self, address, handler, args=()):
+        self.socket = None
         self.running = True
         self.server_address = address
         self.handler = handler
         self.args = args
+        self.init_socket()
+        xlog.info("server %s:%d started.", address[0], address[1])
+
+    def init_socket(self):
+        if self.socket is not None:
+            self.server_close()
+            self.socket = None
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
         self.socket.listen(200)
-        xlog.info("server %s:%d started.", address[0], address[1])
 
     def serve_forever(self):
         fdset = [self.socket, ]
         while self.running:
             r, w, e = select.select(fdset, [], [], 1)
             if self.socket in r:
-                (sock, address) = self.socket.accept()
+                try:
+                    (sock, address) = self.socket.accept()
+                except IOError as e:
+                    xlog.warn("socket(%s:%s) accept fail(errno: %s).", self.server_address[0], self.server_address[1], e.args[0])
+                    if e.args[0] == 10022:
+                        xlog.info("server %s:%d restarted.", self.server_address[0], self.server_address[1])
+                        self.init_socket()
+                        fdset = [self.socket, ]
+                    return
+
                 self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
