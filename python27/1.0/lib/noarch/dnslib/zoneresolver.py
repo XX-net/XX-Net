@@ -14,9 +14,9 @@ class ZoneResolver(BaseResolver):
 
     def __init__(self,zone,glob=False):
         """
-            Initialise resolver from zone file. 
+            Initialise resolver from zone file.
             Stores RRs as a list of (label,type,rr) tuples
-            If 'glob' is True use glob match against zone file 
+            If 'glob' is True use glob match against zone file
         """
         self.zone = [(rr.rname,QTYPE[rr.rtype],rr) for rr in RR.fromZone(zone)]
         self.glob = glob
@@ -32,8 +32,8 @@ class ZoneResolver(BaseResolver):
         qtype = QTYPE[request.q.qtype]
         for name,rtype,rr in self.zone:
             # Check if label & type match
-            if getattr(qname,self.eq)(name) and (qtype == rtype or 
-                                                 qtype == 'ANY' or 
+            if getattr(qname,self.eq)(name) and (qtype == rtype or
+                                                 qtype == 'ANY' or
                                                  rtype == 'CNAME'):
                 # If we have a glob match fix reply label
                 if self.glob:
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     p.add_argument("--log-prefix",action='store_true',default=False,
                     help="Log prefix (timestamp/handler/resolver) (default: False)")
     args = p.parse_args()
-    
+
     if args.zone == '-':
         args.zone = sys.stdin
     else:

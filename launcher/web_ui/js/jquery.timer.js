@@ -27,7 +27,7 @@
  */
 
 ;(function($) {
-	$.timer = function(func, time, autostart) {	
+	$.timer = function(func, time, autostart) {
 	 	this.set = function(func, time, autostart) {
 	 		this.init = true;
 	 	 	if(typeof func == 'object') {
@@ -100,7 +100,7 @@
 	 			this.setTimer();
 	 		}
 	 	};
-	 	
+
 	 	if(this.init) {
 	 		return new $.timer(func, time, autostart);
 	 	} else {

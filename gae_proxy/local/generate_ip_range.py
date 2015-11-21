@@ -168,7 +168,7 @@ def filter_ip_range(good_range, bad_range):
                 PRINT("cut bad ip case 5:%s - %s" % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end)))
                 break
             else:
-                PRINT("any case? good:%s-%s bad:%s-%s" % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end), 
+                PRINT("any case? good:%s-%s bad:%s-%s" % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end),
                     ip_utils.ip_num_to_string(bad_begin), ip_utils.ip_num_to_string(bad_end)))
                 assert( False )
 

@@ -12,7 +12,7 @@ class BufferError(Exception):
 class Buffer(object):
 
     """
-    A simple data buffer - supports packing/unpacking in struct format 
+    A simple data buffer - supports packing/unpacking in struct format
 
     # Needed for Python 2/3 doctest compatibility
     >>> def p(s):
@@ -90,7 +90,7 @@ class Buffer(object):
 
     def update(self,ptr,fmt,*args):
         """
-            Modify data at offset `ptr` 
+            Modify data at offset `ptr`
         """
         s = struct.pack(fmt,*args)
         self.data[ptr:ptr+len(s)] = s
@@ -103,7 +103,7 @@ class Buffer(object):
             data = self.get(struct.calcsize(fmt))
             return struct.unpack(fmt,data)
         except struct.error as e:
-            raise BufferError("Error unpacking struct '%s' <%s>" % 
+            raise BufferError("Error unpacking struct '%s' <%s>" %
                     (fmt,binascii.hexlify(data).decode()))
 
     def __len__(self):
