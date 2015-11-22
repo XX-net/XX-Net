@@ -59,6 +59,31 @@ class LocalServer(SocketServer.ThreadingTCPServer):
             del etype, value
             SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
+    def _handle_request_noblock(self):
+        try:
+            request, client_address = self.get_request()
+        except IOError as e:
+            launcher_log.warn("socket(%s:%s) accept fail(errno: %s).", self.server_address[0], self.server_address[1], e.args[0])
+            if e.args[0] == 10022:
+                launcher_log.info("server %s:%d restarted.", self.server_address[0], self.server_address[1])
+                self.init_socket()
+            return
+
+        if self.verify_request(request, client_address):
+            try:
+                self.process_request(request, client_address)
+            except:
+                self.handle_error(request, client_address)
+                self.shutdown_request(request)
+
+    def init_socket(self):
+        self.server_close()
+        self.socket = None
+
+        self.socket = socket.socket(self.address_family, self.socket_type)
+        self.server_bind()
+        self.server_activate()
+
 module_menus = {}
 class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
