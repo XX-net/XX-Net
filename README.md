@@ -3,17 +3,17 @@
 XX-Net
 ========
 翻墙工具套件  
-* GAE proxy, 稳定、快速、易用
+* GAE proxy, 稳定、易用、快速
 * Web界面，人性化交互
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.7.0
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.5.5
+https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 
 
 使用方法：  
