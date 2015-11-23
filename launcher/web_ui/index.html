@@ -29,19 +29,25 @@
         <div class="navbar-inner">
             <div class="container">
                 <div class="row-fluid">
-                    <div id="logo" class="span10">
+                    <div id="logo" class="span8">
                         <a href="/">
                             <img src="/img/logo.png" alt="Logo">
                             XX-Net
                         </a>
                     </div> <!-- #logo -->
-                    <div id="quit" class="span1 text-right">
-                        <a href="javascript:void(0);">Quit</a>
-                    </div> <!-- #Quit -->
-                    <div class="span1 text-right">
-                        <a id="resize-window-trigger" href="javascript:void(0);">
-                            <img src="/img/fixed-width.png" alt="resize-window">
-                        </a>
+                    <div class="span4 text-right">
+                        <ul class="inline">
+                            <li>
+                                <a id="resize-window-trigger" href="javascript:void(0);">
+                                    <img src="/img/fixed-width.png" alt="resize-window">
+                                </a>
+                            </li>
+                            <li>
+                                <a id="quit-trigger" href="javascript:void(0);">
+                                    <img src="/img/quit.png" alt="quit">
+                                </a>
+                            </li>
+                        </ul>
                     </div> <!-- .span4 -->
                 </div> <!-- .row-fluid -->
             </div> <!-- .container -->
@@ -89,7 +95,7 @@
         });
     </script>
     <script type="text/javascript">
-        $('#Quit').click(function() {
+        $('#quit-trigger').click(function() {
             $.ajax({
                 type: 'GET',
                 url: '/quit',
