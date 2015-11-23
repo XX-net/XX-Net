@@ -5,6 +5,9 @@ import os, sys
 import time
 import atexit
 import webbrowser
+import threading
+
+threading.stack_size(64*1024)
 
 import launcher_log
 import update_from_github
