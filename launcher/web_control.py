@@ -298,7 +298,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "launcher", "start_create_lnk"], 0)
+                    , config.get(["modules", "launcher", "start_create_lnk"], 1)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
