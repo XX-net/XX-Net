@@ -24,6 +24,12 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
+        <div class="span4">启动时创建桌面快捷方式(Windows有效)</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="start-create-lnk" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
         <div class="span4">
             <label for="update-options" class="pull-down-control">
                 <i class="icon icon-chevron-right"></i> 升级管理
@@ -167,6 +173,12 @@
 
                     $( "#php-enable").prop('checked', true);
                 }
+                if ( result['start_create_lnk'] != 0 ) {
+                    $( "#start-create-lnk").parent().removeClass('switch-off');
+                    $( "#start-create-lnk").parent().addClass('switch-on');
+
+                    $( "#start-create-lnk").prop('checked', true);
+                }
                 $( "#check-update").val(result['check_update']);
             },
             error: function() {
@@ -242,6 +254,14 @@
     $('#php-enable').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'php_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+
+    $('#start-create-lnk').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'start_create_lnk',
             value     = isChecked ? 1 : 0;
 
         setConfig(key, value);
