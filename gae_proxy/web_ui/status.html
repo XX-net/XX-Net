@@ -202,7 +202,7 @@
                     'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), 
                     'Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
                 updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
-                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
+                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
                 //有待设计类似Github Issue的一键生成功能;
