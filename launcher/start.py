@@ -68,7 +68,6 @@ atexit.register(exit_handler)
 
 
 
-
 def main():
     # change path to launcher
     global __file__
@@ -110,4 +109,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt: # Ctrl + C on console
         module_init.stop_all()
-        sys.exit
+        sys.exit()

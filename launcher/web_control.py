@@ -292,12 +292,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif check_update == 1:
                 check_update = "long-term-stable"
 
-            data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "start_create_lnk": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
+                    , config.get(["modules", "launcher", "start_create_lnk"], 1)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
@@ -361,6 +362,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     config.save()
 
                     data = '{"res":"success"}'
+
+            elif 'start_create_lnk' in reqs:
+                start_create_lnk = int(reqs['start_create_lnk'][0])
+                if start_create_lnk != 0 and start_create_lnk != 1:
+                    data = '{"res":"fail, start_create_lnk:%s"}' % start_create_lnk
+                else:
+                    config.set(["modules", "launcher", "start_create_lnk"], start_create_lnk)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
             elif 'gae_proxy_enable' in reqs :
                 gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:
