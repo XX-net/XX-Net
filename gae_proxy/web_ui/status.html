@@ -4,23 +4,6 @@
     我们建议您使用最新版本的Chrome浏览器。
 </div>
 <![endif]-->
-<style type="text/css">
-    .invisible {display:none;}
-</style>
-
-<div id="PopUpBG" class="invisible" style="top: 0px; left: 0px; position: fixed; width:100%;height:100%; opacity: 0.25; z-index: 60000; background-color: rgb(0, 0, 0);">
-    <div style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:-1;">&nbsp;</div>
-</div>
-<div id="PopUp1" class="invisible" style="background-color:rgba(62, 120, 156, 0.42); top:20%; left:35%; width:30%; padding: 5px; position: fixed; z-index: 60001;">
-    <div style="padding: 10px;background-color: white;">
-        <h4>诊断信息</h4></br>
-        <a href="https://github.com/XX-net/XX-Net/issues"  id="OneKeyIssue" class="btn btn-primary " target="_blank">一键反馈</a>
-        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="GotoGGroup" class="btn btn-primary " target="_blank">前往论坛</a>
-        <p> * 一键反馈需要登录Github账号</p>
-        <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
-    </div>
-</div>
-
 <h4>状态</h4>
 <table id="status" class="table table-bordered table-striped">
     <thead>
@@ -31,7 +14,7 @@
     </thead>
     <tbody>
         <tr>
-            <td>IP num/good</td>
+            <td>Total IP / Good IP</td>
             <td id="gws-ip-num"></td>
         </tr>
         <tr>
@@ -39,15 +22,15 @@
             <td id="ip-handshake-10"></td>
         </tr>
         <tr>
-            <td>connected link(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
+            <td>Connected Link (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
             <td id="connected-link"></td>
         </tr>
         <tr>
-            <td>scaning ip thread num</td>
+            <td>Number of Threads Scaning IPs</td>
             <td id="scan-ip-thread-num"></td>
         </tr>
         <tr>
-            <td>block stat(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
+            <td>Block Status (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
             <td id="block-stat"></td>
         </tr>
     </tbody>
@@ -75,7 +58,7 @@
             <td id="ipv6-status"></td>
         </tr>
         <tr>
-            <td>ip-connect-interval</td>
+            <td>IP Connect Interval</td>
             <td id="ip-connect-interval"></td>
         </tr>
     </tbody>
@@ -91,19 +74,19 @@
     </thead>
     <tbody>
         <tr hidden="true">
-            <td>Set appids</td>
+            <td>Set App IDs</td>
             <td id="gae-appid"></td>
         </tr>
         <tr>
-            <td>working appids</td>
+            <td>Working App IDs</td>
             <td id="working-appid"></td>
         </tr>
         <tr>
-            <td>Out of Quota appids</td>
+            <td>Out of Quota App IDs</td>
             <td id="out-of-quota-appids"></td>
         </tr>
         <tr>
-            <td>Not Exist appids</td>
+            <td>Not Exist App IDs</td>
             <td id="not-exist-appids"></td>
         </tr>
     </tbody>
@@ -127,7 +110,7 @@
             <td id="python-version"></td>
         </tr>
         <tr>
-            <td>Sys Platform</td>
+            <td>System Platform</td>
             <td id="sys-platform"></td>
         </tr>
         <tr>
@@ -135,23 +118,23 @@
             <td id="os-system"></td>
         </tr>
         <tr>
-            <td>OS version</td>
+            <td>OS Version</td>
             <td id="os-version"></td>
         </tr>
         <tr>
-            <td>OS release</td>
+            <td>OS Release</td>
             <td id="os-release"></td>
         </tr>
         <tr>
-            <td>OS detail</td>
+            <td>OS Detail</td>
             <td id="os-detail"></td>
         </tr>
         <tr>
-            <td>language</td>
+            <td>Language</td>
             <td id="language"></td>
         </tr>
         <tr>
-            <td>architecture</td>
+            <td>Architecture</td>
             <td id="architecture"></td>
         </tr>
         <tr>
@@ -160,11 +143,22 @@
         </tr>
     </tbody>
 </table>
+<button id="pop-up-report" class="btn btn-primary">反馈问题</button>
 
-<div id="tip">
-    <input type="button" id="PopUpReport" value="反馈问题">
-</div>
-</br></br>
+<div id="report-issue-modal" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>诊断信息</h3>
+    </div> <!-- .modal-header -->
+    <div class="modal-body">
+        <p> * 一键反馈需要登录Github账号</p>
+        <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
+    </div>
+    <div class="modal-footer">
+        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-goole-group" class="btn btn-primary " target="_blank">前往论坛</a>
+        <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">一键反馈</a>
+    </div> <!-- .modal-footer -->
+</div> <!-- #report-issue-modal -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
@@ -187,33 +181,32 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
-                var information = new Array('sys-platform: ' + result['sys_platform'], '\
-os-system: ' + result['os_system'], '\
-os-version: ' + result['os_version'], '\
-os-release: ' + result['os_release'], '\
-os-detail: ' + result['os_detail'], '\
-architecture: ' + String(result['architecture'].concat()), '\
-browser: ' + result['browser'], '\
-xxnet-version: ' + result['xxnet_version'], '\
-python-version: ' + result['python_version'], '\
-', '\
-ipv6-status: ' + result['use_ipv6'], '\
-gws-ip-num: ' + result['gws_ip_num'], '\
-connected-link: ' + result['connected_link'], '\
-ip-connect-interval: ' + result['ip_connect_interval'], '\
-scan-ip-thread-num: ' + result['scan_ip_thread_num'], '\
-ip-handshake-10: ' + result['ip_handshake_10'], '\
-block-stat: ' + result['block_stat'], '\
-Appid_Working: ' + (result['working_appid'].length != 0), '\
-Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), '\
-Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), '\
-Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
+                var information = new Array('sys-platform: ' + result['sys_platform'], 
+                    'os-system: ' + result['os_system'],
+                    'os-version: ' + result['os_version'], 
+                    'os-release: ' + result['os_release'],
+                    'os-detail: ' + result['os_detail'], 
+                    'architecture: ' + String(result['architecture'].concat()), 
+                    'browser: ' + result['browser'], 
+                    'xxnet-version: ' + result['xxnet_version'], 
+                    'python-version: ' + result['python_version'], 
+                    '\nipv6-status: ' + result['use_ipv6'], 
+                    'gws-ip-num: ' + result['gws_ip_num'], 
+                    'connected-link: ' + result['connected_link'], 
+                    'ip-connect-interval: ' + result['ip_connect_interval'], 
+                    'scan-ip-thread-num: ' + result['scan_ip_thread_num'], 
+                    'ip-handshake-10: ' + result['ip_handshake_10'], 
+                    'block-stat: ' + result['block_stat'], 
+                    'Appid_Working: ' + (result['working_appid'].length != 0), 
+                    'Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), 
+                    'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), 
+                    'Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
                 updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
-                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?title=&amp;body=-----------问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
-                $("a#OneKeyIssue").attr("href",IssueURL);
+                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
+                $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
                 //有待设计类似Github Issue的一键生成功能;
-                $("a#GotoGGroup").attr("href",GGroupURL);
+                $("a#go-to-goole-group").attr("href", GGroupURL);
             }
           })
     }
@@ -223,14 +216,9 @@ Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
         getStatus();
     });
     $(document).ready(function(){
-        $("input#PopUpReport").click(function(){
+        $("#pop-up-report").click(function(){
             OneKeyReport();
-            $("div#PopUpBG").removeClass("invisible");
-            $("div#PopUp1").removeClass("invisible");
-        });
-        $("div#PopUpBG").click(function(){
-            $("div#PopUpBG").addClass("invisible");
-            $("div#PopUp1").addClass("invisible");
+            $('#report-issue-modal').modal();
         });
     });
 </script>
@@ -260,7 +248,7 @@ Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
                     '#python-version': result['python_version'],
                     '#proxy-listen': result['proxy_listen'],
                     '#pac-url': result['pac_url'],
-                    '#ipv6-status': result['use_ipv6'],
+                    '#ipv6-status': result['use_ipv6'] == '0' ? 'Disabled' : 'Enabled',
                     '#gws-ip-num': result['gws_ip_num'],
                     '#connected-link': result['connected_link'],
                     '#gae-appid': result['gae_appid'],
