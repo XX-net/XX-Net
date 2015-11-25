@@ -8,7 +8,7 @@ del threading
 
 class Connection:
     def __init__(self, *args):
-        self._ssl_conn = apply(_ssl.Connection, args)
+        self._ssl_conn = _ssl.Connection(*args)
         self._lock = _RLock()
 
     for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
