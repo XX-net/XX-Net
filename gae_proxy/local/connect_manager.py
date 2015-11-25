@@ -147,7 +147,7 @@ class Connect_pool():
     def clear(self):
         self.pool_lock.acquire()
         try:
-            for sock in pool:
+            for sock in self.pool:
                 sock.close()
 
             self.pool = {}
@@ -458,7 +458,7 @@ class Https_connection_manager(object):
             if time_cost < self.timeout - 1:
                 xlog.debug("connect %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
             else:
-                xlog.debug("%s fail", ip)
+                xlog.debug("%s fail:%r", ip, e)
 
             google_ip.report_connect_fail(ip)
             connect_control.report_connect_fail()

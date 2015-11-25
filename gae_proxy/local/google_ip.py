@@ -116,7 +116,11 @@ class Check_ip():
 
         for line in lines:
             try:
+                if line.startswith("#"):
+                    continue
+                    
                 str_l = line.split(' ')
+
                 if len(str_l) < 4:
                     xlog.warning("line err: %s", line)
                     continue
