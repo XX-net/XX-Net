@@ -16,9 +16,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.1
 https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 
 使用方法：  
-https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
+https://github.com/XX-net/XX-Net/wiki/使用方法
 
-更新历史：https://github.com/XX-net/XX-Net/wiki/%E6%9B%B4%E6%96%B0%E5%8E%86%E5%8F%B2
+更新历史：https://github.com/XX-net/XX-Net/wiki/更新历史
   
   
 
@@ -42,10 +42,10 @@ https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
 
 感谢
 =========
-* GoAgent
-* GoGoTest
-* goagentfindip
-* checkgoogleip
+* [GoAgent](https://github.com/phuslu/goagent)
+* [GoGoTest](https://github.com/azzvx/gogotester)
+* [goagentfindip](https://github.com/usrtmp/goagentfindip)
+* [checkgoogleip](https://github.com/moonshawdo/checkgoogleip)
 
 
 如何帮助项目
