@@ -47,10 +47,20 @@ class Ip_range(object):
         self.candidate_amount_ip = 0
 
         content = self.load_range_content()
-        lines = content.splitlines()
-        for line in lines:
-            if len(line) == 0 or line[0] == '#':
+        raw_lines = content.splitlines()
+
+        lines = []
+        for ip_line in raw_lines:
+            if len(ip_line) == 0 or ip_line[0] == '#':
                 continue
+            ip_line = ip_line.replace(' ', '')
+            ips = ip_line.split("|")
+            for ip in ips:
+                if len(ip) == 0:
+                    continue
+                lines.append(ip)
+
+        for line in lines:
 
             try:
                 begin, end = ip_utils.split_ip(line)
