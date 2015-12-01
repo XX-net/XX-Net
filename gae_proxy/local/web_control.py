@@ -67,11 +67,9 @@ class User_special(object):
         self.proxy_passwd = ""
 
         self.host_appengine_mode = "gae"
-        self.ip_connect_interval = 10
         self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
         self.use_ipv6 = 0
-        self.connect_interval = 200
 
 class User_config(object):
     user_special = User_special()
@@ -93,7 +91,6 @@ class User_config(object):
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
                 self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
                 self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-                self.ip_connect_interval = self.DEFAULT_CONFIG.getint('google_ip', 'ip_connect_interval')
             else:
                 return
 
@@ -114,11 +111,6 @@ class User_config(object):
                 pass
 
             try:
-                self.user_special.ip_connect_interval = config.CONFIG.getint('google_ip', 'ip_connect_interval')
-            except:
-                pass
-
-            try:
                 self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
             except:
                 self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
@@ -130,11 +122,6 @@ class User_config(object):
 
             try:
                 self.user_special.use_ipv6 = config.CONFIG.getint('google_ip', 'use_ipv6')
-            except:
-                pass
-
-            try:
-                self.user_special.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
             except:
                 pass
 
@@ -171,8 +158,6 @@ class User_config(object):
                 f.write("www.google.com = %s\n\n" % self.user_special.host_appengine_mode)
 
             f.write("[google_ip]\n")
-            if self.user_special.ip_connect_interval != self.DEFAULT_CONFIG.getint('google_ip', 'ip_connect_interval'):
-                f.write("ip_connect_interval = %d\n" % int(self.user_special.ip_connect_interval))
 
             if int(self.user_special.auto_adjust_scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num'):
                 f.write("auto_adjust_scan_ip_thread_num = %d\n\n" % int(self.user_special.auto_adjust_scan_ip_thread_num))
@@ -181,10 +166,6 @@ class User_config(object):
 
             if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
-
-            f.write("[connect_manager]\n")
-            if int(self.user_special.connect_interval) != self.DEFAULT_CONFIG.getint('connect_manager', 'connect_interval'):
-                f.write("connect_interval = %d\n\n" % int(self.user_special.connect_interval))
 
             f.close()
         except:
@@ -338,7 +319,9 @@ class ControlHandler():
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def send_response(self, mimetype, data):
-        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        no_cache = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
+        self.wfile.write(('HTTP/1.1 200\r\n%sAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n'
+             % (no_cache, mimetype, len(data))).encode())
         self.wfile.write(data)
 
     def send_file(self, filename, mimetype):
@@ -458,7 +441,6 @@ class ControlHandler():
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
                    "pac_url":config.pac_url,
-                   "ip_connect_interval":config.CONFIG.getint("google_ip", "ip_connect_interval"),
                    "scan_ip_thread_num":google_ip.searching_thread_count,
                    "ip_handshake_10":google_ip.ip_handshake_th(10),
                    "block_stat":connect_control.block_stat(),
@@ -489,9 +471,7 @@ class ControlHandler():
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
-                user_config.user_special.ip_connect_interval = int(self.postvars['ip_connect_interval'][0])
                 user_config.user_special.use_ipv6 = int(self.postvars['use_ipv6'][0])
-                user_config.user_special.connect_interval = int(self.postvars['connect_interval'][0])
                 user_config.save()
 
                 config.load()
