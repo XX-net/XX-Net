@@ -34,34 +34,10 @@
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="deploy-via-gae">通过GAE进行部署<a href="https://github.com/XX-net/XX-Net/wiki/Deploy-By-GAE" target="_blank">(帮助)</a></label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="deploy-via-gae" type="checkbox" data-toggle="switch" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
-                <label for="use-ipv6">使用ipv6</label>
+                <label for="use-ipv6">使用ipv6(一般教育网才开)</label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="use-ipv6" type="checkbox" data-toggle="switch" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
-                <label for="ip-connect-interval">Google IP使用频率限制<a href="https://github.com/XX-net/XX-Net/wiki/About-ip-connect-interval" target="_blank">(帮助)</a></label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="ip-connect-interval" type="text" value="10" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
-                <label for="connect-interval">TCP连接间隔ms<a href="https://github.com/XX-net/XX-Net/wiki/GAE-connect-interval" target="_blank">(帮助)</a></label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="connect-interval" type="text" value="200" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
@@ -118,11 +94,6 @@
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
         </div> <!-- #proxy-options -->
-        <div class="row-fluid">
-            <div class="span4">
-                小贴士: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">如何通过文件配置</a>
-            </div> <!-- .span4 -->
-        </div> <!-- .row-fluid -->
     </div> <!-- #advanced-options -->
     <div class="row-fluid">
         <div class="span12">
@@ -131,6 +102,11 @@
     </div> <!-- .row-fluid -->
 </form> <!-- #gae_proxy-config -->
 
+        <div class="row-fluid">
+            <div class="span4">
+                高级技巧: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">通过文件配置</a>
+            </div> <!-- .span4 -->
+        </div> <!-- .row-fluid -->
 <!-- JavaScript -->
 <script type="text/javascript">
     title('配置GAEProxy');
