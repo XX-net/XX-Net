@@ -190,7 +190,7 @@ def download_apic(filename):
 
 def generage_range_from_apnic(input):
 
-    cnregex = re.compile(r'^apnic\|(?:cn|hk|mo)\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
+    cnregex = re.compile(r'^apnic\|(?:cn)\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
                          re.I | re.M )
     cndata = cnregex.findall(input)
 
