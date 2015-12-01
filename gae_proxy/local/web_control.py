@@ -590,6 +590,8 @@ class ControlHandler():
         elif reqs['cmd'] == ['exportip']:
             data = '{"res":"'
             for ip in google_ip.gws_ip_list:
+                if google_ip.ip_dict[ip]['fail_times'] > 0:
+                    continue
                 data += "%s|" % ip
             data = data[0 : len(data) - 1]
             data += '"}'
