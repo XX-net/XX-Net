@@ -1,13 +1,13 @@
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#setup" data-toggle="tab">设置</a></li>
-    <li><a href="#logs" data-toggle="tab">日志</a></li>
+    <li class="active"><a href="#setup" data-toggle="tab">{{ _("Settings") }}</a></li>
+    <li><a href="#logs" data-toggle="tab">{{ _("Log") }}</a></li>
 </ul>
 <div id="scan-ip" class="tab-content">
     <div id="setup" class="tab-pane fade in active">
         <form method="POST" onSubmit="return false;">
             <div class="row-fluid">
                 <div class="span3">
-                    <label for="auto-adjust-scan-ip-thread-num">自动调整扫描线程数<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Auto-adjust-scan-ip-thread-num" target="_blank">(帮助)</a></label>
+                    <label for="auto-adjust-scan-ip-thread-num">{{ _("Auto-adjust scan thread count") }}<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Auto-adjust-scan-ip-thread-num" target="_blank">({{ _("Help") }})</a></label>
                 </div> <!-- .span3 -->
                 <div class="span9">
                     <input id="auto-adjust-scan-ip-thread-num" type="checkbox" data-toggle="switch" />
@@ -15,18 +15,18 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span3">
-                    <label for="scan-ip-thread-num">最大扫描线程数</label>
+                    <label for="scan-ip-thread-num">{{ _("Max scan thread count") }}</label>
                 </div> <!-- .span3 -->
                 <div class="span6">
                     <input id="scan-ip-thread-num" type="text" />
                 </div> <!-- .span6 -->
                 <div class="span3" >
-                    <button class="btn btn-primary " id="update-thread-num">更新</button>
+                    <button class="btn btn-primary " id="update-thread-num">{{ _("Update") }}</button>
                 </div>
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span3">
-                    <label for="ip-range-content">IP段列表(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Scan-Ip-Range-Format" target="_blank">支持格式</a>)</label>
+                    <label for="ip-range-content">{{ _("IP range list") }}(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Scan-Ip-Range-Format" target="_blank">{{ _("Supporting formats") }}</a>)</label>
                 </div> <!-- .span3 -->
                 <div class="span9">
                     <textarea id="ip-range-content" rows="10"></textarea>
@@ -34,7 +34,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" id="submit-ip-range" type="submit">提交</button>
+                    <button class="btn btn-primary btn-block" id="submit-ip-range" type="submit">{{ _("Submit") }}</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
@@ -43,13 +43,13 @@
         <div id="log" class="span12"></div>
         <div class="row-fluid">
             <div class="span12">
-                <button class="btn btn-primary btn-block" id="reload-scan-ip-log" type="submit">刷新</button>
+                <button class="btn btn-primary btn-block" id="reload-scan-ip-log" type="submit">{{ _("Refresh") }}</button>
             </div> <!-- .span12 -->
         </div> <!-- .row-fluid -->
     </div> <!-- #log -->
 </div> <!-- #tab-content -->
 <script type="text/javascript">
-    title('扫描IP设置(一般不需要改动)');
+    title('{{ _("IP scan settings(Needless to modify generally)") }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -74,7 +74,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('{{ _("Settings saved successfully") }}', 'success');
                 } else {
                     displayErrorMessage();
                 }
@@ -96,7 +96,7 @@
                 $('#log').scrollTop($('#log')[0].scrollHeight);
             },
             error: function(){
-                tip('读取日志失败.', 'error');
+                tip('{{ _("Failed reading the log") }}', 'error');
             }
         });
     }
@@ -117,7 +117,7 @@
                 $('#scan-ip-thread-num').val(result['scan_ip_thread_num']);
             },
             error: function(){
-                tip('读取设置失败.', 'error');
+                tip('{{ _("Failed reading the settings") }}', 'error');
             }
         });
     });
@@ -145,9 +145,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('{{ _("Settings saved successfully") }}', 'success');
                 } else {
-                    tip('发生未知错误.', 'error');
+                    tip('{{ _("Unkown error occurred") }}', 'error');
                 }
             }
         });
@@ -167,9 +167,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('{{ _("Settings saved successfully") }}', 'success');
                 } else {
-                    tip('发生未知错误.', 'error');
+                    tip('{{ _("Unkown error occurred") }}', 'error');
                 }
             }
         });
