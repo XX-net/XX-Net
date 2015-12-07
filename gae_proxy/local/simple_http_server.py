@@ -182,22 +182,39 @@ class HttpServerHandler():
 
 class HTTPServer():
     def __init__(self, address, handler, args=()):
+        self.socket = None
         self.running = True
         self.server_address = address
         self.handler = handler
         self.args = args
+        self.init_socket()
+        xlog.info("server %s:%d started.", address[0], address[1])
+
+    def init_socket(self):
+        if self.socket is not None:
+            self.server_close()
+            self.socket = None
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
         self.socket.listen(200)
-        xlog.info("server %s:%d started.", address[0], address[1])
 
     def serve_forever(self):
         fdset = [self.socket, ]
         while self.running:
             r, w, e = select.select(fdset, [], [], 1)
             if self.socket in r:
-                (sock, address) = self.socket.accept()
+                try:
+                    (sock, address) = self.socket.accept()
+                except IOError as e:
+                    xlog.warn("socket(%s:%s) accept fail(errno: %s).", self.server_address[0], self.server_address[1], e.args[0])
+                    if e.args[0] == 10022:
+                        xlog.info("server %s:%d restarted.", self.server_address[0], self.server_address[1])
+                        self.init_socket()
+                        fdset = [self.socket, ]
+                    return
+
                 self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
@@ -218,17 +235,34 @@ class test_http_server(HttpServerHandler):
         self.data_path = args
         HttpServerHandler.__init__(self, sock, client, args)
 
+
+    def generate_random_lowercase(self, n):
+        min_lc = ord(b'a')
+        len_lc = 26
+        ba = bytearray(os.urandom(n))
+        for i, b in enumerate(ba):
+            ba[i] = min_lc + b % len_lc # convert 0..255 to 97..122
+        #sys.stdout.buffer.write(ba)
+        return ba
+
     def do_GET(self):
         url_path = urlparse.urlparse(self.path).path
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+
         if url_path == '/':
             data = "OK\r\n"
             self.wfile.write('HTTP/1.1 200\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
         elif url_path == '/null':
             mimetype = "application/x-binary"
-            file_size = 1024 * 1024 * 1024
+            if "size" in reqs:
+                file_size = int(reqs['size'][0])
+            else:
+                file_size = 1024 * 1024 * 1024
+
             self.wfile.write('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, file_size))
             start = 0
-            data = ''.join(chr(ord('a')+i) for i in xrange(65535))
+            data = self.generate_random_lowercase(65535)
             while start < file_size:
                 left = file_size - start
                 send_batch = min(left, 65535)
@@ -268,4 +302,10 @@ if __name__ == "__main__":
         data_path = sys.argv[1]
     else:
         data_path = "."
-    main(data_path=data_path)
+
+    try:
+        main(data_path=data_path)
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+    except KeyboardInterrupt:
+        sys.exit()

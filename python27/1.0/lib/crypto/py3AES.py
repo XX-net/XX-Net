@@ -33,7 +33,7 @@ import math
 def append_PKCS7_padding(b):
     """
     Function to pad the given data to a multiple of 16-bytes by PKCS7 padding.
-    
+
     @param b data to be padded (bytes)
     @return padded data (bytes)
     """
@@ -44,7 +44,7 @@ def append_PKCS7_padding(b):
 def strip_PKCS7_padding(b):
     """
     Function to strip off PKCS7 padding.
-    
+
     @param b data to be stripped (bytes)
     @return stripped data (bytes)
     @exception ValueError data padding is invalid
@@ -151,7 +151,7 @@ class AES(object):
     def __getSBoxValue(self, num):
         """
         Private method to retrieve a given S-Box value.
-        
+
         @param num position of the value (integer)
         @return value of the S-Box (integer)
         """
@@ -160,7 +160,7 @@ class AES(object):
     def __getSBoxInvert(self, num):
         """
         Private method to retrieve a given Inverted S-Box value.
-        
+
         @param num position of the value (integer)
         @return value of the Inverted S-Box (integer)
         """
@@ -172,7 +172,7 @@ class AES(object):
 
         Rotate the data word eight bits to the left: eg,
         rotate(1d2c3a4f) == 2c3a4f1d.
-        
+
         @param data data of size 4 (bytearray)
         @return rotated data (bytearray)
         """
@@ -181,7 +181,7 @@ class AES(object):
     def __getRconValue(self, num):
         """
         Private method to retrieve a given Rcon value.
-        
+
         @param num position of the value (integer)
         @return Rcon value (integer)
         """
@@ -190,7 +190,7 @@ class AES(object):
     def __core(self, data, iteration):
         """
         Private method performing the key schedule core operation.
-        
+
         @param data data to operate on (bytearray)
         @param iteration iteration counter (integer)
         @return modified data (bytearray)
@@ -210,7 +210,7 @@ class AES(object):
         Private method performing Rijndael's key expansion.
 
         Expands a 128, 192 or 256 bit key into a 176, 208 or 240 bit key.
-        
+
         @param key key to be expanded (bytes or bytearray)
         @param size size of the key in bytes (16, 24 or 32)
         @param expandedKeySize size of the expanded key (integer)
@@ -254,7 +254,7 @@ class AES(object):
     def __addRoundKey(self, state, roundKey):
         """
         Private method to add (XORs) the round key to the state.
-        
+
         @param state state to be changed (bytearray)
         @param roundKey key to be used for the modification (bytearray)
         @return modified state (bytearray)
@@ -267,7 +267,7 @@ class AES(object):
     def __createRoundKey(self, expandedKey, roundKeyPointer):
         """
         Private method to create a round key.
-        
+
         @param expandedKey expanded key to be used (bytearray)
         @param roundKeyPointer position within the expanded key (integer)
         @return round key (bytearray)
@@ -282,7 +282,7 @@ class AES(object):
         """
         Private method to perform a Galois multiplication of 8 bit characters
         a and b.
-        
+
         @param a first factor (byte)
         @param b second factor (byte)
         @return result (byte)
@@ -304,7 +304,7 @@ class AES(object):
         """
         Private method to substitute all the values from the state with the
         value in the SBox using the state value as index for the SBox.
-        
+
         @param state state to be worked on (bytearray)
         @param isInv flag indicating an inverse operation (boolean)
         @return modified state (bytearray)
@@ -322,7 +322,7 @@ class AES(object):
         """
         Private method to iterate over the 4 rows and call __shiftRow() with
         that row.
-        
+
         @param state state to be worked on (bytearray)
         @param isInv flag indicating an inverse operation (boolean)
         @return modified state (bytearray)
@@ -335,7 +335,7 @@ class AES(object):
     def __shiftRow(self, state, statePointer, nbr, isInv):
         """
         Private method to shift the bytes of a row to the left.
-        
+
         @param state state to be worked on (bytearray)
         @param statePointer index into the state (integer)
         @param nbr number of positions to shift (integer)
@@ -357,7 +357,7 @@ class AES(object):
     def __mixColumns(self, state, isInv):
         """
         Private method to perform a galois multiplication of the 4x4 matrix.
-        
+
         @param state state to be worked on (bytearray)
         @param isInv flag indicating an inverse operation (boolean)
         @return modified state (bytearray)
@@ -379,7 +379,7 @@ class AES(object):
         """
         Private method to perform a galois multiplication of 1 column the
         4x4 matrix.
-        
+
         @param column column to be worked on (bytearray)
         @param isInv flag indicating an inverse operation (boolean)
         @return modified column (bytearray)
@@ -406,7 +406,7 @@ class AES(object):
         """
         Private method to apply the 4 operations of the forward round in
         sequence.
-        
+
         @param state state to be worked on (bytearray)
         @param roundKey round key to be used (bytearray)
         @return modified state (bytearray)
@@ -421,7 +421,7 @@ class AES(object):
         """
         Private method to apply the 4 operations of the inverse round in
         sequence.
-        
+
         @param state state to be worked on (bytearray)
         @param roundKey round key to be used (bytearray)
         @return modified state (bytearray)
@@ -435,11 +435,11 @@ class AES(object):
     def __aes_main(self, state, expandedKey, nbrRounds):
         """
         Private method to do the AES encryption for one round.
-        
+
         Perform the initial operations, the standard round, and the
         final operations of the forward AES, creating a round key for
         each round.
-        
+
         @param state state to be worked on (bytearray)
         @param expandedKey expanded key to be used (bytearray)
         @param nbrRounds number of rounds to be done (integer)
@@ -461,11 +461,11 @@ class AES(object):
     def __aes_invMain(self, state, expandedKey, nbrRounds):
         """
         Private method to do the inverse AES encryption for one round.
-        
+
         Perform the initial operations, the standard round, and the
         final operations of the inverse AES, creating a round key for
         each round.
-        
+
         @param state state to be worked on (bytearray)
         @param expandedKey expanded key to be used (bytearray)
         @param nbrRounds number of rounds to be done (integer)
@@ -488,7 +488,7 @@ class AES(object):
         """
         Public method to encrypt a 128 bit input block against the given key
         of size specified.
-        
+
         @param iput input data (bytearray)
         @param key key to be used (bytes or bytearray)
         @param size key size (16, 24 or 32)
@@ -545,7 +545,7 @@ class AES(object):
         """
         Public method to decrypt a 128 bit input block against the given key
         of size specified.
-        
+
         @param iput input data (bytearray)
         @param key key to be used (bytes or bytearray)
         @param size key size (16, 24 or 32)
@@ -610,7 +610,7 @@ class AESModeOfOperation(object):
     def __extractBytes(self, input, start, end, mode):
         """
         Private method to extract a range of bytes from the input.
-        
+
         @param input input data (bytes)
         @param start start index (integer)
         @param end end index (integer)
@@ -637,7 +637,7 @@ class AESModeOfOperation(object):
     def encrypt(self, input, mode, key, size, IV):
         """
         Public method to perform the encryption operation.
-        
+
         @param input data to be encrypted (bytes)
         @param mode mode of operation (0, 1 or 2)
         @param key key to be used (bytes)
@@ -728,7 +728,7 @@ class AESModeOfOperation(object):
     def decrypt(self, cipherIn, originalsize, mode, key, size, IV):
         """
         Public method to perform the decryption operation.
-        
+
         @param cipherIn data to be decrypted (bytes)
         @param originalsize unencrypted string length (required for CBC)
             (integer)
@@ -817,7 +817,7 @@ class AESModeOfOperation(object):
 def encryptData(key, data, mode=AESModeOfOperation.ModeOfOperation["CBC"]):
     """
     Module function to encrypt the given data with the given key.
-    
+
     @param key key to be used for encryption (bytes)
     @param data data to be encrypted (bytes)
     @param mode mode of operations (0, 1 or 2)
@@ -842,7 +842,7 @@ def encryptData(key, data, mode=AESModeOfOperation.ModeOfOperation["CBC"]):
 def decryptData(key, data, mode=AESModeOfOperation.ModeOfOperation["CBC"]):
     """
     Module function to decrypt the given data with the given key.
-    
+
     @param key key to be used for decryption (bytes)
     @param data data to be decrypted (with initialization vector prepended)
         (bytes)

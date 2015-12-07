@@ -1,36 +1,36 @@
 <form method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span2">
-            <label for="action">任务类型</label>
+            <label for="action">{{ _( "Task type" ) }}</label>
         </div> <!-- .span2 -->
         <div class="span8">
             <div class="row-fluid">
                 <div class="span6">
                     <input id="action-import" name="action" class="action" type="radio" value="import" checked />
-                    <label for="action-import" style="display: inline">导入</label>
+                    <label for="action-import" style="display: inline">{{ _( "Import" ) }}</label>
                 </div> <!-- .span6 -->
                 <div class="span6">
                     <input id="action-export" name="action" class="action" class="action" type="radio" value="export" />
-                    <label for="action-export" style="display: inline">导出</label>
+                    <label for="action-export" style="display: inline">{{ _( "Export" ) }}</label>
                 </div> <!-- .span6 -->
             </div> <!-- .row-fluid -->
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span2">
-            <label for="ip-format">导入/导出格式</label>
+            <label for="ip-format">{{ _( "Import/Export format" ) }}</label>
         </div> <!-- .span2 -->
         <div class="span10">
             <select id="ip-format">
-                <option value="1" selected>IP|IP|IP (Gogo-Tester/Goagent格式)</option>
-                <option value="2">换行分割</option>
-                <option value="3">智能正则匹配</option>
+                <option value="1" selected>IP|IP|IP (Gogo-Tester/Goagent{{ _( " format" ) }})</option>
+                <option value="2">{{ _( "New line delimiter" ) }}</option>
+                <option value="3">{{ _( "Intelligent regular matching" ) }}</option>
             </select>
         </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span2">
-            <label for="ip-list">IP列表</label>
+            <label for="ip-list">{{ _( "IP list" ) }}</label>
         </div> <!-- .span2 -->
         <div class="span10">
             <textarea id="ip-list" rows="10"></textarea>
@@ -38,14 +38,14 @@
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="submit">执行</button>
+            <button class="btn btn-primary btn-block" type="submit">{{ _( "Run" ) }}</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 </form> <!-- #import-export-ip -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('IP导入导出');
+    title('{{ _('IP Import/Export') }}');
 </script>
 <script type="text/javascript">
     function onSubmit() {
@@ -75,7 +75,7 @@
             $('option[value=1]').css('display', '');
             $('option[value=2]').css('display', '');
             $('option[value=3]').css('display', 'none');
-            
+
             if( $('#ip-format').val() == 3 ) {
                 $('#ip-format').val("1");
             }

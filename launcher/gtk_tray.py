@@ -85,6 +85,8 @@ class Gtk_tray():
         module_init.start("gae_proxy")
 
     def on_quit(self, widget, data=None):
+        module_init.stop_all()
+        os._exit(0)
         gtk.main_quit()
 
     def serve_forever(self):

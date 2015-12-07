@@ -21,7 +21,7 @@ def hexdump(src, length=16, prefix=''):
 
     """
     n = 0
-    left = length // 2 
+    left = length // 2
     right = length - left
     result= []
     src = bytearray(src)
@@ -32,7 +32,7 @@ def hexdump(src, length=16, prefix=''):
         hexb = "%-*s" % (right*3,' '.join(["%02x"%x for x in r]))
         lf = l.translate(FILTER)
         rf = r.translate(FILTER)
-        result.append("%s%04x  %s %s %s %s" % (prefix, n, hexa, hexb, 
+        result.append("%s%04x  %s %s %s %s" % (prefix, n, hexa, hexb,
                                                lf.decode(), rf.decode()))
         n += length
     return "\n".join(result)
@@ -45,10 +45,10 @@ def get_bits(data,offset,bits=1):
         '0b1'
         >>> bin(get_bits(0b0011100,0,4))
         '0b1100'
-        
+
     """
     mask = ((1 << bits) - 1) << offset
-    return (data & mask) >> offset 
+    return (data & mask) >> offset
 
 def set_bits(data,value,offset,bits=1):
     """

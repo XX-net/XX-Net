@@ -29,6 +29,7 @@ import module_init
 import config
 import autorun
 import update_from_github
+import jinja2_i18n_helper
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -59,6 +60,31 @@ class LocalServer(SocketServer.ThreadingTCPServer):
             del etype, value
             SocketServer.ThreadingTCPServer.handle_error(self, *args)
 
+    def _handle_request_noblock(self):
+        try:
+            request, client_address = self.get_request()
+        except IOError as e:
+            launcher_log.warn("socket(%s:%s) accept fail(errno: %s).", self.server_address[0], self.server_address[1], e.args[0])
+            if e.args[0] == 10022:
+                launcher_log.info("server %s:%d restarted.", self.server_address[0], self.server_address[1])
+                self.init_socket()
+            return
+
+        if self.verify_request(request, client_address):
+            try:
+                self.process_request(request, client_address)
+            except:
+                self.handle_error(request, client_address)
+                self.shutdown_request(request)
+
+    def init_socket(self):
+        self.server_close()
+        self.socket = None
+
+        self.socket = socket.socket(self.address_family, self.socket_type)
+        self.server_bind()
+        self.server_activate()
+
 module_menus = {}
 class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     deploy_proc = None
@@ -71,15 +97,22 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1:
+            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1: # skip php_proxy module
                 continue
 
             #version = values["current_version"]
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")
+            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml") # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
 
-            module_menu = yaml.load(file(menu_path, 'r'))
+            #module_menu = yaml.load(file(menu_path, 'r')) # non-i18n
+            # i18n code lines (Both the locale dir & the template dir are module-dependent)
+            locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+            template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
+            jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            stream = jinja2_i18n_helper.ihelper.render("menu.yaml", None)
+            
+            module_menu = yaml.load(stream)
             module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
@@ -95,6 +128,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
     def do_POST(self):
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                launcher_log.warn("web control ref:%s host:%s", refer_loc, host)
+                return
+
         #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
@@ -111,14 +152,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
 
     def do_GET(self):
-        try:
-            refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
-            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                launcher_log.warn("web control ref:%s refuse", netloc)
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                launcher_log.warn("web control ref:%s host:%s", refer_loc, host)
                 return
-        except:
-            pass
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
@@ -136,6 +176,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
                     launcher_log.warn("request %s no module in path", url_path)
+                    self.send_not_found()
+                    return
+
+                if "imp" not in module_init.proc_handler[module]:
+                    launcher_log.warn("request module:%s start fail", module)
                     self.send_not_found()
                     return
 
@@ -211,10 +256,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if len(module_menus) == 0:
             self.load_module_menus()
+            
+        # Old code without i18n
+        #index_path = os.path.join(current_path, 'web_ui', "index.html")
+        #with open(index_path, "r") as f:
+         #   index_content = f.read()
 
-        index_path = os.path.join(current_path, 'web_ui', "index.html")
-        with open(index_path, "r") as f:
-            index_content = f.read()
+        # i18n code lines (Both the locale dir & the template dir are module-dependent)
+        locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
+        template_dir = os.path.abspath(os.path.join(current_path, 'web_ui'))
+        jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+        index_content = jinja2_i18n_helper.ihelper.render("index.html", None)
 
         menu_content = ''
         for module,v in module_menus:
@@ -232,8 +284,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
-            with open(right_content_file, "r") as f:
-                right_content = f.read()
+            # Old code without i18n
+            #with open(right_content_file, "r") as f:
+            #   right_content = f.read()
+            
+            # i18n code lines (Both the locale dir & the template dir are module-dependent)
+            locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
+            template_dir = os.path.abspath(os.path.join(root_path, target_module, 'web_ui'))
+            jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            right_content = jinja2_i18n_helper.ihelper.render(target_menu + ".html", None)
+
         else:
             right_content = ""
 

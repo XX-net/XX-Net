@@ -199,4 +199,4 @@ def update_version(version):
         update_config(version)
         restart_xxnet()
     except Exception as e:
-        launcher_log.exception("update version %d fail:%r", version, e)
+        launcher_log.exception("update version %s fail:%r", version, e)

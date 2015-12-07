@@ -77,7 +77,9 @@ class MacTrayObject(NSObject):
         nc.addObserver_selector_name_object_(self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
 
     def windowWillClose_(self, notification):
+        self.disableProxy_(None)
         module_init.stop_all()
+        os._exit(0)
         NSApp.terminate_(self)
 
     def config_(self, notification):

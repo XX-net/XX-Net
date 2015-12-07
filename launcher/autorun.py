@@ -111,12 +111,17 @@ elif sys.platform == 'darwin':
     run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
     from os.path import expanduser
     home = expanduser("~")
+    launch_path = os.path.join(home, "Library/LaunchAgents")
 
-    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.xxnet.launcher.plist")
+    plist_file_path = os.path.join(launch_path, "com.xxnet.launcher.plist")
 
     def add(name, cmd):
         file_content = plist_template % cmd
         launcher_log.info("create file:%s", plist_file_path)
+
+        if not os.path.isdir(launch_path):
+            os.mkdir(launch_path, 0755)
+            
         with open(plist_file_path, "w") as f:
             f.write(file_content)
     def remove(name):

@@ -4,7 +4,11 @@
 import os, sys
 import time
 import atexit
-import webbrowser
+
+# reduce resource request for threading
+# for OpenWrt
+import threading
+threading.stack_size(128*1024)
 
 import launcher_log
 import update_from_github
@@ -87,6 +91,7 @@ def main():
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        import webbrowser
         webbrowser.open("http://127.0.0.1:%s/" % host_port)
 
     update.start()
@@ -107,4 +112,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt: # Ctrl + C on console
         module_init.stop_all()
-        sys.exit
+        os._exit(0)

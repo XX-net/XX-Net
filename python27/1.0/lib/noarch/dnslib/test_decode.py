@@ -2,8 +2,8 @@
 """
     Test dnslib packet encoding/decoding
 
-    Reads test files from dnslib/test (by default) containing 
-    dump of DNS exchange (packet dump & parse output) and test 
+    Reads test files from dnslib/test (by default) containing
+    dump of DNS exchange (packet dump & parse output) and test
     round-trip parsing - specifically:
 
         - Parse packet data and zone format data and compare
@@ -15,34 +15,34 @@
     The original parsed output is created using dnslib by default so systematic
     encode/decode errors will not be found. By default the test data is
     checked against 'dig' to ensure that it is correct when generated
-    using the --new option. 
+    using the --new option.
 
     By default the module runs in 'unittest' mode (and supports unittest
     --verbose/--failfast options)
 
     The module can also be run in interactive mode (--interactive) and inspect
-    failed tests (--debug) 
+    failed tests (--debug)
 
     New test data files can be automatically created using the:
-    
+
         --new <domain> <type>
 
     option. The data is checked against dig output and an error raised if
     this does not match. This is effectively the same as running:
 
-        python -m dnslib.client --query --hex --dig <domain> <type> 
+        python -m dnslib.client --query --hex --dig <domain> <type>
 
     It is possible to manually generate test data files using dnslib.client
     even if the dig data doesn't match (this is usually due to an unsupported
     RDATA type which dnslib will output in hex rather then parsing contents).
     The roundtrip tests will still work in this case (the unknown RDATA is
-    handled as an opaque blob). 
+    handled as an opaque blob).
 
     In some cases the tests will fail as a result of the zone file parser
     being more fragile than the packet parser (especially with broken data)
 
     Note - unittests are dynamically generated from the test directory contents
-    (matched against the --glob parameter) 
+    (matched against the --glob parameter)
 
 """
 
@@ -58,9 +58,9 @@ try:
 except ImportError:
     from commands import getoutput
 
-try: 
+try:
     input = raw_input
-except NameError: 
+except NameError:
     pass
 
 class TestContainer(unittest.TestCase):
@@ -138,12 +138,12 @@ def check_decode(f,debug=False):
     if r != rparse:
         errors.append(('Reply',r.diff(rparse)))
 
-    # Repack the data 
+    # Repack the data
     qpack = qparse.pack()
     rpack = rparse.pack()
 
-    # Check if repacked question data matches original 
-    # We occasionally get issues where original packet did not 
+    # Check if repacked question data matches original
+    # We occasionally get issues where original packet did not
     # compress all labels - in this case we reparse packed
     # record, repack this and compare with the packed data
     if qpack != qdata:

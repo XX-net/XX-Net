@@ -106,6 +106,8 @@ class Win_tray():
 
     def on_quit(self, widget, data=None):
         win32_proxy_manager.disable_proxy()
+        module_init.stop_all()
+        os._exit(0)
 
     def serve_forever(self):
         self.systray._message_loop_func()

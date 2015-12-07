@@ -3,21 +3,21 @@
 XX-Net
 ========
 翻墙工具套件  
-* GAE proxy, 稳定、快速、易用
+* GAE proxy, 稳定、易用、快速
 * Web界面，人性化交互
 
 
 下载链接：
 ==========
 测试版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.5.5
+https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
 稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.5.1
+https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 
+使用方法：https://github.com/XX-net/XX-Net/wiki/使用方法
 
-使用方法：  
-https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
+更新历史：https://github.com/XX-net/XX-Net/wiki/更新历史
   
   
 
@@ -26,7 +26,7 @@ https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
 
 平台支持
 ================
-* Windows 7/8/10 （xp 需要 tcpip.sys 补丁, 比如用 tcp-z）
+* Windows 7/8/10 （xp 需要 [tcpip.sys补丁]( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014.）
   Win10 存在声音卡的问题 
 * Linux （Ubuntu不显示系统托盘）
 * Mac OS X(10.7; 10.8; 10.9; 10.10)
@@ -41,10 +41,10 @@ https://github.com/XX-net/XX-Net/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
 
 感谢
 =========
-* GoAgent
-* GoGoTest
-* goagentfindip
-* checkgoogleip
+* [GoAgent](https://github.com/phuslu/goagent)
+* [GoGoTest](https://github.com/azzvx/gogotester)
+* [goagentfindip](https://github.com/usrtmp/goagentfindip)
+* [checkgoogleip](https://github.com/moonshawdo/checkgoogleip)
 
 
 如何帮助项目
@@ -78,7 +78,7 @@ GAEProxy 查看日志页面
   集成Google Chrome和XX-Net的自动翻墙浏览器
   维护人：Yanu
 * 集成Chrome和XX-Net
-  https://github.com/yeahwu/chrome
+  https://github.com/yeahwu/chrome-xx
 * plusburg
   主页：https://github.com/Plusburg/Plusburg
   集成XX-Net的启动光盘镜像

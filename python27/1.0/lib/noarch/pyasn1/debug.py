@@ -25,10 +25,10 @@ class Debug:
                 raise error.PyAsn1Error('bad debug flag %s' % (f,))
             self._flags = self._flags | flagMap[f]
             self('debug category \'%s\' enabled' % f)
-        
+
     def __str__(self):
         return 'logger %s, flags %x' % (self._printer, self._flags)
-    
+
     def __call__(self, msg):
         self._printer('DBG: %s\n' % msg)
 
@@ -46,7 +46,7 @@ def setLogger(l):
 
 def hexdump(octets):
     return ' '.join(
-            [ '%s%.2X' % (n%16 == 0 and ('\n%.5d: ' % n) or '', x) 
+            [ '%s%.2X' % (n%16 == 0 and ('\n%.5d: ' % n) or '', x)
               for n,x in zip(range(len(octets)), octs2ints(octets)) ]
         )
 

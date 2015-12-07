@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-    DNS Client - DiG-like CLI utility. 
-    
+    DNS Client - DiG-like CLI utility.
+
     Mostly useful for testing. Can optionally compare results from two
     nameservers (--diff) or compare results against DiG (--dig).
 
     Usage: python -m dnslib.client [options|--help]
-    
+
     See --help for usage.
 """
 

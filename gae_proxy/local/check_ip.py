@@ -65,7 +65,7 @@ g_handshake_timeout = 2
 default_socket = None
 
 
-def load_sock():
+def load_proxy_config():
     global default_socket
     if config.PROXY_ENABLE:
 
@@ -81,7 +81,7 @@ def load_sock():
 
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
         default_socket = socket.socket
-load_sock()
+load_proxy_config()
 
 
 #####################################
@@ -532,8 +532,8 @@ def test_keep_alive(ip_str, interval=5):
     xlog.info("result:%r", result)
 
 
-def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
-
+def test_alive(ip_str="180.188.250.54", begin=45, end=60, interval=2):
+    start_time = time.time()
     test_array = {}
     for i in range(begin, end, interval):
         sslsock, _, _ = connect_ssl(ip_str)
@@ -546,7 +546,8 @@ def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
         test_array[i]["start_time"] = time.time()
         time.sleep(interval)
 
-    time.sleep(begin)
+    time_now = time.time()
+    time.sleep(end - (time_now - start_time))
 
     for i in test_array:
         stat = test_array[i]
@@ -556,8 +557,8 @@ def test_alive(ip_str="74.125.96.107", begin=50, end=60, interval=2):
             result = test_app_check(sslsock, ip_str)
             xlog.info("time alive:%d", time_now - stat["start_time"])
         except:
-            xlog.info("time alive fail")
-            break
+            xlog.info("time alive fail:%d", time_now - stat["start_time"])
+            continue
 
 
 class Test_cipher():
@@ -617,8 +618,8 @@ if __name__ == "__main__":
     #test_gws("216.58.196.176") #gvs
     #result = test_gws("139.175.107.212")
     #print result
-    result = test_gae('64.15.119.69')
-    #test("216.239.38.123")
+    #result = test_gae('64.15.119.69')
+    test("192.119.23.73")
     #     test_multi_thread_search_ip()
     #check_all_exist_ip()
     #test_gws("74.125.216.36")
