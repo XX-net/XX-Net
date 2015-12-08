@@ -47,7 +47,7 @@ if python_lib not in sys.path:
     sys.path.append(python_lib)
 
 # As packages jinja2, markupsafe, babel, pytz are OS-independent,
-# they're put in folder python27/1.0/lib/noarc
+# they're put in folder python27/1.0/lib/noarch
 if noarch_lib not in sys.path:
     sys.path.append(noarch_lib)
 
