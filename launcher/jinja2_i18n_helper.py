@@ -7,8 +7,11 @@
 # I. See jinja2: https://github.com/mitsuhiko/jinja2
 # II. See MarkupSafe-0.23.tar.gz: https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz
 # III. See Python babel: https://github.com/python-babel/babel
-# IV. See ytz-2015.7.tar.gz: https://pypi.python.org/packages/source/p/pytz/pytz-2015.7.tar.gz#md5=252bb731883f37ff9c7f462954e8706d
+# IV. See pytz-2015.7.tar.gz: https://pypi.python.org/packages/source/p/pytz/pytz-2015.7.tar.gz#md5=252bb731883f37ff9c7f462954e8706d
 # V. See Language_contry code list: http://www.fincher.org/Utilities/CountryLanguageList.shtml
+# IMPORTANT:
+# By the way, module decimal.py and numbers.py are also needed on Windows when run with the bundled Python,
+# which were already appended to folder python27/1.0/lib. 
 
 # See for these steps at http://tlphoto.googlecode.com/git/jinja2_i18n_howto.txt
 # 0. Create the folder structure (no whitespace after the commas!!!)
@@ -36,9 +39,15 @@ python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', 
 python_lib = os.path.abspath(os.path.join(python_path, 'lib'))
 noarch_lib = os.path.abspath(os.path.join(python_lib, 'noarch'))
 
+# Michael.X: common lib should put in python27/1.0/lib/noarch, so all platform can use it.
+# the path struct is not good because some history reason. python27/1.0/ is a win32 env.
+# Appended modules decimal.py and numbers.py were copied from Python code on Windows,
+# so they're put in folder python27/1.0/lib
 if python_lib not in sys.path:
     sys.path.append(python_lib)
-	
+
+# As packages jinja2, markupsafe, babel, pytz are OS-independent,
+# they're put in folder python27/1.0/lib/noarc
 if noarch_lib not in sys.path:
     sys.path.append(noarch_lib)
 
