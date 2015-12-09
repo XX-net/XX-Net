@@ -102,13 +102,13 @@
                 dataType: 'JSON',
                 success: function(result) {
                     if ( result['status'] == 'success' ) {
-                        tip('退出成功.', 'success');
+                        tip('{{ _( "Exited successfully" ) }}', 'success');
                     } else {
-                        tip('退出失败.', 'error');
+                        tip('{{ _( "Exitting failed" ) }}', 'error');
                     }
                 },
                 error: function() {
-                    tip('退出失败,网络错误.', 'error');
+                    tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
                 }
             });
         });

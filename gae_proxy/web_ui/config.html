@@ -4,37 +4,37 @@
             <label for="gae-appid">GAE AppID </label>
         </div> <!-- .span4 -->
         <div id="gae-appid-field" class="span8">
-            <input id="gae-appid" type="text" placeholder="默认使用公共AppID"/>
+            <input id="gae-appid" type="text" placeholder={{ _( "Public appids used by default" ) }}/>
             <div id="public-appid-tip" class="hide">
                 <p>
-                    <span color="red">公共AppID不能看视频、下载文件。</span>
-                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">(怎么申请)</a>
+                    <span color="red">{{ _( "The public appids are disabled to access videos or download files." ) }}</span>
+                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">({{ _( "How to apply" ) }})</a>
                 </p>
             </div>
             <div id="gae-appid-tip" class="hide">
                 <p>
-                    <span >注意：appid部署之前无法使用。</span>
+                    <span >{{ _( "Attention: inaccessable before appids are deployed." ) }}</span>
                 </p>
             </div>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">
-            <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
+            <label for="advanced-options"><i class="icon icon-chevron-right"></i> {{ _( "Advanced options" ) }}</label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
     <div id="advanced-options" style="display: none;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="gae-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">帮助</a>)</label>
+                <label for="gae-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">{{ _( "Help" ) }}</a>)</label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="gae-password" type="password" placeholder="一般无需配置" />
+                <input id="gae-password" type="password" placeholder={{ _("Needless to configure generally") }} />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="use-ipv6">使用ipv6(一般教育网才开)</label>
+                <label for="use-ipv6">{{ _( "Enable IPv6(CERNet only)" ) }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="use-ipv6" type="checkbox" data-toggle="switch" />
@@ -42,7 +42,7 @@
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="enable-proxy">局域网代理(一般无需配置) <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">(帮助)</a></label>
+                <label for="enable-proxy">{{ _( "LAN proxy(Generally not needed)" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="enable-proxy" type="checkbox" data-toggle="switch" />
@@ -51,7 +51,7 @@
         <div id="proxy-options" style="display: none;">
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="proxy-type">代理服务器类型</label>
+                    <label for="proxy-type">{{ _( "Proxy type" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <select id="proxy-type">
@@ -63,7 +63,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="proxy-host">代理服务器地址</label>
+                    <label for="proxy-host">{{ _( "Proxy IP address or domain name" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
@@ -71,7 +71,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="proxy-port">端口</label>
+                    <label for="proxy-port">{{ _( "Port" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="proxy-port" type="text" placeholder="Example: 808" />
@@ -79,7 +79,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="proxy-username">用户名</label>
+                    <label for="proxy-username">{{ _( "User name" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="proxy-username" type="text" />
@@ -87,7 +87,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="proxy-password">密码</label>
+                    <label for="proxy-password">{{ _( "Password" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
                     <input id="proxy-password" type="password" />
@@ -97,19 +97,19 @@
     </div> <!-- #advanced-options -->
     <div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="submit">保存</button>
+            <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 </form> <!-- #gae_proxy-config -->
 
         <div class="row-fluid">
             <div class="span4">
-                高级技巧: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">通过文件配置</a>
+                {{ _( "Advanced tricks:" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
             </div> <!-- .span4 -->
         </div> <!-- .row-fluid -->
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('配置GAEProxy');
+    title('{{ _( "Configure GAEProxy" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -191,7 +191,7 @@
                 }
             },
             error: function(){
-                tip('读取设置失败.', 'error');
+                tip('{{ _( "Failed reading the seeting." ) }}', 'error');
             }
         });
     });
@@ -236,9 +236,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('{{ _( "Settings saved successfully" ) }}', 'success');
                 } else {
-                    tip('发生未知错误.', 'error');
+                    tip('{{ _( "Unkown error occurred." ) }}', 'error');
                 }
             }
         });

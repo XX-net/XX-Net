@@ -1,20 +1,20 @@
-<h2>部署XX-Net至GAE</h2>
+<h2>{{ _( "Deploy XX-Net onto GAE" ) }}</h2>
 <div class="alert alert-info fade in">
-    <p class="message">当前状态: 空闲</p>
+    <p class="message">{{ _( "Current status: idle" ) }}</p>
 </div> <!-- .alert -->
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#authentication" data-toggle="tab">授权</a></li>
-    <li><a href="#logs" data-toggle="tab">日志</a></li>
+    <li class="active"><a href="#authentication" data-toggle="tab">{{ _( "Authorization" ) }}</a></li>
+    <li><a href="#logs" data-toggle="tab">{{ _( "Log" ) }}</a></li>
 </ul>
 <div id="deploy" class="tab-content">
     <div id="authentication" class="tab-pane fade in active">
         <form method="POST" onSubmit="return false;">
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="gae-appid">GAE AppID (<a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">如何申请</a>)</label>
+                    <label for="gae-appid">GAE AppID (<a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">{{ _( "How to apply" ) }}</a>)</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
-                    <input id="gae-appid" type="text" placeholder="批量部署多个AppID, 请用|分割。"/>
+                    <input id="gae-appid" type="text" placeholder={{ _("Delimit multiple appids with |") }}/>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
@@ -32,15 +32,15 @@
                 <div id="password-field" class="span8">
                     <input id="gae-password" type="password" />
                     <p id="password-tip" class="tip hide">
-                        如果启用两步验证, 请使用应用专用密码: <a href="https://security.google.com/settings/security/apppasswords" target="_blank">立即设置</a><br>
-                        如果没有启用两步验证, 请开启弱安全应用登录: <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">立即设置</a><br>
-                        <a href="https://github.com/XX-net/XX-Net/wiki/Deploy-password-problem" target="_blank">详细说明</a>
+                        {{ _( "If the 2-step verification is in-use, please use your exclusive password." ) }}: <a href="https://security.google.com/settings/security/apppasswords" target="_blank">{{ _( "Configure now" ) }}</a><br>
+                        {{ _( "If the 2-step verification is NOT in-use, please enable the less secure apps." ) }}: <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">{{ _( "Configure now" ) }}</a><br>
+                        <a href="https://github.com/XX-net/XX-Net/wiki/Deploy-password-problem" target="_blank">{{ _( "Details" ) }}</a>
                     </p>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span4">
-                    <label for="advanced-options"><i class="icon icon-chevron-right"></i> 高级选项</label>
+                    <label for="advanced-options"><i class="icon icon-chevron-right"></i> {{ _( "Advanced options" ) }}</label>
                 </div> <!-- .span4 -->
             </div> <!-- .row-fluid -->
             <div id="advanced-options" style="display: none;">
@@ -49,20 +49,20 @@
                         <label for="rc4-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">帮助</a>)</label>
                     </div> <!-- .span4 -->
                     <div id="rc4-password-field" class="span8">
-                        <input id="rc4-password" type="password" placeholder="一般无须填写" />
+                        <input id="rc4-password" type="password" placeholder={{ _("Needless to fill generally") }} />
                         <p id="rc4-password-tip" class="tip hide">
-                            如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。<br>
+                            {{ _( "If RC4 password is used, please configure it in the advanced settings while configuring GAE Proxy" ) }}<br>
                         </p>
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
             </div> <!-- #advanced-options -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" type="submit">开始部署</button>
+                    <button class="btn btn-primary btn-block" type="submit">{{ _( "Start to deploy" ) }}</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
-        <p class="tip">* XX-Net 1.13.6之前的服务端, 请重新部署。</p>
+        <p class="tip">* {{ _( "Redploy the server if XX-Net version is prior to 1.13.6." ) }}</p>
     </div> <!-- #authentication -->
     <div id="logs" class="tab-pane fade">
         <div id="log" class="span12"></div>

@@ -1,10 +1,10 @@
 <!--[if lte IE 9]>
 <div class="alert alert-warning">
-    您的浏览器版本过低, 部分功能将无法使用。<br>
-    我们建议您使用最新版本的Chrome浏览器。
+    {{ _( "Your browser is obsolete. Partial functionality will not be available." ) }}<br>
+    {{ _( "The latest Chrome browser is recommended." ) }}
 </div>
 <![endif]-->
-<h4>状态</h4>
+<h4>{{ _( "Status" ) }}</h4>
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -22,7 +22,7 @@
             <td id="ip-handshake-10"></td>
         </tr>
         <tr>
-            <td>Connected Links (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
+            <td>Connected Links (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">{{ _( "Help" ) }}</a>)</td>
             <td id="connected-link"></td>
         </tr>
         <tr>
@@ -30,13 +30,13 @@
             <td id="scan-ip-thread-num"></td>
         </tr>
         <tr>
-            <td>Block Status (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
+            <td>Block Status (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">{{ _( "Help" ) }}</a>)</td>
             <td id="block-stat"></td>
         </tr>
     </tbody>
 </table>
 
-<h4>设置</h4>
+<h4>{{ _( "Configuration" ) }}</h4>
 <table id="setting" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -88,7 +88,7 @@
     </tbody>
 </table>
 
-<h4>系统版本</h4>
+<h4>{{ _( "System Version" ) }}</h4>
 <table id="version" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -139,26 +139,26 @@
         </tr>
     </tbody>
 </table>
-<button id="pop-up-report" class="btn btn-primary">反馈问题</button>
+<button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
 
 <div id="report-issue-modal" class="modal hide fade">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>诊断信息</h3>
+        <h3>{{ _( "Diagnostic Info" ) }}</h3>
     </div> <!-- .modal-header -->
     <div class="modal-body">
-        <p> * 一键反馈需要登录Github账号</p>
+        <p> * {{ _( "The one-key feedback needs to sign in your Github account" ) }}</p>
         <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
     </div>
     <div class="modal-footer">
-        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-goole-group" class="btn btn-primary " target="_blank">前往论坛</a>
-        <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">一键反馈</a>
+        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-goole-group" class="btn btn-primary " target="_blank">{{ _( "To Google Groups" ) }}</a>
+        <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">{{ _( "One-key feedback" ) }}</a>
     </div> <!-- .modal-footer -->
 </div> <!-- #report-issue-modal -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('GAEProxy状态信息');
+    title('{{ _( "GAE Proxy Status Info" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
