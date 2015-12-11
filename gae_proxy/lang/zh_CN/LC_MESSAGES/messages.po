@@ -314,3 +314,32 @@ msgstr "一键反馈"
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
 
+msgid "IP Number"
+msgstr "IP数量"
+
+msgid "You have enough IP."
+msgstr "可用IP数量充裕。"
+
+msgid "Running low on good IP, scaning for more..."
+msgstr "可用IP数不足，请等待一段时间，XX-Net将进行自动扫描。"
+
+msgid "IP Quality"
+msgstr "IP质量"
+
+msgid "Good to go."
+msgstr "指标正常。"
+
+msgid "Currently running slow, scaning for faster IP..."
+msgstr "IP质量欠佳，请耐心等待扫描。"
+
+msgid "Connection Status"
+msgstr "连接状态"
+
+msgid "Connected to the world."
+msgstr "成功建立连接。"
+
+msgid "Connection not established yet."
+msgstr "连接尚未建立。"
+
+msgid "Number of IP-Scaning Threads"
+msgstr "IP扫描线程数"
