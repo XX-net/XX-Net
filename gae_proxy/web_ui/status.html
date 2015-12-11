@@ -14,24 +14,20 @@
     </thead>
     <tbody>
         <tr>
-            <td>Total IP / Good IP</td>
-            <td id="gws-ip-num"></td>
+            <td>{{ _( "IP Number" ) }}</td>
+            <td id="ip-num"></td>
         </tr>
         <tr>
-            <td>10th IP handshake(ms)</td>
-            <td id="ip-handshake-10"></td>
+            <td>{{ _( "IP Quality" ) }}</td>
+            <td id="ip-quality"></td>
         </tr>
         <tr>
-            <td>Connected Links (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">{{ _( "Help" ) }}</a>)</td>
-            <td id="connected-link"></td>
+            <td>{{ _( "Connection Status" ) }}(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">{{ _( "Help" ) }}</a>)</td>
+            <td id="connection-status"></td>
         </tr>
         <tr>
-            <td>Number of Threads Scaning IPs</td>
+            <td>{{ _( "Number of IP-Scaning Threads" ) }}</td>
             <td id="scan-ip-thread-num"></td>
-        </tr>
-        <tr>
-            <td>Block Status (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">{{ _( "Help" ) }}</a>)</td>
-            <td id="block-stat"></td>
         </tr>
     </tbody>
 </table>
@@ -187,7 +183,7 @@
                     'xxnet-version: ' + result['xxnet_version'], 
                     'python-version: ' + result['python_version'], 
                     '\nipv6-status: ' + result['use_ipv6'], 
-                    'gws-ip-num: ' + result['gws_ip_num'], 
+                    'gws-ip-num: ' + result['ip_num'] + ' / ' + result['good_ip_num'], 
                     'connected-link: ' + result['connected_link'], 
                     'scan-ip-thread-num: ' + result['scan_ip_thread_num'], 
                     'ip-handshake-10: ' + result['ip_handshake_10'], 
@@ -244,14 +240,14 @@
                     '#proxy-listen': result['proxy_listen'],
                     '#pac-url': result['pac_url'],
                     '#ipv6-status': result['use_ipv6'] == '0' ? 'Disabled' : 'Enabled',
-                    '#gws-ip-num': result['gws_ip_num'],
-                    '#connected-link': result['connected_link'],
+                    '#ip-num': result['good_ip_num'] > 20 ? '{{ _( "You have enough IP." ) }}':'{{ _( "Running low on good IP, scaning for more..." ) }}',
+                    '#connection-status': result['total_connected_link'] > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}',
                     '#gae-appid': result['gae_appid'],
                     '#working-appid': result['working_appid'],
                     '#out-of-quota-appids': result['out_of_quota_appids'],
                     '#not-exist-appids': result['not_exist_appids'],
                     '#scan-ip-thread-num': result['scan_ip_thread_num'],
-                    '#ip-handshake-10': result['ip_handshake_10'],
+                    '#ip-quality': result['ip_handshake_10'] < 400 ? '{{ _( "Good to go." ) }}':'{{ _( "Currently running slow, scaning for faster IP..." ) }}',
                     '#block-stat': result['block_stat'],
                 }
                 for (var item in updates) {

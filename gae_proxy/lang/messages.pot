@@ -307,3 +307,32 @@ msgstr ""
 msgid "GAE Proxy Status Info"
 msgstr ""
 
+msgid "IP Number"
+msgstr ""
+
+msgid "You have enough IP."
+msgstr ""
+
+msgid "Running low on good IP, scaning for more..."
+msgstr ""
+
+msgid "IP Quality"
+msgstr ""
+
+msgid "Good to go."
+msgstr ""
+
+msgid "Currently running slow, scaning for faster IP..."
+msgstr ""
+
+msgid "Connection Status"
+msgstr ""
+
+msgid "Connected to the world."
+msgstr ""
+
+msgid "Connection not established yet."
+msgstr ""
+
+msgid "Number of IP-Scaning Threads"
+msgstr ""
