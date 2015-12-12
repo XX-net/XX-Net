@@ -279,10 +279,6 @@ msgstr ""
 msgid "The latest Chrome browser is recommended."
 msgstr ""
 
-#: web_ui/status.html:91
-msgid "System Version"
-msgstr ""
-
 #: web_ui/status.html:142
 msgid "Feedback"
 msgstr ""
@@ -335,4 +331,40 @@ msgid "Connection not established yet."
 msgstr ""
 
 msgid "Number of IP-Scaning Threads"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Property"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Working App IDs"
+msgstr ""
+
+msgid "Out of Quota App IDs"
+msgstr ""
+
+msgid "Not Exist App IDs"
+msgstr ""
+
+msgid "Click here to view"
+msgstr ""
+
+msgid "You are using your own Appid, keep it to yourself for privacy."
+msgstr ""
+
+msgid "You are using public Appid."
+msgstr ""
+
+msgid "Proxy Listen"
+msgstr ""
+
+msgid "PAC URL"
 msgstr ""

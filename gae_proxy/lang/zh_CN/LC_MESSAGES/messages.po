@@ -285,10 +285,6 @@ msgstr "您的浏览器版本过低, 部分功能将无法使用。"
 msgid "The latest Chrome browser is recommended."
 msgstr "我们建议您使用最新版本的Chrome浏览器。"
 
-#: web_ui/status.html:91
-msgid "System Version"
-msgstr "系统版本"
-
 #: web_ui/status.html:142
 msgid "Feedback"
 msgstr "反馈问题"
@@ -343,3 +339,39 @@ msgstr "连接尚未建立。"
 
 msgid "Number of IP-Scaning Threads"
 msgstr "IP扫描线程数"
+
+msgid "Disabled"
+msgstr "未启用"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Property"
+msgstr "指标项"
+
+msgid "Value"
+msgstr "当前状态"
+
+msgid "Working App IDs"
+msgstr "工作中的App ID"
+
+msgid "Out of Quota App IDs"
+msgstr "流量超限的App ID"
+
+msgid "Not Exist App IDs"
+msgstr "不存在的App ID"
+
+msgid "Click here to view"
+msgstr "点此查看"
+
+msgid "You are using your own Appid, keep it to yourself for privacy."
+msgstr "你正在使用私有Appid。私有Appid是敏感信息，请不要泄漏与他人。"
+
+msgid "You are using public Appid."
+msgstr "你正在使用公共Appid。"
+
+msgid "Proxy Listen"
+msgstr "代理地址/端口"
+
+msgid "PAC URL"
+msgstr "PAC地址"

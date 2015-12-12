@@ -8,8 +8,8 @@
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th>{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
@@ -26,7 +26,7 @@
             <td id="connection-status"></td>
         </tr>
         <tr>
-            <td>{{ _( "Number of IP-Scaning Threads" ) }}</td>
+            <td>{{ _( "Number of IP-Scaning Threads" ) }}(<a href="/?module=gae_proxy&menu=scan_ip">{{ _( "Settings" ) }}</a>)</td>
             <td id="scan-ip-thread-num"></td>
         </tr>
     </tbody>
@@ -36,17 +36,17 @@
 <table id="setting" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th>{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>Proxy Listen</td>
+            <td>{{ _( "Proxy Listen" ) }}</td>
             <td id="proxy-listen"></td>
         </tr>
         <tr>
-            <td>PAC URL</td>
+            <td>{{ _( "PAC URL" ) }}</td>
             <td id="pac-url"></td>
         </tr>
         <tr>
@@ -60,81 +60,31 @@
 <table id="appids" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th width="75%">Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th width="75%">{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
-        <tr hidden="true">
-            <td>Set App IDs</td>
-            <td id="gae-appid"></td>
-        </tr>
         <tr>
-            <td>Working App IDs</td>
+            <td><a id="show-appid" href="javascript:void(0);">{{ _( "Click here to view" ) }}</a></td>
+            <td id="using-public"> {{ _( "You are using public Appid." ) }}</td>
+            <td id="using-private" hidden> {{ _( "You are using your own Appid, keep it to yourself for privacy." ) }}</td>
+        </tr>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Working App IDs" ) }}</td>
             <td id="working-appid"></td>
         </tr>
-        <tr>
-            <td>Out of Quota App IDs</td>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Out of Quota App IDs" ) }}</td>
             <td id="out-of-quota-appids"></td>
         </tr>
-        <tr>
-            <td>Not Exist App IDs</td>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Not Exist App IDs" ) }}</td>
             <td id="not-exist-appids"></td>
         </tr>
     </tbody>
 </table>
 
-<h4>{{ _( "System Version" ) }}</h4>
-<table id="version" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th >Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>XX-Net Version</td>
-            <td id="xxnet-version"></td>
-        </tr>
-        <tr>
-            <td>Python Version</td>
-            <td id="python-version"></td>
-        </tr>
-        <tr>
-            <td>System Platform</td>
-            <td id="sys-platform"></td>
-        </tr>
-        <tr>
-            <td>OS System</td>
-            <td id="os-system"></td>
-        </tr>
-        <tr>
-            <td>OS Version</td>
-            <td id="os-version"></td>
-        </tr>
-        <tr>
-            <td>OS Release</td>
-            <td id="os-release"></td>
-        </tr>
-        <tr>
-            <td>OS Detail</td>
-            <td id="os-detail"></td>
-        </tr>
-        <tr>
-            <td>Language</td>
-            <td id="language"></td>
-        </tr>
-        <tr>
-            <td>Architecture</td>
-            <td id="architecture"></td>
-        </tr>
-        <tr>
-            <td>Browser</td>
-            <td id="browser"></td>
-        </tr>
-    </tbody>
-</table>
 <button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
 
 <div id="report-issue-modal" class="modal hide fade">
@@ -211,6 +161,10 @@
             OneKeyReport();
             $('#report-issue-modal').modal();
         });
+        $("#show-appid").click(function(){
+            $("tr#hidden-appids").show();
+            $("#show-appid").hide();
+        });
     });
 </script>
 <script type="text/javascript">
@@ -239,16 +193,19 @@
                     '#python-version': result['python_version'],
                     '#proxy-listen': result['proxy_listen'],
                     '#pac-url': result['pac_url'],
-                    '#ipv6-status': result['use_ipv6'] == '0' ? 'Disabled' : 'Enabled',
+                    '#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
                     '#ip-num': result['good_ip_num'] > 20 ? '{{ _( "You have enough IP." ) }}':'{{ _( "Running low on good IP, scaning for more..." ) }}',
                     '#connection-status': result['total_connected_link'] > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}',
-                    '#gae-appid': result['gae_appid'],
                     '#working-appid': result['working_appid'],
                     '#out-of-quota-appids': result['out_of_quota_appids'],
                     '#not-exist-appids': result['not_exist_appids'],
                     '#scan-ip-thread-num': result['scan_ip_thread_num'],
                     '#ip-quality': result['ip_handshake_10'] < 400 ? '{{ _( "Good to go." ) }}':'{{ _( "Currently running slow, scaning for faster IP..." ) }}',
                     '#block-stat': result['block_stat'],
+                }
+                if ( result['gae_appid'].match('xxnet-') == null ) {
+                    $("td#using-private").show();
+                    $("td#using-public").hide();
                 }
                 for (var item in updates) {
                     updateStatus(item, updates[item]);
