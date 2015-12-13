@@ -200,7 +200,7 @@
                 IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
-                //有待设计类似Github Issue的一键生成功能;
+                // The one-key generaton function is to be designed as Github does有待设计类似Github Issue的一键生成功能
                 $("a#go-to-goole-group").attr("href", GGroupURL);
             }
           })
@@ -271,9 +271,9 @@
                 }
 
                 if ( formValue == '' ) {
-                    tip('状态页显示空白, 很可能GAEProxy启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
                 } else {
-                    tip('GAEProxy进程无响应, 可能已退出.', 'warning', false);
+                    tip('{{ _("No response from GAEProxy process. It might have already exited.")}}', 'warning', false);
                 }
             }
         });

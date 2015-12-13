@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-06 21:08+0800\n"
+"POT-Creation-Date: 2015-12-13 22:38+0800\n"
 "PO-Revision-Date: 2015-12-06 09:27+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: es_VE <LL@li.org>\n"
@@ -38,8 +38,8 @@ msgstr ""
 msgid "Advanced options"
 msgstr ""
 
-#: web_ui/config.html:29 web_ui/config.html:45 web_ui/scan_ip.html:10
-#: web_ui/status.html:25 web_ui/status.html:33
+#: web_ui/config.html:29 web_ui/config.html:45 web_ui/deploy.html:49
+#: web_ui/scan_ip.html:10 web_ui/status.html:25 web_ui/status.html:33
 msgid "Help"
 msgstr ""
 
@@ -160,6 +160,72 @@ msgstr ""
 msgid "Redploy the server if XX-Net version is prior to 1.13.6."
 msgstr ""
 
+#: web_ui/deploy.html:170 web_ui/deploy.html:178 web_ui/deploy.html:184
+#: web_ui/deploy.html:190 web_ui/deploy.html:193 web_ui/deploy.html:200
+#: web_ui/deploy.html:205 web_ui/deploy.html:269 web_ui/deploy.html:272
+msgid "Current status: "
+msgstr ""
+
+#: web_ui/deploy.html:170
+msgid "XX-Net was reset."
+msgstr ""
+
+#: web_ui/deploy.html:178 web_ui/deploy.html:200
+msgid "Deployment completed. "
+msgstr ""
+
+#: web_ui/deploy.html:178
+msgid "Please go to "
+msgstr ""
+
+#: web_ui/deploy.html:178
+msgid "the configuration page "
+msgstr ""
+
+#: web_ui/deploy.html:178
+msgid "to set AppID to enable them."
+msgstr ""
+
+#: web_ui/deploy.html:184 web_ui/deploy.html:205 web_ui/deploy.html:272
+msgid "An exception occurred. "
+msgstr ""
+
+#: web_ui/deploy.html:184 web_ui/deploy.html:205 web_ui/deploy.html:272
+msgid "The exception info: "
+msgstr ""
+
+#: web_ui/deploy.html:190
+msgid "idle"
+msgstr ""
+
+#: web_ui/deploy.html:193
+msgid "deploying ..."
+msgstr ""
+
+#: web_ui/deploy.html:221 web_ui/deploy.html:231
+msgid "Start deploying"
+msgstr ""
+
+#: web_ui/deploy.html:225 web_ui/deploy.html:233
+msgid "Terminate deploying"
+msgstr ""
+
+#: web_ui/deploy.html:269
+msgid "Deployment cancelled."
+msgstr ""
+
+#: web_ui/deploy.html:282
+msgid "Either AppID is empty or invalid."
+msgstr ""
+
+#: web_ui/deploy.html:285
+msgid "Either your Email address is empty or invalid."
+msgstr ""
+
+#: web_ui/deploy.html:288
+msgid "Please fill in your account & its password."
+msgstr ""
+
 #: web_ui/ipconfig.html:4
 msgid "Task type"
 msgstr ""
@@ -189,7 +255,7 @@ msgid "Intelligent regular matching"
 msgstr ""
 
 #: web_ui/ipconfig.html:33
-msgid "IP list"
+msgid "IP address list"
 msgstr ""
 
 #: web_ui/ipconfig.html:41
@@ -198,6 +264,30 @@ msgstr ""
 
 #: web_ui/ipconfig.html:48
 msgid "IP Import/Export"
+msgstr ""
+
+#: web_ui/ipconfig.html:90
+msgid "Trying to import "
+msgstr ""
+
+#: web_ui/ipconfig.html:90 web_ui/ipconfig.html:102 web_ui/ipconfig.html:119
+msgid " IP addresses."
+msgstr ""
+
+#: web_ui/ipconfig.html:102
+msgid "Succeeded importing "
+msgstr ""
+
+#: web_ui/ipconfig.html:105
+msgid "Failed importing IP addresses."
+msgstr ""
+
+#: web_ui/ipconfig.html:119
+msgid "Succeeded exporting "
+msgstr ""
+
+#: web_ui/ipconfig.html:125
+msgid "Failed exporting the IP addresses."
 msgstr ""
 
 #: web_ui/logging.html:15
@@ -306,6 +396,24 @@ msgstr ""
 
 #: web_ui/status.html:161
 msgid "GAE Proxy Status Info"
+msgstr ""
+
+#: web_ui/status.html:274
+msgid ""
+"The status page is empty. Highly likely that GAEProxy failed getting "
+"started. Please follow "
+msgstr ""
+
+#: web_ui/status.html:274
+msgid "guide "
+msgstr ""
+
+#: web_ui/status.html:274
+msgid "to troubleshoot."
+msgstr ""
+
+#: web_ui/status.html:276
+msgid "No response from GAEProxy process. It might have already exited."
 msgstr ""
 
 #~ msgid "GAEProxy Status Info"
