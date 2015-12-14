@@ -393,7 +393,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             user_agent = ""
 
-        res_arr = {"gws_ip_num": "%d,%d" % (len(google_ip.gws_ip_list), google_ip.good_ip_num),
+        res_arr = {"ip_num":len(google_ip.gws_ip_list),
+                   "good_ip_num":google_ip.good_ip_num,
                    "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
@@ -407,6 +408,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
                    "connected_link":"%d,%d" % (len(https_manager.new_conn_pool.pool), len(https_manager.gae_conn_pool.pool)),
+                   "total_connected_link":(len(https_manager.new_conn_pool.pool)+len(https_manager.gae_conn_pool.pool)),
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),

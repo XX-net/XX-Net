@@ -30,7 +30,7 @@
             <div class="container">
                 <div class="row-fluid">
                     <div id="logo" class="span8">
-                        <a href="/">
+                        <a href="/" title="XX-Net・接力Goagent">
                             <img src="/img/logo.png" alt="Logo">
                             XX-Net
                         </a>
@@ -38,12 +38,12 @@
                     <div class="span4 text-right">
                         <ul class="inline">
                             <li>
-                                <a id="resize-window-trigger" href="javascript:void(0);">
+                                <a id="resize-window-trigger" href="javascript:void(0);" title="自适应宽度">
                                     <img src="/img/fixed-width.png" alt="resize-window">
                                 </a>
                             </li>
                             <li>
-                                <a id="quit-trigger" href="javascript:void(0);">
+                                <a id="quit-trigger" href="javascript:void(0);" title="退出">
                                     <img src="/img/quit.png" alt="quit">
                                 </a>
                             </li>
@@ -102,13 +102,13 @@
                 dataType: 'JSON',
                 success: function(result) {
                     if ( result['status'] == 'success' ) {
-                        tip('退出成功.', 'success');
+                        tip('{{ _( "Exited successfully" ) }}', 'success');
                     } else {
-                        tip('退出失败.', 'error');
+                        tip('{{ _( "Exitting failed" ) }}', 'error');
                     }
                 },
                 error: function() {
-                    tip('退出失败,网络错误.', 'error');
+                    tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
                 }
             });
         });

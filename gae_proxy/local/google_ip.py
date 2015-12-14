@@ -224,7 +224,7 @@ class Check_ip():
             handshake_time = self.ip_dict[last_ip]['handshake_time']
             return handshake_time
         except:
-            return -1
+            return 9999
 
     def append_ip_history(self, ip_str, info):
         if config.record_ip_history:

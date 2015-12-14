@@ -1,0 +1,377 @@
+# Chinese (Simplified, China) translations for PROJECT.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-12-06 21:08+0800\n"
+"PO-Revision-Date: 2015-12-06 09:14+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: zh_Hans_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+
+#: web_ui/config.html:7
+msgid "Public appids used by default"
+msgstr "默认使用公共appid"
+
+#: web_ui/config.html:10
+msgid "The public appids are disabled to access videos or download files."
+msgstr "公共AppID不能看视频、下载文件。"
+
+#: web_ui/config.html:11 web_ui/deploy.html:14
+msgid "How to apply"
+msgstr "怎么申请"
+
+#: web_ui/config.html:16
+msgid "Attention: inaccessable before appids are deployed."
+msgstr "注意：appid部署之前无法使用。"
+
+#: web_ui/config.html:23 web_ui/deploy.html:43
+msgid "Advanced options"
+msgstr "高级选项"
+
+#: web_ui/config.html:29 web_ui/config.html:45 web_ui/scan_ip.html:10
+#: web_ui/status.html:25 web_ui/status.html:33
+msgid "Help"
+msgstr "帮助"
+
+#: web_ui/config.html:32
+msgid "Needless to configure generally"
+msgstr "一般无需配置"
+
+#: web_ui/config.html:37
+msgid "Enable IPv6(CERNet only)"
+msgstr "使用IPv6(一般教育网才开)"
+
+#: web_ui/config.html:45
+msgid "LAN proxy(Generally not needed)"
+msgstr "局域网代理(一般无需配置)"
+
+#: web_ui/config.html:54
+msgid "Proxy type"
+msgstr "代理服务器类型"
+
+#: web_ui/config.html:66
+msgid "Proxy IP address or domain name"
+msgstr "代理服务器IP地址或域名"
+
+#: web_ui/config.html:74
+msgid "Port"
+msgstr "端口"
+
+#: web_ui/config.html:82
+msgid "User name"
+msgstr "用户名"
+
+#: web_ui/config.html:90
+msgid "Password"
+msgstr "密码"
+
+#: web_ui/config.html:100
+msgid "Save"
+msgstr "保存"
+
+#: web_ui/config.html:107
+msgid "Advanced tricks:"
+msgstr "高级技巧"
+
+#: web_ui/config.html:107
+msgid "By the configuration file"
+msgstr "通过文件配置"
+
+#: web_ui/config.html:112
+msgid "Configure GAEProxy"
+msgstr "配置GAEProxy"
+
+#: web_ui/config.html:194
+msgid "Failed reading the seeting."
+msgstr "读取设置失败。"
+
+#: web_ui/config.html:239 web_ui/scan_ip.html:77 web_ui/scan_ip.html:148
+#: web_ui/scan_ip.html:170
+msgid "Settings saved successfully"
+msgstr "设置保存成功"
+
+#: web_ui/config.html:241
+msgid "Unkown error occurred."
+msgstr "发生未知错误"
+
+#: web_ui/deploy.html:1
+msgid "Deploy XX-Net onto GAE"
+msgstr "部署XX-Net至GAE"
+
+#: web_ui/deploy.html:3
+msgid "Current status: idle"
+msgstr "当前状态: 空闲"
+
+#: web_ui/deploy.html:6
+msgid "Authorization"
+msgstr "授权"
+
+#: web_ui/deploy.html:7 web_ui/menu.yaml:25 web_ui/scan_ip.html:3
+msgid "Log"
+msgstr "日志"
+
+#: web_ui/deploy.html:17
+msgid "Delimit multiple appids with |"
+msgstr "批量部署多个AppID, 请用|分割"
+
+#: web_ui/deploy.html:35
+msgid "If the 2-step verification is in-use, please use your exclusive password."
+msgstr "如果启用两步验证, 请使用应用专用密码"
+
+#: web_ui/deploy.html:35 web_ui/deploy.html:36
+msgid "Configure now"
+msgstr "立即设置"
+
+#: web_ui/deploy.html:36
+msgid ""
+"If the 2-step verification is NOT in-use, please enable the less secure "
+"apps."
+msgstr "如果没有启用两步验证, 请开启弱安全应用登录"
+
+#: web_ui/deploy.html:37
+msgid "Details"
+msgstr "详细说明"
+
+#: web_ui/deploy.html:52
+msgid "Needless to fill generally"
+msgstr "一般无须填写"
+
+#: web_ui/deploy.html:54
+msgid ""
+"If RC4 password is used, please configure it in the advanced settings "
+"while configuring GAE Proxy"
+msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
+
+#: web_ui/deploy.html:61
+msgid "Start to deploy"
+msgstr "开始部署"
+
+#: web_ui/deploy.html:65
+msgid "Redploy the server if XX-Net version is prior to 1.13.6."
+msgstr "XX-Net 1.13.6之前的服务端, 请重新部署。"
+
+#: web_ui/ipconfig.html:4
+msgid "Task type"
+msgstr "任务类型"
+
+#: web_ui/ipconfig.html:10
+msgid "Import"
+msgstr "导入"
+
+#: web_ui/ipconfig.html:14
+msgid "Export"
+msgstr "导出"
+
+#: web_ui/ipconfig.html:21
+msgid "Import/Export format"
+msgstr "导入/导出格式"
+
+#: web_ui/ipconfig.html:25
+msgid " format"
+msgstr "格式"
+
+#: web_ui/ipconfig.html:26
+msgid "New line delimiter"
+msgstr "换行分割"
+
+#: web_ui/ipconfig.html:27
+msgid "Intelligent regular matching"
+msgstr "智能正则匹配"
+
+#: web_ui/ipconfig.html:33
+msgid "IP list"
+msgstr "IP列表"
+
+#: web_ui/ipconfig.html:41
+msgid "Run"
+msgstr "执行"
+
+#: web_ui/ipconfig.html:48
+#, fuzzy
+msgid "IP Import/Export"
+msgstr "导入/导出格式"
+
+#: web_ui/logging.html:15
+msgid "GAEProxy Log"
+msgstr "GAEProxy日志"
+
+#: web_ui/menu.yaml:5 web_ui/status.html:7
+msgid "Status"
+msgstr "状态"
+
+#: web_ui/menu.yaml:9 web_ui/status.html:39
+msgid "Configuration"
+msgstr "配置"
+
+#: web_ui/menu.yaml:13
+msgid "Deploy Server"
+msgstr "部署服务端"
+
+#: web_ui/menu.yaml:17
+msgid "Scan IP Addresses"
+msgstr "扫描IP"
+
+#: web_ui/menu.yaml:21
+msgid "Import/Export IP Addresses"
+msgstr "导入/导出IP"
+
+#: web_ui/scan_ip.html:2
+msgid "Settings"
+msgstr "设置"
+
+#: web_ui/scan_ip.html:10
+msgid "Auto-adjust scan thread count"
+msgstr "自动调整扫描线程数"
+
+#: web_ui/scan_ip.html:18
+msgid "Max scan thread count"
+msgstr "最大扫描线程数"
+
+#: web_ui/scan_ip.html:24
+msgid "Update"
+msgstr "更新"
+
+#: web_ui/scan_ip.html:29
+msgid "IP range list"
+msgstr "IP段列表"
+
+#: web_ui/scan_ip.html:29
+msgid "Supporting formats"
+msgstr "支持格式"
+
+#: web_ui/scan_ip.html:37
+msgid "Submit"
+msgstr "提交"
+
+#: web_ui/scan_ip.html:46
+msgid "Refresh"
+msgstr "刷新"
+
+#: web_ui/scan_ip.html:52
+#, fuzzy
+msgid "IP scan settings(Needless to modify generally)"
+msgstr "扫描IP设置(一般不需要改动)"
+
+#: web_ui/scan_ip.html:99
+#, fuzzy
+msgid "Failed reading the log"
+msgstr "读取日志失败。"
+
+#: web_ui/scan_ip.html:120
+#, fuzzy
+msgid "Failed reading the settings"
+msgstr "读取设置失败。"
+
+#: web_ui/scan_ip.html:150 web_ui/scan_ip.html:172
+#, fuzzy
+msgid "Unkown error occurred"
+msgstr "发生未知错误"
+
+#: web_ui/status.html:3
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr "您的浏览器版本过低, 部分功能将无法使用。"
+
+#: web_ui/status.html:4
+msgid "The latest Chrome browser is recommended."
+msgstr "我们建议您使用最新版本的Chrome浏览器。"
+
+#: web_ui/status.html:142
+msgid "Feedback"
+msgstr "反馈问题"
+
+#: web_ui/status.html:147
+msgid "Diagnostic Info"
+msgstr "诊断信息"
+
+#: web_ui/status.html:150
+msgid "The one-key feedback needs to sign in your Github account"
+msgstr "一键反馈需要登录Github账号"
+
+#: web_ui/status.html:154
+msgid "To Google Groups"
+msgstr "前往论坛"
+
+#: web_ui/status.html:155
+msgid "One-key feedback"
+msgstr "一键反馈"
+
+#: web_ui/status.html:161
+#, fuzzy
+msgid "GAE Proxy Status Info"
+msgstr "GAEProxy状态信息"
+
+msgid "IP Number"
+msgstr "IP数量"
+
+msgid "You have enough IP."
+msgstr "可用IP数量充裕。"
+
+msgid "Running low on good IP, scaning for more..."
+msgstr "可用IP数不足，请等待一段时间，XX-Net将进行自动扫描。"
+
+msgid "IP Quality"
+msgstr "IP质量"
+
+msgid "Good to go."
+msgstr "指标正常。"
+
+msgid "Currently running slow, scaning for faster IP..."
+msgstr "IP质量欠佳，请耐心等待扫描。"
+
+msgid "Connection Status"
+msgstr "连接状态"
+
+msgid "Connected to the world."
+msgstr "成功建立连接。"
+
+msgid "Connection not established yet."
+msgstr "连接尚未建立。"
+
+msgid "Number of IP-Scaning Threads"
+msgstr "IP扫描线程数"
+
+msgid "Disabled"
+msgstr "未启用"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Property"
+msgstr "指标项"
+
+msgid "Value"
+msgstr "当前状态"
+
+msgid "Working App IDs"
+msgstr "工作中的App ID"
+
+msgid "Out of Quota App IDs"
+msgstr "流量超限的App ID"
+
+msgid "Not Exist App IDs"
+msgstr "不存在的App ID"
+
+msgid "Click here to view"
+msgstr "点此查看"
+
+msgid "You are using your own Appid, keep it to yourself for privacy."
+msgstr "你正在使用私有Appid。私有Appid是敏感信息，请不要泄漏与他人。"
+
+msgid "You are using public Appid."
+msgstr "你正在使用公共Appid。"
+
+msgid "Proxy Listen"
+msgstr "代理地址/端口"
+
+msgid "PAC URL"
+msgstr "PAC地址"

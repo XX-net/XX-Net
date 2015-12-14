@@ -1,56 +1,52 @@
 <!--[if lte IE 9]>
 <div class="alert alert-warning">
-    您的浏览器版本过低, 部分功能将无法使用。<br>
-    我们建议您使用最新版本的Chrome浏览器。
+    {{ _( "Your browser is obsolete. Partial functionality will not be available." ) }}<br>
+    {{ _( "The latest Chrome browser is recommended." ) }}
 </div>
 <![endif]-->
-<h4>状态</h4>
+<h4>{{ _( "Status" ) }}</h4>
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th>{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>Total IP / Good IP</td>
-            <td id="gws-ip-num"></td>
+            <td>{{ _( "IP Number" ) }}</td>
+            <td id="ip-num"></td>
         </tr>
         <tr>
-            <td>10th IP handshake(ms)</td>
-            <td id="ip-handshake-10"></td>
+            <td>{{ _( "IP Quality" ) }}</td>
+            <td id="ip-quality"></td>
         </tr>
         <tr>
-            <td>Connected Links (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">帮助</a>)</td>
-            <td id="connected-link"></td>
+            <td>{{ _( "Connection Status" ) }}(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Connection-status" target="_blank">{{ _( "Help" ) }}</a>)</td>
+            <td id="connection-status"></td>
         </tr>
         <tr>
-            <td>Number of Threads Scaning IPs</td>
+            <td>{{ _( "Number of IP-Scaning Threads" ) }}(<a href="/?module=gae_proxy&menu=scan_ip">{{ _( "Settings" ) }}</a>)</td>
             <td id="scan-ip-thread-num"></td>
-        </tr>
-        <tr>
-            <td>Block Status (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">帮助</a>)</td>
-            <td id="block-stat"></td>
         </tr>
     </tbody>
 </table>
 
-<h4>设置</h4>
+<h4>{{ _( "Configuration" ) }}</h4>
 <table id="setting" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th>Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th>{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>Proxy Listen</td>
+            <td>{{ _( "Proxy Listen" ) }}</td>
             <td id="proxy-listen"></td>
         </tr>
         <tr>
-            <td>PAC URL</td>
+            <td>{{ _( "PAC URL" ) }}</td>
             <td id="pac-url"></td>
         </tr>
         <tr>
@@ -64,101 +60,51 @@
 <table id="appids" class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th width="25%">Property</th>
-            <th width="75%">Value</th>
+            <th width="25%">{{ _( "Property" ) }}</th>
+            <th width="75%">{{ _( "Value" ) }}</th>
         </tr>
     </thead>
     <tbody>
-        <tr hidden="true">
-            <td>Set App IDs</td>
-            <td id="gae-appid"></td>
-        </tr>
         <tr>
-            <td>Working App IDs</td>
+            <td><a id="show-appid" href="javascript:void(0);">{{ _( "Click here to view" ) }}</a></td>
+            <td id="using-public"> {{ _( "You are using public Appid." ) }}</td>
+            <td id="using-private" hidden> {{ _( "You are using your own Appid, keep it to yourself for privacy." ) }}</td>
+        </tr>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Working App IDs" ) }}</td>
             <td id="working-appid"></td>
         </tr>
-        <tr>
-            <td>Out of Quota App IDs</td>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Out of Quota App IDs" ) }}</td>
             <td id="out-of-quota-appids"></td>
         </tr>
-        <tr>
-            <td>Not Exist App IDs</td>
+        <tr id="hidden-appids" hidden="true">
+            <td>{{ _( "Not Exist App IDs" ) }}</td>
             <td id="not-exist-appids"></td>
         </tr>
     </tbody>
 </table>
 
-<h4>系统版本</h4>
-<table id="version" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">Property</th>
-            <th >Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>XX-Net Version</td>
-            <td id="xxnet-version"></td>
-        </tr>
-        <tr>
-            <td>Python Version</td>
-            <td id="python-version"></td>
-        </tr>
-        <tr>
-            <td>System Platform</td>
-            <td id="sys-platform"></td>
-        </tr>
-        <tr>
-            <td>OS System</td>
-            <td id="os-system"></td>
-        </tr>
-        <tr>
-            <td>OS Version</td>
-            <td id="os-version"></td>
-        </tr>
-        <tr>
-            <td>OS Release</td>
-            <td id="os-release"></td>
-        </tr>
-        <tr>
-            <td>OS Detail</td>
-            <td id="os-detail"></td>
-        </tr>
-        <tr>
-            <td>Language</td>
-            <td id="language"></td>
-        </tr>
-        <tr>
-            <td>Architecture</td>
-            <td id="architecture"></td>
-        </tr>
-        <tr>
-            <td>Browser</td>
-            <td id="browser"></td>
-        </tr>
-    </tbody>
-</table>
-<button id="pop-up-report" class="btn btn-primary">反馈问题</button>
+<button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
 
 <div id="report-issue-modal" class="modal hide fade">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>诊断信息</h3>
+        <h3>{{ _( "Diagnostic Info" ) }}</h3>
     </div> <!-- .modal-header -->
     <div class="modal-body">
-        <p> * 一键反馈需要登录Github账号</p>
+        <p> * {{ _( "The one-key feedback needs to sign in your Github account" ) }}</p>
         <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
     </div>
     <div class="modal-footer">
-        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-google-group" class="btn btn-primary " target="_blank">前往论坛</a>
-        <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">一键反馈</a>
+        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-google-group" class="btn btn-primary " target="_blank">{{ _( "To Google Groups" ) }}</a>
+        <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">{{ _( "One-key feedback" ) }}</a>
     </div> <!-- .modal-footer -->
 </div> <!-- #report-issue-modal -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('GAEProxy状态信息');
+    title('{{ _( "GAE Proxy Status Info" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -186,8 +132,13 @@
                     'browser: ' + result['browser'], 
                     'xxnet-version: ' + result['xxnet_version'], 
                     'python-version: ' + result['python_version'], 
+<<<<<<< HEAD
                     '\nipv6-status: ' + result['use_ipv6'],
                     'gws-ip-num: ' + result['gws_ip_num'], 
+=======
+                    '\nipv6-status: ' + result['use_ipv6'], 
+                    'gws-ip-num: ' + result['ip_num'] + ' / ' + result['good_ip_num'], 
+>>>>>>> e9482c7441010d0e7de115edecc1dbd2660df445
                     'connected-link: ' + result['connected_link'], 
                     'scan-ip-thread-num: ' + result['scan_ip_thread_num'], 
                     'ip-handshake-10: ' + result['ip_handshake_10'], 
@@ -215,6 +166,10 @@
         $("#pop-up-report").click(function(){
             OneKeyReport();
             $('#report-issue-modal').modal();
+        });
+        $("#show-appid").click(function(){
+            $("tr#hidden-appids").show();
+            $("#show-appid").hide();
         });
     });
 </script>
@@ -244,16 +199,19 @@
                     '#python-version': result['python_version'],
                     '#proxy-listen': result['proxy_listen'],
                     '#pac-url': result['pac_url'],
-                    '#ipv6-status': result['use_ipv6'] == '0' ? 'Disabled' : 'Enabled',
-                    '#gws-ip-num': result['gws_ip_num'],
-                    '#connected-link': result['connected_link'],
-                    '#gae-appid': result['gae_appid'],
+                    '#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
+                    '#ip-num': result['good_ip_num'] > 20 ? '{{ _( "You have enough IP." ) }}':'{{ _( "Running low on good IP, scaning for more..." ) }}',
+                    '#connection-status': result['total_connected_link'] > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}',
                     '#working-appid': result['working_appid'],
                     '#out-of-quota-appids': result['out_of_quota_appids'],
                     '#not-exist-appids': result['not_exist_appids'],
                     '#scan-ip-thread-num': result['scan_ip_thread_num'],
-                    '#ip-handshake-10': result['ip_handshake_10'],
+                    '#ip-quality': result['ip_handshake_10'] < 400 ? '{{ _( "Good to go." ) }}':'{{ _( "Currently running slow, scaning for faster IP..." ) }}',
                     '#block-stat': result['block_stat'],
+                }
+                if ( result['gae_appid'].match('xxnet-') == null ) {
+                    $("td#using-private").show();
+                    $("td#using-public").hide();
                 }
                 for (var item in updates) {
                     updateStatus(item, updates[item]);
