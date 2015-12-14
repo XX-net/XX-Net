@@ -8,7 +8,7 @@ import os
 import shutil
 import ip_utils
 from config import config
-import xlog
+from proxy import xlog
 
 random.seed(time.time()* 1000000)
 

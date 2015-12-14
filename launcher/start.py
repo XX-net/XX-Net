@@ -10,13 +10,28 @@ import atexit
 import threading
 threading.stack_size(128*1024)
 
-import launcher_log
-import update_from_github
-
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+data_path = os.path.join(root_path, 'data')
+data_launcher_path = os.path.join(data_path, 'launcher')
+python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+
+def create_data_path():
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
+    if not os.path.isdir(data_launcher_path):
+        os.mkdir(data_launcher_path)
+
+    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+    if not os.path.isdir(data_gae_proxy_path):
+        os.mkdir(data_gae_proxy_path)
+create_data_path()
+
+from instances import xlog
 
 has_desktop = True
 if sys.platform.startswith("linux"):
@@ -54,11 +69,14 @@ else:
     from non_tray import sys_tray
     has_desktop = False
 
+
 import config
 import web_control
 import module_init
 import update
 import setup_win_python
+import update_from_github
+
 
 def exit_handler():
     print 'Stopping all modules before exit!'
@@ -66,8 +84,6 @@ def exit_handler():
     web_control.stop()
 
 atexit.register(exit_handler)
-
-
 
 
 def main():
@@ -78,7 +94,7 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    launcher_log.info("start XX-Net %s", update_from_github.current_version())
+    xlog.info("start XX-Net %s", update_from_github.current_version())
 
     web_control.confirm_xxnet_exit()
 

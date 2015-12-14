@@ -2,7 +2,7 @@ import os
 import sys
 import platform
 import shutil
-import launcher_log
+from instances import xlog
 import time
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -21,14 +21,14 @@ def copy_VCR_files():
             #print relate_path
             dest_path = os.path.join(win_dst_path, relate_path)
             if not os.path.isdir(dest_path):
-                launcher_log.info("setup win python, mkdir:%s", dest_path)
+                xlog.info("setup win python, mkdir:%s", dest_path)
                 os.mkdir(dest_path)
             #print "root:", path
             #print "file:", file
             src_path = os.path.join(path, file)
             target_file = os.path.join(dest_path, file)
             if not os.path.isfile(target_file):
-                launcher_log.info("setup win python, copy:%s %s", src_path, target_file)
+                xlog.info("setup win python, copy:%s %s", src_path, target_file)
                 shutil.copyfile(src_path, target_file)
 
 def is_winxp():
@@ -43,7 +43,7 @@ def check_setup(): #40ms
         try:
             copy_VCR_files()
         except Exception as e:
-            launcher_log.exception("setup win python except:%s", e)
+            xlog.exception("setup win python except:%s", e)
 
 def smart_check(): #400 ms
     import uuid

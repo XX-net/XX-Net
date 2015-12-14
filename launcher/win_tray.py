@@ -21,7 +21,7 @@ import win32_proxy_manager
 
 import module_init
 import update
-import launcher_log
+from instances import xlog
 import config
 
 

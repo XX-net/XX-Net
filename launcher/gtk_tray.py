@@ -2,17 +2,15 @@
 # coding:utf-8
 # Contributor:
 #      Phus Lu        <phus.lu@gmail.com>
-
-import webbrowser
 import os
-import base64
+import sys
+import webbrowser
 
-import launcher_log
+from instances import xlog
 
 import pygtk
 import config
 if __name__ == "__main__":
-    import os, sys
     current_path = os.path.dirname(os.path.abspath(__file__))
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
@@ -26,7 +24,7 @@ try:
     import pynotify
     pynotify.init('XX-Net Notify')
 except:
-    launcher_log.warn("import pynotify fail, please install python-notify if possiable.")
+    xlog.warn("import pynotify fail, please install python-notify if possiable.")
     pynotify = None
 
 import module_init

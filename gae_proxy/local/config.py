@@ -6,7 +6,8 @@ import ConfigParser
 import os
 import re
 import io
-import xlog
+
+from proxy import xlog
 
 
 

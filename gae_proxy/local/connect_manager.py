@@ -9,12 +9,12 @@ import socket
 import select
 import Queue
 import struct
-import xlog
 import threading
 import operator
 import httplib
-import random
+
 import socks
+from proxy import xlog
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 import OpenSSL

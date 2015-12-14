@@ -5,13 +5,13 @@ import os
 import base64
 import time
 import re
-import xlog
 import thread
-import simple_http_server
 import urllib2
 import urlparse
 
 
+import simple_http_server
+from proxy import xlog
 from config import config
 
 default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)

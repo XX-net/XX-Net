@@ -5,7 +5,6 @@
 import errno
 import time
 import re
-import xlog
 import socket
 import ssl
 import httplib
@@ -16,11 +15,10 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 from connect_manager import https_manager
 
-from gae_handler import generate_message_html, send_response
-from connect_control import connect_allow_time, connect_fail_time
 from gae_handler import return_fail_message
 from google_ip import google_ip
 from config import config
+from proxy import xlog
 
 
 

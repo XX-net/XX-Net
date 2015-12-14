@@ -3,15 +3,14 @@
 # but OpenSSL is different then ssl, so need a wrapper
 import sys
 import os
-
+import select
+import time
+import socket
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-import select
-import time
-import socket
-import xlog
+from proxy import xlog
 
 ssl_version = ''
 

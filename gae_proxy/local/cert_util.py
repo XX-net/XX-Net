@@ -12,7 +12,7 @@ import hashlib
 import threading
 import subprocess
 
-import xlog
+from proxy import xlog
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))

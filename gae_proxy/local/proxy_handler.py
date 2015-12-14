@@ -3,23 +3,22 @@
 
 
 import errno
-import xlog
 import socket
 import ssl
 import urlparse
-
-import simple_http_server
-from cert_util import CertUtil
-from connect_manager import https_manager,forwork_manager
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
+from proxy import xlog
+import simple_http_server
+from cert_util import CertUtil
+from connect_manager import forwork_manager
 from config import config
 import gae_handler
 import direct_handler
-from connect_control import connect_allow_time, connect_fail_time, touch_active
+from connect_control import touch_active
 import web_control
 
 
@@ -35,9 +34,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_HEAD = self.__class__.do_METHOD
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
-
-    def address_string(self):
-        return '%s:%s' % self.client_address[:2]
 
     def forward_local(self):
         html = gae_handler.generate_message_html('Browser pass local request to proxy', u'您的浏览器把本地请求转发到代理上。<br>请在浏览器中设置：访问本地，不经过代理。<br><a href="https://github.com/XX-net/XX-Net/wiki/Browser-pass-localhost-request-to-proxy">帮助</a>')

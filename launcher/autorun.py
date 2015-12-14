@@ -4,7 +4,7 @@ from __future__ import with_statement
 
 import os
 import sys
-import launcher_log
+from instances import xlog
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +57,7 @@ elif sys.platform == 'linux' or sys.platform == 'linux2':
 
     def add(name, application):
         if not os.path.isdir(os.path.expanduser(_xdg_config_home)):
-            launcher_log.warn("autorun linux config path not found:%s", os.path.expanduser(_xdg_config_home))
+            xlog.warn("autorun linux config path not found:%s", os.path.expanduser(_xdg_config_home))
             return
 
         if not os.path.isdir(_xdg_user_autostart):
@@ -117,7 +117,7 @@ elif sys.platform == 'darwin':
 
     def add(name, cmd):
         file_content = plist_template % cmd
-        launcher_log.info("create file:%s", plist_file_path)
+        xlog.info("create file:%s", plist_file_path)
 
         if not os.path.isdir(launch_path):
             os.mkdir(launch_path, 0755)
@@ -127,7 +127,7 @@ elif sys.platform == 'darwin':
     def remove(name):
         if(os.path.isfile(plist_file_path)):
             os.unlink(plist_file_path)
-            launcher_log.info("remove file:%s", plist_file_path)
+            xlog.info("remove file:%s", plist_file_path)
 else:
     def add(name, cmd):
         pass

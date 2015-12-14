@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
 import webbrowser
 import module_init
-import launcher_log
+from instances import xlog
 
 from PyObjCTools import AppHelper
 from AppKit import *
@@ -104,7 +104,7 @@ class MacTrayObject(NSObject):
         exec_command = "%s;%s;%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
         admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
         cmd = admin_command.encode('utf-8')
-        launcher_log.info("try enable proxy:%s", cmd)
+        xlog.info("try enable proxy:%s", cmd)
         os.system(cmd)
 
     def disableProxy_(self, _):
@@ -115,7 +115,7 @@ class MacTrayObject(NSObject):
         exec_command = "%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4)
         admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
         cmd = admin_command.encode('utf-8')
-        launcher_log.info("try disable proxy:%s", cmd)
+        xlog.info("try disable proxy:%s", cmd)
         os.system(cmd)
 
 
@@ -128,7 +128,7 @@ class Mac_tray():
             title, "OK", "Cancel", None, msg)
         alert.setAlertStyle_(0)  # informational style
         res = alert.runModal()
-        launcher_log.debug("dialog_yes_no return %d", res)
+        xlog.debug("dialog_yes_no return %d", res)
 
         # The "ok" button is ``1`` and "cancel" is ``0``.
         if res == 0:
@@ -141,7 +141,7 @@ class Mac_tray():
         return res
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
-        launcher_log.error("Mac notify_general not implemented.")
+        xlog.error("Mac notify_general not implemented.")
 
 
 sys_tray = Mac_tray()

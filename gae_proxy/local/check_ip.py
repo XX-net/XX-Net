@@ -39,7 +39,7 @@ from appids_manager import appid_manager
 
 
 if __name__ == "__main__":
-    import xlog
+    import logging as xlog
 else:
     # hide log in working mode.
     class xlog():

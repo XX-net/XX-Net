@@ -1,24 +1,6 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import sys
-import os
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
-
-if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
-
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-
-    if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
-        sys.path.append(win32_lib)
-    elif sys.platform == "linux" or sys.platform == "linux2":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
-        sys.path.append(win32_lib)
 
 import platform
 import env_info
@@ -35,7 +17,7 @@ import locale
 import time
 
 
-import xlog
+from proxy import xlog
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
@@ -47,10 +29,13 @@ import connect_control
 import ip_utils
 import check_ip
 import cert_util
+import simple_http_server
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
+
 
 import yaml
 
@@ -187,8 +172,9 @@ def http_request(url, method="GET"):
     return
 
 deploy_proc = None
-class ControlHandler():
 
+
+class ControlHandler(simple_http_server.HttpServerHandler):
     def __init__(self, client_address, headers, command, path, rfile, wfile):
         self.client_address = client_address
         self.headers = headers
@@ -196,9 +182,6 @@ class ControlHandler():
         self.path = path
         self.rfile = rfile
         self.wfile = wfile
-
-    def address_string(self):
-        return '%s:%s' % self.client_address[:2]
 
     def do_CONNECT(self):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
@@ -292,6 +275,7 @@ class ControlHandler():
                 return
         except:
             pass
+            
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -317,20 +301,6 @@ class ControlHandler():
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
-
-    def send_response(self, mimetype, data):
-        no_cache = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
-        self.wfile.write(('HTTP/1.1 200\r\n%sAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n'
-             % (no_cache, mimetype, len(data))).encode())
-        self.wfile.write(data)
-
-    def send_file(self, filename, mimetype):
-        # logging.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
-        data = ''
-        with open(filename, 'rb') as fp:
-            data = fp.read()
-        if data:
-            self.send_response(mimetype, data)
 
     def req_log_handler(self):
         req = urlparse.urlparse(self.path).query

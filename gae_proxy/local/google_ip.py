@@ -27,7 +27,7 @@ if __name__ == "__main__":
 import ip_utils
 import check_ip
 from google_ip_range import ip_range
-import xlog
+from proxy import xlog
 from config import config
 import connect_control
 from scan_ip_log import scan_ip_log

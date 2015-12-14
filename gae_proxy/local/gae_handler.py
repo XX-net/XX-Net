@@ -9,7 +9,6 @@ import zlib
 import functools
 import re
 import io
-import xlog
 import string
 import socket
 import ssl
@@ -17,8 +16,8 @@ import httplib
 import Queue
 import urlparse
 import threading
-import BaseHTTPServer
 
+from proxy import xlog
 from connect_manager import https_manager
 from appids_manager import appid_manager
 

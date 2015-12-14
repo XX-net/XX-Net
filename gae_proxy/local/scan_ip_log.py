@@ -1,10 +1,9 @@
 
 import os
-import sys
 import shutil
 import time
 
-import xlog
+from proxy import xlog
 from config import config
 
 class Scan_ip_log():

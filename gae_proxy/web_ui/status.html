@@ -151,7 +151,7 @@
         <textarea id="DiagInfo" onmouseover="this.focus();this.select()"></textarea>
     </div>
     <div class="modal-footer">
-        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-goole-group" class="btn btn-primary " target="_blank">前往论坛</a>
+        <a href="https://groups.google.com/forum/#!forum/xx-net"  id="go-to-google-group" class="btn btn-primary " target="_blank">前往论坛</a>
         <a href="https://github.com/XX-net/XX-Net/issues"  id="one-key-issue" class="btn btn-success " target="_blank">一键反馈</a>
     </div> <!-- .modal-footer -->
 </div> <!-- #report-issue-modal -->
@@ -186,7 +186,7 @@
                     'browser: ' + result['browser'], 
                     'xxnet-version: ' + result['xxnet_version'], 
                     'python-version: ' + result['python_version'], 
-                    '\nipv6-status: ' + result['use_ipv6'], 
+                    '\nipv6-status: ' + result['use_ipv6'],
                     'gws-ip-num: ' + result['gws_ip_num'], 
                     'connected-link: ' + result['connected_link'], 
                     'scan-ip-thread-num: ' + result['scan_ip_thread_num'], 
@@ -197,11 +197,12 @@
                     'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), 
                     'Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
                 updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
+
                 IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
                 //有待设计类似Github Issue的一键生成功能;
-                $("a#go-to-goole-group").attr("href", GGroupURL);
+                $("a#go-to-google-group").attr("href", GGroupURL);
             }
           })
     }
@@ -257,8 +258,15 @@
                 for (var item in updates) {
                     updateStatus(item, updates[item]);
                 }
-                if ( !tipHasClose() ) {
-                    tipClose();
+                var ip_num = result['gws_ip_num'].split(",")[1];
+
+
+                if ( ip_num < 5 ){
+                    tip("第一次启动，需要等待10到20分钟扫描ip.");
+                }else{
+                    if ( !tipHasClose() ) {
+                        tipClose();
+                    }
                 }
             },
             error: function(result) {

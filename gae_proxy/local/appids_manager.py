@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+import random
 import threading
 from config import config
-import xlog
-import random
+from proxy import xlog
 
 class APPID_manager(object):
     lock = threading.Lock()
