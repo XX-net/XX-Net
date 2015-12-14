@@ -279,6 +279,10 @@ msgstr ""
 msgid "The latest Chrome browser is recommended."
 msgstr ""
 
+#: web_ui/status.html:91		
+msgid "System Version"		
+msgstr ""
+
 #: web_ui/status.html:142
 msgid "Feedback"
 msgstr ""

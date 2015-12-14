@@ -246,7 +246,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if check_update == 0:
                 check_update = "dont-check"
             elif check_update == 1:
-                check_update = "long-term-stable"
+                check_update = "stable"
 
             data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
@@ -259,7 +259,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
-                if check_update not in ["dont-check", "long-term-stable", "stable", "test"]:
+                if check_update not in ["dont-check", "stable", "test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
                     config.set(["update", "check_update"], check_update)
