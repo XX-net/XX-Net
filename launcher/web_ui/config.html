@@ -18,7 +18,7 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Needed" ) }}</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Needed)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
@@ -388,7 +388,7 @@ function versionCompare(v1, v2, options) {
     var configUrl   = '/config?cmd=get_new_version';
     var progressUrl = 'download?cmd=get_progress';
 
-    // Checks download status检测下载状态
+    // Checks the download status检测下载状态
     $.getJSON(progressUrl, function (rst) {
         Object.keys(rst).forEach(function (v) {
             if (rst[v].status === 'downloading' && v.indexOf('XX-Net/zip') > -1) {
@@ -397,7 +397,7 @@ function versionCompare(v1, v2, options) {
         });
     });
 
-    // Shows download status展示下载状态
+    // Shows the download status展示下载状态
     dtd.promise().done(function (ver) {
         $.getJSON(configUrl, function(rst) {
             createVerInfo(rst);
@@ -448,7 +448,7 @@ function versionCompare(v1, v2, options) {
 
     /**
      * Create the version info生成版本信息
-     * @param rst 来自 url /config 的json
+     * @param rst json from url /config来自 url /config 的json
      */
     function createVerInfo (rst) {
         var $updateTestVersion = $('#update-test-version');
@@ -513,10 +513,10 @@ function versionCompare(v1, v2, options) {
 
 
     /**
-     * 轮询获取下载进度
+     * Gets the downloading progress via the round-robin. 轮询获取下载进度
      * @param ver
      * @param cb(status, progress)
-     * @param [delay = 500] 延迟时间
+     * @param [delay = 500] Latency延迟时间
      */
     function getDownloadProgress (ver, cb, delay) {
         var progressUrl = 'download?cmd=get_progress',

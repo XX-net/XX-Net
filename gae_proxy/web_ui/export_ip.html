@@ -12,7 +12,7 @@
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span2">
-            <label for="ip-list">{{ _( "IP list" ) }}</label>
+            <label for="ip-list">{{ _( "IP address list" ) }}</label>
         </div> <!-- .span2 -->
         <div class="span10">
             <textarea id="ip-list" rows="10"></textarea>
@@ -41,13 +41,13 @@
             success: function(result) {
                 var ipList = result['res'];
 
-                tip('成功导出' + ipList.split('|').length + '个IP.', 'success');
+                tip('{{ _("Succeeded exporting ") }}' + ipList.split('|').length + ''{{ _(" IP addresses.") }}', 'success');
 
                 ipList = conversionFormat('1', ipFormat, ipList);
                 $('#ip-list').val(ipList);
             },
             error: function() {
-                tip('导出IP失败.', 'error');
+                tip('{{ _("Failed exporting the IP addresses.") }}', 'error');
             }
         });
     }
@@ -85,7 +85,7 @@
         }
 
         var result;
-        switch(targetFormat) { //由中间格式转换为目标格式
+        switch(targetFormat) { // convert from the interim format to the destination format由中间格式转换为目标格式
         case '1': //IP|IP|IP
             result = '';
             for(var id in ipList) {
@@ -93,7 +93,7 @@
             }
             result = result.substr(0, result.length - 1);
             break;
-        case '2': //换行分割
+        case '2': //New line delimiter换行分割
             result = '';
             for(var id in ipList) {
                 result += ipList[id] + '\n';
