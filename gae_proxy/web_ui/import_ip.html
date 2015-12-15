@@ -23,7 +23,7 @@
 </script>
 <script type="text/javascript">
     function doImportAction(ipList) {
-        ipList = conversionFormat(3, '1', ipList);
+        ipList = conversionFormat('3', '1', ipList);
         console.log('尝试导入 ', ipList.split('|').length, ' 个IP.');
 
         var postData = {
