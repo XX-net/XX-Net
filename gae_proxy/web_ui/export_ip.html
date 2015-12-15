@@ -26,13 +26,6 @@
 </form> <!-- #import-export-ip -->
 
 <script type="text/javascript">
-    function onSubmit() {
-        var ipFormat = $('#ip-format').val();
-
-        return doExportAction(ipFormat);
-    }
-</script>
-<script type="text/javascript">
     function doExportAction(ipFormat) {
         $.ajax({
             type: 'POST',
@@ -41,7 +34,7 @@
             success: function(result) {
                 var ipList = result['res'];
 
-                tip('{{ _("Succeeded exporting ") }}' + ipList.split('|').length + ''{{ _(" IP addresses.") }}', 'success');
+                tip('{{ _("Succeeded exporting ") }}' + ipList.split('|').length + '{{ _(" IP addresses.") }}', 'success');
 
                 ipList = conversionFormat('1', ipFormat, ipList);
                 $('#ip-list').val(ipList);
@@ -102,5 +95,13 @@
         }
 
         return result;
+    }
+</script>
+
+<script type="text/javascript">
+    function onSubmit() {
+        var ipFormat = $('#ip-format').val();
+
+        return doExportAction(ipFormat);
     }
 </script>
