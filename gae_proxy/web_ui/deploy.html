@@ -58,7 +58,7 @@
             </div> <!-- #advanced-options -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" type="submit">{{ _( "Start to deploy" ) }}</button>
+                    <button class="btn btn-primary btn-block" type="submit">{{ _("Start deploy") }}</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
@@ -218,7 +218,7 @@
         if ( status == 'start' ) {
             $('button.btn').removeClass('btn-danger');
             $('button.btn').addClass('btn-primary');
-            $('button.btn').html('{{ _("Start deploying") }}');
+            $('button.btn').html('{{ _("Start deploy") }}');
         } else if ( status == 'cancel' ) {
             $('button.btn').removeClass('btn-primary');
             $('button.btn').addClass('btn-danger');
@@ -228,7 +228,7 @@
 </script>
 <script type="text/javascript">
     $('button.btn').click(function() {
-        if ( $('button.btn').html() == '{{ _("Start deploying") }}' ){
+        if ( $('button.btn').html() == '{{ _("Start deploy") }}' ){
             onStart();
         } else if ( $('button.btn').html() == '{{ _("Terminate deploying") }}' ) {
             onCancel();
