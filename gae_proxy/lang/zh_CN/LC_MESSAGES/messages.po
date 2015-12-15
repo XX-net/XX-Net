@@ -313,17 +313,11 @@ msgstr "GAEProxy状态信息"
 msgid "IP Number"
 msgstr "IP数量"
 
-msgid "You have enough IP."
-msgstr "可用IP数量充裕"
-
 msgid "Running low on good IP, "
 msgstr "可用IP数不足，"
 
-msgid "IP Quality"
-msgstr "IP质量"
-
-msgid "Good to go."
-msgstr "指标正常"
+msgid "10th IP handshake(ms)"
+msgstr "IP质量（越小越好）"
 
 msgid "Currently running slow. "
 msgstr "IP质量欠佳，"
@@ -342,12 +336,6 @@ msgstr "没有可用APPID，请检查。"
 
 msgid "Connection Status"
 msgstr "连接状态"
-
-msgid "Connected to the world."
-msgstr "成功建立连接"
-
-msgid "Connection not established yet."
-msgstr "连接尚未建立"
 
 msgid "Number of IP-Scaning Threads"
 msgstr "IP扫描线程数"
@@ -372,12 +360,6 @@ msgstr "流量超限的App ID"
 
 msgid "Not Exist App IDs"
 msgstr "不存在的App ID"
-
-msgid "Click here to view"
-msgstr "点此查看"
-
-msgid "You are using your own Appid, keep it to yourself for privacy."
-msgstr "你正在使用私有Appid。私有Appid是敏感信息，请不要泄漏与他人。"
 
 msgid "You are using public Appid."
 msgstr "你正在使用公共Appid。"
@@ -411,9 +393,6 @@ msgstr "我是专业的使用者，显示更多内容。"
 
 msgid "Pro Mode"
 msgstr "专家模式"
-
-msgid "Noob Mode"
-msgstr "新手模式"
 
 msgid "You are using XX-Net version "
 msgstr "您正在使用XX-Net "

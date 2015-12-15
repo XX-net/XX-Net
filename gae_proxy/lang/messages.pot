@@ -310,16 +310,10 @@ msgstr ""
 msgid "IP Number"
 msgstr ""
 
-msgid "You have enough IP."
-msgstr ""
-
 msgid "Running low on good IP, "
 msgstr ""
 
-msgid "IP Quality"
-msgstr ""
-
-msgid "Good to go."
+msgid "10th IP handshake(ms)"
 msgstr ""
 
 msgid "Currently running slow. "
@@ -338,12 +332,6 @@ msgid "No working appid. Please check. "
 msgstr ""
 
 msgid "Connection Status"
-msgstr ""
-
-msgid "Connected to the world."
-msgstr ""
-
-msgid "Connection not established yet."
 msgstr ""
 
 msgid "Number of IP-Scaning Threads"
@@ -368,12 +356,6 @@ msgid "Out of Quota App IDs"
 msgstr ""
 
 msgid "Not Exist App IDs"
-msgstr ""
-
-msgid "Click here to view"
-msgstr ""
-
-msgid "You are using your own Appid, keep it to yourself for privacy."
 msgstr ""
 
 msgid "You are using public Appid."
@@ -407,9 +389,6 @@ msgid "Show advanced information"
 msgstr ""
 
 msgid "Pro Mode"
-msgstr ""
-
-msgid "Noob Mode"
 msgstr ""
 
 msgid "You are using XX-Net version "

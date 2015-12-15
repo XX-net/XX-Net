@@ -25,7 +25,7 @@
             <td id="ip-num"></td>
         </tr>
         <tr>
-            <td>{{ _( "IP Quality" ) }}</td>
+            <td>{{ _( "10th IP handshake(ms)" ) }}</td>
             <td id="ip-quality"></td>
         </tr>
         <tr>
@@ -294,13 +294,13 @@
                     'td#proxy-listen': result['proxy_listen'],
                     'td#pac-url': result['pac_url'],
                     'td#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
-                    'td#ip-num': ip_num_string(result['good_ip_num'], result['ip_num'] ),
-                    'td#connection-status': connection_status_string(result['connected_link_new'], result['connected_link_used']),
+                    'td#ip-num': result['good_ip_num'] + ' / ' + result['ip_num'],
+                    'td#connection-status': result['connected_link_new'] + ',' + result['connected_link_used'],
                     'td#working-appid': appid_string(result['working_appid']),
                     'td#out-of-quota-appids': result['out_of_quota_appids'],
                     'td#not-exist-appids': result['not_exist_appids'],
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
-                    'td#ip-quality': ip_quality_string(result['ip_handshake_10']),
+                    'td#ip-quality': result['ip_handshake_10'],
                     'td#block-stat': result['block_stat'],
                     'td#proxy-status': proxy_status_string(result['proxy_state'],result['proxy_url']),
                 }
@@ -392,16 +392,6 @@
         }
         return true;
     }
-    function ip_quality_string(ip_handshake_10){
-        var tip = ip_handshake_10 < 400 ? '{{ _( "Good to go." ) }}':'{{ _( "Currently running slow, scaning for faster IP..." ) }}';
-        var ip_quality_str = ip_handshake_10 + " (" + tip + ")";
-        return ip_quality_str;
-    }
-    function connection_status_string(connected_link_new, connected_link_used){
-        var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}'
-        var conn_str = connected_link_new + "," + connected_link_used + " (" + tip + ")";
-        return conn_str;
-    }
     function proxy_status_string(proxy_state,proxy_url){
         if (proxy_state == "Auto proxy enabled"){
             return '{{ _( "Auto proxy enabled at " ) }}' + proxy_url
@@ -410,11 +400,6 @@
         }else{
             return '{{ _( "Proxy disabled" ) }}'
         }
-    }
-    function ip_num_string(good_ip_num, ip_num){
-        var tip = good_ip_num > 20 ? '{{ _( "You have enough IP." ) }}':'{{ _( "Running low on good IP, scaning for more..." ) }}';
-        var num_str = ip_num + "/" + good_ip_num + " (" + tip + ")";
-        return num_str;
     }
 </script>
 
