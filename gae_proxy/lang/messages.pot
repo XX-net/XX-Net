@@ -8,14 +8,81 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-14 07:04+0800\n"
+"POT-Creation-Date: 2015-12-15 21:20+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 1.3\n"
+"Generated-By: Babel 2.1.1\n"
+
+#: web_ui/advance.html:2
+msgid "Scan Settings"
+msgstr ""
+
+#: web_ui/advance.html:3
+msgid "Scan Log"
+msgstr ""
+
+#: web_ui/advance.html:4
+msgid "Import IP"
+msgstr ""
+
+#: web_ui/advance.html:5
+msgid "Export IP"
+msgstr ""
+
+#: web_ui/advance.html:6
+msgid "Check IP"
+msgstr ""
+
+#: web_ui/advance.html:13 web_ui/menu.yaml:17
+msgid "Advance"
+msgstr ""
+
+#: web_ui/check_ip.html:3 web_ui/status.html:3
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr ""
+
+#: web_ui/check_ip.html:4 web_ui/status.html:4
+msgid "The latest Chrome browser is recommended."
+msgstr ""
+
+#: web_ui/check_ip.html:7 web_ui/menu.yaml:5 web_ui/status.html:7
+msgid "Status"
+msgstr ""
+
+#: web_ui/check_ip.html:11 web_ui/status.html:11 web_ui/status.html:39
+#: web_ui/status.html:63
+msgid "Property"
+msgstr ""
+
+#: web_ui/check_ip.html:12 web_ui/status.html:12 web_ui/status.html:40
+#: web_ui/status.html:64
+msgid "Value"
+msgstr ""
+
+#: web_ui/check_ip.html:17
+msgid "All IP Number"
+msgstr ""
+
+#: web_ui/check_ip.html:21
+msgid "Left Number"
+msgstr ""
+
+#: web_ui/check_ip.html:25
+msgid "Good IP Number"
+msgstr ""
+
+#: web_ui/check_ip.html:33 web_ui/check_ip.html:79 web_ui/export_ip.html:23
+#: web_ui/import_ip.html:12
+msgid "Run"
+msgstr ""
+
+#: web_ui/check_ip.html:87
+msgid "Running"
+msgstr ""
 
 #: web_ui/config.html:7
 msgid "Public appids used by default"
@@ -38,7 +105,7 @@ msgid "Advanced options"
 msgstr ""
 
 #: web_ui/config.html:29 web_ui/config.html:45 web_ui/deploy.html:49
-#: web_ui/scan_ip.html:10 web_ui/status.html:25 web_ui/status.html:33
+#: web_ui/scan_setting.html:5 web_ui/status.html:25
 msgid "Help"
 msgstr ""
 
@@ -94,8 +161,8 @@ msgstr ""
 msgid "Failed reading the seeting."
 msgstr ""
 
-#: web_ui/config.html:239 web_ui/scan_ip.html:77 web_ui/scan_ip.html:148
-#: web_ui/scan_ip.html:170
+#: web_ui/config.html:239 web_ui/scan_setting.html:59
+#: web_ui/scan_setting.html:107 web_ui/scan_setting.html:129
 msgid "Settings saved successfully"
 msgstr ""
 
@@ -108,14 +175,18 @@ msgid "Deploy XX-Net onto GAE"
 msgstr ""
 
 #: web_ui/deploy.html:3
-msgid "Current status: idle"
+msgid "Current status"
+msgstr ""
+
+#: web_ui/deploy.html:3 web_ui/deploy.html:190
+msgid "idle"
 msgstr ""
 
 #: web_ui/deploy.html:6
 msgid "Authorization"
 msgstr ""
 
-#: web_ui/deploy.html:7 web_ui/menu.yaml:25 web_ui/scan_ip.html:3
+#: web_ui/deploy.html:7 web_ui/menu.yaml:21
 msgid "Log"
 msgstr ""
 
@@ -193,10 +264,6 @@ msgstr ""
 msgid "The exception info: "
 msgstr ""
 
-#: web_ui/deploy.html:190
-msgid "idle"
-msgstr ""
-
 #: web_ui/deploy.html:193
 msgid "deploying ..."
 msgstr ""
@@ -225,79 +292,43 @@ msgstr ""
 msgid "Please fill in your account & its password."
 msgstr ""
 
-#: web_ui/ipconfig.html:4
-msgid "Task type"
+#: web_ui/export_ip.html:4
+msgid "Export format"
 msgstr ""
 
-#: web_ui/ipconfig.html:10
-msgid "Import"
-msgstr ""
-
-#: web_ui/ipconfig.html:14
-msgid "Export"
-msgstr ""
-
-#: web_ui/ipconfig.html:21
-msgid "Import/Export format"
-msgstr ""
-
-#: web_ui/ipconfig.html:25
+#: web_ui/export_ip.html:8
 msgid " format"
 msgstr ""
 
-#: web_ui/ipconfig.html:26
+#: web_ui/export_ip.html:9
 msgid "New line delimiter"
 msgstr ""
 
-#: web_ui/ipconfig.html:27
-msgid "Intelligent regular matching"
-msgstr ""
-
-#: web_ui/ipconfig.html:33
+#: web_ui/export_ip.html:15
 msgid "IP address list"
 msgstr ""
 
-#: web_ui/ipconfig.html:41
-msgid "Run"
-msgstr ""
-
-#: web_ui/ipconfig.html:48
-msgid "IP Import/Export"
-msgstr ""
-
-#: web_ui/ipconfig.html:90
-msgid "Trying to import "
-msgstr ""
-
-#: web_ui/ipconfig.html:90 web_ui/ipconfig.html:102 web_ui/ipconfig.html:119
-msgid " IP addresses."
-msgstr ""
-
-#: web_ui/ipconfig.html:102
-msgid "Succeeded importing "
-msgstr ""
-
-#: web_ui/ipconfig.html:105
-msgid "Failed importing IP addresses."
-msgstr ""
-
-#: web_ui/ipconfig.html:119
+#: web_ui/export_ip.html:44
 msgid "Succeeded exporting "
 msgstr ""
 
-#: web_ui/ipconfig.html:125
+#: web_ui/export_ip.html:44
+msgid " IP addresses."
+msgstr ""
+
+#: web_ui/export_ip.html:50
 msgid "Failed exporting the IP addresses."
+msgstr ""
+
+#: web_ui/import_ip.html:4
+msgid "IP list"
 msgstr ""
 
 #: web_ui/logging.html:15
 msgid "GAEProxy Log"
 msgstr ""
 
-#: web_ui/menu.yaml:5 web_ui/status.html:7
-msgid "Status"
-msgstr ""
-
-#: web_ui/menu.yaml:9 web_ui/status.html:39
+#: web_ui/menu.yaml:9 web_ui/status.html:35
 msgid "Configuration"
 msgstr ""
 
@@ -305,113 +336,165 @@ msgstr ""
 msgid "Deploy Server"
 msgstr ""
 
-#: web_ui/menu.yaml:17
-msgid "Scan IP Addresses"
-msgstr ""
-
-#: web_ui/menu.yaml:21
-msgid "Import/Export IP Addresses"
-msgstr ""
-
-#: web_ui/scan_ip.html:2
-msgid "Settings"
-msgstr ""
-
-#: web_ui/scan_ip.html:10
-msgid "Auto-adjust scan thread count"
-msgstr ""
-
-#: web_ui/scan_ip.html:18
-msgid "Max scan thread count"
-msgstr ""
-
-#: web_ui/scan_ip.html:24
-msgid "Update"
-msgstr ""
-
-#: web_ui/scan_ip.html:29
-msgid "IP range list"
-msgstr ""
-
-#: web_ui/scan_ip.html:29
-msgid "Supporting formats"
-msgstr ""
-
-#: web_ui/scan_ip.html:37
-msgid "Submit"
-msgstr ""
-
-#: web_ui/scan_ip.html:46
+#: web_ui/scan_log.html:5
 msgid "Refresh"
 msgstr ""
 
-#: web_ui/scan_ip.html:52
-msgid "IP scan settings(Needless to modify generally)"
-msgstr ""
-
-#: web_ui/scan_ip.html:99
+#: web_ui/scan_log.html:20
 msgid "Failed reading the log"
 msgstr ""
 
-#: web_ui/scan_ip.html:120
+#: web_ui/scan_setting.html:5
+msgid "Auto-adjust scan thread count"
+msgstr ""
+
+#: web_ui/scan_setting.html:13
+msgid "Max scan thread count"
+msgstr ""
+
+#: web_ui/scan_setting.html:19
+msgid "Update"
+msgstr ""
+
+#: web_ui/scan_setting.html:24
+msgid "IP range list"
+msgstr ""
+
+#: web_ui/scan_setting.html:24
+msgid "Supporting formats"
+msgstr ""
+
+#: web_ui/scan_setting.html:32
+msgid "Submit"
+msgstr ""
+
+#: web_ui/scan_setting.html:86
 msgid "Failed reading the settings"
 msgstr ""
 
-#: web_ui/scan_ip.html:150 web_ui/scan_ip.html:172
+#: web_ui/scan_setting.html:109 web_ui/scan_setting.html:131
 msgid "Unkown error occurred"
 msgstr ""
 
-#: web_ui/status.html:3
-msgid "Your browser is obsolete. Partial functionality will not be available."
+#: web_ui/status.html:17
+msgid "IP Number"
 msgstr ""
 
-#: web_ui/status.html:4
-msgid "The latest Chrome browser is recommended."
+#: web_ui/status.html:21
+msgid "IP Quality"
 msgstr ""
 
-#: web_ui/status.html:91		
-msgid "System Version"		
+#: web_ui/status.html:25
+msgid "Connection Status"
 msgstr ""
 
-#: web_ui/status.html:142
+#: web_ui/status.html:29
+msgid "Number of IP-Scaning Threads"
+msgstr ""
+
+#: web_ui/status.html:29
+msgid "Settings"
+msgstr ""
+
+#: web_ui/status.html:45
+msgid "Proxy Listen"
+msgstr ""
+
+#: web_ui/status.html:49
+msgid "PAC URL"
+msgstr ""
+
+#: web_ui/status.html:69
+msgid "Working App IDs"
+msgstr ""
+
+#: web_ui/status.html:73
+msgid "Out of Quota App IDs"
+msgstr ""
+
+#: web_ui/status.html:77
+msgid "Not Exist App IDs"
+msgstr ""
+
+#: web_ui/status.html:83
+msgid "System Version"
+msgstr ""
+
+#: web_ui/status.html:135
 msgid "Feedback"
 msgstr ""
 
-#: web_ui/status.html:147
+#: web_ui/status.html:140
 msgid "Diagnostic Info"
 msgstr ""
 
-#: web_ui/status.html:150
+#: web_ui/status.html:143
 msgid "The one-key feedback needs to sign in your Github account"
 msgstr ""
 
-#: web_ui/status.html:154
+#: web_ui/status.html:147
 msgid "To Google Groups"
 msgstr ""
 
-#: web_ui/status.html:155
+#: web_ui/status.html:148
 msgid "One-key feedback"
 msgstr ""
 
-#: web_ui/status.html:161
+#: web_ui/status.html:154
 msgid "GAE Proxy Status Info"
 msgstr ""
 
-#: web_ui/status.html:274
+#: web_ui/status.html:244
+msgid "Disabled"
+msgstr ""
+
+#: web_ui/status.html:244
+msgid "Enabled"
+msgstr ""
+
+#: web_ui/status.html:284
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
 msgstr ""
 
-#: web_ui/status.html:274
+#: web_ui/status.html:284
 msgid "guide "
 msgstr ""
 
-#: web_ui/status.html:274
+#: web_ui/status.html:284
 msgid "to troubleshoot."
 msgstr ""
 
-#: web_ui/status.html:276
+#: web_ui/status.html:286
 msgid "No response from GAEProxy process. It might have already exited."
+msgstr ""
+
+#: web_ui/status.html:293
+msgid "You are using public Appid."
+msgstr ""
+
+#: web_ui/status.html:310
+msgid "Good to go."
+msgstr ""
+
+#: web_ui/status.html:310
+msgid "Currently running slow, scaning for faster IP..."
+msgstr ""
+
+#: web_ui/status.html:315
+msgid "Connected to the world."
+msgstr ""
+
+#: web_ui/status.html:315
+msgid "Connection not established yet."
+msgstr ""
+
+#: web_ui/status.html:320
+msgid "You have enough IP."
+msgstr ""
+
+#: web_ui/status.html:320
+msgid "Running low on good IP, scaning for more..."
 msgstr ""
 
