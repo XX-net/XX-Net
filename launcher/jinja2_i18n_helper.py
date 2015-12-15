@@ -101,12 +101,11 @@ class Jinja2I18nHelper():
         #desired_lang = "zh_CN" # Simple Chinese
 		
         desired_locales_list = [desired_lang]
-        print("Your desired language is %s" % desired_lang)
+        #print("Your desired language is %s" % desired_lang)
         translations = Translations.load(self.locale_dir, desired_locales_list)
         self.env.install_gettext_translations(translations)
         template = self.env.get_template(template_name)
         return template.render().encode('utf-8') # magic here & avoid error UnicodeEncodeError
-        #return template.render() # magic here
 
 
 # Creates the global singleton object (?)
