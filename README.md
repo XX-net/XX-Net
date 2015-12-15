@@ -3,17 +3,19 @@
 XX-Net
 ========
 翻墙工具套件  
-* GAE proxy, 稳定、易用、快速
-* Web界面，人性化交互
+* GAE proxy, 稳定、易用、快速  
+  Stable, easy and fast proxy  
+* Web界面，人性化交互  
+  Friendly web UI  
 
 
-下载链接：
+下载链接(Download)：
 ==========
-测试版：
+测试版(Test)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
-稳定版：
-https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
+稳定版(Stable)：
+https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
 使用方法：https://github.com/XX-net/XX-Net/wiki/使用方法
 
@@ -24,7 +26,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 
 
 
-平台支持
+平台支持(Support Platforms)
 ================
 * Windows 7/8/10 （xp 需要 [tcpip.sys补丁]( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014.）
   Win10 存在声音卡的问题 
@@ -33,13 +35,13 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 
 
 
-## 链接
+## 链接(Links)
 |   |   |
 | --------   | :----  |
-|问题报告:  |https://github.com/XX-net/XX-Net/issues|
-|讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
+|问题报告(Report bug):  |https://github.com/XX-net/XX-Net/issues|
+|讨论群(Discuss forum):  |https://groups.google.com/forum/#!forum/xx-net|
 
-感谢
+感谢(Thanks)
 =========
 * [GoAgent](https://github.com/phuslu/goagent)
 * [GoGoTest](https://github.com/azzvx/gogotester)
@@ -47,7 +49,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.6.2
 * [checkgoogleip](https://github.com/moonshawdo/checkgoogleip)
 
 
-如何帮助项目
+如何帮助项目(How to contribute)
 ==========
 https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
