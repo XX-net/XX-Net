@@ -30,8 +30,8 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 ================
 * Windows 7/8/10 （xp 需要 [tcpip.sys补丁]( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014.）
   Win10 存在声音卡的问题 
-* Linux （Ubuntu不显示系统托盘）
-* Mac OS X(10.7; 10.8; 10.9; 10.10)
+* Linux 
+* Mac OS X(10.7; 10.8; 10.9; 10.10; 10.11)
 
 
 
@@ -43,6 +43,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
 感谢(Thanks)
 =========
+* [Google](https://www.google.com)
 * [GoAgent](https://github.com/phuslu/goagent)
 * [GoGoTest](https://github.com/azzvx/gogotester)
 * [goagentfindip](https://github.com/usrtmp/goagentfindip)
