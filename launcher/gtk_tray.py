@@ -29,18 +29,43 @@ except:
 
 import module_init
 
+try:
+    import platform
+    import appindicator
+except:
+    platform = None
+    appindicator = None
+
+
 class Gtk_tray():
     notify_list = []
     def __init__(self):
         logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
 
-        self.trayicon = gtk.StatusIcon()
-        self.trayicon.set_from_file(logo_filename)
+        if platform and appindicator and platform.dist()[0].lower() == 'ubuntu':
+            self.trayicon = self.ubuntu_trayicon(logo_filename)
+        else:
+            self.trayicon = self.gtk_trayicon(logo_filename)
 
-        self.trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
-        self.trayicon.connect('activate', self.show_control_web)
-        self.trayicon.set_tooltip('XX-Net')
-        self.trayicon.set_visible(True)
+    def ubuntu_trayicon(self, logo_filename):
+        trayicon = appindicator.Indicator('XX-Net', 'indicator-messages', appindicator.CATEGORY_APPLICATION_STATUS)
+        trayicon.set_status(appindicator.STATUS_ACTIVE)
+        trayicon.set_attention_icon('indicator-messages-new')
+        trayicon.set_icon(logo_filename)
+        trayicon.set_menu(self.make_menu())
+
+        return trayicon
+
+    def gtk_trayicon(self, logo_filename):
+        trayicon = gtk.StatusIcon()
+        trayicon.set_from_file(logo_filename)
+
+        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
+        trayicon.connect('activate', self.show_control_web)
+        trayicon.set_tooltip('XX-Net')
+        trayicon.set_visible(True)
+
+        return trayicon
 
     def make_menu(self):
         menu = gtk.Menu()
