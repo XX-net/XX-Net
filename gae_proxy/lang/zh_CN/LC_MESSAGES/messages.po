@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-06 21:08+0800\n"
+"POT-Creation-Date: 2015-12-14 07:04+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
@@ -38,8 +38,8 @@ msgstr "注意：appid部署之前无法使用。"
 msgid "Advanced options"
 msgstr "高级选项"
 
-#: web_ui/config.html:29 web_ui/config.html:45 web_ui/scan_ip.html:10
-#: web_ui/status.html:25 web_ui/status.html:33
+#: web_ui/config.html:29 web_ui/config.html:45 web_ui/deploy.html:49
+#: web_ui/scan_ip.html:10 web_ui/status.html:25 web_ui/status.html:33
 msgid "Help"
 msgstr "帮助"
 
@@ -160,46 +160,146 @@ msgstr "开始部署"
 msgid "Redploy the server if XX-Net version is prior to 1.13.6."
 msgstr "XX-Net 1.13.6之前的服务端, 请重新部署。"
 
+#: web_ui/deploy.html:170 web_ui/deploy.html:178 web_ui/deploy.html:184
+#: web_ui/deploy.html:190 web_ui/deploy.html:193 web_ui/deploy.html:200
+#: web_ui/deploy.html:205 web_ui/deploy.html:269 web_ui/deploy.html:272
+#, fuzzy
+msgid "Current status: "
+msgstr "当前状态："
+
+#: web_ui/deploy.html:170
+msgid "XX-Net was reset."
+msgstr "XX-Net被重置。"
+
+#: web_ui/deploy.html:178 web_ui/deploy.html:200
+msgid "Deployment completed. "
+msgstr "部署完成。"
+
+#: web_ui/deploy.html:178
+msgid "Please go to "
+msgstr "请在"
+
+#: web_ui/deploy.html:178
+#, fuzzy
+msgid "the configuration page "
+msgstr "配置页面"
+
+#: web_ui/deploy.html:178
+msgid "to set AppID to enable them."
+msgstr "中设置AppID, 方会生效。"
+
+#: web_ui/deploy.html:184 web_ui/deploy.html:205 web_ui/deploy.html:272
+#, fuzzy
+msgid "An exception occurred. "
+msgstr "发生异常。"
+
+#: web_ui/deploy.html:184 web_ui/deploy.html:205 web_ui/deploy.html:272
+msgid "The exception info: "
+msgstr "异常信息："
+
+#: web_ui/deploy.html:190
+msgid "idle"
+msgstr "空闲"
+
+#: web_ui/deploy.html:193
+msgid "deploying ..."
+msgstr "正在部署..."
+
+#: web_ui/deploy.html:221 web_ui/deploy.html:231
+#, fuzzy
+msgid "Start deploying"
+msgstr "开始部署"
+
+#: web_ui/deploy.html:225 web_ui/deploy.html:233
+msgid "Terminate deploying"
+msgstr "终止部署"
+
+#: web_ui/deploy.html:269
+msgid "Deployment cancelled."
+msgstr "部署已被取消。"
+
+#: web_ui/deploy.html:282
+msgid "Either AppID is empty or invalid."
+msgstr "AppID为空或无效。"
+
+#: web_ui/deploy.html:285
+#, fuzzy
+msgid "Either your Email address is empty or invalid."
+msgstr "您的email为空或无效。"
+
+#: web_ui/deploy.html:288
+msgid "Please fill in your account & its password."
+msgstr "请填写您账户的密码。"
+
 #: web_ui/ipconfig.html:4
 msgid "Task type"
 msgstr "任务类型"
 
 #: web_ui/ipconfig.html:10
+#, fuzzy
 msgid "Import"
 msgstr "导入"
 
 #: web_ui/ipconfig.html:14
+#, fuzzy
 msgid "Export"
 msgstr "导出"
 
 #: web_ui/ipconfig.html:21
 msgid "Import/Export format"
-msgstr "导入/导出格式"
+msgstr "导入或导出格式"
 
 #: web_ui/ipconfig.html:25
+#, fuzzy
 msgid " format"
 msgstr "格式"
 
 #: web_ui/ipconfig.html:26
 msgid "New line delimiter"
-msgstr "换行分割"
+msgstr "新行分隔符"
 
 #: web_ui/ipconfig.html:27
 msgid "Intelligent regular matching"
 msgstr "智能正则匹配"
 
 #: web_ui/ipconfig.html:33
-msgid "IP list"
-msgstr "IP列表"
+msgid "IP address list"
+msgstr "IP地址列表"
 
 #: web_ui/ipconfig.html:41
 msgid "Run"
-msgstr "执行"
+msgstr "运行"
 
 #: web_ui/ipconfig.html:48
-#, fuzzy
 msgid "IP Import/Export"
-msgstr "导入/导出格式"
+msgstr "IP出导入或导出"
+
+#: web_ui/ipconfig.html:90
+msgid "Trying to import "
+msgstr "尝试导入 "
+
+#: web_ui/ipconfig.html:90 web_ui/ipconfig.html:102 web_ui/ipconfig.html:119
+#, fuzzy
+msgid " IP addresses."
+msgstr "个IP地址"
+
+#: web_ui/ipconfig.html:102
+msgid "Succeeded importing "
+msgstr "成功导入"
+
+#: web_ui/ipconfig.html:105
+#, fuzzy
+msgid "Failed importing IP addresses."
+msgstr "导入IP地址失败"
+
+#: web_ui/ipconfig.html:119
+msgid "Succeeded exporting "
+msgstr "成功导入"
+
+#: web_ui/ipconfig.html:125
+#, fuzzy
+msgid "Failed exporting the IP addresses."
+msgstr "导入IP地址失败"
 
 #: web_ui/logging.html:15
 msgid "GAEProxy Log"
@@ -219,7 +319,7 @@ msgstr "部署服务端"
 
 #: web_ui/menu.yaml:17
 msgid "Scan IP Addresses"
-msgstr "扫描IP"
+msgstr "扫描IP地址"
 
 #: web_ui/menu.yaml:21
 msgid "Import/Export IP Addresses"
@@ -310,68 +410,21 @@ msgstr "一键反馈"
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
 
-msgid "IP Number"
-msgstr "IP数量"
+#: web_ui/status.html:274
+msgid ""
+"The status page is empty. Highly likely that GAEProxy failed getting "
+"started. Please follow "
+msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按"
 
-msgid "You have enough IP."
-msgstr "可用IP数量充裕。"
+#: web_ui/status.html:274
+msgid "guide "
+msgstr "指引"
 
-msgid "Running low on good IP, scaning for more..."
-msgstr "可用IP数不足，请等待一段时间，XX-Net将进行自动扫描。"
+#: web_ui/status.html:274
+msgid "to troubleshoot."
+msgstr "查找问题原因。"
 
-msgid "IP Quality"
-msgstr "IP质量"
+#: web_ui/status.html:276
+msgid "No response from GAEProxy process. It might have already exited."
+msgstr "GAEProxy进程无响应, 可能已退出。"
 
-msgid "Good to go."
-msgstr "指标正常。"
-
-msgid "Currently running slow, scaning for faster IP..."
-msgstr "IP质量欠佳，请耐心等待扫描。"
-
-msgid "Connection Status"
-msgstr "连接状态"
-
-msgid "Connected to the world."
-msgstr "成功建立连接。"
-
-msgid "Connection not established yet."
-msgstr "连接尚未建立。"
-
-msgid "Number of IP-Scaning Threads"
-msgstr "IP扫描线程数"
-
-msgid "Disabled"
-msgstr "未启用"
-
-msgid "Enabled"
-msgstr "已启用"
-
-msgid "Property"
-msgstr "指标项"
-
-msgid "Value"
-msgstr "当前状态"
-
-msgid "Working App IDs"
-msgstr "工作中的App ID"
-
-msgid "Out of Quota App IDs"
-msgstr "流量超限的App ID"
-
-msgid "Not Exist App IDs"
-msgstr "不存在的App ID"
-
-msgid "Click here to view"
-msgstr "点此查看"
-
-msgid "You are using your own Appid, keep it to yourself for privacy."
-msgstr "你正在使用私有Appid。私有Appid是敏感信息，请不要泄漏与他人。"
-
-msgid "You are using public Appid."
-msgstr "你正在使用公共Appid。"
-
-msgid "Proxy Listen"
-msgstr "代理地址/端口"
-
-msgid "PAC URL"
-msgstr "PAC地址"

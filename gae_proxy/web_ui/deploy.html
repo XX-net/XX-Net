@@ -14,7 +14,7 @@
                     <label for="gae-appid">GAE AppID (<a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">{{ _( "How to apply" ) }}</a>)</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
-                    <input id="gae-appid" type="text" placeholder={{ _("Delimit multiple appids with |") }}/>
+                    <input id="gae-appid" type="text" placeholder='{{ _("Delimit multiple appids with |") }}' />
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
@@ -46,10 +46,10 @@
             <div id="advanced-options" style="display: none;">
                 <div class="row-fluid">
                     <div class="span4">
-                        <label for="rc4-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">帮助</a>)</label>
+                        <label for="rc4-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">{{ _("Help") }}</a>)</label>
                     </div> <!-- .span4 -->
                     <div id="rc4-password-field" class="span8">
-                        <input id="rc4-password" type="password" placeholder={{ _("Needless to fill generally") }} />
+                        <input id="rc4-password" type="password" placeholder='{{ _("Needless to fill generally") }}' />
                         <p id="rc4-password-tip" class="tip hide">
                             {{ _( "If RC4 password is used, please configure it in the advanced settings while configuring GAE Proxy" ) }}<br>
                         </p>
@@ -167,7 +167,7 @@
                 if ( window.status == 'running' ) {
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
-                        $('.alert').html('当前状态: XX-Net被重置。');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("XX-Net was reset.") }}');
 
                         changeButtonStatus('start');
                     } else if ( result['status'] == 'running' ) {
@@ -175,34 +175,34 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成。 <br>请在<a href="/?module=gae_proxy&menu=config">配置页面</a>中设置AppID, 方会生效。');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }} <br>{{ _("Please go to ") }}请在<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result['status']);
                         updateLog(result['log']);
                     }
                 } else { // window.status == 'init' || window.status == 'finished' || undefined
                     if ( result['status'] == 'init' ) {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 空闲');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
                     } else if ( result['status'] == 'running' ) {
                         window.status = 'running';
-                        $('.alert').html('当前状态: 正在部署...');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("deploying ...") }}');
 
                         updateLog(result['log']);
                         changeButtonStatus('cancel');
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('当前状态: 部署完成');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }}');
 
                         updateLog(result['log']);
                     } else {
                         window.timer.stop();
-                        $('.alert').html('当前状态: 发生异常。<br>异常信息:' + result['status']);
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result['status']);
                         updateLog(result['log']);
                     }
                 }
@@ -218,19 +218,19 @@
         if ( status == 'start' ) {
             $('button.btn').removeClass('btn-danger');
             $('button.btn').addClass('btn-primary');
-            $('button.btn').html('开始部署');
+            $('button.btn').html('{{ _("Start deploying") }}');
         } else if ( status == 'cancel' ) {
             $('button.btn').removeClass('btn-primary');
             $('button.btn').addClass('btn-danger');
-            $('button.btn').html('终止部署');
+            $('button.btn').html('{{ _("Terminate deploying") }}');
         }
     }
 </script>
 <script type="text/javascript">
     $('button.btn').click(function() {
-        if ( $('button.btn').html() == '开始部署' ){
+        if ( $('button.btn').html() == '{{ _("Start deploying") }}' ){
             onStart();
-        } else if ( $('button.btn').html() == '终止部署' ) {
+        } else if ( $('button.btn').html() == '{{ _("Terminate deploying") }}' ) {
             onCancel();
         }
     });
@@ -266,10 +266,10 @@
             dataType: 'JSON',
             success: function(result) {
                 changeButtonStatus('start');
-                $('.alert').html("当前状态: 部署已取消。");
+                $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment cancelled.") }}');
             },
             error: function(result){
-                $('.alert').html("当前状态: 发生异常。<br>异常信息:" + result);
+                $('.alert').html('{{ _("Current status: ") }} {{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result);
             }
         });
     }
@@ -279,13 +279,13 @@
         var errorMessage = '';
 
         if ( appId.length == 0 || !isAppIdValid(appId) ) {
-            errorMessage += 'AppID为空或无效。<br>';
+            errorMessage += '{{ _("Either AppID is empty or invalid.") }}<br>';
         }
         if ( email.length == 0 || !isEmailValid(email) ) {
-            errorMessage += 'Email为空或无效。<br>';
+            errorMessage += '{{ _("Either your Email address is empty or invalid.") }}<br>';
         }
         if ( password.length == 0 ) {
-            errorMessage += '请填写您账户的密码。<br>'
+            errorMessage += '{{ _("Please fill in your account & its password.") }}<br>'
         }
 
         return errorMessage;

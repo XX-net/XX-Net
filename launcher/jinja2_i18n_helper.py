@@ -96,7 +96,10 @@ class Jinja2I18nHelper():
         """Returns the rendered template with the desired language."""
         if not desired_lang:
 		    desired_lang =  self.current_locale
-		    
+		
+        # To test simplified Chinese only
+        #desired_lang = "zh_CN" # Simple Chinese
+		
         desired_locales_list = [desired_lang]
         #print("Your desired language is %s" % desired_lang)
         translations = Translations.load(self.locale_dir, desired_locales_list)
@@ -113,10 +116,10 @@ if __name__ == '__main__':
     # Test cases. If not found, en_US is used instead.
     # Language_contry code list: http://www.fincher.org/Utilities/CountryLanguageList.shtml
     #desired_lang = "en_US" # American English
-    #desired_lang = "zh_CN" # Simple Chinese
+    desired_lang = "zh_CN" # Simple Chinese
     #desired_lang = "es_VE" #Venezuela
     #desired_lang = "de_DE" # Geman
-    desired_lang = "fa_IR" # Iran-Persian
+    #desired_lang = "fa_IR" # Iran-Persian
     #desired_lang = "ja_JP" # Japanese
 
     root_path =  os.path.abspath(os.path.join(current_path, os.pardir))
@@ -130,8 +133,8 @@ if __name__ == '__main__':
     #print( ihelper.render("about.html", desired_lang) )
     
     print("\n--- launcher/web_ui/menu.yaml ---")    
-    #stream = ihelper.render("menu.yaml", desired_lang)
-    stream = ihelper.render("menu.yaml", None)
+    stream = ihelper.render("menu.yaml", desired_lang)
+    #stream = ihelper.render("menu.yaml", None)
     print(yaml.load(stream))
     
     # Test locale in module gae_proxy
