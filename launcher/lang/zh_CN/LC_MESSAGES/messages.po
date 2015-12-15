@@ -127,8 +127,8 @@ msgid "Module management"
 msgstr "模块管理"
 
 #: web_ui/config.html:92
-msgid "Enable Goagent"
-msgstr "启用Goagent"
+msgid "Enable GAE proxy"
+msgstr "启用 GAE proxy"
 
 #: web_ui/config.html:98
 msgid "Enable PHP proxy"

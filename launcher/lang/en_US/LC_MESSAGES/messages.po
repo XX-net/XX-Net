@@ -127,7 +127,7 @@ msgid "Module management"
 msgstr ""
 
 #: web_ui/config.html:92
-msgid "Enable Goagent"
+msgid "Enable GAE proxy"
 msgstr ""
 
 #: web_ui/config.html:98
