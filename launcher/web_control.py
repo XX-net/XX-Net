@@ -132,7 +132,17 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 controler.do_GET()
                 return
             else:
-                file_path = os.path.join(root_path, module, url_path_list[3:].join('/'))
+                relate_path = '/'.join(url_path_list[3:])
+                file_path = os.path.join(root_path, module, "web_ui", relate_path)
+                if not os.path.isfile(file_path):
+                    return self.send_not_found()
+
+                # i18n code lines (Both the locale dir & the template dir are module-dependent)
+                locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+                template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
+                jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+                content = jinja2_i18n_helper.ihelper.render(relate_path, None)
+                return self.send_response('text/html', content)
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
@@ -145,6 +155,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 mimetype = 'text/css'
             elif file_path.endswith('.html'):
                 mimetype = 'text/html'
+
             elif file_path.endswith('.jpg'):
                 mimetype = 'image/jpeg'
             elif file_path.endswith('.png'):

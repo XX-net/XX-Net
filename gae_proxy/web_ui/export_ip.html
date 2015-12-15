@@ -1,30 +1,12 @@
 <form method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span2">
-            <label for="action">{{ _( "Task type" ) }}</label>
-        </div> <!-- .span2 -->
-        <div class="span8">
-            <div class="row-fluid">
-                <div class="span6">
-                    <input id="action-import" name="action" class="action" type="radio" value="import" checked />
-                    <label for="action-import" style="display: inline">{{ _( "Import" ) }}</label>
-                </div> <!-- .span6 -->
-                <div class="span6">
-                    <input id="action-export" name="action" class="action" class="action" type="radio" value="export" />
-                    <label for="action-export" style="display: inline">{{ _( "Export" ) }}</label>
-                </div> <!-- .span6 -->
-            </div> <!-- .row-fluid -->
-        </div> <!-- .span8 -->
-    </div> <!-- .row-fluid -->
-    <div class="row-fluid">
-        <div class="span2">
-            <label for="ip-format">{{ _( "Import/Export format" ) }}</label>
+            <label for="ip-format">{{ _( "Export format" ) }}</label>
         </div> <!-- .span2 -->
         <div class="span10">
             <select id="ip-format">
                 <option value="1" selected>IP|IP|IP (Gogo-Tester/Goagent{{ _( " format" ) }})</option>
                 <option value="2">{{ _( "New line delimiter" ) }}</option>
-                <option value="3">{{ _( "Intelligent regular matching" ) }}</option>
             </select>
         </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
@@ -43,72 +25,15 @@
     </div> <!-- .row-fluid -->
 </form> <!-- #import-export-ip -->
 
-<!-- JavaScript -->
-<script type="text/javascript">
-    title('{{ _('IP Import/Export') }}');
-</script>
 <script type="text/javascript">
     function onSubmit() {
-        var action   = $('.action:checked').val(),
-            ipFormat = $('#ip-format').val(),
-            ipList   = $('#ip-list').val();
+        var ipFormat = $('#ip-format').val();
 
-        if ( action == 'import' ) {
-            return doImportAction(ipFormat, ipList);
-        } else if ( action == 'export' ) {
-            return doExportAction(ipFormat, ipList);
-        }
+        return doExportAction(ipFormat);
     }
 </script>
 <script type="text/javascript">
-    $('input[name="action"]').click(onActionChange);
-
-    function onActionChange() {
-        var action = $('.action:checked').val();
-
-        if( action == 'import' ) {
-            $('option[value=1]').css('display', 'none');
-            $('option[value=2]').css('display', 'none');
-            $('option[value=3]').css('display', '');
-            $('#ip-format').val("3")
-        } else if ( action == 'export' ) {
-            $('option[value=1]').css('display', '');
-            $('option[value=2]').css('display', '');
-            $('option[value=3]').css('display', 'none');
-
-            if( $('#ip-format').val() == 3 ) {
-                $('#ip-format').val("1");
-            }
-        }
-    }
-
-    onActionChange();
-</script>
-<script type="text/javascript">
-    function doImportAction(ipFormat, ipList) {
-        ipList = conversionFormat(ipFormat, '1', ipList);
-        console.log('尝试导入 ', ipList.split('|').length, ' 个IP.');
-
-        var postData = {
-            'ipList': ipList
-        };
-
-        $.ajax({
-            type: 'POST',
-            url: '/module/gae_proxy/control/importip?cmd=importip',
-            data: postData,
-            dataType: 'JSON',
-            success: function(result) {
-                tip('成功导入' + result['res'] + '个IP.', 'success');
-            },
-            error: function() {
-                tip('导入IP失败');
-            }
-        });
-    }
-</script>
-<script type="text/javascript">
-    function doExportAction(ipFormat, ipList) {
+    function doExportAction(ipFormat) {
         $.ajax({
             type: 'POST',
             url: '/module/gae_proxy/control/importip?cmd=exportip',

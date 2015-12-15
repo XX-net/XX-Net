@@ -14,14 +14,10 @@ sub_menus: {
     url: deploy
   },
   4:{
-    title: {{ _("Scan IP Addresses") }},
-    url: scan_ip
+    title: {{ _("Advance") }},
+    url: advance
   },
   5:{
-    title: {{ _("Import/Export IP Addresses") }},
-    url: ipconfig
-  },
-  6:{
     title: {{ _("Log") }},
     url: logging
   }

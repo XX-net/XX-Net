@@ -1,0 +1,23 @@
+<ul class="nav nav-tabs" id="advance_tabs">
+    <li class="active"><a class="advance_tab" id="scan_setting" data-toggle="tab">{{ _("Scan Settings") }}</a></li>
+    <li><a class="advance_tab" id="scan_log" data-toggle="tab">{{ _("Scan Log") }}</a></li>
+    <li><a class="advance_tab" id="import_ip" data-toggle="tab">{{ _("Import IP") }}</a></li>
+    <li><a class="advance_tab" id="export_ip" data-toggle="tab">{{ _("Export IP") }}</a></li>
+    <li><a class="advance_tab" id="check_ip" data-toggle="tab">{{ _("Check IP") }}</a></li>
+</ul>
+<div id="advance_content" class="tab-content">
+    <div id="tab_content" class="tab-pane fade in active">
+    </div> <!-- #authentication -->
+</div> <!-- #tab-content -->
+<script type="text/javascript">
+    title('{{ _("Advance") }}');
+</script>
+<script type="text/javascript">
+    $(".advance_tab").click(function(){
+        var id = $(this).attr('id');
+        
+        var url = "/module/gae_proxy/" + id + ".html";
+        $("#tab_content").load(url);
+    });
+    $("#tab_content").load("/module/gae_proxy/scan_setting.html");
+</script>

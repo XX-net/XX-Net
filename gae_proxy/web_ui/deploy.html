@@ -216,13 +216,17 @@
 <script type="text/javascript">
     function changeButtonStatus(status) {
         if ( status == 'start' ) {
-            $('button.btn').removeClass('btn-danger');
-            $('button.btn').addClass('btn-primary');
-            $('button.btn').html('开始部署');
+            if $('button.btn').hasClass('btn-danger'){
+                $('button.btn').removeClass('btn-danger');
+                $('button.btn').addClass('btn-primary');
+                $('button.btn').html('开始部署');
+            }
         } else if ( status == 'cancel' ) {
-            $('button.btn').removeClass('btn-primary');
-            $('button.btn').addClass('btn-danger');
-            $('button.btn').html('终止部署');
+            if $('button.btn').hasClass('btn-primary'){
+                $('button.btn').removeClass('btn-primary');
+                $('button.btn').addClass('btn-danger');
+                $('button.btn').html('终止部署');
+            }
         }
     }
 </script>

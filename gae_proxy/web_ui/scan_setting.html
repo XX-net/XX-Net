@@ -1,9 +1,4 @@
-<ul class="nav nav-tabs">
-    <li class="active"><a href="#setup" data-toggle="tab">{{ _("Settings") }}</a></li>
-    <li><a href="#logs" data-toggle="tab">{{ _("Log") }}</a></li>
-</ul>
-<div id="scan-ip" class="tab-content">
-    <div id="setup" class="tab-pane fade in active">
+
         <form method="POST" onSubmit="return false;">
             <div class="row-fluid">
                 <div class="span3">
@@ -38,19 +33,6 @@
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
-    </div> <!-- #authentication -->
-    <div id="logs" class="tab-pane fade">
-        <div id="log" class="span12"></div>
-        <div class="row-fluid">
-            <div class="span12">
-                <button class="btn btn-primary btn-block" id="reload-scan-ip-log" type="submit">{{ _("Refresh") }}</button>
-            </div> <!-- .span12 -->
-        </div> <!-- .row-fluid -->
-    </div> <!-- #log -->
-</div> <!-- #tab-content -->
-<script type="text/javascript">
-    title('{{ _("IP scan settings(Needless to modify generally)") }}');
-</script>
 <script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
@@ -86,22 +68,6 @@
     }
 </script>
 <script type="text/javascript">
-    function loadScanIpLog(){
-        $.ajax({
-            type: 'GET',
-            url: '/module/gae_proxy/control/scan_ip?cmd=get_scan_ip_log',
-            dataType: 'html',
-            success: function(result) {
-                $('#log').html(result.replace(/\n/g, '<br>'));
-                $('#log').scrollTop($('#log')[0].scrollHeight);
-            },
-            error: function(){
-                tip('{{ _("Failed reading the log") }}', 'error');
-            }
-        });
-    }
-</script>
-<script type="text/javascript">
     $(function() {
         $.ajax({
             type: 'POST',
@@ -123,13 +89,6 @@
     });
 
     $('#ip-range-content').load('/module/gae_proxy/control/scan_ip?cmd=get_range');
-
-    loadScanIpLog();
-</script>
-<script type="text/javascript">
-    $('#reload-scan-ip-log').click(function(){
-        loadScanIpLog();
-    });
 </script>
 <script type="text/javascript">
     $('#update-thread-num').click(function(){
