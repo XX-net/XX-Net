@@ -437,7 +437,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             if reqs['cmd'] == ['get_config']:
                 data = json.dumps(user_config.user_special, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
-                user_config.user_special.appid = self.postvars['appid'][0]
+                appids = self.postvars['appid'][0]
+                if appids != user_config.user_special.appid:
+                    fail_appid_list = google_ip.test_appids(appids)
+                    if len(fail_appid_list):
+                        fail_appid = "|".join(fail_appid_list)
+                        return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+
+                    user_config.user_special.appid = appids
                 user_config.user_special.password = self.postvars['password'][0]
                 user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
