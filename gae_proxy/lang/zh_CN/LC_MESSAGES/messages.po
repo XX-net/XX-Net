@@ -479,10 +479,6 @@ msgstr "足够使用"
 msgid "Currently running slow, scaning for faster IP..."
 msgstr "当前速度较慢，正在扫描更多IP"
 
-#: web_ui/status.html:316
-msgid "Local network fail."
-msgstr ""
-
 #: web_ui/status.html:318
 msgid "Connected to the world."
 msgstr "已经翻墙成功"
@@ -555,5 +551,5 @@ msgstr "</p><p>目前尚未建立连接。</p><p>"
 msgid ", All systems go well. "
 msgstr "，程序运转正常。"
 
-msgid ". No response from GAEProxy process. It might have already exited."
-msgstr "。GAEProxy进程无响应, 可能已退出。"
+msgid "Local network fail, please check your network and firewall. "
+msgstr "网络无法连接，请检查网络和防火墙设置。"

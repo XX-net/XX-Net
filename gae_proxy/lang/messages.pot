@@ -479,7 +479,7 @@ msgid "Currently running slow, scaning for faster IP..."
 msgstr ""
 
 #: web_ui/status.html:316
-msgid "Local network fail."
+msgid "Local network fail. "
 msgstr ""
 
 #: web_ui/status.html:318
@@ -513,9 +513,6 @@ msgid "You are using public APPID. You are recommended to <a href=\"https://gith
 msgstr ""
 
 msgid "No working appid. Please check. "
-msgstr ""
-
-msgid "Local network fail. "
 msgstr ""
 
 msgid "PAC URL"
@@ -557,5 +554,5 @@ msgstr ""
 msgid ", All systems go well. "
 msgstr ""
 
-msgid ". No response from GAEProxy process. It might have already exited."
+msgid "Local network fail, please check your network and firewall. "
 msgstr ""
