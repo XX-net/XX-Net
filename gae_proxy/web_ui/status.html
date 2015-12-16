@@ -4,8 +4,15 @@
     {{ _( "The latest Chrome browser is recommended." ) }}
 </div>
 <![endif]-->
-<h4>{{ _( "Status" ) }}</h4>
-<table id="status" class="table table-bordered table-striped">
+
+<div pro="False">
+    </br></br></br>
+    <div id="noob-info"></div>
+    </br></br></br>
+</div>
+
+<h4 pro="True">{{ _( "Status" ) }}</h4>
+<table id="status" class="table table-bordered table-striped" pro="True">
     <thead>
         <tr>
             <th width="25%">{{ _( "Property" ) }}</th>
@@ -18,7 +25,7 @@
             <td id="ip-num"></td>
         </tr>
         <tr>
-            <td>{{ _( "IP Quality" ) }}</td>
+            <td>{{ _( "10th IP handshake(ms)" ) }}</td>
             <td id="ip-quality"></td>
         </tr>
         <tr>
@@ -29,11 +36,19 @@
             <td>{{ _( "Number of IP-Scaning Threads" ) }}(<a href="/?module=gae_proxy&menu=scan_ip">{{ _( "Settings" ) }}</a>)</td>
             <td id="scan-ip-thread-num"></td>
         </tr>
+        <tr>
+            <td>{{ _( "Block Status" ) }} (<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">{{ _( "Help" ) }}</a>)</td>
+            <td id="block-stat"></td>
+        </tr>
+        <!--tr pro="False">
+            <td>{{ _( "XX-Net Version" ) }}</td>
+            <td id="xxnet-version"></td>
+        </tr-->
     </tbody>
 </table>
 
-<h4>{{ _( "Configuration" ) }}</h4>
-<table id="setting" class="table table-bordered table-striped">
+<h4 pro="True">{{ _( "Configuration" ) }}</h4>
+<table id="setting" class="table table-bordered table-striped" pro="True">
     <thead>
         <tr>
             <th width="25%">{{ _( "Property" ) }}</th>
@@ -41,6 +56,10 @@
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>{{ _( "System Proxy Status" ) }}</td>
+            <td id="proxy-status"></td>
+        </tr>
         <tr>
             <td>{{ _( "Proxy Listen" ) }}</td>
             <td id="proxy-listen"></td>
@@ -56,8 +75,8 @@
     </tbody>
 </table>
 
-<h4>Appid</h4>
-<table id="appids" class="table table-bordered table-striped">
+<h4 pro="True">Appid</h4>
+<table id="appids" class="table table-bordered table-striped" pro="True">
     <thead>
         <tr>
             <th width="25%">{{ _( "Property" ) }}</th>
@@ -79,59 +98,67 @@
         </tr>
     </tbody>
 </table>
-         
-<h4>{{ _( "System Version" ) }}</h4>       
-<table id="version" class="table table-bordered table-striped">        
-    <thead>        
+
+<h4 pro="True">{{ _( "System Version" ) }}</h4>
+<table id="version" class="table table-bordered table-striped" pro="True">
+    <thead>
         <tr>
             <th width="25%">{{ _( "Property" ) }}</th>
             <th width="75%">{{ _( "Value" ) }}</th>
         </tr>
-    </thead>       
-    <tbody>        
-        <tr>       
-            <td>XX-Net Version</td>        
-            <td id="xxnet-version"></td>       
-        </tr>      
-        <tr>       
-            <td>Python Version</td>        
-            <td id="python-version"></td>      
-        </tr>      
-        <tr>       
-            <td>System Platform</td>       
-            <td id="sys-platform"></td>        
-        </tr>      
-        <tr>       
-            <td>OS System</td>     
-            <td id="os-system"></td>       
-        </tr>      
-        <tr>       
-            <td>OS Version</td>        
-            <td id="os-version"></td>      
-        </tr>      
-        <tr>       
-            <td>OS Release</td>        
-            <td id="os-release"></td>      
-        </tr>      
-        <tr>       
-            <td>OS Detail</td>     
-            <td id="os-detail"></td>       
-        </tr>      
-        <tr>       
-            <td>Language</td>      
-            <td id="language"></td>        
-        </tr>      
-        <tr>       
-            <td>Architecture</td>      
-            <td id="architecture"></td>        
-        </tr>      
-        <tr>       
-            <td>Browser</td>       
-            <td id="browser"></td>     
-        </tr>      
-    </tbody>       
+    </thead>
+    <tbody>
+        <tr>
+            <td>XX-Net Version</td>
+            <td id="xxnet-version"></td>
+        </tr>
+        <tr>
+            <td>Python Version</td>
+            <td id="python-version"></td>
+        </tr>
+        <tr>
+            <td>System Platform</td>
+            <td id="sys-platform"></td>
+        </tr>
+        <tr>
+            <td>OS System</td>
+            <td id="os-system"></td>
+        </tr>
+        <tr>
+            <td>OS Version</td>
+            <td id="os-version"></td>
+        </tr>
+        <tr>
+            <td>OS Release</td>
+            <td id="os-release"></td>
+        </tr>
+        <tr>
+            <td>OS Detail</td>
+            <td id="os-detail"></td>
+        </tr>
+        <tr>
+            <td>Language</td>
+            <td id="language"></td>
+        </tr>
+        <tr>
+            <td>Architecture</td>
+            <td id="architecture"></td>
+        </tr>
+        <tr>
+            <td>Browser</td>
+            <td id="browser"></td>
+        </tr>
+    </tbody>
 </table>
 
+<!-- pro mode: show advanced information.-->
+<!-- show pro="True" and hide pro="False"-->
+<div style="float:left;width: 20%;">
+    <label for="pro-mode">{{ _( "Pro Mode" ) }}</label>
+</div>
+<div title='{{ _( "Show advanced information" ) }}'>
+    <input type="checkbox" data-toggle="switch" id="pro-mode" />
+</div>
 <button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
 
 <div id="report-issue-modal" class="modal hide fade">
@@ -156,7 +183,11 @@
 <script type="text/javascript">
     $(function() {
         var timer = $.timer(function() {
-            getStatus();
+            if ($('#pro-mode').is(':checked')) {
+                getStatus();
+            }else{
+                GetStatusNoob();
+            }
         });
 
         timer.set({
@@ -170,28 +201,29 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
-                var information = new Array('sys-platform: ' + result['sys_platform'], 
+                var information = new Array('sys-platform: ' + result['sys_platform'],
                     'os-system: ' + result['os_system'],
-                    'os-version: ' + result['os_version'], 
+                    'os-version: ' + result['os_version'],
                     'os-release: ' + result['os_release'],
-                    'os-detail: ' + result['os_detail'], 
-                    'architecture: ' + String(result['architecture'].concat()), 
-                    'browser: ' + result['browser'], 
-                    'xxnet-version: ' + result['xxnet_version'], 
-                    'python-version: ' + result['python_version'], 
-                    '\nipv6-status: ' + result['use_ipv6'], 
-                    'gws-ip-num: ' + result['ip_num'] + ' / ' + result['good_ip_num'], 
-                    'connected-link: ' + result['connected_link'], 
-                    'scan-ip-thread-num: ' + result['scan_ip_thread_num'], 
-                    'ip-handshake-10: ' + result['ip_handshake_10'], 
-                    'block-stat: ' + result['block_stat'], 
-                    'Appid_Working: ' + (result['working_appid'].length != 0), 
-                    'Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0), 
-                    'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0), 
-                    'Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null));
+                    'os-detail: ' + result['os_detail'],
+                    'architecture: ' + String(result['architecture'].concat()),
+                    'browser: ' + result['browser'],
+                    'xxnet-version: ' + result['xxnet_version'],
+                    'python-version: ' + result['python_version'],
+                    '\nipv6-status: ' + result['use_ipv6'],
+                    'gws-ip-num: ' + result['ip_num'] + ' / ' + result['good_ip_num'],
+                    'connected-link: ' + result['connected_link'],
+                    'scan-ip-thread-num: ' + result['scan_ip_thread_num'],
+                    'ip-handshake-10: ' + result['ip_handshake_10'],
+                    'block-stat: ' + result['block_stat'],
+                    'Appid_Working: ' + (result['working_appid'].length != 0),
+                    'Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0),
+                    'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0),
+                    'Using_Public_Appid: ' + (result['gae_appid'].match('xxnet-') != null),
+                    'proxy_state: ' + result['proxy_state']);
                 updateStatus("textarea#DiagInfo","XX-Net Status：\n\n" + information.join("\n"));
 
-                IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
+                IssueURL = 'https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A' + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
                 // The one-key generaton function is to be designed as Github does有待设计类似Github Issue的一键生成功能
@@ -202,7 +234,15 @@
 </script>
 <script type="text/javascript">
     $(function() {
-        getStatus();
+        if ($('#pro-mode').is(':checked')) {
+            getStatus();
+        }else{
+            GetStatusNoob();
+        }
+    });
+    $("[pro='True']").hide();
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
     $(document).ready(function(){
         $("#pop-up-report").click(function(){
@@ -213,6 +253,18 @@
             $("tr#hidden-appids").show();
             $("#show-appid").hide();
         });
+        $("#pro-mode").change(function(){
+            if ($('#pro-mode').is(':checked')) {
+                $("[pro='True']").show();
+                $("[pro='False']").hide();
+                getStatus();
+            }else{
+                $("[pro='False']").show();
+                $("[pro='True']").hide();
+                GetStatusNoob();
+            }
+        });
+
     });
 </script>
 <script type="text/javascript">
@@ -229,27 +281,28 @@
             dataType: 'JSON',
             success: function(result) {
                 var updates = {
-                    '#sys-platform': result['sys_platform'],
-                    '#os-system': result['os_system'],
-                    '#os-version': result['os_version'],
-                    '#os-release': result['os_release'],
-                    '#os-detail': result['os_detail'],
-                    '#language': result['language'],
-                    '#architecture': String(result['architecture'].concat()),
-                    '#browser': result['browser'],
-                    '#xxnet-version': result['xxnet_version'],
-                    '#python-version': result['python_version'],
-                    '#proxy-listen': result['proxy_listen'],
-                    '#pac-url': result['pac_url'],
-                    '#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
-                    '#ip-num': ip_num_string(result['good_ip_num'], result['ip_num'] ),
-                    '#connection-status': connection_status_string(result['network_state'], result['connected_link_new'], result['connected_link_used']),
-                    '#working-appid': appid_string(result['working_appid']),
-                    '#out-of-quota-appids': result['out_of_quota_appids'],
-                    '#not-exist-appids': result['not_exist_appids'],
-                    '#scan-ip-thread-num': result['scan_ip_thread_num'],
-                    '#ip-quality': ip_quality_string(result['ip_handshake_10']),
-                    '#block-stat': result['block_stat'],
+                    'td#sys-platform': result['sys_platform'],
+                    'td#os-system': result['os_system'],
+                    'td#os-version': result['os_version'],
+                    'td#os-release': result['os_release'],
+                    'td#os-detail': result['os_detail'],
+                    'td#language': result['language'],
+                    'td#architecture': String(result['architecture'].concat()),
+                    'td#browser': result['browser'],
+                    'td#xxnet-version': result['xxnet_version'],
+                    'td#python-version': result['python_version'],
+                    'td#proxy-listen': result['proxy_listen'],
+                    'td#pac-url': result['pac_url'],
+                    'td#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
+                    'td#ip-num': result['good_ip_num'] + ' / ' + result['ip_num'],
+                    'td#connection-status': connection_status_string(result['network_state'], result['connected_link_new'], result['connected_link_used']),
+                    'td#working-appid': appid_string(result['working_appid']),
+                    'td#out-of-quota-appids': result['out_of_quota_appids'],
+                    'td#not-exist-appids': result['not_exist_appids'],
+                    'td#scan-ip-thread-num': result['scan_ip_thread_num'],
+                    'td#ip-quality': result['ip_handshake_10'],
+                    'td#block-stat': result['block_stat'],
+                    'td#proxy-status': proxy_status_string(result['proxy_state'],result['proxy_url']),
                 }
                 for (var item in updates) {
                     updateStatus(item, updates[item]);
@@ -288,6 +341,43 @@
             }
         });
     }
+    function GetStatusNoob() {
+        var updates1 = ''
+        var updates2 = ''
+        var updates3 = ''
+        $.ajax({
+            type: 'GET',
+            url: '/module/gae_proxy/control/status',
+            dataType: 'JSON',
+            success: function(result) {
+                updates1 = '<span>' + '{{ _( "You are using XX-Net version " ) }}' + result['xxnet_version'];
+                updates2 = result['network_state'] ? '' : '{{ _( "Local network fail, please check your network and firewall. " ) }}';
+                updates2 = updates2 + ((result['connected_link_new'] + result['connected_link_used']) > 0 ? '{{ _( "</p><p>Connection established, congratulation! </p><p>" ) }}' : '{{ _( "</p><p>Connection not established yet. </p><p>" ) }}');
+                updates3 = result['good_ip_num'] > 20 ? '':'{{ _( "Running low on good IP, " ) }}';
+                updates3 = updates3 + (result['ip_handshake_10'] < 400 ? '':'{{ _( "Currently running slow. " ) }}');
+                if (updates3 != ""){
+                    updates3 = updates3 + (result['scan_ip_thread_num'] != 0 ? '{{ _( "XX-Net is scaning, please wait." ) }}':'{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>." ) }}');
+                    updates2 = updates2 +updates3;
+                }
+                if (result['working_appid'] != ""){
+                    updates2 = updates2 + (is_public_appid(result['working_appid']) ? '':'{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}');
+                }else{
+                    updates2 = updates2 + '{{ _( "No working appid. Please check. " ) }}';
+                }
+                var update = updates1 + '{{ _( ", All systems go well. " ) }}' + updates2 + '</span>';
+                updateStatus('#noob-info',update);
+            },
+            error: function(result) {
+                var infoValue = $('#noob-info').html();
+                if ( infoValue == '' ) {
+                    tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
+                } else {
+                    var update = updates1 + '{{ _("No response from GAEProxy process. It might have already exited.")}}' + updates2 + '</span>';
+                    updateStatus('#noob-info',update);
+                }
+            }
+        });
+    }
     function appid_string(appid){
         if (is_public_appid(appid)){
             return "{{ _( "You are using public Appid." ) }}";
@@ -306,22 +396,23 @@
         }
         return true;
     }
-    function ip_quality_string(ip_handshake_10){
-        var tip = ip_handshake_10 < 400 ? '{{ _( "Good to go." ) }}':'{{ _( "Currently running slow, scaning for faster IP..." ) }}';
-        var ip_quality_str = ip_handshake_10 + " (" + tip + ")";
-        return ip_quality_str;
-    }
     function connection_status_string(network_state, connected_link_new, connected_link_used){
         if ( connected_link_new + connected_link_used == 0 && !network_state ){
-            return '{{ _( "Local network fail." ) }}';
+            return '{{ _( "Local network fail. " ) }}';
         }
         var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}'
         var conn_str = connected_link_new + "," + connected_link_used + " (" + tip + ")";
         return conn_str;
     }
-    function ip_num_string(good_ip_num, ip_num){
-        var tip = good_ip_num > 20 ? '{{ _( "You have enough IP." ) }}':'{{ _( "Running low on good IP, scaning for more..." ) }}';
-        var num_str = ip_num + "/" + good_ip_num + " (" + tip + ")";
-        return num_str;
+    function proxy_status_string(proxy_state,proxy_url){
+        if (proxy_state == "Auto proxy enabled"){
+            return '{{ _( "Auto proxy enabled at " ) }}' + proxy_url
+        }else if (proxy_state == "Proxy enabled"){
+            return '{{ _( "Proxy enabled at " ) }}' + proxy_url
+        }else{
+            return '{{ _( "Proxy disabled" ) }}'
+        }
     }
 </script>
+
+

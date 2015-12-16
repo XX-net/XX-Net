@@ -15,7 +15,7 @@ import sys
 import datetime
 import locale
 import time
-
+import _winreg as winreg
 
 from proxy import xlog
 from config import config
@@ -38,6 +38,25 @@ web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
 import yaml
+
+def get_proxy_state():
+    REG_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+    INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,REG_PATH,0, winreg.KEY_ALL_ACCESS)
+    try:
+        AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
+        if AutoConfigURL:
+            return ("Auto proxy enabled",AutoConfigURL)
+    except Exception as e:
+        pass
+
+    try:
+        ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
+        ProxyServer = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyServer')[0]
+        if ProxyEnable:
+            return ("Proxy enabled",ProxyServer)
+    except Exception as e:
+        pass
+    return ("Proxy disabled","")
 
 class User_special(object):
     def __init__(self):
@@ -424,6 +443,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "low_prior_connecting_num":connect_control.low_prior_connecting_num,
                    "high_prior_lock":len(connect_control.high_prior_lock),
                    "low_prior_lock":len(connect_control.low_prior_lock),
+                   "proxy_state":get_proxy_state()[0],
+                   "proxy_url":get_proxy_state()[1],
                    }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response('text/html', data)
@@ -707,4 +728,3 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 google_ip.scan_all_exist_ip()
         else:
             return self.send_not_exist()
-

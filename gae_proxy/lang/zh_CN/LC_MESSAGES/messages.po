@@ -389,7 +389,7 @@ msgstr "发生未知错误"
 
 #: web_ui/status.html:17
 msgid "IP Number"
-msgstr "IP数"
+msgstr "IP数量"
 
 #: web_ui/status.html:21
 msgid "IP Quality"
@@ -503,45 +503,71 @@ msgstr "已经翻墙成功"
 
 #: web_ui/status.html:318
 msgid "Connection not established yet."
-msgstr "无法建立连接"
+msgstr "尚未建立连接"
 
 #: web_ui/status.html:323
 msgid "You have enough IP."
 msgstr "你有足够IP"
 
-#: web_ui/status.html:323
-msgid "Running low on good IP, scaning for more..."
-msgstr "目前较慢，扫描更多ip"
+msgid "Running low on good IP, "
+msgstr "可用IP数不足，"
 
-#~ msgid "Task type"
-#~ msgstr "任务类型"
+msgid "10th IP handshake(ms)"
+msgstr "IP质量（越小越好）"
 
-#~ msgid "Intelligent regular matching"
-#~ msgstr "智能正则匹配"
+msgid "Currently running slow. "
+msgstr "IP质量欠佳，"
 
-#~ msgid "IP Import/Export"
-#~ msgstr "IP出导入或导出"
+msgid "XX-Net is scaning, please wait."
+msgstr "请等待一段时间，XX-Net正在进行自动扫描。"
 
-#~ msgid "Trying to import "
-#~ msgstr "尝试导入 "
+msgid "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>."
+msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。"
 
-#~ msgid "Succeeded importing "
-#~ msgstr "成功导入"
+msgid "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>"
+msgstr "您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
 
-#~ msgid "Failed importing IP addresses."
-#~ msgstr "导入IP地址失败"
+msgid "No working appid. Please check. "
+msgstr "没有可用APPID，请检查。"
 
-#~ msgid "Scan IP Addresses"
-#~ msgstr "扫描IP地址"
+msgid "Local network fail. "
+msgstr "网络无法连接。"
 
-#~ msgid "Import/Export IP Addresses"
-#~ msgstr "导入/导出IP"
+msgid "System Proxy Status"
+msgstr "系统代理状态"
 
-#~ msgid "IP scan settings(Needless to modify generally)"
-#~ msgstr "扫描IP设置(一般不需要改动)"
+msgid "Auto proxy enabled at "
+msgstr "智能代理已启用："
 
-#~ msgid "Current status: idle"
-#~ msgstr "当前状态: 空闲"
+msgid "Proxy enabled at "
+msgstr "全局代理已启用："
 
-#~ msgid "Unkown error occurred."
-#~ msgstr "发生未知错误"
+msgid "Proxy disabled"
+msgstr "全局代理已禁用"
+
+msgid "Block Status"
+msgstr "屏蔽状态"
+
+msgid "XX-Net Version"
+msgstr "XX-Net版本"
+
+msgid "Show advanced information"
+msgstr "我是专业的使用者，显示更多内容。"
+
+msgid "Pro Mode"
+msgstr "专家模式"
+
+msgid "You are using XX-Net version "
+msgstr "您正在使用XX-Net "
+
+msgid "</p><p>Connection established, congratulation! </p><p>"
+msgstr "</p><p>目前已经建立连接，恭喜！</p><p>"
+
+msgid "</p><p>Connection not established yet. </p><p>"
+msgstr "</p><p>目前尚未建立连接。</p><p>"
+
+msgid ", All systems go well. "
+msgstr "，程序运转正常。"
+
+msgid "Local network fail, please check your network and firewall. "
+msgstr "网络无法连接，请检查网络和防火墙设置。"
