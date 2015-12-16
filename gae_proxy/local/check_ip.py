@@ -188,18 +188,19 @@ def check_appid(ssl_sock, appid):
 
     ssl_sock.server_type = response.getheader('Server', "")
 
+
 # export api for google_ip
-def test_gae_ip(ip):
+def test_gae_ip(ip, appid=None):
     try:
         ssl_sock = connect_ssl(ip, timeout=max_timeout, openssl_context=openssl_context)
         get_ssl_cert_domain(ssl_sock)
 
-        appid = appid_manager.get_appid()
+        if not appid:
+            appid = appid_manager.get_appid()
         check_appid(ssl_sock, appid)
 
         return ssl_sock
     except Exception as e:
         #xlog.exception("test_gae_ip %s e:%r",ip, e)
         return False
-
 

@@ -696,6 +696,30 @@ class Check_ip():
 
             self.add_ip(ip_str, result.handshake_time, result.domain, "gws")
 
+    def test_appid(self, appid):
+        for ip in self.ip_dict:
+            try:
+                ssl_sock = check_ip.connect_ssl(ip)
+            except:
+                continue
+
+            try:
+                check_ip.check_appid(ssl_sock, appid)
+                return True
+            except:
+                return False
+
+        return False
+
+    def test_appids(self, appids):
+        appid_list = appids.split("|")
+        fail_appid_list = []
+        for appid in appid_list:
+            if not self.test_appid(appid):
+                fail_appid_list.append(appid)
+        return fail_appid_list
+
+
 def test():
     google_ip.search_more_google_ip()
     #check.test_ip("74.125.130.98", print_result=True)
