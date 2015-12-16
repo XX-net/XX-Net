@@ -244,7 +244,7 @@ class Check_ip():
             ip_num = len(self.gws_ip_list)
             if ip_num == 0:
                 #logging.warning("no gws ip")
-                time.sleep(10)
+                #time.sleep(10)
                 return None
 
             for i in range(ip_num):
