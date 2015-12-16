@@ -212,6 +212,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_is_ready_handler()
         elif path == "/test_ip":
             return self.req_test_ip_handler()
+        elif path == "/check_ip":
+            return self.req_check_ip_handler()
         elif path == "/quit":
             connect_control.keep_running = False
             data = "Quit"
@@ -407,6 +409,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "python_version": platform.python_version(),
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
+                   "network_state":check_ip.network_ok,
                    "connected_link_new":len(https_manager.new_conn_pool.pool),
                    "connected_link_used":len(https_manager.gae_conn_pool.pool),
                    "working_appid":"|".join(appid_manager.working_appid_list),
@@ -439,7 +442,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
-                user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
+                user_config.user_special.proxy_port = int(self.postvars['proxy_port'][0])
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
@@ -556,7 +559,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         data = ''
 
         ip = reqs['ip'][0]
-        result = check_ip.test_gws(ip)
+        result = check_ip.test_gae_ip(ip)
         if not result:
             data = "{'res':'fail'}"
         else:
@@ -675,3 +678,24 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
+
+    def req_check_ip_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ""
+        if reqs['cmd'] == ['get_process']:
+            all_ip_num = len(google_ip.ip_dict)
+            left_num = google_ip.scan_exist_ip_queue.qsize()
+            good_num = google_ip.good_ip_num
+            data = json.dumps(dict(all_ip_num=all_ip_num, left_num=left_num, good_num=good_num))
+            self.send_response('text/plain', data)
+        elif reqs['cmd'] == ['start']:
+            left_num = google_ip.scan_exist_ip_queue.qsize()
+            if left_num:
+                self.send_response('text/plain', '{"res":"fail", "reason":"running"}')
+            else:
+                self.send_response('text/plain', '{"res":"success"}')
+                google_ip.scan_all_exist_ip()
+        else:
+            return self.send_not_exist()
+

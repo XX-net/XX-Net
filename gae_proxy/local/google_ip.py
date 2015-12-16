@@ -36,11 +36,11 @@ from scan_ip_log import scan_ip_log
 class Check_ip():
     trafic_control = 0
     ncount_lock = threading.Lock()
-
     remove_ip_thread_num = 0
     remove_ip_thread_num_lock = threading.Lock()
-
     ip_lock = threading.Lock()
+
+    scan_exist_ip_queue = Queue.Queue()
 
     def __init__(self):
         self.reset()
@@ -244,7 +244,7 @@ class Check_ip():
             ip_num = len(self.gws_ip_list)
             if ip_num == 0:
                 #logging.warning("no gws ip")
-                time.sleep(10)
+                #time.sleep(10)
                 return None
 
             for i in range(ip_num):
@@ -349,7 +349,9 @@ class Check_ip():
             if ip_str in self.ip_dict:
                 self.ip_dict[ip_str]['handshake_time'] = handshake_time
                 self.ip_dict[ip_str]['fail_times'] = fail_times
-                self.ip_dict[ip_str]['fail_time'] = 0
+                if self.ip_dict[ip_str]['fail_time'] > 0:
+                    self.ip_dict[ip_str]['fail_time'] = 0
+                    self.good_ip_num += 1
                 self.append_ip_history(ip_str, handshake_time)
                 return False
 
@@ -481,7 +483,7 @@ class Check_ip():
                 return
 
             # increase handshake_time to make it can be used in lower probability
-            self.ip_dict[ip_str]['handshake_time'] += 300
+            #self.ip_dict[ip_str]['handshake_time'] += 300
 
             if self.ip_dict[ip_str]['fail_times'] == 0:
                 self.good_ip_num -= 1
@@ -612,16 +614,16 @@ class Check_ip():
                     continue
 
                 connect_control.start_connect_register()
-                result = check_ip.test_gae(ip_str)
+                result = check_ip.test_gae_ip(ip_str)
                 connect_control.end_connect_register()
                 if not result:
                     continue
 
-                if self.add_ip(ip_str, result.handshake_time, result.domain, result.server_type):
+                if self.add_ip(ip_str, result.handshake_time, result.domain, "gws"):
                     #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip_str,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
                     xlog.info("scan_ip add ip:%s time:%d", ip_str, result.handshake_time)
-                    scan_ip_log.info("Add %s time:%d CN:%s type:%s", ip_str, result.handshake_time, result.domain, result.server_type)
+                    scan_ip_log.info("Add %s time:%d CN:%s ", ip_str, result.handshake_time, result.domain)
                     self.remove_slowest_ip()
                     self.save_ip_list()
             except Exception as e:
@@ -651,6 +653,48 @@ class Check_ip():
     def update_scan_thread_num(self, num):
         self.max_scan_ip_thread_num = num
         self.adjust_scan_thread_num()
+
+    def scan_all_exist_ip(self):
+        max_scan_ip_thread_num = self.max_scan_ip_thread_num
+        self.update_scan_thread_num(0)
+        for ip in self.ip_dict:
+            self.scan_exist_ip_queue.put(ip)
+
+        scan_threads = []
+        for i in range(0, 10):
+            th = threading.Thread(target=self.scan_exist_ip_worker)
+            th.start()
+            scan_threads.append(th)
+
+        for th in scan_threads:
+            th.join()
+        self.update_scan_thread_num(max_scan_ip_thread_num)
+
+    def scan_exist_ip_worker(self):
+        while connect_control.keep_running:
+            try:
+                ip_str = self.scan_exist_ip_queue.get_nowait()
+            except:
+                break
+
+            connect_control.start_connect_register()
+            result = check_ip.test_gae_ip(ip_str)
+            connect_control.end_connect_register()
+            if not result:
+                self.ip_lock.acquire()
+                try:
+                    if ip_str not in self.ip_dict:
+                        continue
+
+                    if self.ip_dict[ip_str]['fail_times'] == 0:
+                        self.good_ip_num -= 1
+                    self.ip_dict[ip_str]['fail_times'] += 1
+                    self.ip_dict[ip_str]["fail_time"] = time.time()
+                finally:
+                    self.ip_lock.release()
+                continue
+
+            self.add_ip(ip_str, result.handshake_time, result.domain, "gws")
 
 def test():
     google_ip.search_more_google_ip()

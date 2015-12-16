@@ -198,7 +198,8 @@ class Logger():
 
     def unicode_line(self, line):
         try:
-            return unicode(line, errors='replace')
+            return line.encode("utf-8")
+            #return unicode(line, errors='replace')
         except Exception as e:
             print("unicode err:%r" % e)
             print("line can't decode:%s" % line)

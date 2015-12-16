@@ -80,6 +80,9 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
 def handler(method, host, url, headers, body, wfile):
     time_request = time.time()
 
+    if "Connection" in headers and headers["Connection"] == "close":
+        del headers["Connection"]
+
     errors = []
     response = None
     while True:

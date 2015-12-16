@@ -3,8 +3,9 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+python_path = os.path.join(root_path, 'python27', '1.0')
+noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 import yaml
 
@@ -193,6 +194,7 @@ def restart_xxnet():
     time.sleep(10)
     os._exit(0)
 
+
 def update_version(version):
     try:
         download_overwrite_new_version(version)
@@ -200,3 +202,19 @@ def update_version(version):
         restart_xxnet()
     except Exception as e:
         xlog.exception("update version %s fail:%r", version, e)
+
+
+def delete_file(file):
+    try:
+        os.remove(file)
+    except:
+        pass
+
+
+def remove_old_file():
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "simple_http_server.py"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "simple_http_server.pyc"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "xlog.py"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "xlog.pyc"))
+
+remove_old_file()

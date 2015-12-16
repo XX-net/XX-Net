@@ -194,7 +194,7 @@
                 IssueURL = "https://github.com/XX-net/XX-Net/issues/new?body=-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A" + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href",IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
-                //有待设计类似Github Issue的一键生成功能;
+                // The one-key generaton function is to be designed as Github does有待设计类似Github Issue的一键生成功能
                 $("a#go-to-google-group").attr("href", GGroupURL);
             }
           })
@@ -243,7 +243,7 @@
                     '#pac-url': result['pac_url'],
                     '#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
                     '#ip-num': ip_num_string(result['good_ip_num'], result['ip_num'] ),
-                    '#connection-status': connection_status_string(result['connected_link_new'], result['connected_link_used']),
+                    '#connection-status': connection_status_string(result['network_state'], result['connected_link_new'], result['connected_link_used']),
                     '#working-appid': appid_string(result['working_appid']),
                     '#out-of-quota-appids': result['out_of_quota_appids'],
                     '#not-exist-appids': result['not_exist_appids'],
@@ -281,9 +281,9 @@
                 }
 
                 if ( formValue == '' ) {
-                    tip('状态页显示空白, 很可能GAEProxy启动失败, 请按<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">指引</a>查找问题原因.<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
                 } else {
-                    tip('GAEProxy进程无响应, 可能已退出.', 'warning', false);
+                    tip('{{ _("No response from GAEProxy process. It might have already exited.")}}', 'warning', false);
                 }
             }
         });
@@ -311,7 +311,10 @@
         var ip_quality_str = ip_handshake_10 + " (" + tip + ")";
         return ip_quality_str;
     }
-    function connection_status_string(connected_link_new, connected_link_used){
+    function connection_status_string(network_state, connected_link_new, connected_link_used){
+        if ( connected_link_new + connected_link_used == 0 && !network_state ){
+            return '{{ _( "Local network fail." ) }}';
+        }
         var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}'
         var conn_str = connected_link_new + "," + connected_link_used + " (" + tip + ")";
         return conn_str;
