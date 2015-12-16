@@ -15,7 +15,7 @@ import sys
 import datetime
 import locale
 import time
-import _winreg as winreg
+
 
 from proxy import xlog
 from config import config
@@ -40,6 +40,13 @@ web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 import yaml
 
 def get_proxy_state():
+    # Disable this function first.
+    # It may need move to launcher
+    # and call from http or other way.
+    return ("Proxy disabled","")
+
+
+    import _winreg as winreg
     REG_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
     INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,REG_PATH,0, winreg.KEY_ALL_ACCESS)
     try:
@@ -414,8 +421,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             user_agent = ""
 
+        good_ip_num = google_ip.good_ip_num
+        if good_ip_num > len(google_ip.gws_ip_list):
+            good_ip_num = len(google_ip.gws_ip_list)
         res_arr = {"ip_num":len(google_ip.gws_ip_list),
-                   "good_ip_num":google_ip.good_ip_num,
+                   "good_ip_num":good_ip_num,
                    "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
