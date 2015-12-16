@@ -8,7 +8,7 @@
 # II. See MarkupSafe-0.23.tar.gz: https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz
 # III. See Python babel: https://github.com/python-babel/babel
 # IV. See pytz-2015.7.tar.gz: https://pypi.python.org/packages/source/p/pytz/pytz-2015.7.tar.gz#md5=252bb731883f37ff9c7f462954e8706d
-# V. See Language_contry code list: http://www.fincher.org/Utilities/CountryLanguageList.shtml
+# V. See Language_country code list: http://www.fincher.org/Utilities/CountryLanguageList.shtml
 # IMPORTANT:
 # By the way, module decimal.py and numbers.py are also needed on Windows when run with the bundled Python,
 # which were already appended to folder python27/1.0/lib. 

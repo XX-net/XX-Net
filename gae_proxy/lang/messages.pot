@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-15 21:20+0800\n"
+"POT-Creation-Date: 2015-12-16 09:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -222,8 +222,8 @@ msgid ""
 "while configuring GAE Proxy"
 msgstr ""
 
-#: web_ui/deploy.html:61
-msgid "Start to deploy"
+#: web_ui/deploy.html:61 web_ui/deploy.html:221 web_ui/deploy.html:231
+msgid "Start deploy"
 msgstr ""
 
 #: web_ui/deploy.html:65
@@ -268,10 +268,6 @@ msgstr ""
 msgid "deploying ..."
 msgstr ""
 
-#: web_ui/deploy.html:221 web_ui/deploy.html:231
-msgid "Start deploying"
-msgstr ""
-
 #: web_ui/deploy.html:225 web_ui/deploy.html:233
 msgid "Terminate deploying"
 msgstr ""
@@ -308,15 +304,15 @@ msgstr ""
 msgid "IP address list"
 msgstr ""
 
-#: web_ui/export_ip.html:44
+#: web_ui/export_ip.html:37
 msgid "Succeeded exporting "
 msgstr ""
 
-#: web_ui/export_ip.html:44
+#: web_ui/export_ip.html:37
 msgid " IP addresses."
 msgstr ""
 
-#: web_ui/export_ip.html:50
+#: web_ui/export_ip.html:43
 msgid "Failed exporting the IP addresses."
 msgstr ""
 
@@ -482,19 +478,23 @@ msgstr ""
 msgid "Currently running slow, scaning for faster IP..."
 msgstr ""
 
-#: web_ui/status.html:315
+#: web_ui/status.html:316
+msgid "Local network fail."
+msgstr ""
+
+#: web_ui/status.html:318
 msgid "Connected to the world."
 msgstr ""
 
-#: web_ui/status.html:315
+#: web_ui/status.html:318
 msgid "Connection not established yet."
 msgstr ""
 
-#: web_ui/status.html:320
+#: web_ui/status.html:323
 msgid "You have enough IP."
 msgstr ""
 
-#: web_ui/status.html:320
+#: web_ui/status.html:323
 msgid "Running low on good IP, scaning for more..."
 msgstr ""
 

@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-15 21:20+0800\n"
+"POT-Creation-Date: 2015-12-16 09:14+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -20,7 +19,6 @@ msgstr ""
 "Generated-By: Babel 2.1.1\n"
 
 #: web_ui/advance.html:2
-#, fuzzy
 msgid "Scan Settings"
 msgstr "设置"
 
@@ -29,12 +27,10 @@ msgid "Scan Log"
 msgstr "扫描日志"
 
 #: web_ui/advance.html:4
-#, fuzzy
 msgid "Import IP"
 msgstr "导入 IP"
 
 #: web_ui/advance.html:5
-#, fuzzy
 msgid "Export IP"
 msgstr "导出 IP"
 
@@ -180,9 +176,8 @@ msgid "Deploy XX-Net onto GAE"
 msgstr "部署XX-Net至GAE"
 
 #: web_ui/deploy.html:3
-#, fuzzy
 msgid "Current status"
-msgstr "当前状态："
+msgstr "当前状态"
 
 #: web_ui/deploy.html:3 web_ui/deploy.html:190
 msgid "idle"
@@ -228,8 +223,8 @@ msgid ""
 "while configuring GAE Proxy"
 msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
 
-#: web_ui/deploy.html:61
-msgid "Start to deploy"
+#: web_ui/deploy.html:61 web_ui/deploy.html:221 web_ui/deploy.html:231
+msgid "Start deploy"
 msgstr "开始部署"
 
 #: web_ui/deploy.html:65
@@ -239,7 +234,6 @@ msgstr "XX-Net 1.13.6之前的服务端, 请重新部署。"
 #: web_ui/deploy.html:170 web_ui/deploy.html:178 web_ui/deploy.html:184
 #: web_ui/deploy.html:190 web_ui/deploy.html:193 web_ui/deploy.html:200
 #: web_ui/deploy.html:205 web_ui/deploy.html:269 web_ui/deploy.html:272
-#, fuzzy
 msgid "Current status: "
 msgstr "当前状态："
 
@@ -256,7 +250,6 @@ msgid "Please go to "
 msgstr "请在"
 
 #: web_ui/deploy.html:178
-#, fuzzy
 msgid "the configuration page "
 msgstr "配置页面"
 
@@ -265,7 +258,6 @@ msgid "to set AppID to enable them."
 msgstr "中设置AppID, 方会生效。"
 
 #: web_ui/deploy.html:184 web_ui/deploy.html:205 web_ui/deploy.html:272
-#, fuzzy
 msgid "An exception occurred. "
 msgstr "发生异常。"
 
@@ -276,11 +268,6 @@ msgstr "异常信息："
 #: web_ui/deploy.html:193
 msgid "deploying ..."
 msgstr "正在部署..."
-
-#: web_ui/deploy.html:221 web_ui/deploy.html:231
-#, fuzzy
-msgid "Start deploying"
-msgstr "开始部署"
 
 #: web_ui/deploy.html:225 web_ui/deploy.html:233
 msgid "Terminate deploying"
@@ -295,7 +282,6 @@ msgid "Either AppID is empty or invalid."
 msgstr "AppID为空或无效。"
 
 #: web_ui/deploy.html:285
-#, fuzzy
 msgid "Either your Email address is empty or invalid."
 msgstr "您的email为空或无效。"
 
@@ -304,12 +290,10 @@ msgid "Please fill in your account & its password."
 msgstr "请填写您账户的密码。"
 
 #: web_ui/export_ip.html:4
-#, fuzzy
 msgid "Export format"
 msgstr "导入或导出格式"
 
 #: web_ui/export_ip.html:8
-#, fuzzy
 msgid " format"
 msgstr "格式"
 
@@ -321,17 +305,15 @@ msgstr "新行分隔符"
 msgid "IP address list"
 msgstr "IP地址列表"
 
-#: web_ui/export_ip.html:44
+#: web_ui/export_ip.html:37
 msgid "Succeeded exporting "
 msgstr "成功导入"
 
-#: web_ui/export_ip.html:44
-#, fuzzy
+#: web_ui/export_ip.html:37
 msgid " IP addresses."
 msgstr "个IP地址"
 
-#: web_ui/export_ip.html:50
-#, fuzzy
+#: web_ui/export_ip.html:43
 msgid "Failed exporting the IP addresses."
 msgstr "导入IP地址失败"
 
@@ -356,7 +338,6 @@ msgid "Refresh"
 msgstr "刷新"
 
 #: web_ui/scan_log.html:20
-#, fuzzy
 msgid "Failed reading the log"
 msgstr "读取日志失败。"
 
@@ -385,12 +366,10 @@ msgid "Submit"
 msgstr "提交"
 
 #: web_ui/scan_setting.html:86
-#, fuzzy
 msgid "Failed reading the settings"
-msgstr "读取设置失败。"
+msgstr "读取设置失败"
 
 #: web_ui/scan_setting.html:109 web_ui/scan_setting.html:131
-#, fuzzy
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
 
@@ -415,7 +394,6 @@ msgid "Settings"
 msgstr "设置"
 
 #: web_ui/status.html:45
-#, fuzzy
 msgid "Proxy Listen"
 msgstr "代理服务器类型"
 
@@ -460,7 +438,6 @@ msgid "One-key feedback"
 msgstr "一键反馈"
 
 #: web_ui/status.html:154
-#, fuzzy
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
 
@@ -502,19 +479,23 @@ msgstr "足够使用"
 msgid "Currently running slow, scaning for faster IP..."
 msgstr "当前速度较慢，正在扫描更多IP"
 
-#: web_ui/status.html:315
+#: web_ui/status.html:316
+msgid "Local network fail."
+msgstr ""
+
+#: web_ui/status.html:318
 msgid "Connected to the world."
 msgstr "已经翻墙成功"
 
-#: web_ui/status.html:315
+#: web_ui/status.html:318
 msgid "Connection not established yet."
 msgstr "无法建立连接"
 
-#: web_ui/status.html:320
+#: web_ui/status.html:323
 msgid "You have enough IP."
 msgstr "你有足够IP"
 
-#: web_ui/status.html:320
+#: web_ui/status.html:323
 msgid "Running low on good IP, scaning for more..."
 msgstr "目前较慢，扫描更多ip"
 
