@@ -365,8 +365,8 @@
                 updateStatus('#noob-info',update);
             },
             error: function(result) {
-                var formValue = $('#sys-platform').html();
-                if ( formValue == '' ) {
+                var infoValue = $('#noob-info').html();
+                if ( infoValue == '' ) {
                     tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
                 } else {
                     var update = updates1 + '{{ _(". No response from GAEProxy process. It might have already exited.")}}' + updates2 + '</span>';
