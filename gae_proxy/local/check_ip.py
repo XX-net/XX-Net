@@ -57,12 +57,16 @@ checking_num = 0
 network_ok = True
 last_check_time = 0
 check_network_interval = 100
+last_ok_time = 0
 
 
 def network_is_ok():
     global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
     if time.time() - last_check_time < check_network_interval:
         return network_ok
+
+    if time.time() - last_ok_time < check_network_interval:
+        return True
 
     if checking_num > 0:
         return network_ok
@@ -119,6 +123,7 @@ def network_is_ok():
 
 
 def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
+    global last_ok_time
     ip_port = (ip, port)
 
     if not openssl_context:
@@ -151,6 +156,7 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     ssl_sock.sock = sock
     ssl_sock.connct_time = connct_time
     ssl_sock.handshake_time = handshake_time
+    last_ok_time = time_handshaked
     return ssl_sock
 
 

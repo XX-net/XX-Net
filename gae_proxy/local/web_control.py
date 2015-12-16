@@ -409,7 +409,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "python_version": platform.python_version(),
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "network_state":check_ip.network_ok,
+                   "network_state":check_ip.network_is_ok(),
                    "connected_link_new":len(https_manager.new_conn_pool.pool),
                    "connected_link_used":len(https_manager.gae_conn_pool.pool),
                    "working_appid":"|".join(appid_manager.working_appid_list),
@@ -442,7 +442,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
-                user_config.user_special.proxy_port = int(self.postvars['proxy_port'][0])
+                user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
+                if not user_config.user_special.proxy_port:
+                    user_config.user_special.proxy_port = 0
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
