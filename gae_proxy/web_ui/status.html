@@ -360,7 +360,7 @@
                     updates2 = updates2 +updates3;
                 }
                 if (result['working_appid'] != ""){
-                    updates2 = updates2 + (is_public_appid(result['working_appid']) ? '':'{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}');
+                    updates2 = updates2 + (is_public_appid(result['working_appid']) ? '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}' : '');
                 }else{
                     updates2 = updates2 + '{{ _( "No working appid. Please check. " ) }}';
                 }
@@ -390,6 +390,7 @@
         for (index = 0; index < appid_list.length; ++index) {
             var appid = appid_list[index];
             var app_pre = appid.slice(0, 6);
+         
             if (app_pre != "xxnet-"){
                 return false;
             }
