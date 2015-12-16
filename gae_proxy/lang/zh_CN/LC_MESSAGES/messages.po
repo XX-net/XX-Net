@@ -7,16 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-16 09:14+0800\n"
-"PO-Revision-Date: 2015-12-06 09:14+0800\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: zh_Hans_CN\n"
+"POT-Creation-Date: 2015-12-16 15:52+0800\n"
+"PO-Revision-Date: 2015-12-16 15:55+0800\n"
+"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Language: zh_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.1.1\n"
+"X-Generator: Poedit 1.6.10\n"
 
 #: web_ui/advance.html:2
 msgid "Scan Settings"
@@ -55,12 +56,12 @@ msgid "Status"
 msgstr "状态"
 
 #: web_ui/check_ip.html:11 web_ui/status.html:11 web_ui/status.html:39
-#: web_ui/status.html:63
+#: web_ui/status.html:63 web_ui/status.html:87
 msgid "Property"
 msgstr "属性"
 
 #: web_ui/check_ip.html:12 web_ui/status.html:12 web_ui/status.html:40
-#: web_ui/status.html:64
+#: web_ui/status.html:64 web_ui/status.html:88
 msgid "Value"
 msgstr "值"
 
@@ -167,9 +168,22 @@ msgstr "读取设置失败。"
 msgid "Settings saved successfully"
 msgstr "设置保存成功"
 
-#: web_ui/config.html:241
-msgid "Unkown error occurred."
-msgstr "发生未知错误"
+#: web_ui/config.html:242
+msgid "AppID invalid:"
+msgstr "无效的Appid:"
+
+#: web_ui/config.html:242
+msgid ", deploy appid before use."
+msgstr "，使用前请先部署。"
+
+#: web_ui/config.html:244
+msgid "Save setting fail:"
+msgstr "保存设置失败："
+
+#: web_ui/config.html:250
+#, fuzzy
+msgid "Failed Saving Setting."
+msgstr "读取设置失败"
 
 #: web_ui/deploy.html:1
 msgid "Deploy XX-Net onto GAE"
@@ -196,7 +210,8 @@ msgid "Delimit multiple appids with |"
 msgstr "批量部署多个AppID, 请用|分割"
 
 #: web_ui/deploy.html:35
-msgid "If the 2-step verification is in-use, please use your exclusive password."
+msgid ""
+"If the 2-step verification is in-use, please use your exclusive password."
 msgstr "如果启用两步验证, 请使用应用专用密码"
 
 #: web_ui/deploy.html:35 web_ui/deploy.html:36
@@ -205,8 +220,7 @@ msgstr "立即设置"
 
 #: web_ui/deploy.html:36
 msgid ""
-"If the 2-step verification is NOT in-use, please enable the less secure "
-"apps."
+"If the 2-step verification is NOT in-use, please enable the less secure apps."
 msgstr "如果没有启用两步验证, 请开启弱安全应用登录"
 
 #: web_ui/deploy.html:37
@@ -219,8 +233,8 @@ msgstr "一般无须填写"
 
 #: web_ui/deploy.html:54
 msgid ""
-"If RC4 password is used, please configure it in the advanced settings "
-"while configuring GAE Proxy"
+"If RC4 password is used, please configure it in the advanced settings while "
+"configuring GAE Proxy"
 msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
 
 #: web_ui/deploy.html:61 web_ui/deploy.html:221 web_ui/deploy.html:231
@@ -481,7 +495,7 @@ msgstr "当前速度较慢，正在扫描更多IP"
 
 #: web_ui/status.html:316
 msgid "Local network fail."
-msgstr ""
+msgstr "本地网络无法连接"
 
 #: web_ui/status.html:318
 msgid "Connected to the world."
@@ -529,3 +543,5 @@ msgstr "目前较慢，扫描更多ip"
 #~ msgid "Current status: idle"
 #~ msgstr "当前状态: 空闲"
 
+#~ msgid "Unkown error occurred."
+#~ msgstr "发生未知错误"

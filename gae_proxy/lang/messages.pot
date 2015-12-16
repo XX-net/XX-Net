@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-16 09:14+0800\n"
+"POT-Creation-Date: 2015-12-16 15:52+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -54,12 +54,12 @@ msgid "Status"
 msgstr ""
 
 #: web_ui/check_ip.html:11 web_ui/status.html:11 web_ui/status.html:39
-#: web_ui/status.html:63
+#: web_ui/status.html:63 web_ui/status.html:87
 msgid "Property"
 msgstr ""
 
 #: web_ui/check_ip.html:12 web_ui/status.html:12 web_ui/status.html:40
-#: web_ui/status.html:64
+#: web_ui/status.html:64 web_ui/status.html:88
 msgid "Value"
 msgstr ""
 
@@ -166,8 +166,20 @@ msgstr ""
 msgid "Settings saved successfully"
 msgstr ""
 
-#: web_ui/config.html:241
-msgid "Unkown error occurred."
+#: web_ui/config.html:242
+msgid "AppID invalid:"
+msgstr ""
+
+#: web_ui/config.html:242
+msgid ", deploy appid before use."
+msgstr ""
+
+#: web_ui/config.html:244
+msgid "Save setting fail:"
+msgstr ""
+
+#: web_ui/config.html:250
+msgid "Failed Saving Setting."
 msgstr ""
 
 #: web_ui/deploy.html:1
