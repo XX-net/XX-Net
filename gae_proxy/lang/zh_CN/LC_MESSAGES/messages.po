@@ -7,17 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-16 15:52+0800\n"
+"POT-Creation-Date: 2015-12-16 16:57+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
-"Language: zh_CN\n"
+"Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.1.1\n"
-"X-Generator: Poedit 1.6.10\n"
 
 #: web_ui/advance.html:2
 msgid "Scan Settings"
@@ -51,17 +50,17 @@ msgstr "您的浏览器版本过低, 部分功能将无法使用。"
 msgid "The latest Chrome browser is recommended."
 msgstr "我们建议您使用最新版本的Chrome浏览器。"
 
-#: web_ui/check_ip.html:7 web_ui/menu.yaml:5 web_ui/status.html:7
+#: web_ui/check_ip.html:7 web_ui/menu.yaml:5 web_ui/status.html:14
 msgid "Status"
 msgstr "状态"
 
-#: web_ui/check_ip.html:11 web_ui/status.html:11 web_ui/status.html:39
-#: web_ui/status.html:63 web_ui/status.html:87
+#: web_ui/check_ip.html:11 web_ui/status.html:18 web_ui/status.html:54
+#: web_ui/status.html:82 web_ui/status.html:106
 msgid "Property"
 msgstr "属性"
 
-#: web_ui/check_ip.html:12 web_ui/status.html:12 web_ui/status.html:40
-#: web_ui/status.html:64 web_ui/status.html:88
+#: web_ui/check_ip.html:12 web_ui/status.html:19 web_ui/status.html:55
+#: web_ui/status.html:83 web_ui/status.html:107
 msgid "Value"
 msgstr "值"
 
@@ -107,7 +106,7 @@ msgid "Advanced options"
 msgstr "高级选项"
 
 #: web_ui/config.html:29 web_ui/config.html:45 web_ui/deploy.html:49
-#: web_ui/scan_setting.html:5 web_ui/status.html:25
+#: web_ui/scan_setting.html:5 web_ui/status.html:32 web_ui/status.html:40
 msgid "Help"
 msgstr "帮助"
 
@@ -210,8 +209,7 @@ msgid "Delimit multiple appids with |"
 msgstr "批量部署多个AppID, 请用|分割"
 
 #: web_ui/deploy.html:35
-msgid ""
-"If the 2-step verification is in-use, please use your exclusive password."
+msgid "If the 2-step verification is in-use, please use your exclusive password."
 msgstr "如果启用两步验证, 请使用应用专用密码"
 
 #: web_ui/deploy.html:35 web_ui/deploy.html:36
@@ -220,7 +218,8 @@ msgstr "立即设置"
 
 #: web_ui/deploy.html:36
 msgid ""
-"If the 2-step verification is NOT in-use, please enable the less secure apps."
+"If the 2-step verification is NOT in-use, please enable the less secure "
+"apps."
 msgstr "如果没有启用两步验证, 请开启弱安全应用登录"
 
 #: web_ui/deploy.html:37
@@ -233,8 +232,8 @@ msgstr "一般无须填写"
 
 #: web_ui/deploy.html:54
 msgid ""
-"If RC4 password is used, please configure it in the advanced settings while "
-"configuring GAE Proxy"
+"If RC4 password is used, please configure it in the advanced settings "
+"while configuring GAE Proxy"
 msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
 
 #: web_ui/deploy.html:61 web_ui/deploy.html:221 web_ui/deploy.html:231
@@ -339,7 +338,7 @@ msgstr "IP列表"
 msgid "GAEProxy Log"
 msgstr "GAEProxy日志"
 
-#: web_ui/menu.yaml:9 web_ui/status.html:35
+#: web_ui/menu.yaml:9 web_ui/status.html:50
 msgid "Configuration"
 msgstr "配置"
 
@@ -387,187 +386,211 @@ msgstr "读取设置失败"
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
 
-#: web_ui/status.html:17
+#: web_ui/status.html:24
 msgid "IP Number"
 msgstr "IP数量"
 
-#: web_ui/status.html:21
-msgid "IP Quality"
-msgstr "IP质量"
+#: web_ui/status.html:28
+msgid "10th IP handshake(ms)"
+msgstr "IP质量（越小越好）"
 
-#: web_ui/status.html:25
+#: web_ui/status.html:32
 msgid "Connection Status"
 msgstr "连接状态"
 
-#: web_ui/status.html:29
+#: web_ui/status.html:36
 msgid "Number of IP-Scaning Threads"
 msgstr "扫描IP线程数"
 
-#: web_ui/status.html:29
+#: web_ui/status.html:36
 msgid "Settings"
 msgstr "设置"
 
-#: web_ui/status.html:45
+#: web_ui/status.html:40
+msgid "Block Status"
+msgstr "屏蔽状态"
+
+#: web_ui/status.html:44
+msgid "XX-Net Version"
+msgstr "XX-Net版本"
+
+#: web_ui/status.html:60
+msgid "System Proxy Status"
+msgstr "系统代理状态"
+
+#: web_ui/status.html:64
 msgid "Proxy Listen"
 msgstr "代理服务器类型"
 
-#: web_ui/status.html:49
+#: web_ui/status.html:68
 msgid "PAC URL"
 msgstr "PAC自动代理地址"
 
-#: web_ui/status.html:69
+#: web_ui/status.html:88
 msgid "Working App IDs"
 msgstr "当前工作AppID"
 
-#: web_ui/status.html:73
+#: web_ui/status.html:92
 msgid "Out of Quota App IDs"
 msgstr "超额AppID"
 
-#: web_ui/status.html:77
+#: web_ui/status.html:96
 msgid "Not Exist App IDs"
 msgstr "不存在的AppID"
 
-#: web_ui/status.html:83
+#: web_ui/status.html:102
 msgid "System Version"
 msgstr "系统版本"
 
-#: web_ui/status.html:135
+#: web_ui/status.html:157
+msgid "Pro Mode"
+msgstr "专家模式"
+
+#: web_ui/status.html:159
+msgid "Show advanced information"
+msgstr "我是专业的使用者，显示更多内容。"
+
+#: web_ui/status.html:162
 msgid "Feedback"
 msgstr "反馈问题"
 
-#: web_ui/status.html:140
+#: web_ui/status.html:167
 msgid "Diagnostic Info"
 msgstr "诊断信息"
 
-#: web_ui/status.html:143
+#: web_ui/status.html:170
 msgid "The one-key feedback needs to sign in your Github account"
 msgstr "一键反馈需要登录Github账号"
 
-#: web_ui/status.html:147
+#: web_ui/status.html:174
 msgid "To Google Groups"
 msgstr "前往论坛"
 
-#: web_ui/status.html:148
+#: web_ui/status.html:175
 msgid "One-key feedback"
 msgstr "一键反馈"
 
-#: web_ui/status.html:154
+#: web_ui/status.html:181
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
 
-#: web_ui/status.html:244
+#: web_ui/status.html:296
 msgid "Disabled"
 msgstr "禁用"
 
-#: web_ui/status.html:244
+#: web_ui/status.html:296
 msgid "Enabled"
 msgstr "启用"
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
 msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按"
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid "guide "
 msgstr "指引"
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid "to troubleshoot."
 msgstr "查找问题原因。"
 
-#: web_ui/status.html:286
+#: web_ui/status.html:339 web_ui/status.html:375
 msgid "No response from GAEProxy process. It might have already exited."
 msgstr "GAEProxy进程无响应, 可能已退出。"
 
-#: web_ui/status.html:293
-msgid "You are using public Appid."
-msgstr "你正使用公共AppID"
-
-#: web_ui/status.html:310
-msgid "Good to go."
-msgstr "足够使用"
-
-#: web_ui/status.html:310
-msgid "Currently running slow, scaning for faster IP..."
-msgstr "当前速度较慢，正在扫描更多IP"
-
-#: web_ui/status.html:316
-msgid "Local network fail."
-msgstr "本地网络无法连接"
-
-#: web_ui/status.html:318
-msgid "Connected to the world."
-msgstr "已经翻墙成功"
-
-#: web_ui/status.html:318
-msgid "Connection not established yet."
-msgstr "尚未建立连接"
-
-#: web_ui/status.html:323
-msgid "You have enough IP."
-msgstr "你有足够IP"
-
-msgid "Running low on good IP, "
-msgstr "可用IP数不足，"
-
-msgid "10th IP handshake(ms)"
-msgstr "IP质量（越小越好）"
-
-msgid "Currently running slow. "
-msgstr "IP质量欠佳，"
-
-msgid "XX-Net is scaning, please wait."
-msgstr "请等待一段时间，XX-Net正在进行自动扫描。"
-
-msgid "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>."
-msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。"
-
-msgid "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>"
-msgstr "您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
-
-msgid "No working appid. Please check. "
-msgstr "没有可用APPID，请检查。"
-
-msgid "Local network fail. "
-msgstr "网络无法连接。"
-
-msgid "System Proxy Status"
-msgstr "系统代理状态"
-
-msgid "Auto proxy enabled at "
-msgstr "智能代理已启用："
-
-msgid "Proxy enabled at "
-msgstr "全局代理已启用："
-
-msgid "Proxy disabled"
-msgstr "全局代理已禁用"
-
-msgid "Block Status"
-msgstr "屏蔽状态"
-
-msgid "XX-Net Version"
-msgstr "XX-Net版本"
-
-msgid "Show advanced information"
-msgstr "我是专业的使用者，显示更多内容。"
-
-msgid "Pro Mode"
-msgstr "专家模式"
-
+#: web_ui/status.html:353
 msgid "You are using XX-Net version "
 msgstr "您正在使用XX-Net "
 
+#: web_ui/status.html:354
+msgid "Local network fail, please check your network and firewall. "
+msgstr "网络无法连接，请检查网络和防火墙设置。"
+
+#: web_ui/status.html:355
 msgid "</p><p>Connection established, congratulation! </p><p>"
 msgstr "</p><p>目前已经建立连接，恭喜！</p><p>"
 
+#: web_ui/status.html:355
 msgid "</p><p>Connection not established yet. </p><p>"
 msgstr "</p><p>目前尚未建立连接。</p><p>"
 
+#: web_ui/status.html:356
+msgid "Running low on good IP, "
+msgstr "可用IP数不足，"
+
+#: web_ui/status.html:357
+msgid "Currently running slow. "
+msgstr "IP质量欠佳，"
+
+#: web_ui/status.html:359
+msgid "XX-Net is scaning, please wait."
+msgstr "请等待一段时间，XX-Net正在进行自动扫描。"
+
+#: web_ui/status.html:359
+msgid ""
+"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP "
+"scaner</a>."
+msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。"
+
+#: web_ui/status.html:363
+msgid ""
+"You are using public APPID. You are recommended to <a "
+"href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
+"target=\"_blank\">deploy your own APPID</a>"
+msgstr ""
+"您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
+
+#: web_ui/status.html:365
+msgid "No working appid. Please check. "
+msgstr "没有可用APPID，请检查。"
+
+#: web_ui/status.html:367
 msgid ", All systems go well. "
 msgstr "，程序运转正常。"
 
-msgid "Local network fail, please check your network and firewall. "
-msgstr "网络无法连接，请检查网络和防火墙设置。"
+#: web_ui/status.html:383
+msgid "You are using public Appid."
+msgstr "你正使用公共AppID"
+
+#: web_ui/status.html:401
+msgid "Local network fail. "
+msgstr "网络无法连接。"
+
+#: web_ui/status.html:403
+msgid "Connected to the world."
+msgstr "已经翻墙成功"
+
+#: web_ui/status.html:403
+msgid "Connection not established yet."
+msgstr "尚未建立连接"
+
+#: web_ui/status.html:409
+msgid "Auto proxy enabled at "
+msgstr "智能代理已启用："
+
+#: web_ui/status.html:411
+msgid "Proxy enabled at "
+msgstr "全局代理已启用："
+
+#: web_ui/status.html:413
+msgid "Proxy disabled"
+msgstr "全局代理已禁用"
+
+#~ msgid "IP Quality"
+#~ msgstr "IP质量"
+
+#~ msgid "Good to go."
+#~ msgstr "足够使用"
+
+#~ msgid "Currently running slow, scaning for faster IP..."
+#~ msgstr "当前速度较慢，正在扫描更多IP"
+
+#~ msgid "Local network fail."
+#~ msgstr "本地网络无法连接"
+
+#~ msgid "You have enough IP."
+#~ msgstr "你有足够IP"
+

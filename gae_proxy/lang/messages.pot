@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-16 15:52+0800\n"
+"POT-Creation-Date: 2015-12-16 16:57+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -49,17 +49,17 @@ msgstr ""
 msgid "The latest Chrome browser is recommended."
 msgstr ""
 
-#: web_ui/check_ip.html:7 web_ui/menu.yaml:5 web_ui/status.html:7
+#: web_ui/check_ip.html:7 web_ui/menu.yaml:5 web_ui/status.html:14
 msgid "Status"
 msgstr ""
 
-#: web_ui/check_ip.html:11 web_ui/status.html:11 web_ui/status.html:39
-#: web_ui/status.html:63 web_ui/status.html:87
+#: web_ui/check_ip.html:11 web_ui/status.html:18 web_ui/status.html:54
+#: web_ui/status.html:82 web_ui/status.html:106
 msgid "Property"
 msgstr ""
 
-#: web_ui/check_ip.html:12 web_ui/status.html:12 web_ui/status.html:40
-#: web_ui/status.html:64 web_ui/status.html:88
+#: web_ui/check_ip.html:12 web_ui/status.html:19 web_ui/status.html:55
+#: web_ui/status.html:83 web_ui/status.html:107
 msgid "Value"
 msgstr ""
 
@@ -105,7 +105,7 @@ msgid "Advanced options"
 msgstr ""
 
 #: web_ui/config.html:29 web_ui/config.html:45 web_ui/deploy.html:49
-#: web_ui/scan_setting.html:5 web_ui/status.html:25
+#: web_ui/scan_setting.html:5 web_ui/status.html:32 web_ui/status.html:40
 msgid "Help"
 msgstr ""
 
@@ -336,7 +336,7 @@ msgstr ""
 msgid "GAEProxy Log"
 msgstr ""
 
-#: web_ui/menu.yaml:9 web_ui/status.html:35
+#: web_ui/menu.yaml:9 web_ui/status.html:50
 msgid "Configuration"
 msgstr ""
 
@@ -384,187 +384,194 @@ msgstr ""
 msgid "Unkown error occurred"
 msgstr ""
 
-#: web_ui/status.html:17
+#: web_ui/status.html:24
 msgid "IP Number"
 msgstr ""
 
-#: web_ui/status.html:21
-msgid "IP Quality"
+#: web_ui/status.html:28
+msgid "10th IP handshake(ms)"
 msgstr ""
 
-#: web_ui/status.html:25
+#: web_ui/status.html:32
 msgid "Connection Status"
 msgstr ""
 
-#: web_ui/status.html:29
+#: web_ui/status.html:36
 msgid "Number of IP-Scaning Threads"
 msgstr ""
 
-#: web_ui/status.html:29
+#: web_ui/status.html:36
 msgid "Settings"
 msgstr ""
 
-#: web_ui/status.html:45
+#: web_ui/status.html:40
+msgid "Block Status"
+msgstr ""
+
+#: web_ui/status.html:44
+msgid "XX-Net Version"
+msgstr ""
+
+#: web_ui/status.html:60
+msgid "System Proxy Status"
+msgstr ""
+
+#: web_ui/status.html:64
 msgid "Proxy Listen"
 msgstr ""
 
-#: web_ui/status.html:49
+#: web_ui/status.html:68
 msgid "PAC URL"
 msgstr ""
 
-#: web_ui/status.html:69
+#: web_ui/status.html:88
 msgid "Working App IDs"
 msgstr ""
 
-#: web_ui/status.html:73
+#: web_ui/status.html:92
 msgid "Out of Quota App IDs"
 msgstr ""
 
-#: web_ui/status.html:77
+#: web_ui/status.html:96
 msgid "Not Exist App IDs"
 msgstr ""
 
-#: web_ui/status.html:83
+#: web_ui/status.html:102
 msgid "System Version"
 msgstr ""
 
-#: web_ui/status.html:135
+#: web_ui/status.html:157
+msgid "Pro Mode"
+msgstr ""
+
+#: web_ui/status.html:159
+msgid "Show advanced information"
+msgstr ""
+
+#: web_ui/status.html:162
 msgid "Feedback"
 msgstr ""
 
-#: web_ui/status.html:140
+#: web_ui/status.html:167
 msgid "Diagnostic Info"
 msgstr ""
 
-#: web_ui/status.html:143
+#: web_ui/status.html:170
 msgid "The one-key feedback needs to sign in your Github account"
 msgstr ""
 
-#: web_ui/status.html:147
+#: web_ui/status.html:174
 msgid "To Google Groups"
 msgstr ""
 
-#: web_ui/status.html:148
+#: web_ui/status.html:175
 msgid "One-key feedback"
 msgstr ""
 
-#: web_ui/status.html:154
+#: web_ui/status.html:181
 msgid "GAE Proxy Status Info"
 msgstr ""
 
-#: web_ui/status.html:244
+#: web_ui/status.html:296
 msgid "Disabled"
 msgstr ""
 
-#: web_ui/status.html:244
+#: web_ui/status.html:296
 msgid "Enabled"
 msgstr ""
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
 msgstr ""
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid "guide "
 msgstr ""
 
-#: web_ui/status.html:284
+#: web_ui/status.html:337 web_ui/status.html:373
 msgid "to troubleshoot."
 msgstr ""
 
-#: web_ui/status.html:286
+#: web_ui/status.html:339 web_ui/status.html:375
 msgid "No response from GAEProxy process. It might have already exited."
 msgstr ""
 
-#: web_ui/status.html:293
-msgid "You are using public Appid."
-msgstr ""
-
-#: web_ui/status.html:310
-msgid "Good to go."
-msgstr ""
-
-#: web_ui/status.html:310
-msgid "Currently running slow, scaning for faster IP..."
-msgstr ""
-
-#: web_ui/status.html:316
-msgid "Local network fail. "
-msgstr ""
-
-#: web_ui/status.html:318
-msgid "Connected to the world."
-msgstr ""
-
-#: web_ui/status.html:318
-msgid "Connection not established yet."
-msgstr ""
-
-#: web_ui/status.html:323
-msgid "You have enough IP."
-msgstr ""
-
-msgid "Running low on good IP, "
-msgstr ""
-
-msgid "10th IP handshake(ms)"
-msgstr ""
-
-msgid "Currently running slow. "
-msgstr ""
-
-msgid "XX-Net is scaning, please wait."
-msgstr ""
-
-msgid "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>."
-msgstr ""
-
-msgid "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>"
-msgstr ""
-
-msgid "No working appid. Please check. "
-msgstr ""
-
-msgid "PAC URL"
-msgstr ""
-
-msgid "System Proxy Status"
-msgstr ""
-
-msgid "Auto proxy enabled at "
-msgstr ""
-
-msgid "Proxy enabled at "
-msgstr ""
-
-msgid "Proxy disabled"
-msgstr ""
-
-msgid "Block Status"
-msgstr ""
-
-msgid "XX-Net Version"
-msgstr ""
-
-msgid "Show advanced information"
-msgstr ""
-
-msgid "Pro Mode"
-msgstr ""
-
+#: web_ui/status.html:353
 msgid "You are using XX-Net version "
 msgstr ""
 
+#: web_ui/status.html:354
+msgid "Local network fail, please check your network and firewall. "
+msgstr ""
+
+#: web_ui/status.html:355
 msgid "</p><p>Connection established, congratulation! </p><p>"
 msgstr ""
 
+#: web_ui/status.html:355
 msgid "</p><p>Connection not established yet. </p><p>"
 msgstr ""
 
+#: web_ui/status.html:356
+msgid "Running low on good IP, "
+msgstr ""
+
+#: web_ui/status.html:357
+msgid "Currently running slow. "
+msgstr ""
+
+#: web_ui/status.html:359
+msgid "XX-Net is scaning, please wait."
+msgstr ""
+
+#: web_ui/status.html:359
+msgid ""
+"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP "
+"scaner</a>."
+msgstr ""
+
+#: web_ui/status.html:363
+msgid ""
+"You are using public APPID. You are recommended to <a "
+"href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
+"target=\"_blank\">deploy your own APPID</a>"
+msgstr ""
+
+#: web_ui/status.html:365
+msgid "No working appid. Please check. "
+msgstr ""
+
+#: web_ui/status.html:367
 msgid ", All systems go well. "
 msgstr ""
 
-msgid "Local network fail, please check your network and firewall. "
+#: web_ui/status.html:383
+msgid "You are using public Appid."
 msgstr ""
+
+#: web_ui/status.html:401
+msgid "Local network fail. "
+msgstr ""
+
+#: web_ui/status.html:403
+msgid "Connected to the world."
+msgstr ""
+
+#: web_ui/status.html:403
+msgid "Connection not established yet."
+msgstr ""
+
+#: web_ui/status.html:409
+msgid "Auto proxy enabled at "
+msgstr ""
+
+#: web_ui/status.html:411
+msgid "Proxy enabled at "
+msgstr ""
+
+#: web_ui/status.html:413
+msgid "Proxy disabled"
+msgstr ""
+

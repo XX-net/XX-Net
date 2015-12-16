@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-14 07:01+0800\n"
+"POT-Creation-Date: 2015-12-16 20:43+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 1.3\n"
+"Generated-By: Babel 2.1.1\n"
 
 #: web_ui/about.html:3
 msgid "Project main page"
@@ -53,7 +53,7 @@ msgstr ""
 msgid "Thanks the following projects"
 msgstr ""
 
-#: web_ui/about.html:49
+#: web_ui/about.html:50
 msgid "About XX-Net"
 msgstr ""
 
@@ -90,83 +90,79 @@ msgid "Do not upgrade"
 msgstr ""
 
 #: web_ui/config.html:42
-msgid "Long Term Support version"
-msgstr ""
-
-#: web_ui/config.html:43
 msgid "Stable version"
 msgstr ""
 
-#: web_ui/config.html:44
+#: web_ui/config.html:43
 msgid "Test version"
 msgstr ""
 
-#: web_ui/config.html:48
+#: web_ui/config.html:47
 msgid "Check the latest version"
 msgstr ""
 
-#: web_ui/config.html:55
+#: web_ui/config.html:54
 msgid "Current version"
 msgstr ""
 
-#: web_ui/config.html:62
+#: web_ui/config.html:61
 msgid "Version of the test one"
 msgstr ""
 
-#: web_ui/config.html:67 web_ui/config.html:77
+#: web_ui/config.html:66 web_ui/config.html:76
 msgid "Update now"
 msgstr ""
 
-#: web_ui/config.html:72
+#: web_ui/config.html:71
 msgid "Version of the stable one"
 msgstr ""
 
-#: web_ui/config.html:85
+#: web_ui/config.html:84
 msgid "Module management"
 msgstr ""
 
-#: web_ui/config.html:92
-msgid "Enable GAE proxy"
+#: web_ui/config.html:91 web_ui/config.html:97
+msgid "Enable"
 msgstr ""
 
-#: web_ui/config.html:98
-msgid "Enable PHP proxy"
-msgstr ""
-
-#: web_ui/config.html:109
+#: web_ui/config.html:108
 msgid "System configuration options"
 msgstr ""
 
-#: web_ui/config.html:267
+#: web_ui/config.html:266
 msgid "Settings saved successfully."
 msgstr ""
 
-#: web_ui/config.html:282
+#: web_ui/config.html:281
 msgid "Unkown error occured. Please refresh the page and try again"
 msgstr ""
 
-#: web_ui/config.html:289
+#: web_ui/config.html:288
 #, python-format
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
 msgstr ""
 
-#: web_ui/config.html:294
+#: web_ui/config.html:291
+msgid "GAE Proxy"
+msgstr ""
+
+#: web_ui/config.html:293
 msgid "PHP proxy"
 msgstr ""
 
-#: web_ui/config.html:436
+#: web_ui/config.html:435
 msgid "Updating in progress ..."
 msgstr ""
 
-#: web_ui/config.html:496
+#: web_ui/config.html:495
 msgid "Updating ..."
 msgstr ""
 
-#: web_ui/config.html:503
+#: web_ui/config.html:502
 msgid "Update completed"
 msgstr ""
 
-#: web_ui/config.html:510
+#: web_ui/config.html:509
 msgid "Unkown error occurred"
 msgstr ""
 

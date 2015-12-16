@@ -7,15 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"PO-Revision-Date: 2015-12-15 09:35+0800\n"
+"POT-Creation-Date: 2015-12-16 20:43+0800\n"
+"PO-Revision-Date: 2015-12-16 20:43+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
-"POT-Creation-Date: 2015-12-14 07:01+0800\n"
+"Language: zh_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.1.1\n"
+"X-Generator: Poedit 1.6.10\n"
 
 #: web_ui/about.html:3
 msgid "Project main page"
@@ -53,7 +55,7 @@ msgstr "讨论区"
 msgid "Thanks the following projects"
 msgstr "感谢以下项目"
 
-#: web_ui/about.html:49
+#: web_ui/about.html:50
 msgid "About XX-Net"
 msgstr "关于XX-Net"
 
@@ -90,84 +92,79 @@ msgid "Do not upgrade"
 msgstr "不升级"
 
 #: web_ui/config.html:42
-msgid "Long Term Support version"
-msgstr "长期稳定版"
-
-#: web_ui/config.html:43
 msgid "Stable version"
 msgstr "稳定版"
 
-#: web_ui/config.html:44
+#: web_ui/config.html:43
 msgid "Test version"
 msgstr "测试版"
 
-#: web_ui/config.html:48
+#: web_ui/config.html:47
 msgid "Check the latest version"
 msgstr "检查最新版本"
 
-#: web_ui/config.html:55
+#: web_ui/config.html:54
 msgid "Current version"
 msgstr "当前版本"
 
-#: web_ui/config.html:62
+#: web_ui/config.html:61
 msgid "Version of the test one"
 msgstr "测试版版本"
 
-#: web_ui/config.html:67 web_ui/config.html:77
+#: web_ui/config.html:66 web_ui/config.html:76
 msgid "Update now"
 msgstr "立即更新"
 
-#: web_ui/config.html:72
+#: web_ui/config.html:71
 msgid "Version of the stable one"
 msgstr "稳定版版本"
 
-#: web_ui/config.html:85
+#: web_ui/config.html:84
 msgid "Module management"
 msgstr "模块管理"
 
-#: web_ui/config.html:92
-#, fuzzy
-msgid "Enable GAE proxy"
-msgstr "启用GAE代理"
+#: web_ui/config.html:91 web_ui/config.html:97
+msgid "Enable"
+msgstr "启用"
 
-#: web_ui/config.html:98
-msgid "Enable PHP proxy"
-msgstr "启用PHP代理"
-
-#: web_ui/config.html:109
+#: web_ui/config.html:108
 msgid "System configuration options"
 msgstr "系统配置选项"
 
-#: web_ui/config.html:267
+#: web_ui/config.html:266
 msgid "Settings saved successfully."
 msgstr "设置已成功保存"
 
-#: web_ui/config.html:282
+#: web_ui/config.html:281
 msgid "Unkown error occured. Please refresh the page and try again"
 msgstr "发生未知错误, 请刷新页面重试。"
 
-#: web_ui/config.html:289
+#: web_ui/config.html:288
 #, python-format
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
 msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
 
-#: web_ui/config.html:294
+#: web_ui/config.html:291
+msgid "GAE Proxy"
+msgstr "GAE代理"
+
+#: web_ui/config.html:293
 msgid "PHP proxy"
 msgstr "PHP代理"
 
-#: web_ui/config.html:436
+#: web_ui/config.html:435
 msgid "Updating in progress ..."
 msgstr "更新进行中..."
 
-#: web_ui/config.html:496
+#: web_ui/config.html:495
 msgid "Updating ..."
 msgstr "正在更新..."
 
-#: web_ui/config.html:503
+#: web_ui/config.html:502
 msgid "Update completed"
 msgstr "更新完毕"
 
-#: web_ui/config.html:510
+#: web_ui/config.html:509
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
 
@@ -198,3 +195,11 @@ msgstr "关于"
 #~ msgid "Enable Goagent"
 #~ msgstr "启用 GAE proxy"
 
+#~ msgid "Long Term Support version"
+#~ msgstr "长期稳定版"
+
+#~ msgid "Enable GAE proxy"
+#~ msgstr "启用GAE代理"
+
+#~ msgid "Enable PHP proxy"
+#~ msgstr "启用PHP代理"

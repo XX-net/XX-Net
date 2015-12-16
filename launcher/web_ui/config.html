@@ -88,13 +88,13 @@
     <div id="modules-manager" style="display: none;">
         <hr>
         <div class="row-fluid">
-            <div class="span4">{{ _( "Enable GAE proxy" ) }}</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} GAE proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" >
-            <div class="span4">{{ _( "Enable PHP proxy" ) }}</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} PHP proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="php-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
@@ -105,7 +105,7 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title({{ _( "System configuration options" ) }});
+    title('{{ _( "System configuration options" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -263,7 +263,7 @@
                     if ( key == 'gae_proxy_enable' || key == 'php_enable' ) {
                         restartingService(key);
                     } else {
-                        tip({{ _( "Settings saved successfully." ) }}, 'success');
+                        tip('{{ _( "Settings saved successfully." ) }}', 'success');
                     }
 
                 } else {
@@ -278,19 +278,19 @@
 </script>
 <script type="text/javascript">
     function displayErrorMessage() {
-        tip({{ _( "Unkown error occured. Please refresh the page and try again" ) }}, 'error');
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
     }
 </script>
 <script type="text/javascript">
     function restartingService(serviceNameSlug) {
         var serviceName     = '',
             restatingTime   = 5,
-            messageTemplate = {{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }};
+            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
 
         if ( serviceNameSlug == 'gae_proxy_enable' ) {
-            serviceName     = 'GAEProxy';
+            serviceName     = '{{ _( "GAE Proxy" ) }}';
         } else if ( serviceNameSlug == 'php_enable' ) {
-            serviceName     = {{ _( "PHP proxy" ) }};
+            serviceName     = '{{ _( "PHP proxy" ) }}';
         } else {
             serviceName     = 'Unknown';
         }
@@ -432,7 +432,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip( {{ _( "Updating in progress ..." ) }}, "info");
+                    tip( '{{ _( "Updating in progress ..." ) }}', "info");
                 } else {
                     displayErrorMessage();
                 }
@@ -492,21 +492,21 @@ function versionCompare(v1, v2, options) {
           switch (status) {
               case 'downloading':
                   loading.setProgress(progress);
-                  progress && label.text( {{ _( "Updating ..." ) }} + parseInt(progress * 100) + '%');
+                  progress && label.text( '{{ _( "Updating ..." ) }}' + parseInt(progress * 100) + '%');
                   break;
 
               case 'finished':
                   loading.setProgress(progress);
                   loading.stop();
 
-                  label.text( {{ _( "Update completed" ) }});
+                  label.text( '{{ _( "Update completed" ) }}');
                   $btn.prop('disabled', true);
                   break;
 
               default:
                   loading.stop();
 
-                  $btn.text( {{ _( "Unkown error occurred" ) }});
+                  $btn.text( '{{ _( "Unkown error occurred" ) }}');
           }
       });
   }
