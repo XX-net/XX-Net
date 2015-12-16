@@ -494,10 +494,6 @@ msgstr ""
 msgid "You have enough IP."
 msgstr ""
 
-#: web_ui/status.html:323
-msgid "Running low on good IP, scaning for more..."
-msgstr ""
-
 msgid "Running low on good IP, "
 msgstr ""
 
@@ -552,11 +548,14 @@ msgstr ""
 msgid "You are using XX-Net version "
 msgstr ""
 
-msgid ". </p><p>Connection established, congratulation! </p><p>"
+msgid "</p><p>Connection established, congratulation! </p><p>"
 msgstr ""
 
-msgid ". </p><p>Connection not established yet. </p><p>"
+msgid "</p><p>Connection not established yet. </p><p>"
 msgstr ""
 
-msgid ", All systems go well"
+msgid ", All systems go well. "
+msgstr ""
+
+msgid ". No response from GAEProxy process. It might have already exited."
 msgstr ""

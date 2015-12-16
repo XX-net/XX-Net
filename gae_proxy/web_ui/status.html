@@ -348,8 +348,8 @@
             dataType: 'JSON',
             success: function(result) {
                 var updates1 = '<span>' + '{{ _( "You are using XX-Net version " ) }}' + result['xxnet_version'];
-                var updates2 = result['network_state'] ? '' : '{{ _( "Local network fail. " ) }}';
-                updates2 = updates2 + ((result['connected_link_new'] + result['connected_link_used']) > 0 ? '{{ _( ". </p><p>Connection established, congratulation! </p><p>" ) }}' : '{{ _( ". </p><p>Connection not established yet. </p><p>" ) }}');
+                var updates2 = result['network_state'] ? '' : '{{ _( "Local network fail, please check your network and firewall. " ) }}';
+                updates2 = updates2 + ((result['connected_link_new'] + result['connected_link_used']) > 0 ? '{{ _( "</p><p>Connection established, congratulation! </p><p>" ) }}' : '{{ _( "</p><p>Connection not established yet. </p><p>" ) }}');
                 var updates3 = result['good_ip_num'] > 20 ? '':'{{ _( "Running low on good IP, " ) }}';
                 updates3 = updates3 + (result['ip_handshake_10'] < 400 ? '':'{{ _( "Currently running slow. " ) }}');
                 if (updates3 != ""){
@@ -361,7 +361,7 @@
                 }else{
                     updates2 = updates2 + '{{ _( "No working appid. Please check. " ) }}';
                 }
-                var update = updates1 + '{{ _( ", All systems go well" ) }}' + updates2 + '</span>';
+                var update = updates1 + '{{ _( ", All systems go well. " ) }}' + updates2 + '</span>';
                 updateStatus('#noob-info',update);
             },
             error: function(result) {
@@ -369,7 +369,7 @@
                 if ( formValue == '' ) {
                     tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
                 } else {
-                    var update = updates1 + '{{ _("No response from GAEProxy process. It might have already exited.")}}' + updates2 + '</span>';
+                    var update = updates1 + '{{ _(". No response from GAEProxy process. It might have already exited.")}}' + updates2 + '</span>';
                     updateStatus('#noob-info',update);
                 }
             }

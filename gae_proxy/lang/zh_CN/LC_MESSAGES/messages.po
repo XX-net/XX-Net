@@ -495,10 +495,6 @@ msgstr "尚未建立连接"
 msgid "You have enough IP."
 msgstr "你有足够IP"
 
-#: web_ui/status.html:323
-msgid "Running low on good IP, scaning for more..."
-msgstr "目前较慢，扫描更多ip"
-
 msgid "Running low on good IP, "
 msgstr "可用IP数不足，"
 
@@ -550,11 +546,14 @@ msgstr "专家模式"
 msgid "You are using XX-Net version "
 msgstr "您正在使用XX-Net "
 
-msgid ". </p><p>Connection established, congratulation! </p><p>"
-msgstr "。</p><p>目前已经建立连接，恭喜！</p><p>"
+msgid "</p><p>Connection established, congratulation! </p><p>"
+msgstr "</p><p>目前已经建立连接，恭喜！</p><p>"
 
-msgid ". </p><p>Connection not established yet. </p><p>"
-msgstr "。</p><p>目前尚未建立连接。</p><p>"
+msgid "</p><p>Connection not established yet. </p><p>"
+msgstr "</p><p>目前尚未建立连接。</p><p>"
 
-msgid ", All systems go well"
-msgstr "，程序运转正常"
+msgid ", All systems go well. "
+msgstr "，程序运转正常。"
+
+msgid ". No response from GAEProxy process. It might have already exited."
+msgstr "。GAEProxy进程无响应, 可能已退出。"
