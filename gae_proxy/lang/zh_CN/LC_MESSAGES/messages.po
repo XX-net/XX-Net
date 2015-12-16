@@ -375,7 +375,7 @@ msgstr "发生未知错误"
 
 #: web_ui/status.html:17
 msgid "IP Number"
-msgstr "IP数"
+msgstr "IP数量"
 
 #: web_ui/status.html:21
 msgid "IP Quality"
@@ -489,7 +489,7 @@ msgstr "已经翻墙成功"
 
 #: web_ui/status.html:318
 msgid "Connection not established yet."
-msgstr "无法建立连接"
+msgstr "尚未建立连接"
 
 #: web_ui/status.html:323
 msgid "You have enough IP."
