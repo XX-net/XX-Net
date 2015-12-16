@@ -479,7 +479,7 @@ msgid "Currently running slow, scaning for faster IP..."
 msgstr ""
 
 #: web_ui/status.html:316
-msgid "Local network fail."
+msgid "Local network fail. "
 msgstr ""
 
 #: web_ui/status.html:318
@@ -494,7 +494,65 @@ msgstr ""
 msgid "You have enough IP."
 msgstr ""
 
-#: web_ui/status.html:323
-msgid "Running low on good IP, scaning for more..."
+msgid "Running low on good IP, "
 msgstr ""
 
+msgid "10th IP handshake(ms)"
+msgstr ""
+
+msgid "Currently running slow. "
+msgstr ""
+
+msgid "XX-Net is scaning, please wait."
+msgstr ""
+
+msgid "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>."
+msgstr ""
+
+msgid "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>"
+msgstr ""
+
+msgid "No working appid. Please check. "
+msgstr ""
+
+msgid "PAC URL"
+msgstr ""
+
+msgid "System Proxy Status"
+msgstr ""
+
+msgid "Auto proxy enabled at "
+msgstr ""
+
+msgid "Proxy enabled at "
+msgstr ""
+
+msgid "Proxy disabled"
+msgstr ""
+
+msgid "Block Status"
+msgstr ""
+
+msgid "XX-Net Version"
+msgstr ""
+
+msgid "Show advanced information"
+msgstr ""
+
+msgid "Pro Mode"
+msgstr ""
+
+msgid "You are using XX-Net version "
+msgstr ""
+
+msgid "</p><p>Connection established, congratulation! </p><p>"
+msgstr ""
+
+msgid "</p><p>Connection not established yet. </p><p>"
+msgstr ""
+
+msgid ", All systems go well. "
+msgstr ""
+
+msgid "Local network fail, please check your network and firewall. "
+msgstr ""
