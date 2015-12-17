@@ -383,6 +383,8 @@ class Check_ip():
             xlog.warn("%s handshake:%d impossible", ip_str, 1000 * handshake_time)
             return
 
+        check_ip.network_ok = True
+
         self.ip_lock.acquire()
         try:
             if ip_str in self.ip_dict:

@@ -424,6 +424,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         good_ip_num = google_ip.good_ip_num
         if good_ip_num > len(google_ip.gws_ip_list):
             good_ip_num = len(google_ip.gws_ip_list)
+
         res_arr = {"ip_num":len(google_ip.gws_ip_list),
                    "good_ip_num":good_ip_num,
                    "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
@@ -438,7 +439,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "python_version": platform.python_version(),
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "network_state":check_ip.network_is_ok(),
+                   "network_state":check_ip.network_ok,
                    "connected_link_new":len(https_manager.new_conn_pool.pool),
                    "connected_link_used":len(https_manager.gae_conn_pool.pool),
                    "working_appid":"|".join(appid_manager.working_appid_list),

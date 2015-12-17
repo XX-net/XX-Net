@@ -60,16 +60,18 @@ check_network_interval = 100
 last_ok_time = 0
 
 
-def network_is_ok():
+def network_is_ok(force=False):
     global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
-    if time.time() - last_check_time < check_network_interval:
-        return network_ok
+    time_now = time.time()
+    if not force:
+        if time_now - last_check_time < check_network_interval:
+            return network_ok
 
-    if time.time() - last_ok_time < check_network_interval:
-        return True
+        if time_now - last_ok_time < check_network_interval:
+            return True
 
-    if checking_num > 0:
-        return network_ok
+        if checking_num > 0:
+            return network_ok
 
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
@@ -79,7 +81,7 @@ def network_is_ok():
     checking_num += 1
     checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
+        conn = httplib.HTTPSConnection("github.com", 443, timeout=10)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -89,12 +91,15 @@ def network_is_ok():
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
-            xlog.debug("network is ok")
+            xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
             network_ok = True
             last_check_time = time.time()
             return True
-    except:
-        pass
+    except Exception as e:
+        xlog.warn("network fail:%r", e)
+        network_ok = False
+        last_check_time = time.time()
+        return False
     finally:
         checking_lock.acquire()
         checking_num -= 1
@@ -104,10 +109,7 @@ def network_is_ok():
             socket.socket = default_socket
             xlog.debug("restore socket")
 
-    xlog.warn("network fail.")
-    network_ok = False
-    last_check_time = time.time()
-    return False
+
 
 ######################################
 # about ip connect time and handshake time
