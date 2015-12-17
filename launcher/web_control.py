@@ -10,14 +10,11 @@ if __name__ == "__main__":
     sys.path.append(noarch_lib)
 
 import re
-import SocketServer, socket, ssl
-import BaseHTTPServer
-import errno
+import socket, ssl
 import urlparse
 import threading
 import urllib2
 import time
-import datetime
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
@@ -30,11 +27,12 @@ import config
 import autorun
 import update_from_github
 import simple_http_server
-import jinja2_i18n_helper
+#import jinja2_i18n_helper
+from simple_i18n import simpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-
+i18n_translator = simpleI18N()
 
 module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
@@ -59,9 +57,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             #module_menu = yaml.load(file(menu_path, 'r')) # non-i18n
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
-            template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
-            jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
-            stream = jinja2_i18n_helper.ihelper.render("menu.yaml", None)
+            #template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
+            #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            #stream = jinja2_i18n_helper.ihelper.render("menu.yaml", None)
+            stream = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", "menu.yaml"))
             
             module_menu = yaml.load(stream)
             module_menus[module] = module_menu
@@ -140,8 +139,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 # i18n code lines (Both the locale dir & the template dir are module-dependent)
                 locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
                 template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
-                jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
-                content = jinja2_i18n_helper.ihelper.render(relate_path, None)
+                #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+                #content = jinja2_i18n_helper.ihelper.render(relate_path, None)
+                content = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", relate_path))
                 return self.send_response('text/html', content)
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
@@ -208,9 +208,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         # i18n code lines (Both the locale dir & the template dir are module-dependent)
         locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
-        template_dir = os.path.abspath(os.path.join(current_path, 'web_ui'))
-        jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
-        index_content = jinja2_i18n_helper.ihelper.render("index.html", None)
+        #template_dir = os.path.abspath(os.path.join(current_path, 'web_ui'))
+        #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+        #index_content = jinja2_i18n_helper.ihelper.render("index.html", None)
+        index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
 
         menu_content = ''
         for module,v in module_menus:
@@ -234,9 +235,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
-            template_dir = os.path.abspath(os.path.join(root_path, target_module, 'web_ui'))
-            jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
-            right_content = jinja2_i18n_helper.ihelper.render(target_menu + ".html", None)
+            #template_dir = os.path.abspath(os.path.join(root_path, target_module, 'web_ui'))
+            #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            #right_content = jinja2_i18n_helper.ihelper.render(target_menu + ".html", None)
+            right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
 
         else:
             right_content = ""

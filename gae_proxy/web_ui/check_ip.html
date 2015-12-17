@@ -68,7 +68,7 @@
                 }
             },
             error: function(result) {
-                tip('GAEProxy进程无响应, 可能已退出.', 'warning', false);
+                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
             }
         });
     }
@@ -106,7 +106,7 @@
                 }
             },
             error: function(result) {
-                tip('GAEProxy进程无响应, 可能已退出.', 'warning', false);
+                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
             }
         });
     });
