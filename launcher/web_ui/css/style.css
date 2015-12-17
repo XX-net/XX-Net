@@ -1,5 +1,5 @@
 html, body {
-    font-family: "Segoe UI", "Microsoft YaHei";
+    font-family: "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC";
     margin: 0;
     padding: 0;
 }
@@ -8,7 +8,7 @@ button,
 input,
 select,
 textarea {
-    font-family: "Segoe UI", "Microsoft YaHei" !important;
+    font-family:  "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC" !important;
 }
 
 a {
