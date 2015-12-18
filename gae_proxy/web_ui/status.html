@@ -401,7 +401,7 @@
         if ( connected_link_new + connected_link_used == 0 && !network_state ){
             return '{{ _( "Local network fail. " ) }}';
         }
-        var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}'
+        var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world" ) }}':'{{ _( "Connection not established yet" ) }}'
         var conn_str = connected_link_new + "," + connected_link_used + " (" + tip + ")";
         return conn_str;
     }

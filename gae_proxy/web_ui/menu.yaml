@@ -14,8 +14,8 @@ sub_menus: {
     url: deploy
   },
   4:{
-    title: {{ _("Advance") }},
-    url: advance
+    title: {{ _("Advanced") }},
+    url: advanced
   },
   5:{
     title: {{ _("Log") }},
