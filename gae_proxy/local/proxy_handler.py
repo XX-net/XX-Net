@@ -63,6 +63,12 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
+        if self.path == "http://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+
         self.parsed_url = urlparse.urlparse(self.path)
 
         if host in config.HOSTS_GAE:
@@ -227,6 +233,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
+
+        if self.path == "https://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+
         xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
             if host.endswith(".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
@@ -316,7 +329,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-        xlog.debug('GAE CONNECT %s %s', self.command, self.path)
+
+        if self.path == "https://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+
+        xlog.debug('GAE CONNECT Direct %s %s', self.command, self.path)
 
         try:
             if self.path[0] == '/' and host:

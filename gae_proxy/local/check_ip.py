@@ -54,25 +54,14 @@ load_proxy_config()
 
 checking_lock = threading.Lock()
 checking_num = 0
-network_ok = True
+network_ok = False
 last_check_time = 0
-check_network_interval = 100
-last_ok_time = 0
+check_network_interval = 60
 
 
-def network_is_ok(force=False):
+def check_worker():
     global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
     time_now = time.time()
-    if not force:
-        if time_now - last_check_time < check_network_interval:
-            return network_ok
-
-        if time_now - last_ok_time < check_network_interval:
-            return True
-
-        if checking_num > 0:
-            return network_ok
-
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
         xlog.debug("patch socks")
@@ -81,7 +70,7 @@ def network_is_ok(force=False):
     checking_num += 1
     checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("github.com", 443, timeout=10)
+        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -91,9 +80,8 @@ def network_is_ok(force=False):
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
+            report_network_ok()
             xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
-            network_ok = True
-            last_check_time = time.time()
             return True
     except Exception as e:
         xlog.warn("network fail:%r", e)
@@ -110,6 +98,25 @@ def network_is_ok(force=False):
             xlog.debug("restore socket")
 
 
+def network_is_ok(force=False):
+    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+    time_now = time.time()
+    if not force:
+        if time_now - last_check_time < check_network_interval:
+            return network_ok
+
+        if checking_num > 0:
+            return network_ok
+
+    th = threading.Thread(target=check_worker)
+    th.start()
+    return network_ok
+
+
+def report_network_ok():
+    global network_ok, last_check_time
+    network_ok = True
+    last_check_time = time.time()
 
 ######################################
 # about ip connect time and handshake time
@@ -125,7 +132,6 @@ def network_is_ok(force=False):
 
 
 def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
-    global last_ok_time
     ip_port = (ip, port)
 
     if not openssl_context:
@@ -158,7 +164,12 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     ssl_sock.sock = sock
     ssl_sock.connct_time = connct_time
     ssl_sock.handshake_time = handshake_time
-    last_ok_time = time_handshaked
+
+    #report_network_ok()
+    global  network_ok, last_check_time
+    network_ok = True
+    last_check_time = time_handshaked
+
     return ssl_sock
 
 
