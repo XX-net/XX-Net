@@ -1,8 +1,9 @@
+
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-17 10:57+0800\n"
+"POT-Creation-Date: 2015-12-18 13:07+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -287,16 +288,28 @@ msgstr "读取设置失败"
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
 
+msgid "Show Detail"
+msgstr "显示详细信息"
+
+msgid "Local Network Status"
+msgstr "本地网络状态"
+
 msgid "IP Number"
 msgstr "IP数量"
 
-msgid "10th IP handshake(ms)"
-msgstr "IP质量（越小越好）"
+msgid "IP Quality"
+msgstr "IP质量"
 
-msgid "Connection Status"
-msgstr "连接状态"
+msgid "Connection Pool"
+msgstr "连接池"
 
-msgid "Number of IP-Scaning Threads"
+msgid "Browser Proxy Setting"
+msgstr "浏览器代理设置"
+
+msgid "CA status"
+msgstr "CA证书状态"
+
+msgid "Number of IP-Scanning Threads"
 msgstr "扫描IP线程数"
 
 msgid "Settings"
@@ -312,7 +325,7 @@ msgid "System Proxy Status"
 msgstr "系统代理状态"
 
 msgid "Proxy Listen"
-msgstr "代理服务器类型"
+msgstr "代理服务监听端口"
 
 msgid "PAC URL"
 msgstr "PAC自动代理地址"
@@ -328,12 +341,6 @@ msgstr "不存在的AppID"
 
 msgid "System Version"
 msgstr "系统版本"
-
-msgid "Pro Mode"
-msgstr "专家模式"
-
-msgid "Show advanced information"
-msgstr "我是专业的使用者，显示更多内容。"
 
 msgid "Feedback"
 msgstr "反馈问题"
@@ -370,31 +377,28 @@ msgstr "指引"
 msgid "to troubleshoot."
 msgstr "查找问题原因。"
 
-msgid "You are using XX-Net version "
-msgstr "您正在使用XX-Net "
-
 msgid "Local network fail, please check your network and firewall. "
 msgstr "网络无法连接，请检查网络和防火墙设置。"
-
-msgid "</p><p>Connection established, congratulation! </p><p>"
-msgstr "</p><p>目前已经建立连接，恭喜！</p><p>"
-
-msgid "</p><p>Connection not established yet. </p><p>"
-msgstr "</p><p>目前尚未建立连接。</p><p>"
-
-msgid "Running low on good IP, "
-msgstr "可用IP数不足，"
-
-msgid "Currently running slow. "
-msgstr "IP质量欠佳，"
-
-msgid "XX-Net is scaning, please wait."
-msgstr "请等待一段时间，XX-Net正在进行自动扫描。"
 
 msgid ""
 "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP "
 "scaner</a>."
 msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。"
+
+msgid "XX-Net is scanning IP, please wait about half an hour."
+msgstr "请等待大约半小时，XX-Net需要扫描IP。"
+
+msgid "</p><p>Connection not established yet. </p><p>"
+msgstr "</p><p>目前尚未建立连接。</p><p>"
+
+msgid "No working appid. Please check. "
+msgstr "没有可用APPID，请检查。"
+
+msgid "Please check browser proxy setting."
+msgstr "请检查浏览器代理设置。"
+
+msgid "Please import certificate to browser."
+msgstr "请导入浏览器CA证书"
 
 msgid ""
 "You are using public APPID. You are recommended to <a "
@@ -404,17 +408,11 @@ msgstr ""
 "您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
 
-msgid "No working appid. Please check. "
-msgstr "没有可用APPID，请检查。"
-
-msgid ", All systems go well. "
-msgstr "，程序运转正常。"
+msgid ", Everything is OK, you have reach the real internet. "
+msgstr "，一切正常，你可以访问真正的互联网了。"
 
 msgid "You are using public Appid."
 msgstr "你正使用公共AppID"
-
-msgid "Local network fail. "
-msgstr "网络无法连接。"
 
 msgid "Connected to the world."
 msgstr "已经翻墙成功"
@@ -430,9 +428,4 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
-
-
-
-
-
 
