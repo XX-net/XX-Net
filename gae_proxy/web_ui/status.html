@@ -44,7 +44,7 @@
             <td>{{ _( "Browser Proxy Setting" ) }}</td>
             <td id="browser-proxy-setting"></td>
         </tr>
-        <tr>
+        <tr id="tr_ca-status">
             <td>{{ _( "CA status" ) }}</td>
             <td id="ca-status"></td>
         </tr>
@@ -285,6 +285,14 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
+                if ( test_http_proxy_setting() ){
+                    var ca_status_str = test_https_proxy_setting() ? "OK" : "Fail";
+                    $("#tr_ca-status").show();
+                }else{
+                    var ca_status_str = "";
+                    $("#tr_ca-status").hide();
+                }
+
                 var updates = {
                     'td#sys-platform': result['sys_platform'],
                     'td#os-system': result['os_system'],
@@ -309,7 +317,7 @@
                     'td#ip-num': result['good_ip_num'],
                     'td#connection-status': connection_status_string(result['connected_link_new'], result['connected_link_used']),
                     'td#browser-proxy-setting': test_http_proxy_setting() ? "OK" : "Fail",
-                    'td#ca-status': test_https_proxy_setting() ? "OK" : "Fail",
+                    'td#ca-status': ca_status_str,
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
                     'td#ip-quality': result['ip_quality'],
                     'td#block-stat': result['block_stat']
