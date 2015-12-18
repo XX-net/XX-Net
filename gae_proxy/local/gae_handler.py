@@ -311,7 +311,7 @@ def handler(method, url, headers, body, wfile):
 
                 try:
                     server_type = response.getheader('Server', "")
-                    if "gws" not in server_type and "Google Frontend" not in server_type:
+                    if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
                         xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
                         google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                         response.close()
