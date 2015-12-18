@@ -21,7 +21,7 @@ import win32_proxy_manager
 
 import module_init
 import update
-import launcher_log
+from instances import xlog
 import config
 
 
@@ -35,20 +35,30 @@ class Win_tray():
             reg_path,
             0, winreg.KEY_ALL_ACCESS)
 
+        proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
+        if proxy_setting == "pac":
+            self.on_enable_pac()
+        elif proxy_setting == "gae":
+            self.on_enable_gae_proxy()
+        elif proxy_setting == "disable":
+            self.on_disable_proxy()
+        else:
+            xlog.warn("proxy_setting:%r", proxy_setting)
+
     def get_proxy_state(self):
         REG_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
         INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,REG_PATH,0, winreg.KEY_ALL_ACCESS)
         try:
             AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
             if AutoConfigURL:
-                return "auto"
+                return "pac"
         except Exception as e:
             pass
 
         try:
             ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
             if ProxyEnable:
-                return "enable"
+                return "gae"
         except Exception as e:
             pass
         return "disable"
@@ -62,20 +72,20 @@ class Win_tray():
         lang_code, code_page = locale.getdefaultlocale()
 
         proxy_stat = self.get_proxy_state()
-        enable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="enable" else 0
-        auto_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="auto" else 0
+        gae_proxy_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="gae" else 0
+        pac_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="pac" else 0
         disable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="disable" else 0
 
         if lang_code == "zh_CN":
             menu_options = ((u"设置", None, self.on_show, 0),
-                        (u"全局通过GAEProxy代理", None, self.on_enable_proxy, enable_checked),
-                        (u"全局PAC智能代理", None, self.on_enable_pac, auto_checked),
+                        (u"全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked),
+                        (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
                         (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
                         (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0))
         else:
             menu_options = ((u"Config", None, self.on_show, 0),
-                        (u"Set Global GAEProxy Proxy", None, self.on_enable_proxy, enable_checked),
-                        (u"Set Global PAC Proxy", None, self.on_enable_pac, auto_checked),
+                        (u"Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked),
+                        (u"Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
                         (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
                         (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0))
         return menu_options
@@ -90,14 +100,20 @@ class Win_tray():
     def on_check_update(self, widget=None, data=None):
         update.check_update()
 
-    def on_enable_proxy(self, widget=None, data=None):
+    def on_enable_gae_proxy(self, widget=None, data=None):
         win32_proxy_manager.set_proxy_server("127.0.0.1", 8087)
+        config.set(["modules", "launcher", "proxy"], "gae")
+        config.save()
 
     def on_enable_pac(self, widget=None, data=None):
         win32_proxy_manager.set_proxy_auto("http://127.0.0.1:8086/proxy.pac")
+        config.set(["modules", "launcher", "proxy"], "pac")
+        config.save()
 
     def on_disable_proxy(self, widget=None, data=None):
         win32_proxy_manager.disable_proxy()
+        config.set(["modules", "launcher", "proxy"], "disable")
+        config.save()
 
     def show_control_web(self, widget=None, data=None):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
@@ -106,6 +122,8 @@ class Win_tray():
 
     def on_quit(self, widget, data=None):
         win32_proxy_manager.disable_proxy()
+        module_init.stop_all()
+        os._exit(0)
 
     def serve_forever(self):
         self.systray._message_loop_func()

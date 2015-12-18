@@ -29,7 +29,7 @@ Delimiter = "$"
 def pbkdf2(password, salt, iterations, digestMod):
     """
     Module function to hash a password according to the PBKDF2 specification.
-    
+
     @param password clear text password (bytes)
     @param salt salt value (bytes)
     @param iterations number of times hash function should be applied (integer)
@@ -46,7 +46,7 @@ def hashPasswordTuple(password, digestMod=hashlib.sha512, iterations=10000,
                       saltSize=32):
     """
     Module function to hash a password according to the PBKDF2 specification.
-    
+
     @param password clear text password (string)
     @param digestMod hash function
     @param iterations number of times hash function should be applied (integer)
@@ -65,7 +65,7 @@ def hashPassword(password, digestMod=hashlib.sha512, iterations=10000,
                  saltSize=32):
     """
     Module function to hash a password according to the PBKDF2 specification.
-    
+
     @param password clear text password (string)
     @param digestMod hash function
     @param iterations number of times hash function should be applied (integer)
@@ -85,7 +85,7 @@ def hashPassword(password, digestMod=hashlib.sha512, iterations=10000,
 def verifyPassword(password, hash):
     """
     Module function to verify a password against a hash encoded password.
-    
+
     @param password clear text password (string)
     @param hash hash encoded password in the form
         'digestmod$iterations$salt$hashed_password' as produced by the
@@ -101,12 +101,12 @@ def verifyPassword(password, hash):
             "Expected hash encoded password in format "
             "'digestmod{0}iterations{0}salt{0}hashed_password"
             .format(Delimiter))
-    
+
     if digestname not in Hashes.keys():
         raise ValueError(
             "Unsupported hash algorithm '{0}' for hash encoded password '{1}'."
             .format(digestname, hash))
-    
+
     iterations = int(iterations)
     salt = base64.b64decode(salt.encode("ascii"))
     pwHash = base64.b64decode(pwHash.encode("ascii"))
@@ -117,7 +117,7 @@ def verifyPassword(password, hash):
 def rehashPassword(password, hashParameters):
     """
     Module function to recreate a password hash given the hash parameters.
-    
+
     @param password clear text password (string)
     @param hashParameters hash parameters in the form
         'digestmod$iterations$salt' (string)
@@ -131,12 +131,12 @@ def rehashPassword(password, hashParameters):
         raise ValueError(
             "Expected hash parameters string in format "
             "'digestmod{0}iterations{0}salt".format(Delimiter))
-    
+
     if digestname not in Hashes.keys():
         raise ValueError(
             "Unsupported hash algorithm '{0}' for hash parameters '{1}'."
             .format(digestname, hash))
-    
+
     iterations = int(iterations)
     salt = base64.b64decode(salt.encode("ascii"))
     password = password.encode("utf-8")

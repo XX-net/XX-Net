@@ -1,8 +1,6 @@
 
 import os
-import launcher_log
-
-
+from instances import xlog
 import yaml
 from distutils.version import LooseVersion
 
@@ -27,7 +25,8 @@ def save():
     try:
         yaml.dump(config, file(config_path, "w"))
     except Exception as e:
-        launcher_log.warn("save config %s fail %s", config_path, e)
+        xlog.warn("save config %s fail %s", config_path, e)
+
 
 def get(path, default_val=""):
     global config
@@ -41,6 +40,7 @@ def get(path, default_val=""):
     except:
         return default_val
 
+
 def _set(m, k_list, v):
     k0 = k_list[0]
     if len(k_list) == 1:
@@ -50,11 +50,10 @@ def _set(m, k_list, v):
         m[k0] = {}
     _set(m[k0], k_list[1:], v)
 
+
 def set(path, val):
     global config
     _set(config, path, val)
-
-
 
 
 def recheck_module_path():
@@ -75,6 +74,10 @@ def recheck_module_path():
         set(["modules", "launcher", "control_port"], 8085)
         set(["modules", "launcher", "allow_remote_connect"], 0)
 
+    if get(["modules", "launcher", "proxy"], 0) == 0:
+        # default enable PAC on startup.
+        set(["modules", "launcher", "proxy"], "pac")
+
     #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #    set(["modules", "gae_proxy", "control_port"], 8084)
 
@@ -83,40 +86,11 @@ def recheck_module_path():
 
     return need_save_config
 
-def create_data_path():
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
 
-    data_launcher_path = os.path.join(data_path, 'launcher')
-    if not os.path.isdir(data_launcher_path):
-        os.mkdir(data_launcher_path)
-
-    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-    if not os.path.isdir(data_gae_proxy_path):
-        os.mkdir(data_gae_proxy_path)
-
-def main():
-    create_data_path()
+def init():
     if os.path.isfile(config_path):
         load()
 
     if recheck_module_path():
         save()
-
-main()
-
-def test():
-    load()
-    val = get(["web_ui", "popup_webui"], 0)
-    print val
-
-def test2():
-    set(["web_ui", "popup_webui"], 0)
-    set(["web_ui", "popup"], 0)
-    print config
-
-if __name__ == "__main__":
-    test2()
-    #main()
-    #a = eval('2*3')
-    #eval("conf = {}")
+init()

@@ -1,0 +1,136 @@
+
+        <form method="POST" onSubmit="return false;">
+            <div class="row-fluid">
+                <div class="span3">
+                    <label for="auto-adjust-scan-ip-thread-num">{{ _("Auto-adjust scan thread count") }}<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Auto-adjust-scan-ip-thread-num" target="_blank">({{ _("Help") }})</a></label>
+                </div> <!-- .span3 -->
+                <div class="span9">
+                    <input id="auto-adjust-scan-ip-thread-num" type="checkbox" data-toggle="switch" />
+                </div> <!-- .span9 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span3">
+                    <label for="scan-ip-thread-num">{{ _("Max scan thread count") }}</label>
+                </div> <!-- .span3 -->
+                <div class="span6">
+                    <input id="scan-ip-thread-num" type="text" />
+                </div> <!-- .span6 -->
+                <div class="span3" >
+                    <button class="btn btn-primary " id="update-thread-num">{{ _("Update") }}</button>
+                </div>
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span3">
+                    <label for="ip-range-content">{{ _("IP range list") }}(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Scan-Ip-Range-Format" target="_blank">{{ _("Supporting formats") }}</a>)</label>
+                </div> <!-- .span3 -->
+                <div class="span9">
+                    <textarea id="ip-range-content" rows="10"></textarea>
+                </div> <!-- .span9 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span12">
+                    <button class="btn btn-primary btn-block" id="submit-ip-range" type="submit">{{ _("Submit") }}</button>
+                </div> <!-- .span12 -->
+            </div> <!-- .row-fluid -->
+        </form>
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+
+    $('#auto-adjust-scan-ip-thread-num').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'auto_adjust_scan_ip_thread_num',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+    function setConfig(key, value) {
+        var pageRequests = {};
+        pageRequests[key]   = value;
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_auto_adjust_scan_ip_thread_num',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _("Settings saved successfully") }}', 'success');
+                } else {
+                    displayErrorMessage();
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $(function() {
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/config?cmd=get_config',
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['auto_adjust_scan_ip_thread_num'] != 0 ) {
+                    $( "#auto-adjust-scan-ip-thread-num").parent().removeClass('switch-off');
+                    $( "#auto-adjust-scan-ip-thread-num").parent().addClass('switch-on');
+
+                    $( "#auto-adjust-scan-ip-thread-num").prop('checked', true);
+                }
+                $('#scan-ip-thread-num').val(result['scan_ip_thread_num']);
+            },
+            error: function(){
+                tip('{{ _("Failed reading the settings") }}', 'error');
+            }
+        });
+    });
+
+    $('#ip-range-content').load('/module/gae_proxy/control/scan_ip?cmd=get_range');
+</script>
+<script type="text/javascript">
+    $('#update-thread-num').click(function(){
+        var scanIpThreadNum = $('#scan-ip-thread-num').val();
+        var config = {
+            'scan_ip_thread_num': scanIpThreadNum
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_scan_thread_num',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _("Settings saved successfully") }}', 'success');
+                } else {
+                    tip('{{ _("Unkown error occurred") }}', 'error');
+                }
+            }
+        });
+    });
+</script>
+<script type="text/javascript">
+    $('#submit-ip-range').click(function(){
+        var ipRangeContent = $('#ip-range-content').val();
+        var config = {
+            'ip_range': ipRangeContent
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/scan_ip?cmd=set_range',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _("Settings saved successfully") }}', 'success');
+                } else {
+                    tip('{{ _("Unkown error occurred") }}', 'error');
+                }
+            }
+        });
+    });
+</script>

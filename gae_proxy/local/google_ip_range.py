@@ -8,7 +8,7 @@ import os
 import shutil
 import ip_utils
 from config import config
-import xlog
+from proxy import xlog
 
 random.seed(time.time()* 1000000)
 
@@ -52,11 +52,15 @@ class Ip_range(object):
             if len(line) == 0 or line[0] == '#':
                 continue
 
-            begin, end = ip_utils.split_ip(line)
-            nbegin = ip_utils.ip_string_to_num(begin)
-            nend = ip_utils.ip_string_to_num(end)
-            if not nbegin or not nend or nend < nbegin:
-                xlog.warn("load ip range:%s fail", line)
+            try:
+                begin, end = ip_utils.split_ip(line)
+                nbegin = ip_utils.ip_string_to_num(begin)
+                nend = ip_utils.ip_string_to_num(end)
+                if not nbegin or not nend or nend < nbegin:
+                    xlog.warn("load ip range:%s fail", line)
+                    continue
+            except Exception as e:
+                xlog.exception("load ip range:%s fail:%r", line, e)
                 continue
 
             self.ip_range_map[self.candidate_amount_ip] = [nbegin, nend]

@@ -99,7 +99,7 @@ class ValueRangeConstraint(AbstractConstraint):
                 )
             )
         AbstractConstraint._setValues(self, values)
-        
+
 class ValueSizeConstraint(ValueRangeConstraint):
     """len(value) must be within start and stop values (inclusive)"""
     def _testValue(self, value, idx):
@@ -142,7 +142,7 @@ class InnerTypeConstraint(AbstractConstraint):
                 self.__singleTypeConstraint = v
         AbstractConstraint._setValues(self, values)
 
-# Boolean ops on constraints 
+# Boolean ops on constraints
 
 class ConstraintsExclusion(AbstractConstraint):
     """Value must not fit the single constraint"""
@@ -169,7 +169,7 @@ class AbstractConstraintSet(AbstractConstraint):
     def __len__(self): return len(self._values)
 
     # Constraints inclusion in sets
-    
+
     def _setValues(self, values):
         self._values = values
         for v in values:

@@ -3,15 +3,16 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+python_path = os.path.join(root_path, 'python27', '1.0')
+noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 import yaml
 
 import urllib2
 import time
 import subprocess
-import launcher_log
+from instances import xlog
 import re
 import zipfile
 import config
@@ -53,7 +54,7 @@ def current_version():
                 version = m.group(1) + "." + m.group(2) + "." + m.group(3)
                 return version
     except Exception as e:
-        launcher_log.exception("xxnet_version fail")
+        xlog.exception("xxnet_version fail")
     return "get_version_fail"
 
 def download_file(url, file):
@@ -62,12 +63,12 @@ def download_file(url, file):
         download_progress[url]["status"] = "downloading"
     else:
         if download_progress[url]["status"] == "downloading":
-            launcher_log.warn("url in downloading, %s", url)
+            xlog.warn("url in downloading, %s", url)
             return False
 
     for i in range(0, 2):
         try:
-            launcher_log.info("download %s to %s, retry:%d", url, file, i)
+            xlog.info("download %s to %s, retry:%d", url, file, i)
             opener = get_opener(i)
             req = opener.open(url)
             download_progress[url]["size"] = int(req.headers.get('content-length') or 0)
@@ -84,16 +85,16 @@ def download_file(url, file):
                     download_progress[url]["downloaded"] = downloaded
 
             if downloaded != download_progress[url]["size"]:
-                launcher_log.warn("download size:%d, need size:%d, download fail.", downloaded, download_progress[url]["size"])
+                xlog.warn("download size:%d, need size:%d, download fail.", downloaded, download_progress[url]["size"])
                 continue
             else:
                 download_progress[url]["status"] = "finished"
                 return True
         except urllib2.URLError as e:
-            launcher_log.warn("download %s to %s URL fail:%r", url, file, e)
+            xlog.warn("download %s to %s URL fail:%r", url, file, e)
             continue
         except Exception as e:
-            launcher_log.exception("download %s to %s fail:%r", url, file, e)
+            xlog.exception("download %s to %s fail:%r", url, file, e)
             continue
 
     download_progress[url]["status"] = "failed"
@@ -113,7 +114,7 @@ def get_xxnet_url_version(readme_file):
                 if len(versions) == 2:
                     return versions
     except Exception as e:
-        launcher_log.exception("xxnet_version fail:%r", e)
+        xlog.exception("xxnet_version fail:%r", e)
         raise "get_version_fail:" % readme_file
 
 def get_github_versions():
@@ -161,7 +162,7 @@ def download_overwrite_new_version(xxnet_version):
 
                 target_path = os.path.join(root_path, relate_path, subdir)
                 if not os.path.isdir(target_path):
-                    launcher_log.info("mkdir %s", target_path)
+                    xlog.info("mkdir %s", target_path)
                     os.mkdir(target_path)
 
             for filename in files:
@@ -169,7 +170,7 @@ def download_overwrite_new_version(xxnet_version):
                 dst_file = os.path.join(root_path, relate_path, filename)
                 if not os.path.isfile(dst_file) or sha1_file(src_file) != sha1_file(dst_file):
                     shutil.copy(src_file, dst_file)
-                    launcher_log.info("copy %s => %s", src_file, dst_file)
+                    xlog.info("copy %s => %s", src_file, dst_file)
 
     os.remove(xxnet_zip_file)
     shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
@@ -193,10 +194,27 @@ def restart_xxnet():
     time.sleep(10)
     os._exit(0)
 
+
 def update_version(version):
     try:
         download_overwrite_new_version(version)
         update_config(version)
         restart_xxnet()
     except Exception as e:
-        launcher_log.exception("update version %d fail:%r", version, e)
+        xlog.exception("update version %s fail:%r", version, e)
+
+
+def delete_file(file):
+    try:
+        os.remove(file)
+    except:
+        pass
+
+
+def remove_old_file():
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "simple_http_server.py"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "simple_http_server.pyc"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "xlog.py"))
+    delete_file(os.path.join(root_path, "gae_proxy", "local", "xlog.pyc"))
+
+remove_old_file()

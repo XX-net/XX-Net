@@ -1,7 +1,7 @@
 
 import time
 import threading
-import xlog
+from proxy import xlog
 import sys
 
 from config import config

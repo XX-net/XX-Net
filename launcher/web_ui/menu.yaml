@@ -1,12 +1,12 @@
-module_title: 系统
+module_title: {{ _( "System" ) }}
 menu_sort_id: 100
 sub_menus: {
   1:{
-    title: 配置,
+    title: {{ _( "Configuration" ) }},
     url: config
   },
   2:{
-    title: 关于,
+    title: {{ _( "About" ) }},
     url: about
   }
 }

@@ -3,15 +3,14 @@
 # but OpenSSL is different then ssl, so need a wrapper
 import sys
 import os
-
+import select
+import time
+import socket
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-import select
-import time
-import socket
-import xlog
+from proxy import xlog
 
 ssl_version = ''
 
@@ -128,7 +127,7 @@ class SSLConnection(object):
 
             if sys.platform == "darwin":
                 ssl_version = "TLSv1"
-            
+
             # freenas openssl support fix from twitter user "himanzero"
             # https://twitter.com/himanzero/status/645231724318748672
             if sys.platform == "freebsd9":

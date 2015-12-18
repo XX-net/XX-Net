@@ -1,0 +1,201 @@
+# German (Germany) translations for PROJECT.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-12-14 07:01+0800\n"
+"PO-Revision-Date: 2015-12-06 09:18+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de_DE\n"
+"Language-Team: de_DE <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+#: web_ui/about.html:3
+msgid "Project main page"
+msgstr ""
+
+#: web_ui/about.html:7
+msgid "Bug feedback"
+msgstr ""
+
+#: web_ui/about.html:10
+msgid "When submitting a bug, please attach"
+msgstr ""
+
+#: web_ui/about.html:10
+msgid "status page "
+msgstr ""
+
+#: web_ui/about.html:10
+msgid "info and "
+msgstr ""
+
+#: web_ui/about.html:10
+msgid "log page "
+msgstr ""
+
+#: web_ui/about.html:10
+msgid "contents"
+msgstr ""
+
+#: web_ui/about.html:14
+msgid "Google Groups"
+msgstr ""
+
+#: web_ui/about.html:39
+msgid "Thanks the following projects"
+msgstr ""
+
+#: web_ui/about.html:49
+msgid "About XX-Net"
+msgstr ""
+
+#: web_ui/config.html:3
+msgid "Auto-Startup"
+msgstr ""
+
+#: web_ui/config.html:9
+msgid "Popup Status Page on Startup"
+msgstr ""
+
+#: web_ui/config.html:15
+msgid "Enable Remote Web Control"
+msgstr ""
+
+#: web_ui/config.html:15 web_ui/config.html:37
+msgid "Help"
+msgstr ""
+
+#: web_ui/config.html:21
+msgid "Display System Tray(Restarting XX-Net Needed)"
+msgstr ""
+
+#: web_ui/config.html:29
+msgid "Upgrade Management"
+msgstr ""
+
+#: web_ui/config.html:37
+msgid "Auto-Upgrade to"
+msgstr ""
+
+#: web_ui/config.html:41
+msgid "Do not upgrade"
+msgstr ""
+
+#: web_ui/config.html:42
+msgid "Long Term Support version"
+msgstr ""
+
+#: web_ui/config.html:43
+msgid "Stable version"
+msgstr ""
+
+#: web_ui/config.html:44
+msgid "Test version"
+msgstr ""
+
+#: web_ui/config.html:48
+msgid "Check the latest version"
+msgstr ""
+
+#: web_ui/config.html:55
+msgid "Current version"
+msgstr ""
+
+#: web_ui/config.html:62
+msgid "Version of the test one"
+msgstr ""
+
+#: web_ui/config.html:67 web_ui/config.html:77
+msgid "Update now"
+msgstr ""
+
+#: web_ui/config.html:72
+msgid "Version of the stable one"
+msgstr ""
+
+#: web_ui/config.html:85
+msgid "Module management"
+msgstr ""
+
+#: web_ui/config.html:92
+msgid "Enable GAE proxy"
+msgstr ""
+
+#: web_ui/config.html:98
+msgid "Enable PHP proxy"
+msgstr ""
+
+#: web_ui/config.html:109
+msgid "System configuration options"
+msgstr ""
+
+#: web_ui/config.html:267
+msgid "Settings saved successfully."
+msgstr ""
+
+#: web_ui/config.html:282
+msgid "Unkown error occured. Please refresh the page and try again"
+msgstr ""
+
+#: web_ui/config.html:289
+#, python-format
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr ""
+
+#: web_ui/config.html:294
+msgid "PHP proxy"
+msgstr ""
+
+#: web_ui/config.html:436
+msgid "Updating in progress ..."
+msgstr ""
+
+#: web_ui/config.html:496
+msgid "Updating ..."
+msgstr ""
+
+#: web_ui/config.html:503
+msgid "Update completed"
+msgstr ""
+
+#: web_ui/config.html:510
+msgid "Unkown error occurred"
+msgstr ""
+
+#: web_ui/index.html:105
+msgid "Exited successfully"
+msgstr ""
+
+#: web_ui/index.html:107
+msgid "Exitting failed"
+msgstr ""
+
+#: web_ui/index.html:111
+msgid "Exitting failed. A network error occurred."
+msgstr ""
+
+#: web_ui/menu.yaml:1
+msgid "System"
+msgstr ""
+
+#: web_ui/menu.yaml:5
+msgid "Configuration"
+msgstr ""
+
+#: web_ui/menu.yaml:9
+msgid "About"
+msgstr ""
+
+#~ msgid "Enable Goagent"
+#~ msgstr ""
+

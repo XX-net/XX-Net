@@ -111,6 +111,7 @@ def filter_ip_range(good_range, bad_range):
         while True:
             if good_begin > good_end:
                 PRINT("bad good ip range when filter:%s-%s"  % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end)))
+                assert(good_begin < good_end)
             if good_end < bad_begin:
                 # case:
                 #     [  good  ]
@@ -167,7 +168,9 @@ def filter_ip_range(good_range, bad_range):
                 PRINT("cut bad ip case 5:%s - %s" % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end)))
                 break
             else:
-                PRINT("any case?")
+                PRINT("any case? good:%s-%s bad:%s-%s" % (ip_utils.ip_num_to_string(good_begin), ip_utils.ip_num_to_string(good_end),
+                    ip_utils.ip_num_to_string(bad_begin), ip_utils.ip_num_to_string(bad_end)))
+                assert( False )
 
     return out_good_range
 
@@ -187,7 +190,7 @@ def download_apic(filename):
 
 def generage_range_from_apnic(input):
 
-    cnregex = re.compile(r'^apnic\|(?:cn|hk|mo)\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
+    cnregex = re.compile(r'^apnic\|(?:cn)\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
                          re.I | re.M )
     cndata = cnregex.findall(input)
 

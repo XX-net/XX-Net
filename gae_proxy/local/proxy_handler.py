@@ -3,23 +3,22 @@
 
 
 import errno
-import xlog
 import socket
 import ssl
 import urlparse
-
-import simple_http_server
-from cert_util import CertUtil
-from connect_manager import https_manager,forwork_manager
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
+from proxy import xlog
+import simple_http_server
+from cert_util import CertUtil
+from connect_manager import forwork_manager
 from config import config
 import gae_handler
 import direct_handler
-from connect_control import connect_allow_time, connect_fail_time, touch_active
+from connect_control import touch_active
 import web_control
 
 
@@ -35,9 +34,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_HEAD = self.__class__.do_METHOD
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
-
-    def address_string(self):
-        return '%s:%s' % self.client_address[:2]
 
     def forward_local(self):
         html = gae_handler.generate_message_html('Browser pass local request to proxy', u'您的浏览器把本地请求转发到代理上。<br>请在浏览器中设置：访问本地，不经过代理。<br><a href="https://github.com/XX-net/XX-Net/wiki/Browser-pass-localhost-request-to-proxy">帮助</a>')
@@ -66,6 +62,12 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if host.startswith("127.0.0.1") or host.startswith("localhost"):
             xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
+
+        if self.path == "http://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
 
         self.parsed_url = urlparse.urlparse(self.path)
 
@@ -231,6 +233,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
+
+        if self.path == "https://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+
         xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
             if host.endswith(".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
@@ -320,7 +329,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-        xlog.debug('GAE CONNECT %s %s', self.command, self.path)
+
+        if self.path == "https://www.twitter.com/xxnet":
+            # for web_ui status page
+            # auto detect browser proxy setting is work
+            data = "OK"
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+
+        xlog.debug('GAE CONNECT Direct %s %s', self.command, self.path)
 
         try:
             if self.path[0] == '/' and host:

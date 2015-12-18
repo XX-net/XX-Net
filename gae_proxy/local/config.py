@@ -6,7 +6,8 @@ import ConfigParser
 import os
 import re
 import io
-import xlog
+
+from proxy import xlog
 
 
 
@@ -115,6 +116,8 @@ class Config(object):
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
         self.ip_traffic_quota = self.CONFIG.getint('google_ip', 'ip_traffic_quota')
         self.ip_traffic_quota_base = self.CONFIG.getint('google_ip', 'ip_traffic_quota_base')
+        self.max_links_per_ip = self.CONFIG.getint('google_ip', 'max_links_per_ip')
+        self.record_ip_history = self.CONFIG.getint('google_ip', 'record_ip_history')
 
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")

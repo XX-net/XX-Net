@@ -3,3 +3,7 @@ data
 *~
 *.pyc
 *.swp
+*.pot
+*.mo
+
+.DS_Store

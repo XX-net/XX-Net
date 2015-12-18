@@ -214,13 +214,21 @@ class socksocket(_BaseSocket):
             msg = "Socket type must be stream or datagram, not {!r}"
             raise ValueError(msg.format(type))
 
-        _BaseSocket.__init__(self, family, type, proto, _sock)
         self._proxyconn = None  # TCP connection to keep UDP relay alive
 
         if self.default_proxy:
             self.proxy = self.default_proxy
+            proxy_host = self.proxy[1]
+            if ":" in proxy_host:
+                family=socket.AF_INET6
+            elif check_ip_valid(proxy_host):
+                family=socket.AF_INET
+
         else:
             self.proxy = (None, None, None, None, None, None)
+
+        _BaseSocket.__init__(self, family, type, proto, _sock)
+
         self.proxy_sockname = None
         self.proxy_peername = None
 
@@ -474,14 +482,13 @@ class socksocket(_BaseSocket):
         host, port = addr
         proxy_type, _, _, rdns, username, password = self.proxy
 
-        # If the given destination address is an IP address, we'll
-        # use the IPv4 address request even if remote resolving was specified.
-        try:
-            addr_bytes = socket.inet_aton(host)
+        if ":" in host:
+            addr_bytes = socket.inet_pton(socket.AF_INET6, host)
+            file.write(b"\x04" + addr_bytes)
+        elif check_ip_valid(host):
+            addr_bytes = socket.inet_pton(socket.AF_INET, host)
             file.write(b"\x01" + addr_bytes)
-            host = socket.inet_ntoa(addr_bytes)
-        except socket.error:
-            # Well it's not an IP number, so it's probably a DNS name.
+        else:
             if rdns:
                 # Resolve remotely
                 host_bytes = host.encode('idna')
@@ -502,6 +509,8 @@ class socksocket(_BaseSocket):
         elif atyp == b"\x03":
             length = self._readall(file, 1)
             addr = self._readall(file, ord(length))
+        elif atyp == b"\x04":
+            addr = socket.inet_ntop(socket.AF_INET6, self._readall(file, 16))
         else:
             raise GeneralProxyError("SOCKS5 proxy server sent invalid data")
 
@@ -633,7 +642,7 @@ class socksocket(_BaseSocket):
             if not self._proxyconn:
                 self.bind(("", 0))
             dest_addr = socket.gethostbyname(dest_addr)
-            
+
             # If the host address is INADDR_ANY or similar, reset the peer
             # address so that packets are received from any peer
             if dest_addr == "0.0.0.0" and not dest_port:
@@ -698,6 +707,21 @@ class socksocket(_BaseSocket):
         if not proxy_port:
             raise GeneralProxyError("Invalid proxy type")
         return proxy_addr, proxy_port
+
+
+import re
+g_ip_check = re.compile(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
+def check_ip_valid(ip):
+    global g_ip_check
+    ret = g_ip_check.match(ip)
+    if ret is not None:
+        "each item range: [0,255]"
+        for item in ret.groups():
+            if int(item) > 255:
+                return 0
+        return 1
+    else:
+        return 0
 
 if __name__ == "__main__":
     name = "abc"

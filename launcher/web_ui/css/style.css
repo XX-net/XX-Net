@@ -1,14 +1,14 @@
 html, body {
-    font-family: "Segoe UI", "Microsoft YaHei";
+    font-family: "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC";
     margin: 0;
     padding: 0;
 }
 
 button,
-input, 
+input,
 select,
 textarea {
-    font-family: "Segoe UI", "Microsoft YaHei" !important;
+    font-family:  "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC" !important;
 }
 
 a {
@@ -65,14 +65,20 @@ div#header div#logo img {
     max-height: 32px;
 }
 
-div#header a#resize-window-trigger {
+div#header a#resize-window-trigger,
+div#header a#quit-trigger {
     display: block;
     padding-top: 8px;
 }
 
+div#header img {
+    max-height: 22px;
+}
+
+
 div#content {
     margin: 40px auto 0;
-    padding: 40px 0 0;
+    padding: 40px 0 40px;
 }
 
 div#content div#sidebar a {
@@ -100,6 +106,10 @@ div#content div.row-fluid > div.span3 > label {
     margin: 10px 0 0;
 }
 div#content div.row-fluid > div.span2 > label {
+    font-weight: bold;
+    margin: 10px 0 0;
+}
+div#content div.row-fluid > div.span1 > label {
     font-weight: bold;
     margin: 10px 0 0;
 }
@@ -144,6 +154,10 @@ div#content form#gae_proxy-php-config div.row-fluid div.span4 label[for=enable-p
 /* Style for status.html */
 table#status td {
     word-wrap: break-word;
+}
+
+div#report-issue-modal {
+    position: fixed;
 }
 
 /* Style for logging.html */

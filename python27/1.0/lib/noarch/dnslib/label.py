@@ -51,7 +51,7 @@ class DNSLabel(object):
     >>> l3.matchGlob("*.[abc]xx.bbb.ccc")
     False
 
-    # Too hard to get unicode doctests to work on Python 3.2  
+    # Too hard to get unicode doctests to work on Python 3.2
     # (works on 3.3)
     # >>> u1 = DNSLabel(u'\u2295.com')
     # >>> u1.__str__() == u'\u2295.com.'
@@ -62,7 +62,7 @@ class DNSLabel(object):
     """
     def __init__(self,label):
         """
-            Create DNS label instance 
+            Create DNS label instance
 
             Label can be specified as:
             - a list/tuple of byte strings
@@ -84,7 +84,7 @@ class DNSLabel(object):
 
     def add(self,name):
         """
-            Prepend name to label 
+            Prepend name to label
         """
         new = DNSLabel(name)
         if self.label:
@@ -98,7 +98,7 @@ class DNSLabel(object):
 
     def matchSuffix(self,suffix):
         """
-            Return True if label suffix matches 
+            Return True if label suffix matches
         """
         suffix = DNSLabel(suffix)
         return self.label[-len(suffix.label):] == suffix.label
@@ -219,13 +219,13 @@ class DNSBuffer(Buffer):
                 pointer = get_bits(self.unpack("!H")[0],0,14)
                 save = self.offset
                 if last == save:
-                    raise BufferError("Recursive pointer in DNSLabel [offset=%d,pointer=%d,length=%d]" % 
+                    raise BufferError("Recursive pointer in DNSLabel [offset=%d,pointer=%d,length=%d]" %
                             (self.offset,pointer,len(self.data)))
                 if pointer < self.offset:
                     self.offset = pointer
                 else:
                     # Pointer can't point forwards
-                    raise BufferError("Invalid pointer in DNSLabel [offset=%d,pointer=%d,length=%d]" % 
+                    raise BufferError("Invalid pointer in DNSLabel [offset=%d,pointer=%d,length=%d]" %
                             (self.offset,pointer,len(self.data)))
                 label.extend(self.decode_name(save).label)
                 self.offset = save
@@ -271,7 +271,7 @@ class DNSBuffer(Buffer):
 
     def encode_name_nocompress(self,name):
         """
-            Encode and store label with no compression 
+            Encode and store label with no compression
             (needed for RRSIG)
         """
         if not isinstance(name,DNSLabel):

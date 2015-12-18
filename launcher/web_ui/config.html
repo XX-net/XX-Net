@@ -1,24 +1,24 @@
 <div id="options">
     <div class="row-fluid">
-        <div class="span4">开机自动启动</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="auto-start" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">启动时弹出状态页</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Popup Status Page on Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="popup-webui" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">允许远程连接Web控制端<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">(帮助)</a></div> <!-- .span4 -->
+        <div class="span4">{{ _( "Enable Remote Web Control" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
             <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">显示托盘图标(需要重启XX-Net)</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Needed)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
@@ -26,7 +26,7 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="update-options" class="pull-down-control">
-                <i class="icon icon-chevron-right"></i> 升级管理
+                <i class="icon icon-chevron-right"></i> {{ _( "Upgrade Management" ) }}
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
@@ -34,47 +34,46 @@
         <hr>
         <div class="row-fluid">
             <div class="span3">
-                <label for="check-update">自动升级到：<a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">(帮助)</a></label>
+                <label for="check-update">{{ _( "Auto-Upgrade to" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">({{ _( "Help" ) }})</a></label>
             </div>
             <div class="span6">
                 <select id="check-update">
-                    <option value="dont-check">不升级</option>
-                    <option value="long-term-stable">长期稳定版</option>
-                    <option value="stable">稳定版</option>
-                    <option value="test">测试版</option>
+                    <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
+                    <option value="stable">{{ _( "Stable version" ) }}</option>
+                    <option value="test">{{ _( "Test version" ) }}</option>
                 </select>
             </div>
             <div class="span2">
-                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">检查最新版本</button>
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">{{ _( "Check the latest version" ) }}</button>
             </div>
             <div class="span1" id="check-new-version-process">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="current-version-no">当前版本：</label>
+                <label for="current-version-no">{{ _( "Current version" ) }}: </label>
             </div>
             <div class="span4" id="current-version-no" style="margin-top:10px">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="test-version-no">测试版版本：</label>
+                <label for="test-version-no">{{ _( "Version of the test one" ) }}: </label>
             </div>
             <div class="span4" id="test-version-no" style="margin-top:10px">
             </div>
             <div class="span2" >
-                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">立即更新</button>
+                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="stable-version-no">稳定版版本：</label>
+                <label for="stable-version-no">{{ _( "Version of the stable one" ) }}: </label>
             </div>
             <div class="span4" id="stable-version-no" style="margin-top:10px">
             </div>
             <div class="span2">
-                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">立即更新</button>
+                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
         <hr>
@@ -82,20 +81,20 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="modules-manager" class="pull-down-control">
-                <i class="icon icon-chevron-right"></i> 模块管理
+                <i class="icon icon-chevron-right"></i> {{ _( "Module management" ) }}
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
     <div id="modules-manager" style="display: none;">
         <hr>
         <div class="row-fluid">
-            <div class="span4">启用Goagent</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} GAE proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" >
-            <div class="span4">启用PHP代理</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} PHP proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="php-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
@@ -106,7 +105,7 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('系统配置选项');
+    title('{{ _( "System configuration options" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -264,7 +263,7 @@
                     if ( key == 'gae_proxy_enable' || key == 'php_enable' ) {
                         restartingService(key);
                     } else {
-                        tip('设置已成功保存.', 'success');
+                        tip('{{ _( "Settings saved successfully." ) }}', 'success');
                     }
 
                 } else {
@@ -279,19 +278,19 @@
 </script>
 <script type="text/javascript">
     function displayErrorMessage() {
-        tip('发生未知错误, 请刷新页面重试.', 'error');
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
     }
 </script>
 <script type="text/javascript">
     function restartingService(serviceNameSlug) {
         var serviceName     = '',
             restatingTime   = 5,
-            messageTemplate = '正在配置服务[%s], 页面将在%s秒内刷新.';
+            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
 
         if ( serviceNameSlug == 'gae_proxy_enable' ) {
-            serviceName     = 'GAEProxy';
+            serviceName     = '{{ _( "GAE Proxy" ) }}';
         } else if ( serviceNameSlug == 'php_enable' ) {
-            serviceName     = 'PHP代理';
+            serviceName     = '{{ _( "PHP proxy" ) }}';
         } else {
             serviceName     = 'Unknown';
         }
@@ -389,7 +388,7 @@ function versionCompare(v1, v2, options) {
     var configUrl   = '/config?cmd=get_new_version';
     var progressUrl = 'download?cmd=get_progress';
 
-    // 检测下载状态
+    // Checks the download status检测下载状态
     $.getJSON(progressUrl, function (rst) {
         Object.keys(rst).forEach(function (v) {
             if (rst[v].status === 'downloading' && v.indexOf('XX-Net/zip') > -1) {
@@ -398,7 +397,7 @@ function versionCompare(v1, v2, options) {
         });
     });
 
-    // 展示下载状态
+    // Shows the download status展示下载状态
     dtd.promise().done(function (ver) {
         $.getJSON(configUrl, function(rst) {
             createVerInfo(rst);
@@ -433,7 +432,7 @@ function versionCompare(v1, v2, options) {
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('更新进行中。。。.', "info");
+                    tip( '{{ _( "Updating in progress ..." ) }}', "info");
                 } else {
                     displayErrorMessage();
                 }
@@ -448,8 +447,8 @@ function versionCompare(v1, v2, options) {
 
 
     /**
-     * 生成版本信息
-     * @param rst 来自 url /config 的json
+     * Create the version info生成版本信息
+     * @param rst json from url /config来自 url /config 的json
      */
     function createVerInfo (rst) {
         var $updateTestVersion = $('#update-test-version');
@@ -476,7 +475,7 @@ function versionCompare(v1, v2, options) {
 
 
   /**
-   * 展示按钮的下载状态
+   * Displays the button download status展示按钮的下载状态
    * @param ver
    */
   function showDownloadProgress (ver) {
@@ -493,31 +492,31 @@ function versionCompare(v1, v2, options) {
           switch (status) {
               case 'downloading':
                   loading.setProgress(progress);
-                  progress && label.text('正在更新.. ' + parseInt(progress * 100) + '%');
+                  progress && label.text( '{{ _( "Updating ..." ) }}' + parseInt(progress * 100) + '%');
                   break;
 
               case 'finished':
                   loading.setProgress(progress);
                   loading.stop();
 
-                  label.text('更新完毕');
+                  label.text( '{{ _( "Update completed" ) }}');
                   $btn.prop('disabled', true);
                   break;
 
               default:
                   loading.stop();
 
-                  $btn.text('发生未知错误');
+                  $btn.text( '{{ _( "Unkown error occurred" ) }}');
           }
       });
   }
 
 
     /**
-     * 轮询获取下载进度
+     * Gets the downloading progress via the round-robin. 轮询获取下载进度
      * @param ver
      * @param cb(status, progress)
-     * @param [delay = 500] 延迟时间
+     * @param [delay = 500] Latency延迟时间
      */
     function getDownloadProgress (ver, cb, delay) {
         var progressUrl = 'download?cmd=get_progress',

@@ -10,59 +10,33 @@ if __name__ == "__main__":
     sys.path.append(noarch_lib)
 
 import re
-import SocketServer, socket, ssl
-import BaseHTTPServer
-import errno
+import socket, ssl
 import urlparse
 import threading
 import urllib2
 import time
-import datetime
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
 import yaml
 import json
 
-import launcher_log
+from instances import xlog
 import module_init
 import config
 import autorun
 import update_from_github
+import simple_http_server
+#import jinja2_i18n_helper
+from simple_i18n import simpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-
-
-class LocalServer(SocketServer.ThreadingTCPServer):
-    allow_reuse_address = True
-
-    def close_request(self, request):
-        try:
-            request.close()
-        except Exception:
-            pass
-
-    def finish_request(self, request, client_address):
-        try:
-            self.RequestHandlerClass(request, client_address, self)
-        except NetWorkIOError as e:
-            if e[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                raise
-
-    def handle_error(self, *args):
-        """make ThreadingTCPServer happy"""
-        etype, value = sys.exc_info()[:2]
-        if isinstance(value, NetWorkIOError) and 'bad write retry' in value.args[1]:
-            etype = value = None
-        else:
-            del etype, value
-            SocketServer.ThreadingTCPServer.handle_error(self, *args)
+i18n_translator = simpleI18N()
 
 module_menus = {}
-class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
-
 
     def load_module_menus(self):
         global module_menus
@@ -71,37 +45,45 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1:
+            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1: # skip php_proxy module
                 continue
 
             #version = values["current_version"]
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")
+            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml") # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
 
-            module_menu = yaml.load(file(menu_path, 'r'))
+            #module_menu = yaml.load(file(menu_path, 'r')) # non-i18n
+            # i18n code lines (Both the locale dir & the template dir are module-dependent)
+            locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+            #template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
+            #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            #stream = jinja2_i18n_helper.ihelper.render("menu.yaml", None)
+            stream = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", "menu.yaml"))
+            
+            module_menu = yaml.load(stream)
             module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
-    def address_string(self):
-        return '%s:%s' % self.client_address[:2]
-
-    def send_response(self, mimetype, data):
-        self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
-    def send_not_found(self):
-        self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
     def do_POST(self):
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                xlog.warn("web control ref:%s host:%s", refer_loc, host)
+                return
+
         #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
-                    launcher_log.warn("request %s no module in path", self.path)
+                    xlog.warn("request %s no module in path", self.path)
                     self.send_not_found()
                     return
 
@@ -111,19 +93,18 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
 
     def do_GET(self):
-        try:
-            refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
-            if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
-                launcher_log.warn("web control ref:%s refuse", netloc)
+        refer = self.headers.getheader('Referer')
+        if refer:
+            refer_loc = urlparse.urlparse(refer).netloc
+            host = self.headers.getheader('host')
+            if refer_loc != host:
+                xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
-        except:
-            pass
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            launcher_log.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
         url_path = urlparse.urlparse(self.path).path
@@ -135,7 +116,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
-                    launcher_log.warn("request %s no module in path", url_path)
+                    xlog.warn("request %s no module in path", url_path)
+                    self.send_not_found()
+                    return
+
+                if "imp" not in module_init.proc_handler[module]:
+                    xlog.warn("request module:%s start fail", module)
                     self.send_not_found()
                     return
 
@@ -144,12 +130,23 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 controler.do_GET()
                 return
             else:
-                file_path = os.path.join(root_path, module, url_path_list[3:].join('/'))
+                relate_path = '/'.join(url_path_list[3:])
+                file_path = os.path.join(root_path, module, "web_ui", relate_path)
+                if not os.path.isfile(file_path):
+                    return self.send_not_found()
+
+                # i18n code lines (Both the locale dir & the template dir are module-dependent)
+                locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+                template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
+                #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+                #content = jinja2_i18n_helper.ihelper.render(relate_path, None)
+                content = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", relate_path))
+                return self.send_response('text/html', content)
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
 
-        launcher_log.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
+        xlog.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
             if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
@@ -157,6 +154,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 mimetype = 'text/css'
             elif file_path.endswith('.html'):
                 mimetype = 'text/html'
+
             elif file_path.endswith('.jpg'):
                 mimetype = 'image/jpeg'
             elif file_path.endswith('.png'):
@@ -180,18 +178,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response('text/html', '{"status":"success"}')
             update_from_github.restart_xxnet()
         else:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-            launcher_log.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
-
-    def send_file(self, filename, mimetype):
-        try:
-            with open(filename, 'rb') as fp:
-                data = fp.read()
-            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
-            self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\nExpires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (tme, mimetype, len(data))).encode())
-            self.wfile.write(data)
-        except:
-            self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
+            self.send_not_found()
+            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -211,10 +199,18 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if len(module_menus) == 0:
             self.load_module_menus()
+            
+        # Old code without i18n
+        #index_path = os.path.join(current_path, 'web_ui', "index.html")
+        #with open(index_path, "r") as f:
+         #   index_content = f.read()
 
-        index_path = os.path.join(current_path, 'web_ui', "index.html")
-        with open(index_path, "r") as f:
-            index_content = f.read()
+        # i18n code lines (Both the locale dir & the template dir are module-dependent)
+        locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
+        #template_dir = os.path.abspath(os.path.join(current_path, 'web_ui'))
+        #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+        #index_content = jinja2_i18n_helper.ihelper.render("index.html", None)
+        index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
 
         menu_content = ''
         for module,v in module_menus:
@@ -232,8 +228,17 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
-            with open(right_content_file, "r") as f:
-                right_content = f.read()
+            # Old code without i18n
+            #with open(right_content_file, "r") as f:
+            #   right_content = f.read()
+            
+            # i18n code lines (Both the locale dir & the template dir are module-dependent)
+            locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
+            #template_dir = os.path.abspath(os.path.join(root_path, target_module, 'web_ui'))
+            #jinja2_i18n_helper.ihelper.refresh_env(locale_dir, template_dir)
+            #right_content = jinja2_i18n_helper.ihelper.render(target_menu + ".html", None)
+            right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
+
         else:
             right_content = ""
 
@@ -253,7 +258,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             if check_update == 0:
                 check_update = "dont-check"
             elif check_update == 1:
-                check_update = "long-term-stable"
+                check_update = "stable"
 
             data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
@@ -266,7 +271,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
-                if check_update not in ["dont-check", "long-term-stable", "stable", "test"]:
+                if check_update not in ["dont-check", "stable", "test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
                     config.set(["update", "check_update"], check_update)
@@ -294,11 +299,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     data = '{"res":"success"}'
 
-                    launcher_log.debug("restart web control.")
+                    xlog.debug("restart web control.")
                     stop()
                     time.sleep(1)
                     start()
-                    launcher_log.debug("launcher web control restarted.")
+                    xlog.debug("launcher web control restarted.")
 
             elif 'show_systray' in reqs:
                 show_systray = int(reqs['show_systray'][0])
@@ -355,14 +360,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif reqs['cmd'] == ['get_new_version']:
             versions = update_from_github.get_github_versions()
             data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
-            launcher_log.info("%s", data)
+            xlog.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
             try:
                 update_from_github.update_version(version)
                 data = '{"res":"success"}'
             except Exception as e:
-                launcher_log.info("update_test_version fail:%r", e)
+                xlog.info("update_test_version fail:%r", e)
                 data = '{"res":"fail", "error":"%s"}' % e
 
         self.send_response('text/html', data)
@@ -397,7 +402,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 result_start = module_init.start(module)
                 data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (module, result_stop, result_start)
         except Exception as e:
-            launcher_log.exception("init_module except:%s", e)
+            xlog.exception("init_module except:%s", e)
 
         self.send_response("text/html", data)
 
@@ -414,23 +419,25 @@ def start():
     else:
         host_addr = "127.0.0.1"
 
-    launcher_log.info("begin to start web control")
-    server = LocalServer((host_addr, host_port), Http_Handler)
+    xlog.info("begin to start web control")
+
+    server = simple_http_server.HTTPServer((host_addr, host_port), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
-    launcher_log.info("launcher web control started.")
+    
+    xlog.info("launcher web control started.")
 
 def stop():
     global process, server
     if process == 0:
         return
 
-    launcher_log.info("begin to exit web control")
+    xlog.info("begin to exit web control")
     server.shutdown()
     server.server_close()
     process.join()
-    launcher_log.info("launcher web control exited.")
+    xlog.info("launcher web control exited.")
     process = 0
 
 
@@ -449,16 +456,16 @@ def confirm_xxnet_exit():
 
     """
     is_xxnet_exit = False
-    launcher_log.debug("start confirm_xxnet_exit")
+    xlog.debug("start confirm_xxnet_exit")
 
     for i in range(30):
         # gae_proxy(default port:8087)
         if http_request("http://127.0.0.1:8087/quit") == False:
-            launcher_log.debug("good, xxnet:8087 cleared!")
+            xlog.debug("good, xxnet:8087 cleared!")
             is_xxnet_exit = True
             break
         else:
-            launcher_log.debug("<%d>: try to terminate xxnet:8087" % i)
+            xlog.debug("<%d>: try to terminate xxnet:8087" % i)
         time.sleep(1)
 
 
@@ -467,18 +474,18 @@ def confirm_xxnet_exit():
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) == False:
-            launcher_log.debug("good, xxnet:%s clear!" % host_port)
+            xlog.debug("good, xxnet:%s clear!" % host_port)
             is_xxnet_exit = True
             break
         else:
-            launcher_log.debug("<%d>: try to terminate xxnet:%s" % (i, host_port))
+            xlog.debug("<%d>: try to terminate xxnet:%s" % (i, host_port))
         time.sleep(1)
-    launcher_log.debug("finished confirm_xxnet_exit")
+    xlog.debug("finished confirm_xxnet_exit")
     return is_xxnet_exit
 
 def confirm_module_ready(port):
     if port == 0:
-        launcher_log.error("confirm_module_ready with port 0")
+        xlog.error("confirm_module_ready with port 0")
         time.sleep(1)
         return False
 
