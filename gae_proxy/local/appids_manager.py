@@ -27,6 +27,17 @@ class APPID_manager(object):
 
         self.last_reset_time = 0
 
+    def reset_appid(self):
+        # called by web_control
+        self.lock.acquire()
+        try:
+            self.working_appid_list = list(config.GAE_APPIDS)
+            self.not_exist_appids = []
+            self.out_of_quota_appids = []
+        finally:
+            self.lock.release()
+
+
     def get_appid(self):
         if len(self.working_appid_list) == 0:
             if time.time() - self.last_reset_time < 60:
