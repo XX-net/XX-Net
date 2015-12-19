@@ -726,6 +726,11 @@ class Check_ip():
         for appid in appid_list:
             if not self.test_appid(appid):
                 fail_appid_list.append(appid)
+            else:
+                # return success if one appid is work
+                # just reduce wait time
+                # here can be more ui friendly.
+                return []
         return fail_appid_list
 
 

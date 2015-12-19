@@ -445,12 +445,8 @@
         }
         return true;
     }
-    function connection_status_string(network_state, connected_link_new, connected_link_used){
-        if ( connected_link_new + connected_link_used == 0 && !network_state ){
-            return '{{ _( "Your local network failed. " ) }}';
-        }
-        var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world" ) }}':'{{ _( "Connection not established yet" ) }}'
-        var conn_str = connected_link_new + "; " + connected_link_used + " (" + tip + ")";
+    function connection_status_string(connected_link_new, connected_link_used){
+        var conn_str = connected_link_new + " / " + connected_link_used;
         return conn_str;
     }
     function proxy_status_string(proxy_state,proxy_url){
