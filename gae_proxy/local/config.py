@@ -49,7 +49,7 @@ class Config(object):
         self.LISTEN_VISIBLE = self.CONFIG.getint('listen', 'visible')
         self.LISTEN_DEBUGINFO = self.CONFIG.getint('listen', 'debuginfo')
 
-        self.GAE_APPIDS = re.findall(r'[\w\-\.]+', self.CONFIG.get('gae', 'appid').replace('.appspot.com', ''))
+        self.GAE_APPIDS = self.CONFIG.get('gae', 'appid').split("|")
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
 
         fwd_endswith = []

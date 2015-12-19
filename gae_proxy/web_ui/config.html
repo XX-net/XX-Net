@@ -209,6 +209,8 @@
             proxyUsername     = $('#proxy-username').val(),
             proxyPassword     = $('#proxy-password').val();
 
+        tip('{{ _( "Wait for checking setting..." ) }}', 'info');
+
         return setConfig(gaeAppId, gaePassword, hostAppEngine, useIpv6,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
     }

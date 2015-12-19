@@ -191,7 +191,7 @@ def check_appid(ssl_sock, appid):
 
     response.begin()
     if response.status == 404:
-        xlog.warn("app check %s status:%d", appid, response.status)
+        #xlog.warn("app check %s status:%d", appid, response.status)
         return False
 
     if response.status == 503:
@@ -203,7 +203,7 @@ def check_appid(ssl_sock, appid):
 
     content = response.read()
     if "GoAgent" not in content:
-        xlog.warn("app check %s content:%s", appid, content)
+        #xlog.warn("app check %s content:%s", appid, content)
         return False
 
     return True
