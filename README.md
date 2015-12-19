@@ -4,7 +4,7 @@ XX-Net - A Rebirth of Goagent
 ========
 翻墙工具套件 A firewall circumvention toolkit
 * GAE proxy, 稳定、易用、快速  
-  Stable, ease-of-use and fast proxy based on GAE  
+  A stable, ease-of-use and fast proxy based on GAE  
 * Web界面，人性化交互  
   Friendly web UI  
 
@@ -26,20 +26,26 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
 
 
-平台支持(Supporting Platforms)
+平台支持(Supported Platforms)
 ================
-* Windows 7/8/10 （XP 需要 [tcpip.sys补丁]XP needs this patch ( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014. Adjust the count to 2014.）
-  Win10 存在声音卡的问题 Audio bug on Windows 10
+* Windows 7/8/10 （XP 需要 [tcpip.sys补丁] ( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014. ）Win10 存在声音卡的问题。XP needs the patch linked above. Adjust the count to 2014. There exists an audio bug on Windows 10.
 * Linux 
 * Mac OS X(10.7; 10.8; 10.9; 10.10; 10.11)
 
 
 
+语言支持(Supported Languages)
+================
+* 英语English (en_US)
+* 简体中文Simplified Chinese (zh_CN)
+* 波斯语Persian (fa_IR)
+
+
 ## 链接(Links)
 |   |   |
 | --------   | :----  |
-|问题报告(Report bug):  |https://github.com/XX-net/XX-Net/issues|
-|讨论群(Discuss forum):  |https://groups.google.com/forum/#!forum/xx-net|
+|问题报告(Report a bug):  |https://github.com/XX-net/XX-Net/issues|
+|讨论群(Discussion forum):  |https://groups.google.com/forum/#!forum/xx-net|
 
 感谢(Thanks)
 =========
@@ -67,4 +73,4 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
   集成XX-Net的启动光盘镜像 (XX-Net-integrated bootable CD image) 
 * appifed-xx-net
   https://github.com/binarydist/appified-xx-net
-  Mac OS X 环境下，变成一个标准的Mac应用A standard Mac app on Mac OS X
+  Mac OS X 环境下，变成一个标准的Mac应用(A standard Mac app on Mac OS X)
