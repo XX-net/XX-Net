@@ -191,7 +191,7 @@
                 }
             },
             error: function(){
-                tip('{{ _( "Failed reading the seeting." ) }}', 'error');
+                tip('{{ _( "Failed reading the settings." ) }}', 'error');
             }
         });
     });
@@ -241,15 +241,15 @@
                     tip('{{ _( "Settings saved successfully" ) }}', 'success');
                 } else {
                     if (result['reason'].indexOf("appid fail") > -1){
-                        tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before use." ) }}', 'error');
+                        tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before using." ) }}', 'error');
                     }else{
-                        tip('{{ _( "Save setting fail:" ) }}' + result['reason'], 'error');
+                        tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
                     }
                     
                 }
             },
             error: function(){
-                tip('{{ _( "Failed Saving Setting." ) }}', 'error');
+                tip('{{ _( "Failed saving settings" ) }}' + ".", 'error');
             }
         });
     }

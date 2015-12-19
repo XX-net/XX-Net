@@ -77,7 +77,7 @@
             <td id="proxy-status"></td>
         </tr>
         <tr>
-            <td>{{ _( "Proxy Listen" ) }}</td>
+            <td>{{ _( "Listening Proxy" ) }}</td>
             <td id="proxy-listen"></td>
         </tr>
         <tr>
@@ -101,15 +101,15 @@
     </thead>
     <tbody>
         <tr id="hidden-appids">
-            <td>{{ _( "Working App IDs" ) }}</td>
+            <td>{{ _( "Working AppIDs" ) }}</td>
             <td id="working-appid"></td>
         </tr>
         <tr id="tr-out-of-quota-appids" hidden="true">
-            <td>{{ _( "Out of Quota App IDs" ) }}</td>
+            <td>{{ _( "Out-of-quota AppIDs" ) }}</td>
             <td id="out-of-quota-appids"></td>
         </tr>
         <tr id="tr-not-exist-appids" hidden="true">
-            <td>{{ _( "Not Exist App IDs" ) }}</td>
+            <td>{{ _( "Nonexistent AppIDs" ) }}</td>
             <td id="not-exist-appids"></td>
         </tr>
     </tbody>
@@ -166,11 +166,12 @@
         </tr>
     </tbody>
 </table>
+
 <div pro="True" hidden>
     <button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
     <br><br>
     <div id="tip">
-            <a href="https://github.com/XX-net/XX-Net/issues">查看github的问题讨论</a> 或 <a href="https://groups.google.com/forum/#!forum/xx-net">Google Group问题讨论</a><br>
+            <a href="https://github.com/XX-net/XX-Net/issues">{{ _("Check Github issues") }}</a>{{ _(" or ")}} <a href="https://groups.google.com/forum/#!forum/xx-net">Google Group{{ _(" Discussions") }}</a><br>
     </div>
 </div>
 <!-- pro mode: show advanced information.-->
@@ -369,14 +370,14 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( !result['network_state']){
-                    return updateProperty('#noob-info', '{{ _( "Local network fail, please check your network and firewall. " ) }}');
+                    return updateProperty('#noob-info', '{{ _( "Your local network failed. Please check your network and firewall. " ) }}');
                 }
 
                 if ( result['good_ip_num'] < 1){
                     if ( result['scan_ip_thread_num'] < 3 ){
                         return updateProperty('#noob-info', '{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>." ) }}');
                     }else{
-                        return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP, please wait about half an hour." ) }}');
+                        return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}');
                     }
                 }
 
@@ -397,13 +398,13 @@
                 }
 
                 if ( test_http_proxy_setting() == "Fail" ){
-                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/%E8%AE%BE%E7%BD%AE%E4%BB%A3%E7%90%86" target="_blank">' + '{{ _( "Please check browser proxy setting." ) }}' + '</a>');
+                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/%E8%AE%BE%E7%BD%AE%E4%BB%A3%E7%90%86" target="_blank">' + '{{ _( "Please check your browser proxy setting." ) }}' + '</a>');
                 } else  if ( test_http_proxy_setting() == "Detecting" ){
                     return updateProperty('#noob-info', '{{ _( "Detecting..." ) }}');
                 }
 
                 if ( test_https_proxy_setting() == "Fail"){
-                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Import-CA" target="_blank">' + '{{ _( "Please import certificate to browser." ) }}' + '</a>');
+                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Import-CA" target="_blank">' + '{{ _( "Please import certificates to your browser." ) }}' + '</a>');
                 } else  if ( test_https_proxy_setting() == "Detecting" ){
                     return updateProperty('#noob-info', '{{ _( "Detecting..." ) }}');
                 }
@@ -412,7 +413,7 @@
                     return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}');
                 }
 
-                return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'] + '{{ _( ", Everything is OK, you have reach the real internet. " ) }}');
+                return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'] + '{{ _( ", Everything is OK. Welcome to the FREE Internet. " ) }}');
 
             },
             error: function(result) {
@@ -427,7 +428,7 @@
     }
     function appid_string(appid){
         if (is_public_appid(appid)){
-            return "{{ _( "You are using public Appid." ) }}";
+            return "{{ _( "You are using the public Appid." ) }}";
         }else{
             return appid;
         }
@@ -444,9 +445,12 @@
         }
         return true;
     }
-    function connection_status_string(connected_link_new, connected_link_used){
-        //var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world." ) }}':'{{ _( "Connection not established yet." ) }}'
-        var conn_str = connected_link_new + "," + connected_link_used;
+    function connection_status_string(network_state, connected_link_new, connected_link_used){
+        if ( connected_link_new + connected_link_used == 0 && !network_state ){
+            return '{{ _( "Your local network failed. " ) }}';
+        }
+        var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world" ) }}':'{{ _( "Connection not established yet" ) }}'
+        var conn_str = connected_link_new + "; " + connected_link_used + " (" + tip + ")";
         return conn_str;
     }
     function proxy_status_string(proxy_state,proxy_url){

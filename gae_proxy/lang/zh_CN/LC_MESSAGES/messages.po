@@ -3,16 +3,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-19 15:47+0800\n"
+"POT-Creation-Date: 2015-12-19 14:39+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
-"Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
+"Generated-By: Babel 1.3\n"
 
 msgid "Scan Settings"
 msgstr "设置"
@@ -29,7 +28,7 @@ msgstr "导出 IP"
 msgid "Check IP"
 msgstr "检查所有IP"
 
-msgid "Advance"
+msgid "Advanced"
 msgstr "高级"
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
@@ -119,8 +118,8 @@ msgstr "通过文件配置"
 msgid "Configure GAEProxy"
 msgstr "配置GAEProxy"
 
-msgid "Failed reading the seeting."
-msgstr "读取设置失败。"
+msgid "Failed reading the settings."
+msgstr "读取设置失败"
 
 msgid "Wait for checking setting..."
 msgstr "请等待后台检查设置有效性。。。"
@@ -131,14 +130,11 @@ msgstr "设置保存成功"
 msgid "AppID invalid:"
 msgstr "无效的Appid:"
 
-msgid ", deploy appid before use."
+msgid ", deploy appid before using."
 msgstr "，使用前请先部署。"
 
-msgid "Save setting fail:"
-msgstr "保存设置失败："
-
-msgid "Failed Saving Setting."
-msgstr "读取设置失败"
+msgid "Failed saving settings"
+msgstr "保存设置失败"
 
 msgid "Deploy XX-Net onto GAE"
 msgstr "部署XX-Net至GAE"
@@ -180,7 +176,7 @@ msgid ""
 "while configuring GAE Proxy"
 msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
 
-msgid "Start deploy"
+msgid "Start to deploy"
 msgstr "开始部署"
 
 msgid "Redploy the server if XX-Net version is prior to 1.13.6."
@@ -219,10 +215,10 @@ msgstr "终止部署"
 msgid "Deployment cancelled."
 msgstr "部署已被取消。"
 
-msgid "Either AppID is empty or invalid."
-msgstr "AppID为空或无效。"
+msgid "Your AppID is either empty or invalid."
+msgstr "您的AppID为空或无效。"
 
-msgid "Either your Email address is empty or invalid."
+msgid "Your Email address is either empty or invalid."
 msgstr "您的email为空或无效。"
 
 msgid "Please fill in your account & its password."
@@ -327,26 +323,35 @@ msgstr "XX-Net版本"
 msgid "System Proxy Status"
 msgstr "系统代理状态"
 
-msgid "Proxy Listen"
-msgstr "代理服务监听端口"
+msgid "Listening Proxy"
+msgstr "监听代理"
 
 msgid "PAC URL"
 msgstr "PAC自动代理地址"
 
-msgid "Working App IDs"
+msgid "Working AppIDs"
 msgstr "当前工作AppID"
 
-msgid "Out of Quota App IDs"
+msgid "Out-of-quota AppIDs"
 msgstr "超额AppID"
 
-msgid "Not Exist App IDs"
-msgstr "不存在的AppID"
+msgid "Nonexistent AppIDs"
+msgstr "不存在的 AppIDs"
 
 msgid "System Version"
 msgstr "系统版本"
 
 msgid "Feedback"
 msgstr "反馈问题"
+
+msgid "Check Github issues"
+msgstr "查看Github的问题讨论"
+
+msgid " or "
+msgstr "或者"
+
+msgid " Discussions"
+msgstr "讨论"
 
 msgid "Diagnostic Info"
 msgstr "诊断信息"
@@ -380,7 +385,7 @@ msgstr "指引"
 msgid "to troubleshoot."
 msgstr "查找问题原因。"
 
-msgid "Local network fail, please check your network and firewall. "
+msgid "Your local network failed. Please check your network and firewall. "
 msgstr "网络无法连接，请检查网络和防火墙设置。"
 
 msgid ""
@@ -388,7 +393,7 @@ msgid ""
 "scaner</a>."
 msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。"
 
-msgid "XX-Net is scanning IP, please wait about half an hour."
+msgid "XX-Net is scanning IP. Please wait about half an hour."
 msgstr "请等待大约半小时，XX-Net需要扫描IP。"
 
 msgid ""
@@ -412,13 +417,13 @@ msgstr "没有可用APPID，请检查。"
 msgid "Connection not established yet. "
 msgstr "尚未建立连接"
 
-msgid "Please check browser proxy setting."
+msgid "Please check your browser proxy setting."
 msgstr "请检查浏览器代理设置。"
 
 msgid "Detecting..."
 msgstr "正在自检..."
 
-msgid "Please import certificate to browser."
+msgid "Please import certificates to your browser."
 msgstr "请导入浏览器CA证书"
 
 msgid ""
@@ -429,16 +434,19 @@ msgstr ""
 "您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
 
-msgid ", Everything is OK, you have reach the real internet. "
+msgid ", Everything is OK. Welcome to the FREE Internet. "
 msgstr "，一切正常，你可以访问真正的互联网了。"
 
-msgid "You are using public Appid."
+msgid "You are using the public Appid."
 msgstr "你正使用公共AppID"
 
-msgid "Connected to the world."
+msgid "Your local network failed. "
+msgstr "网络无法连接。"
+
+msgid "Connected to the world"
 msgstr "已经翻墙成功"
 
-msgid "Connection not established yet."
+msgid "Connection not established yet"
 msgstr "尚未建立连接"
 
 msgid "Auto proxy enabled at "
