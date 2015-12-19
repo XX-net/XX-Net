@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-18 13:07+0800\n"
+"POT-Creation-Date: 2015-12-19 10:28+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -396,6 +396,9 @@ msgstr "没有可用APPID，请检查。"
 
 msgid "Please check browser proxy setting."
 msgstr "请检查浏览器代理设置。"
+
+msgid "Detecting..."
+msgstr "正在自检..."
 
 msgid "Please import certificate to browser."
 msgstr "请导入浏览器CA证书"

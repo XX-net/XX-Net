@@ -285,8 +285,8 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
-                if ( test_http_proxy_setting() ){
-                    var ca_status_str = test_https_proxy_setting() ? "OK" : "Fail";
+                if ( test_http_proxy_setting() == "OK"){
+                    var ca_status_str = test_https_proxy_setting();
                     $("#tr_ca-status").show();
                 }else{
                     var ca_status_str = "";
@@ -316,7 +316,7 @@
                     'td#network-status': result['network_state'] ? "OK" : "Fail",
                     'td#ip-num': result['good_ip_num'],
                     'td#connection-status': connection_status_string(result['connected_link_new'], result['connected_link_used']),
-                    'td#browser-proxy-setting': test_http_proxy_setting() ? "OK" : "Fail",
+                    'td#browser-proxy-setting': test_http_proxy_setting(),
                     'td#ca-status': ca_status_str,
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
                     'td#ip-quality': result['ip_quality'],
@@ -389,12 +389,16 @@
                     return updateProperty('#noob-info', '{{ _( "No working appid. Please check. " ) }}');
                 }
 
-                if ( !test_http_proxy_setting() ){
-                    return updateProperty('#noob-info', '{{ _( "Please check browser proxy setting." ) }}');
+                if ( test_http_proxy_setting() == "Fail" ){
+                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/%E8%AE%BE%E7%BD%AE%E4%BB%A3%E7%90%86" target="_blank">' + '{{ _( "Please check browser proxy setting." ) }}' + '</a>');
+                } else  if ( test_http_proxy_setting() == "Detecting" ){
+                    return updateProperty('#noob-info', '{{ _( "Detecting..." ) }}');
                 }
 
-                if ( !test_https_proxy_setting() ){
-                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Import-CA">' + '{{ _( "Please import certificate to browser." ) }}' + '</a>');
+                if ( test_https_proxy_setting() == "Fail"){
+                    return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Import-CA" target="_blank">' + '{{ _( "Please import certificate to browser." ) }}' + '</a>');
+                } else  if ( test_https_proxy_setting() == "Detecting" ){
+                    return updateProperty('#noob-info', '{{ _( "Detecting..." ) }}');
                 }
 
                 if ( is_public_appid(result['working_appid']) ){
@@ -450,7 +454,7 @@
 
     function test_http_proxy_setting() {
         if (window.http_proxy_setting === "OK") {
-            return true;
+            return "OK";
         }
 
         $.ajax({
@@ -472,14 +476,14 @@
         });
 
         if (window.http_proxy_setting === "Fail") {
-            return false;
+            return "Fail";
         }
-        return true;
+        return "Detecting";
     }
 
     function test_https_proxy_setting() {
         if (window.https_proxy_setting === "OK") {
-            return true;
+            return "OK";
         }
 
         $.ajax({
@@ -501,9 +505,9 @@
         });
 
         if (window.https_proxy_setting === "Fail") {
-            return false;
+            return "Fail";
         }
-        return true;
+        return "Detecting";
     }
     test_http_proxy_setting();
     test_https_proxy_setting();
