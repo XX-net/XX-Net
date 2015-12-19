@@ -131,12 +131,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                 # i18n code lines (Both the locale dir & the template dir are module-dependent)
                 locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
-                template_dir = os.path.abspath(os.path.join(root_path, module, 'web_ui'))
-                content = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", relate_path))
+                content = i18n_translator.render(locale_dir, file_path)
                 return self.send_response('text/html', content)
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
-
 
         xlog.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
