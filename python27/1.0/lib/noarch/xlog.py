@@ -7,6 +7,8 @@ import traceback
 import threading
 import json
 import shutil
+import types
+
 
 CRITICAL = 50
 FATAL = CRITICAL
@@ -198,8 +200,10 @@ class Logger():
 
     def unicode_line(self, line):
         try:
-            return line.encode("utf-8")
-            #return unicode(line, errors='replace')
+            if type(line) is types.UnicodeType:
+                return line
+            else:
+                return unicode(line, errors='ignore')
         except Exception as e:
             print("unicode err:%r" % e)
             print("line can't decode:%s" % line)

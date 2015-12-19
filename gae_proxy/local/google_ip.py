@@ -216,13 +216,18 @@ class Check_ip():
             self.scan_ip_thread_num = scan_ip_thread_num
             self.search_more_google_ip()
 
-    def ip_handshake_th(self, num):
+    def ip_quality(self, num=20):
         try:
             iplist_length = len(self.gws_ip_list)
-            ip_index = iplist_length if iplist_length < num else num
-            last_ip = self.gws_ip_list[ip_index]
-            handshake_time = self.ip_dict[last_ip]['handshake_time']
-            return handshake_time
+            ip_th = min(num, iplist_length)
+            for i in range(ip_th, 0, -1):
+                last_ip = self.gws_ip_list[i]
+                if self.ip_dict[last_ip]['fail_times'] > 0:
+                    continue
+                handshake_time = self.ip_dict[last_ip]['handshake_time']
+                return handshake_time
+
+            return 9999
         except:
             return 9999
 
@@ -383,10 +388,14 @@ class Check_ip():
             xlog.warn("%s handshake:%d impossible", ip_str, 1000 * handshake_time)
             return
 
+        time_now = time.time()
+        check_ip.network_ok = True
+        check_ip.last_check_time = time_now
+
         self.ip_lock.acquire()
         try:
             if ip_str in self.ip_dict:
-                time_now = time.time()
+
 
                 # Case: some good ip, average handshake time is 300ms
                 # some times ip package lost cause handshake time become 2000ms
@@ -704,10 +713,10 @@ class Check_ip():
                 continue
 
             try:
-                check_ip.check_appid(ssl_sock, appid)
-                return True
-            except:
-                return False
+                return check_ip.check_appid(ssl_sock, appid)
+            except Exception as e:
+                xlog.exception("check_appid %s %r", appid, e)
+                continue
 
         return False
 

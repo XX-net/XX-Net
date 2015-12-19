@@ -329,7 +329,7 @@ class TestHttpServer(HttpServerHandler):
 
         if url_path == '/':
             data = "OK\r\n"
-            self.wfile.write('HTTP/1.1 200\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+            self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
         elif url_path == '/null':
             mimetype = "application/x-binary"
             if "size" in reqs:

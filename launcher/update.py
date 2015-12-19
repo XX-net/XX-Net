@@ -8,12 +8,12 @@ import time
 import threading
 import zipfile
 import sys
+import platform
 from distutils.version import LooseVersion
 
 from instances import xlog
 import config
 import uuid
-import platform
 
 import update_from_github
 
@@ -258,7 +258,9 @@ def check_push_update():
     try:
         opener = get_opener()
 
-        req_url = update_url + "?uuid=" + get_uuid() + "&version=" + update_from_github.current_version()
+        req_url = update_url + "?uuid=" + get_uuid() \
+            + "&version=" + update_from_github.current_version() \
+            + "&platform=" + platform.platform()
         try:
             update_content = opener.open(req_url).read()
         except Exception as e:

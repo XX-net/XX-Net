@@ -37,7 +37,6 @@ module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
 
-
     def load_module_menus(self):
         global module_menus
         module_menus = {}

@@ -39,31 +39,6 @@ web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 import yaml
 
-def get_proxy_state():
-    # Disable this function first.
-    # It may need move to launcher
-    # and call from http or other way.
-    return ("Proxy disabled","")
-
-
-    import _winreg as winreg
-    REG_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
-    INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,REG_PATH,0, winreg.KEY_ALL_ACCESS)
-    try:
-        AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
-        if AutoConfigURL:
-            return ("Auto proxy enabled",AutoConfigURL)
-    except Exception as e:
-        pass
-
-    try:
-        ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
-        ProxyServer = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyServer')[0]
-        if ProxyEnable:
-            return ("Proxy enabled",ProxyServer)
-    except Exception as e:
-        pass
-    return ("Proxy disabled","")
 
 class User_special(object):
     def __init__(self):
@@ -424,8 +399,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         good_ip_num = google_ip.good_ip_num
         if good_ip_num > len(google_ip.gws_ip_list):
             good_ip_num = len(google_ip.gws_ip_list)
-        res_arr = {"ip_num":len(google_ip.gws_ip_list),
-                   "good_ip_num":good_ip_num,
+
+        res_arr = {
                    "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
                    "os_system":platform.system(),
                    "os_version":platform.version(),
@@ -436,25 +411,29 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "browser":user_agent,
                    "xxnet_version":self.xxnet_version(),
                    "python_version": platform.python_version(),
+
                    "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
+                   "pac_url":config.pac_url,
+                   "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
+
                    "gae_appid":"|".join(config.GAE_APPIDS),
-                   "network_state":check_ip.network_is_ok(),
-                   "connected_link_new":len(https_manager.new_conn_pool.pool),
-                   "connected_link_used":len(https_manager.gae_conn_pool.pool),
                    "working_appid":"|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids":"|".join(appid_manager.not_exist_appids),
-                   "pac_url":config.pac_url,
+
+                   "network_state":check_ip.network_is_ok(),
+                   "ip_num":len(google_ip.gws_ip_list),
+                   "good_ip_num":good_ip_num,
+                   "connected_link_new":len(https_manager.new_conn_pool.pool),
+                   "connected_link_used":len(https_manager.gae_conn_pool.pool),
                    "scan_ip_thread_num":google_ip.searching_thread_count,
-                   "ip_handshake_10":google_ip.ip_handshake_th(10),
+                   "ip_quality": google_ip.ip_quality(),
                    "block_stat":connect_control.block_stat(),
-                   "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
+
                    "high_prior_connecting_num":connect_control.high_prior_connecting_num,
                    "low_prior_connecting_num":connect_control.low_prior_connecting_num,
                    "high_prior_lock":len(connect_control.high_prior_lock),
                    "low_prior_lock":len(connect_control.low_prior_lock),
-                   "proxy_state":get_proxy_state()[0],
-                   "proxy_url":get_proxy_state()[1],
                    }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response('text/html', data)
@@ -470,10 +449,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             elif reqs['cmd'] == ['set_config']:
                 appids = self.postvars['appid'][0]
                 if appids != user_config.user_special.appid:
-                    fail_appid_list = google_ip.test_appids(appids)
-                    if len(fail_appid_list):
-                        fail_appid = "|".join(fail_appid_list)
-                        return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+                    if appids:
+                        fail_appid_list = google_ip.test_appids(appids)
+                        if len(fail_appid_list):
+                            fail_appid = "|".join(fail_appid_list)
+                            return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
 
                     user_config.user_special.appid = appids
                 user_config.user_special.password = self.postvars['password'][0]

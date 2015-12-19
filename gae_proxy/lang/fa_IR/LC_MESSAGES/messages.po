@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-19 13:16+0800\n"
+"POT-Creation-Date: 2015-12-19 14:39+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fa_IR <LL@li.org>\n"
@@ -292,16 +292,28 @@ msgstr "خواندن تنظیمات انجام نشد"
 msgid "Unkown error occurred"
 msgstr "خطای ناشناخته رخ داده"
 
+msgid "Show Detail"
+msgstr "نمایش جزئیات"
+
+msgid "Local Network Status"
+msgstr "شبکه محلی ما شکست خورده است."
+
 msgid "IP Number"
 msgstr "IP شماره"
 
-msgid "10th IP handshake(ms)"
-msgstr "دست دادن 10 IP (MS)"
+msgid "IP Quality"
+msgstr "IP کیفیت"
 
-msgid "Connection Status"
+msgid "Connection Pool"
 msgstr "وضعیت اتصال"
 
-msgid "Number of IP-Scaning Threads"
+msgid "Browser Proxy Setting"
+msgstr "مرورگر تنظیم پروکسی"
+
+msgid "CA status"
+msgstr "وضعیت CA"
+
+msgid "Number of IP-Scanning Threads"
 msgstr "تعداد IP-اسکن موضوعات"
 
 msgid "Settings"
@@ -334,14 +346,17 @@ msgstr "AppIDs وجود ندارد"
 msgid "System Version"
 msgstr "نسخه سیستم"
 
-msgid "Pro Mode"
-msgstr "حالت حرفه ای"
-
-msgid "Show advanced info"
-msgstr "نمایش اطلاعات و جوی پیشرفته"
-
 msgid "Feedback"
 msgstr "بازخورد"
+
+msgid "Check Github issues"
+msgstr "بررسی مسائل _Github_"
+
+msgid " or "
+msgstr " یا "
+
+msgid " Discussions"
+msgstr "بحث"
 
 msgid "Diagnostic Info"
 msgstr "اطلاعات تشخیصی"
@@ -377,43 +392,40 @@ msgstr "راهنما"
 msgid "to troubleshoot."
 msgstr "به عیب یابی."
 
-msgid "You are using XX-Net version "
-msgstr "شما با استفاده از نسخه _XX-Net_ "
-
 msgid "Your local network failed. Please check your network and firewall. "
 msgstr "شبکه محلی شما را شکست خورده است. لطفا شبکه و فایروال خود را چک کنید."
 
-msgid "</p><p>Connection established, congratulation! </p><p>"
+msgid ""
+"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP "
+"scaner</a>."
 msgstr ""
+
+msgid "XX-Net is scanning IP. Please wait about half an hour."
+msgstr "_XX-Net_ اسکن است. لطفا صبر کنید."
 
 msgid "</p><p>Connection not established yet. </p><p>"
 msgstr "</ P> <P> اتصال هنوز مشخص نشده است. </ P> <P>"
 
-msgid "Running low on good IP, "
-msgstr "در حال اجرا کم IP خوب، "
+msgid "No working appid. Please check. "
+msgstr "بدون APPID کارگر. لطفا بررسی کنید. "
 
-msgid "Currently running slow. "
-msgstr "در حال حاضر در حال اجرا کند. "
+msgid "Please check your browser proxy setting."
+msgstr "لطفا تنظیمات پروکسی مرورگر خود را بررسی کنید."
 
-msgid "XX-Net is scaning. Please wait."
-msgstr "_XX-Net_ اسکن است. لطفا صبر کنید."
+msgid "Detecting..."
+msgstr "استقرار ..."
 
-msgid ""
-"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on the "
-"IP scaner</a>."
-msgstr ""
+msgid "Please import certificates to your browser."
+msgstr "لطفا مرورگر خود را به گواهی وارد کنید."
 
 msgid ""
-"You are using the public APPID. You are recommended to <a "
+"You are using public APPID. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
 "target=\"_blank\">deploy your own APPID</a>"
 msgstr ""
 
-msgid "No working appid. Please check. "
-msgstr "بدون APPID کارگر. لطفا بررسی کنید. "
-
-msgid ", All systems go well. "
-msgstr "، تمام سیستم های خوب پیش برود. "
+msgid ", Everything is OK. Welcome to the FREE Internet. "
+msgstr "، همه چی خوبه. به اینترنت خوش آمدید. "
 
 msgid "You are using the public Appid."
 msgstr "شما با استفاده از شناسه های عمومی است."

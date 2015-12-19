@@ -54,23 +54,14 @@ load_proxy_config()
 
 checking_lock = threading.Lock()
 checking_num = 0
-network_ok = True
+network_ok = False
 last_check_time = 0
-check_network_interval = 100
-last_ok_time = 0
+check_network_interval = 60
 
 
-def network_is_ok():
+def check_worker():
     global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
-    if time.time() - last_check_time < check_network_interval:
-        return network_ok
-
-    if time.time() - last_ok_time < check_network_interval:
-        return True
-
-    if checking_num > 0:
-        return network_ok
-
+    time_now = time.time()
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
         xlog.debug("patch socks")
@@ -89,12 +80,14 @@ def network_is_ok():
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
-            xlog.debug("network is ok")
-            network_ok = True
-            last_check_time = time.time()
+            report_network_ok()
+            xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
             return True
-    except:
-        pass
+    except Exception as e:
+        xlog.warn("network fail:%r", e)
+        network_ok = False
+        last_check_time = time.time()
+        return False
     finally:
         checking_lock.acquire()
         checking_num -= 1
@@ -104,10 +97,26 @@ def network_is_ok():
             socket.socket = default_socket
             xlog.debug("restore socket")
 
-    xlog.warn("network fail.")
-    network_ok = False
+
+def network_is_ok(force=False):
+    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+    time_now = time.time()
+    if not force:
+        if time_now - last_check_time < check_network_interval:
+            return network_ok
+
+        if checking_num > 0:
+            return network_ok
+
+    th = threading.Thread(target=check_worker)
+    th.start()
+    return network_ok
+
+
+def report_network_ok():
+    global network_ok, last_check_time
+    network_ok = True
     last_check_time = time.time()
-    return False
 
 ######################################
 # about ip connect time and handshake time
@@ -123,7 +132,6 @@ def network_is_ok():
 
 
 def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
-    global last_ok_time
     ip_port = (ip, port)
 
     if not openssl_context:
@@ -156,7 +164,12 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     ssl_sock.sock = sock
     ssl_sock.connct_time = connct_time
     ssl_sock.handshake_time = handshake_time
-    last_ok_time = time_handshaked
+
+    #report_network_ok()
+    global  network_ok, last_check_time
+    network_ok = True
+    last_check_time = time_handshaked
+
     return ssl_sock
 
 
@@ -177,16 +190,23 @@ def check_appid(ssl_sock, appid):
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
     response.begin()
+    if response.status == 404:
+        xlog.warn("app check %s status:%d", appid, response.status)
+        return False
+
+    if response.status == 503:
+        # out of quota
+        return True
+
     if response.status != 200:
-        #xlog.debug("app check %s status:%d", ssl_sock.ip, response.status)
-        raise Exception("app check fail")
+        xlog.warn("app check %s status:%d", appid, response.status)
 
     content = response.read()
     if "GoAgent" not in content:
-        #xlog.debug("app check %s content:%s", ssl_sock.ip, content)
-        raise Exception("content fail")
+        xlog.warn("app check %s content:%s", appid, content)
+        return False
 
-    ssl_sock.server_type = response.getheader('Server', "")
+    return True
 
 
 # export api for google_ip

@@ -36,22 +36,6 @@ class simpleI18N():
         return lang_code
 
     def po_loader(self, file):
-        def read_msgstr(fp):
-            msgstr = ""
-            while True:
-                line = fp.readline()
-                if not line or len(line) == 0:
-                    break
-
-                if line.startswith("msgstr "):
-                    msgstr += line[8:-2]
-                elif line.startswith("\""):
-                    msgstr += line[1:-2]
-                else:
-                    break
-
-            return msgstr
-
         po_dict = {}
         fp = open(file, "r")
         while True:
@@ -67,7 +51,30 @@ class simpleI18N():
 
             if line.startswith("msgid "):
                 key = line[7:-2]
-                value = read_msgstr(fp)
+                value = ""
+                while True:
+                    line = fp.readline()
+                    if not line:
+                        break
+
+                    if line.startswith("\""):
+                        key += line[1:-2]
+                    elif line.startswith("msgstr "):
+                        value += line[8:-2]
+                        break
+                    else:
+                        break
+
+                while True:
+                    line = fp.readline()
+                    if not line:
+                        break
+
+                    if line.startswith("\""):
+                        value += line[1:-2]
+                    else:
+                        break
+
                 if key == "":
                     continue
 
