@@ -380,13 +380,20 @@
                     }
                 }
 
-                if ( (result['connected_link_new'] + result['connected_link_used']) < 1 ){
-                    return updateProperty('#noob-info', '{{ _( "</p><p>Connection not established yet. </p><p>" ) }}');
+                if (result['working_appid'] == ""){
+                    if ( result['out_of_quota_appids'] != "" ){
+                        if ( is_public_appid(result['gae_appid']) ){
+                            return updateProperty('#noob-info', '{{ _( "Public appid out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}');
+                        }else{
+                            return updateProperty('#noob-info', '{{ _( "Your appid out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy more APPID</a>" ) }}');
+                        }
+                    }else{
+                        return updateProperty('#noob-info', '{{ _( "No working appid. Please check. " ) }}');
+                    }
                 }
 
-
-                if (result['working_appid'] == ""){
-                    return updateProperty('#noob-info', '{{ _( "No working appid. Please check. " ) }}');
+                if ( (result['connected_link_new'] + result['connected_link_used']) < 1 ){
+                    return updateProperty('#noob-info', '{{ _( "Connection not established yet. " ) }}');
                 }
 
                 if ( test_http_proxy_setting() == "Fail" ){

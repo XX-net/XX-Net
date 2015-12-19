@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-19 10:28+0800\n"
+"POT-Creation-Date: 2015-12-19 15:47+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -121,6 +121,9 @@ msgstr "配置GAEProxy"
 
 msgid "Failed reading the seeting."
 msgstr "读取设置失败。"
+
+msgid "Wait for checking setting..."
+msgstr "请等待后台检查设置有效性。。。"
 
 msgid "Settings saved successfully"
 msgstr "设置保存成功"
@@ -388,11 +391,26 @@ msgstr "建议<a href=\"./?module=gae_proxy&menu=scan_ip\">启动IP扫描</a>。
 msgid "XX-Net is scanning IP, please wait about half an hour."
 msgstr "请等待大约半小时，XX-Net需要扫描IP。"
 
-msgid "</p><p>Connection not established yet. </p><p>"
-msgstr "</p><p>目前尚未建立连接。</p><p>"
+msgid ""
+"Public appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own "
+"APPID</a>"
+msgstr ""
+"公共APPID配额已用完，请<a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
+
+msgid ""
+"Your appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">deploy more APPID</a>"
+msgstr ""
+"您的APPID流量已经用完，请<a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">部署更多APPID</a>。"
 
 msgid "No working appid. Please check. "
 msgstr "没有可用APPID，请检查。"
+
+msgid "Connection not established yet. "
+msgstr "尚未建立连接"
 
 msgid "Please check browser proxy setting."
 msgstr "请检查浏览器代理设置。"
