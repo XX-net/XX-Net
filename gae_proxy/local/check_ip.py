@@ -190,16 +190,23 @@ def check_appid(ssl_sock, appid):
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
     response.begin()
+    if response.status == 404:
+        xlog.warn("app check %s status:%d", appid, response.status)
+        return False
+
+    if response.status == 503:
+        # out of quota
+        return True
+
     if response.status != 200:
-        #xlog.debug("app check %s status:%d", ssl_sock.ip, response.status)
-        raise Exception("app check fail")
+        xlog.warn("app check %s status:%d", appid, response.status)
 
     content = response.read()
     if "GoAgent" not in content:
-        #xlog.debug("app check %s content:%s", ssl_sock.ip, content)
-        raise Exception("content fail")
+        xlog.warn("app check %s content:%s", appid, content)
+        return False
 
-    ssl_sock.server_type = response.getheader('Server', "")
+    return True
 
 
 # export api for google_ip

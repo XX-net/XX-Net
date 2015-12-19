@@ -713,10 +713,10 @@ class Check_ip():
                 continue
 
             try:
-                check_ip.check_appid(ssl_sock, appid)
-                return True
-            except:
-                return False
+                return check_ip.check_appid(ssl_sock, appid)
+            except Exception as e:
+                xlog.exception("check_appid %s %r", appid, e)
+                continue
 
         return False
 

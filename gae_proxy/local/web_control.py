@@ -449,10 +449,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             elif reqs['cmd'] == ['set_config']:
                 appids = self.postvars['appid'][0]
                 if appids != user_config.user_special.appid:
-                    fail_appid_list = google_ip.test_appids(appids)
-                    if len(fail_appid_list):
-                        fail_appid = "|".join(fail_appid_list)
-                        return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+                    if appids:
+                        fail_appid_list = google_ip.test_appids(appids)
+                        if len(fail_appid_list):
+                            fail_appid = "|".join(fail_appid_list)
+                            return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
 
                     user_config.user_special.appid = appids
                 user_config.user_special.password = self.postvars['password'][0]
