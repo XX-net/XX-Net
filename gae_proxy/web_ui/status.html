@@ -61,7 +61,7 @@
             <td id="proxy-status"></td>
         </tr>
         <tr>
-            <td>{{ _( "Proxy Listen" ) }}</td>
+            <td>{{ _( "Listening Proxy" ) }}</td>
             <td id="proxy-listen"></td>
         </tr>
         <tr>
@@ -85,15 +85,15 @@
     </thead>
     <tbody>
         <tr id="hidden-appids">
-            <td>{{ _( "Working App IDs" ) }}</td>
+            <td>{{ _( "Working AppIDs" ) }}</td>
             <td id="working-appid"></td>
         </tr>
         <tr id="tr-out-of-quota-appids" hidden="true">
-            <td>{{ _( "Out of Quota App IDs" ) }}</td>
+            <td>{{ _( "Out-of-quota AppIDs" ) }}</td>
             <td id="out-of-quota-appids"></td>
         </tr>
         <tr id="tr-not-exist-appids" hidden="true">
-            <td>{{ _( "Not Exist App IDs" ) }}</td>
+            <td>{{ _( "Nonexistent AppIDs" ) }}</td>
             <td id="not-exist-appids"></td>
         </tr>
     </tbody>
@@ -156,7 +156,7 @@
 <div style="float:left;width: 20%;">
     <label for="pro-mode">{{ _( "Pro Mode" ) }}</label>
 </div>
-<div title='{{ _( "Show advanced information" ) }}'>
+<div title='{{ _( "Show advanced info" ) }}'>
     <input type="checkbox" data-toggle="switch" id="pro-mode" />
 </div>
 <button id="pop-up-report" class="btn btn-primary">{{ _( "Feedback" ) }}</button>
@@ -351,16 +351,16 @@
             dataType: 'JSON',
             success: function(result) {
                 updates1 = '<span>' + '{{ _( "You are using XX-Net version " ) }}' + result['xxnet_version'];
-                updates2 = result['network_state'] ? '' : '{{ _( "Local network fail, please check your network and firewall. " ) }}';
+                updates2 = result['network_state'] ? '' : '{{ _( "Your local network failed. Please check your network and firewall. " ) }}';
                 updates2 = updates2 + ((result['connected_link_new'] + result['connected_link_used']) > 0 ? '{{ _( "</p><p>Connection established, congratulation! </p><p>" ) }}' : '{{ _( "</p><p>Connection not established yet. </p><p>" ) }}');
                 updates3 = result['good_ip_num'] > 20 ? '':'{{ _( "Running low on good IP, " ) }}';
                 updates3 = updates3 + (result['ip_handshake_10'] < 400 ? '':'{{ _( "Currently running slow. " ) }}');
                 if (updates3 != ""){
-                    updates3 = updates3 + (result['scan_ip_thread_num'] != 0 ? '{{ _( "XX-Net is scaning, please wait." ) }}':'{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>." ) }}');
+                    updates3 = updates3 + (result['scan_ip_thread_num'] != 0 ? '{{ _( "XX-Net is scaning. Please wait." ) }}':'{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on the IP scaner</a>." ) }}');
                     updates2 = updates2 +updates3;
                 }
                 if (result['working_appid'] != ""){
-                    updates2 = updates2 + (is_public_appid(result['working_appid']) ? '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}' : '');
+                    updates2 = updates2 + (is_public_appid(result['working_appid']) ? '{{ _( "You are using the public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}' : '');
                 }else{
                     updates2 = updates2 + '{{ _( "No working appid. Please check. " ) }}';
                 }
@@ -380,7 +380,7 @@
     }
     function appid_string(appid){
         if (is_public_appid(appid)){
-            return "{{ _( "You are using public Appid." ) }}";
+            return "{{ _( "You are using the public Appid." ) }}";
         }else{
             return appid;
         }
@@ -399,7 +399,7 @@
     }
     function connection_status_string(network_state, connected_link_new, connected_link_used){
         if ( connected_link_new + connected_link_used == 0 && !network_state ){
-            return '{{ _( "Local network fail. " ) }}';
+            return '{{ _( "Your local network failed. " ) }}';
         }
         var tip = connected_link_new + connected_link_used > 0 ? '{{ _( "Connected to the world" ) }}':'{{ _( "Connection not established yet" ) }}'
         var conn_str = connected_link_new + "," + connected_link_used + " (" + tip + ")";

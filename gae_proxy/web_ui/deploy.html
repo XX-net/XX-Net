@@ -58,7 +58,7 @@
             </div> <!-- #advanced-options -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" type="submit">{{ _("Start deploy") }}</button>
+                    <button class="btn btn-primary btn-block" type="submit">{{ _("Start to deploy") }}</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
@@ -218,7 +218,7 @@
         if ( status == 'start' ) {
             $('button.btn').removeClass('btn-danger');
             $('button.btn').addClass('btn-primary');
-            $('button.btn').html('{{ _("Start deploy") }}');
+            $('button.btn').html('{{ _("Start to deploy") }}');
         } else if ( status == 'cancel' ) {
             $('button.btn').removeClass('btn-primary');
             $('button.btn').addClass('btn-danger');
@@ -228,7 +228,7 @@
 </script>
 <script type="text/javascript">
     $('button.btn').click(function() {
-        if ( $('button.btn').html() == '{{ _("Start deploy") }}' ){
+        if ( $('button.btn').html() == '{{ _("Start to deploy") }}' ){
             onStart();
         } else if ( $('button.btn').html() == '{{ _("Terminate deploying") }}' ) {
             onCancel();
@@ -279,10 +279,10 @@
         var errorMessage = '';
 
         if ( appId.length == 0 || !isAppIdValid(appId) ) {
-            errorMessage += '{{ _("Either AppID is empty or invalid.") }}<br>';
+            errorMessage += '{{ _("Your AppID is either empty or invalid.") }}<br>';
         }
         if ( email.length == 0 || !isEmailValid(email) ) {
-            errorMessage += '{{ _("Either your Email address is empty or invalid.") }}<br>';
+            errorMessage += '{{ _("Your Email address is either empty or invalid.") }}<br>';
         }
         if ( password.length == 0 ) {
             errorMessage += '{{ _("Please fill in your account & its password.") }}<br>'

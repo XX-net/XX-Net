@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-18 12:04+0800\n"
+"POT-Creation-Date: 2015-12-19 13:16+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -28,7 +28,7 @@ msgstr ""
 msgid "Check IP"
 msgstr ""
 
-msgid "Advance"
+msgid "Advanced"
 msgstr ""
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
@@ -118,7 +118,7 @@ msgstr ""
 msgid "Configure GAEProxy"
 msgstr ""
 
-msgid "Failed reading the seeting."
+msgid "Failed reading the settings."
 msgstr ""
 
 msgid "Settings saved successfully"
@@ -127,13 +127,10 @@ msgstr ""
 msgid "AppID invalid:"
 msgstr ""
 
-msgid ", deploy appid before use."
+msgid ", deploy appid before using."
 msgstr ""
 
-msgid "Save setting fail:"
-msgstr ""
-
-msgid "Failed Saving Setting."
+msgid "Failed saving settings"
 msgstr ""
 
 msgid "Deploy XX-Net onto GAE"
@@ -176,7 +173,7 @@ msgid ""
 "while configuring GAE Proxy"
 msgstr ""
 
-msgid "Start deploy"
+msgid "Start to deploy"
 msgstr ""
 
 msgid "Redploy the server if XX-Net version is prior to 1.13.6."
@@ -215,10 +212,10 @@ msgstr ""
 msgid "Deployment cancelled."
 msgstr ""
 
-msgid "Either AppID is empty or invalid."
+msgid "Your AppID is either empty or invalid."
 msgstr ""
 
-msgid "Either your Email address is empty or invalid."
+msgid "Your Email address is either empty or invalid."
 msgstr ""
 
 msgid "Please fill in your account & its password."
@@ -255,9 +252,6 @@ msgid "Configuration"
 msgstr ""
 
 msgid "Deploy Server"
-msgstr ""
-
-msgid "Advanced"
 msgstr ""
 
 msgid "Refresh"
@@ -314,19 +308,19 @@ msgstr ""
 msgid "System Proxy Status"
 msgstr ""
 
-msgid "Proxy Listen"
+msgid "Listening Proxy"
 msgstr ""
 
 msgid "PAC URL"
 msgstr ""
 
-msgid "Working App IDs"
+msgid "Working AppIDs"
 msgstr ""
 
-msgid "Out of Quota App IDs"
+msgid "Out-of-quota AppIDs"
 msgstr ""
 
-msgid "Not Exist App IDs"
+msgid "Nonexistent AppIDs"
 msgstr ""
 
 msgid "System Version"
@@ -335,7 +329,7 @@ msgstr ""
 msgid "Pro Mode"
 msgstr ""
 
-msgid "Show advanced information"
+msgid "Show advanced info"
 msgstr ""
 
 msgid "Feedback"
@@ -376,7 +370,7 @@ msgstr ""
 msgid "You are using XX-Net version "
 msgstr ""
 
-msgid "Local network fail, please check your network and firewall. "
+msgid "Your local network failed. Please check your network and firewall. "
 msgstr ""
 
 msgid "</p><p>Connection established, congratulation! </p><p>"
@@ -391,16 +385,16 @@ msgstr ""
 msgid "Currently running slow. "
 msgstr ""
 
-msgid "XX-Net is scaning, please wait."
+msgid "XX-Net is scaning. Please wait."
 msgstr ""
 
 msgid ""
-"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP "
-"scaner</a>."
+"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on the "
+"IP scaner</a>."
 msgstr ""
 
 msgid ""
-"You are using public APPID. You are recommended to <a "
+"You are using the public APPID. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
 "target=\"_blank\">deploy your own APPID</a>"
 msgstr ""
@@ -411,10 +405,10 @@ msgstr ""
 msgid ", All systems go well. "
 msgstr ""
 
-msgid "You are using public Appid."
+msgid "You are using the public Appid."
 msgstr ""
 
-msgid "Local network fail. "
+msgid "Your local network failed. "
 msgstr ""
 
 msgid "Connected to the world"
@@ -431,6 +425,5 @@ msgstr ""
 
 msgid "Proxy disabled"
 msgstr ""
-
 
 

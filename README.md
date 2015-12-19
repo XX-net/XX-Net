@@ -1,10 +1,10 @@
 
 
-XX-Net
+XX-Net - A Rebirth of Goagent
 ========
-翻墙工具套件  
+翻墙工具套件 A firewall circumvention toolkit
 * GAE proxy, 稳定、易用、快速  
-  Stable, easy and fast proxy  
+  Stable, ease-of-use and fast proxy based on GAE  
 * Web界面，人性化交互  
   Friendly web UI  
 
@@ -17,19 +17,19 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
-使用方法：https://github.com/XX-net/XX-Net/wiki/使用方法
+使用方法(Usage)：https://github.com/XX-net/XX-Net/wiki/使用方法
 
-更新历史：https://github.com/XX-net/XX-Net/wiki/更新历史
+更新历史(Update history)：https://github.com/XX-net/XX-Net/wiki/更新历史
   
   
 
 
 
 
-平台支持(Support Platforms)
+平台支持(Supporting Platforms)
 ================
-* Windows 7/8/10 （xp 需要 [tcpip.sys补丁]( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014.）
-  Win10 存在声音卡的问题 
+* Windows 7/8/10 （XP 需要 [tcpip.sys补丁]XP needs this patch ( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014. Adjust the count to 2014.）
+  Win10 存在声音卡的问题 Audio bug on Windows 10
 * Linux 
 * Mac OS X(10.7; 10.8; 10.9; 10.10; 10.11)
 
@@ -54,17 +54,17 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 ==========
 https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
-集成XX-Net的项目
+集成XX-Net的项目(XX-Net-integrated projects)
 ===============
 * ChromeGAE
-  主页：http://www.ccav1.com/chromegae
-  集成Google Chrome和XX-Net的自动翻墙浏览器
-  维护人：Yanu
-* 集成Chrome和XX-Net
+  主页(Main page)：http://www.ccav1.com/chromegae
+  集成Google Chrome和XX-Net的自动翻墙浏览器(An automatic comobo of Google Chrome browser and XX-Net)
+  维护人(Maintainer)：Yanu
+* 集成Chrome和XX-Net (XX-Net-integrated Chrome)
   https://github.com/yeahwu/chrome-xx
 * plusburg
-  主页：https://github.com/Plusburg/Plusburg
-  集成XX-Net的启动光盘镜像
+  主页(Main page)：https://github.com/Plusburg/Plusburg
+  集成XX-Net的启动光盘镜像 (XX-Net-integrated bootable CD image) 
 * appifed-xx-net
   https://github.com/binarydist/appified-xx-net
-  Mac OSX 环境下，变成一个标准的MAC应用
+  Mac OS X 环境下，变成一个标准的Mac应用A standard Mac app on Mac OS X
