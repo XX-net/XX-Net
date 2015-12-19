@@ -17,6 +17,9 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.8.1
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
 
+集成浏览器版（Browser Bundle）:
+https://github.com/yeahwu/chrome-xx
+
 使用方法(Usage)：https://github.com/XX-net/XX-Net/wiki/使用方法
 
 更新历史(Update history)：https://github.com/XX-net/XX-Net/wiki/更新历史
@@ -56,15 +59,15 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
 集成XX-Net的项目(XX-Net-integrated projects)
 ===============
-* ChromeGAE
-  主页(Main page)：http://www.ccav1.com/chromegae
-  集成Google Chrome和XX-Net的自动翻墙浏览器(An automatic comobo of Google Chrome browser and XX-Net)
-  维护人(Maintainer)：Yanu
-* 集成Chrome和XX-Net (XX-Net-integrated Chrome)
-  https://github.com/yeahwu/chrome-xx
-* plusburg
-  主页(Main page)：https://github.com/Plusburg/Plusburg
+* ChromeGAE  
+  主页(Main page)：http://www.ccav1.com/chromegae  
+  集成Google Chrome和XX-Net的自动翻墙浏览器(An automatic comobo of Google Chrome browser and XX-Net)  
+  维护人(Maintainer)：Yanu  
+* 集成Chrome和XX-Net (XX-Net-integrated Chrome)  
+  https://github.com/yeahwu/chrome-xx  
+* plusburg  
+  主页(Main page)：https://github.com/Plusburg/Plusburg  
   集成XX-Net的启动光盘镜像 (XX-Net-integrated bootable CD image) 
-* appifed-xx-net
-  https://github.com/binarydist/appified-xx-net
-  Mac OS X 环境下，变成一个标准的Mac应用A standard Mac app on Mac OS X
+* appifed-xx-net  
+  https://github.com/binarydist/appified-xx-net  
+  Mac OS X 环境下，变成一个标准的Mac应用A standard Mac app on Mac OS X  
