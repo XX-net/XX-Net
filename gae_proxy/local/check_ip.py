@@ -131,7 +131,7 @@ def report_network_ok():
 # bad case is 1300ms and more.
 
 
-def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
+def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     ip_port = (ip, port)
 
     if not openssl_context:
@@ -155,6 +155,15 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None):
     time_connected = time.time()
     ssl_sock.do_handshake()
     time_handshaked = time.time()
+
+    cert = ssl_sock.get_peer_certificate()
+    if not cert:
+        raise socket.error(' certficate is none')
+
+    if check_cert:
+        issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+        if not issuer_commonname.startswith('Google'):
+            raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
     connct_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)

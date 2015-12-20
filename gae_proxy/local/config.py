@@ -7,7 +7,7 @@ import os
 import re
 import io
 
-from proxy import xlog
+import logging as xlog
 
 
 

@@ -216,7 +216,7 @@ class Check_ip():
             self.scan_ip_thread_num = scan_ip_thread_num
             self.search_more_google_ip()
 
-    def ip_quality(self, num=20):
+    def ip_quality(self, num=10):
         try:
             iplist_length = len(self.gws_ip_list)
             ip_th = min(num, iplist_length)
