@@ -49,7 +49,7 @@
             <td id="ca-status"></td>
         </tr>
         <tr>
-            <td>{{ _( "Number of IP-Scanning Threads" ) }}(<a href="/?module=gae_proxy&menu=scan_ip">{{ _( "Settings" ) }}</a>)</td>
+            <td>{{ _( "Number of IP-Scanning Threads" ) }}(<a href="/?module=gae_proxy&menu=advanced#scan_ip">{{ _( "Settings" ) }}</a>)</td>
             <td id="scan-ip-thread-num"></td>
         </tr>
         <tr>
@@ -375,7 +375,7 @@
 
                 if ( result['good_ip_num'] < 1){
                     if ( result['scan_ip_thread_num'] < 3 ){
-                        return updateProperty('#noob-info', '{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on IP scaner</a>." ) }}');
+                        return updateProperty('#noob-info', '{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">turn on IP scaner</a>." ) }}');
                     }else{
                         return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}');
                     }
