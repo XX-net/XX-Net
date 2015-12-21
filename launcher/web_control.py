@@ -202,7 +202,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             for sub_id in v['sub_menus']:
                 sub_title = v['sub_menus'][sub_id]['title']
                 sub_url = v['sub_menus'][sub_id]['url']
-                if target_module == title and target_menu == sub_url:
+                if target_module == module and target_menu == sub_url:
                     active = 'class="active"'
                 else:
                     active = ''
