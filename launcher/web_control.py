@@ -39,7 +39,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def load_module_menus(self):
         global module_menus
-        module_menus = {}
+        new_module_menus = {}
         #config.load()
         modules = config.get(['modules'], None)
         for module in modules:
@@ -56,9 +56,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
             stream = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", "menu.yaml"))
             module_menu = yaml.load(stream)
-            module_menus[module] = module_menu
+            new_module_menus[module] = module_menu
 
-        module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
