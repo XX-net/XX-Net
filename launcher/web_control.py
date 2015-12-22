@@ -31,7 +31,7 @@ from simple_i18n import simpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-i18n_translator = simpleI18N()
+i18n_translator = simpleI18N(config.get(['language'], None))
 
 module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
@@ -209,7 +209,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 menu_content += '<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % (active, module, sub_url, sub_title)
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
-        if os.path.isfile(right_content_file):            
+        if os.path.isfile(right_content_file):
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
             right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
@@ -235,8 +235,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif check_update == 1:
                 check_update = "stable"
 
-            data = '{ "check_update": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
+                    , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
@@ -251,6 +252,20 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 else:
                     config.set(["update", "check_update"], check_update)
                     config.save()
+
+                    data = '{"res":"success"}'
+
+            elif 'language' in reqs:
+                language = reqs['language'][0]
+
+                if language not in i18n_translator.get_valid_languages():
+                    data = '{"res":"fail, language:%s"}' % language
+                else:
+                    config.set(["language"], language)
+                    config.save()
+
+                    i18n_translator.lang = language
+                    self.load_module_menus()
 
                     data = '{"res":"success"}'
 
@@ -400,7 +415,7 @@ def start():
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
-    
+
     xlog.info("launcher web control started.")
 
 def stop():

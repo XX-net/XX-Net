@@ -1,5 +1,20 @@
 <div id="options">
     <div class="row-fluid">
+        <div class="span4">
+            <label for="language">{{ _( "Language" ) }}</label>
+        </div>
+        <div class="span4">
+            <select id="language">
+                <!-- <option value="de_DE">Deutsch</option> -->
+                <option value="en_US">English</option>
+                <!-- <option value="es_VE">Español</option> -->
+                <option value="fa_IR">فارسی</option>
+                <!-- <option value="ja_JP">日本語</option> -->
+                <option value="zh_CN">简体中文</option>
+            </select>
+        </div>
+    </div>
+    <div class="row-fluid">
         <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="auto-start" type="checkbox" data-toggle="switch" />
@@ -166,6 +181,7 @@
 
                     $( "#php-enable").prop('checked', true);
                 }
+                $( "#language").val(result['language']);
                 $( "#check-update").val(result['check_update']);
             },
             error: function() {
@@ -191,6 +207,14 @@
     });
 </script>
 <script type="text/javascript">
+    $('#language').change(function() {
+        var key   = 'language',
+            value = $(this).val();
+
+        setConfig(key, value);
+        location.reload();
+    });
+
     $('#auto-start').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'auto_start',

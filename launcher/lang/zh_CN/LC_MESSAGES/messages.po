@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-17 10:50+0800\n"
+"POT-Creation-Date: 2015-12-22 17:26+0800\n"
 "PO-Revision-Date: 2015-12-16 20:43+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -43,6 +43,9 @@ msgstr "感谢以下项目"
 
 msgid "About XX-Net"
 msgstr "关于XX-Net"
+
+msgid "Language"
+msgstr "语言"
 
 msgid "Auto-Startup"
 msgstr "开机自动启动"

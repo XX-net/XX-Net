@@ -35,6 +35,10 @@ class simpleI18N():
         lang_code = 'Unknown'
         return lang_code
 
+    def get_valid_languages(self):
+        # return ['de_DE', 'en_US', 'es_VE', 'fa_IR', 'ja_JP', 'zh_CN']
+        return ['en_US', 'fa_IR', 'zh_CN']
+
     def po_loader(self, file):
         po_dict = {}
         fp = open(file, "r")
