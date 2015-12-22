@@ -212,7 +212,10 @@
             value = $(this).val();
 
         setConfig(key, value);
-        location.reload();
+
+        setTimeout(function () {
+            location.reload();
+        }, 500);
     });
 
     $('#auto-start').change(function() {
