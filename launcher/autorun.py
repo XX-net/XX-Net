@@ -108,7 +108,7 @@ elif sys.platform == 'darwin':
 </dict>
 </plist>"""
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath( os.path.join(root_path, "start.command"))
     from os.path import expanduser
     home = expanduser("~")
     launch_path = os.path.join(home, "Library/LaunchAgents")

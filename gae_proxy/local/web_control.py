@@ -30,6 +30,7 @@ import ip_utils
 import check_ip
 import cert_util
 import simple_http_server
+import test_appid
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -389,7 +390,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         lang_code = 'Unknown'
         return lang_code
 
-
     def req_status_handler(self):
         if "user-agent" in self.headers.dict:
             user_agent = self.headers.dict["user-agent"]
@@ -401,39 +401,39 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             good_ip_num = len(google_ip.gws_ip_list)
 
         res_arr = {
-                   "sys_platform":"%s, %s" % (platform.machine(), platform.platform()),
-                   "os_system":platform.system(),
-                   "os_version":platform.version(),
-                   "os_release":platform.release(),
-                   "architecture":platform.architecture(),
-                   "os_detail":env_info.os_detail(),
-                   "language":self.get_os_language(),
-                   "browser":user_agent,
-                   "xxnet_version":self.xxnet_version(),
+                   "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
+                   "os_system": platform.system(),
+                   "os_version": platform.version(),
+                   "os_release": platform.release(),
+                   "architecture": platform.architecture(),
+                   "os_detail": env_info.os_detail(),
+                   "language": self.get_os_language(),
+                   "browser": user_agent,
+                   "xxnet_version": self.xxnet_version(),
                    "python_version": platform.python_version(),
 
-                   "proxy_listen":config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
-                   "pac_url":config.pac_url,
-                   "use_ipv6":config.CONFIG.getint("google_ip", "use_ipv6"),
+                   "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
+                   "pac_url": config.pac_url,
+                   "use_ipv6": config.CONFIG.getint("google_ip", "use_ipv6"),
 
-                   "gae_appid":"|".join(config.GAE_APPIDS),
-                   "working_appid":"|".join(appid_manager.working_appid_list),
-                   "out_of_quota_appids":"|".join(appid_manager.out_of_quota_appids),
-                   "not_exist_appids":"|".join(appid_manager.not_exist_appids),
+                   "gae_appid": "|".join(config.GAE_APPIDS),
+                   "working_appid": "|".join(appid_manager.working_appid_list),
+                   "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
+                   "not_exist_appids": "|".join(appid_manager.not_exist_appids),
 
-                   "network_state":check_ip.network_is_ok(),
-                   "ip_num":len(google_ip.gws_ip_list),
-                   "good_ip_num":good_ip_num,
-                   "connected_link_new":len(https_manager.new_conn_pool.pool),
-                   "connected_link_used":len(https_manager.gae_conn_pool.pool),
-                   "scan_ip_thread_num":google_ip.searching_thread_count,
+                   "network_state": check_ip.network_stat,
+                   "ip_num": len(google_ip.gws_ip_list),
+                   "good_ip_num": good_ip_num,
+                   "connected_link_new": len(https_manager.new_conn_pool.pool),
+                   "connected_link_used": len(https_manager.gae_conn_pool.pool),
+                   "scan_ip_thread_num": google_ip.scan_thread_count,
                    "ip_quality": google_ip.ip_quality(),
-                   "block_stat":connect_control.block_stat(),
+                   "block_stat": connect_control.block_stat(),
 
-                   "high_prior_connecting_num":connect_control.high_prior_connecting_num,
-                   "low_prior_connecting_num":connect_control.low_prior_connecting_num,
-                   "high_prior_lock":len(connect_control.high_prior_lock),
-                   "low_prior_lock":len(connect_control.low_prior_lock),
+                   "high_prior_connecting_num": connect_control.high_prior_connecting_num,
+                   "low_prior_connecting_num": connect_control.low_prior_connecting_num,
+                   "high_prior_lock": len(connect_control.high_prior_lock),
+                   "low_prior_lock": len(connect_control.low_prior_lock),
                    }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response('text/html', data)
@@ -443,6 +443,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
+        appid_updated = False
+
         try:
             if reqs['cmd'] == ['get_config']:
                 data = json.dumps(user_config.user_special, default=lambda o: o.__dict__)
@@ -450,11 +452,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 appids = self.postvars['appid'][0]
                 if appids != user_config.user_special.appid:
                     if appids:
-                        fail_appid_list = google_ip.test_appids(appids)
+                        fail_appid_list = test_appid.test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
                             return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
 
+                    appid_updated = True
                     user_config.user_special.appid = appids
                 user_config.user_special.password = self.postvars['password'][0]
                 user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
@@ -474,7 +477,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 import connect_manager
                 connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
-                connect_manager.forwork_manager.load_config()
+                if appid_updated:
+                    connect_manager.https_manager.clean_old_connection()
 
                 google_ip.reset()
                 check_ip.load_proxy_config()
@@ -503,7 +507,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
             if deploy_proc and deploy_proc.poll() == None:
                 xlog.warn("deploy is running, request denied.")
-                data = '{"res":"deploy is running", "time":"%s"}' % (time_now)
+                data = '{"res":"deploy is running", "time":"%s"}' % time_now
 
             else:
                 try:
@@ -523,9 +527,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['cancel']:
             if deploy_proc and deploy_proc.poll() == None:
                 deploy_proc.kill()
-                data = '{"res":"deploy is killed", "time":"%s"}' % (time_now)
+                data = '{"res":"deploy is killed", "time":"%s"}' % time_now
             else:
-                data = '{"res":"deploy is not running", "time":"%s"}' % (time_now)
+                data = '{"res":"deploy is not running", "time":"%s"}' % time_now
 
         elif reqs['cmd'] == ['get_log']:
             if deploy_proc and os.path.isfile(log_path):
@@ -541,7 +545,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 else:
                     status = 'finished'
 
-            data = json.dumps({'status':status,'log':content, 'time':time_now})
+            data = json.dumps({'status': status, 'log': content, 'time': time_now})
 
         self.send_response('text/html', data)
 
@@ -568,7 +572,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 if google_ip.ip_dict[ip]['fail_times'] > 0:
                     continue
                 data += "%s|" % ip
-            data = data[0 : len(data) - 1]
+            data = data[0: len(data) - 1]
             data += '"}'
 
         self.send_response('text/html', data)
@@ -576,7 +580,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def req_test_ip_handler(self):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
-        data = ''
 
         ip = reqs['ip'][0]
         result = check_ip.test_gae_ip(ip)
@@ -622,10 +625,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             transfered_data = google_ip.ip_dict[ip]["transfered_data"]
             transfered_quota = transfered_data - (active_time * config.ip_traffic_quota)
 
-
             history = google_ip.ip_dict[ip]["history"]
             t0 = 0
-            str = ''
+            str_out = ''
             for item in history:
                 t = item[0]
                 v = item[1]
@@ -633,11 +635,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     t0 = t
                 time_per = int((t - t0) * 1000)
                 t0 = t
-                str += "%d(%s) " % (time_per, v)
+                str_out += "%d(%s) " % (time_per, v)
             data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
                     "<td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
                     (i, ip, handshake_time, fail_times, links, get_time, success_time, fail_time,
-                    active_time, transfered_data, transfered_quota, str)
+                    active_time, transfered_data, transfered_quota, str_out)
             i += 1
 
         data += "</table></div></body></html>"
@@ -666,7 +668,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             user_config.save()
 
             scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
-            google_ip.update_scan_thread_num(scan_ip_thread_num)
+            google_ip.adjust_scan_thread_num(scan_ip_thread_num)
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['get_scan_ip_log']:
             data = scan_ip_log.get_log_content()

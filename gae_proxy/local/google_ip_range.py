@@ -13,18 +13,20 @@ from proxy import xlog
 random.seed(time.time()* 1000000)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-default_range_file = os.path.join(current_path, "ip_range.txt")
-user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
 
-class Ip_range(object):
+
+class IpRange(object):
     def __init__(self):
+        self.default_range_file = os.path.join(current_path, "ip_range.txt")
+        self.user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
         self.load_ip_range()
 
     def load_range_content(self):
-        if os.path.isfile(user_range_file):
-            self.range_file = user_range_file
+        
+        if os.path.isfile(self.user_range_file):
+            self.range_file = self.user_range_file
         else:
-            self.range_file = default_range_file
+            self.range_file = self.default_range_file
 
         xlog.info("load ip range file:%s", self.range_file)
         fd = open(self.range_file, "r")
@@ -37,7 +39,7 @@ class Ip_range(object):
         return content
 
     def update_range_content(self, content):
-        with open(user_range_file, "w") as fd:
+        with open(self.user_range_file, "w") as fd:
             fd.write(content)
 
     def load_ip_range(self):
@@ -93,35 +95,19 @@ class Ip_range(object):
             ip_range = self.ip_range_list[index]
             #logging.debug("random.randint %d - %d", ip_range[0], ip_range[1])
             if ip_range[1] == ip_range[0]:
-                return ip_range[1]
+                return ip_utils.ip_num_to_string(ip_range[1])
 
             try:
                 id_2 = random.randint(0, ip_range[1] - ip_range[0])
             except Exception as e:
                 xlog.exception("random.randint:%r %d - %d, %d", e, ip_range[0], ip_range[1], ip_range[1] - ip_range[0])
+                return
 
             ip = ip_range[0] + id_2
             add_last_byte = ip % 255
             if add_last_byte == 0 or add_last_byte == 255:
                 continue
 
-            return ip
+            return ip_utils.ip_num_to_string(ip)
 
-ip_range = Ip_range()
-
-def test():
-    proxy = ip_range()
-    # proxy.show_ip_range()
-    for i in range(1, 300):
-        ip = proxy.get_ip()
-        ip_addr = ip_utils.ip_num_to_string(ip)
-        print "ip:", ip_addr
-
-def test_random():
-    #random.seed(time.time())
-    for i in range(1000):
-        index = random.randint(0, 1000 - 1)
-        print index
-
-if __name__ == '__main__':
-    test_random()
+ip_range = IpRange()

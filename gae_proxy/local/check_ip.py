@@ -54,13 +54,19 @@ load_proxy_config()
 
 checking_lock = threading.Lock()
 checking_num = 0
-network_ok = False
+network_stat = "unknown"
 last_check_time = 0
-check_network_interval = 60
+continue_fail_count = 0
 
+
+def report_network_ok():
+    global network_stat, last_check_time, continue_fail_count
+    network_stat = "OK"
+    last_check_time = time.time()
+    continue_fail_count = 0
 
 def check_worker():
-    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+    global checking_lock, checking_num, network_stat, last_check_time
     time_now = time.time()
     if config.PROXY_ENABLE:
         socket.socket = socks.socksocket
@@ -80,12 +86,13 @@ def check_worker():
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
+            last_check_time = time.time()
             report_network_ok()
             xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
             return True
     except Exception as e:
         xlog.warn("network fail:%r", e)
-        network_ok = False
+        network_stat = "Fail"
         last_check_time = time.time()
         return False
     finally:
@@ -98,25 +105,67 @@ def check_worker():
             xlog.debug("restore socket")
 
 
-def network_is_ok(force=False):
-    global checking_lock, checking_num, network_ok, last_check_time, check_network_interval
+def simple_check_worker():
+    global checking_lock, checking_num, network_stat, last_check_time
+    time_now = time.time()
+    if config.PROXY_ENABLE:
+        socket.socket = socks.socksocket
+        xlog.debug("patch socks")
+
+    checking_lock.acquire()
+    checking_num += 1
+    checking_lock.release()
+    try:
+        conn = httplib.HTTPConnection("www.baidu.com", 80, timeout=3)
+        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+                  "accept":"application/json, text/javascript, */*; q=0.01",
+                  "accept-encoding":"gzip, deflate, sdch",
+                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+                  "connection":"keep-alive"
+                  }
+        conn.request("HEAD", "/", headers=header)
+        response = conn.getresponse()
+        if response.status:
+            last_check_time = time.time()
+            report_network_ok()
+            xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
+            return True
+    except Exception as e:
+        xlog.warn("network fail:%r", e)
+        network_stat = "Fail"
+        last_check_time = time.time()
+        return False
+    finally:
+        checking_lock.acquire()
+        checking_num -= 1
+        checking_lock.release()
+
+        if config.PROXY_ENABLE:
+            socket.socket = default_socket
+            xlog.debug("restore socket")
+
+simple_check_worker()
+
+
+def triger_check_network(force=False):
+    global checking_lock, checking_num, network_stat, last_check_time
     time_now = time.time()
     if not force:
-        if time_now - last_check_time < check_network_interval:
-            return network_ok
-
         if checking_num > 0:
-            return network_ok
+            return
 
-    th = threading.Thread(target=check_worker)
+        if network_stat == "OK":
+            if time_now - last_check_time < 10:
+                return
+        else:
+            # Fail or unknown
+            if time_now - last_check_time < 3:
+                return
+
+    last_check_time = time_now
+    th = threading.Thread(target=simple_check_worker)
     th.start()
-    return network_ok
 
-
-def report_network_ok():
-    global network_ok, last_check_time
-    network_ok = True
-    last_check_time = time.time()
 
 ######################################
 # about ip connect time and handshake time
@@ -147,7 +196,7 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = SSLConnection(openssl_context, sock)
+    ssl_sock = SSLConnection(openssl_context, sock, ip)
     ssl_sock.set_connect_state()
 
     time_begin = time.time()
@@ -155,6 +204,12 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     time_connected = time.time()
     ssl_sock.do_handshake()
     time_handshaked = time.time()
+
+    #report_network_ok
+    global  network_stat, last_check_time, continue_fail_count
+    network_stat = "OK"
+    last_check_time = time_handshaked
+    continue_fail_count = 0
 
     cert = ssl_sock.get_peer_certificate()
     if not cert:
@@ -174,11 +229,6 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     ssl_sock.connct_time = connct_time
     ssl_sock.handshake_time = handshake_time
 
-    #report_network_ok()
-    global  network_ok, last_check_time
-    network_ok = True
-    last_check_time = time_handshaked
-
     return ssl_sock
 
 
@@ -193,7 +243,7 @@ def get_ssl_cert_domain(ssl_sock):
     ssl_sock.domain = ssl_cert.cn
 
 
-def check_appid(ssl_sock, appid):
+def check_appid(ssl_sock, appid, ip):
     request_data = 'GET / HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
@@ -205,10 +255,15 @@ def check_appid(ssl_sock, appid):
 
     if response.status == 503:
         # out of quota
-        return True
+        server_type = response.getheader('Server', "")
+        if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
+            return False
+        else:
+            return True
 
     if response.status != 200:
-        xlog.warn("app check %s status:%d", appid, response.status)
+        #xlog.warn("app check %s ip:%s status:%d", appid, ip, response.status)
+        return False
 
     content = response.read()
     if "GoAgent" not in content:
@@ -218,7 +273,7 @@ def check_appid(ssl_sock, appid):
     return True
 
 
-# export api for google_ip
+# export api for google_ip, appid_manager
 def test_gae_ip(ip, appid=None):
     try:
         ssl_sock = connect_ssl(ip, timeout=max_timeout, openssl_context=openssl_context)
@@ -226,7 +281,8 @@ def test_gae_ip(ip, appid=None):
 
         if not appid:
             appid = appid_manager.get_appid()
-        check_appid(ssl_sock, appid)
+        if not check_appid(ssl_sock, appid, ip):
+            return False
 
         return ssl_sock
     except Exception as e:

@@ -22,6 +22,7 @@ SSLError = OpenSSL.SSL.WantReadError
 
 from config import config
 
+
 def load_proxy_config():
     if config.PROXY_ENABLE:
         if config.PROXY_TYPE == "HTTP":
@@ -33,8 +34,8 @@ def load_proxy_config():
         else:
             xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
             config.PROXY_ENABLE = 0
+            return
 
-    if config.PROXY_ENABLE:
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 load_proxy_config()
 
@@ -47,6 +48,7 @@ NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 import connect_control
+
 
 class Connect_pool():
     def __init__(self):
@@ -210,6 +212,8 @@ class Https_connection_manager(object):
         self.gae_conn_pool = Connect_pool()
         self.host_conn_pool = {}
 
+    def clean_old_connection(self):
+        self.gae_conn_pool.clear()
 
     def head_request(self, ssl_sock):
         if ssl_sock.host == '':
@@ -248,14 +252,14 @@ class Https_connection_manager(object):
             status = response.status
             if status != 200:
                 xlog.debug("app head fail status:%d", status)
-                raise Exception("app check fail")
+                raise Exception("app check fail %r" % status)
             return True
         except httplib.BadStatusLine as e:
             inactive_time = time.time() - ssl_sock.last_use_time
             xlog.debug("%s keep alive fail, time:%d", ssl_sock.ip, inactive_time)
             return False
         except Exception as e:
-            xlog.debug("head request fail:%r", e)
+            xlog.warn("%s head %s request fail:%r", ssl_sock.ip, ssl_sock.appid, e)
             return False
         finally:
             if response:
@@ -427,9 +431,9 @@ class Https_connection_manager(object):
         time_begin = time.time()
         try:
             if config.PROXY_ENABLE:
-                sock = socks.socksocket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
+                sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
             else:
-                sock = socket.socket(socket.AF_INET if ':' not in ip_port[0] else socket.AF_INET6)
+                sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
             # set reuseaddr option to avoid 10048 socket error
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
@@ -442,7 +446,7 @@ class Https_connection_manager(object):
 
             sock.settimeout(self.timeout)
 
-            ssl_sock = SSLConnection(self.openssl_context, sock)
+            ssl_sock = SSLConnection(self.openssl_context, sock, ip, google_ip.ssl_closed)
             ssl_sock.set_connect_state()
 
             ssl_sock.connect(ip_port)
@@ -548,150 +552,14 @@ class Https_connection_manager(object):
                 xlog.debug("create ssl timeout fail.")
                 return None
 
-
-class Forward_connection_manager():
-    timeout = 1
-    max_timeout = 60
-    tcp_connection_cache = Queue.PriorityQueue()
-    thread_num_lock = threading.Lock()
-    thread_num = 0
-
-    def __init__(self):
-        self.load_config()
-
-    def load_config(self):
-        self.max_thread_num = config.CONFIG.getint("connect_manager", "forward_max_connect_thread") #10
-
-    def create_connection(self, host="", port=443, sock_life=5):
-        if port != 443:
-            xlog.warn("forward port %d not supported.", port)
+    def get_new_ssl(self):
+        self.create_more_connection()
+        ret = self.new_conn_pool.get(True, self.max_timeout)
+        if ret:
+            handshake_time, ssl_sock = ret
+            return ssl_sock
+        else:
+            xlog.debug("get_new_ssl timeout fail.")
             return None
 
-        def _create_connection(ip_port, delay=0):
-            time.sleep(delay)
-            ip = ip_port[0]
-            sock = None
-            # start connection time record
-            start_time = time.time()
-            conn_time = 0
-            connect_control.start_connect_register(high_prior=True)
-            try:
-                # create a ipv4/ipv6 socket object
-                if config.PROXY_ENABLE:
-                    sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-                else:
-                    sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-                # set reuseaddr option to avoid 10048 socket error
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                # resize socket recv buffer 8K->32K to improve browser releated application performance
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
-                # disable negal algorithm to send http request quickly.
-                sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-                # set a short timeout to trigger timeout retry more quickly.
-                sock.settimeout(self.timeout)
-
-                # TCP connect
-                sock.connect(ip_port)
-
-                # record TCP connection time
-                conn_time = time.time() - start_time
-                xlog.debug("tcp conn %s time:%d", ip, conn_time * 1000)
-
-                google_ip.update_ip(ip, conn_time * 2000)
-                #logging.info("create_tcp update ip:%s time:%d", ip, conn_time * 2000)
-
-                # put ssl socket object to output queobj
-                #sock.ip = ip
-                self.tcp_connection_cache.put((time.time(), sock))
-            except Exception as e:
-                conn_time = int((time.time() - start_time) * 1000)
-                xlog.debug("tcp conn %s fail t:%d", ip, conn_time)
-                google_ip.report_connect_fail(ip)
-                #logging.info("create_tcp report fail ip:%s", ip)
-                if sock:
-                    sock.close()
-            finally:
-                self.thread_num_lock.acquire()
-                self.thread_num -= 1
-                self.thread_num_lock.release()
-                connect_control.end_connect_register(high_prior=True)
-
-
-        if host != "appengine.google.com":
-            while True:
-                try:
-                    ctime, sock = self.tcp_connection_cache.get_nowait()
-                    if time.time() - ctime < sock_life:
-                        return sock
-                    else:
-                        sock.close()
-                        continue
-                except Queue.Empty:
-                    break
-
-        start_time = time.time()
-        while time.time() - start_time < self.max_timeout:
-
-            if self.thread_num < self.max_thread_num:
-                if host == "appengine.google.com":
-                    ip = google_ip.get_host_ip("*.google.com")
-                else:
-                    ip = google_ip.get_gws_ip()
-                if not ip:
-                    xlog.error("no gws ip.")
-                    return
-                addr = (ip, port)
-                self.thread_num_lock.acquire()
-                self.thread_num += 1
-                self.thread_num_lock.release()
-                p = threading.Thread(target=_create_connection, args=(addr,))
-                p.start()
-
-            try:
-                ctime, sock = self.tcp_connection_cache.get(timeout=0.2)
-                return sock
-            except:
-                continue
-        xlog.warning('create tcp connection fail.')
-
-
-    def forward_socket(self, local, remote, timeout=60, tick=2, bufsize=8192):
-        try:
-            timecount = timeout
-            while 1:
-                timecount -= tick
-                if timecount <= 0:
-                    break
-                (ins, _, errors) = select.select([local, remote], [], [local, remote], tick)
-                if errors:
-                    break
-                if not ins:
-                    continue
-
-                for sock in ins:
-                    data = sock.recv(bufsize)
-                    if not data:
-                        if sock is remote:
-                            xlog.debug("forward remote disconnected.")
-                        else:
-                            xlog.debug("forward local disconnected.")
-                        return
-
-                    if sock is remote:
-                        local.sendall(data)
-                        timecount = timeout
-                    else:
-                        remote.sendall(data)
-                        timecount = timeout
-        except Exception as e:
-            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.ENOTCONN, errno.EPIPE):
-                xlog.exception("forward except:%s.", e)
-        finally:
-            if local:
-                local.close()
-            if remote:
-                remote.close()
-
-
 https_manager = Https_connection_manager()
-forwork_manager = Forward_connection_manager()

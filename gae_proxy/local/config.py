@@ -122,6 +122,9 @@ class Config(object):
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
 
+        self.log_file = config.CONFIG.getint("system", "log_file")
+
+
         # change to True when finished import CA cert to browser
         # launcher will wait import ready then open browser to show status, check update etc
         self.cert_import_ready = False

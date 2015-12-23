@@ -314,7 +314,7 @@
                     'td#out-of-quota-appids': result['out_of_quota_appids'],
                     'td#not-exist-appids': result['not_exist_appids'],
 
-                    'td#network-status': result['network_state'] ? "OK" : "Fail",
+                    'td#network-status': result['network_state'],
                     'td#ip-num': result['good_ip_num'],
                     'td#connection-status': connection_status_string(result['connected_link_new'], result['connected_link_used']),
                     'td#browser-proxy-setting': test_http_proxy_setting(),
@@ -369,7 +369,7 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
-                if ( !result['network_state']){
+                if ( result['network_state'] == "Fail" ){
                     return updateProperty('#noob-info', '{{ _( "Your local network failed. Please check your network and firewall. " ) }}');
                 }
 

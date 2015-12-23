@@ -14,7 +14,6 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 from proxy import xlog
 import simple_http_server
 from cert_util import CertUtil
-from connect_manager import forwork_manager
 from config import config
 import gae_handler
 import direct_handler
@@ -133,56 +132,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return self.do_CONNECT_AGENT()
         if host in config.HOSTS_DIRECT:
             return self.do_CONNECT_DIRECT()
-        if host in config.HOSTS_FWD:
-            return self.do_CONNECT_FWD()
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_CONNECT_AGENT()
         if host.endswith(config.HOSTS_DIRECT_ENDSWITH):
             return self.do_CONNECT_DIRECT()
-        if host.endswith(config.HOSTS_FWD_ENDSWITH):
-            return self.do_CONNECT_FWD()
 
         return self.do_CONNECT_AGENT()
-
-    def do_CONNECT_FWD(self):
-        """socket forward for http CONNECT command"""
-        host, _, port = self.path.rpartition(':')
-        port = int(port)
-        xlog.info('FWD %s %s:%d ', self.command, host, port)
-        if host == "appengine.google.com" or host == "www.google.com":
-            connected_in_s = 5 # gae_proxy upload to appengine is slow, it need more 'fresh' connection.
-        else:
-            connected_in_s = 10  # gws connect can be used after tcp connection created 15 s
-
-        try:
-            self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
-            data = self.connection.recv(1024)
-        except Exception as e:
-            xlog.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
-            self.connection.close()
-            return
-
-        remote = forwork_manager.create_connection(host=host, port=port, sock_life=connected_in_s)
-        if remote is None:
-            self.connection.close()
-            xlog.warn('FWD %s %s:%d create_connection fail', self.command, host, port)
-            return
-
-        try:
-            if data:
-                remote.send(data)
-        except Exception as e:
-            xlog.exception('do_CONNECT_FWD (%r, %r) Exception:%s', host, port, e)
-            self.connection.close()
-            remote.close()
-            return
-
-        # reset timeout default to avoid long http upload failure, but it will delay timeout retry :(
-        remote.settimeout(None)
-
-        forwork_manager.forward_socket(self.connection, remote, bufsize=self.bufsize)
-        xlog.debug('FWD %s %s:%d with closed', self.command, host, port)
 
     def do_CONNECT_AGENT(self):
         """deploy fake cert to client"""
@@ -377,5 +333,3 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 finally:
                     self.__realconnection = None
 
-if __name__ == "__main__":
-    pass

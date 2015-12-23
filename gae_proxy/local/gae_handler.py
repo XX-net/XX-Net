@@ -155,6 +155,7 @@ def request(headers={}, payload=None):
                 ssl_sock.appid = appid_manager.get_appid()
                 if not ssl_sock.appid:
                     google_ip.report_connect_closed(ssl_sock.ip, "no appid")
+                    time.sleep(60)
                     raise GAE_Exception(1, "no appid can use")
                 headers['Host'] = ssl_sock.appid + ".appspot.com"
                 ssl_sock.host = headers['Host']
@@ -322,8 +323,8 @@ def handler(method, url, headers, body, wfile):
                     continue
 
             if response.app_status == 404:
-                xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-                appid_manager.report_not_exist(response.ssl_sock.appid)
+                #xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+                appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
                 google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
                 appid = appid_manager.get_appid()
 
@@ -437,7 +438,6 @@ def handler(method, url, headers, body, wfile):
                         length, response.ssl_sock.handshake_time, response.status, url)
 
                 response.ssl_sock.received_size += body_length
-                google_ip.report_ip_traffic(response.ssl_sock.ip, body_length)
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, call_time=time_request)
                 return
 
@@ -611,7 +611,7 @@ class RangeFetch(object):
 
                     if response.app_status == 404:
                         xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-                        appid_manager.report_not_exist(response.ssl_sock.appid)
+                        appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
                         appid = appid_manager.get_appid()
                         if not appid:
                             xlog.error("no appid left")
