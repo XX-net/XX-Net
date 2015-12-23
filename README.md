@@ -77,6 +77,6 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 * appifed-xx-net  
   https://github.com/binarydist/appified-xx-net  
   Mac OS X 环境下，变成一个标准的Mac应用(A standard Mac app on Mac OS X)  
-* ComodoDragonPortable  
+* ComodoDragonPortable: 为XX-Net和Lantern定制的便携浏览器(A customized portable browser for XX-Net & Lantern) 
   https://github.com/mikedchavez1010/ComodoDragonPortable  
-  Windows Only, focus on security
+  仅支持Windows，心系安全(Windows-only, focusing on security)
