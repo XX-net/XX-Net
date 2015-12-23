@@ -3,7 +3,7 @@ import os
 import sys
 import subprocess
 
-class simpleI18N():
+class SimpleI18N():
 
     def __init__(self, lang=None):
         if lang:
