@@ -289,3 +289,31 @@ def test_gae_ip(ip, appid=None):
         #xlog.exception("test_gae_ip %s e:%r",ip, e)
         return False
 
+#===========================================
+
+
+def check_ipv6_host(host):
+    try:
+        conn = httplib.HTTPConnection(host, 80, timeout=5)
+        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+                  "accept":"application/json, text/javascript, */*; q=0.01",
+                  "accept-encoding":"gzip, deflate, sdch",
+                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+                  "connection":"keep-alive"
+                  }
+        conn.request("HEAD", "/", headers=header)
+        response = conn.getresponse()
+        if response.status:
+            return True
+        else:
+            return False
+    except Exception as e:
+        return False
+
+
+def check_ipv6():
+    hosts = ["www.6rank.edu.cn", "v6.testmyipv6.com", ]
+    for host in hosts:
+        if check_ipv6_host(host):
+            return True
+    return False

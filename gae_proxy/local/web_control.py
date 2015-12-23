@@ -469,7 +469,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
-                user_config.user_special.use_ipv6 = int(self.postvars['use_ipv6'][0])
+                use_ipv6 = int(self.postvars['use_ipv6'][0])
+                if user_config.user_special.use_ipv6 != use_ipv6:
+                    if use_ipv6:
+                        if not check_ip.check_ipv6():
+                            xlog.warn("Enable Ipv6 but check failed.")
+                            return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
+
+                    user_config.user_special.use_ipv6 = use_ipv6
                 user_config.save()
 
                 config.load()

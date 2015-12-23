@@ -486,7 +486,7 @@ class IpManager():
                 xlog.debug("restore ip:%s", ip)
                 continue
 
-            xlog.info("ip:%s real fail", ip)
+            xlog.debug("ip:%s real fail", ip)
 
     def remove_slowest_ip(self):
         if len(self.gws_ip_list) <= self.max_good_ip_num:

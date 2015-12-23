@@ -242,6 +242,8 @@
                 } else {
                     if (result['reason'].indexOf("appid fail") > -1){
                         tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before using." ) }}', 'error');
+                    }else if(result['reason'].indexOf("IPv6 fail") > -1){
+                        tip('{{ _( "Enable IPv6 failed. Be sure your network support IPv6." ) }}', 'error');
                     }else{
                         tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
                     }

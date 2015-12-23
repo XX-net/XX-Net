@@ -12,7 +12,7 @@ XX-Net - A Rebirth of Goagent
 下载链接(Download)：
 ==========
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.8.2
+https://codeload.github.com/XX-net/XX-Net/zip/2.8.3
 
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
@@ -77,6 +77,7 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 * appifed-xx-net  
   https://github.com/binarydist/appified-xx-net  
   Mac OS X 环境下，变成一个标准的Mac应用(A standard Mac app on Mac OS X)  
-* ComodoDragonPortable: 为XX-Net和Lantern定制的便携浏览器(A customized portable browser for XX-Net & Lantern) 
+* ComodoDragonPortable:   
+  为XX-Net和Lantern定制的便携浏览器(A customized portable browser for XX-Net & Lantern) 
   https://github.com/mikedchavez1010/ComodoDragonPortable  
   仅支持Windows，心系安全(Windows-only, focusing on security)
