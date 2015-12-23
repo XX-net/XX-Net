@@ -11,6 +11,9 @@ class simpleI18N():
         else:
             self.lang = self.get_os_language()
 
+        if not self.lang:
+            self.lang = "en_US"
+
     def get_os_language(self):
         try:
             lang_code, code_page = locale.getdefaultlocale()
