@@ -41,7 +41,8 @@ class Win_tray():
         elif proxy_setting == "gae":
             self.on_enable_gae_proxy()
         elif proxy_setting == "disable":
-            self.on_disable_proxy()
+            # Don't disable proxy setting, just do nothing.
+            pass
         else:
             xlog.warn("proxy_setting:%r", proxy_setting)
 
