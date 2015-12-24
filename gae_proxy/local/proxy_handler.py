@@ -65,8 +65,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if self.path == "http://www.twitter.com/xxnet":
             # for web_ui status page
             # auto detect browser proxy setting is work
-            data = "OK"
-            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: 2\r\n\r\nOK')
 
         self.parsed_url = urlparse.urlparse(self.path)
 

@@ -420,7 +420,7 @@ class IpManager():
 
             check_ip.triger_check_network()
             self.to_check_ip_queue.put((ip, time_now + 10))
-            xlog.info("report_connect_fail:%s", ip)
+            xlog.debug("report_connect_fail:%s", ip)
         
         except Exception as e:
             xlog.exception("report_connect_fail err:%s", e)
