@@ -348,9 +348,9 @@ def handler(method, url, headers, body, wfile):
                 continue
 
             if response.app_status == 503:
-                xlog.warning('APPID %r out of Quota, remove it.', response.ssl_sock.appid)
+                xlog.warning('APPID %r out of Quota, remove it. %s', response.ssl_sock.appid, response.ssl_sock.ip)
                 appid_manager.report_out_of_quota(response.ssl_sock.appid)
-                google_ip.report_connect_closed(response.ssl_sock.ip, "get_timeout")
+                google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
                 appid = appid_manager.get_appid()
 
                 if not appid:
