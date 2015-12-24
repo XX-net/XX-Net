@@ -46,29 +46,34 @@ if sys.platform == 'win32':
 
     run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
               os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
-elif sys.platform == 'linux' or sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
-    _xdg_user_autostart = os.path.join(os.path.expanduser(_xdg_config_home),
-            "autostart")
+    home_config_path = os.path.expanduser(_xdg_config_home)
+    _xdg_user_autostart = os.path.join(home_config_path, "autostart")
 
     def getfilename(name):
         """get the filename of an autostart (.desktop) file"""
         return os.path.join(_xdg_user_autostart, name + ".desktop")
 
     def add(name, application):
-        if not os.path.isdir(os.path.expanduser(_xdg_config_home)):
-            xlog.warn("autorun linux config path not found:%s", os.path.expanduser(_xdg_config_home))
+        if not os.path.isdir(home_config_path):
+            xlog.warn("autorun linux config path not found:%s", home_config_path)
             return
 
         if not os.path.isdir(_xdg_user_autostart):
-            os.mkdir(_xdg_user_autostart)
+            try:
+                os.mkdir(_xdg_user_autostart)
+            except Exception as e:
+                xlog.warn("Enable auto start, create path:%s fail:%r", _xdg_user_autostart, e)
+                return
 
         """add a new autostart entry"""
         desktop_entry = "[Desktop Entry]\n"\
             "Name=%s\n"\
             "Exec=%s\n"\
             "Type=Application\n"\
-            "Terminal=false\n" % (name, application)
+            "Terminal=false\n"\
+            "X-GNOME-Autostart-enabled=true" % (name, application)
         with open(getfilename(name), "w") as f:
             f.write(desktop_entry)
 
