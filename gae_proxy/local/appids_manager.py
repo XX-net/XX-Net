@@ -46,8 +46,8 @@ class APPID_manager(object):
                 time.sleep(60)
                 return None
                 
-            if time.time() - self.last_reset_time < 60:
-                xlog.warn("all appid out of quota, need 1 min to reset")
+            if time.time() - self.last_reset_time < 600:
+                xlog.warn("all appid out of quota, need 10 min to reset")
                 return None
             else:
                 xlog.warn("reset appid")
@@ -65,7 +65,7 @@ class APPID_manager(object):
         try:
             if appid not in self.out_of_quota_appids:
                 self.out_of_quota_appids.append(appid)
-                self.working_appid_list.remove(appid)
+            self.working_appid_list.remove(appid)
         except:
             pass
         finally:
