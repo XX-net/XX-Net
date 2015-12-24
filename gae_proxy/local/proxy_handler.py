@@ -35,6 +35,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
+        self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
+               "Access-Control-Allow-Origin: *\r\n"\
+               "Content-Type: text/plain\r\n"\
+               "Content-Length: 2\r\n\r\nOK"
+
     def forward_local(self):
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
@@ -95,9 +100,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return self.forward_local()
 
         if self.path == "http://www.twitter.com/xxnet":
+            xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
             # auto detect browser proxy setting is work
-            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: 2\r\n\r\nOK')
+            return self.wfile.write(self.self_check_response_data)
 
         self.parsed_url = urlparse.urlparse(self.path)
 
@@ -224,8 +230,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if self.path == "https://www.twitter.com/xxnet":
             # for web_ui status page
             # auto detect browser proxy setting is work
-            data = "OK"
-            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+            xlog.debug("CONNECT %s %s", self.command, self.path)
+            return self.wfile.write(self.self_check_response_data)
 
         xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
@@ -316,12 +322,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 raise
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-
-        if self.path == "https://www.twitter.com/xxnet":
-            # for web_ui status page
-            # auto detect browser proxy setting is work
-            data = "OK"
-            return self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
 
         xlog.debug('GAE CONNECT Direct %s %s', self.command, self.path)
 
