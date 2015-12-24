@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-19 13:16+0800\n"
+"POT-Creation-Date: 2015-12-23 22:40+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -121,6 +121,9 @@ msgstr ""
 msgid "Failed reading the settings."
 msgstr ""
 
+msgid "Wait for checking setting..."
+msgstr ""
+
 msgid "Settings saved successfully"
 msgstr ""
 
@@ -128,6 +131,9 @@ msgid "AppID invalid:"
 msgstr ""
 
 msgid ", deploy appid before using."
+msgstr ""
+
+msgid "Enable IPv6 failed. Be sure your network support IPv6."
 msgstr ""
 
 msgid "Failed saving settings"
@@ -284,16 +290,28 @@ msgstr ""
 msgid "Unkown error occurred"
 msgstr ""
 
+msgid "Show Details"
+msgstr ""
+
+msgid "Local Network Status"
+msgstr ""
+
 msgid "IP Number"
 msgstr ""
 
-msgid "10th IP handshake(ms)"
+msgid "IP Quality"
 msgstr ""
 
-msgid "Connection Status"
+msgid "Connection Pool"
 msgstr ""
 
-msgid "Number of IP-Scaning Threads"
+msgid "Browser Proxy Setting"
+msgstr ""
+
+msgid "CA status"
+msgstr ""
+
+msgid "Number of IP-Scanning Threads"
 msgstr ""
 
 msgid "Settings"
@@ -326,13 +344,16 @@ msgstr ""
 msgid "System Version"
 msgstr ""
 
-msgid "Pro Mode"
-msgstr ""
-
-msgid "Show advanced info"
-msgstr ""
-
 msgid "Feedback"
+msgstr ""
+
+msgid "Check Github issues"
+msgstr ""
+
+msgid " or "
+msgstr ""
+
+msgid " Discussions"
 msgstr ""
 
 msgid "Diagnostic Info"
@@ -367,54 +388,52 @@ msgstr ""
 msgid "to troubleshoot."
 msgstr ""
 
-msgid "You are using XX-Net version "
-msgstr ""
-
 msgid "Your local network failed. Please check your network and firewall. "
 msgstr ""
 
-msgid "</p><p>Connection established, congratulation! </p><p>"
+msgid ""
+"You may want to <a "
 msgstr ""
 
-msgid "</p><p>Connection not established yet. </p><p>"
-msgstr ""
-
-msgid "Running low on good IP, "
-msgstr ""
-
-msgid "Currently running slow. "
-msgstr ""
-
-msgid "XX-Net is scaning. Please wait."
+msgid "XX-Net is scanning IP. Please wait about half an hour."
 msgstr ""
 
 msgid ""
-"You may want to <a href=\"./?module=gae_proxy&menu=scan_ip\">turn on the "
-"IP scaner</a>."
+"Public appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own "
+"APPID</a>"
 msgstr ""
 
 msgid ""
-"You are using the public APPID. You are recommended to <a "
-"href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
-"target=\"_blank\">deploy your own APPID</a>"
+"Your appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/Register-Google-appid\" target=\"_blank\">deploy more APPID</a>"
 msgstr ""
 
 msgid "No working appid. Please check. "
 msgstr ""
 
-msgid ", All systems go well. "
+msgid "Connection not established yet. "
+msgstr ""
+
+msgid "Please check your browser proxy setting."
+msgstr ""
+
+msgid "Detecting..."
+msgstr ""
+
+msgid "Please import certificates to your browser."
+msgstr ""
+
+msgid ""
+"You are using public APPID. You are recommended to <a "
+"href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
+"target=\"_blank\">deploy your own APPID</a>"
+msgstr ""
+
+msgid ", Everything is OK. Welcome to the FREE Internet. "
 msgstr ""
 
 msgid "You are using the public Appid."
-msgstr ""
-
-msgid "Your local network failed. "
-msgstr ""
-
-msgid "Connected to the world"
-msgstr ""
-
-msgid "Connection not established yet"
 msgstr ""
 
 msgid "Auto proxy enabled at "
@@ -425,5 +444,21 @@ msgstr ""
 
 msgid "Proxy disabled"
 msgstr ""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

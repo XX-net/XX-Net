@@ -3,16 +3,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-23 16:34+0800\n"
+"POT-Creation-Date: 2015-12-23 22:40+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: fa_IR\n"
 "Language-Team: fa_IR <LL@li.org>\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
+"Generated-By: Babel 1.3\n"
 
 msgid "Scan Settings"
 msgstr "تنظیمات اسکن"
@@ -137,7 +136,9 @@ msgid ", deploy appid before using."
 msgstr "، استقرار APPID قبل از استفاده."
 
 msgid "Enable IPv6 failed. Be sure your network support IPv6."
-msgstr "فعال کردن IPv6 را شکست خورده است. مطمئن باشید که از IPv6 پشتیبانی از شبکه خود را."
+msgstr ""
+"فعال کردن IPv6 را شکست خورده است. مطمئن باشید که از IPv6 پشتیبانی از شبکه"
+" خود را."
 
 msgid "Failed saving settings"
 msgstr "خواندن تنظیمات انجام نشد."
@@ -299,7 +300,7 @@ msgstr "خواندن تنظیمات انجام نشد"
 msgid "Unkown error occurred"
 msgstr "خطای ناشناخته رخ داده"
 
-msgid "Show Detail"
+msgid "Show Details"
 msgstr "نمایش جزئیات"
 
 msgid "Local Network Status"
@@ -455,6 +456,5 @@ msgstr "پروکسی را فعال کنید در "
 
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
-
 
 

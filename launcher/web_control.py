@@ -27,11 +27,11 @@ import config
 import autorun
 import update_from_github
 import simple_http_server
-from simple_i18n import simpleI18N
+from simple_i18n import SimpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-i18n_translator = simpleI18N(config.get(['language'], None))
+i18n_translator = SimpleI18N(config.get(['language'], None))
 
 module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
@@ -54,7 +54,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
-            stream = i18n_translator.render(locale_dir, os.path.join(root_path, module, "web_ui", "menu.yaml"))
+            stream = i18n_translator.render(locale_dir, menu_path)
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
