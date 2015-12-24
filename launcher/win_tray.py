@@ -52,16 +52,24 @@ class Win_tray():
         try:
             AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
             if AutoConfigURL:
-                return "pac"
+                if AutoConfigURL == "http://127.0.0.1:8086/proxy.pac":
+                    return "pac"
+                else:
+                    return "unknown"
         except Exception as e:
             pass
 
         try:
             ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
             if ProxyEnable:
-                return "gae"
+                ProxyServer, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyServer')
+                if ProxyServer == "127.0.0.1:8087":
+                    return "gae"
+                else:
+                    return "unknown"
         except Exception as e:
             pass
+        
         return "disable"
 
     def on_right_click(self):
