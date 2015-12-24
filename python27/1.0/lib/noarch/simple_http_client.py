@@ -31,12 +31,12 @@ class HTTP_client():
 
 
         if not self.http_proxy:
-            self.path_base = "/"
+            self.path_base = ""
         else:
             if use_https:
-                self.path_base = "https://%s:%d/" % self.address
+                self.path_base = "https://%s:%d" % self.address
             else:
-                self.path_base = "http://%s:%d/" % self.address
+                self.path_base = "http://%s:%d" % self.address
 
         self.sock_pool = Queue.Queue()
 
@@ -86,7 +86,11 @@ class HTTP_client():
             time_request = time.time()
             url = self.address[0]
             header = {"Content-Length": str(len(data)), "Host": self.address[0]}
-            response = self.fetch(method, self.address[0], self.path_base + path, header, data, timeout)
+            if path.startswith("/"):
+                req_path = self.path_base + path
+            else:
+                req_path = self.path_base + "/" + path
+            response = self.fetch(method, self.address[0], req_path, header, data, timeout)
             if not response:
                 #logging.warn("post return fail")
                 return "", False, response

@@ -12,6 +12,7 @@ NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
 from proxy import xlog
+import simple_http_client
 import simple_http_server
 from cert_util import CertUtil
 from config import config
@@ -35,8 +36,39 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
     def forward_local(self):
-        html = gae_handler.generate_message_html('Browser pass local request to proxy', u'您的浏览器把本地请求转发到代理上。<br>请在浏览器中设置：访问本地，不经过代理。<br><a href="https://github.com/XX-net/XX-Net/wiki/Browser-pass-localhost-request-to-proxy">帮助</a>')
-        gae_handler.send_response(self.wfile, 200, body=html.encode('utf-8'))
+        host = self.headers.get('Host', '')
+        host_ip, _, port = host.rpartition(':')
+        http_client = simple_http_client.HTTP_client((host_ip, int(port)))
+
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        payload = b''
+        if 'Content-Length' in request_headers:
+            try:
+                payload_len = int(request_headers.get('Content-Length', 0))
+                payload = self.rfile.read(payload_len)
+            except Exception as e:
+                xlog.warn('forward_local read payload failed:%s', e)
+                return
+
+        self.parsed_url = urlparse.urlparse(self.path)
+        if len(self.parsed_url[4]):
+            path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
+        else:
+            path = self.parsed_url[2]
+        content, status, response = http_client.request(self.command, path, request_headers, payload)
+        if not status:
+            xlog.warn("forward_local fail")
+            return
+
+        out_list = []
+        out_list.append("HTTP/1.1 %d\r\n" % status)
+        for key, value in response.getheaders():
+            key = key.title()
+            out_list.append("%s: %s\r\n" % (key, value))
+        out_list.append("\r\n")
+        out_list.append(content)
+
+        self.wfile.write("".join(out_list))
 
     def do_METHOD(self):
         touch_active()
@@ -59,7 +91,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             host = urlparse.urlparse(self.path).netloc
 
         if host.startswith("127.0.0.1") or host.startswith("localhost"):
-            xlog.warn("Your browser forward localhost to proxy.")
+            #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
         if self.path == "http://www.twitter.com/xxnet":
