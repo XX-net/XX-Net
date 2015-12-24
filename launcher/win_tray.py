@@ -122,7 +122,9 @@ class Win_tray():
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
-        win32_proxy_manager.disable_proxy()
+        proxy_setting = config.get(["modules", "launcher", "proxy"], "disable")
+        if proxy_setting != "disable":
+            win32_proxy_manager.disable_proxy()
         module_init.stop_all()
         os._exit(0)
 
