@@ -64,7 +64,7 @@ class IpManager():
         self.load_config()
         self.load_ip()
 
-        if check_ip.network_stat == "OK":
+        if check_ip.network_stat == "OK" and not config.USE_IPV6:
             self.start_scan_all_exist_ip()
         #self.search_more_google_ip()
 
@@ -201,6 +201,8 @@ class IpManager():
 
             if scan_ip_thread_num > self.max_scan_ip_thread_num:
                 scan_ip_thread_num = self.max_scan_ip_thread_num
+            elif scan_ip_thread_num < 0:
+                scan_ip_thread_num = 0
 
         if scan_ip_thread_num != self.scan_ip_thread_num:
             xlog.info("Adjust scan thread num from %d to %d", self.scan_ip_thread_num, scan_ip_thread_num)
