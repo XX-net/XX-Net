@@ -244,7 +244,10 @@
 <script type="text/javascript">
     $(document).ready(function(){
         var timer = $.timer(function() {
-            updateStatus();
+            if ( $("#details").is(":visible")){
+                updateDetailStatus();
+            }
+            updateNoobStatus();
         });
 
         timer.set({
@@ -252,7 +255,8 @@
             autostart: true
         });
 
-        updateStatus();
+        updateDetailStatus();
+        updateNoobStatus();
         getConfig();
     });
 
@@ -262,13 +266,6 @@
     });
 </script>
 <script type="text/javascript">
-    function updateStatus(){
-        if ( $("#details").is(":visible")){
-            updateDetailStatus();
-        }
-        updateNoobStatus();
-    }
-
     function updateProperty(selector, content, attrclass) {
         var previousContent = $(selector).html();
         if (String(previousContent) != String(content)) {
