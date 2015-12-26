@@ -579,6 +579,7 @@ class IpManager():
             self.scan_exist_ip_queue.put(ip)
         xlog.debug("start scan all exist ip, num:%d", self.scan_exist_ip_queue.qsize())
 
+        self.keep_scan_all_exist_ip = True
         scan_threads = []
         for i in range(0, 10):
             th = threading.Thread(target=self.scan_exist_ip_worker, )
@@ -598,8 +599,12 @@ class IpManager():
         th = threading.Thread(target=self.scan_all_exist_ip)
         th.start()
 
+    def stop_scan_all_exist_ip(self):
+        self.keep_scan_all_exist_ip = False
+        self.scan_exist_ip_queue = Queue.Queue()
+
     def scan_exist_ip_worker(self):
-        while connect_control.keep_running:
+        while connect_control.keep_running and self.keep_scan_all_exist_ip:
             try:
                 ip = self.scan_exist_ip_queue.get_nowait()
             except:

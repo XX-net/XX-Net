@@ -244,7 +244,7 @@ def get_ssl_cert_domain(ssl_sock):
 
 
 def check_appid(ssl_sock, appid, ip):
-    request_data = 'GET /_gh HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
+    request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
@@ -281,6 +281,8 @@ def test_gae_ip(ip, appid=None):
 
         if not appid:
             appid = appid_manager.get_appid()
+        if appid.startswith("xxnet-"):
+            appid = "xxnet-check"
         if not check_appid(ssl_sock, appid, ip):
             return False
 

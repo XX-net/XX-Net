@@ -12,7 +12,7 @@ XX-Net - A Rebirth of Goagent
 下载链接(Download)：
 ==========
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.8.4
+https://codeload.github.com/XX-net/XX-Net/zip/2.8.5
 
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
@@ -69,14 +69,18 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
   主页(Main page)：http://www.ccav1.com/chromegae  
   集成Google Chrome和XX-Net的自动翻墙浏览器(An automatic comobo of Google Chrome browser and XX-Net)  
   维护人(Maintainer)：Yanu  
+
 * 集成Chrome和XX-Net (XX-Net-integrated Chrome)  
   https://github.com/yeahwu/chrome-xx  
+
 * plusburg  
   主页(Main page)：https://github.com/Plusburg/Plusburg  
   集成XX-Net的启动光盘镜像 (XX-Net-integrated bootable CD image) 
+
 * appifed-xx-net  
   https://github.com/binarydist/appified-xx-net  
   Mac OS X 环境下，变成一个标准的Mac应用(A standard Mac app on Mac OS X)  
+  
 * ComodoDragonPortable:   
   为XX-Net和Lantern定制的便携浏览器(A customized portable browser for XX-Net & Lantern) 
   https://github.com/mikedchavez1010/ComodoDragonPortable  

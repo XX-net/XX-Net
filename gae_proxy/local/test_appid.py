@@ -5,7 +5,7 @@ from connect_manager import https_manager
 
 
 def test_appid_exist(ssl_sock, appid):
-    request_data = 'GET / HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
+    request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
 

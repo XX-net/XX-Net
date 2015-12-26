@@ -723,7 +723,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             if left_num:
                 self.send_response('text/plain', '{"res":"fail", "reason":"running"}')
             else:
+                google_ip.start_scan_all_exist_ip()
                 self.send_response('text/plain', '{"res":"success"}')
-                google_ip.scan_all_exist_ip()
+        elif reqs['cmd'] == ['stop']:
+            left_num = google_ip.scan_exist_ip_queue.qsize()
+            if not left_num:
+                self.send_response('text/plain', '{"res":"fail", "reason":"not running"}')
+            else:
+                google_ip.stop_scan_all_exist_ip()
+                self.send_response('text/plain', '{"res":"success"}')
         else:
             return self.send_not_exist()

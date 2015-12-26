@@ -77,38 +77,52 @@
             $('#check_start').removeClass('btn-inverse');
             $('#check_start').addClass('btn-primary');
             $('#check_start').html('{{ _( "Run" ) }}');
-            //console.log("enable");
         }
     }
     function disableStartButton(){
         if ($('#check_start').hasClass("btn-primary")){
             $('#check_start').removeClass('btn-primary');
             $('#check_start').addClass('btn-inverse');
-            $('#check_start').html('{{ _( "Running" ) }}');
-            //console.log("disable");
+            $('#check_start').html('{{ _( "Stop" ) }}');
         }
     }
 </script>
 
 <script type="text/javascript">
     $('button.btn').click(function() {
-        $.ajax({
-            type: 'GET',
-            url: '/module/gae_proxy/control/check_ip?cmd=start',
-            dataType: 'JSON',
-            success: function(result) {
-                window.timer.play();
+        if ( $('#check_start').html() == '{{ _( "Run" ) }}' ){
+            $.ajax({
+                type: 'GET',
+                url: '/module/gae_proxy/control/check_ip?cmd=start',
+                dataType: 'JSON',
+                success: function(result) {
+                    window.timer.play();
 
-                disableStartButton();
+                    disableStartButton();
 
-                if ( !tipHasClose() ) {
-                    tipClose();
+                    if ( !tipHasClose() ) {
+                        tipClose();
+                    }
+                },
+                error: function(result) {
+                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
                 }
-            },
-            error: function(result) {
-                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
-            }
-        });
+            });
+        }else{
+            $.ajax({
+                type: 'GET',
+                url: '/module/gae_proxy/control/check_ip?cmd=stop',
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( !tipHasClose() ) {
+                        tipClose();
+                    }
+                },
+                error: function(result) {
+                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+                }
+            });
+        }
     });
 </script>
 
