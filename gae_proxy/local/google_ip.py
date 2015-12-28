@@ -183,7 +183,7 @@ class IpManager():
         self.adjust_scan_thread_num()
 
     def adjust_scan_thread_num(self, max_scan_ip_thread_num=None):
-        if max_scan_ip_thread_num:
+        if max_scan_ip_thread_num!=None:
             self.max_scan_ip_thread_num = max_scan_ip_thread_num
 
         if not self.auto_adjust_scan_ip_thread_num:
