@@ -451,7 +451,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             elif reqs['cmd'] == ['set_config']:
                 appids = self.postvars['appid'][0]
                 if appids != user_config.user_special.appid:
-                    if appids:
+                    if appids and google_ip.good_ip_num:
                         fail_appid_list = test_appid.test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
