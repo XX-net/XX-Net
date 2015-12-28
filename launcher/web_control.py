@@ -240,7 +240,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "launcher", "show_detail"], 0)
+                    , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
@@ -329,7 +329,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     else:
                         autorun.disable()
 
-                    config.set(["modules", "launcher", "show_detail"], show_detail)
+                    config.set(["modules", "gae_proxy", "show_detail"], show_detail)
                     config.save()
 
                     data = '{"res":"success"}'

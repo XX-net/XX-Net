@@ -7,16 +7,7 @@
 
 <div id="noob-info" class=""></div>
 
-<!-- Toggle #details-->
-<div class="row-fluid">
-    <div class="span3 bold">{{ _( "Show Details" ) }}</div> <!-- .span4 -->
-    <div class="span9">
-        <input id="show-detail" type="checkbox" />
-    </div> <!-- .span8 -->
-</div>
-
 <div id="details" hidden>
-    </br>
     <h4>{{ _( "Status" ) }}</h4>
     <table id="status" class="table table-bordered table-striped">
         <thead>
@@ -174,8 +165,16 @@
     <div id="tip">
             <a href="https://github.com/XX-net/XX-Net/issues">{{ _("Check Github issues") }}</a>{{ _(" or ")}} <a href="https://groups.google.com/forum/#!forum/xx-net">Google Group{{ _(" Discussions") }}</a><br>
     </div>
+    <br><br>
 </div> <!-- #details -->
 
+<!-- Toggle #details-->
+<div class="row-fluid">
+    <div class="span3 bold">{{ _( "Show Details" ) }}</div> <!-- .span4 -->
+    <div class="span9">
+        <input id="show-detail" type="checkbox" />
+    </div> <!-- .span8 -->
+</div>
 
 <div id="report-issue-modal" class="modal hide fade">
     <div class="modal-header">
