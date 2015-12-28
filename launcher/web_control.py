@@ -156,8 +156,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
-        elif url_path == '/download':
-            self.req_download_handler()
+        elif url_path == '/update':
+            self.req_update_handler()
         elif url_path == '/init_module':
             self.req_init_module_handler()
         elif url_path == '/quit':
@@ -224,8 +224,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
-
-        current_version = update_from_github.current_version()
 
         if reqs['cmd'] == ['get_config']:
             config.load()
@@ -347,29 +345,25 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
-        elif reqs['cmd'] == ['get_new_version']:
-            versions = update_from_github.get_github_versions()
-            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
-            xlog.info("%s", data)
-        elif reqs['cmd'] == ['update_version']:
-            version = reqs['version'][0]
-            try:
-                update_from_github.update_version(version)
-                data = '{"res":"success"}'
-            except Exception as e:
-                xlog.info("update_test_version fail:%r", e)
-                data = '{"res":"fail", "error":"%s"}' % e
 
         self.send_response('text/html', data)
 
-    def req_download_handler(self):
+    def req_update_handler(self):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_progress']:
-            data = json.dumps(update_from_github.download_progress)
-
+            data = json.dumps(update_from_github.progress)
+        elif reqs['cmd'] == ['get_new_version']:
+            current_version = update_from_github.current_version()
+            github_versions = update_from_github.get_github_versions()
+            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (github_versions[0][1], github_versions[1][1], current_version)
+            xlog.info("%s", data)
+        elif reqs['cmd'] == ['update_version']:
+            version = reqs['version'][0]
+            update_from_github.start_update_version(version)
+            data = '{"res":"success"}'
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
