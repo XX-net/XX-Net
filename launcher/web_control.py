@@ -233,13 +233,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif check_update == 1:
                 check_update = "stable"
 
-            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
+                    , config.get(["modules", "launcher", "show_detail"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0))
         elif reqs['cmd'] == ['set_config']:
@@ -317,6 +318,22 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
+
+            elif 'show_detail' in reqs:
+                show_detail = int(reqs['show_detail'][0])
+                if show_detail != 0 and show_detail != 1:
+                    data = '{"res":"fail, show_detail:%s"}' % show_detail
+                else:
+                    if show_detail:
+                        autorun.enable()
+                    else:
+                        autorun.disable()
+
+                    config.set(["modules", "launcher", "show_detail"], show_detail)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
             elif 'gae_proxy_enable' in reqs :
                 gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:

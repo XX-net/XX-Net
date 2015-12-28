@@ -214,9 +214,32 @@ div#content div#options div.row-fluid {
     margin-bottom: 10px;
 }
 
-div#content div#options div.row-fluid div.span4 {
+div#content div#options div.row-fluid div.span4, .bold {
     font-weight: bold;
     padding-top: 5px;
+}
+
+#noob-info {
+    padding: 10px;
+    margin: 40px 0;
+    color: #b94a48;
+    background-color: #f2dede;
+    border:1px solid;
+    border-color: #eed3d7;
+    border-radius: 4px;
+    transition: color .3s,background .3s,border .3s;
+}
+
+#noob-info.hard {
+    color: #468847;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+}
+
+#noob-info.fluent {
+    color: #146C98;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
 }
 
 /* Smaller than standard 1200 (devices and browsers) */
