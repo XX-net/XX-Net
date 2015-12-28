@@ -459,9 +459,6 @@ class Https_connection_manager(object):
 
             google_ip.update_ip(ip, handshake_time)
             xlog.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
-            # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
-            ssl_sock.ip = ip
-            ssl_sock.sock = sock
             ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin
             ssl_sock.received_size = 0

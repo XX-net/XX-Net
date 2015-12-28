@@ -64,9 +64,9 @@ class IpManager():
         self.load_config()
         self.load_ip()
 
-        if check_ip.network_stat == "OK" and not config.USE_IPV6:
-            self.start_scan_all_exist_ip()
-        #self.search_more_google_ip()
+        #if check_ip.network_stat == "OK" and not config.USE_IPV6:
+        #    self.start_scan_all_exist_ip()
+        self.search_more_google_ip()
 
     def is_ip_enough(self):
         if len(self.gws_ip_list) >= self.max_good_ip_num:
@@ -435,18 +435,6 @@ class IpManager():
 
     def report_connect_closed(self, ip, reason=""):
         xlog.debug("%s close:%s", ip, reason)
-        self.ip_lock.acquire()
-        try:
-            if ip in self.ip_dict:
-                if self.ip_dict[ip]['links']:
-                    self.ip_dict[ip]['links'] -= 1
-                    self.append_ip_history(ip, "C[%s]"%reason)
-                else:
-                    xlog.error("report_connect_closed %s closed", ip)
-        except Exception as e:
-            xlog.error("report_connect_closed err:%s", e)
-        finally:
-            self.ip_lock.release()
 
     def ssl_closed(self, ip, reason=""):
         #xlog.debug("%s ssl_closed:%s", ip, reason)
@@ -456,7 +444,7 @@ class IpManager():
                 if self.ip_dict[ip]['links']:
                     self.ip_dict[ip]['links'] -= 1
                     self.append_ip_history(ip, "C[%s]"%reason)
-                    xlog.warn("ssl_closed %s", ip)
+                    xlog.debug("ssl_closed %s", ip)
         except Exception as e:
             xlog.error("ssl_closed %s err:%s", ip, e)
         finally:
@@ -594,10 +582,15 @@ class IpManager():
 
         self.max_scan_ip_thread_num = max_scan_ip_thread_num
         self.adjust_scan_thread_num()
+        self.scan_all_ip_thread = None
 
     def start_scan_all_exist_ip(self):
-        th = threading.Thread(target=self.scan_all_exist_ip)
-        th.start()
+        if hasattr(self, "scan_all_ip_thread") and self.scan_all_ip_thread:
+            xlog.warn("scan all exist ip is running")
+            return
+
+        self.scan_all_ip_thread = threading.Thread(target=self.scan_all_exist_ip)
+        self.scan_all_ip_thread.start()
 
     def stop_scan_all_exist_ip(self):
         self.keep_scan_all_exist_ip = False
