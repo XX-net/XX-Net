@@ -26,14 +26,6 @@
     <div id="advanced-options" style="display: none;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="gae-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">{{ _( "Help" ) }}</a>)</label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="gae-password" type="password" placeholder='{{ _("Needless to configure generally") }}' />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
                 <label for="use-ipv6">{{ _( "Enable IPv6(CERNet only)" ) }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
@@ -164,7 +156,6 @@
                 if( !result['appid'] || result['appid'] == '' ){
                     $('#public-appid-tip').removeClass("hide");
                 }
-                $('#gae-password').val(result['password']);
 
                 if ( result['host_appengine_mode'] == 'gae' ) {
                     $('#deploy-via-gae').parent().removeClass('switch-off');
@@ -199,7 +190,6 @@
 <script type="text/javascript">
     function onSubmit() {
         var gaeAppId          = $('#gae-appid').val(),
-            gaePassword       = $('#gae-password').val(),
             hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct',
             useIpv6           = $('#use-ipv6').is(':checked') ? 1 : 0,
             enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
@@ -211,16 +201,15 @@
 
         tip('{{ _( "Wait for checking setting..." ) }}', 'info');
 
-        return setConfig(gaeAppId, gaePassword, hostAppEngine, useIpv6,
+        return setConfig(gaeAppId, hostAppEngine, useIpv6,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(gaeAppId, gaePassword, hostAppEngine, useIpv6,
+    function setConfig(gaeAppId, hostAppEngine, useIpv6,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
             'appid': gaeAppId,
-            'password': gaePassword,
             'host_appengine_mode': hostAppEngine,
             'use_ipv6': useIpv6,
             'proxy_enable': enableProxy,

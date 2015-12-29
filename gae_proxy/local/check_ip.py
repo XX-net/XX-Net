@@ -188,7 +188,8 @@ def test_gae_ip(ip, appid=None):
             xlog.warn("connect timeout")
         return False
     except Exception as e:
-        xlog.exception("test_gae_ip %s e:%r",ip, e)
+        if __name__ == "__main__":
+            xlog.exception("test_gae_ip %s e:%r",ip, e)
         return False
 
 

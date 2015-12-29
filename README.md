@@ -12,7 +12,7 @@ XX-Net - A Reborn of Goagent
 下载链接(Download)：
 ==========
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.8.7
+https://codeload.github.com/XX-net/XX-Net/zip/2.8.8
 
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.7.3

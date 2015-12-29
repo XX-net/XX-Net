@@ -462,7 +462,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                     appid_updated = True
                     user_config.user_special.appid = appids
-                user_config.user_special.password = self.postvars['password'][0]
+
                 user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
@@ -472,6 +472,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
+
                 use_ipv6 = int(self.postvars['use_ipv6'][0])
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
@@ -480,6 +481,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                             return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 
                     user_config.user_special.use_ipv6 = use_ipv6
+
                 user_config.save()
 
                 config.load()
@@ -692,6 +694,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         data += "\nGAE conn:\n"
         data += https_manager.gae_conn_pool.to_string()
+
+        for host in https_manager.host_conn_pool:
+            data += "\nHost:%s\n" % host
+            data += https_manager.host_conn_pool[host].to_string()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

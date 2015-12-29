@@ -39,24 +39,6 @@
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
-                <div class="span4">
-                    <label for="advanced-options"><i class="icon icon-chevron-right"></i> {{ _( "Advanced options" ) }}</label>
-                </div> <!-- .span4 -->
-            </div> <!-- .row-fluid -->
-            <div id="advanced-options" style="display: none;">
-                <div class="row-fluid">
-                    <div class="span4">
-                        <label for="rc4-password">RC4 Password(<a href="https://github.com/XX-net/XX-Net/wiki/Rc4-password-problem" target="_blank">{{ _("Help") }}</a>)</label>
-                    </div> <!-- .span4 -->
-                    <div id="rc4-password-field" class="span8">
-                        <input id="rc4-password" type="password" placeholder='{{ _("Needless to fill generally") }}' />
-                        <p id="rc4-password-tip" class="tip hide">
-                            {{ _( "If RC4 password is used, please configure it in the advanced settings while configuring GAE Proxy" ) }}<br>
-                        </p>
-                    </div> <!-- .span8 -->
-                </div> <!-- .row-fluid -->
-            </div> <!-- #advanced-options -->
-            <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">{{ _("Start to deploy") }}</button>
                 </div> <!-- .span12 -->
@@ -117,21 +99,13 @@
     $('#password-field').click(function(){
         $('#password-tip').removeClass('hide');
     });
-    $('#rc4-password-field').click(function(){
-        $('#rc4-password-tip').removeClass('hide');
-    });
 </script>
 <script type="text/javascript">
     $('html').click(function() {
         $('#password-tip').addClass('hide');
-        $('#rc4-password-tip').addClass('hide');
     });
 
     $('#password-field').click(function(event){
-        event.stopPropagation();
-    });
-
-    $('#rc4-password-field').click(function(event){
         event.stopPropagation();
     });
 </script>
@@ -240,7 +214,7 @@
         var appId        = $('#gae-appid').val(),
             email        = $('#gae-email').val(),
             password     = $('#gae-password').val(),
-            rc4Password  = $('#rc4-password').val();
+            rc4Password  = "";
         var errorMessage = getErrorMessage(appId, email, password);
 
         if ( errorMessage.length != 0 ) {
