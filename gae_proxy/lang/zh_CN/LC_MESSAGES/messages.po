@@ -241,13 +241,13 @@ msgid "IP address list"
 msgstr "IP地址列表"
 
 msgid "Succeeded exporting "
-msgstr "成功导入"
+msgstr "成功导出"
 
 msgid " IP addresses."
 msgstr "个IP地址"
 
 msgid "Failed exporting the IP addresses."
-msgstr "导入IP地址失败"
+msgstr "导出IP地址失败"
 
 msgid "IP list"
 msgstr "IP列表"
