@@ -242,6 +242,10 @@ div#content div#options div.row-fluid div.span4, .bold {
     border-color: #bce8f1;
 }
 
+#details, #update-options, #modules-manager{
+    overflow: hidden;
+}
+
 /* Smaller than standard 1200 (devices and browsers) */
 @media only screen and (max-width: 1199px) {
 }
