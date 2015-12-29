@@ -17,7 +17,9 @@ import locale
 import time
 
 
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 from config import config
 from appids_manager import appid_manager
 from google_ip import google_ip
@@ -27,6 +29,7 @@ from scan_ip_log import scan_ip_log
 import ConfigParser
 import connect_control
 import ip_utils
+import check_local_network
 import check_ip
 import cert_util
 import simple_http_server
@@ -421,7 +424,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids": "|".join(appid_manager.not_exist_appids),
 
-                   "network_state": check_ip.network_stat,
+                   "network_state": check_local_network.network_stat,
                    "ip_num": len(google_ip.gws_ip_list),
                    "good_ip_num": good_ip_num,
                    "connected_link_new": len(https_manager.new_conn_pool.pool),
@@ -472,7 +475,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 use_ipv6 = int(self.postvars['use_ipv6'][0])
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
-                        if not check_ip.check_ipv6():
+                        if not check_local_network.check_ipv6():
                             xlog.warn("Enable Ipv6 but check failed.")
                             return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 

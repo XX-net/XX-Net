@@ -84,12 +84,13 @@ create_data_path()
 
 
 from config import config
-from xlog import Logger
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+xlog.set_buffer(500)
 if config.log_file:
     log_file = os.path.join(data_gae_proxy_path, "local.log")
-else:
-    log_file = None
-xlog = Logger(buffer_size=500, file_name=log_file)
+    xlog.set_file(log_file)
 
 from cert_util import CertUtil
 import pac_server

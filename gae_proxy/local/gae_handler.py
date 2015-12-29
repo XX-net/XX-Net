@@ -17,7 +17,9 @@ import Queue
 import urlparse
 import threading
 
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 from connect_manager import https_manager
 from appids_manager import appid_manager
 

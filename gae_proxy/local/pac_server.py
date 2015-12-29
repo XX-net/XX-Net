@@ -11,7 +11,10 @@ import urlparse
 
 
 import simple_http_server
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+
 from config import config
 
 default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)

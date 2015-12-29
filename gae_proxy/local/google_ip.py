@@ -10,13 +10,29 @@ import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
+import check_local_network
 import check_ip
 import google_ip_range
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+
 from config import config
 import connect_control
 from scan_ip_log import scan_ip_log
 
+
+######################################
+# about ip connect time and handshake time
+# handshake time is double of connect time in common case.
+# after connect and handshaked, http get time is like connect time
+#
+# connect time is zero if you use socks proxy.
+#
+#
+# most case, connect time is 300ms - 600ms.
+# good case is 60ms
+# bad case is 1300ms and more.
 
 class IpManager():
 
@@ -64,7 +80,7 @@ class IpManager():
         self.load_config()
         self.load_ip()
 
-        #if check_ip.network_stat == "OK" and not config.USE_IPV6:
+        #if check_local_network.network_stat == "OK" and not config.USE_IPV6:
         #    self.start_scan_all_exist_ip()
         self.search_more_google_ip()
 
@@ -340,7 +356,7 @@ class IpManager():
             return
 
         time_now = time.time()
-        check_ip.network_stat = "OK"
+        check_local_network.network_stat = "OK"
         check_ip.last_check_time = time_now
         check_ip.continue_fail_count = 0
 
@@ -398,15 +414,15 @@ class IpManager():
             self.ip_dict[ip]['links'] -= 1
 
             # ignore if system network is disconnected.
-            if check_ip.network_stat == "Fail":
+            if check_local_network.network_stat == "Fail":
                 xlog.debug("report_connect_fail network fail")
                 return
 
-            check_ip.continue_fail_count += 1
-            if check_ip.continue_fail_count > 10:
-                check_ip.network_stat = "unknown"
-                xlog.debug("report_connect_fail continue_fail_count:%d", check_ip.continue_fail_count)
-                check_ip.triger_check_network()
+            check_local_network.continue_fail_count += 1
+            if check_local_network.continue_fail_count > 10:
+                check_local_network.network_stat = "unknown"
+                xlog.debug("report_connect_fail continue_fail_count:%d", check_local_network.continue_fail_count)
+                check_local_network.triger_check_network()
                 return
 
             fail_time = self.ip_dict[ip]["fail_time"]
@@ -420,7 +436,7 @@ class IpManager():
             self.append_ip_history(ip, "fail")
             self.ip_dict[ip]["fail_time"] = time_now
 
-            check_ip.triger_check_network()
+            check_local_network.triger_check_network()
             self.to_check_ip_queue.put((ip, time_now + 10))
             xlog.debug("report_connect_fail:%s", ip)
         
@@ -461,7 +477,7 @@ class IpManager():
             if time_wait > 0:
                 time.sleep(time_wait)
 
-            if check_ip.network_stat == "Fail":
+            if check_local_network.network_stat == "Fail":
                 try:
                     if self.ip_dict[ip]['fail_times']:
                         self.ip_dict[ip]['fail_times'] = 0

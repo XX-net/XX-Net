@@ -12,7 +12,8 @@ import hashlib
 import threading
 import subprocess
 
-from proxy import xlog
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))

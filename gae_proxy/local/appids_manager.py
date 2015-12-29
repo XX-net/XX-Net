@@ -6,7 +6,8 @@ import threading
 import time
 
 from config import config
-from proxy import xlog
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 import check_ip
 
 

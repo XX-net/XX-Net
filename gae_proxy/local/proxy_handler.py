@@ -11,7 +11,8 @@ import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
-from proxy import xlog
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 import simple_http_client
 import simple_http_server
 from cert_util import CertUtil

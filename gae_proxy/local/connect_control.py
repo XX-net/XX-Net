@@ -1,11 +1,14 @@
 
 import time
 import threading
-from proxy import xlog
 import sys
 
 from config import config
 import env_info
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+
 # change to False when exit: system tray exit menu, or Ctrl+C in console
 # then GoAgent will quit
 # Every long running thread should check it and exit when False

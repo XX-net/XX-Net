@@ -7,7 +7,9 @@ import os
 import re
 import io
 
-import logging as xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 
 

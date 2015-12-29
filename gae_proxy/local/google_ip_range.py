@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # Based on checkgoogleip by  <moonshawdo@gmail.com>
 import random
-import bisect
 import time
 import os
-import shutil
 import ip_utils
 from config import config
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 random.seed(time.time()* 1000000)
 
@@ -104,7 +104,7 @@ class IpRange(object):
                 return
 
             ip = ip_range[0] + id_2
-            add_last_byte = ip % 255
+            add_last_byte = ip % 256
             if add_last_byte == 0 or add_last_byte == 255:
                 continue
 

@@ -10,7 +10,9 @@ import socket
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 ssl_version = ''
 
@@ -19,16 +21,16 @@ class SSLConnection(object):
 
     def __init__(self, context, sock, ip=None, on_close=None):
         self._context = context
-        self.sock = sock
+        self._sock = sock
         self.ip = ip
         self._connection = OpenSSL.SSL.Connection(context, sock)
         self._makefile_refs = 0
         self.on_close = on_close
 
     def __del__(self):
-        if self.sock:
-            socket.socket.close(self.sock)
-            self.sock = None
+        if self._sock:
+            socket.socket.close(self._sock)
+            self._sock = None
             if self.on_close:
                 self.on_close(self.ip)
 
@@ -37,8 +39,8 @@ class SSLConnection(object):
             return getattr(self._connection, attr)
 
     def __iowait(self, io_func, *args, **kwargs):
-        timeout = self.sock.gettimeout() or 0.1
-        fd = self.sock.fileno()
+        timeout = self._sock.gettimeout() or 0.1
+        fd = self._sock.fileno()
         time_start = time.time()
         while True:
             try:
@@ -61,7 +63,7 @@ class SSLConnection(object):
                     break
 
     def accept(self):
-        sock, addr = self.sock.accept()
+        sock, addr = self._sock.accept()
         client = OpenSSL.SSL.Connection(sock._context, sock)
         return client, addr
 
@@ -110,9 +112,9 @@ class SSLConnection(object):
     def close(self):
         if self._makefile_refs < 1:
             self._connection = None
-            if self.sock:
-                socket.socket.close(self.sock)
-                self.sock = None
+            if self._sock:
+                socket.socket.close(self._sock)
+                self._sock = None
                 if self.on_close:
                     self.on_close(self.ip)
         else:

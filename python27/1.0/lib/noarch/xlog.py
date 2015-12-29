@@ -29,9 +29,12 @@ class Logger():
         self.min_level = NOTSET
         self.log_fd = None
         self.set_color()
+        self.roll_num = roll_num
         if file_name:
-            self.roll_num = roll_num
-            self.log_to_file(file_name)
+            self.set_file(file_name)
+
+    def set_buffer(self, buffer_size):
+        self.buffer_size = buffer_size
         
     def setLevel(self, level):
         if level == "DEBUG":
@@ -73,7 +76,7 @@ class Logger():
         
                 self.set_console_color = lambda color: sys.stderr.write(color)
 
-    def log_to_file(self, file_name):
+    def set_file(self, file_name):
         self.log_filename = file_name
         if os.path.isfile(file_name) and os.path.getsize(file_name) > 1024 * 1024:
             self.roll_log()
@@ -209,3 +212,22 @@ class Logger():
             print("line can't decode:%s" % line)
             print("Except stack:%s" % traceback.format_exc())
             return ""
+
+
+loggerDict = {}
+
+
+def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
+    global loggerDict
+
+    if not isinstance(name, basestring):
+        raise TypeError('A logger name must be string or Unicode')
+    if isinstance(name, unicode):
+        name = name.encode('utf-8')
+
+    if name in loggerDict:
+        return loggerDict[name]
+    else:
+        logger_instance = Logger(buffer_size, file_name, roll_num)
+        loggerDict[name] = logger_instance
+        return logger_instance

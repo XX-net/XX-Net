@@ -1,5 +1,7 @@
 import httplib
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 from connect_manager import https_manager
 

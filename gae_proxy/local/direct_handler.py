@@ -18,7 +18,9 @@ from connect_manager import https_manager
 from gae_handler import return_fail_message
 from google_ip import google_ip
 from config import config
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 
 

@@ -2,19 +2,19 @@
 # coding:utf-8
 
 import os
-import errno
 import binascii
 import time
 import socket
-import select
-import Queue
 import struct
 import threading
 import operator
 import httplib
 
+
 import socks
-from proxy import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 import OpenSSL
@@ -239,7 +239,7 @@ class Https_connection_manager(object):
         response = None
         try:
             ssl_sock.settimeout(10)
-            ssl_sock.sock.settimeout(10)
+            ssl_sock._sock.settimeout(10)
 
             data = request_data.encode()
             ret = ssl_sock.send(data)
