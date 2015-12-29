@@ -324,11 +324,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if show_detail != 0 and show_detail != 1:
                     data = '{"res":"fail, show_detail:%s"}' % show_detail
                 else:
-                    if show_detail:
-                        autorun.enable()
-                    else:
-                        autorun.disable()
-
                     config.set(["modules", "gae_proxy", "show_detail"], show_detail)
                     config.save()
 
