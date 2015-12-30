@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-26 08:51+0800\n"
+"POT-Creation-Date: 2015-12-29 14:44+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -82,17 +82,14 @@ msgstr "توجه: غیر قابل دسترس قبل از appids مستقر هس�
 msgid "Advanced options"
 msgstr "گزینه های پیشرفته"
 
-msgid "Help"
-msgstr "کمک"
-
-msgid "Needless to configure generally"
-msgstr "نیازی به پیکربندی کلی"
-
 msgid "Enable IPv6(CERNet only)"
 msgstr "فعال کردن IPv6 را (سرنت تنها)"
 
 msgid "LAN proxy(Generally not needed)"
 msgstr "پروکسی LAN (به طور کلی مورد نیاز نیست)"
+
+msgid "Help"
+msgstr "کمک"
 
 msgid "Proxy type"
 msgstr "نوع پروکسی"
@@ -179,16 +176,6 @@ msgstr ""
 
 msgid "Details"
 msgstr "جزئیات"
-
-msgid "Needless to fill generally"
-msgstr "نیازی به پر کردن به طور کلی"
-
-msgid ""
-"If RC4 password is used, please configure it in the advanced settings "
-"while configuring GAE Proxy"
-msgstr ""
-"اگر رمز عبور RC4 استفاده می شود، آن را پیکربندی در تنظیمات پیشرفته در "
-"حالی که پیکربندی پروکسی GAE"
 
 msgid "Start to deploy"
 msgstr "شروع به استقرار"
@@ -301,9 +288,6 @@ msgstr "خواندن تنظیمات انجام نشد"
 msgid "Unkown error occurred"
 msgstr "خطای ناشناخته رخ داده"
 
-msgid "Show Details"
-msgstr "نمایش جزئیات"
-
 msgid "Local Network Status"
 msgstr "شبکه محلی ما شکست خورده است."
 
@@ -355,8 +339,8 @@ msgstr "AppIDs وجود ندارد"
 msgid "System Version"
 msgstr "نسخه سیستم"
 
-msgid "Feedback"
-msgstr "بازخورد"
+msgid "Diagnostic Info"
+msgstr "اطلاعات تشخیصی"
 
 msgid "Check Github issues"
 msgstr "بررسی مسائل _Github_"
@@ -367,17 +351,17 @@ msgstr " یا "
 msgid " Discussions"
 msgstr "بحث"
 
-msgid "Diagnostic Info"
-msgstr "اطلاعات تشخیصی"
+msgid "Show Details"
+msgstr "نمایش جزئیات"
 
-msgid "The one-key feedback needs to sign in your Github account"
+msgid "The Post to Github Issue needs to sign in your Github account"
 msgstr "بازخورد یک کلید نیاز به ثبت نام در حساب github خود را"
 
 msgid "To Google Groups"
 msgstr "به Google Groups"
 
-msgid "One-key feedback"
-msgstr "یک کلید بازخورد"
+msgid "Post to Github Issue"
+msgstr "بررسی مسائل _Github_"
 
 msgid "GAE Proxy Status Info"
 msgstr "GAE پروکسی وضعیت"
@@ -457,6 +441,10 @@ msgstr "پروکسی را فعال کنید در "
 
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
+
+
+
+
 
 
 

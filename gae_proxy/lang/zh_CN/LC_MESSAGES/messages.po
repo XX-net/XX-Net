@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-26 08:51+0800\n"
+"POT-Creation-Date: 2015-12-29 14:44+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -80,17 +80,14 @@ msgstr "注意：appid部署之前无法使用。"
 msgid "Advanced options"
 msgstr "高级选项"
 
-msgid "Help"
-msgstr "帮助"
-
-msgid "Needless to configure generally"
-msgstr "一般无需配置"
-
 msgid "Enable IPv6(CERNet only)"
 msgstr "使用IPv6(一般教育网才开)"
 
 msgid "LAN proxy(Generally not needed)"
 msgstr "局域网代理(一般无需配置)"
+
+msgid "Help"
+msgstr "帮助"
 
 msgid "Proxy type"
 msgstr "代理服务器类型"
@@ -171,14 +168,6 @@ msgstr "如果没有启用两步验证, 请开启弱安全应用登录"
 
 msgid "Details"
 msgstr "详细说明"
-
-msgid "Needless to fill generally"
-msgstr "一般无须填写"
-
-msgid ""
-"If RC4 password is used, please configure it in the advanced settings "
-"while configuring GAE Proxy"
-msgstr "如果使用RC4密码, 请在配置GAEProxy时同样在高级设置中配置RC4密码。"
 
 msgid "Start to deploy"
 msgstr "开始部署"
@@ -291,9 +280,6 @@ msgstr "读取设置失败"
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
 
-msgid "Show Details"
-msgstr "显示详细信息"
-
 msgid "Local Network Status"
 msgstr "本地网络状态"
 
@@ -345,8 +331,8 @@ msgstr "不存在的 AppIDs"
 msgid "System Version"
 msgstr "系统版本"
 
-msgid "Feedback"
-msgstr "反馈问题"
+msgid "Diagnostic Info"
+msgstr "诊断信息"
 
 msgid "Check Github issues"
 msgstr "查看Github的问题讨论"
@@ -357,17 +343,17 @@ msgstr "或者"
 msgid " Discussions"
 msgstr "讨论"
 
-msgid "Diagnostic Info"
-msgstr "诊断信息"
+msgid "Show Details"
+msgstr "显示详细信息"
 
-msgid "The one-key feedback needs to sign in your Github account"
-msgstr "一键反馈需要登录Github账号"
+msgid "The Post to Github Issue needs to sign in your Github account"
+msgstr "发到github问题区需要登录Github账号"
 
 msgid "To Google Groups"
-msgstr "前往论坛"
+msgstr "前往Google论坛"
 
-msgid "One-key feedback"
-msgstr "一键反馈"
+msgid "Post to Github Issue"
+msgstr "发到github问题区"
 
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
@@ -451,6 +437,9 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
+
+
+
 
 
 
