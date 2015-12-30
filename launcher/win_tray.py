@@ -134,6 +134,8 @@ class Win_tray():
         if proxy_setting != "disable":
             win32_proxy_manager.disable_proxy()
         module_init.stop_all()
+        nid = win32_adapter.NotifyData(self.systray._hwnd, 0)
+        win32_adapter.Shell_NotifyIcon(2, ctypes.byref(nid))
         os._exit(0)
 
     def serve_forever(self):
