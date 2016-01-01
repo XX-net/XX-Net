@@ -51,7 +51,7 @@ class IpManager():
         self.gws_ip_pointer = 0
         self.gws_ip_pointer_reset_time = 0
         self.scan_thread_count = 0
-        self.iplist_need_save = 0
+        self.iplist_need_save = False
         self.iplist_saved_time = 0
         self.last_sort_time_for_gws = 0 # keep status for avoid wast too many cpu
         self.good_ip_num = 0 # only success ip num
@@ -147,7 +147,7 @@ class IpManager():
 
     def save_ip_list(self, force=False):
         if not force:
-            if self.iplist_need_save == 0:
+            if not self.iplist_need_save:
                 return
             if time.time() - self.iplist_saved_time < 10:
                 return
@@ -162,7 +162,7 @@ class IpManager():
                     fd.write( "%s %s %s %d %d\n" %
                         (ip, property['domain'], property['server'], property['handshake_time'], property['fail_times']) )
 
-            self.iplist_need_save = 0
+            self.iplist_need_save = False
         except Exception as e:
             xlog.error("save good_ip.txt fail %s", e)
         finally:
@@ -327,7 +327,7 @@ class IpManager():
                 self.append_ip_history(ip, handshake_time)
                 return False
 
-            self.iplist_need_save = 1
+            self.iplist_need_save = True
             self.good_ip_num += 1
 
             self.ip_dict[ip] = {'handshake_time':handshake_time, "fail_times":fail_times,
@@ -382,7 +382,7 @@ class IpManager():
                 self.append_ip_history(ip, handshake_time)
                 self.ip_dict[ip]["fail_time"] = 0
 
-                self.iplist_need_save = 1
+                self.iplist_need_save = True
 
             #logging.debug("update ip:%s not exist", ip)
         except Exception as e:
@@ -443,7 +443,7 @@ class IpManager():
         except Exception as e:
             xlog.exception("report_connect_fail err:%s", e)
         finally:
-            self.iplist_need_save = 1
+            self.iplist_need_save = True
             self.ip_lock.release()
 
         if not self.is_ip_enough():
