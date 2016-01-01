@@ -289,7 +289,7 @@ class HTTPServer():
                     if e.args[0] == 10022:
                         logging.info("restart socket server.")
                         self.init_socket()
-                    return
+                    break
                 self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
