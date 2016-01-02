@@ -242,6 +242,7 @@ class HttpServerHandler():
 
 class HTTPServer():
     def __init__(self, address, handler, args=(), use_https=False, cert=""):
+        self.sockets = None
         self.running = True
         if isinstance(address, tuple):
             self.server_address = [address]
@@ -256,6 +257,9 @@ class HTTPServer():
         #logging.info("server %s:%d started.", address[0], address[1])
 
     def init_socket(self):
+        if self.sockets is not None:
+            self.server_close()
+
         self.sockets = []
         for addr in self.server_address:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -289,7 +293,7 @@ class HTTPServer():
                     if e.args[0] == 10022:
                         logging.info("restart socket server.")
                         self.init_socket()
-                    return
+                    break
                 self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
