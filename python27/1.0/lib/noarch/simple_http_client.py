@@ -90,7 +90,7 @@ class HTTP_client():
                 req_path = self.path_base + path
             else:
                 req_path = self.path_base + "/" + path
-            response = self.fetch(method, self.address[0], req_path, header, data, timeout)
+            response = self.fetch(method, self.address[0], req_path, header, data, timeout=timeout)
             if not response:
                 #logging.warn("post return fail")
                 return "", False, response
