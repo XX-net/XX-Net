@@ -163,7 +163,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        touch_active()
+        if self.path != "https://www.twitter.com/xxnet":
+            touch_active()
+
         host, _, port = self.path.rpartition(':')
 
         if host in config.HOSTS_GAE:

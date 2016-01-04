@@ -379,7 +379,6 @@ def handler(method, url, headers, body, wfile):
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
 
     try:
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
         response_headers = {}
         for key, value in response.getheaders():
             key = key.title()
@@ -397,6 +396,7 @@ def handler(method, url, headers, body, wfile):
 
         send_to_browser = True
         try:
+            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             for key in response_headers:
                 value = response_headers[key]
                 send_header(wfile, key, value)
