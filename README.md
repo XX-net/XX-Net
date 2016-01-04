@@ -15,7 +15,7 @@ XX-Net - A Reborn of Goagent
 https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
 
 稳定版(Stable)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.7.3
+https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
 
 懒人集成浏览器版（Easy Browser Bundle）:
 https://github.com/yeahwu/chrome-xx
