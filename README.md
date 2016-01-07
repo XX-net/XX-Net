@@ -1,6 +1,6 @@
 
 
-XX-Net - A Reborn of Goagent
+XX-Net - A Reborn Goagent
 ========
 翻墙工具套件 A firewall circumvention toolkit
 * GAE proxy, 稳定、易用、快速  
