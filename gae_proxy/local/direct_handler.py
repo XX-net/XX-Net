@@ -23,6 +23,8 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
+google_server_types = ["GAE", "Google Frontend", "GSE"]
+
 
 def send_header(wfile, keyword, value):
     keyword = keyword.title()
@@ -96,7 +98,8 @@ def handler(method, host, url, headers, body, wfile):
             if response:
                 if response.status > 400:
                     server_type = response.getheader('Server', "")
-                    if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
+
+                    if "gws" not in server_type and server_type not in google_server_types:
                         xlog.warn("IP:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, server_type, response.status)
                         google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                         response.close()

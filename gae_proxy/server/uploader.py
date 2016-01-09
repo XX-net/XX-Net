@@ -104,7 +104,7 @@ def upload(appid, email, password):
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
     try:
-        for i in range(100):
+        for i in range(3):
             try:
                 result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
