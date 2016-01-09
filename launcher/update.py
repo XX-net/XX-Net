@@ -331,9 +331,9 @@ def create_desktop_shortcut():
     if sys.platform.startswith("linux"):
         pass
     elif sys.platform == "win32":
-        import ctypes
-        msg = u"是否在桌面创建图标？"
-        title = u"XX-Net 叉叉网"
+        # import ctypes
+        # msg = u"是否在桌面创建图标？"
+        # title = u"XX-Net 叉叉网"
         #res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
         # Yes:1 No:2
         #if res == 2:
@@ -342,7 +342,7 @@ def create_desktop_shortcut():
         os.chdir(work_path)
 
         import subprocess
-        p = subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
+        subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
 
 def notify_install_tcpz_for_winXp():
     import ctypes
