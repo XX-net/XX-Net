@@ -56,7 +56,7 @@ def start(module):
 
     except Exception as e:
         xlog.exception("start module %s fail:%s", module, e)
-        return "Except:%s" % e
+        raise
     return "start success."
 
 
