@@ -12,28 +12,28 @@ if __name__ == "__main__":
     sys.path.append(win32_lib)
 
 import webbrowser
-from systray import SysTrayIcon
-import systray.win32_adapter as win32_adapter
 import os
 import ctypes
 import _winreg as winreg
 import win32_proxy_manager
-
 import module_init
 import update
-from instances import xlog
 import config
 
+from instances import xlog
+from systray import SysTrayIcon, win32_adapter
+
+import locale
+lang_code, code_page = locale.getdefaultlocale()
 
 class Win_tray():
     def __init__(self):
         icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
-        self.systray = SysTrayIcon(icon_path, "XX-Net", self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
+        self.systray = SysTrayIcon(icon_path, "XX-Net", 
+            self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
-        self.INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-            reg_path,
-            0, winreg.KEY_ALL_ACCESS)
+        self.INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path, 0, winreg.KEY_ALL_ACCESS)
 
         proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
         if proxy_setting == "pac":
@@ -47,27 +47,25 @@ class Win_tray():
             xlog.warn("proxy_setting:%r", proxy_setting)
 
     def get_proxy_state(self):
-        REG_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
-        INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,REG_PATH,0, winreg.KEY_ALL_ACCESS)
         try:
-            AutoConfigURL, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'AutoConfigURL')
+            AutoConfigURL, reg_type = winreg.QueryValueEx(self.INTERNET_SETTINGS, 'AutoConfigURL')
             if AutoConfigURL:
                 if AutoConfigURL == "http://127.0.0.1:8086/proxy.pac":
                     return "pac"
                 else:
                     return "unknown"
-        except Exception as e:
+        except:
             pass
 
         try:
-            ProxyEnable, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyEnable')
+            ProxyEnable, reg_type = winreg.QueryValueEx(self.INTERNET_SETTINGS, 'ProxyEnable')
             if ProxyEnable:
-                ProxyServer, reg_type = winreg.QueryValueEx(INTERNET_SETTINGS, 'ProxyServer')
+                ProxyServer, reg_type = winreg.QueryValueEx(self.INTERNET_SETTINGS, 'ProxyServer')
                 if ProxyServer == "127.0.0.1:8087":
                     return "gae"
                 else:
                     return "unknown"
-        except Exception as e:
+        except:
             pass
         
         return "disable"
@@ -77,9 +75,6 @@ class Win_tray():
         self.systray._show_menu()
 
     def make_menu(self):
-        import locale
-        lang_code, code_page = locale.getdefaultlocale()
-
         proxy_stat = self.get_proxy_state()
         gae_proxy_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="gae" else 0
         pac_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="pac" else 0
@@ -110,12 +105,12 @@ class Win_tray():
         update.check_update()
 
     def on_enable_gae_proxy(self, widget=None, data=None):
-        win32_proxy_manager.set_proxy_server("127.0.0.1", 8087)
+        win32_proxy_manager.set_proxy("127.0.0.1:8087")
         config.set(["modules", "launcher", "proxy"], "gae")
         config.save()
 
     def on_enable_pac(self, widget=None, data=None):
-        win32_proxy_manager.set_proxy_auto("http://127.0.0.1:8086/proxy.pac")
+        win32_proxy_manager.set_proxy("http://127.0.0.1:8086/proxy.pac")
         config.set(["modules", "launcher", "proxy"], "pac")
         config.save()
 
