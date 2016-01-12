@@ -149,7 +149,7 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }} <br>{{ _("Please go to ") }}请在<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }} <br>{{ _("Please go to ") }}<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
