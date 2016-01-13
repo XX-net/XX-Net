@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-29 14:44+0800\n"
+"POT-Creation-Date: 2016-01-13 10:08+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -430,6 +430,16 @@ msgstr ""
 msgid ", Everything is OK. Welcome to the FREE Internet. "
 msgstr "، همه چی خوبه. به اینترنت خوش آمدید. "
 
+msgid ""
+"The status page is empty. Highly likely that XX-Net failed getting "
+"started. Please follow "
+msgstr ""
+"صفحه وضعیت خالی است. بسیار محتمل است که GAEProxy شروع کار شکست خورده است."
+" لطفا دنبال کنید"
+
+msgid "No response from process. It might have already exited."
+msgstr "هیچ پاسخی از روند GAEProxy. این ممکن است در حال حاضر خارج می شود."
+
 msgid "You are using the public Appid."
 msgstr "شما با استفاده از شناسه های عمومی است."
 
@@ -441,10 +451,5 @@ msgstr "پروکسی را فعال کنید در "
 
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
-
-
-
-
-
 
 

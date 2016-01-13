@@ -411,9 +411,9 @@
             error: function(result) {
                 var infoValue = $('#noob-info').html();
                 if ( infoValue == '' ) {
-                    tip('{{ _("The status page is empty. Highly likely that GAEProxy failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that XX-Net failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
                 } else {
-                    updateProperty('#noob-info', '{{ _("No response from GAEProxy process. It might have already exited.")}}', 'none');
+                    updateProperty('#noob-info', '{{ _("No response from process. It might have already exited.")}}', 'none');
                 }
             }
         });
