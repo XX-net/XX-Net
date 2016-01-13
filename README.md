@@ -9,10 +9,10 @@ XX-Net - A Reborn Goagent
   Friendly web UI  
 
 
-下载链接(Download)：
+下载(Download)：
 ==========
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
+https://codeload.github.com/XX-net/XX-Net/zip/2.8.10
 
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
@@ -20,48 +20,21 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
 懒人集成浏览器版（Easy Browser Bundle）:
 https://github.com/yeahwu/chrome-xx
 
-使用方法(Usage)：https://github.com/XX-net/XX-Net/wiki/使用方法
-
-更新历史(Update history)：https://github.com/XX-net/XX-Net/wiki/更新历史
-  
-  
-
-
-
-
-平台支持(Supported Platforms)
-================
-* Windows 7/8/10 （XP 需要 [tcpip.sys补丁] ( https://github.com/yeahwu/wu/raw/master/WindowsXP-TCPIP-concurrency-count-patch.rar) , 将数量调节到2014. ）Win10 存在声音卡的问题。XP needs the patch linked above. Adjust the count to 2014. There exists an audio bug on Windows 10.
-* Linux 
-* Mac OS X(10.7; 10.8; 10.9; 10.10; 10.11)
-
-
-
-语言支持(Supported Languages)
-================
-* 英语English (en_US)
-* 简体中文Simplified Chinese (zh_CN)
-* 波斯语Persian (fa_IR)
 
 
 ## 链接(Links)
 |   |   |
 | --------   | :----  |
+|使用方法(Usage)：|https://github.com/XX-net/XX-Net/wiki/使用方法|
+|更新历史(Update history)：|https://github.com/XX-net/XX-Net/wiki/更新历史|
 |问题报告(Report a bug):  |https://github.com/XX-net/XX-Net/issues|
 |讨论群(Discussion forum):  |https://groups.google.com/forum/#!forum/xx-net|
-
-感谢(Thanks)
-=========
-* [Google](https://www.google.com)
-* [GoAgent](https://github.com/phuslu/goagent)
-* [GoGoTest](https://github.com/azzvx/gogotester)
-* [goagentfindip](https://github.com/usrtmp/goagentfindip)
-* [checkgoogleip](https://github.com/moonshawdo/checkgoogleip)
 
 
 如何帮助项目(How to contribute)
 ==========
 https://github.com/XX-net/XX-Net/wiki/How-to-contribute
+
 
 集成XX-Net的项目(XX-Net-integrated projects)
 ===============
