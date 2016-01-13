@@ -22,8 +22,8 @@ from config import config
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-
-google_server_types = ["GAE", "Google Frontend", "GSE"]
+#"GAE", "Google Frontend", "GSE", "GFE/2.0",
+google_server_types = ["ClientMapServer"]
 
 
 def send_header(wfile, keyword, value):
@@ -99,9 +99,9 @@ def handler(method, host, url, headers, body, wfile):
                 if response.status > 400:
                     server_type = response.getheader('Server', "")
 
-                    if "gws" not in server_type and server_type not in google_server_types:
-                        xlog.warn("IP:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, server_type, response.status)
-                        google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                    if "G" not in server_type and "g" not in server_type and server_type not in google_server_types:
+                        xlog.warn("IP:%s host:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, host, server_type, response.status)
+                        google_ip.report_connect_fail(response.ssl_sock.ip)
                         response.close()
                         continue
                 break
