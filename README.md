@@ -1,6 +1,6 @@
 
 
-XX-Net  [[English Home Page]]
+XX-Net  [English Home Page](https://github.com/XX-net/XX-Net/wiki/English-Home-Page)  
 ========
 翻墙工具套件
 * GAE proxy, 稳定、易用、快速   
