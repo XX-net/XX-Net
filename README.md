@@ -8,8 +8,7 @@ XX-Net
 * Web界面，人性化交互  
 
 
-下载(Download)：
-==========
+## 下载(Download)：
 测试版(Test)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.8.10
 
@@ -30,13 +29,11 @@ https://github.com/yeahwu/chrome-xx
 |讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 
 
-如何帮助项目
-==========
+## 如何帮助项目
 https://github.com/XX-net/XX-Net/wiki/How-to-contribute
 
 
-集成XX-Net的项目
-===============
+## 集成XX-Net的项目
 * ChromeGAE  
   http://www.ccav1.com/chromegae  
   集成Google Chrome和XX-Net的自动翻墙浏览器  
