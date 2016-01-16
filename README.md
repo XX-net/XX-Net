@@ -1,4 +1,4 @@
-
+[Persian Home](https://github.com/XX-net/XX-Net/wiki/Persian-home-page)
 
 XX-Net - A Reborn Goagent
 ========
