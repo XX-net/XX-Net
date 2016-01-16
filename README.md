@@ -16,7 +16,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/2.8.10
 https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
 
 懒人集成浏览器版（Easy Browser Bundle）:
-https://github.com/yeahwu/chrome-xx
+https://github.com/yeahwu/firefox-xx
 
 
 
@@ -39,8 +39,8 @@ https://github.com/XX-net/XX-Net/wiki/How-to-contribute
   集成Google Chrome和XX-Net的自动翻墙浏览器  
   维护人：Yanu  
 
-* 集成Chrome和XX-Net  
-  https://github.com/yeahwu/chrome-xx  
+* 集成火狐和XX-Net  
+  https://github.com/yeahwu/firefox-xx  
 
 * plusburg  
   https://github.com/Plusburg/Plusburg  
