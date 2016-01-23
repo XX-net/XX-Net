@@ -233,7 +233,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif check_update == 1:
                 check_update = "stable"
 
-            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
+             "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d, \
+             "x_tunnel_enable": %d}' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
@@ -242,7 +244,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
-                    , config.get(["modules", "gae_proxy", "auto_start"], 0))
+                    , config.get(["modules", "gae_proxy", "auto_start"], 0)
+                    , config.get(["modules", "x_tunnel", "auto_start"], 0)
+                    )
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
@@ -353,6 +357,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.start("php_proxy")
                     else:
                         module_init.stop("php_proxy")
+                    self.load_module_menus()
+                    data = '{"res":"success"}'
+            elif 'x_tunnel_enable' in reqs :
+                x_tunnel_enable = int(reqs['x_tunnel_enable'][0])
+                if x_tunnel_enable != 0 and x_tunnel_enable != 1:
+                    data = '{"res":"fail, x_tunnel_enable:%s"}' % x_tunnel_enable
+                else:
+                    config.set(["modules", "x_tunnel", "auto_start"], x_tunnel_enable)
+                    config.save()
+                    if x_tunnel_enable:
+                        module_init.start("x_tunnel")
+                    else:
+                        module_init.stop("x_tunnel")
                     self.load_module_menus()
                     data = '{"res":"success"}'
             else:

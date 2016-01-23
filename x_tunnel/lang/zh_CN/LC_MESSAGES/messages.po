@@ -1,0 +1,134 @@
+
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2016-01-22 22:50+0800\n"
+"PO-Revision-Date: 2015-12-16 20:54+0800\n"
+"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Language: zh_Hans_CN\n"
+"Language-Team: zh_Hans_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+msgid "Summary"
+msgstr "概要"
+
+msgid "Plan"
+msgstr "套餐"
+
+msgid "History"
+msgstr "历史"
+
+msgid "Get"
+msgstr "获取"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "Bands"
+msgstr "流量"
+
+msgid "Time range"
+msgstr "时间范围"
+
+msgid "Price"
+msgstr "价格"
+
+msgid "Buy"
+msgstr "购买"
+
+msgid "Quarterly"
+msgstr "季度"
+
+msgid "Months"
+msgstr "个月"
+
+msgid "Order"
+msgstr "下单"
+
+msgid "Yearly"
+msgstr "年"
+
+msgid "Current Quotas"
+msgstr "当前流量套餐"
+
+msgid "End time"
+msgstr "有效日期"
+
+msgid "Quota Left"
+msgstr "流量剩余"
+
+msgid "Orders"
+msgstr "订单"
+
+msgid "Infos"
+msgstr "信息"
+
+msgid "Transfer"
+msgstr "转让"
+
+msgid "Account"
+msgstr "帐号"
+
+msgid "Amount"
+msgstr "帐号"
+
+msgid "Submit"
+msgstr "提交"
+
+msgid "Send To Friend"
+msgstr "转给朋友"
+
+msgid "Charge"
+msgstr "充值"
+
+msgid "Input valid email."
+msgstr "输入有效的Email"
+
+msgid "Property"
+msgstr "属性"
+
+msgid "Value"
+msgstr "值"
+
+msgid "Login"
+msgstr "登陆"
+
+msgid "Register"
+msgstr "注册"
+
+msgid "Logout"
+msgstr "登出"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Balance"
+msgstr "余额"
+
+msgid "Quota"
+msgstr "剩余流量"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "No response from process. It might have already exited."
+msgstr "没有收到响应信息，可能已经退出。"
+
+msgid "Password at least 6 charactor."
+msgstr "密码最少6个字符。"
+
+msgid "Home"
+msgstr "首页"
+
+msgid "Log"
+msgstr "日志"
+
+

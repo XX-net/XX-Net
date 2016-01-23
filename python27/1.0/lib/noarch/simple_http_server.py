@@ -5,12 +5,15 @@ import threading
 import mimetools
 import socket
 import errno
-import xlog
 import sys
 import select
 import time
+import json
 
+
+import xlog
 logging = xlog.Logger()
+
 
 class HttpServerHandler():
     default_request_version = "HTTP/1.1"
@@ -182,32 +185,28 @@ class HttpServerHandler():
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
 
-    def send_response(self, mimetype, data):
-        no_cache = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
-        try:
-            self.wfile.write(('HTTP/1.1 200\r\n%sAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n'
-                 % (no_cache, mimetype, len(data))).encode())
-            self.wfile.write(data)
-        except:
-            pass
-
     def send_error(self, code, message=None):
         self.wfile.write('HTTP/1.1 %d\r\n' % code)
         self.wfile.write('Connection: close\r\n\r\n')
         if message:
             self.wfile.write(message)
 
-    def send_response_data(self, mimetype="", content="", heads="", status=200):
+    def send_response(self, mimetype="", content="", headers="", status=200):
         data = []
         data.append('HTTP/1.1 %d\r\n' % status)
         if len(mimetype):
             data.append('Content-Type: %s\r\n' % mimetype)
+
         data.append('Content-Length: %s\r\n' % len(content))
-        if len(heads):
-            data.append(heads)
+        if len(headers):
+            if isinstance(headers, dict):
+                for key in headers:
+                    data.append("%s: %s\r\n" % (key, headers[key]))
+            elif isinstance(headers, basestring):
+                data.append(headers)
         data.append("\r\n")
 
-        if len(content) + len(heads) < 1024:
+        if len(content) < 1024:
             data.append(content)
             data_str = "".join(data)
             self.wfile.write(data_str)
@@ -238,6 +237,10 @@ class HttpServerHandler():
         except:
             pass
             #logging.warn("download broken")
+
+    def response_json(self, res_arr):
+        data = json.dumps(res_arr, indent=0, sort_keys=True)
+        self.send_response('application/json', data)
 
 
 class HTTPServer():
@@ -355,6 +358,7 @@ class TestHttpServer(HttpServerHandler):
                 self.send_file(target, "application/x-binary")
             else:
                 self.wfile.write('HTTP/1.1 404\r\nContent-Length: 0\r\n\r\n' )
+
 
 def main(data_path="."):
     logging.info("listen http on 8880")
