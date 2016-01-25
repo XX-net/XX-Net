@@ -140,7 +140,7 @@ class HttpServerHandler():
             elif self.command == "PUT":
                 self.do_PUT()
             else:
-                logging.warn("unhandler cmd:%s", self.command)
+                logging.warn("unhandler cmd:%s path:%s from:%s", self.command, self.path, self.address_string())
                 return
 
             self.wfile.flush() #actually send the response if not already done.
@@ -158,29 +158,29 @@ class HttpServerHandler():
         #except OpenSSL.SSL.SysCallError as e:
         #    logging.warn("socket error:%r", e)
         except Exception as e:
-            logging.exception("handler:%r", e)
+            logging.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
             pass
 
     def do_GET(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_POST(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_PUT(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_DELETE(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_OPTIONS(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_HEAD(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_CONNECT(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')

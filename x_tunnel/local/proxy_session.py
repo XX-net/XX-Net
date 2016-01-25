@@ -77,6 +77,7 @@ class ProxySession():
             return
 
         self.running = False
+        self.session_id = ""
         self.balance = 0
         self.close_all_connection()
         self.upload_task_queue.stop()

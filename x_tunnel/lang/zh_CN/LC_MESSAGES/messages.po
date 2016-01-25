@@ -78,7 +78,7 @@ msgid "Account"
 msgstr "帐号"
 
 msgid "Amount"
-msgstr "帐号"
+msgstr "数量"
 
 msgid "Submit"
 msgstr "提交"
