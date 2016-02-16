@@ -1,4 +1,3 @@
-
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
@@ -32,7 +31,7 @@ msgstr "时间"
 msgid "Action"
 msgstr "操作"
 
-msgid "Bands"
+msgid "Bandwidth"
 msgstr "流量"
 
 msgid "Time range"
@@ -40,9 +39,6 @@ msgstr "时间范围"
 
 msgid "Price"
 msgstr "价格"
-
-msgid "Buy"
-msgstr "购买"
 
 msgid "Quarterly"
 msgstr "季度"
@@ -56,14 +52,8 @@ msgstr "下单"
 msgid "Yearly"
 msgstr "年"
 
-msgid "Current Quotas"
-msgstr "当前流量套餐"
-
 msgid "End time"
 msgstr "有效日期"
-
-msgid "Quota Left"
-msgstr "流量剩余"
 
 msgid "Orders"
 msgstr "订单"
@@ -83,50 +73,68 @@ msgstr "帐号"
 msgid "Submit"
 msgstr "提交"
 
-msgid "Send To Friend"
+msgid "Send To Friends"
 msgstr "转给朋友"
 
 msgid "Charge"
 msgstr "充值"
 
-msgid "Input valid email."
-msgstr "输入有效的Email"
+msgid "Unknown error occurred."
+msgstr "发生了未知错误。"
 
-msgid "Property"
-msgstr "属性"
+msgid "Email seems invalid.."
+msgstr "电子邮件地址似乎是无效的。"
 
-msgid "Value"
-msgstr "值"
+msgid "Incorrect Email or password."
+msgstr "电子邮件地址或密码不正确。"
+
+msgid "Password needs at least 6 charactors."
+msgstr "密码最少6个字符。"
+
+msgid "Please wait..."
+msgstr "请稍后..."
 
 msgid "Login"
-msgstr "登陆"
+msgstr "登录"
+
+msgid "Email"
+msgstr "电子邮件地址"
+
+msgid "Haven't an account?"
+msgstr "没有账户?"
 
 msgid "Register"
 msgstr "注册"
 
+msgid "Already have an account?"
+msgstr "已有账户?"
+
+msgid "Email has been taken by another user."
+msgstr "电子邮件地址已被他人使用。"
+
 msgid "Logout"
 msgstr "登出"
 
-msgid "Refresh"
-msgstr "刷新"
+msgid "Failed to log out."
+msgstr "登出失败。"
+
+msgid "Buy Now"
+msgstr "立即购买"
+
+msgid "Please refresh page."
+msgstr "请刷新页面。"
+
+msgid "Close"
+msgstr "关闭"
 
 msgid "Balance"
 msgstr "余额"
 
-msgid "Quota"
-msgstr "剩余流量"
-
 msgid "Password"
 msgstr "密码"
 
-msgid "No response from process. It might have already exited."
-msgstr "没有收到响应信息，可能已经退出。"
-
-msgid "Password at least 6 charactor."
-msgstr "密码最少6个字符。"
-
-msgid "Home"
-msgstr "首页"
+msgid "Config"
+msgstr "配置"
 
 msgid "Log"
 msgstr "日志"

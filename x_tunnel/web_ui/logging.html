@@ -29,10 +29,10 @@
 </script>
 <script type="text/javascript">
     $(function() {
-        window.previousOffset  = 0;
-        window.offset          = 1;
-        window.logLineNum      = 0;
-        window.isAutoScrollLog = true;
+        window.previousOffset     = 0;
+        window.offset             = 1;
+        window.logLineNum         = 0;
+        window.isAutoScrollLog    = true;
         window.isgetLogProcessing = false;
 
         var timer = $.timer(function() {
@@ -71,8 +71,12 @@
 </script>
 <script type="text/javascript">
     function getLog() {
-        if ( window.isgetLogProcessing ) { return }
-        if ( !window.isAutoScrollLog ) { return }
+        if ( window.isgetLogProcessing ) { 
+            return; 
+        }
+        if ( !window.isAutoScrollLog ) { 
+            return; 
+        }
         window.isgetLogProcessing = true;
         var pageRequests = {
             'cmd': 'get_new',
