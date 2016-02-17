@@ -35,6 +35,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif path == "/debug":
             data = g.session.status()
             return self.send_response('text/html', data)
+        elif path == "/info":
+            return self.req_info_handler()
+        elif path == "/get_history":
+            return self.req_get_history_handler()
         else:
             xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -58,15 +62,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif path == "/logout":
             return self.req_logout_handler()
         elif path == "/register":
-            return self.req_config_handler()
-        elif path == "/status":
-            return self.req_status_handler()
+            return self.req_login_handler()
         elif path == "/order":
             return self.req_order_handler()
         elif path == "/transfer":
             return self.req_transfer_handler()
-        elif path == "/get_history":
-            return self.req_get_history_handler()
         else:
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
             return self.send_not_found()
@@ -102,13 +102,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
 
-    def req_status_handler(self):
+    def req_info_handler(self):
         if len(g.config.login_account) == 0 or len(g.config.login_password) == 0:
-            return self.response_json({"res": "success",
-                   "login_account": ""})
+            return self.response_json({
+                "res": "fail",
+                "login_account": ""
+            })
 
-        if 'force' in self.postvars:
-            force = int(self.postvars['force'][0])
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+
+        if 'force' in reqs:
+            force = int(reqs['force'][0])
         else:
             force = False
 
@@ -119,23 +124,27 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 update_server = False
             else:
                 update_server = True
-            res, reason = proxy_session.request_balance(g.config.login_account, g.config.login_password,
-                                                        is_register=False, update_server=update_server)
+            res, reason = proxy_session.request_balance(
+                g.config.login_account, g.config.login_password,
+                is_register=False, update_server=update_server)
 
             if not res:
-                return self.response_json(
-                    {"res": "fail", "login_account": "%s" % (g.config.login_account), "reason": reason})
-
+                return self.response_json({
+                    "res": "fail",
+                    "login_account": "%s" % (g.config.login_account),
+                    "reason": reason
+                })
             if not g.session.running:
                 g.session.start()
 
-        res_arr = {"res": "success",
-                   "login_account": "%s" % (g.config.login_account),
-                   "balance": "%f" % (g.balance),
-                   "quota": "%d" % (g.quota),
-                   "quota_list": g.quota_list,
-                   "traffic": g.session.traffic
-                   }
+        res_arr = {
+            "res": "success",
+            "login_account": "%s" % (g.config.login_account),
+            "balance": "%f" % (g.balance),
+            "quota": "%d" % (g.quota),
+            "quota_list": g.quota_list,
+            "traffic": g.session.traffic
+        }
         self.response_json(res_arr)
 
     def req_login_handler(self):
@@ -146,30 +155,39 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             else:
                 return True
 
-        account = str(self.postvars['account'][0])
-        password = str(self.postvars['password'][0])
+        username    = str(self.postvars['username'][0])
+        password    = str(self.postvars['password'][0])
         is_register = int(self.postvars['is_register'][0])
 
-        pa = check_email(account)
+        pa = check_email(username)
         if not pa:
-            reason = "email invalid."
-            return self.response_json({"res": "fail", "reason": reason})
+            return self.response_json({
+                "res": "fail",
+                "reason": "Invalid email."
+            })
         elif len(password) < 6:
-            reason = "password at least 6 charactor."
-            return self.response_json({"res": "fail", "reason": reason})
+            return self.response_json({
+                "res": "fail",
+                "reason": "Password needs at least 6 charactors."
+            })
 
         password_hash = str(hashlib.sha256(password).hexdigest())
-        res, reason = proxy_session.request_balance(account, password_hash, is_register, update_server=True)
+        res, reason = proxy_session.request_balance(username, password_hash, is_register, update_server=True)
         if res:
-            g.config.login_account = account
+            g.config.login_account  = username
             g.config.login_password = password_hash
             g.config.save()
-            res_arr = {"res": "success",
-                       "balance": float(g.balance)}
+            res_arr = {
+                "res": "success",
+                "balance": float(g.balance)
+            }
             g.last_refresh_time = time.time()
             g.session.start()
         else:
-            res_arr = {"res": "fail", "reason": reason}
+            res_arr = {
+                "res": "fail",
+                "reason": reason
+            }
 
         return self.response_json(res_arr)
 
@@ -186,18 +204,25 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         product = self.postvars['product'][0]
         if product != 'x_tunnel':
             xlog.warn("x_tunnel order product %s not support", product)
-            return self.response_json({"res": "fail", 'reason': 'product %s not support' % product})
+            return self.response_json({
+                "res": "fail",
+                "reason": "product %s not support" % product
+            })
 
         plan = self.postvars['plan'][0]
         if plan not in ["quarterly", "yearly"]:
             xlog.warn("x_tunnel order plan %s not support", plan)
-            return self.response_json({"res": "fail", 'reason': 'plan %s not support' % plan})
+            return self.response_json({
+                "res": "fail",
+                "reason": "plan %s not support" % plan
+            })
 
-        res, info = proxy_session.call_api("order",
-                                           {"account": g.config.login_account,
-                                            "password": g.config.login_password,
-                                            "product": "x_tunnel",
-                                            "plan": plan})
+        res, info = proxy_session.call_api("order", {
+            "account": g.config.login_account,
+            "password": g.config.login_password,
+            "product": "x_tunnel",
+            "plan": plan
+        })
         if not res:
             xlog.warn("order fail:%s", info)
             return self.response_json({"res": "fail", "reason": info})
@@ -221,30 +246,45 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.warn("transfer fail:%s", reason)
             return self.response_json({"res": "fail", "reason": reason})
 
-        req_info = {"account": g.config.login_account,
-                    "password": g.config.login_password,
-                    "transfer_type": transfer_type,
-                    "end_time": end_time,
-                    "to_account": to_account,
-                    "amount": amount}
+        req_info = {
+            "account": g.config.login_account,
+            "password": g.config.login_password,
+            "transfer_type": transfer_type,
+            "end_time": end_time,
+            "to_account": to_account,
+            "amount": amount
+        }
 
         res, info = proxy_session.call_api("transfer", req_info)
         if not res:
             xlog.warn("transfer fail:%s", info)
-            return self.response_json({"res": "fail", "reason": info})
+            return self.response_json({
+                "res": "fail",
+                "reason": info
+            })
 
         self.response_json({"res": "success"})
 
     def req_get_history_handler(self):
-        req_info = {"account": g.config.login_account,
-                    "password": g.config.login_password,
-                    "start": int(self.postvars['start'][0]),
-                    "end": int(self.postvars['end'][0]),
-                    "limit": int(self.postvars['limit'][0]), }
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+
+        req_info = {
+            "account": g.config.login_account,
+            "password": g.config.login_password,
+            "start": int(reqs['start'][0]),
+            "end": int(reqs['end'][0]),
+            "limit": int(reqs['limit'][0])
+        }
 
         res, info = proxy_session.call_api("get_history", req_info)
         if not res:
             xlog.warn("get history fail:%s", info)
-            return self.response_json({"res": "fail", "reason": info})
-
-        self.response_json({"res": "success", "history": info["history"]})
+            return self.response_json({
+                "res": "fail",
+                "reason": info
+            })
+        self.response_json({
+            "res": "success",
+            "history": info["history"]
+        })

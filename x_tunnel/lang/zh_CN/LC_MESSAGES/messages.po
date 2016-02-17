@@ -1,11 +1,10 @@
-
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-01-22 22:50+0800\n"
-"PO-Revision-Date: 2015-12-16 20:54+0800\n"
-"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
+"POT-Creation-Date: 2016-02-17 14:30+0800\n"
+"PO-Revision-Date: 2016-02-17 14:30+0800\n"
+"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -14,121 +13,161 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.1.1\n"
 
-msgid "Summary"
-msgstr "概要"
+msgid "Config"
+msgstr "配置"
 
-msgid "Plan"
+msgid "Log"
+msgstr "日志"
+
+msgid "Info"
+msgstr "信息"
+
+msgid "Plans"
 msgstr "套餐"
 
 msgid "History"
 msgstr "历史"
 
-msgid "Get"
-msgstr "获取"
-
-msgid "Time"
-msgstr "时间"
-
-msgid "Action"
-msgstr "操作"
-
-msgid "Bands"
-msgstr "流量"
-
-msgid "Time range"
-msgstr "时间范围"
-
-msgid "Price"
-msgstr "价格"
-
-msgid "Buy"
-msgstr "购买"
-
-msgid "Quarterly"
-msgstr "季度"
-
-msgid "Months"
-msgstr "个月"
-
-msgid "Order"
-msgstr "下单"
-
-msgid "Yearly"
-msgstr "年"
-
-msgid "Current Quotas"
-msgstr "当前流量套餐"
-
-msgid "End time"
-msgstr "有效日期"
-
-msgid "Quota Left"
-msgstr "流量剩余"
-
-msgid "Orders"
-msgstr "订单"
-
-msgid "Infos"
-msgstr "信息"
-
-msgid "Transfer"
-msgstr "转让"
-
-msgid "Account"
-msgstr "帐号"
-
-msgid "Amount"
-msgstr "数量"
-
-msgid "Submit"
-msgstr "提交"
-
-msgid "Send To Friend"
-msgstr "转给朋友"
-
-msgid "Charge"
-msgstr "充值"
-
-msgid "Input valid email."
-msgstr "输入有效的Email"
-
-msgid "Property"
-msgstr "属性"
-
-msgid "Value"
-msgstr "值"
-
 msgid "Login"
-msgstr "登陆"
+msgstr "登录"
 
-msgid "Register"
-msgstr "注册"
-
-msgid "Logout"
-msgstr "登出"
-
-msgid "Refresh"
-msgstr "刷新"
-
-msgid "Balance"
-msgstr "余额"
-
-msgid "Quota"
-msgstr "剩余流量"
+msgid "Email"
+msgstr "电子邮件地址"
 
 msgid "Password"
 msgstr "密码"
 
-msgid "No response from process. It might have already exited."
-msgstr "没有收到响应信息，可能已经退出。"
+msgid "Haven't an account?"
+msgstr "没有账户?"
 
-msgid "Password at least 6 charactor."
-msgstr "密码最少6个字符。"
+msgid "Register"
+msgstr "注册"
 
-msgid "Home"
-msgstr "首页"
+msgid "Already have an account?"
+msgstr "已有账户?"
 
-msgid "Log"
-msgstr "日志"
+msgid "Summary"
+msgstr "概况"
 
+msgid "Account"
+msgstr "账户"
 
+msgid "Logout"
+msgstr "注销"
+
+msgid "Credit"
+msgstr "余额"
+
+msgid "Charge"
+msgstr "充值"
+
+msgid "Transfer"
+msgstr "转让"
+
+msgid "Bandwidth"
+msgstr "流量"
+
+msgid "Available Bandwidth"
+msgstr "可用流量"
+
+msgid "No bandwidth available."
+msgstr "暂无可用流量。"
+
+msgid "Expire Time"
+msgstr "到期时间"
+
+msgid "Left Bandwidth"
+msgstr "剩余流量"
+
+msgid "Plans and Pricing"
+msgstr "套餐和价格"
+
+msgid "Months"
+msgstr "个月"
+
+msgid "Buy Now"
+msgstr "立即购买"
+
+msgid "Billing History"
+msgstr "历史账单"
+
+msgid "No billing history."
+msgstr "暂无历史账单。"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Description"
+msgstr "描述"
+
+msgid "Get"
+msgstr "获取"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "Plan"
+msgstr "套餐"
+
+msgid "Quarterly"
+msgstr "季度"
+
+msgid "Yearly"
+msgstr "年度"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Transfer Credit"
+msgstr "余额转账"
+
+msgid "Username transfer to"
+msgstr "转账用户名"
+
+msgid "Email Address"
+msgstr "电子邮件地址"
+
+msgid "Credit to transfer"
+msgstr "转账金额"
+
+msgid "Transfer Bandwidth"
+msgstr "流量转账"
+
+msgid "Bandwidth to transfer"
+msgstr "转账流量"
+
+msgid "Email seems invalid."
+msgstr "电子邮件地址似乎是无效的。"
+
+msgid "Password needs at least 6 charactors."
+msgstr "密码至少需要6个字符组成。"
+
+msgid "Please wait..."
+msgstr "请稍后..."
+
+msgid "Incorrect Email or password."
+msgstr "用户名或密码不正确。"
+
+msgid "Email has been taken by another user."
+msgstr "电子邮件地址已被他人使用。"
+
+msgid "Unknown error occurred."
+msgstr "发生了位置错误。"
+
+msgid "Failed to log out."
+msgstr "注销失败。"
+
+msgid "Please refresh page"
+msgstr "请刷新页面"
+
+msgid "Transfer username seems not a valid Email address."
+msgstr "转账用户名似乎不是有效的电子邮件地址。"
+
+msgid "Error occurred: "
+msgstr "发生了错误："
+
+msgid "Max Available Bandwidth: "
+msgstr "最大可用流量："
+
+msgid "Transfer amount should not more than 2 decimal places."
+msgstr "转账金额不得超过2位小数。"
