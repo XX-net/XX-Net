@@ -147,7 +147,7 @@
                 </ul>
             </div> <!-- .row-fluid -->
         </div> <!-- .section -->
-        <div class="section">
+        <div class="section" hidden>
             <h4>{{ _("Billing History") }}</h4>
             <p id="no-billing-history">{{ _("No billing history.") }}</p>
             <table id="billing-history" class="table hide">
@@ -286,8 +286,9 @@
             success: function(result) {
                 if( result['res'] == 'success' ) {
                     getAvailableBandwidth(result['quota_list']);
-                    getBillingHistory();
-                    getHistory();
+
+                    //getBillingHistory();
+                    // not imp yet
 
                     $('.nav-tabs > li').removeClass('hide');
                     $('#login-form').addClass('hide');
