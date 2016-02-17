@@ -29,6 +29,16 @@ class WriteBuffer(object):
         self.append(other)
         return self
 
+    def insert(self, s):
+        if isinstance(s, WriteBuffer):
+            self.buffer_list = s.buffer_list + self.buffer_list
+            self.string_len += s.string_len
+        elif isinstance(s, str):
+            self.buffer_list.insert(0, s)
+            self.string_len += len(s)
+        else:
+            raise Exception("WriteBuffer append not string or StringBuffer")
+
     def append(self, s):
         if isinstance(s, WriteBuffer):
             self.buffer_list.extend(s.buffer_list)
@@ -56,9 +66,9 @@ class ReadBuffer(object):
         elif begin + size > buf_len:
             raise Exception("ReadBuffer buf_len:%d, start:%d len:%d" % (buf_len, begin, size))
 
+        self.size = size
         self.buf = buf
         self.begin = begin
-        self.size = size
 
     def __len__(self):
         return self.size
@@ -328,7 +338,7 @@ class BlockReceivePool():
 
 
 class Conn(object):
-    def __init__(self, session, conn_id, sock, host, port, windows_size, windows_ack, is_client):
+    def __init__(self, session, conn_id, sock, host, port, windows_size, windows_ack, is_client, xlog):
         # xlog.info("session:%s Conn:%d host:%s port:%d", session.session_id, conn_id, host, port)
         self.host = host
         self.port = port
@@ -349,6 +359,7 @@ class Conn(object):
         self.sended_window_position = 0
         self.recv_thread = None
         self.cmd_thread = None
+        self.xlog = xlog
 
         self.transfered_close_to_peer = False
         if sock:
@@ -393,7 +404,7 @@ class Conn(object):
         self.stop_thread.start()
 
     def do_stop(self, reason="unknown"):
-        # xlog.debug("Conn session:%s conn:%d stop:%s", self.session.session_id, self.conn_id, reason)
+        self.xlog.debug("Conn session:%s conn:%d stop:%s", self.session.session_id, self.conn_id, reason)
         self.running = False
 
         self.cmd_notice.acquire()
@@ -421,7 +432,7 @@ class Conn(object):
         self.session.remove_conn(self.conn_id)
 
     def do_connect(self, host, port):
-        # xlog.info("session_id:%s create_conn %d %s:%d", self.session.session_id, self.conn_id, host, port)
+        self.xlog.info("session_id:%s create_conn %d %s:%d", self.session.session_id, self.conn_id, host, port)
         connect_timeout = 30
         sock = None
         # start_time = time.time()
@@ -480,7 +491,7 @@ class Conn(object):
                     payload = self.cmd_queue[self.next_cmd_seq]
                     del self.cmd_queue[self.next_cmd_seq]
                     self.next_cmd_seq += 1
-                    # xlog.debug("Conn session:%s conn:%d get data len:%d ", self.session.session_id, self.conn_id, len(payload))
+                    #self.xlog.debug("Conn session:%s conn:%d get data len:%d ", self.session.session_id, self.conn_id, len(payload))
                     return payload
                 else:
                     self.cmd_notice.wait()
@@ -500,7 +511,7 @@ class Conn(object):
 
             elif cmd_id == 3:  # ack:
                 position = struct.unpack("<Q", data.get(8))[0]
-                # xlog.debug("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
+                self.xlog.debug("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
                 if position > self.remote_acked_position:
                     self.remote_acked_position = position
                     self.recv_notice.acquire()
@@ -508,7 +519,7 @@ class Conn(object):
                     self.recv_notice.release()
 
             elif cmd_id == 2:  # Closed
-                # xlog.info("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
+                self.xlog.info("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
                 if self.is_client:
                     self.transfer_peer_close("finish")
                 self.stop("peer close")
@@ -526,18 +537,19 @@ class Conn(object):
 
                 sock, res = self.do_connect(self.host, self.port)
                 if res is False:
-                    xlog.debug("Conn session:%s conn:%d %s:%d Create fail", self.session.session_id, self.conn_id,
+                    self.xlog.debug("Conn session:%s conn:%d %s:%d Create fail", self.session.session_id, self.conn_id,
                                self.host, self.port)
                     self.transfer_peer_close("connect fail")
                 else:
-                    xlog.info("Conn session:%s conn:%d %s:%d", self.session.session_id, self.conn_id, self.host,
+                    self.xlog.info("Conn session:%s conn:%d %s:%d", self.session.session_id, self.conn_id, self.host,
                               self.port)
                     self.sock = sock
                     self.recv_thread = threading.Thread(target=self.recv_worker)
                     self.recv_thread.start()
             else:
+                self.xlog.error("Conn session:%s conn:%d unknown cmd_id:%d",
+                                self.session.session_id, self.conn_id, cmd_id)
                 raise Exception("put_send_data unknown cmd_id:%d" % cmd_id)
-                # xlog.debug("Conn session:%s conn:%d Send worker stopped", self.session.session_id, self.conn_id)
 
     def send_to_sock(self, data):
         sock = self.sock
@@ -553,7 +565,7 @@ class Conn(object):
             try:
                 sended = sock.send(buf[start:start + send_size])
             except Exception as e:
-                # xlog.info("%s conn_id:%d send closed", self.session.session_id, self.conn_id)
+                self.xlog.info("%s conn_id:%d send closed", self.session.session_id, self.conn_id)
                 sock.close()
                 self.sock = None
                 if self.is_client:

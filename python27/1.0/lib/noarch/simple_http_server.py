@@ -12,7 +12,7 @@ import json
 
 
 import xlog
-logging = xlog.Logger()
+logging = xlog.getLogger("simple_http_server")
 
 
 class HttpServerHandler():
@@ -245,7 +245,7 @@ class HttpServerHandler():
 
 class HTTPServer():
     def __init__(self, address, handler, args=(), use_https=False, cert=""):
-        self.sockets = None
+        self.sockets = []
         self.running = True
         if isinstance(address, tuple):
             self.server_address = [address]
@@ -260,34 +260,40 @@ class HTTPServer():
         #logging.info("server %s:%d started.", address[0], address[1])
 
     def init_socket(self):
-        if self.sockets is not None:
-            self.server_close()
-
-        self.sockets = []
         for addr in self.server_address:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                sock.bind(addr)
-            except Exception as e:
-                logging.error("bind to %s:%d fail", addr[0], addr[1])
-                raise e
+            self.add_listen(addr)
 
-            if self.use_https:
-                import OpenSSL
-                ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
-                #server.pem's location (containing the server private key and the server certificate).
-                fpem = self.cert
-                ctx.use_privatekey_file(fpem)
-                ctx.use_certificate_file(fpem)
-                sock = OpenSSL.SSL.Connection(ctx, sock)
-            sock.listen(200)
-            self.sockets.append(sock)
-            logging.info("server %s:%d started.", addr[0], addr[1])
+    def add_listen(self, addr):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(addr)
+        except Exception as e:
+            logging.error("bind to %s:%d fail", addr[0], addr[1])
+            raise e
+
+        if self.use_https:
+            import OpenSSL
+            if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_2_METHOD
+            elif hasattr(OpenSSL.SSL, "TLSv1_1_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_1_METHOD
+            elif hasattr(OpenSSL.SSL, "TLSv1_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_METHOD
+
+            ctx = OpenSSL.SSL.Context(ssl_version)
+            #server.pem's location (containing the server private key and the server certificate).
+            fpem = self.cert
+            ctx.use_privatekey_file(fpem)
+            ctx.use_certificate_file(fpem)
+            sock = OpenSSL.SSL.Connection(ctx, sock)
+        sock.listen(200)
+        self.sockets.append(sock)
+        logging.info("server %s:%d started.", addr[0], addr[1])
 
     def serve_forever(self):
         while self.running:
-            r, w, e = select.select(self.sockets, [], [], 1)
+            r, w, e = select.select(self.sockets, [], [], 3)
             for rsock in r:
                 try:
                     (sock, address) = rsock.accept()
@@ -295,6 +301,7 @@ class HTTPServer():
                     logging.warn("socket accept fail(errno: %s).", e.args[0])
                     if e.args[0] == 10022:
                         logging.info("restart socket server.")
+                        self.server_close()
                         self.init_socket()
                     break
                 self.process_connect(sock, address)
@@ -311,7 +318,7 @@ class HTTPServer():
     def server_close(self):
         for sock in self.sockets:
             sock.close()
-
+        self.sockets = []
 
 class TestHttpServer(HttpServerHandler):
     def __init__(self, sock, client, args):
@@ -332,7 +339,7 @@ class TestHttpServer(HttpServerHandler):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
-        #logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
+        logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 
         if url_path == '/':
             data = "OK\r\n"

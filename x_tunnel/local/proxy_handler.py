@@ -7,9 +7,16 @@ xlog = getLogger("x_tunnel")
 import global_var as g
 
 
-class Socks5Server(SocketServer.StreamRequestHandler):
+class Socks5Server():
     read_buffer = ""
     buffer_start = 0
+
+    def __init__(self, sock, client, args):
+        self.connection = sock
+        self.rfile = socket._fileobject(self.connection, "rb", -1)
+        self.wfile = socket._fileobject(self.connection, "wb", 0)
+        self.client_address = client
+        self.args = args
 
     def handle(self):
         try:
@@ -93,7 +100,6 @@ class Socks5Server(SocketServer.StreamRequestHandler):
         else:
             addr = ip
 
-        xlog.info("Socks4:%r to %s:%d", self.client_address, addr, port)
         conn_id = g.session.create_conn(sock, addr, port)
         if not conn_id:
             xlog.warn("Socks4 connect fail, no conn_id")
@@ -101,6 +107,7 @@ class Socks5Server(SocketServer.StreamRequestHandler):
             sock.send(reply)
             return
 
+        xlog.info("Socks4:%r to %s:%d, conn_id:%d", self.client_address, addr, port, conn_id)
         reply = b"\x00\x5a" + addr_pack + struct.pack(">H", port)
         sock.send(reply)
 
@@ -150,13 +157,14 @@ class Socks5Server(SocketServer.StreamRequestHandler):
 
         port = struct.unpack('>H', self.rfile.read(2))[0]
 
-        # xlog.info("%r to %s:%d", self.client_address, addr, port)
         conn_id = g.session.create_conn(sock, addr, port)
         if not conn_id:
+            xlog.warn("create conn fail")
             reply = b"\x05\x01\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
             sock.send(reply)
             return
 
+        xlog.info("socks5 %r connect to %s:%d conn_id:%d", self.client_address, addr, port, conn_id)
         reply = b"\x05\x00\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
         sock.send(reply)
 

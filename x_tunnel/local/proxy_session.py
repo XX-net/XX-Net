@@ -191,7 +191,7 @@ class ProxySession():
         self.send_conn_data(conn_id, data)
 
         self.conn_list[conn_id] = base_container.Conn(self, conn_id, sock, host, port, g.config.windows_size,
-                                                      g.config.windows_ack, is_client=True)
+                                                      g.config.windows_ack, True, xlog)
         return conn_id
 
     def close_all_connection(self):
