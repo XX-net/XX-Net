@@ -278,13 +278,32 @@ div#content div#options div.row-fluid div.span4, .bold {
     margin: 0;
 }
 
-div#summary.tab-pane form#login-form,
-div#summary.tab-pane form#register-form {
+div#info.tab-pane div.section {
+    margin-bottom: 20px;
+}
+
+div#info.tab-pane form#login-form,
+div#info.tab-pane form#register-form {
     max-width: 640px;
 }
 
-div#summary.tab-pane div#account-information p {
+div#info.tab-pane div#account-information p {
     margin-top: 10px;
+}
+
+div#plans.tab-pane h1.price {
+    text-align: center;
+}
+
+div#plans.tab-pane ul.details {
+    color: #8e8e8e;
+    list-style: none;
+    margin: 0;
+}
+
+div#plans.tab-pane ul.details div.span4.text-right {
+    color: #747474;
+    font-weight: bold;
 }
 
 div#history.tab-pane > div.row-fluid {

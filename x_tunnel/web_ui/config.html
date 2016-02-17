@@ -1,97 +1,180 @@
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#summary" data-toggle="tab">{{ _( "Summary" ) }}</a></li>
-    <li class="hide"><a href="#plan" data-toggle="tab">{{ _( "Plan" ) }}</a></li>
-    <li class="hide"><a href="#history" data-toggle="tab">{{ _( "History" ) }}</a></li>
+    <li class="active"><a href="#info" data-toggle="tab">{{ _("Info") }}</a></li>
+    <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
+    <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
 </ul>
 <div class="tab-content">
-    <div id="summary" class="tab-pane fade in active">
+    <div id="info" class="tab-pane fade in active">
         <form id="login-form" onSubmit="onLoginSubmit(); return false;">
-            <h5>{{ _( "Login" ) }}</h5>
+            <h4>{{ _("Login") }}</h4>
             <p>
-                <label for="login-username">{{ _( "Email" ) }}</label>
+                <label for="login-username">{{ _("Email") }}</label>
                 <input id="login-username" type="text" />
             </p>
             <p>
-                <label for="login-password">{{ _( "Password" ) }}</label>
+                <label for="login-password">{{ _("Password") }}</label>
                 <input id="login-password" type="password" />
             </p>
             <p>
-                <button class="btn btn-primary btn-block" type="submit">{{ _( "Login" ) }}</button>
+                <button class="btn btn-primary btn-block" type="submit">{{ _("Login") }}</button>
             </p>
             <p class="text-center">
-                <a id="register-trigger" href="javascript:void(0);">{{ _( "Haven't an account?" ) }}</a>
+                <a id="register-trigger" href="javascript:void(0);">{{ _("Haven't an account?") }}</a>
             </p>
         </form> <!-- #login-form -->
         <form id="register-form" class="hide" onSubmit="onRegisterSubmit(); return false;">
-            <h5>{{ _( "Register" ) }}</h5>
+            <h4>{{ _("Register") }}</h4>
             <p>
-                <label for="register-username">{{ _( "Email" ) }}</label>
+                <label for="register-username">{{ _("Email") }}</label>
                 <input id="register-username" type="text" />
             </p>
             <p>
-                <label for="register-password">{{ _( "Password" ) }}</label>
+                <label for="register-password">{{ _("Password") }}</label>
                 <input id="register-password" type="password" />
             </p>
             <p>
-                <button class="btn btn-primary btn-block" type="submit">{{ _( "Register" ) }}</button>
+                <button class="btn btn-primary btn-block" type="submit">{{ _("Register") }}</button>
             </p>
             <p class="text-center">
-                <a id="login-trigger" href="javascript:void(0);">{{ _( "Already have an account?" ) }}</a>
+                <a id="login-trigger" href="javascript:void(0);">{{ _("Already have an account?") }}</a>
             </p>
         </form> <!-- #register-form -->
         <div id="account-information" class="hide">
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="login-account">{{ _( "Account" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <p>
-                        <span id="login-account">N/a</span>
-                        <a id="logout-trigger" href="javascript:void(0)">[{{ _("Logout") }}]</a>
-                    </p>
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="balance">{{ _( "Balance" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <p>
-                        <span id="balance">N/a</span>
-                        <a id="charge-trigger" href="javascript:void(0);">[{{ _( "Charge" ) }}]</a>
-                        <a id="transfer-trigger" href="javascript:void(0);">[{{ _( "Transfer" ) }}]</a>
-                    </p>
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="bandwidth">{{ _( "Bandwidth" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <p>
-                        <span id="bandwidth">N/a</span>
-                    </p>
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
+            <div class="section">
+                <h4>{{ _("Summary") }}</h4>
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label for="login-account">{{ _("Account") }}</label>
+                    </div> <!-- .span4 -->
+                    <div class="span8">
+                        <p>
+                            <span id="login-account">N/a</span>
+                            <a id="logout-trigger" href="javascript:void(0)">[{{ _("Logout") }}]</a>
+                        </p>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label for="credit">{{ _("Credit") }}</label>
+                    </div> <!-- .span4 -->
+                    <div class="span8">
+                        <p>
+                            <span id="credit">N/a</span>
+                            <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a>
+                            <a id="transfer-credit-trigger" href="javascript:void(0);">[{{ _("Transfer") }}]</a>
+                        </p>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label for="bandwidth">{{ _("Bandwidth") }}</label>
+                    </div> <!-- .span4 -->
+                    <div class="span8">
+                        <p>
+                            <span id="bandwidth">N/a</span>
+                        </p>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
+            </div> <!-- .section -->
+            <div class="section">
+                <h4>{{ _("Available Bandwidth") }}</h4>
+                <p id="no-bandwidth">{{ _("No bandwidth available.") }}</p>
+                <table id="available-bandwidth" class="table hide">
+                    <thead>
+                        <tr>
+                            <th>{{ _("Expire Time") }}</th>
+                            <th>{{ _("Left Bandwidth") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div> <!-- .section -->
         </div> <!-- #account-information -->
-    </div> <!-- #summary -->
-    <div id="plan" class="tab-pane fade in">
-
-    </div> <!-- #plan -->
+    </div> <!-- #info -->
+    <div id="plans" class="tab-pane fade in">
+        <div class="section">
+            <h4>{{ _("Plans and Pricing") }}</h4>
+            <div class="row-fluid">
+                <ul class="thumbnails">
+                    <li class="span4">
+                        <div class="thumbnail">
+                            <div class="caption">
+                                <h1 class="price"><sup>$</sup> 4.5</h1>
+                                <ul class="details">
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">300</div> <!-- .span4 -->
+                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">3</div> <!-- .span4 -->
+                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                </ul>
+                                <p>
+                                    <a href="javascript:void(0);" id="quarterly-plan-trigger" class="btn btn-primary btn-block">{{ _("Buy Now") }}</a>
+                                </p>
+                            </div> <!-- .caption -->
+                        </div> <!-- .thumbnail -->
+                    </li>
+                    <li class="span4">
+                        <div class="thumbnail">
+                            <div class="caption">
+                                <h1 class="price"><sup>$</sup> 15</h1>
+                                <ul class="details">
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">1200</div> <!-- .span4 -->
+                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">12</div> <!-- .span4 -->
+                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                </ul>
+                                <p>
+                                    <a href="javascript:void(0);" id="yearly-plan-trigger" class="btn btn-primary btn-block">{{ _("Buy Now") }}</a>
+                                </p>
+                            </div> <!-- .caption -->
+                        </div> <!-- .thumbnail -->
+                    </li>
+                </ul>
+            </div> <!-- .row-fluid -->
+        </div> <!-- .section -->
+        <div class="section">
+            <h4>{{ _("Billing History") }}</h4>
+            <p id="no-billing-history">{{ _("No billing history.") }}</p>
+            <table id="billing-history" class="table hide">
+                <thead>
+                    <tr>
+                        <th>{{ _("Time") }}</th>
+                        <th>{{ _("Description") }}</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div> <!-- .section -->
+    </div> <!-- #plans -->
     <div id="history" class="tab-pane fade in">
         <div class="row-fluid">
             <div class="span6">
-                <h4>{{ _( "History" ) }}</h4>
+                <h4>{{ _("History") }}</h4>
             </div> <!-- .span6 -->
             <div class="span6 text-right">
-                <button class="btn btn-primary" id="get-history-button">{{ _( "Get" ) }}</button>
+                <button class="btn btn-primary" id="get-history-button">{{ _("Get") }}</button>
             </div> <!-- .span6 -->
         </div> <!-- .row-fluid -->
         <table id="history-list" class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th >{{ _( "Time" ) }}</th>
-                    <th>{{ _( "Action" ) }}</th>
+                    <th >{{ _("Time") }}</th>
+                    <th>{{ _("Action") }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -104,15 +187,15 @@
 <form id="charge-modal" class="modal hide fade" action="https://www.paypal.com/cgi-bin/webscr" method="POST" target="_blank">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h5>{{ _( "Charge" ) }}</h5>
+        <h5>{{ _("Charge") }}</h5>
     </div> <!-- .modal-header -->
     <div class="modal-body">
         <!-- Plan Field -->
         <input type="hidden" name="on0" value="Plan">
-        <label for="charge-plan">{{ _( "Plan" ) }}:</label>
+        <label for="charge-plan">{{ _("Plan") }}:</label>
         <select id="charge-plan" name="os0">
-            <option value="Quarterly">{{ _( "Quarterly" ) }} $4.50</option>
-            <option value="Yearly">{{ _( "Yearly" ) }} $15.00</option>
+            <option value="Quarterly">{{ _("Quarterly") }} $4.50</option>
+            <option value="Yearly">{{ _("Yearly") }} $15.00</option>
         </select> 
         <!-- Account Field -->
         <input type="hidden" name="on1" value="Account">
@@ -126,27 +209,51 @@
         <button class="btn btn-primary">{{ _("Buy Now") }}</button>
     </div> <!-- .modal-footer -->
 </form> <!-- #charge-modal -->
-<div id="transfer-modal" class="modal hide fade">
+
+<div id="transfer-credit-modal" class="modal hide fade">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h5>{{ _( "Transfer" ) }}</h5>
+        <h5>{{ _("Transfer Credit") }}</h5>
     </div> <!-- .modal-header -->
     <div class="modal-body">
         <div class="alert alert-error hide"></div> <!-- .alert-error -->
         <p>
-            <label for="transfer-username">{{ _( "Transfer Username" ) }}</label>
-            <input id="transfer-username" type="text" placeholder="{{ _("Email Address") }}" />
+            <label for="transfer-credit-username">{{ _("Username transfer to") }}</label>
+            <input id="transfer-credit-username" type="text" placeholder="{{ _("Email Address") }}" />
         </p>
         <p>
-            <label for="transfer-amount">{{ _( "Transfer Amount" ) }}</label>
-            <input id="transfer-amount" type="text" value="0" onkeyup="isDecimalNumber(this)" />
+            <label for="transfer-credit-amount">{{ _("Credit to transfer") }} (<strong>USD</strong>)</label>
+            <input id="transfer-credit-amount" type="text" value="0" onkeyup="isDecimalNumber(this)" />
         </p>
     </div> <!-- .modal-body -->
     <div class="modal-footer">
         <a href="javascript:void(0);" class="btn" data-dismiss="modal">{{ _("Close") }}</a>
         <button class="btn btn-primary">{{ _("Transfer") }}</button>
     </div> <!-- .modal-footer -->
-</div> <!-- #transfer-modal -->
+</div> <!-- #transfer-credit-modal -->
+
+<div id="transfer-bandwidth-modal" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h5>{{ _("Transfer Bandwidth") }}</h5>
+    </div> <!-- .modal-header -->
+    <div class="modal-body">
+        <div class="alert alert-error hide"></div> <!-- .alert-error -->
+        <p>
+            <label for="transfer-bandwidth-username">{{ _("Username transfer to") }}</label>
+            <input id="transfer-bandwidth-username" type="text" placeholder="{{ _("Email Address") }}" />
+        </p>
+        <p>
+            <label for="transfer-bandwidth-amount">{{ _("Bandwidth to transfer") }} (<strong>MB</strong>)</label>
+            <input id="transfer-bandwidth-amount" type="text" onkeyup="isDecimalNumber(this)" />
+        </p>
+    </div> <!-- .modal-body -->
+    <div class="modal-footer">
+        <input type="hidden" id="bandwidth-expire-time">
+        <a href="javascript:void(0);" class="btn" data-dismiss="modal">{{ _("Close") }}</a>
+        <button class="btn btn-primary">{{ _("Transfer") }}</button>
+    </div> <!-- .modal-footer -->
+</div> <!-- #transfer-bandwidth-modal -->
 
 <!-- Java Script -->
 <script type="text/javascript">
@@ -178,6 +285,8 @@
             dataType: 'JSON',
             success: function(result) {
                 if( result['res'] == 'success' ) {
+                    getAvailableBandwidth(result['quota_list']);
+                    getBillingHistory();
                     getHistory();
 
                     $('.nav-tabs > li').removeClass('hide');
@@ -186,7 +295,7 @@
 
                     $('#login-account').html(result['login_account']);
                     $('.login-account').val(result['login_account']);
-                    $('#balance').html(getBalanceForHunmanReading(result['balance']));
+                    $('#credit').html(getCreditForHunmanReading(result['balance']));
                     $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
                 }
             }
@@ -194,11 +303,38 @@
     }
 </script>
 <script type="text/javascript">
-    function getBalanceForHunmanReading(balance) {
-        if ( parseFloat(balance) == 0 ) {
-            $('#transfer-trigger').addClass('hide');
+    function getAvailableBandwidth(bandwidthList) {
+        $('#available-bandwidth tbody').empty();
+
+        if ( bandwidthList['current'] ) {
+            displayBandwidth(bandwidthList['current']);
         }
-        return '$ ' + parseFloat(balance).toFixed(2);
+        if ( bandwidthList['backup'] ) {
+            bandwidthList['backup'].forEach(function(entry) {
+                displayBandwidth(entry);
+            });
+        }
+
+        $('#no-bandwidth').addClass('hide');
+        $('#available-bandwidth').removeClass('hide');
+    }
+</script>
+<script type="text/javascript">
+    function displayBandwidth(bandwidthRecord) {
+        var expireTime          = bandwidthRecord['end_time'],
+            expireTimeObj       = new Date(expireTime * 1000);
+            expireTimeString    = expireTimeObj.toISOString().substring(0, 10);
+            bandwidth           = getBandwidthForHumanReading(bandwidthRecord['quota']);
+
+        $('#available-bandwidth tbody').append('<tr><td><span class="expire-time" data-value="%s">%s</span></td><td><span class="bandwidth">%s</span> <a href="javascript:void(0);" class="transfer">[{{ _("Transfer") }}]</a></td></tr>'.format(expireTime, expireTimeString, bandwidth));
+    }
+</script>
+<script type="text/javascript">
+    function getCreditForHunmanReading(credit) {
+        if ( parseFloat(credit) == 0 ) {
+            $('#transfer-credit-trigger').addClass('hide');
+        }
+        return '$ ' + parseFloat(credit).toFixed(2);
     }
 </script>
 <script type="text/javascript">
@@ -208,9 +344,9 @@
 
         if ( bandwidth > base ) {
             bandwidth = bandwidth / base;
-            bandwidth = parseFloat(bandwidth).toFixed(2) + ' G';
+            bandwidth = parseFloat(bandwidth).toFixed(2) + ' GB';
         } else {
-            bandwidth = parseFloat(bandwidth).toFixed(2) + ' M';
+            bandwidth = parseFloat(bandwidth).toFixed(2) + ' MB';
         }
         return bandwidth;
     }
@@ -227,9 +363,9 @@
             password = $('#login-password').val();
 
         if ( !isEmailLegal(username) ) {
-            tip('{{ _( "Email seems invalid." )}}', 'error', false);
+            tip('{{ _("Email seems invalid." )}}', 'error', false);
         } else if ( password.length < 6 ) {
-            tip('{{ _( "Password needs at least 6 charactors." ) }}', 'error', false);
+            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
         }
 
         $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
@@ -269,9 +405,9 @@
             password = $('#register-password').val();
 
         if ( !isEmailLegal(username) ) {
-            tip('{{ _( "Email seems invalid." )}}', 'error', false);
+            tip('{{ _("Email seems invalid." )}}', 'error', false);
         } else if ( password.length < 6 ) {
-            tip('{{ _( "Password needs at least 6 charactors." ) }}', 'error', false);
+            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
         }
 
         $('button[type=submit]', '#register-form').html('{{ _("Please wait...") }}');
@@ -335,33 +471,35 @@
 <script type="text/javascript">
     $('.btn-primary', '#charge-modal').click(function() {
         $(this).attr('disabled', 'disabled');
-        $(this).html('{{ _("Please refresh page.") }}');
+        $(this).html('{{ _("Please refresh page") }}');
 
         $('#charge-modal').submit();
     });
 </script>
 <script type="text/javascript">
-    $('#transfer-trigger').click(function() {
-        $('.alert', '#transfer-modal').addClass('hide');
-        $('#transfer-modal').modal();
+    $('#transfer-credit-trigger').click(function() {
+        $('.alert', '#transfer-credit-modal').addClass('hide');
+        $('#transfer-credit-modal').modal();
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#transfer-modal').click(function() {
-        var transferAccount = $('#transfer-username').val(),
-            transferAmount  = $('#transfer-amount').val();
+    $('.btn-primary', '#transfer-credit-modal').click(function() {
+        var transferAccount = $('#transfer-credit-username').val(),
+            transferAmount  = $('#transfer-credit-amount').val();
 
         if ( !isEmailLegal(transferAccount) ) {
-            $('.alert', '#transfer-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
-            $('.alert', '#transfer-modal').removeClass('hide');
+            $('.alert', '#transfer-credit-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
+            $('.alert', '#transfer-credit-modal').removeClass('hide');
             return;
         }
-        console.log('Test');
-        return doTransferAction(transferAccount, transferAmount);
+
+        $('.btn-primary', '#transfer-credit-modal').attr('disabled', 'disabled');
+        $('.btn-primary', '#transfer-credit-modal').html('{{ _("Please wait...") }}');
+        return doTransferCreditAction(transferAccount, transferAmount);
     });
 </script>
 <script type="text/javascript">
-    function doTransferAction(transferAccount, transferAmount) {
+    function doTransferCreditAction(transferAccount, transferAmount) {
         var postData = {
             'to_account': transferAccount,
             'amount': transferAmount,
@@ -377,9 +515,67 @@
                 if ( result['res'] == 'success' ) {
                     window.location.reload();
                 } else {
-                    $('.alert', '#transfer-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
-                    $('.alert', '#transfer-modal').removeClass('hide');
+                    $('.alert', '#transfer-credit-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
+                    $('.alert', '#transfer-credit-modal').removeClass('hide');
                 }
+                $('.btn-primary', '#transfer-credit-modal').removeAttr('disabled', 'disabled');
+                $('.btn-primary', '#transfer-credit-modal').html('{{ _("Transfer") }}');
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $('#available-bandwidth').delegate('a.transfer', 'click', function() {
+        var maxAvailableBandwidth = $('.bandwidth', $(this).parent()).html(),
+            expireTime            = $('.expire-time', $(this).parent().parent()).attr('data-value');
+
+        $('.alert', '#transfer-bandwidth-modal').addClass('hide');
+        $('#transfer-bandwidth-amount').attr('placeholder', '{{ _("Max Available Bandwidth: ") }}' + maxAvailableBandwidth);
+        $('#bandwidth-expire-time').val(expireTime);
+
+        $('#transfer-bandwidth-modal').modal();
+    });
+</script>
+<script type="text/javascript">
+    $('.btn-primary', '#transfer-bandwidth-modal').click(function() {
+        var transferAccount = $('#transfer-bandwidth-username').val(),
+            transferAmount  = $('#transfer-bandwidth-amount').val(),
+            expireTime      = $('#bandwidth-expire-time').val();
+
+        if ( !isEmailLegal(transferAccount) ) {
+            $('.alert', '#transfer-bandwidth-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
+            $('.alert', '#transfer-bandwidth-modal').removeClass('hide');
+            return;
+        }
+
+        $('.btn-primary', '#transfer-bandwidth-modal').attr('disabled', 'disabled');
+        $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Please wait...") }}');
+        return doTransferBandwidthAction(transferAccount, transferAmount, expireTime);
+    });
+</script>
+<script type="text/javascript">
+    function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
+        var postData = {
+            'to_account': transferAccount,
+            'amount': transferAmount * 1024 * 1024,
+            'end_time': expireTime,
+            'transfer_type': 'quota'
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/transfer',
+            data: postData,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    window.location.reload();
+                } else {
+                    $('.alert', '#transfer-bandwidth-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
+                    $('.alert', '#transfer-bandwidth-modal').removeClass('hide');
+                }
+                $('.btn-primary', '#transfer-bandwidth-modal').removeAttr('disabled', 'disabled');
+                $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Transfer") }}');
             }
         });
     }
@@ -396,6 +592,27 @@
                  obj.value = '';
              }
          }
+    }
+</script>
+<!-- Plans -->
+<script type="text/javascript">
+    $('#quarterly-plan-trigger').click(function() {
+        $('#charge-plan', '#charge-modal').val('Quarterly');
+        $('#charge-modal').modal();
+    });
+
+    $('#yearly-plan-trigger').click(function() {
+        $('#charge-plan', '#charge-modal').val('Yearly');
+        $('#charge-modal').modal();
+    });
+</script>
+<script type="text/javascript">
+    function getBillingHistory() {
+        // TODO
+        // Reference: function getHistory()
+        // 
+        // $('#billing-history').removeClass('hide');
+        // $('#no-billing-history').addClass('hide');
     }
 </script>
 <!-- History -->
@@ -428,17 +645,17 @@
                 }
 
                 result['history'].forEach(function(entry) {
-                    insertHistory(entry[1]);
+                    displayHistory(entry[1]);
                 });
 
-                $('#get-history-button').html('{{ _( "Get" ) }}');
+                $('#get-history-button').html('{{ _("Get") }}');
                 $('#get-history-button').removeAttr('disabled');
             }
         });
     }
 </script>
 <script type="text/javascript">
-    function insertHistory(item){
+    function displayHistory(item){
         var timeString = item['time'];
         delete item['time']; 
 
