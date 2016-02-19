@@ -200,7 +200,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         g.session.stop()
 
-        return self.response_json({"res": "ok"})
+        return self.response_json({"res": "success"})
 
     def req_order_handler(self):
         product = self.postvars['product'][0]

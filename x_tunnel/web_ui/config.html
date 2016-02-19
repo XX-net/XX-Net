@@ -210,6 +210,7 @@
         <h5>{{ _("Charge") }}</h5>
     </div> <!-- .modal-header -->
     <div class="modal-body">
+        <div class="alert alert-warning hide">{{ _("You haven't enough credit. Please charge first.") }}</div> <!-- .alert-warning -->
         <!-- Plan Field -->
         <input type="hidden" name="on0" value="Plan">
         <label for="charge-plan">{{ _("Plan") }}:</label>
@@ -316,7 +317,7 @@
 <script type="text/javascript">
     function getUserInfo(force) {
         var url = '/module/x_tunnel/control/info';
-        if( force ){
+        if ( force ) {
             url = url + "?force=1";
         }
         $.ajax({
@@ -518,6 +519,7 @@
 </script>
 <script type="text/javascript">
     $('#charge-trigger').click(function() {
+        $('.alert-warning', '#charge-modal').addClass('hide');
         $('#charge-modal').modal();
     });
 </script>
@@ -619,11 +621,11 @@
     }
 
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
-        var amount_unit = parseUnit(transferAmount)
-        if ( amount_unit[1].toUpperCase() == "G" ){
-            var amount = amount_unit[0] * 1000 * 1000 * 1000;
+        var amountUnit = parseUnit(transferAmount)
+        if ( amountUnit[1].toUpperCase() == "G" ){
+            var amount = amountUnit[0] * 1000 * 1000 * 1000;
         } else {
-            var amount = amount_unit[0] * 1000 * 1000;
+            var amount = amountUnit[0] * 1000 * 1000;
         }
         var postData = {
             'to_account': transferAccount,
@@ -653,20 +655,18 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        var amount_unit = parseUnit(obj.value)
-        if ( isNaN(amount_unit[0]) ) {
-            console.log("is NaN");
+        var amountUnit = parseUnit(obj.value)
+        if ( isNaN(amountUnit[0]) ) {
             obj.value = '';
             return;
         }
-        if ( amount_unit[1].toUpperCase() != "G" && amount_unit[1].toUpperCase() != "M" && amount_unit[1] != "" ){
+        if ( amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "" ){
             alert('{{ _("Unit should be M or G.") }}');
             return;
         }
         if ( obj != null ) {
-            if ( amount_unit[0].toString().split('.').length > 1 &&
-                   amount_unit[0].toString().split(".")[1].length > 2 ) {
-                console.log("more");
+            if ( amountUnit[0].toString().split('.').length > 1 &&
+                   amountUnit[0].toString().split(".")[1].length > 2 ) {
                 alert('{{ _("Transfer amount should not more than 2 decimal places.") }}');
             }
         }
@@ -675,29 +675,35 @@
 <!-- Plans -->
 <script type="text/javascript">
     $('#quarterly-plan-trigger').click(function() {
-        order_plan('Quarterly', 'quarterly');
+        orderPlan('Quarterly', 'quarterly');
     });
 
     $('#yearly-plan-trigger').click(function() {
-        order_plan('Yearly', "yearly");
+        orderPlan('Yearly', "yearly");
     });
-
-    function order_plan(title, plan){
+</script>
+<script type="text/javascript">
+    function orderPlan(planName, planValue) {
         $.ajax({
-            data: {'product':'x_tunnel', 'plan':plan},
+            data: {
+                'product': 'x_tunnel', 
+                'plan': planValue
+            },
             type: 'POST',
             url: '/module/x_tunnel/control/order',
             dataType: 'JSON',
             success: function(result) {
-                if( result['res'] != "success" ){
-                    if (result['reason'] == "balance not enough"){
-                        $('#charge-plan', '#charge-modal').val(title);
+                if( result['res'] != 'success' ){
+                    if ( result['reason'] == "balance not enough" ) {
+                        $('#charge-plan', '#charge-modal').val(planName);
+                        $('.alert-warning', '#charge-modal').removeClass('hide');
+
                         $('#charge-modal').modal();
-                    }else{
-                        tip('Order Fail:' + result['reason'], 'warning', false);
+                    } else {
+                        tip('{{ _("Failed to order: ") }}' + result['reason'], 'warning', false);
                     }
                 } else {
-                    tip('Order success:', 'info', false);
+                    tip('{{ _("Order successfully complete.") }}', 'info', false);
                     setTimeout(function () {
                         getUserInfo(1);
                         setTimeout(function () {
@@ -705,9 +711,6 @@
                         }, 1 * 1000);
                     }, 3 * 1000);
                 }
-            },
-            error: function(result) {
-                tip('order fail.', 'warning', false);
             }
         });
     }
