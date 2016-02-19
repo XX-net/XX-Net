@@ -417,8 +417,10 @@
 
         if ( !isEmailLegal(username) ) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
+            return;
         } else if ( password.length < 6 ) {
             tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+            return;
         }
 
         $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
@@ -459,8 +461,10 @@
 
         if ( !isEmailLegal(username) ) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
+            return;
         } else if ( password.length < 6 ) {
             tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+            return;
         }
 
         $('button[type=submit]', '#register-form').html('{{ _("Please wait...") }}');
