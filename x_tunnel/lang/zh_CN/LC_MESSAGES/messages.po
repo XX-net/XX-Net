@@ -53,7 +53,7 @@ msgid "Account"
 msgstr "账户"
 
 msgid "Logout"
-msgstr "注销"
+msgstr "退出"
 
 msgid "Credit"
 msgstr "余额"
