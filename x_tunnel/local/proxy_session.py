@@ -150,6 +150,7 @@ class ProxySession():
 
             time_cost = time.time() - start_time
             if status != 200:
+                g.last_api_error = "session server login fail:%d" % status
                 xlog.warn("login session fail, status:%r", status)
                 return False
 
@@ -165,9 +166,11 @@ class ProxySession():
                 return False
 
             if res != 0:
+                g.last_api_error = "session server login fail, code:%d msg:%s" % (res, message)
                 xlog.warn("login_session time:%d fail, res:%d msg:%s", 1000 * time_cost, res, message)
                 return False
 
+            g.last_api_error = ""
             xlog.info("login_session time:%d msg:%s", 1000 * time_cost, message)
             return True
         except Exception as e:
@@ -456,24 +459,30 @@ def call_api(path, req_info):
         if status != 200:
             reason = "status:%r" % status
             xlog.warn("api:%s fail:%s t:%d", path, reason, time_cost)
+            g.last_api_error = reason
             return False, reason
+
 
         content = decrypt_data(content)
         try:
             info = json.loads(content)
         except Exception as e:
+            g.last_api_error = "parse json fail"
             xlog.warn("api:%s parse json:%s fail:%r", path, content, e)
             return False, "parse json fail"
 
         res = info["res"]
         if res != "success":
+            g.last_api_error = info["reason"]
             xlog.warn("api:%s fail:%s", path, info["reason"])
             return False, info["reason"]
 
         xlog.info("api:%s success t:%d", path, time_cost * 1000)
+        g.last_api_error = ""
         return True, info
     except Exception as e:
         xlog.exception("order e:%r", e)
+        g.last_api_error = "%r" % e
         return False, "except:%r" % e
 
 

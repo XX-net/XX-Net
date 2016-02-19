@@ -7,6 +7,7 @@ config = None
 proxy = None
 session = None
 socks5_server = None
+last_api_error = ""
 
 quota_list = {}
 quota = 0

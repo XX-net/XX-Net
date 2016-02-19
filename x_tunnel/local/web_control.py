@@ -105,20 +105,19 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def req_info_handler(self):
         if len(g.config.login_account) == 0 or len(g.config.login_password) == 0:
             return self.response_json({
-                "res": "fail",
-                "login_account": ""
+                "res": "logout"
             })
 
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
+        force = False
         if 'force' in reqs:
-            force = int(reqs['force'][0])
-        else:
-            force = False
+            force = 1
 
         time_now = time.time()
         if force or time_now - g.last_refresh_time > 3600:
+            xlog.debug("x_tunnel force update info")
             g.last_refresh_time = time_now
             if g.session.running:
                 update_server = False
@@ -128,23 +127,26 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 g.config.login_account, g.config.login_password,
                 is_register=False, update_server=update_server)
 
-            if not res:
-                return self.response_json({
-                    "res": "fail",
-                    "login_account": "%s" % (g.config.login_account),
-                    "reason": reason
-                })
-            if not g.session.running:
-                g.session.start()
+            if res:
+                if g.quota and not g.session.running:
+                    g.session.start()
 
-        res_arr = {
-            "res": "success",
-            "login_account": "%s" % (g.config.login_account),
-            "balance": "%f" % (g.balance),
-            "quota": "%d" % (g.quota),
-            "quota_list": g.quota_list,
-            "traffic": g.session.traffic
-        }
+        if len(g.last_api_error):
+            res_arr = {
+                "res": "fail",
+                "login_account": "%s" % (g.config.login_account),
+                "reason": g.last_api_error
+            }
+        else:
+            res_arr = {
+                "res": "success",
+                "login_account": "%s" % (g.config.login_account),
+                "balance": "%f" % (g.balance),
+                "quota": "%d" % (g.quota),
+                "quota_list": g.quota_list,
+                "traffic": g.session.traffic,
+                "last_fail": g.last_api_error
+            }
         self.response_json(res_arr)
 
     def req_login_handler(self):

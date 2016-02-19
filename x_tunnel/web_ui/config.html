@@ -2,6 +2,7 @@
     <li class="active"><a href="#info" data-toggle="tab">{{ _("Info") }}</a></li>
     <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
     <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
+    <li class="hide"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
 </ul>
 <div class="tab-content">
     <div id="info" class="tab-pane fade in active">
@@ -181,6 +182,23 @@
             </tbody>
         </table>
     </div> <!-- #history -->
+    <div id="help" class="tab-pane fade in">
+        <div class="row-fluid">
+            <div class="span6">
+                <h4>{{ _("Help") }}</h4>
+            </div> <!-- .span6 -->
+        </div> <!-- .row-fluid -->
+
+        <div class="row-fluid">
+            <div class="span2">Socks5</div>
+            <div class="span2">127.0.0.1:1080</div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="span2">Wiki:</div>
+            <div class="span8"><a href="https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B">https://github.com/XX-net/XX-Net/wiki/x-tunnel</a></div>
+        </div>
+    </div> <!-- #help -->
 </div> <!-- #tab-content -->
 
 <!-- Modals -->
@@ -198,7 +216,7 @@
             <option value="Yearly">{{ _("Yearly") }} $15.00</option>
         </select> 
         <!-- Account Field -->
-        <input type="hidden" name="on1" value="Account">
+        <input type="hidden" name="on1" value="account">
         <input class="login-account" type="hidden" name="os1">
     </div> <!-- .modal-body -->
     <div class="modal-footer">
@@ -261,7 +279,23 @@
 </script>
 <script type="text/javascript">
     $(function() {
-        getUserLoggedIn();
+        window.timer  = $.timer(function() {
+            getUserInfo(0);
+        });
+
+        window.timer.set({
+            time: 10000,
+            autostart: false
+        });
+
+        getUserInfo(0);
+    });
+</script>
+<script type="text/javascript">
+    $('#info').dblclick(function(){
+        // force update info from server
+        // when double click info page
+        getUserInfo(1);
     });
 </script>
 <!-- Summary -->
@@ -278,27 +312,40 @@
     });
 </script>
 <script type="text/javascript">
-    function getUserLoggedIn() {
+    function getUserInfo(force) {
+        var url = '/module/x_tunnel/control/info';
+        if( force ){
+            url = url + "?force=1";
+        }
         $.ajax({
             type: 'GET',
-            url: '/module/x_tunnel/control/info',
+            url: url,
             dataType: 'JSON',
             success: function(result) {
-                if( result['res'] == 'success' ) {
-                    getAvailableBandwidth(result['quota_list']);
-
-                    //getBillingHistory();
-                    // not imp yet
-
-                    $('.nav-tabs > li').removeClass('hide');
-                    $('#login-form').addClass('hide');
-                    $('#account-information').removeClass('hide');
-
-                    $('#login-account').html(result['login_account']);
-                    $('.login-account').val(result['login_account']);
-                    $('#credit').html(getCreditForHunmanReading(result['balance']));
-                    $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
+                if( result['res'] == 'logout' ){
+                    tipClose();
+                    return;
+                }else if( result['res'] != 'success' ){
+                    tip('Get Fail:' + result['reason'], 'warning', false);
+                    return;
+                } else {
+                    tipClose();
                 }
+                getAvailableBandwidth(result['quota_list']);
+
+                //getBillingHistory();
+                // not imp yet
+
+                window.timer.play();
+
+                $('.nav-tabs > li').removeClass('hide');
+                $('#login-form').addClass('hide');
+                $('#account-information').removeClass('hide');
+
+                $('#login-account').html(result['login_account']);
+                $('.login-account').val(result['login_account']);
+                $('#credit').html(getCreditForHumanReading(result['balance']));
+                $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
             }
         });
     }
@@ -331,16 +378,18 @@
     }
 </script>
 <script type="text/javascript">
-    function getCreditForHunmanReading(credit) {
+    function getCreditForHumanReading(credit) {
         if ( parseFloat(credit) == 0 ) {
             $('#transfer-credit-trigger').addClass('hide');
+        }else{
+            $('#transfer-credit-trigger').removeClass('hide');
         }
         return '$ ' + parseFloat(credit).toFixed(2);
     }
 </script>
 <script type="text/javascript">
     function getBandwidthForHumanReading(bandwidth) {
-        var base        = 1024,
+        var base        = 1000,
             bandwidth   = Math.round(bandwidth) / base / base;
 
         if ( bandwidth > base ) {
@@ -454,6 +503,7 @@
             url: '/module/x_tunnel/control/logout',
             dataType: 'JSON',
             success: function(result) {
+                window.timer.stop();
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');
@@ -514,6 +564,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
+                    getUserInfo(1);
                     window.location.reload();
                 } else {
                     $('.alert', '#transfer-credit-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
@@ -555,10 +606,26 @@
     });
 </script>
 <script type="text/javascript">
+    function parseUnit(str) {
+        var out = [ 0, '' ]
+
+        str = String(str)
+        var num = parseFloat(str, 10)
+        out[0] = num
+        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || ''
+        return out
+    }
+
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
+        var amount_unit = parseUnit(transferAmount)
+        if ( amount_unit[1].toUpperCase() == "G" ){
+            var amount = amount_unit[0] * 1000 * 1000 * 1000;
+        } else {
+            var amount = amount_unit[0] * 1000 * 1000;
+        }
         var postData = {
             'to_account': transferAccount,
-            'amount': transferAmount * 1024 * 1024,
+            'amount': amount,
             'end_time': expireTime,
             'transfer_type': 'quota'
         };
@@ -570,6 +637,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
+                    getUserInfo(1);
                     window.location.reload();
                 } else {
                     $('.alert', '#transfer-bandwidth-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
@@ -583,29 +651,64 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        if ( isNaN(obj.value) ) {
-             obj.value = '';
-         }
-         if ( obj != null ) {
-             if ( obj.value.toString().split('.').length > 1 && 
-                    obj.value.toString().split(".")[1].length > 2 ) {
+        var amount_unit = parseUnit(obj.value)
+        if ( isNaN(amount_unit[0]) ) {
+            console.log("is NaN");
+            obj.value = '';
+            return;
+        }
+        if ( amount_unit[1].toUpperCase() != "G" && amount_unit[1].toUpperCase() != "M" && amount_unit[1] != "" ){
+            alert('{{ _("Unit should be M or G.") }}');
+            return;
+        }
+        if ( obj != null ) {
+            if ( amount_unit[0].toString().split('.').length > 1 &&
+                   amount_unit[0].toString().split(".")[1].length > 2 ) {
+                console.log("more");
                 alert('{{ _("Transfer amount should not more than 2 decimal places.") }}');
-                 obj.value = '';
-             }
-         }
+            }
+        }
     }
 </script>
 <!-- Plans -->
 <script type="text/javascript">
     $('#quarterly-plan-trigger').click(function() {
-        $('#charge-plan', '#charge-modal').val('Quarterly');
-        $('#charge-modal').modal();
+        order_plan('Quarterly', 'quarterly');
     });
 
     $('#yearly-plan-trigger').click(function() {
-        $('#charge-plan', '#charge-modal').val('Yearly');
-        $('#charge-modal').modal();
+        order_plan('Yearly', "yearly");
     });
+
+    function order_plan(title, plan){
+        $.ajax({
+            data: {'product':'x_tunnel', 'plan':plan},
+            type: 'POST',
+            url: '/module/x_tunnel/control/order',
+            dataType: 'JSON',
+            success: function(result) {
+                if( result['res'] != "success" ){
+                    if (result['reason'] == "balance not enough"){
+                        $('#charge-plan', '#charge-modal').val(title);
+                        $('#charge-modal').modal();
+                    }else{
+                        tip('Order Fail:' + result['reason'], 'warning', false);
+                    }
+                } else {
+                    tip('Order success:', 'info', false);
+                    setTimeout(function () {
+                        getUserInfo(1);
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1 * 1000);
+                    }, 3 * 1000);
+                }
+            },
+            error: function(result) {
+                tip('order fail.', 'warning', false);
+            }
+        });
+    }
 </script>
 <script type="text/javascript">
     function getBillingHistory() {
