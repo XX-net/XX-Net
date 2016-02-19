@@ -131,7 +131,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 if g.quota and not g.session.running:
                     g.session.start()
 
-        if len(g.last_api_error):
+        if len(g.last_api_error) and g.last_api_error != 'balance not enough':
             res_arr = {
                 "res": "fail",
                 "login_account": "%s" % (g.config.login_account),
