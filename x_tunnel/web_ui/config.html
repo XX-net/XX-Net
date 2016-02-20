@@ -489,7 +489,6 @@
                 if ( result['res'] == 'success' ) {
                     return doLoginAction(username, password);
                 } else {
-
                     if ( result['reason'] == 'user exist' ) {
                         tip('{{ _("Email has been taken by another user.") }}', 'error', false);
                     } else {
@@ -514,6 +513,9 @@
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');
+
+                // Fix bugs in Firefox
+                $('button[type=submit]').removeAttr('disabled');
             },
             error: function(result) {
                 tip('{{ _("Failed to log out.") }}', false);   
