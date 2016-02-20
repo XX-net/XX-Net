@@ -1,7 +1,7 @@
 <form id="goagent-php-config" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
         <div class="span4">
-            <label for="php-server">PHP Server URL</label>
+            <label for="php-server">{{ _("PHP Server URL") }}</label>
         </div> <!-- .span4 -->
         <div class="span8">
             <input id="php-server" type="text" placeholder="Example: http://zjhzxhz.com/index.php" />
@@ -9,15 +9,15 @@
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">
-            <label for="php-password">PHP Password</label>
+            <label for="php-password">{{ _("Password") }}</label>
         </div> <!-- .span4 -->
         <div class="span8">
-            <input id="php-password" type="password" />
+            <input id="php-password" type="password" placeholder="{{ _("Default: ") }}123456" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">
-            <label for="enable-front-proxy">启用前置代理</label>
+            <label for="enable-front-proxy">{{ _("Frontend Proxy") }}</label>
         </div> <!-- .span4 -->
         <div class="span8">
             <input id="enable-front-proxy" type="checkbox" data-toggle="switch" />
@@ -26,23 +26,23 @@
     <div id="front-proxy-options" style="display: none;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-host">代理服务器地址</label>
+                <label for="proxy-host">{{ _("Address") }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+                <input id="proxy-host" type="text" placeholder="{{ _("Example: ") }}127.0.0.1" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-port">端口</label>
+                <label for="proxy-port">{{ _("Port") }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <input id="proxy-port" type="text" placeholder="Example: 808" />
+                <input id="proxy-port" type="text" placeholder="{{ _("Example: ") }}808" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-username">用户名</label>
+                <label for="proxy-username">{{ _("Username") }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="proxy-username" type="text" />
@@ -50,7 +50,7 @@
         </div> <!-- .row-fluid -->
         <div class="row-fluid">
             <div class="span4">
-                <label for="proxy-password">密码</label>
+                <label for="proxy-password">{{ _("Password") }}</label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="proxy-password" type="password" />
@@ -59,17 +59,17 @@
     </div> <!-- #front-proxy-options -->
     <div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="submit">保存并重启PHP代理</button>
+            <button class="btn btn-primary btn-block" type="submit">{{ _("Save and Restart PHP Proxy") }}</button>
         </div> <!-- .span12 -->
     </div>
     <div>
-        <p>帮助：<a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy">https://github.com/XX-net/XX-Net/wiki/PHP-proxy</a></p>
+        <p>{{ _("Help: ") }}<a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy">https://github.com/XX-net/XX-Net/wiki/PHP-proxy</a></p>
     </div> <!-- .row-fluid -->
 </form> <!-- #goagent-php-config -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('配置PHP代理');
+    title('{{ _("PHP Proxy Config") }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -110,7 +110,7 @@
                 $('#proxy-password').val(result['proxy_password']);
             },
             error: function() {
-                tip('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.', 'warning');
+                tip('{{ _("PHP proxy is disabled. Please enable it in <a href=\"/?module=launcher&menu=config\">system settings</a>.") }}', 'warning');
             }
         });
     });
@@ -149,13 +149,13 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('{{ _("Settings saved.") }}', 'success');
                 } else {
-                    tip('发生未知错误.', 'error');
+                    tip('{{ _("Unknown error occurred.") }}', 'error');
                 }
             },
             error: function() {
-                tip('PHP代理被禁用, 请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理.', 'warning');
+                tip('{{ _("PHP proxy is disabled. Please enable it in <a href=\"/?module=launcher&menu=config\">system settings</a>.") }}', 'warning');
             }
         });
     }
