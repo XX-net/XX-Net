@@ -27,31 +27,35 @@ from PyObjCTools import AppHelper
 
 class MacTrayObject(NSObject):
     def __init__(self):
-        proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
-        if proxy_setting == "pac":
-            self.on_enable_pac()
-        elif proxy_setting == "gae":
-            self.on_enable_gae_proxy()
-        elif proxy_setting == "disable":
-            # Don't disable proxy setting, just do nothing.
-            pass
-        else:
-            xlog.warn("proxy_setting:%r", proxy_setting)
+        pass
 
     def applicationDidFinishLaunching_(self, notification):
         self.setupUI()
         self.registerObserver()
+        self.loadConfig()
+
+    def loadConfig(self):
+        proxySetting = config.get(["modules", "launcher", "proxy"], "pac")
+        if proxySetting == "pac":
+            self.on_enable_pac()
+        elif proxySetting == "gae":
+            self.on_enable_gae_proxy()
+        elif proxySetting == "disable":
+            # Don't disable proxy setting, just do nothing.
+            pass
+        else:
+            xlog.warn("proxy_setting:%r", proxySetting)
 
     def getProxyState(self):
         # Check if auto proxy is enabled
-        checkAutoProxyUrlEthernetCommand =   "networksetup -getautoproxyurl Ethernet"
+        checkAutoProxyUrlEthernetCommand    =   "networksetup -getautoproxyurl Ethernet"
         checkAutoProxyUrlThunderboltCommand = "networksetup -getautoproxyurl \\\"Thunderbolt Ethernet\\\""
-        checkAutoProxyUrlWiFiCommand = "networksetup -getautoproxyurl Wi-Fi"
+        checkAutoProxyUrlWiFiCommand        = "networksetup -getautoproxyurl Wi-Fi"
 
         executeCommand = "%s;%s;%s;" % (checkAutoProxyUrlEthernetCommand, checkAutoProxyUrlThunderboltCommand, checkAutoProxyUrlWiFiCommand)
         executeResult  = subprocess.check_output(executeCommand, shell=True)
-        if ( executeResult.find('http://127.0.0.1:8086/proxy.pac') != -1 and 
-                executeResult.find('Enabled: Yes') != -1 ):
+
+        if ( executeResult.find('http://127.0.0.1:8086/proxy.pac\nEnabled: Yes') != -1 ):
             return "pac"
 
         # Check if global proxy is enabled
@@ -61,7 +65,7 @@ class MacTrayObject(NSObject):
 
         executeCommand = "%s;%s;%s;" % (checkGlobalProxyUrlEthernetCommand, checkGlobalProxyUrlThunderboltCommand, checkGlobalProxyUrlWiFiCommand)
         executeResult  = subprocess.check_output(executeCommand, shell=True)
-        if ( executeResult.find('http://127.0.0.1:8087') != -1 ):
+        if ( executeResult.find('Enabled: Yes\nServer: 127.0.0.1\nPort: 8087') != -1 ):
             return "gae"
 
         return "disable"
@@ -118,8 +122,8 @@ class MacTrayObject(NSObject):
         NSApp.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
 
     def updateStatusBarMenu(self):
-        autoGaeProxyMenuItem = self.menu.itemWithTitle_('Enable Auto GAEProxy')
-        globalGaeProxyMenuItem = self.menu.itemWithTitle_('Enable Global GAEProxy')
+        autoGaeProxyMenuItem    = self.menu.itemWithTitle_('Enable Auto GAEProxy')
+        globalGaeProxyMenuItem  = self.menu.itemWithTitle_('Enable Global GAEProxy')
         disableGaeProxyMenuItem = self.menu.itemWithTitle_('Disable GAEProxy')
 
         # Remove Tick before All Menu Items
@@ -137,6 +141,10 @@ class MacTrayObject(NSObject):
             globalGaeProxyMenuItem.setState_(NSOnState)
         elif proxyState == 'disable':
             disableGaeProxyMenuItem.setState_(NSOnState)
+
+    def updateConfig(self, newStatus):
+        config.set(["modules", "launcher", "proxy"], newStatus)
+        config.save()
 
     def registerObserver(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
@@ -159,46 +167,72 @@ class MacTrayObject(NSObject):
         module_init.start("gae_proxy")
 
     def enableAutoProxy_(self, _):
-        cmd1 = "networksetup -setautoproxyurl Ethernet \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        cmd2 = "networksetup -setautoproxyurl \\\"Thunderbolt Ethernet\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        cmd3 = "networksetup -setautoproxyurl Wi-Fi \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        exec_command = "%s;%s;%s" % (cmd1, cmd2, cmd3)
-        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
-        cmd = admin_command.encode('utf-8')
-        xlog.info("try enable proxy:%s", cmd)
-        os.system(cmd)
+        disableProxyCommand                 = self.getDisableProxyCommand()
+        enableAutoProxyCommand              = self.getEnableAutoProxyCommand()
+        rootCommand                         = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableProxyCommand, enableAutoProxyCommand)
+        executeCommand                      = rootCommand.encode('utf-8')
+
+        xlog.info("try enable proxy:%s", executeCommand)
+        os.system(executeCommand)
         self.updateStatusBarMenu()
+        self.updateConfig('pac')
+
+    def getEnableAutoProxyCommand(self):
+        enableAutoProxyEthernetCommand      = "networksetup -setautoproxyurl Ethernet \\\"http://127.0.0.1:8086/proxy.pac\\\""
+        enableAutoProxyThunderboltCommand   = "networksetup -setautoproxyurl \\\"Thunderbolt Ethernet\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\""
+        enableAutoProxyWiFiCommand          = "networksetup -setautoproxyurl Wi-Fi \\\"http://127.0.0.1:8086/proxy.pac\\\""
+        executeCommand                      = "%s;%s;%s" % (enableAutoProxyEthernetCommand, enableAutoProxyThunderboltCommand, enableAutoProxyWiFiCommand)
+
+        return executeCommand
 
     def enableGlobalProxy_(self, _):
-        cmd1 = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
-        cmd2 = "networksetup -setwebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
-        cmd3 = "networksetup -setwebproxy Wi-Fi 127.0.0.1 8087"
-        cmd4 = "networksetup -setsecurewebproxy Ethernet 127.0.0.1 8087"
-        cmd5 = "networksetup -setsecurewebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
-        cmd6 = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
-        exec_command = "%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6)
-        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
-        cmd = admin_command.encode('utf-8')
-        xlog.info("try enable proxy:%s", cmd)
-        os.system(cmd)
+        disableProxyCommand                 = self.getDisableProxyCommand()
+        enableGlobalProxyCommand            = self.getEnableGlobalProxyCommand()
+        rootCommand                         = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableProxyCommand, enableGlobalProxyCommand)
+        executeCommand                      = rootCommand.encode('utf-8')
+
+        xlog.info("try enable proxy:%s", executeCommand)
+        os.system(executeCommand)
         self.updateStatusBarMenu()
+        self.updateConfig('gae')
+
+    def getEnableGlobalProxyCommand(self):
+        enableHttpProxyEthernetCommand      = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
+        enableHttpProxyThunderboltCommand   = "networksetup -setwebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
+        enableHttpProxyWiFiCommand          = "networksetup -setwebproxy Wi-Fi 127.0.0.1 8087"
+        enableHttpsProxyEthernetCommand     = "networksetup -setsecurewebproxy Ethernet 127.0.0.1 8087"
+        enableHttpsProxyThunderboltCommand  = "networksetup -setsecurewebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
+        enableHttpsProxyWiFiCommand         = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
+
+        executeCommand = "%s;%s;%s;%s;%s;%s" % (enableHttpProxyEthernetCommand, enableHttpProxyThunderboltCommand, enableHttpProxyWiFiCommand,
+                            enableHttpsProxyEthernetCommand, enableHttpsProxyThunderboltCommand, enableHttpsProxyWiFiCommand)
+        return executeCommand
 
     def disableProxy_(self, _):
-        cmd1 = "networksetup -setwebproxystate Ethernet off"
-        cmd2 = "networksetup -setwebproxystate \\\"Thunderbolt Ethernet\\\" off"
-        cmd3 = "networksetup -setwebproxystate Wi-Fi off"
-        cmd4 = "networksetup -setsecurewebproxystate Ethernet off"
-        cmd5 = "networksetup -setsecurewebproxystate \\\"Thunderbolt Ethernet\\\" off"
-        cmd6 = "networksetup -setsecurewebproxystate Wi-Fi off"
-        cmd7 = "networksetup -setautoproxystate Ethernet off"
-        cmd8 = "networksetup -setautoproxystate \\\"Thunderbolt Ethernet\\\" off"
-        cmd9 = "networksetup -setautoproxystate Wi-Fi off"
-        exec_command = "%s;%s;%s;%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8, cmd9)
-        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
-        cmd = admin_command.encode('utf-8')
-        xlog.info("try disable proxy:%s", cmd)
-        os.system(cmd)
+        disableProxyCommand                 = self.getDisableProxyCommand()
+        rootCommand                         = """osascript -e 'do shell script "%s" with administrator privileges' """ % disableProxyCommand
+        executeCommand                      = rootCommand.encode('utf-8')
+
+        xlog.info("try disable proxy:%s", executeCommand)
+        os.system(executeCommand)
         self.updateStatusBarMenu()
+        self.updateConfig('disable')
+
+    def getDisableProxyCommand(self):
+        disableHttpProxyEthernetCommand     = "networksetup -setwebproxystate Ethernet off"
+        disableHttpProxyThunderboltCommand  = "networksetup -setwebproxystate \\\"Thunderbolt Ethernet\\\" off"
+        disableHttpProxyWiFiCommand         = "networksetup -setwebproxystate Wi-Fi off"
+        disableHttpsProxyEthernetCommand    = "networksetup -setsecurewebproxystate Ethernet off"
+        disableHttpsProxyThunderboltCommand = "networksetup -setsecurewebproxystate \\\"Thunderbolt Ethernet\\\" off"
+        disableHttpsProxyWiFiCommand        = "networksetup -setsecurewebproxystate Wi-Fi off"
+        disableAutoProxyEthernetCommand     = "networksetup -setautoproxystate Ethernet off"
+        disableAutoProxyThunderboltCommand  = "networksetup -setautoproxystate \\\"Thunderbolt Ethernet\\\" off"
+        disableAutoProxyWiFiCommand         = "networksetup -setautoproxystate Wi-Fi off"
+
+        executeCommand = "%s;%s;%s;%s;%s;%s;%s;%s;%s" % (disableHttpProxyEthernetCommand, disableHttpProxyThunderboltCommand, disableHttpProxyWiFiCommand,
+                            disableHttpsProxyEthernetCommand, disableHttpsProxyThunderboltCommand, disableHttpsProxyWiFiCommand,
+                            disableAutoProxyEthernetCommand, disableAutoProxyThunderboltCommand, disableAutoProxyWiFiCommand)
+        return executeCommand
 
 class Mac_tray():
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
