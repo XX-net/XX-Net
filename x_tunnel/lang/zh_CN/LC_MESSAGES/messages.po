@@ -183,3 +183,6 @@ msgstr "订购成功完成。"
 
 msgid "Failed to order: "
 msgstr "订购失败："
+
+msgid "X-Tunnel Log"
+msgstr "X-Tunnel 日志"

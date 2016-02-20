@@ -7,7 +7,6 @@ import config
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
-
 if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
@@ -17,27 +16,62 @@ if __name__ == "__main__":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 
-import webbrowser
+import config
 import module_init
-from instances import xlog
+import subprocess
+import webbrowser
 
-from PyObjCTools import AppHelper
 from AppKit import *
+from instances import xlog
+from PyObjCTools import AppHelper
 
 class MacTrayObject(NSObject):
     def __init__(self):
-        pass
+        proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
+        if proxy_setting == "pac":
+            self.on_enable_pac()
+        elif proxy_setting == "gae":
+            self.on_enable_gae_proxy()
+        elif proxy_setting == "disable":
+            # Don't disable proxy setting, just do nothing.
+            pass
+        else:
+            xlog.warn("proxy_setting:%r", proxy_setting)
 
     def applicationDidFinishLaunching_(self, notification):
         self.setupUI()
         self.registerObserver()
+
+    def getProxyState(self):
+        # Check if auto proxy is enabled
+        checkAutoProxyUrlEthernetCommand =   "networksetup -getautoproxyurl Ethernet"
+        checkAutoProxyUrlThunderboltCommand = "networksetup -getautoproxyurl \\\"Thunderbolt Ethernet\\\""
+        checkAutoProxyUrlWiFiCommand = "networksetup -getautoproxyurl Wi-Fi"
+
+        executeCommand = "%s;%s;%s;" % (checkAutoProxyUrlEthernetCommand, checkAutoProxyUrlThunderboltCommand, checkAutoProxyUrlWiFiCommand)
+        executeResult  = subprocess.check_output(executeCommand, shell=True)
+        if ( executeResult.find('http://127.0.0.1:8086/proxy.pac') != -1 and 
+                executeResult.find('Enabled: Yes') != -1 ):
+            return "pac"
+
+        # Check if global proxy is enabled
+        checkGlobalProxyUrlEthernetCommand =   "networksetup -getwebproxy Ethernet"
+        checkGlobalProxyUrlThunderboltCommand = "networksetup -getwebproxy \\\"Thunderbolt Ethernet\\\""
+        checkGlobalProxyUrlWiFiCommand = "networksetup -getwebproxy Wi-Fi"
+
+        executeCommand = "%s;%s;%s;" % (checkGlobalProxyUrlEthernetCommand, checkGlobalProxyUrlThunderboltCommand, checkGlobalProxyUrlWiFiCommand)
+        executeResult  = subprocess.check_output(executeCommand, shell=True)
+        if ( executeResult.find('http://127.0.0.1:8087') != -1 ):
+            return "gae"
+
+        return "disable"
 
     def setupUI(self):
         self.statusbar = NSStatusBar.systemStatusBar()
         self.statusitem = self.statusbar.statusItemWithLength_(NSSquareStatusItemLength) #NSSquareStatusItemLength #NSVariableStatusItemLength
 
         # Set initial image icon
-        icon_path = os.path.join(current_path, "web_ui", "favicon_MAC.ico")
+        icon_path = os.path.join(current_path, "web_ui", "favicon-mac.ico")
         image = NSImage.alloc().initByReferencingFile_(icon_path)
         image.setScalesWhenResized_(True)
         image.setSize_((20, 20))
@@ -45,25 +79,33 @@ class MacTrayObject(NSObject):
 
         # Let it highlight upon clicking
         self.statusitem.setHighlightMode_(1)
-
         self.statusitem.setToolTip_("XX-Net")
 
+        # Get current selected mode
+        proxyState = self.getProxyState()
+
         # Build a very simple menu
-        self.menu = NSMenu.alloc().init()
+        self.menu = NSMenu.alloc().initWithTitle_('XX-Net')
 
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto Goagent Proxy', 'enableAutoProxy:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy', 'enableAutoProxy:', '')
+        if proxyState == 'pac':
+            menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global Goagent Proxy', 'enableGlobalProxy:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy', 'enableGlobalProxy:', '')
+        if proxyState == 'gae':
+            menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable Goagent Proxy', 'disableProxy:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable GAEProxy', 'disableProxy:', '')
+        if proxyState == 'disable':
+            menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
 
-        # Rest Menu Item
+        # Reset Menu Item
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
         # Default event
@@ -75,6 +117,27 @@ class MacTrayObject(NSObject):
         # Hide dock icon
         NSApp.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
 
+    def updateStatusBarMenu(self):
+        autoGaeProxyMenuItem = self.menu.itemWithTitle_('Enable Auto GAEProxy')
+        globalGaeProxyMenuItem = self.menu.itemWithTitle_('Enable Global GAEProxy')
+        disableGaeProxyMenuItem = self.menu.itemWithTitle_('Disable GAEProxy')
+
+        # Remove Tick before All Menu Items
+        autoGaeProxyMenuItem.setState_(NSOffState)
+        globalGaeProxyMenuItem.setState_(NSOffState)
+        disableGaeProxyMenuItem.setState_(NSOffState)
+
+        # Get current selected mode
+        proxyState = self.getProxyState()
+
+        # Update Tick before Menu Item
+        if proxyState == 'pac':
+            autoGaeProxyMenuItem.setState_(NSOnState)
+        elif proxyState == 'gae':
+            globalGaeProxyMenuItem.setState_(NSOnState)
+        elif proxyState == 'disable':
+            disableGaeProxyMenuItem.setState_(NSOnState)
+
     def registerObserver(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
@@ -85,12 +148,12 @@ class MacTrayObject(NSObject):
         os._exit(0)
         NSApp.terminate_(self)
 
+    #Note: the function name for action can include '_'
+    # limited by Mac cocoa
     def config_(self, notification):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
-    #Note: the function name for action can include '_'
-    # limited by Mac cocoa
     def resetGoagent_(self, _):
         module_init.stop("gae_proxy")
         module_init.start("gae_proxy")
@@ -104,6 +167,7 @@ class MacTrayObject(NSObject):
         cmd = admin_command.encode('utf-8')
         xlog.info("try enable proxy:%s", cmd)
         os.system(cmd)
+        self.updateStatusBarMenu()
 
     def enableGlobalProxy_(self, _):
         cmd1 = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
@@ -117,6 +181,7 @@ class MacTrayObject(NSObject):
         cmd = admin_command.encode('utf-8')
         xlog.info("try enable proxy:%s", cmd)
         os.system(cmd)
+        self.updateStatusBarMenu()
 
     def disableProxy_(self, _):
         cmd1 = "networksetup -setwebproxystate Ethernet off"
@@ -133,8 +198,7 @@ class MacTrayObject(NSObject):
         cmd = admin_command.encode('utf-8')
         xlog.info("try disable proxy:%s", cmd)
         os.system(cmd)
-
-
+        self.updateStatusBarMenu()
 
 class Mac_tray():
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
