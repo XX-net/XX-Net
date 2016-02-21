@@ -76,7 +76,7 @@ msgid "Help"
 msgstr ""
 
 #: web_ui/config.html:21
-msgid "Display System Tray(Restarting XX-Net Needed)"
+msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr ""
 
 #: web_ui/config.html:29

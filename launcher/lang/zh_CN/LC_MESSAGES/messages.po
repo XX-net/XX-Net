@@ -58,7 +58,7 @@ msgstr "允许远程连接Web控制端"
 msgid "Help"
 msgstr "帮助"
 
-msgid "Display System Tray(Restarting XX-Net Needed)"
+msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "显示托盘图标(需要重启XX-Net)"
 
 msgid "Upgrade Management"
