@@ -4,8 +4,8 @@
 import random
 import time
 import os
-import ip_utils
-from config import config
+from . import ip_utils
+from .config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -77,7 +77,7 @@ class IpRange(object):
 
     def show_ip_range(self):
         for id in self.ip_range_map:
-            print "[",id,"]:", self.ip_range_map[id]
+            print("[",id,"]:", self.ip_range_map[id])
 
     def get_real_random_ip(self):
         while True:

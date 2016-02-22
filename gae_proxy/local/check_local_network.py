@@ -2,7 +2,7 @@
 import sys
 import os
 
-import httplib
+import http.client
 import time
 import socket
 import threading
@@ -81,7 +81,7 @@ def _check_worker():
     _checking_num += 1
     _checking_lock.release()
     try:
-        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
+        conn = http.client.HTTPSConnection("github.com", 443, timeout=30)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -121,7 +121,7 @@ def _simple_check_worker():
     _checking_num += 1
     _checking_lock.release()
     try:
-        conn = httplib.HTTPConnection("www.baidu.com", 80, timeout=3)
+        conn = http.client.HTTPConnection("www.baidu.com", 80, timeout=3)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
@@ -177,7 +177,7 @@ def triger_check_network(force=False):
 
 def _check_ipv6_host(host):
     try:
-        conn = httplib.HTTPConnection(host, 80, timeout=5)
+        conn = http.client.HTTPConnection(host, 80, timeout=5)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",

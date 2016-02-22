@@ -34,7 +34,7 @@ def start(module):
 
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
             if "imp" not in proc_handler[module]:
-                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], -1)
+                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], 0)
 
             _start = proc_handler[module]["imp"].start
             p = threading.Thread(target=_start.main)

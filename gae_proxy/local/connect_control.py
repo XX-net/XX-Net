@@ -3,8 +3,8 @@ import time
 import threading
 import sys
 
-from config import config
-import env_info
+from .config import config
+from . import env_info
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -109,7 +109,7 @@ def end_connect_register(high_prior=False):
 # this design is for save resource when browser have no request for long time.
 # when idle, connect pool will not maintain the connect ready link to save resources.
 
-last_request_time = 0
+last_request_time = time.time()
 
 
 def touch_active():

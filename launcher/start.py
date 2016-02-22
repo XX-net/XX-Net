@@ -14,10 +14,12 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
 data_launcher_path = os.path.join(data_path, 'launcher')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+
+noarch_lib = os.path.join(root_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
+common_lib = os.path.join(root_path, 'lib', 'common')
+sys.path.append(common_lib)
 
 def create_data_path():
     if not os.path.isdir(data_path):
@@ -69,7 +71,7 @@ elif sys.platform == "darwin":
     except:
         from non_tray import sys_tray
 else:
-    print("detect platform fail:%s" % sys.platform)
+    print(("detect platform fail:%s" % sys.platform))
     from non_tray import sys_tray
     has_desktop = False
 
@@ -83,7 +85,7 @@ import update_from_github
 
 
 def exit_handler():
-    print 'Stopping all modules before exit!'
+    print('Stopping all modules before exit!')
     module_init.stop_all()
     web_control.stop()
 

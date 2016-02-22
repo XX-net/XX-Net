@@ -8,7 +8,7 @@ import socket
 import struct
 import threading
 import operator
-import httplib
+import http.client
 
 
 import socks
@@ -20,7 +20,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-from config import config
+from .config import config
 
 
 def load_proxy_config():
@@ -40,14 +40,14 @@ def load_proxy_config():
 load_proxy_config()
 
 
-from google_ip import google_ip
-from appids_manager import appid_manager
-from openssl_wrap import SSLConnection
+from .google_ip import google_ip
+from .appids_manager import appid_manager
+from .openssl_wrap import SSLConnection
 
 NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
-import connect_control
+from . import connect_control
 
 
 class Connect_pool():
@@ -160,7 +160,7 @@ class Connect_pool():
         str = ''
         self.pool_lock.acquire()
         try:
-            pool = sorted(self.pool.items(), key=operator.itemgetter(1))
+            pool = sorted(list(self.pool.items()), key=operator.itemgetter(1))
             i = 0
             for item in pool:
                 sock,t = item
@@ -245,7 +245,7 @@ class Https_connection_manager(object):
             ret = ssl_sock.send(data)
             if ret != len(data):
                 xlog.warn("head send len:%d %d", ret, len(data))
-            response = httplib.HTTPResponse(ssl_sock, buffering=True)
+            response = http.client.HTTPResponse(ssl_sock)
 
             response.begin()
 
@@ -254,12 +254,12 @@ class Https_connection_manager(object):
                 xlog.debug("app head fail status:%d", status)
                 raise Exception("app check fail %r" % status)
             return True
-        except httplib.BadStatusLine as e:
+        except http.client.BadStatusLine as e:
             inactive_time = time.time() - ssl_sock.last_use_time
             xlog.debug("%s keep alive fail, time:%d", ssl_sock.ip, inactive_time)
             return False
         except Exception as e:
-            xlog.warn("%s head %s request fail:%r", ssl_sock.ip, ssl_sock.appid, e)
+            xlog.exception("%s head %s request fail:%r", ssl_sock.ip, ssl_sock.appid, e)
             return False
         finally:
             if response:
@@ -473,8 +473,15 @@ class Https_connection_manager(object):
                     #connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is none')
 
-                issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-                if not issuer_commonname.startswith('Google'):
+                for k, v in cert.get_issuer().get_components():
+                    #xlog.debug("issuer:%s %s", k, v)
+                    if k == b"O":
+                        issuer_commonname = v
+                        break
+                else:
+                    raise socket.error('certficate has no issuer.' )
+
+                if not issuer_commonname.startswith(b'Google'):
                     google_ip.report_connect_fail(ip, force_remove=True)
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 

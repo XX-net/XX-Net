@@ -1,8 +1,8 @@
 import os
-import urlparse
+import urllib.parse
 import datetime
 import threading
-import mimetools
+import http.client
 import socket
 import errno
 import sys
@@ -17,14 +17,14 @@ logging = xlog.getLogger("simple_http_server")
 
 class HttpServerHandler():
     default_request_version = "HTTP/1.1"
-    MessageClass = mimetools.Message
+    MessageClass = http.client.HTTPMessage
     rbufsize = -1
     wbufsize = 0
 
     def __init__(self, sock, client, args):
         self.connection = sock
-        self.rfile = socket._fileobject(self.connection, "rb", self.rbufsize)
-        self.wfile = socket._fileobject(self.connection, "wb", self.wbufsize)
+        self.rfile = sock
+        self.wfile = sock
         self.client_address = client
         self.args = args
         self.setup()
@@ -99,7 +99,8 @@ class HttpServerHandler():
         self.command, self.path, self.request_version = command, path, version
 
         # Examine the headers and look for a Connection directive
-        self.headers = self.MessageClass(self.rfile, 0)
+        self.headers = http.client.parse_headers(self.rfile,
+                                                     _class=self.MessageClass)
 
         conntype = self.headers.get('Connection', "")
         if conntype.lower() == 'close':
@@ -202,7 +203,7 @@ class HttpServerHandler():
             if isinstance(headers, dict):
                 for key in headers:
                     data.append("%s: %s\r\n" % (key, headers[key]))
-            elif isinstance(headers, basestring):
+            elif isinstance(headers, str):
                 data.append(headers)
         data.append("\r\n")
 
@@ -335,9 +336,9 @@ class TestHttpServer(HttpServerHandler):
         return ba
 
     def do_GET(self):
-        url_path = urlparse.urlparse(self.path).path
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        url_path = urllib.parse.urlparse(self.path).path
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 

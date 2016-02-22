@@ -5,10 +5,10 @@ import random
 import threading
 import time
 
-from config import config
+from .config import config
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-import check_ip
+from . import check_ip
 
 
 class APPID_manager(object):
@@ -82,7 +82,7 @@ class APPID_manager(object):
             self.set_appid_not_exist(appid)
         else:
             xlog.warn("process_appid_not_exist, remove ip:%s", ip)
-            from google_ip import google_ip
+            from .google_ip import google_ip
             google_ip.report_connect_fail(ip, force_remove=True)
 
     def set_appid_not_exist(self, appid):

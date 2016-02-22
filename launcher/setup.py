@@ -8,7 +8,7 @@ python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27',
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 import subprocess
 from instances import xlog
@@ -17,7 +17,7 @@ import zipfile
 import config
 import shutil
 
-opener = urllib2.build_opener()
+opener = urllib.request.build_opener()
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 download_path = os.path.abspath( os.path.join(root_path, 'data', 'downloads'))
@@ -84,8 +84,8 @@ def get_new_new_config():
     try:
         new_config = yaml.load(file(data_path, 'r'))
         return new_config
-    except yaml.YAMLError, exc:
-        print "Error in configuration file:", exc
+    except yaml.YAMLError as exc:
+        print("Error in configuration file:", exc)
 
 def process_data_files():
     #TODO: fix bug
@@ -143,8 +143,8 @@ def update_environment():
 def wait_xxnet_exit():
 
     def http_request(url, method="GET"):
-        proxy_handler = urllib2.ProxyHandler({})
-        opener = urllib2.build_opener(proxy_handler)
+        proxy_handler = urllib.request.ProxyHandler({})
+        opener = urllib.request.build_opener(proxy_handler)
         try:
             req = opener.open(url)
             return req

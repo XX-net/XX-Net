@@ -17,7 +17,7 @@ def load():
         config = yaml.load(file(config_path, 'r'))
         #print yaml.dump(config)
     except Exception as  exc:
-        print "Error in configuration file:", exc
+        print("Error in configuration file:", exc)
 
 
 def save():

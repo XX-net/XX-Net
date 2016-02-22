@@ -46,7 +46,7 @@ class SSLConnection(object):
             try:
                 return io_func(*args, **kwargs)
             except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
-                sys.exc_clear()
+                #sys.exc_clear()
                 _, _, errors = select.select([fd], [], [fd], timeout)
                 if errors:
                     break
@@ -54,7 +54,7 @@ class SSLConnection(object):
                 if time_now - time_start > timeout:
                     break
             except OpenSSL.SSL.WantWriteError:
-                sys.exc_clear()
+                #sys.exc_clear()
                 _, _, errors = select.select([], [fd], [fd], timeout)
                 if errors:
                     break
@@ -122,7 +122,8 @@ class SSLConnection(object):
 
     def makefile(self, mode='r', bufsize=-1):
         self._makefile_refs += 1
-        return socket._fileobject(self, mode, bufsize, close=True)
+        #return socket._fileobject(self, mode, bufsize, close=True)
+        return self._connection.makefile()
 
     @staticmethod
     def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)):
@@ -152,7 +153,8 @@ class SSLConnection(object):
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
         if ca_certs:
-            ssl_context.load_verify_locations(os.path.abspath(ca_certs))
+            ca_path = bytes(ca_certs, encoding='UTF-8')
+            ssl_context.load_verify_locations(ca_path)
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)

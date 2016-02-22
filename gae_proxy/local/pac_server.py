@@ -5,9 +5,9 @@ import os
 import base64
 import time
 import re
-import thread
-import urllib2
-import urlparse
+import _thread
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 
 import simple_http_server
@@ -15,7 +15,7 @@ import simple_http_server
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-from config import config
+from .config import config
 
 default_pacfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), config.PAC_FILE)
 user_pacfile = os.path.join(config.DATA_PATH, config.PAC_FILE)
@@ -42,11 +42,11 @@ def get_opener():
         cafile = os.path.join(data_root, "gae_proxy", "CA.crt")
         context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
                                              cafile=cafile)
-        https_handler = urllib2.HTTPSHandler(context=context)
+        https_handler = urllib.request.HTTPSHandler(context=context)
 
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
     else:
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
 
@@ -291,7 +291,7 @@ class PACServerHandler(simple_http_server.HttpServerHandler):
     def do_GET(self):
         xlog.info('PAC from:%s %s %s ', self.address_string(), self.command, self.path)
 
-        path = urlparse.urlparse(self.path).path # '/proxy.pac'
+        path = urllib.parse.urlparse(self.path).path # '/proxy.pac'
         filename = os.path.normpath('./' + path) # proxy.pac
 
         if self.path.startswith(('http://', 'https://')):
@@ -318,7 +318,7 @@ class PACServerHandler(simple_http_server.HttpServerHandler):
 
         mimetype = 'text/plain'
         if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(get_serving_pacfile()) > config.PAC_EXPIRED:
-            thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
+            _thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
 
         pac_filename = get_serving_pacfile()
         with open(pac_filename, 'rb') as fp:

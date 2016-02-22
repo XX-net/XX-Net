@@ -6,7 +6,7 @@ import time
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from config import config
+from .config import config
 
 class Scan_ip_log():
     max_lines_per_log_file = 3000

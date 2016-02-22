@@ -8,11 +8,11 @@ import re
 import os
 import subprocess
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import math
 
-from config import config
-import ip_utils
+from .config import config
+from . import ip_utils
 
 # This code functions:
 # read ip range string in code
@@ -43,7 +43,7 @@ def print_range_list(ip_range_list):
     for ip_range in ip_range_list:
         begin = ip_range[0]
         end = ip_range[1]
-        print ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+        print(ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end))
 
 
 def parse_range_string(input_lines):
@@ -93,7 +93,7 @@ def merge_range(input_ip_range_list):
             last_begin = begin
             last_end = end
         else:
-            print "merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+            print("merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end))
             if end > last_end:
                 last_end = end
 
@@ -179,9 +179,9 @@ def download_apic(filename):
     try:
         data = subprocess.check_output(['wget', url, '-O-'])
     except (OSError, AttributeError):
-        print >> sys.stderr, "Fetching data from apnic.net, "\
-                             "it might take a few minutes, please wait..."
-        data = urllib2.urlopen(url).read()
+        print("Fetching data from apnic.net, "\
+                             "it might take a few minutes, please wait...", file=sys.stderr)
+        data = urllib.request.urlopen(url).read()
 
     with open(filename, "w") as f:
         f.write(data)
@@ -265,7 +265,7 @@ def test_load():
     file_name = os.path.join(config.DATA_PATH, "ip_range.txt")
     fd = open(file_name, "r")
     if not fd:
-        print "open ip_range.txt fail."
+        print("open ip_range.txt fail.")
         exit()
 
     amount = 0
@@ -279,10 +279,10 @@ def test_load():
 
         num = nend - nbegin
         amount += num
-        print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
+        print(ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num)
 
     fd.close()
-    print "amount ip:", amount
+    print("amount ip:", amount)
 
 
 def main():

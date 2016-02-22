@@ -2,7 +2,7 @@
 import sys
 import os
 
-import httplib
+import http.client
 import time
 import socket
 import struct
@@ -11,26 +11,35 @@ import binascii
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+    root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
+    common_lib = os.path.join(root_path, 'lib', 'common')
+    sys.path.append(common_lib)
 
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.join(root_path, 'lib', 'win32')
         sys.path.append(win32_lib)
     elif sys.platform.startswith("linux"):
-        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        linux_lib = os.path.join(root_path, 'lib', 'linux')
         sys.path.append(linux_lib)
+
+    import check_local_network
+    from config import config
+    import cert_util
+    from openssl_wrap import SSLConnection
+
+else:
+    from . import check_local_network
+    from .config import config
+    from . import cert_util
+    from .openssl_wrap import SSLConnection
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
 import socks
-import check_local_network
-from config import config
-import cert_util
-from openssl_wrap import SSLConnection
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -59,7 +68,7 @@ def load_proxy_config():
             proxy_type = socks.SOCKS5
         else:
             xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            raise
+            raise Exception()
 
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 load_proxy_config()
@@ -102,11 +111,19 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
         raise socket.error(' certficate is none')
 
     if check_cert:
-        issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+
+        for k, v in cert.get_issuer().get_components():
+            if k == b"O":
+                issuer_commonname = v
+                break
+        else:
+            raise socket.error('certficate has no issuer.' )
+
         if __name__ == "__main__":
             xlog.debug("issued by:%s", issuer_commonname)
-        if not issuer_commonname.startswith('Google'):
+        if not issuer_commonname.startswith(b'Google'):
             raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+
 
     connct_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
@@ -135,7 +152,7 @@ def get_ssl_cert_domain(ssl_sock):
 def check_goagent(ssl_sock, appid):
     request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
-    response = httplib.HTTPResponse(ssl_sock, buffering=True)
+    response = http.client.HTTPResponse(ssl_sock)
 
     response.begin()
     if response.status == 404:
@@ -198,6 +215,6 @@ if __name__ == "__main__":
         ip = sys.argv[1]
         xlog.info("test ip:%s", ip)
         res = test_gae_ip(ip)
-        print res
+        print(res)
     else:
         xlog.info("check_ip <ip>")

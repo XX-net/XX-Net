@@ -5,21 +5,21 @@
 import threading
 import operator
 import time
-import Queue
+import queue
 import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
-import check_local_network
-import check_ip
-import google_ip_range
+from . import check_local_network
+from . import check_ip
+from . import google_ip_range
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-from config import config
-import connect_control
-from scan_ip_log import scan_ip_log
+from .config import config
+from . import connect_control
+from .scan_ip_log import scan_ip_log
 
 
 ######################################
@@ -73,8 +73,8 @@ class IpManager():
 
         # gererate from ip_dict, sort by handshake_time, when get_batch_ip
         self.gws_ip_list = []
-        self.to_check_ip_queue = Queue.Queue()
-        self.scan_exist_ip_queue = Queue.Queue()
+        self.to_check_ip_queue = queue.Queue()
+        self.scan_exist_ip_queue = queue.Queue()
         self.ip_lock.release()
 
         self.load_config()
@@ -156,7 +156,7 @@ class IpManager():
 
         try:
             self.ip_lock.acquire()
-            ip_dict = sorted(self.ip_dict.items(),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
+            ip_dict = sorted(list(self.ip_dict.items()),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
             with open(self.good_ip_file, "w") as fd:
                 for ip, property in ip_dict:
                     fd.write( "%s %s %s %d %d\n" %
@@ -184,7 +184,7 @@ class IpManager():
                 if self.ip_dict[ip]['fail_times'] == 0:
                     self.good_ip_num += 1
 
-            ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
+            ip_time = sorted(list(ip_rate.items()), key=operator.itemgetter(1))
             self.gws_ip_list = [ip for ip,rate in ip_time]
 
         except Exception as e:
@@ -306,7 +306,7 @@ class IpManager():
             self.ip_lock.release()
 
     def add_ip(self, ip, handshake_time, domain=None, server='', fail_times=0):
-        if not isinstance(ip, basestring):
+        if not isinstance(ip, str):
             xlog.error("add_ip input")
             return
 
@@ -346,7 +346,7 @@ class IpManager():
         return False
 
     def update_ip(self, ip, handshake_time):
-        if not isinstance(ip, basestring):
+        if not isinstance(ip, str):
             xlog.error("set_ip input")
             return
 
@@ -610,7 +610,7 @@ class IpManager():
 
     def stop_scan_all_exist_ip(self):
         self.keep_scan_all_exist_ip = False
-        self.scan_exist_ip_queue = Queue.Queue()
+        self.scan_exist_ip_queue = queue.Queue()
 
     def scan_exist_ip_worker(self):
         while connect_control.keep_running and self.keep_scan_all_exist_ip:

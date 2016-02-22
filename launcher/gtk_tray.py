@@ -69,9 +69,9 @@ class Gtk_tray():
 
     def make_menu(self):
         menu = gtk.Menu()
-        itemlist = [(u'Config', self.on_show),
+        itemlist = [('Config', self.on_show),
                     ('restart gae_proxy', self.on_restart_gae_proxy),
-                    (u'Quit', self.on_quit)]
+                    ('Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
             item.connect('activate', callback)

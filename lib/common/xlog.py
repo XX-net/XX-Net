@@ -49,7 +49,7 @@ class Logger():
         elif level == "FATAL":
             self.min_level = FATAL
         else:
-            print("log level not support:%s", level)
+            print(("log level not support:%s", level))
     
     def set_color(self):
         self.err_color = None
@@ -217,14 +217,14 @@ class Logger():
 
     def unicode_line(self, line):
         try:
-            if type(line) is types.UnicodeType:
+            if type(line) is str:
                 return line
             else:
-                return unicode(line, errors='ignore')
+                return str(line, errors='ignore')
         except Exception as e:
-            print("unicode err:%r" % e)
-            print("line can't decode:%s" % line)
-            print("Except stack:%s" % traceback.format_exc())
+            print(("unicode err:%r" % e))
+            print(("line can't decode:%s" % line))
+            print(("Except stack:%s" % traceback.format_exc()))
             return ""
 
 
@@ -234,9 +234,9 @@ loggerDict = {}
 def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
     global loggerDict
 
-    if not isinstance(name, basestring):
+    if not isinstance(name, str):
         raise TypeError('A logger name must be string or Unicode')
-    if isinstance(name, unicode):
+    if isinstance(name, str):
         name = name.encode('utf-8')
 
     if name in loggerDict:

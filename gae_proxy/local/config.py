@@ -2,7 +2,7 @@
 # coding:utf-8
 
 
-import ConfigParser
+import configparser
 import os
 import re
 import io
@@ -19,8 +19,8 @@ class Config(object):
     def load(self):
         """load config from proxy.ini"""
         current_path = os.path.dirname(os.path.abspath(__file__))
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-        self.CONFIG = ConfigParser.ConfigParser()
+        configparser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+        self.CONFIG = configparser.ConfigParser()
         self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
         self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
@@ -31,20 +31,20 @@ class Config(object):
         self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
         self.CONFIG.read(self.CONFIG_FILENAME)
         if os.path.isfile(self.CONFIG_USER_FILENAME):
-            with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
-                content = fp.read()
-                self.CONFIG.readfp(io.BytesIO(content))
+            try:
+                self.CONFIG.read(self.CONFIG_USER_FILENAME)
+                xlog.info("load config.ini success")
+            except Exception as e:
+                xlog.exception("data/gae_proxy/config.ini load error:%s", e)
 
         # load ../../../data/gae_proxy/manual.ini, set by manual
         self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
         if os.path.isfile(self.CONFIG_MANUAL_FILENAME):
-            with open(self.CONFIG_MANUAL_FILENAME, 'rb') as fp:
-                content = fp.read()
-                try:
-                    self.CONFIG.readfp(io.BytesIO(content))
-                    xlog.info("load manual.ini success")
-                except Exception as e:
-                    xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
+            try:
+                self.CONFIG.read(self.CONFIG_MANUAL_FILENAME)
+                xlog.info("load manual.ini success")
+            except Exception as e:
+                xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')

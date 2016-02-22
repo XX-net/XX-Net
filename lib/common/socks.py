@@ -726,4 +726,4 @@ def check_ip_valid(ip):
 if __name__ == "__main__":
     name = "abc"
     name2 = name.encode('idna')
-    print name2
+    print(name2)

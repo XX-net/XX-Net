@@ -11,9 +11,9 @@ if __name__ == "__main__":
 
 import re
 import socket, ssl
-import urlparse
+import urllib.parse
 import threading
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -58,14 +58,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(iter(new_module_menus.items()), key=lambda k_v: (k_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
         refer = self.headers.getheader('Referer')
         if refer:
-            refer_loc = urlparse.urlparse(refer).netloc
+            refer_loc = urllib.parse.urlparse(refer).netloc
             host = self.headers.getheader('host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
@@ -89,7 +89,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
     def do_GET(self):
         refer = self.headers.getheader('Referer')
         if refer:
-            refer_loc = urlparse.urlparse(refer).netloc
+            refer_loc = urllib.parse.urlparse(refer).netloc
             host = self.headers.getheader('host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
@@ -101,7 +101,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
-        url_path = urlparse.urlparse(self.path).path
+        url_path = urllib.parse.urlparse(self.path).path
         if url_path == '/':
             return self.req_index_handler()
 
@@ -172,8 +172,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         try:
             target_module = reqs['module'][0]
@@ -221,8 +221,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_config']:
@@ -378,8 +378,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_update_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_progress']:
@@ -396,8 +396,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         try:
@@ -455,8 +455,8 @@ def stop():
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(proxy_handler)
     try:
         req = opener.open(url, timeout=30)
         return req

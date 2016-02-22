@@ -3,14 +3,14 @@
 
 
 import platform
-import env_info
-import urlparse
+from . import env_info
+import urllib.parse
 import json
 import os
 import re
 import subprocess
 import cgi
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import sys
 import datetime
 import locale
@@ -20,20 +20,20 @@ import time
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from config import config
-from appids_manager import appid_manager
-from google_ip import google_ip
-from google_ip_range import ip_range
-from connect_manager import https_manager
-from scan_ip_log import scan_ip_log
-import ConfigParser
-import connect_control
-import ip_utils
-import check_local_network
-import check_ip
-import cert_util
+from .config import config
+from .appids_manager import appid_manager
+from .google_ip import google_ip
+from .google_ip_range import ip_range
+from .connect_manager import https_manager
+from .scan_ip_log import scan_ip_log
+import configparser
+from . import connect_control
+from . import ip_utils
+from . import check_local_network
+from . import check_ip
+from . import cert_util
 import simple_http_server
-import test_appid
+from . import test_appid
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -68,13 +68,13 @@ class User_config(object):
         self.load()
 
     def load(self):
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+        configparser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
 
-        self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
+        self.DEFAULT_CONFIG = configparser.ConfigParser()
         DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
 
 
-        self.USER_CONFIG = ConfigParser.ConfigParser()
+        self.USER_CONFIG = configparser.ConfigParser()
         CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
 
         try:
@@ -168,8 +168,8 @@ user_config = User_config()
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(proxy_handler)
     try:
         req = opener.open(url)
     except Exception as e:
@@ -192,7 +192,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/status":
@@ -276,7 +276,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def do_POST(self):
         try:
             refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
+            netloc = urllib.parse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 xlog.warn("web control ref:%s refuse", netloc)
                 return
@@ -290,13 +290,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
                 length = int(self.headers.getheader('content-length'))
-                self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                self.postvars = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=1)
             else:
                 self.postvars = {}
         except:
             self.postvars = {}
 
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == '/deploy':
             return self.req_deploy_handler()
         elif path == "/config":
@@ -310,8 +310,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         cmd = "get_last"
@@ -344,8 +344,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             config = yaml.load(file(data_path, 'r'))
             return config["modules"]["launcher"]["current_version"]
             #print yaml.dump(config)
-        except yaml.YAMLError, exc:
-            print "Error in configuration file:", exc
+        except yaml.YAMLError as exc:
+            print("Error in configuration file:", exc)
             return "unknown"
 
     @staticmethod
@@ -442,8 +442,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         appid_updated = False
@@ -486,7 +486,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                 config.load()
                 appid_manager.reset_appid()
-                import connect_manager
+                from . import connect_manager
                 connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
                 if appid_updated:
@@ -507,8 +507,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_deploy_handler(self):
         global deploy_proc
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         log_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'upload.log'))
@@ -562,8 +562,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_importip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['importip']:
@@ -590,8 +590,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_test_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         ip = reqs['ip'][0]
         result = check_ip.test_gae_ip(ip)
@@ -659,8 +659,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response(mimetype, data)
 
     def req_scan_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_range']:
             data = ip_range.load_range_content()
@@ -718,8 +718,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response(mimetype, data)
 
     def req_check_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_process']:
             all_ip_num = len(google_ip.ip_dict)

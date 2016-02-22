@@ -1,15 +1,15 @@
-import httplib
+import http.client
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-from connect_manager import https_manager
+from .connect_manager import https_manager
 
 
 def test_appid_exist(ssl_sock, appid):
     request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
-    response = httplib.HTTPResponse(ssl_sock, buffering=True)
+    response = http.client.HTTPResponse(ssl_sock, buffering=True)
 
     response.begin()
     if response.status == 404:

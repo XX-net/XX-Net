@@ -5,7 +5,7 @@
 import errno
 import socket
 import ssl
-import urlparse
+import urllib.parse
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
@@ -15,12 +15,12 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 import simple_http_client
 import simple_http_server
-from cert_util import CertUtil
-from config import config
-import gae_handler
-import direct_handler
-from connect_control import touch_active
-import web_control
+from .cert_util import CertUtil
+from .config import config
+from . import gae_handler
+from . import direct_handler
+from .connect_control import touch_active
+from . import web_control
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
@@ -46,7 +46,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         host_ip, _, port = host.rpartition(':')
         http_client = simple_http_client.HTTP_client((host_ip, int(port)))
 
-        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
         payload = b''
         if 'Content-Length' in request_headers:
             try:
@@ -56,7 +56,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.warn('forward_local read payload failed:%s', e)
                 return
 
-        self.parsed_url = urlparse.urlparse(self.path)
+        self.parsed_url = urllib.parse.urlparse(self.path)
         if len(self.parsed_url[4]):
             path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
         else:
@@ -94,7 +94,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if self.path[0] == '/' and host:
             self.path = 'http://%s%s' % (host, self.path)
         elif not host and '://' in self.path:
-            host = urlparse.urlparse(self.path).netloc
+            host = urllib.parse.urlparse(self.path).netloc
 
         if host.startswith("127.0.0.1") or host.startswith("localhost"):
             #xlog.warn("Your browser forward localhost to proxy.")
@@ -106,7 +106,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             # auto detect browser proxy setting is work
             return self.wfile.write(self.self_check_response_data)
 
-        self.parsed_url = urlparse.urlparse(self.path)
+        self.parsed_url = urllib.parse.urlparse(self.path)
 
         if host in config.HOSTS_GAE:
             return self.do_AGENT()
@@ -129,7 +129,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if crlf != "\r\n":
                 xlog.warn("chunk header read fail crlf")
 
-        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
 
         payload = b''
         if 'Content-Length' in request_headers:
@@ -257,9 +257,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if self.path[0] == '/' and host:
                 self.path = 'http://%s%s' % (host, self.path)
             elif not host and '://' in self.path:
-                host = urlparse.urlparse(self.path).netloc
+                host = urllib.parse.urlparse(self.path).netloc
 
-            self.parsed_url = urlparse.urlparse(self.path)
+            self.parsed_url = urllib.parse.urlparse(self.path)
 
             return self.do_AGENT()
 
@@ -332,15 +332,15 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if self.path[0] == '/' and host:
                 self.path = 'http://%s%s' % (host, self.path)
             elif not host and '://' in self.path:
-                host = urlparse.urlparse(self.path).netloc
+                host = urllib.parse.urlparse(self.path).netloc
 
-            self.parsed_url = urlparse.urlparse(self.path)
+            self.parsed_url = urllib.parse.urlparse(self.path)
             if len(self.parsed_url[4]):
                 path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
             else:
                 path = self.parsed_url[2]
 
-            request_headers = dict((k.title(), v) for k, v in self.headers.items())
+            request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
 
             payload = b''
             if 'Content-Length' in request_headers:

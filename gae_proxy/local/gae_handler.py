@@ -12,23 +12,23 @@ import io
 import string
 import socket
 import ssl
-import httplib
-import Queue
-import urlparse
+import http.client
+import queue
+import urllib.parse
 import threading
 
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from connect_manager import https_manager
-from appids_manager import appid_manager
+from .connect_manager import https_manager
+from .appids_manager import appid_manager
 
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
-from config import config
-from google_ip import google_ip
+from .config import config
+from .google_ip import google_ip
 
 def generate_message_html(title, banner, detail=''):
     MESSAGE_TEMPLATE = '''
@@ -69,7 +69,10 @@ def spawn_later(seconds, target, *args, **kwargs):
         except:
             result = None
         return result
-    return __import__('thread').start_new_thread(wrap, args, kwargs)
+
+    import threading
+    th = threading.Thread(target=wrap, args=args, kwargs=kwargs)
+    return th.start()
 
 
 skip_headers = frozenset(['Vary',
@@ -101,7 +104,7 @@ def send_header(wfile, keyword, value):
 
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()) if k not in skip_headers)
     request_data += '\r\n'
 
     if isinstance(payload, bytes):
@@ -122,13 +125,13 @@ def _request(sock, headers, payload, bufsize=8192):
     else:
         raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
 
-    response = httplib.HTTPResponse(sock, buffering=True)
+    response = http.client.HTTPResponse(sock, buffering=True)
     try:
         orig_timeout = sock.gettimeout()
         sock.settimeout(100)
         response.begin()
         sock.settimeout(orig_timeout)
-    except httplib.BadStatusLine as e:
+    except http.client.BadStatusLine as e:
         #logging.warn("_request bad status line:%r", e)
         response.close()
         response = None
@@ -188,7 +191,7 @@ def deflate(data):
     return zlib.compress(data)[2:-4]
 
 def fetch(method, url, headers, body):
-    if isinstance(body, basestring) and body:
+    if isinstance(body, str) and body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
             zbody = deflate(body)
             if len(zbody) < len(body):
@@ -212,10 +215,10 @@ def fetch(method, url, headers, body):
     kwargs['timeout'] = '19'
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()) if k not in skip_headers)
     #for k, v in headers.items():
     #    logging.debug("Send %s: %s", k, v)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
+    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in list(kwargs.items()) if v)
 
     request_headers = {}
     payload = deflate(payload)
@@ -252,7 +255,7 @@ def fetch(method, url, headers, body):
     _, response.status, response.reason = raw_response_line.split(None, 2)
     response.status = int(response.status)
     response.reason = response.reason.strip()
-    response.msg = httplib.HTTPMessage(io.BytesIO(headers_data))
+    response.msg = http.client.HTTPMessage(io.BytesIO(headers_data))
     response.app_msg = response.msg.fp.read()
     return response
 
@@ -262,7 +265,7 @@ normattachment = functools.partial(re.compile(r'filename=(.+?)').sub, 'filename=
 
 
 def send_response(wfile, status=404, headers={}, body=''):
-    headers = dict((k.title(), v) for k, v in headers.items())
+    headers = dict((k.title(), v) for k, v in list(headers.items()))
     if 'Transfer-Encoding' in headers:
         del headers['Transfer-Encoding']
     if 'Content-Length' not in headers:
@@ -271,14 +274,14 @@ def send_response(wfile, status=404, headers={}, body=''):
         headers['Connection'] = 'close'
 
     wfile.write("HTTP/1.1 %d\r\n" % status)
-    for key, value in headers.items():
+    for key, value in list(headers.items()):
         #wfile.write("%s: %s\r\n" % (key, value))
         send_header(wfile, key, value)
     wfile.write("\r\n")
     wfile.write(body)
 
 def return_fail_message(wfile):
-    html = generate_message_html('504 GAEProxy Proxy Time out', u'连接超时，先休息一会再来！')
+    html = generate_message_html('504 GAEProxy Proxy Time out', '连接超时，先休息一会再来！')
     send_response(wfile, 504, body=html.encode('utf-8'))
     return
 
@@ -331,7 +334,7 @@ def handler(method, url, headers, body, wfile):
                 appid = appid_manager.get_appid()
 
                 if not appid:
-                    html = generate_message_html('404 No usable Appid Exists', u'没有可用appid了，请配置可用的appid')
+                    html = generate_message_html('404 No usable Appid Exists', '没有可用appid了，请配置可用的appid')
                     send_response(wfile, 404, body=html.encode('utf-8'))
                     response.close()
                     return
@@ -356,7 +359,7 @@ def handler(method, url, headers, body, wfile):
                 appid = appid_manager.get_appid()
 
                 if not appid:
-                    html = generate_message_html('503 No usable Appid Exists', u'appid流量不足，请增加appid')
+                    html = generate_message_html('503 No usable Appid Exists', 'appid流量不足，请增加appid')
                     send_response(wfile, 503, body=html.encode('utf-8'))
                     response.close()
                     return
@@ -531,13 +534,13 @@ class RangeFetch(object):
             xlog.warn("RangeFetch send response fail:%r %s", e, self.url)
             return
 
-        data_queue = Queue.PriorityQueue()
-        range_queue = Queue.PriorityQueue()
+        data_queue = queue.PriorityQueue()
+        range_queue = queue.PriorityQueue()
         range_queue.put((start, end, self.response))
         self.expect_begin = start
         for begin in range(end+1, length, self.maxsize):
             range_queue.put((begin, min(begin+self.maxsize-1, length-1), None))
-        for i in xrange(0, self.threads):
+        for i in range(0, self.threads):
             range_delay_size = i * self.maxsize
             spawn_later(float(range_delay_size)/self.waitsize, self.__fetchlet, range_queue, data_queue, range_delay_size)
 
@@ -566,7 +569,7 @@ class RangeFetch(object):
                     else:
                         xlog.error('RangeFetch Error: begin(%r) < expect_begin(%r), quit.', begin, self.expect_begin)
                         break
-            except Queue.Empty:
+            except queue.Empty:
                 xlog.error('data_queue peek timeout, break')
                 break
 
@@ -584,7 +587,7 @@ class RangeFetch(object):
         self._stopped = True
 
     def __fetchlet(self, range_queue, data_queue, range_delay_size):
-        headers = dict((k.title(), v) for k, v in self.headers.items())
+        headers = dict((k.title(), v) for k, v in list(self.headers.items()))
         headers['Connection'] = 'close'
         while not self._stopped:
             try:
@@ -597,7 +600,7 @@ class RangeFetch(object):
                     headers['Range'] = 'bytes=%d-%d' % (start, end)
                     if not response:
                         response = fetch(self.method, self.url, headers, self.body)
-                except Queue.Empty:
+                except queue.Empty:
                     continue
                 except Exception as e:
                     xlog.warning("RangeFetch fetch response %r in __fetchlet", e)
@@ -637,7 +640,7 @@ class RangeFetch(object):
                     continue
 
                 if response.getheader('Location'):
-                    self.url = urlparse.urljoin(self.url, response.getheader('Location'))
+                    self.url = urllib.parse.urljoin(self.url, response.getheader('Location'))
                     xlog.info('RangeFetch Redirect(%r)', self.url)
                     google_ip.report_connect_closed(response.ssl_sock.ip, "reLocation")
                     response.close()
@@ -691,7 +694,7 @@ class RangeFetch(object):
                     response.close()
                     range_queue.put((start, end, None))
                     continue
-            except StandardError as e:
+            except Exception as e:
                 xlog.exception('RangeFetch._fetchlet error:%s', e)
                 raise
 

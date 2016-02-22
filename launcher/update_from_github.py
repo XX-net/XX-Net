@@ -1,7 +1,7 @@
 
 import os
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 import subprocess
 import threading
@@ -34,7 +34,7 @@ progress["update_status"] = "Idle"
 
 def get_opener(retry=0):
     if retry == 0:
-        opener = urllib2.build_opener()
+        opener = urllib.request.build_opener()
         return opener
     else:
         return update.get_opener()
@@ -75,7 +75,7 @@ def download_file(url, filename):
             else:
                 progress[url]["status"] = "finished"
                 return True
-        except (urllib2.URLError, ssl.SSLError) as e:
+        except (urllib.error.URLError, ssl.SSLError) as e:
             xlog.warn("download %s to %s URL fail:%r", url, filename, e)
             continue
         except Exception as e:

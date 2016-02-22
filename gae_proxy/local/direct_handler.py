@@ -7,17 +7,17 @@ import time
 import re
 import socket
 import ssl
-import httplib
+import http.client
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
-from connect_manager import https_manager
+from .connect_manager import https_manager
 
-from gae_handler import return_fail_message
-from google_ip import google_ip
-from config import config
+from .gae_handler import return_fail_message
+from .google_ip import google_ip
+from .config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -46,7 +46,7 @@ def send_header(wfile, keyword, value):
 
 def fetch(method, host, path, headers, payload, bufsize=8192):
     request_data = '%s %s HTTP/1.1\r\n' % (method, path)
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
+    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()))
     request_data += '\r\n'
 
     ssl_sock = https_manager.get_ssl_connection(host)
@@ -62,7 +62,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
             sended = ssl_sock.send(payload[start:start+send_size])
             start += sended
 
-        response = httplib.HTTPResponse(ssl_sock, buffering=True)
+        response = http.client.HTTPResponse(ssl_sock, buffering=True)
 
         response.ssl_sock = ssl_sock
 
@@ -70,7 +70,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
         ssl_sock.settimeout(90)
         response.begin()
         ssl_sock.settimeout(orig_timeout)
-    except httplib.BadStatusLine as e:
+    except http.client.BadStatusLine as e:
         xlog.warn("direct_handler.fetch bad status line:%r", e)
         google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
         response = None
@@ -137,7 +137,7 @@ def handler(method, host, url, headers, body, wfile):
             while True:
                 try:
                     data = response.read(8192)
-                except httplib.IncompleteRead, e:
+                except http.client.IncompleteRead as e:
                     data = e.partial
                 except Exception as e:
                     google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")

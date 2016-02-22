@@ -13,23 +13,27 @@ import threading
 import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
 data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
 if not os.path.isdir(data_path):
     data_path = current_path
 
 if __name__ == "__main__":
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
 
+    common_lib = os.path.join(root_path, 'lib', 'common')
+    sys.path.append(common_lib)
+
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.join(root_path, 'lib', 'win32')
         sys.path.append(win32_lib)
     elif sys.platform == "linux" or sys.platform == "linux2":
-        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        linux_lib = os.path.join(root_path, 'lib', 'linux')
         sys.path.append(linux_lib)
     elif sys.platform == "darwin":
-        darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+        darwin_lib = os.path.join(root_path, 'lib', 'darwin')
         sys.path.append(darwin_lib)
 
 from xlog import getLogger
@@ -130,7 +134,7 @@ class SSLCert:
     def cn(self):
         c = None
         for i in self.subject:
-            if i[0] == "CN":
+            if i[0] == b"CN":
                 c = i[1]
         return c
 
@@ -322,7 +326,7 @@ class CertUtil(object):
                 win32elevate.elevateAdminRun(os.path.abspath(__file__))
                 return True
             else:
-                CertUtil.win32_notify(msg=u'已经导入GoAgent证书，请重启浏览器.', title=u'Restart browser need.')
+                CertUtil.win32_notify(msg='已经导入GoAgent证书，请重启浏览器.', title='Restart browser need.')
 
             return True if ret else False
 
@@ -396,14 +400,14 @@ class CertUtil(object):
             get_sha1_title = False
             sha1 = ""
             for line in lines:
-                if line.endswith("Fingerprint (SHA1):\n"):
+                if line.endswith(b'Fingerprint (SHA1):\n'):
                     get_sha1_title = True
                     continue
                 if get_sha1_title:
                     sha1 = line
                     break
 
-            sha1 = sha1.replace(' ', '').replace(':', '').replace('\n', '')
+            sha1 = sha1.replace(b' ', b'').replace(b':', b'').replace(b'\n', b'')
             if len(sha1) != 40:
                 return False
             else:
@@ -419,7 +423,7 @@ class CertUtil(object):
             return False
 
         sha1 = get_debian_ca_sha1(nss_path)
-        ca_hash = CertUtil.ca_thumbprint.replace(':', '')
+        ca_hash = CertUtil.ca_thumbprint.replace(b':', b'')
         if sha1 == ca_hash:
             xlog.info("system cert exist")
             return
@@ -483,7 +487,7 @@ class CertUtil(object):
             args = ['security', 'find-certificate', '-Z', '-a', '-c', commonname]
             output = subprocess.check_output(args)
             for line in output.splitlines(True):
-                if len(line) == 53 and line.startswith("SHA-1 hash:"):
+                if len(line) == 53 and line.startswith(b"SHA-1 hash:"):
                     sha1_hash = line[12:52]
                     return sha1_hash
 

@@ -14,7 +14,7 @@ if __name__ == "__main__":
 import webbrowser
 import os
 import ctypes
-import _winreg as winreg
+import winreg as winreg
 import win32_proxy_manager
 import module_init
 import update
@@ -81,17 +81,17 @@ class Win_tray():
         disable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="disable" else 0
 
         if lang_code == "zh_CN":
-            menu_options = ((u"设置", None, self.on_show, 0),
-                        (u"全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked),
-                        (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
-                        (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                        (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0))
+            menu_options = (("设置", None, self.on_show, 0),
+                        ("全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked),
+                        ("全局PAC智能代理", None, self.on_enable_pac, pac_checked),
+                        ("取消全局代理", None, self.on_disable_proxy, disable_checked),
+                        ("重启 GAEProxy", None, self.on_restart_gae_proxy, 0))
         else:
-            menu_options = ((u"Config", None, self.on_show, 0),
-                        (u"Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked),
-                        (u"Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
-                        (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
-                        (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0))
+            menu_options = (("Config", None, self.on_show, 0),
+                        ("Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked),
+                        ("Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
+                        ("Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
+                        ("Reset GAEProxy", None, self.on_restart_gae_proxy, 0))
         return menu_options
 
     def on_show(self, widget=None, data=None):

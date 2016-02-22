@@ -138,8 +138,8 @@ class MacTrayObject(NSObject):
 
 class Mac_tray():
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
-        msg = unicode(msg)
-        title = unicode(title)
+        msg = str(msg)
+        title = str(title)
         alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             title, "OK", "Cancel", None, msg)
         alert.setAlertStyle_(0)  # informational style

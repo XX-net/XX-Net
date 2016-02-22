@@ -2,7 +2,7 @@
 # coding:utf-8
 
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import time
 import threading
@@ -16,6 +16,7 @@ import config
 import uuid
 
 import update_from_github
+from functools import reduce
 
 #opener = urllib2.build_opener()
 #update_url = "http://127.0.0.1:8080/update.json"
@@ -41,17 +42,17 @@ def get_opener():
             cafile = None
         context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
                                              cafile=cafile)
-        https_handler = urllib2.HTTPSHandler(context=context)
+        https_handler = urllib.request.HTTPSHandler(context=context)
 
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
     else:
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
 
 
 def version_to_bin(s):
-    return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
+    return reduce(lambda a, b: a << 8 | b, list(map(int, s.split("."))))
 
 def download_file(url, file):
     try:
@@ -186,13 +187,13 @@ def download_module(module, new_version):
                 sys_tray.notify_general(msg=msg, title="Install", buttons=buttons)
             elif sys.platform == "win32":
                 from win_tray import sys_tray
-                if sys_tray.dialog_yes_no(msg, u"Install", None, None) == 1:
+                if sys_tray.dialog_yes_no(msg, "Install", None, None) == 1:
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
             elif sys.platform == "darwin":
                 from  mac_tray import sys_tray
-                if sys_tray.dialog_yes_no(msg, u"Install", None, None) == 1:
+                if sys_tray.dialog_yes_no(msg, "Install", None, None) == 1:
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
@@ -307,14 +308,14 @@ def check_push_update():
                 elif sys.platform == "win32":
                     from win_tray import sys_tray
                     msg = "Module %s new version: %s, Download?" % (module,  new_version)
-                    if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
+                    if sys_tray.dialog_yes_no(msg, "Download", None, None) == 1:
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
                 elif sys.platform == "darwin":
                     from mac_tray import sys_tray
                     msg = "Module %s new version: %s, Download?" % (module,  new_version)
-                    if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
+                    if sys_tray.dialog_yes_no(msg, "Download", None, None) == 1:
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
@@ -346,7 +347,7 @@ def create_desktop_shortcut():
 
 def notify_install_tcpz_for_winXp():
     import ctypes
-    ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
+    ctypes.windll.user32.MessageBoxW(None, "请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", "Patch XP needed", 0)
 
 def check_new_machine():
 

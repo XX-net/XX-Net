@@ -43,19 +43,21 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.join(root_path, 'data')
 data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
 
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+noarch_lib = os.path.join(root_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
+common_lib = os.path.join(root_path, 'lib', 'common')
+sys.path.append(common_lib)
+
 if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    win32_lib = os.path.join(root_path, 'lib', 'win32')
     sys.path.append(win32_lib)
 elif sys.platform.startswith("linux"):
-    linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+    linux_lib = os.path.join(root_path, 'lib', 'linux')
     sys.path.append(linux_lib)
 elif sys.platform == "darwin":
-    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+    darwin_lib = os.path.join(root_path, 'lib', 'darwin')
     sys.path.append(darwin_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
@@ -65,7 +67,7 @@ import traceback
 import platform
 import random
 import threading
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
@@ -83,7 +85,7 @@ def create_data_path():
 create_data_path()
 
 
-from config import config
+from .config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -92,14 +94,14 @@ if config.log_file:
     log_file = os.path.join(data_gae_proxy_path, "local.log")
     xlog.set_file(log_file)
 
-from cert_util import CertUtil
-import pac_server
+from .cert_util import CertUtil
+from . import pac_server
 import simple_http_server
-import proxy_handler
-import connect_control
-import env_info
-import connect_manager
-from gae_handler import spawn_later
+from . import proxy_handler
+from . import connect_control
+from . import env_info
+from . import connect_manager
+from .gae_handler import spawn_later
 
 
 # launcher/module_init will check this value for start/stop finished
@@ -165,7 +167,7 @@ def pre_start():
             pass
     elif os.name == 'nt':
         import ctypes
-        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent ')
+        ctypes.windll.kernel32.SetConsoleTitleW('GoAgent ')
         if not config.LISTEN_VISIBLE:
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
         else:
@@ -176,13 +178,13 @@ def pre_start():
             ctypes.windll.kernel32.SetConsoleTitleW('%s %s' % (title.value, random.choice(config.LOVE_TIP)))
         blacklist = {'360safe': False,
                      'QQProtect': False, }
-        softwares = [k for k, v in blacklist.items() if v]
+        softwares = [k for k, v in list(blacklist.items()) if v]
         if softwares:
             tasklist = '\n'.join(x.name for x in get_windows_running_process_list()).lower()
             softwares = [x for x in softwares if x.lower() in tasklist]
             if softwares:
-                title = u'GoAgent 建议'
-                error = u'某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
+                title = 'GoAgent 建议'
+                error = '某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
                 ctypes.windll.user32.MessageBoxW(None, error, title, 0)
                 #sys.exit(0)
     if config.GAE_APPIDS[0] == 'gae_proxy':
@@ -191,7 +193,7 @@ def pre_start():
     if config.PAC_ENABLE:
         pac_ip = config.PAC_IP
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
-        spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
+        spawn_later(600, urllib.request.build_opener(urllib.request.ProxyHandler({})).open, url)
 
 
 def log_info():
