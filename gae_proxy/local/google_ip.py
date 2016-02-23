@@ -122,7 +122,7 @@ class IpManager():
             try:
                 if line.startswith("#"):
                     continue
-                    
+
                 str_l = line.split(' ')
 
                 if len(str_l) < 4:
@@ -156,7 +156,7 @@ class IpManager():
 
         try:
             self.ip_lock.acquire()
-            ip_dict = sorted(list(self.ip_dict.items()),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
+            ip_dict = sorted(self.ip_dict.items(),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
             with open(self.good_ip_file, "w") as fd:
                 for ip, property in ip_dict:
                     fd.write( "%s %s %s %d %d\n" %
@@ -184,7 +184,7 @@ class IpManager():
                 if self.ip_dict[ip]['fail_times'] == 0:
                     self.good_ip_num += 1
 
-            ip_time = sorted(list(ip_rate.items()), key=operator.itemgetter(1))
+            ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
             self.gws_ip_list = [ip for ip,rate in ip_time]
 
         except Exception as e:
@@ -407,7 +407,7 @@ class IpManager():
 
                 if ip in self.gws_ip_list:
                     self.gws_ip_list.remove(ip)
-                
+
                 xlog.info("remove ip:%s left amount:%d gws_num:%d", ip, len(self.ip_dict), len(self.gws_ip_list))
                 return
 
@@ -439,7 +439,7 @@ class IpManager():
             check_local_network.triger_check_network()
             self.to_check_ip_queue.put((ip, time_now + 10))
             xlog.debug("report_connect_fail:%s", ip)
-        
+
         except Exception as e:
             xlog.exception("report_connect_fail err:%s", e)
         finally:

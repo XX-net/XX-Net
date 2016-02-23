@@ -46,7 +46,7 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
-from config import config
+from .config import config
 
 
 def get_cmd_out(cmd):

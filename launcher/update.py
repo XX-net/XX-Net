@@ -52,7 +52,7 @@ def get_opener():
 
 
 def version_to_bin(s):
-    return reduce(lambda a, b: a << 8 | b, list(map(int, s.split("."))))
+    return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
 
 def download_file(url, file):
     try:

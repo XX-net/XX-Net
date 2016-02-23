@@ -160,7 +160,7 @@ class Connect_pool():
         str = ''
         self.pool_lock.acquire()
         try:
-            pool = sorted(list(self.pool.items()), key=operator.itemgetter(1))
+            pool = sorted(self.pool.items(), key=operator.itemgetter(1))
             i = 0
             for item in pool:
                 sock,t = item
