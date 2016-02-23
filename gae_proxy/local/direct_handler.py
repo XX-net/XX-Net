@@ -46,7 +46,7 @@ def send_header(wfile, keyword, value):
 
 def fetch(method, host, path, headers, payload, bufsize=8192):
     request_data = '%s %s HTTP/1.1\r\n' % (method, path)
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()))
+    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
     request_data += '\r\n'
 
     ssl_sock = https_manager.get_ssl_connection(host)

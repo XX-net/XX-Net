@@ -114,7 +114,7 @@ class HTTP_client():
                     except Exception as e:
                         #xlog.warn("Transfer-Encoding e:%r ", e)
                         return "", False, response
-                    
+
 
                     if not data:
                         break
@@ -162,7 +162,7 @@ class HTTP_client():
 
     def fetch(self, method, host, path, headers, payload, bufsize=8192, timeout=20):
         request_data = '%s %s HTTP/1.1\r\n' % (method, path)
-        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()))
+        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
         request_data += '\r\n'
 
         #print("request:%s" % request_data)
@@ -177,7 +177,7 @@ class HTTP_client():
             payload = request_data.encode() + payload
         else:
             conn.sock.send(request_data.encode())
-            
+
         payload_len = len(payload)
         start = 0
         while start < payload_len:

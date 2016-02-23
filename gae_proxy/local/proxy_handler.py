@@ -46,7 +46,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         host_ip, _, port = host.rpartition(':')
         http_client = simple_http_client.HTTP_client((host_ip, int(port)))
 
-        request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
         payload = b''
         if 'Content-Length' in request_headers:
             try:
@@ -129,7 +129,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if crlf != "\r\n":
                 xlog.warn("chunk header read fail crlf")
 
-        request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
 
         payload = b''
         if 'Content-Length' in request_headers:
@@ -340,7 +340,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             else:
                 path = self.parsed_url[2]
 
-            request_headers = dict((k.title(), v) for k, v in list(self.headers.items()))
+            request_headers = dict((k.title(), v) for k, v in self.headers.items())
 
             payload = b''
             if 'Content-Length' in request_headers:

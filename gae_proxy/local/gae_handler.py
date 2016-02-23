@@ -104,7 +104,7 @@ def send_header(wfile, keyword, value):
 
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()) if k not in skip_headers)
+    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     request_data += '\r\n'
 
     if isinstance(payload, bytes):
@@ -215,10 +215,10 @@ def fetch(method, url, headers, body):
     kwargs['timeout'] = '19'
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()) if k not in skip_headers)
+    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     #for k, v in headers.items():
     #    logging.debug("Send %s: %s", k, v)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in list(kwargs.items()) if v)
+    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
 
     request_headers = {}
     payload = deflate(payload)
@@ -265,7 +265,7 @@ normattachment = functools.partial(re.compile(r'filename=(.+?)').sub, 'filename=
 
 
 def send_response(wfile, status=404, headers={}, body=''):
-    headers = dict((k.title(), v) for k, v in list(headers.items()))
+    headers = dict((k.title(), v) for k, v in headers.items())
     if 'Transfer-Encoding' in headers:
         del headers['Transfer-Encoding']
     if 'Content-Length' not in headers:
@@ -274,7 +274,7 @@ def send_response(wfile, status=404, headers={}, body=''):
         headers['Connection'] = 'close'
 
     wfile.write("HTTP/1.1 %d\r\n" % status)
-    for key, value in list(headers.items()):
+    for key, value in headers.items():
         #wfile.write("%s: %s\r\n" % (key, value))
         send_header(wfile, key, value)
     wfile.write("\r\n")
@@ -587,7 +587,7 @@ class RangeFetch(object):
         self._stopped = True
 
     def __fetchlet(self, range_queue, data_queue, range_delay_size):
-        headers = dict((k.title(), v) for k, v in list(self.headers.items()))
+        headers = dict((k.title(), v) for k, v in self.headers.items())
         headers['Connection'] = 'close'
         while not self._stopped:
             try:

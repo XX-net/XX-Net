@@ -178,7 +178,7 @@ def pre_start():
             ctypes.windll.kernel32.SetConsoleTitleW('%s %s' % (title.value, random.choice(config.LOVE_TIP)))
         blacklist = {'360safe': False,
                      'QQProtect': False, }
-        softwares = [k for k, v in list(blacklist.items()) if v]
+        softwares = [k for k, v in blacklist.items() if v]
         if softwares:
             tasklist = '\n'.join(x.name for x in get_windows_running_process_list()).lower()
             softwares = [x for x in softwares if x.lower() in tasklist]

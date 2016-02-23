@@ -7,7 +7,7 @@ from functools import reduce
 
 def ip_string_to_num(s):
     """Convert dotted IPv4 address to integer."""
-    return reduce(lambda a, b: a << 8 | b, list(map(int, s.split("."))))
+    return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
 
 def get_ip_maskc(ip_str):
     head = ".".join(ip_str.split(".")[:-1])
