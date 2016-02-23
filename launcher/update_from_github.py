@@ -9,6 +9,7 @@ import re
 import zipfile
 import shutil
 import ssl
+import codecs
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
@@ -89,9 +90,8 @@ def download_file(url, filename):
 def parse_readme_versions(readme_file):
     versions = []
     try:
-        fd = open(readme_file, "r")
-        lines = fd.readlines()
-        p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
+        lines = codecs.open(readme_file,"r",'utf8').readlines()
+        p = re.compile('https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
         for line in lines:
             m = p.match(line)
             if m:
