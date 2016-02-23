@@ -6,7 +6,7 @@ import configparser
 import os
 import re
 import io
-
+import codecs
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -29,7 +29,7 @@ class Config(object):
 
         # load ../../../data/gae_proxy/config.ini, set by web_ui
         self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
-        self.CONFIG.read(self.CONFIG_FILENAME)
+        self.CONFIG.readfp(codecs.open(self.CONFIG_FILENAME, "r", "utf8"))
         if os.path.isfile(self.CONFIG_USER_FILENAME):
             try:
                 self.CONFIG.read(self.CONFIG_USER_FILENAME)
