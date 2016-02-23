@@ -26,7 +26,7 @@ import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
 import socks
-from config import config
+from .config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
