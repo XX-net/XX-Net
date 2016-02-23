@@ -116,7 +116,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             force = 1
 
         time_now = time.time()
-        if force or time_now - g.last_refresh_time > 3600:
+        if force or time_now - g.last_refresh_time > 3600 or \
+                (g.last_api_error.startswith("status:") and (time_now - g.last_refresh_time > 30)):
             xlog.debug("x_tunnel force update info")
             g.last_refresh_time = time_now
             if g.session.running:

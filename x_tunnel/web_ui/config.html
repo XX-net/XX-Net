@@ -329,8 +329,17 @@
                     tipClose();
                     return;
                 }else if( result['res'] != 'success' ){
-                    tip('Get Fail:' + result['reason'], 'warning', false);
-                    return;
+                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
+                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
+                        $('#login-form').addClass('hide');
+                        $('#account-information').removeClass('hide');
+                        $('#login-account').html(result['login_account']);
+                        $('.login-account').val(result['login_account']);
+                        return;
+                    }else{
+                        tip('Get Fail:' + result['reason'], 'warning', false);
+                        return;
+                    }
                 } else {
                     tipClose();
                 }
@@ -445,7 +454,13 @@
                 if ( result['res'] == 'success' ) {
                     window.location.reload();
                 } else {
-                    tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
+                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
+                    }else if ( result['reason'] == "auth fail" ){
+                        tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    }else{
+                        tip('Login fail:' + result['reason'], 'error', false);
+                    }
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                     $('button[type=submit]', '#login-form').removeAttr('disabled');
