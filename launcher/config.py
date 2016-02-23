@@ -14,16 +14,16 @@ config = {}
 def load():
     global config, config_path
     try:
-        config = yaml.load(file(config_path, 'r'))
+        config = yaml.load(open(config_path, 'r'))
         #print yaml.dump(config)
-    except Exception as  exc:
+    except Exception as exc:
         print("Error in configuration file:", exc)
 
 
 def save():
     global config, config_path
     try:
-        yaml.dump(config, file(config_path, "w"))
+        yaml.dump(config, open(config_path, "w"))
     except Exception as e:
         xlog.warn("save config %s fail %s", config_path, e)
 
