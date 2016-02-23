@@ -47,7 +47,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1: # skip php_proxy module
                 continue
 
-            #version = values["current_version"]
             menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml") # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
@@ -144,15 +143,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 mimetype = 'text/css'
             elif file_path.endswith('.html'):
                 mimetype = 'text/html'
-
             elif file_path.endswith('.jpg'):
                 mimetype = 'image/jpeg'
             elif file_path.endswith('.png'):
                 mimetype = 'image/png'
             else:
                 mimetype = 'text/plain'
-
-
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
@@ -194,6 +190,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
         index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
 
+        current_version = update_from_github.current_version()
         menu_content = ''
         for module,v in module_menus:
             #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
@@ -217,7 +214,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = (index_content.decode('utf-8') % (current_version, current_version, menu_content, right_content.decode('utf-8') )).encode('utf-8')
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -518,5 +515,6 @@ def confirm_module_ready(port):
     return False
 
 if __name__ == "__main__":
+    pass
     #confirm_xxnet_exit()
-    http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")
+    # http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

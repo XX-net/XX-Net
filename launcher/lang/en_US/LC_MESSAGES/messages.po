@@ -57,7 +57,7 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
-msgid "Display System Tray(Restarting XX-Net Needed)"
+msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr ""
 
 msgid "Upgrade Management"

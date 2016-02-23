@@ -44,7 +44,7 @@ button[type=submit] {
 }
 
 select:focus {
-    border-color: #1abc9c;
+    border-color: #3498db;
     outline: none;
 }
 
