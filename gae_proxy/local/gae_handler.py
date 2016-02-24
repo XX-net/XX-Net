@@ -107,7 +107,8 @@ def _request(sock, headers, payload, bufsize=8192):
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     request_data += '\r\n'
 
-    if isinstance(payload, bytes):
+    if isinstance(payload, bytes) or isinstance(payload, str):
+        payload = payload.encode()
         sock.send(request_data.encode())
         payload_len = len(payload)
         start = 0
@@ -125,7 +126,7 @@ def _request(sock, headers, payload, bufsize=8192):
     else:
         raise TypeError('_request(payload) must be a string or buffer, not %r' % type(payload))
 
-    response = http.client.HTTPResponse(sock, buffering=True)
+    response = http.client.HTTPResponse(sock)
     try:
         orig_timeout = sock.gettimeout()
         sock.settimeout(100)
@@ -188,7 +189,7 @@ def inflate(data):
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
 def deflate(data):
-    return zlib.compress(data)[2:-4]
+    return zlib.compress(data.encode())[2:-4]
 
 def fetch(method, url, headers, body):
     if isinstance(body, str) and body:
@@ -251,12 +252,12 @@ def fetch(method, url, headers, body):
 
     response.ssl_sock.received_size += headers_length
 
-    raw_response_line, headers_data = inflate(data).split('\r\n', 1)
+    raw_response_line, headers_data = inflate(data).split(b'\r\n', 1)
     _, response.status, response.reason = raw_response_line.split(None, 2)
     response.status = int(response.status)
     response.reason = response.reason.strip()
     response.msg = http.client.HTTPMessage(io.BytesIO(headers_data))
-    response.app_msg = response.msg.fp.read()
+    response.app_msg = response.msg.read()
     return response
 
 

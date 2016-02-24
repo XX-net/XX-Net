@@ -6,6 +6,7 @@ import os
 import select
 import time
 import socket
+from _pyio import IOBase
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
@@ -16,7 +17,7 @@ xlog = getLogger("gae_proxy")
 
 ssl_version = ''
 
-class SSLConnection(object):
+class SSLConnection(IOBase):
     """OpenSSL Connection Wrapper"""
 
     def __init__(self, context, sock, ip=None, on_close=None):
@@ -106,8 +107,22 @@ class SSLConnection(object):
     def read(self, bufsiz, flags=0):
         return self.recv(bufsiz, flags)
 
+    def readinto(self, b):
+        # This method is required for `io` module compatibility.
+        temp = self.read(len(b))
+        if len(temp) == 0:
+            return 0
+        else:
+            b[:len(temp)] = temp
+            return len(temp)
+
+
+
     def write(self, buf, flags=0):
         return self.sendall(buf, flags)
+
+    def flush(self):
+        pass
 
     def close(self):
         if self._makefile_refs < 1:
@@ -123,7 +138,7 @@ class SSLConnection(object):
     def makefile(self, mode='r', bufsize=-1):
         self._makefile_refs += 1
         #return socket._fileobject(self, mode, bufsize, close=True)
-        return self._connection.makefile()
+        return self
 
     @staticmethod
     def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)):

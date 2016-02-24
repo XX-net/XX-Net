@@ -30,18 +30,17 @@ def send_header(wfile, keyword, value):
     keyword = keyword.title()
     if keyword == 'Set-Cookie':
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
-            wfile.write("%s: %s\r\n" % (keyword, cookie))
+            wfile.write(("%s: %s\r\n" % (keyword, cookie)).encode())
             #logging.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
-        wfile.write("%s: %s\r\n" % (keyword, value))
+        wfile.write(("%s: %s\r\n" % (keyword, value)).encode())
         #logging.debug("Head1 %s: %s", keyword, value)
     elif keyword == "Alternate-Protocol":
         return
     else:
         #logging.debug("Head1 %s: %s", keyword, value)
-        wfile.write("%s: %s\r\n" % (keyword, value))
-
+        wfile.write(("%s: %s\r\n" % (keyword, value)).encode())
 
 
 def fetch(method, host, path, headers, payload, bufsize=8192):
@@ -62,7 +61,7 @@ def fetch(method, host, path, headers, payload, bufsize=8192):
             sended = ssl_sock.send(payload[start:start+send_size])
             start += sended
 
-        response = http.client.HTTPResponse(ssl_sock, buffering=True)
+        response = http.client.HTTPResponse(ssl_sock)
 
         response.ssl_sock = ssl_sock
 
@@ -116,10 +115,10 @@ def handler(method, host, url, headers, body, wfile):
         send_to_browser = True
         try:
             response_headers = dict((k.title(), v) for k, v in response.getheaders())
-            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
+            wfile.write(("HTTP/1.1 %d %s\r\n" % (response.status, response.reason)).encode())
             for key, value in response.getheaders():
                 send_header(wfile, key, value)
-            wfile.write("\r\n")
+            wfile.write(b"\r\n")
         except Exception as e:
             send_to_browser = False
             wait_time = time.time()-time_request

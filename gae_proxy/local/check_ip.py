@@ -12,6 +12,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
     root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+    gae_path = os.path.join(root_path, "gae_proxy")
+    sys.path.append(gae_path)
 
     noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
@@ -25,20 +27,14 @@ if __name__ == "__main__":
         linux_lib = os.path.join(root_path, 'lib', 'linux')
         sys.path.append(linux_lib)
 
-    import check_local_network
-    from config import config
-    import cert_util
-    from openssl_wrap import SSLConnection
-
-else:
-    from . import check_local_network
-    from .config import config
-    from . import cert_util
-    from .openssl_wrap import SSLConnection
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
+from local import cert_util
+from local.openssl_wrap import SSLConnection
+from local.config import config
+from local import check_local_network
 import socks
 
 from xlog import getLogger

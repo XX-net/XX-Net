@@ -44,6 +44,9 @@ root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.join(root_path, 'data')
 data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
 
+gae_path = os.path.join(root_path, "gae_proxy")
+sys.path.append(gae_path)
+
 noarch_lib = os.path.join(root_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
@@ -85,7 +88,7 @@ def create_data_path():
 create_data_path()
 
 
-from .config import config
+from local.config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -94,14 +97,14 @@ if config.log_file:
     log_file = os.path.join(data_gae_proxy_path, "local.log")
     xlog.set_file(log_file)
 
-from .cert_util import CertUtil
-from . import pac_server
+from local.cert_util import CertUtil
+from local import pac_server
 import simple_http_server
-from . import proxy_handler
-from . import connect_control
-from . import env_info
-from . import connect_manager
-from .gae_handler import spawn_later
+from local import proxy_handler
+from local import connect_control
+from local import env_info
+from local import connect_manager
+from local.gae_handler import spawn_later
 
 
 # launcher/module_init will check this value for start/stop finished

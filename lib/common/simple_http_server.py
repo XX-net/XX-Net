@@ -20,11 +20,13 @@ class HttpServerHandler():
     MessageClass = http.client.HTTPMessage
     rbufsize = -1
     wbufsize = 0
+    command = ""
+    path = ""
 
     def __init__(self, sock, client, args):
         self.connection = sock
-        self.rfile = sock
-        self.wfile = sock
+        self.rfile = sock.makefile("rb", self.rbufsize)
+        self.wfile = sock.makefile("wb", self.wbufsize)
         self.client_address = client
         self.args = args
         self.setup()
@@ -55,17 +57,17 @@ class HttpServerHandler():
         self.request_version = version = self.default_request_version
 
         requestline = self.raw_requestline
-        requestline = requestline.rstrip('\r\n')
+        requestline = requestline.rstrip(b'\r\n')
         self.requestline = requestline
         words = requestline.split()
         if len(words) == 3:
             command, path, version = words
-            if version[:5] != 'HTTP/':
+            if version[:5] != b'HTTP/':
                 self.send_error(400, "Bad request version (%r)" % version)
                 return False
             try:
-                base_version_number = version.split('/', 1)[1]
-                version_number = base_version_number.split(".")
+                base_version_number = version.split(b'/', 1)[1]
+                version_number = base_version_number.split(b".")
                 # RFC 2145 section 3.1 says there can be only one "." and
                 #   - major and minor numbers MUST be treated as
                 #      separate integers;
@@ -87,7 +89,7 @@ class HttpServerHandler():
         elif len(words) == 2:
             command, path = words
             self.close_connection = 1
-            if command != 'GET':
+            if command != b'GET':
                 self.send_error(400,
                                 "Bad HTTP/0.9 request type (%r)" % command)
                 return False
@@ -114,7 +116,7 @@ class HttpServerHandler():
             try:
                 self.raw_requestline = self.rfile.readline(65537)
             except Exception as e:
-                #logging.warn("simple server handle except %r", e)
+                logging.exception("simple server handle except %r", e)
                 return
 
             if len(self.raw_requestline) > 65536:
@@ -126,19 +128,19 @@ class HttpServerHandler():
 
             self.parse_request()
 
-            if self.command == "GET":
+            if self.command == b"GET":
                 self.do_GET()
-            elif self.command == "POST":
+            elif self.command == b"POST":
                 self.do_POST()
-            elif self.command == "CONNECT":
+            elif self.command == b"CONNECT":
                 self.do_CONNECT()
-            elif self.command == "HEAD":
+            elif self.command == b"HEAD":
                 self.do_HEAD()
-            elif self.command == "DELETE":
+            elif self.command == b"DELETE":
                 self.do_DELETE()
-            elif self.command == "OPTIONS":
+            elif self.command == b"OPTIONS":
                 self.do_OPTIONS()
-            elif self.command == "PUT":
+            elif self.command == b"PUT":
                 self.do_PUT()
             else:
                 logging.warn("unhandler cmd:%s path:%s from:%s", self.command, self.path, self.address_string())
@@ -159,7 +161,7 @@ class HttpServerHandler():
         #except OpenSSL.SSL.SysCallError as e:
         #    logging.warn("socket error:%r", e)
         except Exception as e:
-            logging.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
+            logging.exception("handler:%r from:%s", e, self.address_string())
             pass
 
     def do_GET(self):
@@ -187,10 +189,10 @@ class HttpServerHandler():
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
 
     def send_error(self, code, message=None):
-        self.wfile.write('HTTP/1.1 %d\r\n' % code)
-        self.wfile.write('Connection: close\r\n\r\n')
+        self.wfile.write(('HTTP/1.1 %d\r\n' % code).encode())
+        self.wfile.write(b'Connection: close\r\n\r\n')
         if message:
-            self.wfile.write(message)
+            self.wfile.write(message.encode())
 
     def send_response(self, mimetype="", content="", headers="", status=200):
         data = []
@@ -210,12 +212,12 @@ class HttpServerHandler():
         if len(content) < 1024:
             data.append(content)
             data_str = "".join(data)
-            self.wfile.write(data_str)
+            self.wfile.write(data_str.encode())
         else:
             data_str = "".join(data)
-            self.wfile.write(data_str)
+            self.wfile.write(data_str.encode())
             if len(content):
-                self.wfile.write(content)
+                self.wfile.write(content.encode())
 
     def send_file(self, filename, mimetype):
         try:

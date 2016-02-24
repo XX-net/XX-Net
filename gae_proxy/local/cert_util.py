@@ -46,7 +46,8 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
-from .config import config
+
+from local.config import config
 
 
 def get_cmd_out(cmd):
@@ -261,6 +262,7 @@ class CertUtil(object):
 
     @staticmethod
     def get_cert(commonname, sans=(), full_name=False):
+        commonname = str(commonname)
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
         if os.path.exists(certfile):
             return certfile
