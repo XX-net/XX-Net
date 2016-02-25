@@ -68,7 +68,9 @@ class ShellExecuteInfo(ctypes.Structure):
     def __init__(self, **kw):
         ctypes.Structure.__init__(self)
         self.cbSize = ctypes.sizeof(self)
-        for fieldName, fieldValue in kw.iteritems():
+        for fieldName , fieldValue in kw.items():
+            if isinstance(fieldValue,str):
+                fieldValue = fieldValue.encode()
             setattr(self, fieldName, fieldValue)
 
 PShellExecuteInfo = ctypes.POINTER(ShellExecuteInfo)
