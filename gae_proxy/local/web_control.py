@@ -3,7 +3,7 @@
 
 
 import platform
-from . import env_info
+from local import env_info
 import urllib.parse
 import json
 import os
@@ -15,7 +15,7 @@ import sys
 import datetime
 import locale
 import time
-
+import codecs
 
 
 from xlog import getLogger
@@ -79,7 +79,7 @@ class User_config(object):
 
         try:
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
-                self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
+                self.DEFAULT_CONFIG.readfp(codecs.open(DEFAULT_CONFIG_FILENAME, "r", "utf8"))
                 self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
             else:
                 return
@@ -486,7 +486,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                 config.load()
                 appid_manager.reset_appid()
-                from . import connect_manager
+                from local import connect_manager
                 connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
                 if appid_updated:
