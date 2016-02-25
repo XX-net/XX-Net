@@ -110,14 +110,14 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
 
         for k, v in cert.get_issuer().get_components():
             if k == b"O":
-                issuer_commonname = v
+                issuer_commonname = v.decode()
                 break
         else:
             raise socket.error('certficate has no issuer.' )
 
         if __name__ == "__main__":
             xlog.debug("issued by:%s", issuer_commonname)
-        if not issuer_commonname.startswith(b'Google'):
+        if not issuer_commonname.startswith('Google'):
             raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
 
@@ -141,8 +141,8 @@ def get_ssl_cert_domain(ssl_sock):
     #issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
     ssl_cert = cert_util.SSLCert(cert)
     if __name__ == "__main__":
-        xlog.info("%s CN:%s", ip, ssl_cert.cn)
-    ssl_sock.domain = ssl_cert.cn
+        xlog.info("%s CN:%s", ip, ssl_cert.cn.decode())
+    ssl_sock.domain = ssl_cert.cn.decode()
 
 
 def check_goagent(ssl_sock, appid):
