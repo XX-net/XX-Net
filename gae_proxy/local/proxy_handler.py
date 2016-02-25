@@ -24,7 +24,7 @@ from . import web_control
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
-    gae_support_methods = tuple([b"GET", b"POST", b"HEAD", b"PUT", b"DELETE", b"PATCH"])
+    gae_support_methods = tuple(["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])
     bufsize = 256*1024
     max_retry = 3
 
@@ -36,14 +36,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
-        self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
-               "Access-Control-Allow-Origin: *\r\n"\
-               "Content-Type: text/plain\r\n"\
-               "Content-Length: 2\r\n\r\nOK"
+        self.self_check_response_data = b"HTTP/1.1 200 OK\r\n"\
+               b"Access-Control-Allow-Origin: *\r\n"\
+               b"Content-Type: text/plain\r\n"\
+               b"Content-Length: 2\r\n\r\nOK"
 
     def forward_local(self):
         host = self.headers.get('Host', '')
-        host_ip, _, port = host.rpartition(b':')
+        host_ip, _, port = host.rpartition(':')
         http_client = simple_http_client.HTTP_client((host_ip, int(port)))
 
         request_headers = dict((k.title(), v) for k, v in self.headers.items())
@@ -81,11 +81,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
-        if host_ip == b"127.0.0.1" and port == str(config.LISTEN_PORT):
+        if host_ip == "127.0.0.1" and port == str(config.LISTEN_PORT):
             controler = web_control.ControlHandler(self.client_address, self.headers, self.command, self.path, self.rfile, self.wfile)
-            if self.command == b"GET":
+            if self.command == "GET":
                 return controler.do_GET()
-            elif self.command == b"POST":
+            elif self.command == "POST":
                 return controler.do_POST()
             else:
                 xlog.warn("method not defined: %s", self.command)
@@ -93,10 +93,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         if self.path[0] == '/' and host:
             self.path = 'http://%s%s' % (host, self.path)
-        elif not host and b'://' in self.path:
+        elif not host and '://' in self.path:
             host = urllib.parse.urlparse(self.path).netloc
 
-        if host.startswith(b"127.0.0.1") or host.startswith(b"localhost"):
+        if host.startswith("127.0.0.1") or host.startswith("localhost"):
             #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
@@ -131,7 +131,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         request_headers = dict((k.title(), v) for k, v in self.headers.items())
 
-        payload = b''
+        payload = ''
         if 'Content-Length' in request_headers:
             try:
                 payload_len = int(request_headers.get('Content-Length', 0))
@@ -145,9 +145,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             payload = ""
             while True:
                 chunk_size_str = self.rfile.readline(65537)
-                chunk_size_list = chunk_size_str.split(b";")
+                chunk_size_list = chunk_size_str.split(";")
                 chunk_size = int("0x"+chunk_size_list[0], 0)
-                if len(chunk_size_list) > 1 and chunk_size_list[1] != b"\r\n":
+                if len(chunk_size_list) > 1 and chunk_size_list[1] != "\r\n":
                     xlog.warn("chunk ext: %s", chunk_size_str)
                 if chunk_size == 0:
                     while True:
@@ -166,7 +166,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if self.path != "https://www.twitter.com/xxnet":
             touch_active()
 
-        host, _, port = self.path.rpartition(b':')
+        host, _, port = self.path.rpartition(':')
 
         if host in config.HOSTS_GAE:
             return self.do_CONNECT_AGENT()
@@ -183,7 +183,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
     def do_CONNECT_AGENT(self):
         """deploy fake cert to client"""
         # GAE supports the following HTTP methods: GET, POST, HEAD, PUT, DELETE, and PATCH
-        host, _, port = self.path.rpartition(b':')
+        host, _, port = self.path.rpartition(':')
         port = int(port)
         certfile = CertUtil.get_cert(host)
         xlog.info('GAE %s %s:%d ', self.command, host, port)
@@ -209,11 +209,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.wfile = self.connection.makefile('wb', 0)
 
         try:
-            self.raw_requestline = self.rfile.readline(65537)
+            self.raw_requestline = self.rfile.readline(65537).decode('iso-8859-1')
             if len(self.raw_requestline) > 65536:
-                self.requestline = b''
-                self.request_version = b''
-                self.command = b''
+                self.requestline = ''
+                self.request_version = ''
+                self.command = ''
                 self.send_error(414)
                 xlog.warn("read request line len:%d", len(self.raw_requestline))
                 return
@@ -227,7 +227,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
                 xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
                 raise
-        if self.path[0] == b'/' and host:
+        if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
 
         if self.path == "https://www.twitter.com/xxnet":
@@ -238,7 +238,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
-            if host.endswith(b".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
+            if host.endswith(".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
                 if host in config.HOSTS_GAE:
                     gae_set = [s for s in config.HOSTS_GAE]
                     gae_set.remove(host)
@@ -254,9 +254,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
         try:
-            if self.path[0] == b'/' and host:
+            if self.path[0] == '/' and host:
                 self.path = 'http://%s%s' % (host, self.path)
-            elif not host and b'://' in self.path:
+            elif not host and '://' in self.path:
                 host = urllib.parse.urlparse(self.path).netloc
 
             self.parsed_url = urllib.parse.urlparse(self.path)
@@ -278,7 +278,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
     def do_CONNECT_DIRECT(self):
         """deploy fake cert to client"""
-        host, _, port = self.path.rpartition(b':')
+        host, _, port = self.path.rpartition(':')
         port = int(port)
         if port != 443:
             xlog.warn("CONNECT %s port:%d not support", host, port)
@@ -308,7 +308,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.wfile = self.connection.makefile('wb', 0)
 
         try:
-            self.raw_requestline = self.rfile.readline(65537)
+            self.raw_requestline = self.rfile.readline(65537).decode('iso-8859-1')
             if len(self.raw_requestline) > 65536:
                 self.requestline = ''
                 self.request_version = ''
@@ -323,15 +323,15 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         except NetWorkIOError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
                 raise
-        if self.path[0] == b'/' and host:
-            self.path = 'https://%s%s' % (self.headers['Host'], self.path)
+        if self.path[0] == '/' and host:
+            self.path = 'https://%s%s' % (self.headers['Host'], str(self.path))
 
         xlog.debug('GAE CONNECT Direct %s %s', self.command, self.path)
 
         try:
-            if self.path[0] == b'/' and host:
+            if self.path[0] == '/' and host:
                 self.path = 'http://%s%s' % (host, self.path)
-            elif not host and b'://' in self.path:
+            elif not host and '://' in self.path:
                 host = urllib.parse.urlparse(self.path).netloc
 
             self.parsed_url = urllib.parse.urlparse(self.path)
@@ -342,7 +342,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
             request_headers = dict((k.title(), v) for k, v in self.headers.items())
 
-            payload = b''
+            payload = ''
             if 'Content-Length' in request_headers:
                 try:
                     payload_len = int(request_headers.get('Content-Length', 0))

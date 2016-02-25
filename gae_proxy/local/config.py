@@ -61,19 +61,18 @@ class Config(object):
         gae_endswith = []
         gae_hosts = []
         for k, v in self.CONFIG.items('hosts'):
-            k = bytearray(k, encoding='UTF-8')
             if v == "fwd":
-                if k.startswith(b'.'):
+                if k.startswith('.'):
                     fwd_endswith.append(k)
                 else:
                     fwd_hosts.append(k)
             elif v == "direct":
-                if k.startswith(b'.'):
+                if k.startswith('.'):
                     direct_endswith.append(k)
                 else:
                     direct_hosts.append(k)
             elif v == "gae":
-                if k.startswith(b'.'):
+                if k.startswith('.'):
                     gae_endswith.append(k)
                 else:
                     gae_hosts.append(k)

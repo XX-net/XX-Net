@@ -92,14 +92,14 @@ def send_header(wfile, keyword, value):
     if keyword == 'Set-Cookie':
         # https://cloud.google.com/appengine/docs/python/urlfetch/responseobjects
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
-            wfile.write("%s: %s\r\n" % (keyword, cookie))
+            wfile.write(("%s: %s\r\n" % (keyword, cookie)).encode())
             #logging.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
-        wfile.write("%s: %s\r\n" % (keyword, value))
+        wfile.write(("%s: %s\r\n" % (keyword, value)).encode())
         #logging.debug("Head1 %s: %s", keyword, value)
     else:
-        wfile.write("%s: %s\r\n" % (keyword, value))
+        wfile.write(("%s: %s\r\n" % (keyword, value)).encode())
         #logging.debug("Head1 %s: %s", keyword, value)
 
 def _request(sock, headers, payload, bufsize=8192):
@@ -107,8 +107,8 @@ def _request(sock, headers, payload, bufsize=8192):
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     request_data += '\r\n'
 
-    if isinstance(payload, bytes) or isinstance(payload, str):
-        payload = payload.encode()
+    if isinstance(payload, bytes):
+        payload = payload
         sock.send(request_data.encode())
         payload_len = len(payload)
         start = 0
@@ -137,7 +137,7 @@ def _request(sock, headers, payload, bufsize=8192):
         response.close()
         response = None
     except Exception as e:
-        xlog.warn("_request:%r", e)
+        xlog.exception("_request:%r", e)
     return response
 
 class GAE_Exception(BaseException):
@@ -189,10 +189,13 @@ def inflate(data):
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
 def deflate(data):
-    return zlib.compress(data.encode())[2:-4]
+    return zlib.compress(data)[2:-4]
 
 def fetch(method, url, headers, body):
-    if isinstance(body, str) and body:
+    if isinstance(body, str):
+        body = body.encode()
+
+    if body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
             zbody = deflate(body)
             if len(zbody) < len(body):
@@ -215,19 +218,19 @@ def fetch(method, url, headers, body):
     kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
     kwargs['timeout'] = '19'
 
-    payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
+    req_head = '%s %s HTTP/1.1\r\n' % (method, url)
+    req_head += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     #for k, v in headers.items():
     #    logging.debug("Send %s: %s", k, v)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
+    req_head += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
 
+    pack_req_head = deflate(req_head.encode())
+
+    request_body = struct.pack('!h', len(pack_req_head)) + pack_req_head + body
     request_headers = {}
-    payload = deflate(payload)
+    request_headers['Content-Length'] = str(len(request_body))
 
-    body = '%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
-    request_headers['Content-Length'] = str(len(body))
-
-    response = request(request_headers, body)
+    response = request(request_headers, request_body)
 
     response.app_msg = ''
     response.app_status = response.status
@@ -256,8 +259,8 @@ def fetch(method, url, headers, body):
     _, response.status, response.reason = raw_response_line.split(None, 2)
     response.status = int(response.status)
     response.reason = response.reason.strip()
-    response.msg = http.client.HTTPMessage(io.BytesIO(headers_data))
-    response.app_msg = response.msg.read()
+    response.headers = http.client.parse_headers(io.BytesIO(headers_data))
+    response.app_msg = response.headers.get_payload()
     return response
 
 
@@ -274,12 +277,12 @@ def send_response(wfile, status=404, headers={}, body=''):
     if 'Connection' not in headers:
         headers['Connection'] = 'close'
 
-    wfile.write("HTTP/1.1 %d\r\n" % status)
+    wfile.write(("HTTP/1.1 %d\r\n" % status).encode())
     for key, value in headers.items():
         #wfile.write("%s: %s\r\n" % (key, value))
         send_header(wfile, key, value)
-    wfile.write("\r\n")
-    wfile.write(body)
+    wfile.write(b"\r\n")
+    wfile.write(body.encode())
 
 def return_fail_message(wfile):
     html = generate_message_html('504 GAEProxy Proxy Time out', '连接超时，先休息一会再来！')
@@ -400,18 +403,18 @@ def handler(method, url, headers, body, wfile):
 
         send_to_browser = True
         try:
-            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
+            wfile.write(("HTTP/1.1 %d %s\r\n" % (response.status, response.reason)).encode())
             for key in response_headers:
                 value = response_headers[key]
                 send_header(wfile, key, value)
                 #logging.debug("Head- %s: %s", key, value)
-            wfile.write("\r\n")
+            wfile.write(b"\r\n")
         except Exception as e:
             send_to_browser = False
             xlog.warn("gae_handler.handler send response fail. t:%d e:%r %s", time.time()-time_request, e, url)
 
 
-        if len(response.app_msg):
+        if response.app_msg:
             xlog.warn("APPID error:%d url:%s", response.status, url)
             wfile.write(response.app_msg)
             google_ip.report_connect_closed(response.ssl_sock.ip, "app err")

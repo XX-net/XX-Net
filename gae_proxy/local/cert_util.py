@@ -262,7 +262,6 @@ class CertUtil(object):
 
     @staticmethod
     def get_cert(commonname, sans=(), full_name=False):
-        commonname = str(commonname)
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
         if os.path.exists(certfile):
             return certfile
