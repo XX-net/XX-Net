@@ -23,7 +23,7 @@ def start(module):
     try:
         if module not in config.config["modules"]:
             xlog.error("module not exist %s", module)
-            raise
+            raise Exception("module not exist %s" % module)
 
         if module in proc_handler:
             xlog.error("module %s is running", module)
@@ -34,7 +34,7 @@ def start(module):
 
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
             if "imp" not in proc_handler[module]:
-                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], 0)
+                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['start'], 0)
 
             _start = proc_handler[module]["imp"].start
             p = threading.Thread(target=_start.main)

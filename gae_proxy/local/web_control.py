@@ -341,7 +341,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def get_launcher_version(self):
         data_path = os.path.abspath( os.path.join(root_path, 'data', 'launcher', 'config.yaml'))
         try:
-            config = yaml.load(file(data_path, 'r'))
+            config = yaml.load(open(data_path, 'r'))
             return config["modules"]["launcher"]["current_version"]
             #print yaml.dump(config)
         except yaml.YAMLError as exc:
@@ -394,8 +394,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         return lang_code
 
     def req_status_handler(self):
-        if "user-agent" in self.headers.dict:
-            user_agent = self.headers.dict["user-agent"]
+        if "user-agent" in self.headers:
+            user_agent = self.headers["user-agent"]
         else:
             user_agent = ""
 

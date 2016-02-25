@@ -39,9 +39,7 @@ has_desktop = True
 if sys.platform.startswith("linux"):
     def X_is_running():
         try:
-            import pygtk
-            pygtk.require('2.0')
-            import gtk
+            from gi.repository import Gtk
 
             from subprocess import Popen, PIPE
             p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)

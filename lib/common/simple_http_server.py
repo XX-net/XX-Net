@@ -112,7 +112,8 @@ class HttpServerHandler():
     def handle_one_request(self):
         try:
             try:
-                self.raw_requestline = self.rfile.readline(65537).decode('iso-8859-1')
+                line = self.rfile.readline(65535)
+                self.raw_requestline = line.decode('iso-8859-1')
             except Exception as e:
                 logging.exception("simple server handle except %r", e)
                 return
