@@ -263,7 +263,7 @@ def check_push_update():
             + "&version=" + update_from_github.current_version() \
             + "&platform=" + platform.platform()
         try:
-            update_content = opener.open(req_url).read()
+            update_content = opener.open(req_url).read().decode('utf-8')
         except Exception as e:
             xlog.warn("check_update fail:%r", e)
             return False
