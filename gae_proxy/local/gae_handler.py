@@ -245,8 +245,15 @@ def fetch(method, url, headers, body):
         response.read = response.fp.read
         return response
     headers_length, = struct.unpack('!h', data)
-    data = response.read(headers_length)
-    if len(data) < headers_length:
+    data = bytearray(headers_length)
+    dv = memoryview(data)
+    start = 0
+    while start < headers_length:
+        read_len = response.readinto(dv[start:])
+        if read_len == 0:
+            break
+        start += read_len
+    if start < headers_length:
         xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
         response.app_status = 509
         response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
