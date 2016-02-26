@@ -307,7 +307,7 @@ class CertUtil(object):
             class CRYPT_HASH_BLOB(ctypes.Structure):
                 _fields_ = [('cbData', ctypes.c_ulong), ('pbData', ctypes.c_char_p)]
             assert CertUtil.ca_thumbprint
-            crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(':', '')))
+            crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(b':', b'')))
             crypt_handle = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_HASH, ctypes.byref(crypt_hash), None)
             if crypt_handle:
                 crypt32.CertFreeCertificateContext(crypt_handle)
