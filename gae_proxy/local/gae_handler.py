@@ -521,7 +521,7 @@ class RangeFetch(object):
         xlog.info('>>>>>>>>>>>>>>> RangeFetch started(%r) %d-%d', self.url, start, end)
 
         try:
-            self.wfile.write("HTTP/1.1 200 OK\r\n")
+            self.wfile.write(b"HTTP/1.1 200 OK\r\n")
             for key in response_headers:
                 if key == 'Transfer-Encoding':
                     continue
@@ -532,7 +532,7 @@ class RangeFetch(object):
                 value = response_headers[key]
                 #logging.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
-            self.wfile.write("\r\n")
+            self.wfile.write(b"\r\n")
         except Exception as e:
             self._stopped = True
             xlog.warn("RangeFetch send response fail:%r %s", e, self.url)

@@ -115,7 +115,7 @@ class HttpServerHandler():
                 line = self.rfile.readline(65535)
                 self.raw_requestline = line.decode('iso-8859-1')
             except Exception as e:
-                logging.exception("simple server handle except %r", e)
+                #logging.exception("simple server handle except %r", e)
                 return
 
             if len(self.raw_requestline) > 65536:

@@ -275,7 +275,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def do_POST(self):
         try:
-            refer = self.headers.getheader('Referer')
+            refer = self.headers.get('Referer')
             netloc = urllib.parse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 xlog.warn("web control ref:%s refuse", netloc)
@@ -285,12 +285,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+            ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             if ctype == 'multipart/form-data':
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
-                self.postvars = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                length = int(self.headers.get('content-length'))
+                self.postvars = urllib.parse.parse_qs(self.rfile.read(length).decode('iso-8859-1'), keep_blank_values=1)
             else:
                 self.postvars = {}
         except:
