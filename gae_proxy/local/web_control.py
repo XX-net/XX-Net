@@ -352,7 +352,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def xxnet_version():
         readme_file = os.path.join(root_path, "README.md")
         try:
-            fd = open(readme_file, "r")
+            fd = codecs.open(readme_file,'r','utf-8')
             lines = fd.readlines()
             import re
             p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') #zip/([0-9]+).([0-9]+).([0-9]+)

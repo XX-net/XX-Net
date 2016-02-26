@@ -2,6 +2,7 @@ import locale
 import os
 import sys
 import subprocess
+import codecs
 
 class SimpleI18N():
 
@@ -44,7 +45,7 @@ class SimpleI18N():
 
     def po_loader(self, file):
         po_dict = {}
-        fp = open(file, "r")
+        fp = codecs.open(file,'r','utf-8')
         while True:
             line = fp.readline()
             if not line:
@@ -85,12 +86,16 @@ class SimpleI18N():
                 if key == "":
                     continue
 
+                if key.endswith("\""):
+                    key = key[:-1]
+                if value.endswith("\""):
+                    value = value[:-1]
                 po_dict[key] = value
 
         return po_dict
 
     def _render(self, po_dict, file):
-        fp = open(file, "r")
+        fp = codecs.open(file,'r','utf-8')
         content = fp.read()
 
         out_arr = []
