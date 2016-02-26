@@ -63,10 +63,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
-        refer = self.headers.getheader('Referer')
+        refer = self.headers.get('Referer')
         if refer:
             refer_loc = urllib.parse.urlparse(refer).netloc
-            host = self.headers.getheader('host')
+            host = self.headers.get('host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
@@ -82,15 +82,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler = module_init.proc_handler[module]["imp"].start.client.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_POST()
                 return
 
     def do_GET(self):
-        refer = self.headers.getheader('Referer')
+        refer = self.headers.get('Referer')
         if refer:
             refer_loc = urllib.parse.urlparse(refer).netloc
-            host = self.headers.getheader('host')
+            host = self.headers.get('host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
@@ -120,7 +120,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                #xlog.debug("GET module:%s", module)
+                controler = module_init.proc_handler[module]["imp"].start.client.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_GET()
                 return
             else:
@@ -217,7 +218,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = (index_content % (menu_content, right_content ))
         self.send_response('text/html', data)
 
     def req_config_handler(self):

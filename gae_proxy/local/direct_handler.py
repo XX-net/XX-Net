@@ -147,12 +147,12 @@ def handler(method, host, url, headers, body, wfile):
                 if send_to_browser:
                     try:
                         if not data:
-                            wfile.write('0\r\n\r\n')
+                            wfile.write(b'0\r\n\r\n')
                             break
                         length += len(data)
-                        wfile.write('%x\r\n' % len(data))
+                        wfile.write(('%x\r\n' % len(data)).encode())
                         wfile.write(data)
-                        wfile.write('\r\n')
+                        wfile.write(b'\r\n')
                     except Exception as e:
                         send_to_browser = False
                         xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)

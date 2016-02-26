@@ -72,7 +72,7 @@ class PacUtil(object):
 
         try:
             xlog.info('try download %r to update_pacfile(%r)', config.PAC_GFWLIST, filename)
-            pac_content = opener.open(config.PAC_GFWLIST).read()
+            pac_content = opener.open(config.PAC_GFWLIST).read().decode('iso-8859-1')
         except Exception as e:
             xlog.warn("pac_update download gfwlist fail:%r", e)
             return
@@ -80,7 +80,7 @@ class PacUtil(object):
         content = ''
         need_update = True
         with open(get_serving_pacfile(), 'rb') as fp:
-            content = fp.read()
+            content = fp.read().decode('iso-8859-1')
 
         try:
             placeholder = '// AUTO-GENERATED RULES, DO NOT MODIFY!'
@@ -107,7 +107,7 @@ class PacUtil(object):
             return
 
         try:
-            autoproxy_content = base64.b64decode(pac_content)
+            autoproxy_content = base64.b64decode(pac_content).decode('iso-8859-1')
             xlog.info('%r downloaded, try convert it with autoproxy2pac', config.PAC_GFWLIST)
             jsrule = PacUtil.autoproxy2pac(autoproxy_content, 'FindProxyForURLByAutoProxy', autoproxy, default)
             content += '\r\n' + jsrule + '\r\n'
@@ -119,7 +119,7 @@ class PacUtil(object):
 
         if need_update:
             with open(user_pacfile, 'wb') as fp:
-                fp.write(content)
+                fp.write(content.encode())
             xlog.info('%r successfully updated', user_pacfile)
             serving_pacfile = user_pacfile
 
@@ -280,7 +280,7 @@ class PacUtil(object):
 
 
 class PACServerHandler(simple_http_server.HttpServerHandler):
-    onepixel = b'GIF89a\x01\x00\x01\x00\x80\xff\x00\xc0\xc0\xc0\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+    onepixel = 'GIF89a\x01\x00\x01\x00\x80\xff\x00\xc0\xc0\xc0\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
 
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
@@ -295,12 +295,12 @@ class PACServerHandler(simple_http_server.HttpServerHandler):
         filename = os.path.normpath('./' + path) # proxy.pac
 
         if self.path.startswith(('http://', 'https://')):
-            data = b'HTTP/1.1 200\r\nCache-Control: max-age=86400\r\nExpires:Oct, 01 Aug 2100 00:00:00 GMT\r\nConnection: close\r\n'
+            data = 'HTTP/1.1 200\r\nCache-Control: max-age=86400\r\nExpires:Oct, 01 Aug 2100 00:00:00 GMT\r\nConnection: close\r\n'
             if filename.endswith(('.jpg', '.gif', '.jpeg', '.bmp')):
-                data += b'Content-Type: image/gif\r\n\r\n' + self.onepixel
+                data += 'Content-Type: image/gif\r\n\r\n' + self.onepixel
             else:
-                data += b'\r\n This is the Pac server, not proxy port, use 8087 as proxy port.'
-            self.wfile.write(data)
+                data += '\r\n This is the Pac server, not proxy port, use 8087 as proxy port.'
+            self.wfile.write(data.encode())
             xlog.info('%s "%s %s HTTP/1.1" 200 -', self.address_string(), self.command, self.path)
             return
 
@@ -322,16 +322,16 @@ class PACServerHandler(simple_http_server.HttpServerHandler):
 
         pac_filename = get_serving_pacfile()
         with open(pac_filename, 'rb') as fp:
-            data = fp.read()
+            data = fp.read().decode('iso-8859-1')
 
-        host = self.headers.getheader('Host')
+        host = self.headers['Host']
         host, _, port = host.rpartition(":")
         gae_proxy_proxy = host + ":" + str(config.LISTEN_PORT)
         pac_proxy = host + ":" + str(config.PAC_PORT)
         data = data.replace(gae_proxy_listen, gae_proxy_proxy)
         data = data.replace(pac_listen, pac_proxy)
         self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
+        self.wfile.write(data.encode())
 
     def send_file(self, filename, mimetype):
         with open(filename, 'rb') as fp:

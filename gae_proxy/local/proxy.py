@@ -105,7 +105,7 @@ from local import connect_control
 from local import env_info
 from local import connect_manager
 from local.gae_handler import spawn_later
-
+from local import web_control
 
 # launcher/module_init will check this value for start/stop finished
 ready = False

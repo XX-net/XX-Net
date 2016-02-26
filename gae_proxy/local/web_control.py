@@ -275,7 +275,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def do_POST(self):
         try:
-            refer = self.headers.getheader('Referer')
+            refer = self.headers.get('Referer')
             netloc = urllib.parse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 xlog.warn("web control ref:%s refuse", netloc)
@@ -285,12 +285,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+            ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             if ctype == 'multipart/form-data':
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
-                self.postvars = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                length = int(self.headers.get('content-length'))
+                self.postvars = urllib.parse.parse_qs(self.rfile.read(length).decode('iso-8859-1'), keep_blank_values=1)
             else:
                 self.postvars = {}
         except:
@@ -341,7 +341,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def get_launcher_version(self):
         data_path = os.path.abspath( os.path.join(root_path, 'data', 'launcher', 'config.yaml'))
         try:
-            config = yaml.load(file(data_path, 'r'))
+            config = yaml.load(open(data_path, 'r'))
             return config["modules"]["launcher"]["current_version"]
             #print yaml.dump(config)
         except yaml.YAMLError as exc:
@@ -394,8 +394,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         return lang_code
 
     def req_status_handler(self):
-        if "user-agent" in self.headers.dict:
-            user_agent = self.headers.dict["user-agent"]
+        if "user-agent" in self.headers:
+            user_agent = self.headers["user-agent"]
         else:
             user_agent = ""
 

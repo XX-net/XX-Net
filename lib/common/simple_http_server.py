@@ -17,7 +17,6 @@ logging = xlog.getLogger("simple_http_server")
 
 class HttpServerHandler():
     default_request_version = "HTTP/1.1"
-    MessageClass = http.client.HTTPMessage
     rbufsize = -1
     wbufsize = 0
     command = ""
@@ -57,17 +56,17 @@ class HttpServerHandler():
         self.request_version = version = self.default_request_version
 
         requestline = self.raw_requestline
-        requestline = requestline.rstrip(b'\r\n')
+        requestline = requestline.rstrip('\r\n')
         self.requestline = requestline
         words = requestline.split()
         if len(words) == 3:
             command, path, version = words
-            if version[:5] != b'HTTP/':
+            if version[:5] != 'HTTP/':
                 self.send_error(400, "Bad request version (%r)" % version)
                 return False
             try:
-                base_version_number = version.split(b'/', 1)[1]
-                version_number = base_version_number.split(b".")
+                base_version_number = version.split('/', 1)[1]
+                version_number = base_version_number.split(".")
                 # RFC 2145 section 3.1 says there can be only one "." and
                 #   - major and minor numbers MUST be treated as
                 #      separate integers;
@@ -89,7 +88,7 @@ class HttpServerHandler():
         elif len(words) == 2:
             command, path = words
             self.close_connection = 1
-            if command != b'GET':
+            if command != 'GET':
                 self.send_error(400,
                                 "Bad HTTP/0.9 request type (%r)" % command)
                 return False
@@ -101,8 +100,7 @@ class HttpServerHandler():
         self.command, self.path, self.request_version = command, path, version
 
         # Examine the headers and look for a Connection directive
-        self.headers = http.client.parse_headers(self.rfile,
-                                                     _class=self.MessageClass)
+        self.headers = http.client.parse_headers(self.rfile)
 
         conntype = self.headers.get('Connection', "")
         if conntype.lower() == 'close':
@@ -114,9 +112,10 @@ class HttpServerHandler():
     def handle_one_request(self):
         try:
             try:
-                self.raw_requestline = self.rfile.readline(65537)
+                line = self.rfile.readline(65535)
+                self.raw_requestline = line.decode('iso-8859-1')
             except Exception as e:
-                logging.exception("simple server handle except %r", e)
+                #logging.exception("simple server handle except %r", e)
                 return
 
             if len(self.raw_requestline) > 65536:
@@ -128,19 +127,19 @@ class HttpServerHandler():
 
             self.parse_request()
 
-            if self.command == b"GET":
+            if self.command == "GET":
                 self.do_GET()
-            elif self.command == b"POST":
+            elif self.command == "POST":
                 self.do_POST()
-            elif self.command == b"CONNECT":
+            elif self.command == "CONNECT":
                 self.do_CONNECT()
-            elif self.command == b"HEAD":
+            elif self.command == "HEAD":
                 self.do_HEAD()
-            elif self.command == b"DELETE":
+            elif self.command == "DELETE":
                 self.do_DELETE()
-            elif self.command == b"OPTIONS":
+            elif self.command == "OPTIONS":
                 self.do_OPTIONS()
-            elif self.command == b"PUT":
+            elif self.command == "PUT":
                 self.do_PUT()
             else:
                 logging.warn("unhandler cmd:%s path:%s from:%s", self.command, self.path, self.address_string())

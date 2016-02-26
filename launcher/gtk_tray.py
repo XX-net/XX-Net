@@ -8,7 +8,7 @@ import webbrowser
 
 from instances import xlog
 
-import pygtk
+from gi.repository import Gtk, Gdk
 import config
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -16,9 +16,7 @@ if __name__ == "__main__":
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
-pygtk.require('2.0')
-import gtk
-gtk.gdk.threads_init()
+Gdk.threads_init()
 
 try:
     import pynotify
@@ -41,6 +39,7 @@ class Gtk_tray():
     notify_list = []
     def __init__(self):
         logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
+        self.menu = self.make_menu()
 
         if platform and appindicator and platform.dist()[0].lower() == 'ubuntu':
             self.trayicon = self.ubuntu_trayicon(logo_filename)
@@ -57,32 +56,37 @@ class Gtk_tray():
         return trayicon
 
     def gtk_trayicon(self, logo_filename):
-        trayicon = gtk.StatusIcon()
+        trayicon = Gtk.StatusIcon()
         trayicon.set_from_file(logo_filename)
 
-        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
+        #trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, Gtk.status_icon_position_menu, b, t, self.trayicon))
+        trayicon.connect('popup-menu', self.popup_menu)
         trayicon.connect('activate', self.show_control_web)
-        trayicon.set_tooltip('XX-Net')
+        trayicon.set_tooltip_text('XX-Net')
         trayicon.set_visible(True)
 
         return trayicon
 
     def make_menu(self):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         itemlist = [('Config', self.on_show),
                     ('restart gae_proxy', self.on_restart_gae_proxy),
                     ('Quit', self.on_quit)]
         for text, callback in itemlist:
-            item = gtk.MenuItem(text)
+            item = Gtk.MenuItem(text)
             item.connect('activate', callback)
             item.show()
             menu.append(item)
         menu.show()
         return menu
 
+    def popup_menu(self, icon, button, time):
+        menu = self.menu
+        menu.show_all()
+        menu.popup(None, None, None, None, button, time)
+
     def on_show(self, widget=None, data=None):
         self.show_control_web()
-
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         if not pynotify:
@@ -110,12 +114,12 @@ class Gtk_tray():
     def on_quit(self, widget, data=None):
         module_init.stop_all()
         os._exit(0)
-        gtk.main_quit()
+        Gtk.main_quit()
 
     def serve_forever(self):
-        gtk.gdk.threads_enter()
-        gtk.main()
-        gtk.gdk.threads_leave()
+        Gdk.threads_enter()
+        Gtk.main()
+        Gdk.threads_leave()
 
 sys_tray = Gtk_tray()
 
