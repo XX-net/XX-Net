@@ -36,10 +36,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
-        self.self_check_response_data = b"HTTP/1.1 200 OK\r\n"\
-               b"Access-Control-Allow-Origin: *\r\n"\
-               b"Content-Type: text/plain\r\n"\
-               b"Content-Length: 2\r\n\r\nOK"
+        self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
+               "Access-Control-Allow-Origin: *\r\n"\
+               "Content-Type: text/plain\r\n"\
+               "Content-Length: 2\r\n\r\nOK"
+        self.self_check_response_data = self.self_check_response_data.encode()
 
     def forward_local(self):
         host = self.headers.get('Host', '')
@@ -91,8 +92,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.warn("method not defined: %s", self.command)
                 return
 
+        if self.https:
+            protocol = "https"
+        else:
+            protocol = "http"
+
         if self.path[0] == '/' and host:
-            self.path = 'http://%s%s' % (host, self.path)
+            self.path = '%s://%s%s' % (protocol, host, self.path)
         elif not host and '://' in self.path:
             host = urllib.parse.urlparse(self.path).netloc
 
@@ -100,7 +106,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
-        if self.path == "http://www.twitter.com/xxnet":
+        if self.path == "http://www.twitter.com/xxnet" or self.path == "https://www.twitter.com/xxnet":
             xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
             # auto detect browser proxy setting is work
@@ -163,7 +169,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        if self.path != "https://www.twitter.com/xxnet":
+        if self.path != "www.twitter.com:443":
             touch_active()
 
         host, _, port = self.path.rpartition(':')
@@ -207,6 +213,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.connection = ssl_sock
         self.rfile = self.connection.makefile('rb', self.bufsize)
         self.wfile = self.connection.makefile('wb', 0)
+        self.https = True
 
         try:
             self.raw_requestline = self.rfile.readline(65537).decode('iso-8859-1')
@@ -306,6 +313,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.connection = ssl_sock
         self.rfile = self.connection.makefile('rb', self.bufsize)
         self.wfile = self.connection.makefile('wb', 0)
+        self.https = True
 
         try:
             self.raw_requestline = self.rfile.readline(65537).decode('iso-8859-1')

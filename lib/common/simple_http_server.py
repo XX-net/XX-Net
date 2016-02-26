@@ -22,12 +22,13 @@ class HttpServerHandler():
     command = ""
     path = ""
 
-    def __init__(self, sock, client, args):
+    def __init__(self, sock, client, args, https=False):
         self.connection = sock
         self.rfile = sock.makefile("rb", self.rbufsize)
         self.wfile = sock.makefile("wb", self.wbufsize)
         self.client_address = client
         self.args = args
+        self.https = https
         self.setup()
 
     def setup(self):
@@ -310,7 +311,7 @@ class HTTPServer():
 
     def process_connect(self, sock, address):
         #logging.debug("connect from %s:%d", address[0], address[1])
-        client_obj = self.handler(sock, address, self.args)
+        client_obj = self.handler(sock, address, self.args, self.use_https)
         client_thread = threading.Thread(target=client_obj.handle)
         client_thread.start()
 

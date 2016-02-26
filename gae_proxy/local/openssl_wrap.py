@@ -99,10 +99,10 @@ class SSLConnection(IOBase):
         except OpenSSL.SSL.ZeroReturnError:
             return ''
         except OpenSSL.SSL.SysCallError as e:
-            if e[0] == -1 and 'Unexpected EOF' in e[1]:
-                # errors when reading empty strings are expected and can be ignored
-                return ''
-            raise
+            #if e[0] == -1 and 'Unexpected EOF' in e[1]:
+            # errors when reading empty strings are expected and can be ignored
+            return ''
+            #raise
 
     def read(self, bufsiz, flags=0):
         return self.recv(bufsiz, flags)

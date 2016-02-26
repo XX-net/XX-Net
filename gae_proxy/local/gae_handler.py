@@ -478,20 +478,20 @@ def handler(method, url, headers, body, wfile):
                         xlog.debug("send to browser wfile.write ret:%d", ret)
                         ret = wfile.write(data)
                 except Exception as e_b:
-                    if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                        xlog.warn('gae_handler send to browser return %r %r', e_b, url)
-                    else:
-                        xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                    #if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
+                    #    xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                    #else:
+                    xlog.warn('gae_handler send to browser return %r %r', e_b, url)
                     send_to_browser = False
 
     except NetWorkIOError as e:
         time_except = time.time()
         time_cost = time_except - time_request
-        if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            xlog.warn("gae_handler err:%r time:%d %s ", e, time_cost, url)
-            google_ip.report_connect_closed(response.ssl_sock.ip, "Net")
-        else:
-            xlog.exception("gae_handler except:%r %s", e, url)
+        #if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
+        xlog.warn("gae_handler err:%r time:%d %s ", e, time_cost, url)
+        google_ip.report_connect_closed(response.ssl_sock.ip, "Net")
+        #else:
+        #    xlog.exception("gae_handler except:%r %s", e, url)
     except Exception as e:
         xlog.exception("gae_handler except:%r %s", e, url)
 
