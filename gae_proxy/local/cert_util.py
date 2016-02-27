@@ -46,8 +46,10 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 
-
-from local.config import config
+if __name__ == '__main__':
+    import config
+else:
+    from local.config import config
 
 
 def get_cmd_out(cmd):
@@ -187,7 +189,7 @@ class CertUtil(object):
         ca.set_pubkey(req.get_pubkey())
         ca.add_extensions([
             OpenSSL.crypto.X509Extension(
-                'basicConstraints', False, 'CA:TRUE', subject=ca, issuer=ca)
+                b'basicConstraints', False, b'CA:TRUE', subject=ca, issuer=ca)
             ])
         ca.sign(key, CertUtil.ca_digest)
         #logging.debug("CA key:%s", key)
@@ -316,7 +318,6 @@ class CertUtil(object):
             ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
             crypt32.CertCloseStore(store_handle, 0)
             del crypt32
-
 
             if not ret and __name__ != "__main__":
                 #res = CertUtil.win32_notify(msg=u'Import GoAgent Ca?', title=u'Authority need')
