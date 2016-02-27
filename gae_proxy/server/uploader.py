@@ -76,11 +76,6 @@ def do_clean_up():
     sys.stderr = org_stderr
     sys.stdout = org_stdout
 
-try:
-    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
-    os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
-except:
-    pass
 
 def upload(appid, email, password):
     global defined_input
@@ -217,7 +212,7 @@ def uploads(appids, email, password, rc4_password):
 
 def main():
     if len(sys.argv) < 3:
-        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password]\r\n")
+        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password] [proxy]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
         my_stdout.write("== END ==\n")
@@ -236,6 +231,16 @@ def main():
         rc4_password = sys.argv[4]
     else:
         rc4_password = ''
+
+    if len(sys.argv) >= 6:
+        if sys.argv[5] != "no_proxy":
+            os.environ['HTTPS_PROXY'] = sys.argv[5]
+            my_stdout.write("set proxy to %s\r\n" % sys.argv[5])
+        else:
+            my_stdout.write("set no proxy\r\n")
+    else:
+        os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
+        my_stdout.write("set proxy to http://127.0.0.1:8087\r\n")
 
     uploads(appids, email, password, rc4_password)
 
