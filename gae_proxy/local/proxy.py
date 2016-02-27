@@ -185,9 +185,6 @@ def pre_start():
                 error = u'某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
                 ctypes.windll.user32.MessageBoxW(None, error, title, 0)
                 #sys.exit(0)
-    if config.GAE_APPIDS[0] == 'gae_proxy':
-        xlog.critical('please edit %s to add your appid to [gae] !', config.CONFIG_FILENAME)
-        sys.exit(-1)
     if config.PAC_ENABLE:
         pac_ip = config.PAC_IP
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)

@@ -304,7 +304,7 @@
                     'td#pac-url': result['pac_url'],
                     'td#ipv6-status': result['use_ipv6'] == '0' ? '{{ _( "Disabled" ) }}' : '{{ _( "Enabled" ) }}',
 
-                    'td#working-appid': appid_string(result['working_appid']),
+                    'td#working-appid': appid_string(result['gae_appid']),
                     'td#out-of-quota-appids': result['out_of_quota_appids'],
                     'td#not-exist-appids': result['not_exist_appids'],
 
@@ -401,7 +401,7 @@
                     return updateProperty('#noob-info', '{{ _( "Detecting..." ) }}', 'none');
                 }
 
-                if ( is_public_appid(result['working_appid']) ){
+                if ( is_public_appid(result['gae_appid']) ){
                     return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'hard');
                 }
 
@@ -426,16 +426,11 @@
         }
     }
     function is_public_appid(appids){
-        var appid_list = appids.split("|");
-        for (index = 0; index < appid_list.length; ++index) {
-            var appid = appid_list[index];
-            var app_pre = appid.slice(0, 6);
-         
-            if (app_pre != "xxnet-"){
-                return false;
-            }
+        if ( appids.length > 1 ){
+            return false;
+        } else {
+            return true;
         }
-        return true;
     }
     function connection_status_string(connected_link_new, connected_link_used){
         var conn_str = connected_link_new + " / " + connected_link_used;
