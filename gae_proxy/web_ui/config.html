@@ -199,11 +199,7 @@
             proxyUsername     = $('#proxy-username').val(),
             proxyPassword     = $('#proxy-password').val();
 
-        if (proxyPort != parseInt(proxyPort, 10)){
-            tip('{{ _( "Proxy port must be integer." ) }}', 'warn');
-            return;
-        }
-
+        proxyPort = parseInt(proxyPort, 10);
 
         tip('{{ _( "Wait for checking setting..." ) }}', 'info');
 
