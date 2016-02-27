@@ -172,7 +172,13 @@ def PackMENUITEMINFO(text=None, hbmpItem=None, wID=None, hSubMenu=None, fState=f
     if text is not None:
         text = convert_to_ascii(text)
         res.fMask |= MIIM_STRING
-        res.dwTypeData = text
+        try:
+            if isinstance(text,str):
+                import sys
+                text = text.encode(sys.stdin.encoding)
+            res.dwTypeData = text
+        except:
+            pass
     if hSubMenu is not None:
         res.fMask |= MIIM_SUBMENU
         res.hSubMenu = hSubMenu

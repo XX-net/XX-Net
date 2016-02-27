@@ -5,10 +5,14 @@
 if __name__ == "__main__":
     import os, sys
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+    data_path = os.path.join(root_path, 'data')
+
+    noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    common_lib = os.path.join(root_path, 'lib', 'common')
+    sys.path.append(common_lib)
+    win32_lib = os.path.join(root_path, 'lib', 'win32')
     sys.path.append(win32_lib)
 
 import webbrowser
@@ -29,7 +33,7 @@ lang_code, code_page = locale.getdefaultlocale()
 class Win_tray():
     def __init__(self):
         icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
-        self.systray = SysTrayIcon(icon_path, "XX-Net", 
+        self.systray = SysTrayIcon(icon_path, "XX-Net",
             self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
@@ -67,7 +71,7 @@ class Win_tray():
                     return "unknown"
         except:
             pass
-        
+
         return "disable"
 
     def on_right_click(self):
