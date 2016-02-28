@@ -14,7 +14,7 @@ XX-Net
 
 ## 下载(Download)：
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
+https://codeload.github.com/XX-net/XX-Net/zip/2.9.1
 
 稳定版(Stable)：
 https://codeload.github.com/XX-net/XX-Net/zip/2.8.9
