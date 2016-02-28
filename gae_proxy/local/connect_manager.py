@@ -296,6 +296,12 @@ class Https_connection_manager(object):
                 else:
                     self.start_keep_alive(ssl_sock)
 
+            for host in self.host_conn_pool:
+                host_list = self.host_conn_pool[host].get_need_keep_alive(maxtime=self.keep_alive-3)
+
+                for ssl_sock in host_list:
+                    google_ip.report_connect_closed(ssl_sock.ip, "host pool alive_timeout")
+                    ssl_sock.close()
             #self.create_more_connection()
 
             time.sleep(1)
