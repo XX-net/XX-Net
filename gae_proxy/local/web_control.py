@@ -467,10 +467,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
                 user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
-                if not user_config.user_special.proxy_port:
-                    user_config.user_special.proxy_port = 0
-                else:
+                try:
                     user_config.user_special.proxy_port = int(user_config.user_special.proxy_port)
+                except:
+                    user_config.user_special.proxy_port = 0
+
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
