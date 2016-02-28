@@ -287,7 +287,7 @@ msgid "IP Number"
 msgstr "IP数量"
 
 msgid "IP Quality"
-msgstr "IP质量"
+msgstr "IP延迟"
 
 msgid "Connection Pool"
 msgstr "连接池"
