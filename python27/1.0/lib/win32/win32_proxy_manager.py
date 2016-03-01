@@ -50,7 +50,10 @@ InternetSetOption.restype  = BOOL
 def disable_proxy():
     _,values_num,_ = winreg.QueryInfoKey(CONNECTIONS)
     for i in range(0, values_num):
-        key,value,_ = winreg.EnumValue(CONNECTIONS, i)
+        try:
+            key, value,_ = winreg.EnumValue(CONNECTIONS, i)
+        except:
+            break
 
         List = INTERNET_PER_CONN_OPTION_LIST()
         Option = (INTERNET_PER_CONN_OPTION * 1)()
@@ -122,7 +125,11 @@ def set_proxy(proxy_addr):
     _,values_num,_ = winreg.QueryInfoKey(CONNECTIONS)
     if values_num:
         for i in range(0, values_num):
-            key,value,_ = winreg.EnumValue(CONNECTIONS, i)
+            try:
+                key,value,_ = winreg.EnumValue(CONNECTIONS, i)
+            except:
+                break
+
             if '://' in proxy_addr:
                 set_proxy_auto(proxy_addr, key)
             else:
