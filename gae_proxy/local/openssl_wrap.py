@@ -62,6 +62,10 @@ class SSLConnection(IOBase):
                 time_now = time.time()
                 if time_now - time_start > timeout:
                     break
+            except :
+                # OpenSSL.SSL.Error:
+                # [('SSL routines','ssl3_write_bytes','ssl handshake failure')]
+                break
 
     def accept(self):
         sock, addr = self._sock.accept()
@@ -78,9 +82,13 @@ class SSLConnection(IOBase):
         try:
             return self.__iowait(self._connection.send, data, flags)
         except OpenSSL.SSL.SysCallError as e:
-            if e[0] == -1 and not data:
-                # errors when writing empty strings are expected and can be ignored
-                return 0
+            try:
+                if e[0] == -1 and not data:
+                    # errors when writing empty strings are expected and can be ignored
+                    return 0
+            except:
+                xlog.error("SSL send error e:%r ", e )
+                pass
             raise
 
     def __send_memoryview(self, data, flags=0):
@@ -109,12 +117,17 @@ class SSLConnection(IOBase):
 
     def readinto(self, b):
         # This method is required for `io` module compatibility.
-        temp = self.read(len(b))
-        if len(temp) == 0:
+        #  NoneType error : temp
+        try:
+            temp = self.read(len(b))
+            if len(temp) == 0:
+                return 0
+            else:
+                b[:len(temp)] = temp
+                return len(temp)
+        except Exception as e:
+            xlog.error("SSL readinto error e:%r ", e )
             return 0
-        else:
-            b[:len(temp)] = temp
-            return len(temp)
 
 
 
@@ -168,7 +181,7 @@ class SSLConnection(IOBase):
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
         if ca_certs:
-            ca_path = bytes(ca_certs, encoding='UTF-8')
+            ca_path = ca_certs
             ssl_context.load_verify_locations(ca_path)
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
