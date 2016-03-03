@@ -282,10 +282,8 @@
             success: function(result) {
                 if ( test_http_proxy_setting() == "OK"){
                     var ca_status_str = test_https_proxy_setting();
-                    $("#tr_ca-status").show();
                 }else{
-                    var ca_status_str = "";
-                    $("#tr_ca-status").hide();
+                    var ca_status_str = "Fail";
                 }
 
                 var updates = {
