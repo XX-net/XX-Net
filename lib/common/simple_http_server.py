@@ -200,7 +200,7 @@ class HttpServerHandler():
         if len(mimetype):
             data.append('Content-Type: %s\r\n' % mimetype)
 
-        data.append('Content-Length: %s\r\n' % len(content))
+        data.append('Content-Length: %s\r\n' % len(content.encode('utf-8')))
         if len(headers):
             if isinstance(headers, dict):
                 for key in headers:
@@ -346,7 +346,7 @@ class TestHttpServer(HttpServerHandler):
 
         if url_path == '/':
             data = "OK\r\n"
-            self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+            self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data.encode('utf-8')), data) )
         elif url_path == '/null':
             mimetype = "application/x-binary"
             if "size" in reqs:
@@ -387,7 +387,6 @@ if __name__ == "__main__":
         data_path = sys.argv[1]
     else:
         data_path = "."
-        
     try:
         main(data_path=data_path)
     except Exception:
@@ -395,4 +394,4 @@ if __name__ == "__main__":
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
         sys.exit()
-    
+
