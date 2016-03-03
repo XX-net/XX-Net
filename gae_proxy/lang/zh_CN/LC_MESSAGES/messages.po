@@ -446,4 +446,5 @@ msgstr "全局代理已启用："
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
 
-
+msgid "Download"
+msgstr "下载"

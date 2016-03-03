@@ -452,4 +452,5 @@ msgstr "پروکسی را فعال کنید در "
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
 
-
+msgid "Download"
+msgstr "دانلود"
