@@ -100,6 +100,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
+        if host_ip in socket.gethostbyname_ex(socket.gethostname())[-1]:
+            xlog.info("Browse localhost by proxy")
+            return self.forward_local()
+
         if self.path == "http://www.twitter.com/xxnet":
             xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
