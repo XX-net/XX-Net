@@ -38,6 +38,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
                "Access-Control-Allow-Origin: *\r\n"\
+               "Cache-Control: no-cache, no-store, must-revalidate\r\n"\
+               "Pragma: no-cache\r\n"\
+               "Expires: 0\r\n"\
                "Content-Type: text/plain\r\n"\
                "Content-Length: 2\r\n\r\nOK"
 
