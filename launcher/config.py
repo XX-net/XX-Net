@@ -62,7 +62,7 @@ def recheck_module_path():
 
     modules = ["gae_proxy", "launcher", "php_proxy", "x_tunnel"]
     for module in modules:
-        if module not in ["launcher", "php_proxy", "x_tunnel"]:
+        if module not in ["launcher", "php_proxy"]:
             if not os.path.isdir(os.path.join(root_path, module)):
                 del config[module]
                 continue
