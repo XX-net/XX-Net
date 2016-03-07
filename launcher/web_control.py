@@ -234,7 +234,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
              "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d, \
              "x_tunnel_enable": %d}' %\
                    (check_update
-                    , config.get(["language"], i18n_translator.lang)
+                    , config.get(["language"])
                     , config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "allow_remote_connect"], 0)
                     , config.get(["modules", "launcher", "show_systray"], 1)
