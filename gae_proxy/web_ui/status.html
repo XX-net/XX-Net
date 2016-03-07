@@ -38,7 +38,7 @@
                 <td id="browser-proxy-setting"></td>
             </tr>
             <tr id="tr_ca-status">
-                <td>{{ _( "CA status" ) }}</td>
+                <td>{{ _( "CA status" ) }}(<a href="/module/gae_proxy/control/download_cert">{{ _( "Download" ) }}</a>)</td>
                 <td id="ca-status"></td>
             </tr>
             <tr>
@@ -282,10 +282,8 @@
             success: function(result) {
                 if ( test_http_proxy_setting() == "OK"){
                     var ca_status_str = test_https_proxy_setting();
-                    $("#tr_ca-status").show();
                 }else{
-                    var ca_status_str = "";
-                    $("#tr_ca-status").hide();
+                    var ca_status_str = "Fail";
                 }
 
                 var updates = {
