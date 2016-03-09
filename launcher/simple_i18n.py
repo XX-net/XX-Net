@@ -27,9 +27,9 @@ class SimpleI18N():
         if sys.platform == "darwin":
             try:
                 oot = os.pipe()
-                p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'],stdout=oot[1])
+                p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
                 p.communicate()
-                lang_code = os.read(oot[0],10000)
+                lang_code = self.get_default_language_code_for_mac(os.read(oot[0], 10000))
                 self.lang_code = lang_code
                 return lang_code
             except:
@@ -41,6 +41,16 @@ class SimpleI18N():
     def get_valid_languages(self):
         # return ['de_DE', 'en_US', 'es_VE', 'fa_IR', 'ja_JP', 'zh_CN']
         return ['en_US', 'fa_IR', 'zh_CN']
+
+    def get_default_language_code_for_mac(self, lang_code):
+        if lang_code.find('zh') != -1:
+            return 'zh_CN'
+        elif lang_code.find('en') != -1:
+            return 'en_US'
+        elif lang_code.find('fa') != -1:
+            return 'fa_IR'
+        else:
+            return 'Unknown'
 
     def po_loader(self, file):
         po_dict = {}
