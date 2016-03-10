@@ -13,7 +13,7 @@ XX-Net
   
   
 ## 下载(Download)：  
-https://raw.githubusercontent.com/XX-net/XX-Net/master/download.md
+https://github.com/XX-net/XX-Net/blob/master/download.md
   
   
 ## 链接
