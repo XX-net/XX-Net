@@ -43,7 +43,7 @@ mimetypes._winreg = None
 
 
 from google.appengine.tools import appengine_rpc, appcfg
-appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH = './.appcfg_cookies'
+
 
 
 def upload(appid):
@@ -114,8 +114,10 @@ def appid_is_valid(appid):
 
 
 def clean_cookie_file():
+    cookie_file = "~/.appcfg_oauth2_tokens"
+    cookie_file = os.path.expanduser(cookie_file)
     try:
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
+        os.remove(cookie_file)
     except OSError:
         pass
 
