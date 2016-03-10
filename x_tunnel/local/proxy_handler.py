@@ -32,7 +32,7 @@ class Socks5Server():
                 return
 
         except socket.error as e:
-            xlog.debug('socks handler read error %r', e)
+            xlog.exception('socks handler read error %r', e)
         except Exception as e:
             xlog.exception("any err:%r", e)
 
