@@ -18,27 +18,6 @@
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
-                <div class="span4">
-                    <label for="gae-email">Google Account(Email)</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <input id="gae-email" type="text" />
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="gae-password">Password</label>
-                </div> <!-- .span4 -->
-                <div id="password-field" class="span8">
-                    <input id="gae-password" type="password" />
-                    <p id="password-tip" class="tip hide">
-                        {{ _( "If the 2-step verification is in-use, please use your exclusive password." ) }}: <a href="https://security.google.com/settings/security/apppasswords" target="_blank">{{ _( "Configure now" ) }}</a><br>
-                        {{ _( "If the 2-step verification is NOT in-use, please enable the less secure apps." ) }}: <a href="https://www.google.com/settings/security/lesssecureapps" target="_blank">{{ _( "Configure now" ) }}</a><br>
-                        <a href="https://github.com/XX-net/XX-Net/wiki/Deploy-password-problem" target="_blank">{{ _( "Details" ) }}</a>
-                    </p>
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">{{ _("Start to deploy") }}</button>
                 </div> <!-- .span12 -->
@@ -93,20 +72,6 @@
         } else {
             window.isAutoScrollLog = false;
         }
-    });
-</script>
-<script type="text/javascript">
-    $('#password-field').click(function(){
-        $('#password-tip').removeClass('hide');
-    });
-</script>
-<script type="text/javascript">
-    $('html').click(function() {
-        $('#password-tip').addClass('hide');
-    });
-
-    $('#password-field').click(function(event){
-        event.stopPropagation();
     });
 </script>
 <script type="text/javascript">
@@ -211,11 +176,8 @@
 </script>
 <script type="text/javascript">
     function onStart(){
-        var appId        = $('#gae-appid').val(),
-            email        = $('#gae-email').val(),
-            password     = $('#gae-password').val(),
-            rc4Password  = "";
-        var errorMessage = getErrorMessage(appId, email, password);
+        var appId        = $('#gae-appid').val();
+        var errorMessage = getErrorMessage(appId);
 
         if ( errorMessage.length != 0 ) {
             $('.alert').removeClass('alert-info');
@@ -228,7 +190,7 @@
             $('.alert').addClass('alert-info');
         }
 
-        deployProcess(appId, email, password, rc4Password);
+        deployProcess(appId);
         changeButtonStatus('cancel');
     }
 </script>
@@ -249,29 +211,20 @@
     }
 </script>
 <script type="text/javascript">
-    function getErrorMessage(appId, email, password) {
+    function getErrorMessage(appId) {
         var errorMessage = '';
 
         if ( appId.length == 0 || !isAppIdValid(appId) ) {
             errorMessage += '{{ _("Your AppID is either empty or invalid.") }}<br>';
-        }
-        if ( email.length == 0 || !isEmailValid(email) ) {
-            errorMessage += '{{ _("Your Email address is either empty or invalid.") }}<br>';
-        }
-        if ( password.length == 0 ) {
-            errorMessage += '{{ _("Please fill in your account & its password.") }}<br>'
         }
 
         return errorMessage;
     }
 </script>
 <script type="text/javascript">
-    function deployProcess(appId, email, password, rc4Password) {
+    function deployProcess(appId) {
         var authentication = {
-            'appid': appId,
-            'email': email,
-            'passwd': password,
-            'rc4_passwd': rc4Password
+            'appid': appId
         };
 
         $.ajax({
@@ -287,14 +240,8 @@
     }
 </script>
 <script type="text/javascript">
-    function isEmailValid(email) {
-        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
-        return pattern.test(email);
-    }
-</script>
-<script type="text/javascript">
     function isAppIdValid(appId) {
-        var pattern = new RegExp(/^[0-9a-zA-Z\-|]+$/i);
+        var pattern = new RegExp(/^[0-9a-z\-|]+$/i);
         return pattern.test(appId);
     }
 </script>

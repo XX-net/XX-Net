@@ -20,13 +20,16 @@ os.chdir(code_path)
 import logging
 #logging.basicConfig(filename='upload1.log',level=logging.DEBUG)
 fh = logging.FileHandler('upload.log')
-fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
+
+logger = logging.getLogger()
+logger.addHandler(fh)
+logger.addHandler(ch)
+logger.setLevel(logging.INFO)
 
 sys.modules.pop('google', None)
 lib_path = os.path.join(code_path, "lib")

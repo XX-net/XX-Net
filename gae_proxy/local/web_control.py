@@ -530,10 +530,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         os.remove(log_path)
                     script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
 
-                    email = self.postvars['email'][0]
-                    passwd = self.postvars['passwd'][0]
-                    rc4_passwd = self.postvars['rc4_passwd'][0]
-                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
+                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid])
                     xlog.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
