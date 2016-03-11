@@ -65,4 +65,4 @@ msgid "Unknown error occurred."
 msgstr "发生了未知错误。"
 
 msgid "PHP Proxy Log"
-msgstr "PHP代理日志"
+msgstr "PHP Proxy 日志 "
