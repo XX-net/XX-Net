@@ -470,8 +470,10 @@ def confirm_xxnet_exit():
 
     for i in range(30):
         # gae_proxy(default port:8087)
-        if http_request("http://127.0.0.1:8087/quit") == False:
-            xlog.debug("good, xxnet:8087 cleared!")
+        xxnet_port = config.get(["modules", "launcher", "xxnet_port"], 8087)
+        req_url = "http://127.0.0.1:{port}/quit".format(port=xxnet_port)
+        if http_request(req_url) == False:
+            xlog.debug("good, xxnet:%s clear!" % xxnet_port)
             is_xxnet_exit = True
             break
         else:
