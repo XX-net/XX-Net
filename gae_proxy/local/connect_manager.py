@@ -244,7 +244,10 @@ class Https_connection_manager(object):
             data = request_data.encode()
             ret = ssl_sock.send(data)
             if ret != len(data):
-                xlog.warn("head send len:%d %d", ret, len(data))
+                if ret is None or data is None:
+                    xlog.warn("head send data was flushed when ssl_sock closed")
+                else:
+                    xlog.warn("head send len:%d %d", ret, len(data))
             response = http.client.HTTPResponse(ssl_sock)
 
             response.begin()
