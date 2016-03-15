@@ -372,7 +372,7 @@ def check_loop():
     time.sleep(1)
 
     while True:
-        check_update()
+        #check_update()
         time.sleep(3600 * 24)
 
 def start():
