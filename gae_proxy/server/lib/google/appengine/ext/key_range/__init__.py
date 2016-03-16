@@ -570,12 +570,12 @@ class KeyRange(object):
 
 
     expected_max = 127
-    for i in xrange(min(len(start), len(end))):
+    for i in range(min(len(start), len(end))):
       if start[i] == end[i]:
         midpoint.append(start[i])
       else:
         ord_sum = ord(start[i]) + ord(end[i])
-        midpoint.append(unichr(ord_sum / 2))
+        midpoint.append(chr(ord_sum / 2))
         if ord_sum % 2:
           if len(start) > i + 1:
             ord_start = ord(start[i+1])
@@ -588,7 +588,7 @@ class KeyRange(object):
           else:
 
             ord_split = (0xFFFF + ord_start) / 2
-          midpoint.append(unichr(ord_split))
+          midpoint.append(chr(ord_split))
         break
     return "".join(midpoint)
 
@@ -635,14 +635,14 @@ class KeyRange(object):
     assert len2 % 2 == 0
     out_path = []
     min_path_len = min(len1, len2) / 2
-    for i in xrange(min_path_len):
+    for i in range(min_path_len):
       kind1 = path1[2*i]
       kind2 = path2[2*i]
 
       if kind1 != kind2:
         split_kind = KeyRange.bisect_string_range(kind1, kind2)
         out_path.append(split_kind)
-        out_path.append(unichr(0))
+        out_path.append(chr(0))
         break
 
 
@@ -684,22 +684,22 @@ class KeyRange(object):
     Returns:
       An id_or_name such that id_or_name1 <= id_or_name <= id_or_name2.
     """
-    if (isinstance(id_or_name1, (int, long)) and
-        isinstance(id_or_name2, (int, long))):
+    if (isinstance(id_or_name1, int) and
+        isinstance(id_or_name2, int)):
       if not maintain_batches or id_or_name2 - id_or_name1 > batch_size:
         return (id_or_name1 + id_or_name2) / 2
       else:
         return id_or_name1
-    elif (isinstance(id_or_name1, basestring) and
-          isinstance(id_or_name2, basestring)):
+    elif (isinstance(id_or_name1, str) and
+          isinstance(id_or_name2, str)):
       return KeyRange.bisect_string_range(id_or_name1, id_or_name2)
     else:
-      if (not isinstance(id_or_name1, (int, long)) or
-          not isinstance(id_or_name2, basestring)):
+      if (not isinstance(id_or_name1, int) or
+          not isinstance(id_or_name2, str)):
         raise KeyRangeError("Wrong key order: %r, %r" %
                             (id_or_name1, id_or_name2))
 
-      zero_ch = unichr(0)
+      zero_ch = chr(0)
       if id_or_name2 == zero_ch:
         return (id_or_name1 + 2**63 - 1) / 2
       return zero_ch
@@ -756,9 +756,9 @@ class KeyRange(object):
       if index % 2 == 0:
 
         continue
-      elif isinstance(piece, basestring):
+      elif isinstance(piece, str):
 
-        full_path[index] = u"\xffff"
+        full_path[index] = "\xffff"
       else:
 
         full_path[index] = 2**63 - 1
@@ -767,8 +767,8 @@ class KeyRange(object):
                                **{"_app": app, "namespace": namespace})
     split_key = key_end
 
-    for i in xrange(probe_count):
-      for j in xrange(split_rate):
+    for i in range(probe_count):
+      for j in range(split_rate):
         split_key = KeyRange.split_keys(key_start, split_key, 1)
       results = datastore.Query(
           kind,
@@ -826,7 +826,7 @@ class KeyRange(object):
         include_end=False))
 
 
-    for i in xrange(0, len(random_keys) - 1):
+    for i in range(0, len(random_keys) - 1):
       key_ranges.append(cls(
           key_start=random_keys[i],
           key_end=random_keys[i + 1],

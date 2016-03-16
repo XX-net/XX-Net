@@ -69,8 +69,8 @@ import logging
 import os
 import threading
 import time
-import urllib2
-import urlparse
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 _HTTPLIB2_AVAILABLE = False
 
@@ -191,13 +191,13 @@ class Throttle(object):
     self.rotate_mutex[name] = threading.Lock()
 
   def AddThrottles(self, layout):
-    for key, value in layout.iteritems():
+    for key, value in layout.items():
       self.AddThrottle(key, value)
 
   def Register(self, thread):
     """Register this thread with the throttler."""
     thread_id = id(thread)
-    for throttle_name in self.throttles.iterkeys():
+    for throttle_name in self.throttles.keys():
       self.transferred[throttle_name][thread_id] = 0
       self.prior_block[throttle_name][thread_id] = 0
       self.totals[throttle_name][thread_id] = 0
@@ -265,7 +265,7 @@ class Throttle(object):
 
 
       total = 0
-      for count in self.prior_block[throttle_name].values():
+      for count in list(self.prior_block[throttle_name].values()):
         total += count
 
 
@@ -275,7 +275,7 @@ class Throttle(object):
 
 
 
-      for count in self.transferred[throttle_name].values():
+      for count in list(self.transferred[throttle_name].values()):
         total += count
 
 
@@ -341,7 +341,7 @@ class Throttle(object):
       if next_rotate_time >= self.get_time():
         return
 
-      for name, count in self.transferred[throttle_name].items():
+      for name, count in list(self.transferred[throttle_name].items()):
 
 
 
@@ -380,9 +380,9 @@ class Throttle(object):
     """
     total = 0
 
-    for count in self.totals[throttle_name].values():
+    for count in list(self.totals[throttle_name].values()):
       total += count
-    for count in self.transferred[throttle_name].values():
+    for count in list(self.transferred[throttle_name].values()):
       total += count
     return total, self.get_time() - self.start_time
 
@@ -432,11 +432,11 @@ NO_LIMITS = {
 def DefaultThrottle(multiplier=1.0):
   """Return a Throttle instance with multiplier * the quota limits."""
   layout = dict([(name, multiplier * limit)
-                 for (name, limit) in DEFAULT_LIMITS.iteritems()])
+                 for (name, limit) in DEFAULT_LIMITS.items()])
   return Throttle(layout=layout)
 
 
-class ThrottleHandler(urllib2.BaseHandler):
+class ThrottleHandler(urllib.request.BaseHandler):
   """A urllib2 handler for http and https requests that adds to a throttle."""
 
   def __init__(self, throttle):
@@ -461,7 +461,7 @@ class ThrottleHandler(urllib2.BaseHandler):
     """
     (unused_scheme,
      unused_host_port, url_path,
-     unused_query, unused_fragment) = urlparse.urlsplit(req.get_full_url())
+     unused_query, unused_fragment) = urllib.parse.urlsplit(req.get_full_url())
     size = len('%s %s HTTP/1.1\n' % (req.get_method(), url_path))
     size += self._CalculateHeaderSize(req.headers)
     size += self._CalculateHeaderSize(req.unredirected_hdrs)
@@ -491,7 +491,7 @@ class ThrottleHandler(urllib2.BaseHandler):
     res.read = ReturnContent
 
 
-    return len(content) + self._CalculateHeaderSize(dict(res.info().items()))
+    return len(content) + self._CalculateHeaderSize(dict(list(res.info().items())))
 
   def _CalculateHeaderSize(self, headers):
     """Calculates the size of the headers.
@@ -503,7 +503,7 @@ class ThrottleHandler(urllib2.BaseHandler):
       the size of the headers.
     """
     return sum([len('%s: %s\n' % (key, value))
-                for key, value in headers.iteritems()])
+                for key, value in headers.items()])
 
   def AddRequest(self, throttle_name, req):
     """Add to bandwidth throttle for given request.
@@ -654,7 +654,7 @@ if _HTTPLIB2_AVAILABLE:
     def request(self, uri, method='GET', body=None, headers=None,
                 redirections=httplib2.DEFAULT_MAX_REDIRECTS,
                 connection_type=None):
-      scheme = urlparse.urlparse(uri).scheme
+      scheme = urllib.parse.urlparse(uri).scheme
       request = (uri, method, body, headers)
       if scheme == 'http':
         self.throttle_handler.http_request(request)
@@ -686,7 +686,7 @@ class _HttpThrottleHandler(ThrottleHandler):
     uri, method, body, headers = req
     (unused_scheme,
      unused_host_port, url_path,
-     unused_query, unused_fragment) = urlparse.urlsplit(uri)
+     unused_query, unused_fragment) = urllib.parse.urlsplit(uri)
     size = len('%s %s HTTP/1.1\n' % (method, url_path))
     size += self._CalculateHeaderSize(headers)
 

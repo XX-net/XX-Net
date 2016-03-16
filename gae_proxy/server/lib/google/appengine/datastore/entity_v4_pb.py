@@ -20,7 +20,7 @@
 from google.net.proto import ProtocolBuffer
 import array
 import base64
-import dummy_thread as thread
+import _dummy_thread as thread
 try:
   from google3.net.proto import _net_proto___parse__python
 except ImportError:
@@ -182,7 +182,7 @@ class PartitionId(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kdataset_id = 3
   knamespace = 4
@@ -380,7 +380,7 @@ class Key_PathElement(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kkind = 1
   kid = 2
@@ -458,7 +458,7 @@ class Key(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_partition_id()): self.mutable_partition_id().MergeFrom(x.partition_id())
-    for i in xrange(x.path_element_size()): self.add_path_element().CopyFrom(x.path_element(i))
+    for i in range(x.path_element_size()): self.add_path_element().CopyFrom(x.path_element(i))
 
   if _net_proto___parse__python is not None:
     def _CMergeFromString(self, s):
@@ -507,14 +507,14 @@ class Key(ProtocolBuffer.ProtocolMessage):
     n = 0
     if (self.has_partition_id_): n += 1 + self.lengthString(self.partition_id_.ByteSize())
     n += 1 * len(self.path_element_)
-    for i in xrange(len(self.path_element_)): n += self.lengthString(self.path_element_[i].ByteSize())
+    for i in range(len(self.path_element_)): n += self.lengthString(self.path_element_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     if (self.has_partition_id_): n += 1 + self.lengthString(self.partition_id_.ByteSizePartial())
     n += 1 * len(self.path_element_)
-    for i in xrange(len(self.path_element_)): n += self.lengthString(self.path_element_[i].ByteSizePartial())
+    for i in range(len(self.path_element_)): n += self.lengthString(self.path_element_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -526,7 +526,7 @@ class Key(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(10)
       out.putVarInt32(self.partition_id_.ByteSize())
       self.partition_id_.OutputUnchecked(out)
-    for i in xrange(len(self.path_element_)):
+    for i in range(len(self.path_element_)):
       out.putVarInt32(18)
       out.putVarInt32(self.path_element_[i].ByteSize())
       self.path_element_[i].OutputUnchecked(out)
@@ -536,7 +536,7 @@ class Key(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(10)
       out.putVarInt32(self.partition_id_.ByteSizePartial())
       self.partition_id_.OutputPartial(out)
-    for i in xrange(len(self.path_element_)):
+    for i in range(len(self.path_element_)):
       out.putVarInt32(18)
       out.putVarInt32(self.path_element_[i].ByteSizePartial())
       self.path_element_[i].OutputPartial(out)
@@ -580,7 +580,7 @@ class Key(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kpartition_id = 1
   kpath_element = 2
@@ -748,7 +748,7 @@ class GeoPoint(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   klatitude = 1
   klongitude = 2
@@ -1009,7 +1009,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
     if (x.has_blob_value()): self.set_blob_value(x.blob_value())
     if (x.has_entity_value()): self.mutable_entity_value().MergeFrom(x.entity_value())
     if (x.has_geo_point_value()): self.mutable_geo_point_value().MergeFrom(x.geo_point_value())
-    for i in xrange(x.list_value_size()): self.add_list_value().CopyFrom(x.list_value(i))
+    for i in range(x.list_value_size()): self.add_list_value().CopyFrom(x.list_value(i))
     if (x.has_meaning()): self.set_meaning(x.meaning())
     if (x.has_indexed()): self.set_indexed(x.indexed())
 
@@ -1093,7 +1093,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
     if (self.has_entity_value_): n += 1 + self.lengthString(self.entity_value_.ByteSize())
     if (self.has_geo_point_value_): n += 1 + self.lengthString(self.geo_point_value_.ByteSize())
     n += 1 * len(self.list_value_)
-    for i in xrange(len(self.list_value_)): n += self.lengthString(self.list_value_[i].ByteSize())
+    for i in range(len(self.list_value_)): n += self.lengthString(self.list_value_[i].ByteSize())
     if (self.has_meaning_): n += 1 + self.lengthVarInt64(self.meaning_)
     if (self.has_indexed_): n += 2
     return n
@@ -1111,7 +1111,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
     if (self.has_entity_value_): n += 1 + self.lengthString(self.entity_value_.ByteSizePartial())
     if (self.has_geo_point_value_): n += 1 + self.lengthString(self.geo_point_value_.ByteSizePartial())
     n += 1 * len(self.list_value_)
-    for i in xrange(len(self.list_value_)): n += self.lengthString(self.list_value_[i].ByteSizePartial())
+    for i in range(len(self.list_value_)): n += self.lengthString(self.list_value_[i].ByteSizePartial())
     if (self.has_meaning_): n += 1 + self.lengthVarInt64(self.meaning_)
     if (self.has_indexed_): n += 2
     return n
@@ -1152,7 +1152,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(50)
       out.putVarInt32(self.entity_value_.ByteSize())
       self.entity_value_.OutputUnchecked(out)
-    for i in xrange(len(self.list_value_)):
+    for i in range(len(self.list_value_)):
       out.putVarInt32(58)
       out.putVarInt32(self.list_value_[i].ByteSize())
       self.list_value_[i].OutputUnchecked(out)
@@ -1197,7 +1197,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(50)
       out.putVarInt32(self.entity_value_.ByteSizePartial())
       self.entity_value_.OutputPartial(out)
-    for i in xrange(len(self.list_value_)):
+    for i in range(len(self.list_value_)):
       out.putVarInt32(58)
       out.putVarInt32(self.list_value_[i].ByteSizePartial())
       self.list_value_[i].OutputPartial(out)
@@ -1316,7 +1316,7 @@ class Value(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kboolean_value = 1
   kinteger_value = 2
@@ -1455,7 +1455,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
     assert x is not self
     if (x.has_name()): self.set_name(x.name())
     if (x.has_deprecated_multi()): self.set_deprecated_multi(x.deprecated_multi())
-    for i in xrange(x.deprecated_value_size()): self.add_deprecated_value().CopyFrom(x.deprecated_value(i))
+    for i in range(x.deprecated_value_size()): self.add_deprecated_value().CopyFrom(x.deprecated_value(i))
     if (x.has_value()): self.mutable_value().MergeFrom(x.value())
 
   if _net_proto___parse__python is not None:
@@ -1514,7 +1514,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
     n += self.lengthString(len(self.name_))
     if (self.has_deprecated_multi_): n += 2
     n += 1 * len(self.deprecated_value_)
-    for i in xrange(len(self.deprecated_value_)): n += self.lengthString(self.deprecated_value_[i].ByteSize())
+    for i in range(len(self.deprecated_value_)): n += self.lengthString(self.deprecated_value_[i].ByteSize())
     if (self.has_value_): n += 1 + self.lengthString(self.value_.ByteSize())
     return n + 1
 
@@ -1525,7 +1525,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
       n += self.lengthString(len(self.name_))
     if (self.has_deprecated_multi_): n += 2
     n += 1 * len(self.deprecated_value_)
-    for i in xrange(len(self.deprecated_value_)): n += self.lengthString(self.deprecated_value_[i].ByteSizePartial())
+    for i in range(len(self.deprecated_value_)): n += self.lengthString(self.deprecated_value_[i].ByteSizePartial())
     if (self.has_value_): n += 1 + self.lengthString(self.value_.ByteSizePartial())
     return n
 
@@ -1541,7 +1541,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
     if (self.has_deprecated_multi_):
       out.putVarInt32(16)
       out.putBoolean(self.deprecated_multi_)
-    for i in xrange(len(self.deprecated_value_)):
+    for i in range(len(self.deprecated_value_)):
       out.putVarInt32(26)
       out.putVarInt32(self.deprecated_value_[i].ByteSize())
       self.deprecated_value_[i].OutputUnchecked(out)
@@ -1557,7 +1557,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
     if (self.has_deprecated_multi_):
       out.putVarInt32(16)
       out.putBoolean(self.deprecated_multi_)
-    for i in xrange(len(self.deprecated_value_)):
+    for i in range(len(self.deprecated_value_)):
       out.putVarInt32(26)
       out.putVarInt32(self.deprecated_value_[i].ByteSizePartial())
       self.deprecated_value_[i].OutputPartial(out)
@@ -1613,7 +1613,7 @@ class Property(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   kdeprecated_multi = 2
@@ -1694,7 +1694,7 @@ class Entity(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_key()): self.mutable_key().MergeFrom(x.key())
-    for i in xrange(x.property_size()): self.add_property().CopyFrom(x.property(i))
+    for i in range(x.property_size()): self.add_property().CopyFrom(x.property(i))
 
   if _net_proto___parse__python is not None:
     def _CMergeFromString(self, s):
@@ -1743,14 +1743,14 @@ class Entity(ProtocolBuffer.ProtocolMessage):
     n = 0
     if (self.has_key_): n += 1 + self.lengthString(self.key_.ByteSize())
     n += 1 * len(self.property_)
-    for i in xrange(len(self.property_)): n += self.lengthString(self.property_[i].ByteSize())
+    for i in range(len(self.property_)): n += self.lengthString(self.property_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     if (self.has_key_): n += 1 + self.lengthString(self.key_.ByteSizePartial())
     n += 1 * len(self.property_)
-    for i in xrange(len(self.property_)): n += self.lengthString(self.property_[i].ByteSizePartial())
+    for i in range(len(self.property_)): n += self.lengthString(self.property_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -1762,7 +1762,7 @@ class Entity(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(10)
       out.putVarInt32(self.key_.ByteSize())
       self.key_.OutputUnchecked(out)
-    for i in xrange(len(self.property_)):
+    for i in range(len(self.property_)):
       out.putVarInt32(18)
       out.putVarInt32(self.property_[i].ByteSize())
       self.property_[i].OutputUnchecked(out)
@@ -1772,7 +1772,7 @@ class Entity(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(10)
       out.putVarInt32(self.key_.ByteSizePartial())
       self.key_.OutputPartial(out)
-    for i in xrange(len(self.property_)):
+    for i in range(len(self.property_)):
       out.putVarInt32(18)
       out.putVarInt32(self.property_[i].ByteSizePartial())
       self.property_[i].OutputPartial(out)
@@ -1816,7 +1816,7 @@ class Entity(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kkey = 1
   kproperty = 2

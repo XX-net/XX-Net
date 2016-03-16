@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -352,7 +352,7 @@ class FieldValue(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ktype = 1
   klanguage = 2
@@ -507,7 +507,7 @@ class Field(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   kvalue = 2
@@ -568,7 +568,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_name()): self.set_name(x.name())
-    for i in xrange(x.type_size()): self.add_type(x.type(i))
+    for i in range(x.type_size()): self.add_type(x.type(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -591,7 +591,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.name_))
     n += 1 * len(self.type_)
-    for i in xrange(len(self.type_)): n += self.lengthVarInt64(self.type_[i])
+    for i in range(len(self.type_)): n += self.lengthVarInt64(self.type_[i])
     return n + 1
 
   def ByteSizePartial(self):
@@ -600,7 +600,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.name_))
     n += 1 * len(self.type_)
-    for i in xrange(len(self.type_)): n += self.lengthVarInt64(self.type_[i])
+    for i in range(len(self.type_)): n += self.lengthVarInt64(self.type_[i])
     return n
 
   def Clear(self):
@@ -610,7 +610,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.name_)
-    for i in xrange(len(self.type_)):
+    for i in range(len(self.type_)):
       out.putVarInt32(16)
       out.putVarInt32(self.type_[i])
 
@@ -618,7 +618,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
     if (self.has_name_):
       out.putVarInt32(10)
       out.putPrefixedString(self.name_)
-    for i in xrange(len(self.type_)):
+    for i in range(len(self.type_)):
       out.putVarInt32(16)
       out.putVarInt32(self.type_[i])
 
@@ -650,7 +650,7 @@ class FieldTypes(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   ktype = 2
@@ -741,9 +741,9 @@ class IndexShardSettings(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.prev_num_shards_size()): self.add_prev_num_shards(x.prev_num_shards(i))
+    for i in range(x.prev_num_shards_size()): self.add_prev_num_shards(x.prev_num_shards(i))
     if (x.has_num_shards()): self.set_num_shards(x.num_shards())
-    for i in xrange(x.prev_num_shards_search_false_size()): self.add_prev_num_shards_search_false(x.prev_num_shards_search_false(i))
+    for i in range(x.prev_num_shards_search_false_size()): self.add_prev_num_shards_search_false(x.prev_num_shards_search_false(i))
     if (x.has_local_replica()): self.set_local_replica(x.local_replica())
 
   def Equals(self, x):
@@ -771,22 +771,22 @@ class IndexShardSettings(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.prev_num_shards_)
-    for i in xrange(len(self.prev_num_shards_)): n += self.lengthVarInt64(self.prev_num_shards_[i])
+    for i in range(len(self.prev_num_shards_)): n += self.lengthVarInt64(self.prev_num_shards_[i])
     n += self.lengthVarInt64(self.num_shards_)
     n += 1 * len(self.prev_num_shards_search_false_)
-    for i in xrange(len(self.prev_num_shards_search_false_)): n += self.lengthVarInt64(self.prev_num_shards_search_false_[i])
+    for i in range(len(self.prev_num_shards_search_false_)): n += self.lengthVarInt64(self.prev_num_shards_search_false_[i])
     if (self.has_local_replica_): n += 1 + self.lengthString(len(self.local_replica_))
     return n + 1
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.prev_num_shards_)
-    for i in xrange(len(self.prev_num_shards_)): n += self.lengthVarInt64(self.prev_num_shards_[i])
+    for i in range(len(self.prev_num_shards_)): n += self.lengthVarInt64(self.prev_num_shards_[i])
     if (self.has_num_shards_):
       n += 1
       n += self.lengthVarInt64(self.num_shards_)
     n += 1 * len(self.prev_num_shards_search_false_)
-    for i in xrange(len(self.prev_num_shards_search_false_)): n += self.lengthVarInt64(self.prev_num_shards_search_false_[i])
+    for i in range(len(self.prev_num_shards_search_false_)): n += self.lengthVarInt64(self.prev_num_shards_search_false_[i])
     if (self.has_local_replica_): n += 1 + self.lengthString(len(self.local_replica_))
     return n
 
@@ -797,12 +797,12 @@ class IndexShardSettings(ProtocolBuffer.ProtocolMessage):
     self.clear_local_replica()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.prev_num_shards_)):
+    for i in range(len(self.prev_num_shards_)):
       out.putVarInt32(8)
       out.putVarInt32(self.prev_num_shards_[i])
     out.putVarInt32(16)
     out.putVarInt32(self.num_shards_)
-    for i in xrange(len(self.prev_num_shards_search_false_)):
+    for i in range(len(self.prev_num_shards_search_false_)):
       out.putVarInt32(24)
       out.putVarInt32(self.prev_num_shards_search_false_[i])
     if (self.has_local_replica_):
@@ -810,13 +810,13 @@ class IndexShardSettings(ProtocolBuffer.ProtocolMessage):
       out.putPrefixedString(self.local_replica_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.prev_num_shards_)):
+    for i in range(len(self.prev_num_shards_)):
       out.putVarInt32(8)
       out.putVarInt32(self.prev_num_shards_[i])
     if (self.has_num_shards_):
       out.putVarInt32(16)
       out.putVarInt32(self.num_shards_)
-    for i in xrange(len(self.prev_num_shards_search_false_)):
+    for i in range(len(self.prev_num_shards_search_false_)):
       out.putVarInt32(24)
       out.putVarInt32(self.prev_num_shards_search_false_[i])
     if (self.has_local_replica_):
@@ -864,7 +864,7 @@ class IndexShardSettings(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kprev_num_shards = 1
   knum_shards = 2
@@ -1123,7 +1123,7 @@ class IndexMetadata(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kis_over_field_number_threshold = 1
   kindex_shard_settings = 2
@@ -1274,7 +1274,7 @@ class FacetValue(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ktype = 1
   kstring_value = 3
@@ -1417,7 +1417,7 @@ class Facet(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   kvalue = 2
@@ -1546,7 +1546,7 @@ class DocumentMetadata(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kversion = 1
   kcommitted_st_version = 2
@@ -1682,10 +1682,10 @@ class Document(ProtocolBuffer.ProtocolMessage):
     assert x is not self
     if (x.has_id()): self.set_id(x.id())
     if (x.has_language()): self.set_language(x.language())
-    for i in xrange(x.field_size()): self.add_field().CopyFrom(x.field(i))
+    for i in range(x.field_size()): self.add_field().CopyFrom(x.field(i))
     if (x.has_order_id()): self.set_order_id(x.order_id())
     if (x.has_storage()): self.set_storage(x.storage())
-    for i in xrange(x.facet_size()): self.add_facet().CopyFrom(x.facet(i))
+    for i in range(x.facet_size()): self.add_facet().CopyFrom(x.facet(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -1718,11 +1718,11 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_id_): n += 1 + self.lengthString(len(self.id_))
     if (self.has_language_): n += 1 + self.lengthString(len(self.language_))
     n += 1 * len(self.field_)
-    for i in xrange(len(self.field_)): n += self.lengthString(self.field_[i].ByteSize())
+    for i in range(len(self.field_)): n += self.lengthString(self.field_[i].ByteSize())
     if (self.has_order_id_): n += 1 + self.lengthVarInt64(self.order_id_)
     if (self.has_storage_): n += 1 + self.lengthVarInt64(self.storage_)
     n += 1 * len(self.facet_)
-    for i in xrange(len(self.facet_)): n += self.lengthString(self.facet_[i].ByteSize())
+    for i in range(len(self.facet_)): n += self.lengthString(self.facet_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
@@ -1730,11 +1730,11 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_id_): n += 1 + self.lengthString(len(self.id_))
     if (self.has_language_): n += 1 + self.lengthString(len(self.language_))
     n += 1 * len(self.field_)
-    for i in xrange(len(self.field_)): n += self.lengthString(self.field_[i].ByteSizePartial())
+    for i in range(len(self.field_)): n += self.lengthString(self.field_[i].ByteSizePartial())
     if (self.has_order_id_): n += 1 + self.lengthVarInt64(self.order_id_)
     if (self.has_storage_): n += 1 + self.lengthVarInt64(self.storage_)
     n += 1 * len(self.facet_)
-    for i in xrange(len(self.facet_)): n += self.lengthString(self.facet_[i].ByteSizePartial())
+    for i in range(len(self.facet_)): n += self.lengthString(self.facet_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -1752,7 +1752,7 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_language_):
       out.putVarInt32(18)
       out.putPrefixedString(self.language_)
-    for i in xrange(len(self.field_)):
+    for i in range(len(self.field_)):
       out.putVarInt32(26)
       out.putVarInt32(self.field_[i].ByteSize())
       self.field_[i].OutputUnchecked(out)
@@ -1762,7 +1762,7 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_storage_):
       out.putVarInt32(40)
       out.putVarInt32(self.storage_)
-    for i in xrange(len(self.facet_)):
+    for i in range(len(self.facet_)):
       out.putVarInt32(66)
       out.putVarInt32(self.facet_[i].ByteSize())
       self.facet_[i].OutputUnchecked(out)
@@ -1774,7 +1774,7 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_language_):
       out.putVarInt32(18)
       out.putPrefixedString(self.language_)
-    for i in xrange(len(self.field_)):
+    for i in range(len(self.field_)):
       out.putVarInt32(26)
       out.putVarInt32(self.field_[i].ByteSizePartial())
       self.field_[i].OutputPartial(out)
@@ -1784,7 +1784,7 @@ class Document(ProtocolBuffer.ProtocolMessage):
     if (self.has_storage_):
       out.putVarInt32(40)
       out.putVarInt32(self.storage_)
-    for i in xrange(len(self.facet_)):
+    for i in range(len(self.facet_)):
       out.putVarInt32(66)
       out.putVarInt32(self.facet_[i].ByteSizePartial())
       self.facet_[i].OutputPartial(out)
@@ -1848,7 +1848,7 @@ class Document(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kid = 1
   klanguage = 2

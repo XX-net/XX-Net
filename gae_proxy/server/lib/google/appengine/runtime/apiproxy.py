@@ -164,7 +164,7 @@ class RPC(apiproxy_rpc.RPC):
         rpc = exc._appengine_apiproxy_rpc
 
       new_exc = apiproxy_errors.InterruptedError(exc, rpc)
-      raise new_exc.__class__, new_exc, tb
+      raise new_exc.__class__(new_exc).with_traceback(tb)
     return True
 
   def _MakeCallImpl(self):
@@ -224,7 +224,7 @@ class RPC(apiproxy_rpc.RPC):
     else:
       try:
         self.response.ParseFromString(self._result_dict['result_string'])
-      except Exception, e:
+      except Exception as e:
         self._exception = e
     self._Callback()
 

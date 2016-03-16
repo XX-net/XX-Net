@@ -156,7 +156,7 @@ class PolymorphicClass(db.PropertiedClass):
     _class_map[cls.class_key()] = cls
 
 
-class PolyModel(db.Model):
+class PolyModel(db.Model, metaclass=PolymorphicClass):
   """Base-class for models that supports polymorphic queries.
 
   Use this class to build hierarchies that can be queried based
@@ -226,8 +226,6 @@ class PolyModel(db.Model):
 
       Animal.kind() == Feline.kind() == Panther.kind() == 'Animal'
   """
-
-  __metaclass__ = PolymorphicClass
 
 
 

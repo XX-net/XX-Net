@@ -71,7 +71,7 @@ import os
 import pickle
 import random
 import sys
-import thread
+import _thread
 import threading
 import yaml
 import hashlib
@@ -368,7 +368,7 @@ class RemoteDatastoreStub(RemoteStub):
       txid = get_request.transaction().handle()
       txdata = self.__transactions[txid]
       assert (txdata.thread_id ==
-          thread.get_ident()), "Transactions are single-threaded."
+          _thread.get_ident()), "Transactions are single-threaded."
 
 
       keys = [(k, k.Encode()) for k in get_request.key_list()]
@@ -409,7 +409,7 @@ class RemoteDatastoreStub(RemoteStub):
           else:
             new_response.add_entity()
         else:
-          new_entity = it.next()
+          new_entity = next(it)
           if new_entity.has_entity():
             assert new_entity.entity().key() == key
             new_response.add_entity().CopyFrom(new_entity)
@@ -430,7 +430,7 @@ class RemoteDatastoreStub(RemoteStub):
       txid = put_request.transaction().handle()
       txdata = self.__transactions[txid]
       assert (txdata.thread_id ==
-          thread.get_ident()), "Transactions are single-threaded."
+          _thread.get_ident()), "Transactions are single-threaded."
       if new_ents:
         for ent in new_ents:
           e = id_request.add_entity()
@@ -464,7 +464,7 @@ class RemoteDatastoreStub(RemoteStub):
       txid = delete_request.transaction().handle()
       txdata = self.__transactions[txid]
       assert (txdata.thread_id ==
-          thread.get_ident()), "Transactions are single-threaded."
+          _thread.get_ident()), "Transactions are single-threaded."
       for key in delete_request.key_list():
         txdata.entities[key.Encode()] = (key, None)
     else:
@@ -475,7 +475,7 @@ class RemoteDatastoreStub(RemoteStub):
     self.__local_tx_lock.acquire()
     try:
       txid = self.__next_local_tx
-      self.__transactions[txid] = TransactionData(thread.get_ident(),
+      self.__transactions[txid] = TransactionData(_thread.get_ident(),
                                                   request.allow_multiple_eg())
       self.__next_local_tx += 1
     finally:
@@ -492,12 +492,12 @@ class RemoteDatastoreStub(RemoteStub):
 
     txdata = self.__transactions[txid]
     assert (txdata.thread_id ==
-        thread.get_ident()), "Transactions are single-threaded."
+        _thread.get_ident()), "Transactions are single-threaded."
     del self.__transactions[txid]
 
     tx = remote_api_pb.TransactionRequest()
     tx.set_allow_multiple_eg(txdata.is_xg)
-    for key, txhash in txdata.preconditions.values():
+    for key, txhash in list(txdata.preconditions.values()):
       precond = tx.add_precondition()
       precond.mutable_key().CopyFrom(key)
       if txhash:
@@ -505,7 +505,7 @@ class RemoteDatastoreStub(RemoteStub):
 
     puts = tx.mutable_puts()
     deletes = tx.mutable_deletes()
-    for key, entity in txdata.entities.values():
+    for key, entity in list(txdata.entities.values()):
       if entity:
         puts.add_entity().CopyFrom(entity)
       else:
@@ -527,7 +527,7 @@ class RemoteDatastoreStub(RemoteStub):
 
       txdata = self.__transactions[txid]
       assert (txdata.thread_id ==
-          thread.get_ident()), "Transactions are single-threaded."
+          _thread.get_ident()), "Transactions are single-threaded."
       del self.__transactions[txid]
     finally:
       self.__local_tx_lock.release()
@@ -716,14 +716,14 @@ def ConfigureRemoteApiForOAuth(
   try:
 
     from oauth2client import client
-  except ImportError, e:
+  except ImportError as e:
     raise ImportError('Use of OAuth credentials requires the '
                       'oauth2client module: %s' % e)
 
   try:
 
     from google.appengine.tools import appengine_rpc_httplib2
-  except ImportError, e:
+  except ImportError as e:
     raise ImportError('Use of OAuth credentials requires the '
                       'appengine_rpc_httplib2 module. %s' % e)
 

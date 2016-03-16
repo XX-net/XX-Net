@@ -278,7 +278,7 @@ class PropertyFilter(_SinglePropertyFilter):
   }
 
   _OPERATORS_INVERSE = dict((value, key)
-                            for key, value in _OPERATORS.iteritems())
+                            for key, value in _OPERATORS.items())
 
   _OPERATORS_TO_PYTHON_OPERATOR = {
       datastore_pb.Query_Filter.LESS_THAN: '<',
@@ -878,18 +878,18 @@ class CompositeFilter(FilterPredicate):
       matches = collections.defaultdict(set)
       for f in self._filters:
         props = f._get_prop_names()
-        local_value_map = dict((k, v) for k, v in value_map.iteritems()
+        local_value_map = dict((k, v) for k, v in value_map.items()
                                if k in props)
 
         if not f._prune(local_value_map):
           return False
 
 
-        for (prop, values) in local_value_map.iteritems():
+        for (prop, values) in local_value_map.items():
           matches[prop].update(values)
 
 
-      for prop, value_set in matches.iteritems():
+      for prop, value_set in matches.items():
 
         value_map[prop] = sorted(value_set)
       return True
@@ -1462,7 +1462,7 @@ class QueryOptions(FetchOptions):
       raise datastore_errors.BadArgumentError(
           'projection argument cannot be empty')
     for prop in value:
-      if not isinstance(prop, basestring):
+      if not isinstance(prop, str):
         raise datastore_errors.BadArgumentError(
             'projection argument should contain only strings (%r)' % (prop,))
 
@@ -1638,7 +1638,7 @@ class Cursor(_BaseComponent):
   @staticmethod
   def _urlsafe_to_bytes(cursor):
 
-    if not isinstance(cursor, basestring):
+    if not isinstance(cursor, str):
       raise datastore_errors.BadValueError(
           'cursor argument should be str or unicode (%r)' % (cursor,))
 
@@ -1647,7 +1647,7 @@ class Cursor(_BaseComponent):
 
       decoded_bytes = base64.b64decode(
           str(cursor).replace('-', '+').replace('_', '/'))
-    except (ValueError, TypeError), e:
+    except (ValueError, TypeError) as e:
       raise datastore_errors.BadValueError(
           'Invalid cursor %s. Details: %s' % (cursor, e))
     return decoded_bytes
@@ -1925,7 +1925,7 @@ class Query(_BaseQuery):
         raise datastore_errors.BadArgumentError(
             'group_by argument cannot be empty')
       for prop in group_by:
-        if not isinstance(prop, basestring):
+        if not isinstance(prop, str):
           raise datastore_errors.BadArgumentError(
               'group_by argument should contain only strings (%r)' % (prop,))
 
@@ -2244,7 +2244,7 @@ def apply_query(query, entities, _key=None):
 
   key = _key or (lambda x: x)
 
-  filtered_results = filter(lambda r: query._key_filter(key(r)), entities)
+  filtered_results = [r for r in entities if query._key_filter(key(r))]
 
   if not query._order:
 
@@ -2252,7 +2252,7 @@ def apply_query(query, entities, _key=None):
 
 
     if query._filter_predicate:
-      return filter(lambda r: query._filter_predicate(key(r)), filtered_results)
+      return [r for r in filtered_results if query._filter_predicate(key(r))]
     return filtered_results
 
 
@@ -2440,7 +2440,7 @@ def inject_results(query, updated_entities=None, deleted_keys=None):
     if not isinstance(deleted_keys, list):
       raise datastore_errors.BadArgumentError(
           'deleted_keys argument must be a list (%r)' % (deleted_keys,))
-    deleted_keys = filter(query._key_filter, deleted_keys)
+    deleted_keys = list(filter(query._key_filter, deleted_keys))
     for key in deleted_keys:
       overridden_keys.add(datastore_types.ReferenceToKeyValue(key))
 
@@ -2450,7 +2450,7 @@ def inject_results(query, updated_entities=None, deleted_keys=None):
           'updated_entities argument must be a list (%r)' % (updated_entities,))
 
 
-    updated_entities = filter(query._key_filter, updated_entities)
+    updated_entities = list(filter(query._key_filter, updated_entities))
     for entity in updated_entities:
       overridden_keys.add(datastore_types.ReferenceToKeyValue(entity.key()))
 
@@ -2718,7 +2718,7 @@ class Batch(object):
       which if used as a start_cursor will cause the first result to be
       batch.result[index].
     """
-    if not isinstance(index, (int, long)):
+    if not isinstance(index, int):
       raise datastore_errors.BadArgumentError(
           'index argument should be entity_pb.Reference (%r)' % (index,))
     if not -self._skipped_results <= index <= len(self.__results):
@@ -2904,7 +2904,7 @@ class Batch(object):
     """Internal method used as get_result_hook for RunQuery/Next operation."""
     try:
       self._batch_shared.conn.check_rpc_success(rpc)
-    except datastore_errors.NeedIndexError, exc:
+    except datastore_errors.NeedIndexError as exc:
 
       if isinstance(rpc.request, datastore_pb.Query):
         _, kind, ancestor, props = datastore_index.CompositeIndexForQuery(
@@ -3063,7 +3063,7 @@ class _AugmentedBatch(Batch):
 
     in_memory_filter = self._batch_shared.augmented_query._in_memory_filter
     if in_memory_filter:
-      results = filter(in_memory_filter, results)
+      results = list(filter(in_memory_filter, results))
 
 
     in_memory_results = self._batch_shared.augmented_query._in_memory_results
@@ -3165,7 +3165,7 @@ class Batcher(object):
     self.__initial_offset = QueryOptions.offset(query_options) or 0
     self.__skipped_results = 0
 
-  def next(self):
+  def __next__(self):
     """Get the next batch. See .next_batch()."""
     return self.next_batch(self.AT_LEAST_ONE)
 
@@ -3309,7 +3309,7 @@ class ResultsIterator(object):
     return self._ensure_current_batch()._compiled_query()
 
 
-  def next(self):
+  def __next__(self):
     """Returns the next query result."""
     while (not self.__current_batch or
            self.__current_pos >= len(self.__current_batch.results)):

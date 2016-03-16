@@ -82,7 +82,7 @@ class BaseKindStatistic(BaseStatistic):
 
 
 
-  entity_bytes = db.IntegerProperty(default=0L)
+  entity_bytes = db.IntegerProperty(default=0)
 
 
 class GlobalStat(BaseStatistic):
@@ -104,19 +104,19 @@ class GlobalStat(BaseStatistic):
   STORED_KIND_NAME = '__Stat_Total__'
 
 
-  entity_bytes = db.IntegerProperty(default=0L)
+  entity_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
-  composite_index_bytes = db.IntegerProperty(default=0L)
+  composite_index_bytes = db.IntegerProperty(default=0)
 
 
-  composite_index_count = db.IntegerProperty(default=0L)
+  composite_index_count = db.IntegerProperty(default=0)
 
 
 class NamespaceStat(BaseStatistic):
@@ -144,19 +144,19 @@ class NamespaceStat(BaseStatistic):
   subject_namespace = db.StringProperty()
 
 
-  entity_bytes = db.IntegerProperty(default=0L)
+  entity_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
-  composite_index_bytes = db.IntegerProperty(default=0L)
+  composite_index_bytes = db.IntegerProperty(default=0)
 
 
-  composite_index_count = db.IntegerProperty(default=0L)
+  composite_index_count = db.IntegerProperty(default=0)
 
 
 class KindStat(BaseKindStatistic):
@@ -176,16 +176,16 @@ class KindStat(BaseKindStatistic):
   STORED_KIND_NAME = '__Stat_Kind__'
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
-  composite_index_bytes = db.IntegerProperty(default=0L)
+  composite_index_bytes = db.IntegerProperty(default=0)
 
 
-  composite_index_count = db.IntegerProperty(default=0L)
+  composite_index_count = db.IntegerProperty(default=0)
 
 
 class KindRootEntityStat(BaseKindStatistic):
@@ -229,13 +229,13 @@ class PropertyTypeStat(BaseStatistic):
   property_type = db.StringProperty()
 
 
-  entity_bytes = db.IntegerProperty(default=0L)
+  entity_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
 class KindPropertyTypeStat(BaseKindStatistic):
@@ -256,10 +256,10 @@ class KindPropertyTypeStat(BaseKindStatistic):
   property_type = db.StringProperty()
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
 class KindPropertyNameStat(BaseKindStatistic):
@@ -281,10 +281,10 @@ class KindPropertyNameStat(BaseKindStatistic):
   property_name = db.StringProperty()
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
 class KindPropertyNamePropertyTypeStat(BaseKindStatistic):
@@ -310,10 +310,10 @@ class KindPropertyNamePropertyTypeStat(BaseKindStatistic):
   property_name = db.StringProperty()
 
 
-  builtin_index_bytes = db.IntegerProperty(default=0L)
+  builtin_index_bytes = db.IntegerProperty(default=0)
 
 
-  builtin_index_count = db.IntegerProperty(default=0L)
+  builtin_index_count = db.IntegerProperty(default=0)
 
 
 class KindCompositeIndexStat(BaseStatistic):

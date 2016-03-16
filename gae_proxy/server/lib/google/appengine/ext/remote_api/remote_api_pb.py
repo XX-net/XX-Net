@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -220,7 +220,7 @@ class Request(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kservice_name = 2
   kmethod = 3
@@ -365,7 +365,7 @@ class ApplicationError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kcode = 1
   kdetail = 2
@@ -534,7 +534,7 @@ class RpcError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kcode = 1
   kdetail = 2
@@ -787,7 +787,7 @@ class Response(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kresponse = 1
   kexception = 2
@@ -1016,7 +1016,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.precondition_size()): self.add_precondition().CopyFrom(x.precondition(i))
+    for i in range(x.precondition_size()): self.add_precondition().CopyFrom(x.precondition(i))
     if (x.has_puts()): self.mutable_puts().MergeFrom(x.puts())
     if (x.has_deletes()): self.mutable_deletes().MergeFrom(x.deletes())
     if (x.has_allow_multiple_eg()): self.set_allow_multiple_eg(x.allow_multiple_eg())
@@ -1045,7 +1045,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 2 * len(self.precondition_)
-    for i in xrange(len(self.precondition_)): n += self.precondition_[i].ByteSize()
+    for i in range(len(self.precondition_)): n += self.precondition_[i].ByteSize()
     if (self.has_puts_): n += 1 + self.lengthString(self.puts_.ByteSize())
     if (self.has_deletes_): n += 1 + self.lengthString(self.deletes_.ByteSize())
     if (self.has_allow_multiple_eg_): n += 2
@@ -1054,7 +1054,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 2 * len(self.precondition_)
-    for i in xrange(len(self.precondition_)): n += self.precondition_[i].ByteSizePartial()
+    for i in range(len(self.precondition_)): n += self.precondition_[i].ByteSizePartial()
     if (self.has_puts_): n += 1 + self.lengthString(self.puts_.ByteSizePartial())
     if (self.has_deletes_): n += 1 + self.lengthString(self.deletes_.ByteSizePartial())
     if (self.has_allow_multiple_eg_): n += 2
@@ -1067,7 +1067,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_allow_multiple_eg()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.precondition_)):
+    for i in range(len(self.precondition_)):
       out.putVarInt32(11)
       self.precondition_[i].OutputUnchecked(out)
       out.putVarInt32(12)
@@ -1084,7 +1084,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
       out.putBoolean(self.allow_multiple_eg_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.precondition_)):
+    for i in range(len(self.precondition_)):
       out.putVarInt32(11)
       self.precondition_[i].OutputPartial(out)
       out.putVarInt32(12)
@@ -1150,7 +1150,7 @@ class TransactionRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kPreconditionGroup = 1
   kPreconditionkey = 2
@@ -1356,7 +1356,7 @@ class TransactionQueryResult(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kresult = 1
   kentity_group_key = 2

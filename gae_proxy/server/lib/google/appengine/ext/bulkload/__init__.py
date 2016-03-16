@@ -37,7 +37,7 @@ This package contains two separate systems:
 
 
 
-import bulkload_deprecated
+from . import bulkload_deprecated
 Validate = bulkload_deprecated.Validate
 Loader = bulkload_deprecated.Loader
 BulkLoad = bulkload_deprecated.BulkLoad

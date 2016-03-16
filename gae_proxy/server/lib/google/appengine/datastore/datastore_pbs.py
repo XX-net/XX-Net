@@ -235,7 +235,7 @@ def get_v1_mutation_key_and_entity(v1_mutation):
 
 
 def is_valid_utf8(s):
-  if isinstance(s, unicode):
+  if isinstance(s, str):
     return True
   try:
     s.decode('utf-8')
@@ -1034,7 +1034,7 @@ class _EntityConverter(object):
       is_projection: True if the v1_entity is from a projection query.
     """
     v3_entity.Clear()
-    for property_name, v1_value in v1_entity.properties.iteritems():
+    for property_name, v1_value in v1_entity.properties.items():
 
       if v1_value.HasField('array_value'):
         if len(v1_value.array_value.values) == 0:

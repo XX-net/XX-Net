@@ -36,7 +36,7 @@ Handle the CSV format specified in a bulkloader.yaml file.
 
 
 import codecs
-import cStringIO
+import io
 import csv
 import encodings
 import encodings.ascii
@@ -83,13 +83,13 @@ class UnicodeDictWriter(object):
     else:
       self.no_recoding = False
       self.encoder = codecs.getencoder('utf-8')
-      self.queue = cStringIO.StringIO()
+      self.queue = io.StringIO()
       self.writer = csv.DictWriter(self.queue, fieldnames, **kwds)
       self.stream = writer(stream)
 
   def writerow(self, row):
     """Wrap writerow method."""
-    row_encoded = dict([(k, self.encoder(v)[0]) for (k, v) in row.iteritems()])
+    row_encoded = dict([(k, self.encoder(v)[0]) for (k, v) in row.items()])
     self.writer.writerow(row_encoded)
     if self.no_recoding:
       return
@@ -226,16 +226,16 @@ class CsvConnector(connector_interface.ConnectorInterface):
 
 
       decoded_dict = {}
-      for key, value in input_dict.iteritems():
+      for key, value in input_dict.items():
         if key == None:
           raise bulkloader_errors.InvalidImportData(
               'Got more values in row than headers on line %d.'
               % (line_number))
         if not self.column_list:
 
-          key = unicode(key, 'utf-8')
+          key = str(key, 'utf-8')
         if value:
-          value = unicode(value, 'utf-8')
+          value = str(value, 'utf-8')
         decoded_dict[key] = value
       yield decoded_dict
 
@@ -264,8 +264,8 @@ class CsvConnector(connector_interface.ConnectorInterface):
                                         self.csv_encoding,
                                         **self.export_options)
     if write_header:
-      self.csv_writer.writerow(dict(zip(export_column_list,
-                                        export_column_list)))
+      self.csv_writer.writerow(dict(list(zip(export_column_list,
+                                        export_column_list))))
 
   def write_dict(self, dictionary):
     """Write one record for the specified entity."""

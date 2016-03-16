@@ -383,7 +383,7 @@ class BlobInfo(object):
       keys = [keys]
 
     for index, key in enumerate(keys):
-      if not isinstance(key, (basestring, BlobKey)):
+      if not isinstance(key, (str, BlobKey)):
         raise datastore_errors.BadArgumentError(
             'Expected str or BlobKey; received %s (a %s)' % (
                 key,
@@ -473,7 +473,7 @@ def _parse_upload_info(field_storage, error_class):
 
   try:
     creation = blobstore._parse_creation(creation_string, field_name)
-  except blobstore._CreationFormatError, err:
+  except blobstore._CreationFormatError as err:
     raise error_class(str(err))
 
   return {'blob_key': blob_key,
@@ -640,7 +640,7 @@ class BlobReferenceProperty(db.Property):
 
     Automatically converts from strings and BlobKey instances.
     """
-    if isinstance(value, (basestring)):
+    if isinstance(value, (str)):
       value = BlobInfo(BlobKey(value))
     elif isinstance(value, BlobKey):
       value = BlobInfo(value)
@@ -773,7 +773,7 @@ class BlobReader(object):
   def flush(self):
     raise IOError("BlobReaders are read-only")
 
-  def next(self):
+  def __next__(self):
     """Returns the next line from the file.
 
     Returns:

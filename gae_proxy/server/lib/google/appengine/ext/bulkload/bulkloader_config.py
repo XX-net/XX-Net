@@ -94,9 +94,9 @@ def default_export_transform(value):
 
 
   if value is None:
-    return u''
+    return ''
   else:
-    return unicode(value)
+    return str(value)
 
 
 class DictConvertor(object):
@@ -222,7 +222,7 @@ class DictConvertor(object):
     key = None
     if self._create_key:
       key = self.__dict_to_prop(self._create_key, input_dict, bulkload_state)
-      if isinstance(key, (int, long)):
+      if isinstance(key, int):
         key = datastore.Key.from_path(self._transformer_spec.kind, key)
       if self._transformer_spec.model:
         if isinstance(key, datastore.Key):
@@ -286,7 +286,7 @@ class DictConvertor(object):
               value, bulkload_state=bulkload_state)
         else:
           transformed_value = transform.export_transform(value)
-      except Exception, err:
+      except Exception as err:
         raise bulkloader_errors.ErrorOnTransform(
             'Error on transform. '
             'Property: %s External Name: %s. Code: %s Details: %s' %
@@ -435,7 +435,7 @@ class GenericImporter(object):
 
 
     for id_or_name in key.to_path()[1::2]:
-      if isinstance(id_or_name, (int, long)):
+      if isinstance(id_or_name, int):
         self.keys_to_reserve.append(key)
         return
 

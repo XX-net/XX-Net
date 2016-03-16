@@ -32,10 +32,10 @@ Please use the new bulkloader.
 
 
 
-import Cookie
-import StringIO
+import http.cookies
+import io
 import csv
-import httplib
+import http.client
 import os
 import traceback
 import wsgiref.handlers
@@ -43,6 +43,7 @@ import wsgiref.handlers
 from google.appengine.api import datastore
 from google.appengine.ext import webapp
 from google.appengine.ext.bulkload import constants
+import collections
 
 
 def Validate(value, type):
@@ -108,13 +109,13 @@ class Loader(object):
          ('description', datastore_types.Text),
          ]
     """
-    Validate(kind, basestring)
+    Validate(kind, str)
     self.__kind = kind
 
     Validate(properties, list)
     for name, fn in properties:
-      Validate(name, basestring)
-      assert callable(fn), (
+      Validate(name, str)
+      assert isinstance(fn, collections.Callable), (
         'Conversion function %s for property %s is not callable.' % (fn, name))
 
     self.__properties = properties
@@ -253,7 +254,7 @@ class BulkLoad(webapp.RequestHandler):
 
     cookies = os.environ.get('HTTP_COOKIE', None)
     if cookies:
-      cookie = Cookie.BaseCookie(cookies)
+      cookie = http.cookies.BaseCookie(cookies)
 
 
 
@@ -309,11 +310,11 @@ class BulkLoad(webapp.RequestHandler):
         except:
           stacktrace = traceback.format_exc()
           output.append('error:\n%s' % stacktrace)
-          return (httplib.BAD_REQUEST, ''.join(output))
+          return (http.client.BAD_REQUEST, ''.join(output))
 
     datastore.Put(entities)
 
-    return (httplib.OK, ''.join(output))
+    return (http.client.OK, ''.join(output))
 
   def Load(self, kind, data):
     """Parses CSV data, uses a Loader to convert to entities, and stores them.
@@ -332,17 +333,17 @@ class BulkLoad(webapp.RequestHandler):
     """
 
     data = data.encode('utf-8')
-    Validate(kind, basestring)
-    Validate(data, basestring)
+    Validate(kind, str)
+    Validate(data, str)
     output = []
 
     try:
       loader = Loader.RegisteredLoaders()[kind]
     except KeyError:
       output.append('Error: no Loader defined for kind %s.' % kind)
-      return (httplib.BAD_REQUEST, ''.join(output))
+      return (http.client.BAD_REQUEST, ''.join(output))
 
-    buffer = StringIO.StringIO(data)
+    buffer = io.StringIO(data)
     reader = csv.reader(buffer, skipinitialspace=True)
 
     try:

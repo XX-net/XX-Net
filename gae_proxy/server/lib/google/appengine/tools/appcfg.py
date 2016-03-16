@@ -53,7 +53,7 @@ import urllib.request, urllib.error, urllib.parse
 
 
 import google
-from oauth2client import devshell
+from oauth2client.contrib import devshell
 import yaml
 
 from google.appengine.cron import groctimespecification

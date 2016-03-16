@@ -95,7 +95,7 @@ import datetime
 import logging
 import re
 import time
-import urlparse
+import urllib.parse
 import warnings
 
 from google.appengine.api import datastore
@@ -240,12 +240,12 @@ class DerivedPropertyError(Error):
 
 
 _ALLOWED_PROPERTY_TYPES = set([
-    basestring,
     str,
-    unicode,
+    str,
+    str,
     bool,
     int,
-    long,
+    int,
     float,
     Key,
     datetime.datetime,
@@ -422,7 +422,7 @@ def _initialize_properties(model_class, name, bases, dct):
         model_class._properties.update(base._properties)
 
 
-  for attr_name in dct.keys():
+  for attr_name in list(dct.keys()):
     attr = dct[attr_name]
     if isinstance(attr, Property):
       check_reserved_word(attr_name)
@@ -434,11 +434,11 @@ def _initialize_properties(model_class, name, bases, dct):
 
 
   model_class._all_properties = frozenset(
-      prop.name for name, prop in model_class._properties.items())
+      prop.name for name, prop in list(model_class._properties.items()))
 
 
   model_class._unindexed_properties = frozenset(
-    prop.name for name, prop in model_class._properties.items()
+    prop.name for name, prop in list(model_class._properties.items())
     if not prop.indexed)
 
 
@@ -455,7 +455,7 @@ def _coerce_to_key(value):
     return None
 
   value, multiple = datastore.NormalizeAndTypeCheck(
-    value, (Model, Key, basestring))
+    value, (Model, Key, str))
 
   if len(value) > 1:
     raise datastore_errors.BadArgumentError('Expected only one model or key')
@@ -463,7 +463,7 @@ def _coerce_to_key(value):
 
   if isinstance(value, Model):
     return value.key()
-  elif isinstance(value, basestring):
+  elif isinstance(value, str):
     return Key(value)
   else:
     return value
@@ -775,7 +775,7 @@ class Index(datastore._BaseIndex):
   properties = datastore._BaseIndex._Properties
 
 
-class Model(object):
+class Model(object, metaclass=PropertiedClass):
   """Model is the superclass of all object entities in the datastore.
 
   The programming model is to declare Python subclasses of the Model class,
@@ -796,9 +796,6 @@ class Model(object):
   root join the transaction.  All operations within a transaction on this
   group are ACID.
   """
-
-
-  __metaclass__ = PropertiedClass
 
   def __new__(*args, **unused_kwds):
     """Allow subclasses to call __new__() with arguments.
@@ -877,7 +874,7 @@ class Model(object):
     if key is not None:
       if isinstance(key, (tuple, list)):
         key = Key.from_path(*key)
-      if isinstance(key, basestring):
+      if isinstance(key, str):
         key = Key(encoded=key)
       if not isinstance(key, Key):
         raise TypeError('Expected Key type; received %s (is %s)' %
@@ -907,7 +904,7 @@ class Model(object):
     else:
       if key_name == '':
         raise BadKeyError('Name cannot be empty.')
-      elif key_name is not None and not isinstance(key_name, basestring):
+      elif key_name is not None and not isinstance(key_name, str):
         raise BadKeyError('Name must be string type, not %s' %
                           key_name.__class__.__name__)
 
@@ -962,7 +959,7 @@ class Model(object):
 
 
 
-    for prop in self.properties().values():
+    for prop in list(self.properties().values()):
       if prop.name in kwds:
         value = kwds[prop.name]
       elif is_projection:
@@ -1026,7 +1023,7 @@ class Model(object):
       entity: Entity to save information on.
     """
 
-    for prop in self.properties().values():
+    for prop in list(self.properties().values()):
       self.__set_property(entity, prop.name, prop.get_value_for_datastore(self))
 
 
@@ -1045,7 +1042,7 @@ class Model(object):
     self._entity = self._populate_entity(_entity_class=_entity_class)
 
 
-    for prop in self.properties().values():
+    for prop in list(self.properties().values()):
       new_value = prop.get_updated_value_for_datastore(self)
       if new_value is not AUTO_UPDATE_UNCHANGED:
         self.__set_property(self._entity, prop.name, new_value)
@@ -1269,11 +1266,11 @@ class Model(object):
     """
     try:
       parent = _coerce_to_key(parent)
-    except BadKeyError, e:
+    except BadKeyError as e:
 
       raise BadArgumentError(str(e))
 
-    key_names, multiple = datastore.NormalizeAndTypeCheck(key_names, basestring)
+    key_names, multiple = datastore.NormalizeAndTypeCheck(key_names, str)
     keys = [datastore.Key.from_path(cls.kind(), name, parent=parent)
             for name in key_names]
     if multiple:
@@ -1292,7 +1289,7 @@ class Model(object):
     """
     if isinstance(parent, Model):
       parent = parent.key()
-    ids, multiple = datastore.NormalizeAndTypeCheck(ids, (int, long))
+    ids, multiple = datastore.NormalizeAndTypeCheck(ids, (int, int))
     keys = [datastore.Key.from_path(cls.kind(), id, parent=parent)
             for id in ids]
     if multiple:
@@ -1406,7 +1403,7 @@ class Model(object):
       entity: Entity which contain values to search dyanmic properties for.
     """
     entity_values = {}
-    for prop in cls.properties().values():
+    for prop in list(cls.properties().values()):
       if prop.name in entity:
         try:
           value = entity[prop.name]
@@ -1588,7 +1585,7 @@ def delete_async(models, **kwargs):
   get_result() on the return value to block on the call.
   """
 
-  if isinstance(models, (basestring, Model, Key)):
+  if isinstance(models, (str, Model, Key)):
     models = [models]
   else:
     try:
@@ -1676,7 +1673,7 @@ def allocate_id_range(model, start, end, **kwargs):
     key range.
   """
   key = _coerce_to_key(model)
-  datastore.NormalizeAndTypeCheck((start, end), (int, long))
+  datastore.NormalizeAndTypeCheck((start, end), (int, int))
   if start < 1 or end < 1:
     raise BadArgumentError('Start %d and end %d must both be > 0.' %
                            (start, end))
@@ -1826,7 +1823,7 @@ class Expando(Model):
     """
     super(Expando, self).__init__(parent, key_name, _app, **kwds)
     self._dynamic_properties = {}
-    for prop, value in kwds.iteritems():
+    for prop, value in kwds.items():
       if prop not in self._all_properties and prop != 'key':
 
 
@@ -1937,7 +1934,7 @@ class Expando(Model):
     """
     if self._dynamic_properties is None:
       return []
-    return self._dynamic_properties.keys()
+    return list(self._dynamic_properties.keys())
 
   def _to_entity(self, entity):
     """Store to entity, deleting dynamic properties that no longer exist.
@@ -1953,12 +1950,12 @@ class Expando(Model):
     if self._dynamic_properties is None:
       self._dynamic_properties = {}
 
-    for key, value in self._dynamic_properties.iteritems():
+    for key, value in self._dynamic_properties.items():
       entity[key] = value
 
-    all_properties = set(self._dynamic_properties.iterkeys())
+    all_properties = set(self._dynamic_properties.keys())
     all_properties.update(self._all_properties)
-    for key in entity.keys():
+    for key in list(entity.keys()):
       if key not in all_properties:
         del entity[key]
 
@@ -1974,7 +1971,7 @@ class Expando(Model):
       entity: Entity which contain values to search dyanmic properties for.
     """
     entity_values = super(Expando, cls)._load_entity_values(entity)
-    for key, value in entity.iteritems():
+    for key, value in entity.items():
       if key not in entity_values:
 
         entity_values[str(key)] = value
@@ -2115,7 +2112,7 @@ class _BaseQuery(object):
     """
     results = self.run(limit=1, **kwargs)
     try:
-      return results.next()
+      return next(results)
     except StopIteration:
       return None
 
@@ -2280,7 +2277,7 @@ class _BaseQuery(object):
       if limit < 0:
         return []
       return self.fetch(limit, start)
-    elif isinstance(arg, (int, long)):
+    elif isinstance(arg, int):
       if arg < 0:
         raise ValueError('Only indices >= 0 are supported')
       results = self.fetch(1, arg)
@@ -2317,7 +2314,7 @@ class _QueryIterator(object):
     """
     return self
 
-  def next(self):
+  def __next__(self):
     """Get next Model instance in query results.
 
     Returns:
@@ -2327,10 +2324,10 @@ class _QueryIterator(object):
       StopIteration when there are no more results in query.
     """
     if self.__model_class is not None:
-      return self.__model_class.from_entity(self.__iterator.next())
+      return self.__model_class.from_entity(next(self.__iterator))
     else:
       while True:
-        entity = self.__iterator.next()
+        entity = next(self.__iterator)
         try:
           model_class = class_for_kind(entity.kind())
         except KindError:
@@ -2710,7 +2707,7 @@ class GqlQuery(_BaseQuery):
 
     if model_class is not None:
 
-      for property, unused in (self._proto_query.filters().keys() +
+      for property, unused in (list(self._proto_query.filters().keys()) +
                                self._proto_query.orderings()):
         if property in model_class._unindexed_properties:
           raise PropertyError('Property \'%s\' is not indexed' % property)
@@ -2744,7 +2741,7 @@ class GqlQuery(_BaseQuery):
     for arg in args:
       self._args.append(_normalize_query_parameter(arg))
     self._kwds = {}
-    for name, arg in kwds.iteritems():
+    for name, arg in kwds.items():
       self._kwds[name] = _normalize_query_parameter(arg)
 
   def run(self, **kwargs):
@@ -2800,7 +2797,7 @@ class UnindexedProperty(Property):
     if value is not None and not isinstance(value, self.data_type):
       try:
         value = self.data_type(value)
-      except TypeError, err:
+      except TypeError as err:
 
 
 
@@ -2843,7 +2840,7 @@ class StringProperty(Property):
       BadValueError if property is not multi-line but value is.
     """
     value = super(StringProperty, self).validate(value)
-    if value is not None and not isinstance(value, basestring):
+    if value is not None and not isinstance(value, str):
       raise BadValueError(
           'Property %s must be a str or unicode instance, not a %s'
           % (self.name, type(value).__name__))
@@ -2856,7 +2853,7 @@ class StringProperty(Property):
     return value
 
   MAX_LENGTH = 1500
-  data_type = basestring
+  data_type = str
 
 
 class _CoercingProperty(Property):
@@ -2897,7 +2894,7 @@ class LinkProperty(_CoercingProperty):
     if value is not None:
 
 
-      scheme, netloc, path, query, fragment = urlparse.urlsplit(value)
+      scheme, netloc, path, query, fragment = urllib.parse.urlsplit(value)
       if not scheme or not netloc:
         raise BadValueError('Property %s must be a full URL (\'%s\')' %
                             (self.name, value))
@@ -2963,7 +2960,7 @@ class ByteStringProperty(Property):
     if value is not None and not isinstance(value, ByteString):
       try:
         value = ByteString(value)
-      except TypeError, err:
+      except TypeError as err:
         raise BadValueError('Property %s must be convertible '
                             'to a ByteString instance (%s)' % (self.name, err))
     value = super(ByteStringProperty, self).validate(value)
@@ -3247,7 +3244,7 @@ class IntegerProperty(Property):
 
 
 
-    if not isinstance(value, (int, long)) or isinstance(value, bool):
+    if not isinstance(value, int) or isinstance(value, bool):
       raise BadValueError('Property %s must be an int or long, not a %s'
                           % (self.name, type(value).__name__))
     if value < -0x8000000000000000 or value > 0x7fffffffffffffff:
@@ -3438,7 +3435,7 @@ class ListProperty(Property):
     Note that the only permissible value for 'required' is True.
     """
     if item_type is str:
-      item_type = basestring
+      item_type = str
     if not isinstance(item_type, type):
       raise TypeError('Item type should be a type object')
     if item_type not in _ALLOWED_PROPERTY_TYPES:
@@ -3493,14 +3490,14 @@ class ListProperty(Property):
       BadValueError if the list has items are not instances of the
       item_type given to the constructor.
     """
-    if self.item_type in (int, long):
-      item_type = (int, long)
+    if self.item_type in (int, int):
+      item_type = (int, int)
     else:
       item_type = self.item_type
 
     for item in value:
       if not isinstance(item, item_type):
-        if item_type == (int, long):
+        if item_type == (int, int):
           raise BadValueError('Items in the %s list must all be integers.' %
                               self.name)
         else:
@@ -3555,9 +3552,9 @@ class ListProperty(Property):
 
 
     if self.item_type == datetime.date:
-      value = map(_date_to_datetime, value)
+      value = list(map(_date_to_datetime, value))
     elif self.item_type == datetime.time:
-      value = map(_time_to_datetime, value)
+      value = list(map(_time_to_datetime, value))
 
     return value
 
@@ -3574,11 +3571,11 @@ class ListProperty(Property):
     if self.item_type == datetime.date:
       for v in value:
         assert isinstance(v, datetime.datetime)
-      value = map(lambda x: x.date(), value)
+      value = [x.date() for x in value]
     elif self.item_type == datetime.time:
       for v in value:
         assert isinstance(v, datetime.datetime)
-      value = map(lambda x: x.time(), value)
+      value = [x.time() for x in value]
 
     return value
 
@@ -3602,7 +3599,7 @@ class StringListProperty(ListProperty):
       default: Optional default value; if omitted, an empty list is used.
       **kwds: Optional additional keyword arguments, passed to ListProperty().
     """
-    super(StringListProperty, self).__init__(basestring,
+    super(StringListProperty, self).__init__(str,
                                              verbose_name=verbose_name,
                                              default=default,
                                              write_empty_list=write_empty_list,

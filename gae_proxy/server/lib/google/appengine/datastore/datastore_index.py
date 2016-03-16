@@ -664,7 +664,7 @@ def _MatchPostfix(postfix_props, index_props):
       index_group = list(index_group_iter)
       if len(index_group) != len(property_group):
         return None
-      for (index_prop, index_dir), (prop, direction) in itertools.izip(
+      for (index_prop, index_dir), (prop, direction) in zip(
           index_group, reversed(property_group)):
         if index_prop != prop or (direction and index_dir != direction):
           return None
@@ -756,7 +756,7 @@ def MinimalCompositeIndexForQuery(query, index_defs):
   minimal_props, minimal_ancestor = remaining
   minimal_cost = calc_cost(minimal_props, minimal_ancestor)
   for index_postfix, (props_remaining, ancestor_remaining) in (
-      remaining_dict.iteritems()):
+      iter(remaining_dict.items())):
     cost = calc_cost(props_remaining, ancestor_remaining)
     if cost < minimal_cost:
       minimal_cost = cost

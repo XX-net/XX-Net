@@ -69,10 +69,10 @@ is stored in memory before it is written.
 import cgi
 import logging
 import re
-import StringIO
+import io
 import sys
 import traceback
-import urlparse
+import urllib.parse
 import webob
 import wsgiref.handlers
 import wsgiref.headers
@@ -198,7 +198,7 @@ class Request(webob.Request):
     if param_value is None or len(param_value) == 0:
       return default_value
 
-    for i in xrange(len(param_value)):
+    for i in range(len(param_value)):
       if isinstance(param_value[i], cgi.FieldStorage):
         param_value[i] = param_value[i].value
 
@@ -249,7 +249,7 @@ class Response(object):
     """Constructs a response with the default settings."""
 
 
-    self.out = StringIO.StringIO()
+    self.out = io.StringIO()
     self.__wsgi_headers = []
     self.headers = wsgiref.headers.Headers(self.__wsgi_headers)
     self.headers['Content-Type'] = 'text/html; charset=utf-8'
@@ -296,7 +296,7 @@ class Response(object):
       start_response: the WSGI-compatible start_response function
     """
     body = self.out.getvalue()
-    if isinstance(body, unicode):
+    if isinstance(body, str):
 
 
       body = body.encode('utf-8')
@@ -307,7 +307,7 @@ class Response(object):
 
 
         body.decode('utf-8')
-      except UnicodeError, e:
+      except UnicodeError as e:
         logging.warning('Response written is not UTF-8: %s', e)
 
     if (self.headers.get('Cache-Control') == 'no-cache' and
@@ -318,8 +318,8 @@ class Response(object):
 
     new_headers = []
     for header, value in self.__wsgi_headers:
-      if not isinstance(value, basestring):
-        value = unicode(value)
+      if not isinstance(value, str):
+        value = str(value)
       if ('\n' in header or '\r' in header or
           '\n' in value or '\r' in value):
         logging.warning('Replacing newline in header: %s', repr((header,value)))
@@ -338,7 +338,7 @@ class Response(object):
     Args:
       code: the HTTP code for which we want a message
     """
-    if not Response.__HTTP_STATUS_MESSAGES.has_key(code):
+    if code not in Response.__HTTP_STATUS_MESSAGES:
       raise Error('Invalid HTTP status code: %d' % code)
     return Response.__HTTP_STATUS_MESSAGES[code]
   http_status_message = staticmethod(http_status_message)
@@ -451,7 +451,7 @@ class RequestHandler(object):
       self.response.set_status(301)
     else:
       self.response.set_status(302)
-    absolute_url = urlparse.urljoin(self.request.uri, uri)
+    absolute_url = urllib.parse.urljoin(self.request.uri, uri)
     self.response.headers['Location'] = str(absolute_url)
     self.response.clear()
 
@@ -694,7 +694,7 @@ class WSGIApplication(object):
 
 
           handler.initialize(request, response)
-        except Exception, e:
+        except Exception as e:
           if handler is None:
             handler = RequestHandler()
           handler.response = response
@@ -727,7 +727,7 @@ class WSGIApplication(object):
           handler.trace(*groups)
         else:
           handler.error(501)
-      except Exception, e:
+      except Exception as e:
         handler.handle_exception(e, self.__debug)
     else:
       response.set_status(404)

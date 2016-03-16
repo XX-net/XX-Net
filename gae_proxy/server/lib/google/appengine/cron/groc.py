@@ -31,8 +31,8 @@ import google
 
 import antlr3
 
-import GrocLexer
-import GrocParser
+from . import GrocLexer
+from . import GrocParser
 
 
 class GrocException(Exception):

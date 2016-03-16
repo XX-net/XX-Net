@@ -104,7 +104,7 @@ class SimpleXmlConnector(connector_interface.ConnectorInterface):
       raise bulkloader_errors.InvalidConfiguration(
           'simplexml must specify one of these valid xml_style options: "%s". '
           'You specified %s in transformer named %s.' %
-          ('", "'.join(xml_style_mapping.keys()), xml_style,
+          ('", "'.join(list(xml_style_mapping.keys())), xml_style,
            name))
     return cls(xpath_to_nodes, xml_style_mapping[xml_style])
 
@@ -160,7 +160,7 @@ class SimpleXmlConnector(connector_interface.ConnectorInterface):
             input_dict[child.tag] = child.text
       else:
 
-        input_dict = dict(node.items())
+        input_dict = dict(list(node.items()))
       input_dict['__node__'] = node
       yield input_dict
 
@@ -183,9 +183,9 @@ class SimpleXmlConnector(connector_interface.ConnectorInterface):
   def write_iterable_as_elements(self, values):
     """Write a dict as elements, possibly recursively."""
     if isinstance(values, dict):
-      values = values.iteritems()
+      values = iter(values.items())
     for (name, value) in values:
-      if isinstance(value, basestring):
+      if isinstance(value, str):
         self.output_stream.write('%s <%s>%s</%s>\n' % (self.indent, name,
                                                        saxutils.escape(value),
                                                        name))
@@ -208,7 +208,7 @@ class SimpleXmlConnector(connector_interface.ConnectorInterface):
     else:
 
       self.output_stream.write('%s<%s ' % (self.indent, self.entity_node))
-      for (name, value) in dictionary.iteritems():
+      for (name, value) in dictionary.items():
         self.output_stream.write('%s=%s ' % (name, saxutils.quoteattr(value)))
       self.output_stream.write('/>\n')
 

@@ -47,6 +47,7 @@ from google.appengine.api import yaml_listener
 from google.appengine.api import yaml_object
 
 from google.appengine.ext.bulkload import bulkloader_errors
+import collections
 
 
 
@@ -83,10 +84,10 @@ class EvaluatedCallable(validation.Validator):
       self.value = value
       try:
         self.method = eval(value, _global_temp_globals)
-      except Exception, err:
+      except Exception as err:
         raise bulkloader_errors.InvalidCodeInConfiguration(
             'Invalid code for %s. Code: "%s". Details: %s' % (key, value, err))
-      if not callable(self.method):
+      if not isinstance(self.method, collections.Callable):
         raise bulkloader_errors.InvalidCodeInConfiguration(
             'Code for %s did not return a callable.  Code: "%s".' %
             (key, value))
