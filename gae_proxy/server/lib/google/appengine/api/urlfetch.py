@@ -34,13 +34,13 @@ Methods defined in this module:
 
 
 
-import httplib
+import http.client
 import os
-import StringIO
+import io
 import threading
 import UserDict
-import urllib2
-import urlparse
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 from google.appengine.api import apiproxy_stub_map
 from google.appengine.api import urlfetch_service_pb
@@ -68,7 +68,7 @@ _URL_STRING_MAP = {
     'PATCH': PATCH,
 }
 
-_VALID_METHODS = frozenset(_URL_STRING_MAP.values())
+_VALID_METHODS = frozenset(list(_URL_STRING_MAP.values()))
 
 _thread_local_settings = threading.local()
 
@@ -135,7 +135,7 @@ class _CaselessDict(UserDict.IterableUserDict):
 
   def __contains__(self, key):
     """Same as 'has_key', but used for 'in' operator.'"""
-    return self.has_key(key)
+    return key in self
 
   def get(self, key, failobj=None):
     """Get dictionary item, defaulting to another value if it does not exist.
@@ -160,7 +160,7 @@ class _CaselessDict(UserDict.IterableUserDict):
     """
     if dict:
       try:
-        keys = dict.keys()
+        keys = list(dict.keys())
       except AttributeError:
 
         for k, v in dict:
@@ -195,11 +195,11 @@ def _is_fetching_self(url, method):
       "PATH_INFO" not in os.environ):
     return False
 
-  _, host_port, path, _, _ = urlparse.urlsplit(url)
+  _, host_port, path, _, _ = urllib.parse.urlsplit(url)
 
   if host_port == os.environ['HTTP_HOST']:
-    current_path = urllib2.unquote(os.environ['PATH_INFO'])
-    desired_path = urllib2.unquote(path)
+    current_path = urllib.parse.unquote(os.environ['PATH_INFO'])
+    desired_path = urllib.parse.unquote(path)
 
     if (current_path == desired_path or
         (current_path in ('', '/') and desired_path in ('', '/'))):
@@ -291,7 +291,7 @@ def make_fetch_call(rpc, url, payload=None, method=GET, headers={},
   """
 
   assert rpc.service == 'urlfetch', repr(rpc.service)
-  if isinstance(method, basestring):
+  if isinstance(method, str):
     method = method.upper()
   method = _URL_STRING_MAP.get(method, method)
   if method not in _VALID_METHODS:
@@ -304,7 +304,7 @@ def make_fetch_call(rpc, url, payload=None, method=GET, headers={},
   request = urlfetch_service_pb.URLFetchRequest()
   response = urlfetch_service_pb.URLFetchResponse()
 
-  if isinstance(url, unicode):
+  if isinstance(url, str):
     url = url.encode('UTF-8')
   request.set_url(url)
 
@@ -326,7 +326,7 @@ def make_fetch_call(rpc, url, payload=None, method=GET, headers={},
     request.set_payload(payload)
 
 
-  for key, value in headers.iteritems():
+  for key, value in headers.items():
     header_proto = request.add_header()
     header_proto.set_key(key)
 
@@ -376,10 +376,10 @@ def _get_fetch_result(rpc):
 
   try:
     rpc.check_success()
-  except apiproxy_errors.RequestTooLargeError, err:
+  except apiproxy_errors.RequestTooLargeError as err:
     raise InvalidURLError(
         'Request body too large fetching URL: ' + url)
-  except apiproxy_errors.ApplicationError, err:
+  except apiproxy_errors.ApplicationError as err:
     error_detail = ''
     if err.error_detail:
       error_detail = ' Error: ' + err.error_detail
@@ -460,10 +460,10 @@ class _URLFetchResult(object):
     self.status_code = response_proto.statuscode()
     self.content_was_truncated = response_proto.contentwastruncated()
     self.final_url = response_proto.finalurl() or None
-    self.header_msg = httplib.HTTPMessage(
-        StringIO.StringIO(''.join(['%s: %s\n' % (h.key(), h.value())
+    self.header_msg = http.client.HTTPMessage(
+        io.StringIO(''.join(['%s: %s\n' % (h.key(), h.value())
                           for h in response_proto.header_list()] + ['\n'])))
-    self.headers = _CaselessDict(self.header_msg.items())
+    self.headers = _CaselessDict(list(self.header_msg.items()))
 
 def get_default_fetch_deadline():
   """Get the default value for create_rpc()'s deadline parameter."""

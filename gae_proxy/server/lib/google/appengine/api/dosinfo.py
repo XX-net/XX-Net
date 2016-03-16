@@ -54,7 +54,7 @@ class SubnetValidator(validation.Validator):
     """Validates a subnet."""
     if value is None:
       raise validation.MissingAttribute('subnet must be specified')
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
       raise validation.ValidationError('subnet must be a string, not \'%r\'' %
                                        type(value))
     try:

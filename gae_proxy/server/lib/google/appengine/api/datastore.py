@@ -134,7 +134,7 @@ def NormalizeAndTypeCheck(arg, types):
   else:
 
 
-    if isinstance(arg, basestring):
+    if isinstance(arg, str):
       raise datastore_errors.BadArgumentError(
           'Expected an instance or iterable of %s; received %s (a %s).' %
           (types, arg, typename(arg)))
@@ -174,7 +174,7 @@ def NormalizeAndTypeCheckKeys(keys):
     BadArgumentError: arg is not an instance or sequence of one of the given
     types.
   """
-  keys, multiple = NormalizeAndTypeCheck(keys, (basestring, Entity, Key))
+  keys, multiple = NormalizeAndTypeCheck(keys, (str, Entity, Key))
 
   keys = [_GetCompleteKeyOrError(key) for key in keys]
 
@@ -229,7 +229,7 @@ def _GetConfigFromKwargs(kwargs, convert_rpc=False,
 class _BaseIndex(object):
 
 
-  BUILDING, SERVING, DELETING, ERROR = range(4)
+  BUILDING, SERVING, DELETING, ERROR = list(range(4))
 
 
 
@@ -267,7 +267,7 @@ class _BaseIndex(object):
       _BaseIndex.__ValidateEnum(index_property[1],
                                (self.ASCENDING, self.DESCENDING),
                                'sort direction')
-    self.__id = long(index_id)
+    self.__id = int(index_id)
     self.__kind = kind
     self.__has_ancestor = bool(has_ancestor)
     self.__properties = properties
@@ -874,7 +874,7 @@ class Entity(dict):
 
   def set_unindexed_properties(self, unindexed_properties):
 
-    unindexed_properties, multiple = NormalizeAndTypeCheck(unindexed_properties, basestring)
+    unindexed_properties, multiple = NormalizeAndTypeCheck(unindexed_properties, str)
     if not multiple:
       raise datastore_errors.BadArgumentError(
         'unindexed_properties must be a sequence; received %s (a %s).' %
@@ -912,7 +912,7 @@ class Entity(dict):
     BadPropertyError. If any value is not a supported type, raises
     BadValueError.
     """
-    for name, value in other.items():
+    for name, value in list(other.items()):
       self.__setitem__(name, value)
 
   def copy(self):
@@ -932,7 +932,7 @@ class Entity(dict):
     performance-critical.
     """
 
-    xml = u'<entity kind=%s' % saxutils.quoteattr(self.kind())
+    xml = '<entity kind=%s' % saxutils.quoteattr(self.kind())
     if self.__key.has_id_or_name():
       xml += ' key=%s' % saxutils.quoteattr(str(self.__key))
     xml += '>'
@@ -942,7 +942,7 @@ class Entity(dict):
 
 
 
-    properties = self.keys()
+    properties = list(self.keys())
     if properties:
       properties.sort()
       xml += '\n  ' + '\n  '.join(self._PropertiesToXml(properties))
@@ -964,7 +964,7 @@ class Entity(dict):
     xml_properties = []
 
     for propname in properties:
-      if not self.has_key(propname):
+      if propname not in self:
         continue
 
       propname_xml = saxutils.quoteattr(propname)
@@ -982,8 +982,8 @@ class Entity(dict):
       proptype_xml = saxutils.quoteattr(proptype)
       escaped_values = self._XmlEscapeValues(propname)
 
-      open_tag = u'<property name=%s type=%s>' % (propname_xml, proptype_xml)
-      close_tag = u'</property>'
+      open_tag = '<property name=%s type=%s>' % (propname_xml, proptype_xml)
+      close_tag = '</property>'
       xml_properties += [open_tag + val + close_tag for val in escaped_values]
 
     return xml_properties
@@ -998,7 +998,7 @@ class Entity(dict):
     Returns:
       list of strings
     """
-    assert self.has_key(property)
+    assert property in self
     xml = []
 
     values = self[property]
@@ -1012,7 +1012,7 @@ class Entity(dict):
         if val is None:
           xml.append('')
         else:
-          xml.append(saxutils.escape(unicode(val)))
+          xml.append(saxutils.escape(str(val)))
 
     return xml
 
@@ -1050,7 +1050,7 @@ class Entity(dict):
       group.add_element().CopyFrom(root)
 
 
-    properties = self.items()
+    properties = list(self.items())
     properties.sort()
     for (name, values) in properties:
       properties = datastore_types.ToPropertyPb(name, values)
@@ -1127,7 +1127,7 @@ class Entity(dict):
         assert last_path.name()
 
 
-    unindexed_properties = [unicode(p.name(), 'utf-8')
+    unindexed_properties = [str(p.name(), 'utf-8')
                             for p in pb.raw_property_list()]
 
 
@@ -1135,7 +1135,7 @@ class Entity(dict):
       namespace = pb.key().name_space()
     else:
       namespace = ''
-    e = Entity(unicode(last_path.type(), 'utf-8'),
+    e = Entity(str(last_path.type(), 'utf-8'),
                unindexed_properties=unindexed_properties,
                _app=pb.key().app(), namespace=namespace)
     ref = e.__key._Key__reference
@@ -1151,7 +1151,7 @@ class Entity(dict):
           e.__projection = True
         try:
           value = datastore_types.FromPropertyPb(prop)
-        except (AssertionError, AttributeError, TypeError, ValueError), e:
+        except (AssertionError, AttributeError, TypeError, ValueError) as e:
           raise datastore_errors.Error(
             'Property %s is corrupt in the datastore:\n%s' %
             (prop.name(), traceback.format_exc()))
@@ -1173,8 +1173,8 @@ class Entity(dict):
 
 
 
-    for name, value in temporary_values.iteritems():
-      decoded_name = unicode(name, 'utf-8')
+    for name, value in temporary_values.items():
+      decoded_name = str(name, 'utf-8')
 
 
 
@@ -1414,15 +1414,15 @@ class Query(dict):
     orderings = list(orderings)
 
 
-    for (order, i) in zip(orderings, range(len(orderings))):
-      if not (isinstance(order, basestring) or
+    for (order, i) in zip(orderings, list(range(len(orderings)))):
+      if not (isinstance(order, str) or
               (isinstance(order, tuple) and len(order) in [2, 3])):
         raise datastore_errors.BadArgumentError(
           'Order() expects strings or 2- or 3-tuples; received %s (a %s). ' %
           (order, typename(order)))
 
 
-      if isinstance(order, basestring):
+      if isinstance(order, str):
         order = (order,)
 
       datastore_types.ValidateString(order[0], 'sort order property',
@@ -1556,7 +1556,7 @@ class Query(dict):
       current Query.
     """
 
-    ordered_filters = [(i, f) for f, i in self.__filter_order.iteritems()]
+    ordered_filters = [(i, f) for f, i in self.__filter_order.items()]
     ordered_filters.sort()
 
     property_filters = []
@@ -1726,7 +1726,7 @@ class Query(dict):
     config = _GetConfigFromKwargs(kwargs, convert_rpc=True,
                                   config_class=datastore_query.QueryOptions)
 
-    batch = self.GetBatcher(config=config).next()
+    batch = next(self.GetBatcher(config=config))
     self.__index_list_source = (
         lambda: [index for index, state in batch.index_list])
     self.__cursor_source = lambda: batch.cursor(0)
@@ -1819,7 +1819,7 @@ class Query(dict):
     If any filter string is invalid, raises BadFilterError. If any value is
     not a supported type, raises BadValueError.
     """
-    for filter, value in other.items():
+    for filter, value in list(other.items()):
       self.__setitem__(filter, value)
 
   def copy(self):
@@ -2077,7 +2077,7 @@ class MultiQuery(Query):
       self.__entity = None
       self.__min_max_value_cache = {}
       try:
-        self.__entity = entity_iterator.next()
+        self.__entity = next(entity_iterator)
       except StopIteration:
         pass
       else:
@@ -2265,7 +2265,7 @@ class MultiQuery(Query):
 
         return (sort_order_entity.GetEntity().key(),
 
-               frozenset(sort_order_entity.GetEntity().iteritems()))
+               frozenset(iter(sort_order_entity.GetEntity().items())))
       else:
         return sort_order_entity.GetEntity().key()
 
@@ -2307,7 +2307,7 @@ class MultiQuery(Query):
           result = top_result.GetEntity()
           if override:
 
-            for key in result.keys():
+            for key in list(result.keys()):
               if key not in projection:
                 del result[key]
           yield result
@@ -2342,8 +2342,8 @@ class MultiQuery(Query):
 
 
     try:
-      for _ in xrange(lower_bound):
-        it.next()
+      for _ in range(lower_bound):
+        next(it)
     except StopIteration:
       pass
 
@@ -2385,7 +2385,7 @@ class MultiQuery(Query):
         if projection:
 
           dedupe_key = (result.key(),
-                        tuple(result.iteritems()))
+                        tuple(result.items()))
         else:
           dedupe_key = result
         used_keys.add(dedupe_key)
@@ -2425,7 +2425,7 @@ class MultiQuery(Query):
       try:
         query[query_filter] = value
       except:
-        for q, old_value in itertools.izip(self.__bound_queries[:index],
+        for q, old_value in zip(self.__bound_queries[:index],
                                            saved_items):
           if old_value is not None:
             q[query_filter] = old_value
@@ -2456,7 +2456,7 @@ class MultiQuery(Query):
       except KeyError:
         keyerror_count += 1
       except:
-        for q, old_value in itertools.izip(self.__bound_queries[:index],
+        for q, old_value in zip(self.__bound_queries[:index],
                                            saved_items):
           if old_value is not None:
             q[query_filter] = old_value
@@ -2661,7 +2661,7 @@ def _DoOneTry(function, args, kwargs):
     if isinstance(value, datastore_errors.Rollback):
       return True, None
     else:
-      raise type, value, trace
+      raise type(value).with_traceback(trace)
   else:
     if _GetConnection().commit():
       return True, result
@@ -2787,7 +2787,7 @@ def _GetCompleteKeyOrError(arg):
 
   if isinstance(arg, Key):
     key = arg
-  elif isinstance(arg, basestring):
+  elif isinstance(arg, str):
 
     key = Key(arg)
   elif isinstance(arg, Entity):

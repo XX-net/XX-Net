@@ -218,7 +218,7 @@ def make_sign_blob_call(rpc, bytes_to_sign):
     assert rpc.method == _SIGN_FOR_APP_METHOD_NAME, repr(rpc.method)
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _to_app_identity_error(err)
 
     return (response.key_name(), response.signature_bytes())
@@ -256,7 +256,7 @@ def make_get_public_certificates_call(rpc):
     assert rpc.method == _GET_CERTS_METHOD_NAME, repr(rpc.method)
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _to_app_identity_error(err)
     result = []
     for cert in response.public_certificate_list_list():
@@ -300,7 +300,7 @@ def make_get_service_account_name_call(rpc):
     assert rpc.method == _GET_SERVICE_ACCOUNT_NAME_METHOD_NAME, repr(rpc.method)
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _to_app_identity_error(err)
 
     return response.service_account_name()
@@ -342,7 +342,7 @@ def make_get_default_gcs_bucket_name_call(rpc):
         repr(rpc.method))
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _to_app_identity_error(err)
 
     return response.default_gcs_bucket_name() or None
@@ -486,15 +486,15 @@ def make_get_access_token_call(rpc, scopes, service_account_id=None):
   request = app_identity_service_pb.GetAccessTokenRequest()
   if not scopes:
     raise InvalidScope('No scopes specified.')
-  if isinstance(scopes, basestring):
+  if isinstance(scopes, str):
     request.add_scope(scopes)
   else:
     for scope in scopes:
       request.add_scope(scope)
   if service_account_id:
-    if isinstance(service_account_id, (int, long)):
+    if isinstance(service_account_id, int):
       request.set_service_account_id(service_account_id)
-    elif isinstance(service_account_id, basestring):
+    elif isinstance(service_account_id, str):
       request.set_service_account_name(service_account_id)
     else:
       raise TypeError()
@@ -517,7 +517,7 @@ def make_get_access_token_call(rpc, scopes, service_account_id=None):
     assert rpc.method == _GET_ACCESS_TOKEN_METHOD_NAME, repr(rpc.method)
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _to_app_identity_error(err)
 
     return response.access_token(), response.expiration_time()

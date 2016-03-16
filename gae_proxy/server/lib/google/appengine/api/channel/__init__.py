@@ -21,4 +21,4 @@
 """Channel API module."""
 
 
-from channel import *
+from .channel import *

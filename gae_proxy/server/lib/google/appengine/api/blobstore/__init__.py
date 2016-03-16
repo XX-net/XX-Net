@@ -20,4 +20,4 @@
 
 """Blobstore API module."""
 
-from blobstore import *
+from .blobstore import *

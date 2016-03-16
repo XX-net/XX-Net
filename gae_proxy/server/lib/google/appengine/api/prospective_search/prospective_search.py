@@ -122,9 +122,9 @@ def _GetModelTypeForListPropertyType(property_type):
   """Converts (supported) db.ListProperty type to db.Model type."""
   from google.appengine.ext import db
   _LISTPROPERTY_TYPE_TO_SCHEMA_ENTRY = {
-      basestring: db.StringProperty,
       str: db.StringProperty,
-      unicode: db.StringProperty,
+      str: db.StringProperty,
+      str: db.StringProperty,
       bool: db.BooleanProperty,
       int: db.IntegerProperty,
       float: db.FloatProperty,
@@ -138,9 +138,9 @@ def _GetModelTypeForEntityType(python_type):
 
   from google.appengine.ext import db
   _PYTHON_TYPE_TO_MODEL_TYPE = {
-      basestring: db.StringProperty,
       str: db.StringProperty,
-      unicode: db.StringProperty,
+      str: db.StringProperty,
+      str: db.StringProperty,
       int: db.IntegerProperty,
       bool: db.BooleanProperty,
       float: db.FloatProperty,
@@ -256,7 +256,7 @@ def _entity_schema_to_prospective_search_schema(schema, add_entry):
     SchemaError: schema is invalid.
   """
   all_names = []
-  for python_type, names in schema.items():
+  for python_type, names in list(schema.items()):
     all_names.extend(names)
     for name in names:
       model_type = _GetModelTypeForEntityType(python_type)
@@ -274,7 +274,7 @@ def _model_to_prospective_search_schema(model, add_entry):
   """Produce SchemaEntries from db.Model class."""
 
   from google.appengine.ext import db
-  for name, model_property in model.properties().iteritems():
+  for name, model_property in model.properties().items():
     model_class = model_property.__class__
     if issubclass(model_class, db.ListProperty):
       model_class = _GetModelTypeForListPropertyType(model_property.item_type)
@@ -326,7 +326,7 @@ def subscribe(document_class,
 
   request = prospective_search_pb.SubscribeRequest()
   request.set_sub_id(sub_id)
-  request.set_vanilla_query(unicode(query).encode('utf-8'))
+  request.set_vanilla_query(str(query).encode('utf-8'))
   request.set_lease_duration_sec(lease_duration_sec)
 
 
@@ -347,7 +347,7 @@ def subscribe(document_class,
   response = prospective_search_pb.SubscribeResponse()
   try:
     _make_sync_call('matcher', 'Subscribe', request, response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if e.application_error is error_pb.Error.BAD_REQUEST:
       raise QuerySyntaxError(sub_id, topic, query, e.error_detail)
     raise e

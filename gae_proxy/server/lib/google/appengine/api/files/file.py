@@ -23,7 +23,7 @@
 .. deprecated:: 1.8.1
    Use Google Cloud Storage Client library instead."""
 
-from __future__ import with_statement
+
 
 
 
@@ -65,7 +65,7 @@ __all__ = [
 
 import os
 import sys
-import StringIO
+import io
 
 from google.appengine.api import apiproxy_stub_map
 from google.appengine.api.files import file_service_pb
@@ -252,7 +252,7 @@ def _make_call(method, request, response,
   rpc.wait()
   try:
     rpc.check_success()
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     _raise_app_error(e)
 
 
@@ -377,12 +377,12 @@ class _File(object):
       raise UnsupportedContentTypeError(
           'Unsupported content type: %s' % self._content_type)
 
-    buf = StringIO.StringIO()
+    buf = io.StringIO()
     original_offset = self._offset
 
     try:
       if size is None:
-        size = sys.maxint
+        size = sys.maxsize
 
       while size > 0:
         request = file_service_pb.ReadRequest()
@@ -503,12 +503,12 @@ def open(filename,
   """
   if not filename:
     raise InvalidArgumentError('Filename is empty')
-  if not isinstance(filename, basestring):
+  if not isinstance(filename, str):
     raise InvalidArgumentError('Filename should be a string but is %s (%s)' %
                                (filename.__class__, filename))
   if content_type != RAW:
     raise InvalidArgumentError('Invalid content type')
-  if not (isinstance(buffering, int) or isinstance(buffering, long)):
+  if not (isinstance(buffering, int) or isinstance(buffering, int)):
     raise InvalidArgumentError('buffering should be an int but is %s'
                                % buffering)
 
@@ -542,7 +542,7 @@ def listdir(path, **kwargs):
 
   from google.appengine.api.files import gs
 
-  if not isinstance(path, basestring):
+  if not isinstance(path, str):
     raise InvalidArgumentError('path should be a string, but is %s(%r)' %
                                (path.__class__.__name__, path))
 
@@ -562,7 +562,7 @@ def finalize(filename, content_type=RAW):
   """
   if not filename:
     raise InvalidArgumentError('Filename is empty')
-  if not isinstance(filename, basestring):
+  if not isinstance(filename, str):
     raise InvalidArgumentError('Filename should be a string')
   if content_type != RAW:
     raise InvalidArgumentError('Invalid content type')
@@ -604,7 +604,7 @@ def stat(filename):
   """
   if not filename:
     raise InvalidArgumentError('Filename is empty')
-  if not isinstance(filename, basestring):
+  if not isinstance(filename, str):
     raise InvalidArgumentError('Filename should be a string')
 
   with open(filename, 'r') as f:
@@ -624,7 +624,7 @@ def _create(filesystem, content_type=RAW, filename=None, params=None):
   """
   if not filesystem:
     raise InvalidArgumentError('Filesystem is empty')
-  if not isinstance(filesystem, basestring):
+  if not isinstance(filesystem, str):
     raise InvalidArgumentError('Filesystem should be a string')
   if content_type != RAW:
     raise InvalidArgumentError('Invalid content type')
@@ -636,14 +636,14 @@ def _create(filesystem, content_type=RAW, filename=None, params=None):
   request.set_content_type(content_type)
 
   if filename:
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
       raise InvalidArgumentError('Filename should be a string')
     request.set_filename(filename)
 
   if params:
     if not isinstance(params, dict):
       raise InvalidArgumentError('Parameters should be a dictionary')
-    for k,v in params.items():
+    for k,v in list(params.items()):
       param = request.add_parameters()
       param.set_name(k)
       param.set_value(v)
@@ -692,7 +692,7 @@ def delete(*filenames):
   blobkeys = []
 
   for filename in filenames:
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
       raise InvalidArgumentError('Filename should be a string, but is %s(%r)' %
                                  (filename.__class__.__name__, filename))
     if filename.startswith(files_blobstore._BLOBSTORE_DIRECTORY):
@@ -711,7 +711,7 @@ def delete(*filenames):
 
   try:
     blobstore.delete(blobkeys)
-  except Exception, e:
+  except Exception as e:
     raise IOError('Blobstore failure.', e)
 
 
@@ -771,7 +771,7 @@ class BufferedFile(object):
       A string with data read.
     """
     if size is None:
-      size = sys.maxint
+      size = sys.maxsize
     data_list = []
     while True:
       result = self.__readBuffer(size)

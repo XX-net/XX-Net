@@ -104,7 +104,7 @@ def ParseAndSimplify(query):
   try:
     node = SimplifyNode(node)
     ValidateNode(node)
-  except QueryTreeException, e:
+  except QueryTreeException as e:
     msg = "%s in query '%s'" % (e.message, query)
     raise QueryException(msg)
   return node
@@ -115,7 +115,7 @@ def Parse(query):
   parser = CreateParser(query)
   try:
     return parser.query()
-  except Exception, e:
+  except Exception as e:
     msg = "%s in query '%s'" % (e.message, query)
     raise QueryException(msg)
 
@@ -127,7 +127,7 @@ def ConvertNodes(node, from_type, to_type, to_text):
   else:
     new_node = node
   convert_children = lambda c: ConvertNodes(c, from_type, to_type, to_text)
-  new_node.children = map(convert_children, node.children)
+  new_node.children = list(map(convert_children, node.children))
   return new_node
 
 
@@ -238,7 +238,7 @@ def GetQueryNodeText(node):
 def GetQueryNodeTextUnicode(node):
   """Returns the unicode text from node."""
   if node.getType() == QueryParser.VALUE and len(node.children) >= 2:
-    return u''.join(c.getText() for c in node.children[1:])
+    return ''.join(c.getText() for c in node.children[1:])
   elif node.getType() == QueryParser.VALUE:
     return None
   return node.getText()

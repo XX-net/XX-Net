@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -106,7 +106,7 @@ class MailServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -301,7 +301,7 @@ class MailAttachment(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kFileName = 1
   kData = 2
@@ -446,7 +446,7 @@ class MailHeader(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   kvalue = 2
@@ -634,14 +634,14 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     assert x is not self
     if (x.has_sender()): self.set_sender(x.sender())
     if (x.has_replyto()): self.set_replyto(x.replyto())
-    for i in xrange(x.to_size()): self.add_to(x.to(i))
-    for i in xrange(x.cc_size()): self.add_cc(x.cc(i))
-    for i in xrange(x.bcc_size()): self.add_bcc(x.bcc(i))
+    for i in range(x.to_size()): self.add_to(x.to(i))
+    for i in range(x.cc_size()): self.add_cc(x.cc(i))
+    for i in range(x.bcc_size()): self.add_bcc(x.bcc(i))
     if (x.has_subject()): self.set_subject(x.subject())
     if (x.has_textbody()): self.set_textbody(x.textbody())
     if (x.has_htmlbody()): self.set_htmlbody(x.htmlbody())
-    for i in xrange(x.attachment_size()): self.add_attachment().CopyFrom(x.attachment(i))
-    for i in xrange(x.header_size()): self.add_header().CopyFrom(x.header(i))
+    for i in range(x.attachment_size()): self.add_attachment().CopyFrom(x.attachment(i))
+    for i in range(x.header_size()): self.add_header().CopyFrom(x.header(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -693,18 +693,18 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     n += self.lengthString(len(self.sender_))
     if (self.has_replyto_): n += 1 + self.lengthString(len(self.replyto_))
     n += 1 * len(self.to_)
-    for i in xrange(len(self.to_)): n += self.lengthString(len(self.to_[i]))
+    for i in range(len(self.to_)): n += self.lengthString(len(self.to_[i]))
     n += 1 * len(self.cc_)
-    for i in xrange(len(self.cc_)): n += self.lengthString(len(self.cc_[i]))
+    for i in range(len(self.cc_)): n += self.lengthString(len(self.cc_[i]))
     n += 1 * len(self.bcc_)
-    for i in xrange(len(self.bcc_)): n += self.lengthString(len(self.bcc_[i]))
+    for i in range(len(self.bcc_)): n += self.lengthString(len(self.bcc_[i]))
     n += self.lengthString(len(self.subject_))
     if (self.has_textbody_): n += 1 + self.lengthString(len(self.textbody_))
     if (self.has_htmlbody_): n += 1 + self.lengthString(len(self.htmlbody_))
     n += 1 * len(self.attachment_)
-    for i in xrange(len(self.attachment_)): n += self.lengthString(self.attachment_[i].ByteSize())
+    for i in range(len(self.attachment_)): n += self.lengthString(self.attachment_[i].ByteSize())
     n += 1 * len(self.header_)
-    for i in xrange(len(self.header_)): n += self.lengthString(self.header_[i].ByteSize())
+    for i in range(len(self.header_)): n += self.lengthString(self.header_[i].ByteSize())
     return n + 2
 
   def ByteSizePartial(self):
@@ -714,20 +714,20 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
       n += self.lengthString(len(self.sender_))
     if (self.has_replyto_): n += 1 + self.lengthString(len(self.replyto_))
     n += 1 * len(self.to_)
-    for i in xrange(len(self.to_)): n += self.lengthString(len(self.to_[i]))
+    for i in range(len(self.to_)): n += self.lengthString(len(self.to_[i]))
     n += 1 * len(self.cc_)
-    for i in xrange(len(self.cc_)): n += self.lengthString(len(self.cc_[i]))
+    for i in range(len(self.cc_)): n += self.lengthString(len(self.cc_[i]))
     n += 1 * len(self.bcc_)
-    for i in xrange(len(self.bcc_)): n += self.lengthString(len(self.bcc_[i]))
+    for i in range(len(self.bcc_)): n += self.lengthString(len(self.bcc_[i]))
     if (self.has_subject_):
       n += 1
       n += self.lengthString(len(self.subject_))
     if (self.has_textbody_): n += 1 + self.lengthString(len(self.textbody_))
     if (self.has_htmlbody_): n += 1 + self.lengthString(len(self.htmlbody_))
     n += 1 * len(self.attachment_)
-    for i in xrange(len(self.attachment_)): n += self.lengthString(self.attachment_[i].ByteSizePartial())
+    for i in range(len(self.attachment_)): n += self.lengthString(self.attachment_[i].ByteSizePartial())
     n += 1 * len(self.header_)
-    for i in xrange(len(self.header_)): n += self.lengthString(self.header_[i].ByteSizePartial())
+    for i in range(len(self.header_)): n += self.lengthString(self.header_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -748,13 +748,13 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     if (self.has_replyto_):
       out.putVarInt32(18)
       out.putPrefixedString(self.replyto_)
-    for i in xrange(len(self.to_)):
+    for i in range(len(self.to_)):
       out.putVarInt32(26)
       out.putPrefixedString(self.to_[i])
-    for i in xrange(len(self.cc_)):
+    for i in range(len(self.cc_)):
       out.putVarInt32(34)
       out.putPrefixedString(self.cc_[i])
-    for i in xrange(len(self.bcc_)):
+    for i in range(len(self.bcc_)):
       out.putVarInt32(42)
       out.putPrefixedString(self.bcc_[i])
     out.putVarInt32(50)
@@ -765,11 +765,11 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     if (self.has_htmlbody_):
       out.putVarInt32(66)
       out.putPrefixedString(self.htmlbody_)
-    for i in xrange(len(self.attachment_)):
+    for i in range(len(self.attachment_)):
       out.putVarInt32(74)
       out.putVarInt32(self.attachment_[i].ByteSize())
       self.attachment_[i].OutputUnchecked(out)
-    for i in xrange(len(self.header_)):
+    for i in range(len(self.header_)):
       out.putVarInt32(82)
       out.putVarInt32(self.header_[i].ByteSize())
       self.header_[i].OutputUnchecked(out)
@@ -781,13 +781,13 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     if (self.has_replyto_):
       out.putVarInt32(18)
       out.putPrefixedString(self.replyto_)
-    for i in xrange(len(self.to_)):
+    for i in range(len(self.to_)):
       out.putVarInt32(26)
       out.putPrefixedString(self.to_[i])
-    for i in xrange(len(self.cc_)):
+    for i in range(len(self.cc_)):
       out.putVarInt32(34)
       out.putPrefixedString(self.cc_[i])
-    for i in xrange(len(self.bcc_)):
+    for i in range(len(self.bcc_)):
       out.putVarInt32(42)
       out.putPrefixedString(self.bcc_[i])
     if (self.has_subject_):
@@ -799,11 +799,11 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
     if (self.has_htmlbody_):
       out.putVarInt32(66)
       out.putPrefixedString(self.htmlbody_)
-    for i in xrange(len(self.attachment_)):
+    for i in range(len(self.attachment_)):
       out.putVarInt32(74)
       out.putVarInt32(self.attachment_[i].ByteSizePartial())
       self.attachment_[i].OutputPartial(out)
-    for i in xrange(len(self.header_)):
+    for i in range(len(self.header_)):
       out.putVarInt32(82)
       out.putVarInt32(self.header_[i].ByteSizePartial())
       self.header_[i].OutputPartial(out)
@@ -898,7 +898,7 @@ class MailMessage(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kSender = 1
   kReplyTo = 2

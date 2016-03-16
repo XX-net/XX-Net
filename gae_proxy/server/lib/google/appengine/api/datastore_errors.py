@@ -88,7 +88,7 @@ class BadFilterError(Error):
   """
   def __init__(self, filter):
     self.filter = filter
-    message = (u'invalid filter: %s.' % self.filter).encode('utf-8')
+    message = ('invalid filter: %s.' % self.filter).encode('utf-8')
     super(BadFilterError, self).__init__(message)
 
 class BadQueryError(Error):

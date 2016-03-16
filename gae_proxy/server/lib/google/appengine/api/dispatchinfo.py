@@ -86,7 +86,7 @@ class DispatchEntryURLValidator(validation.Validator):
     """Validates an URL pattern."""
     if value is None:
       raise validation.MissingAttribute('url must be specified')
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
       raise validation.ValidationError('url must be a string, not \'%r\'' %
                                        type(value))
 

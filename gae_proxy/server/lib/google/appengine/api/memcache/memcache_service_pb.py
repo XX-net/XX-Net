@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -102,7 +102,7 @@ class MemcacheServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -323,7 +323,7 @@ class AppOverride(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kapp_id = 1
   knum_memcacheg_backends = 2
@@ -429,7 +429,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.key_size()): self.add_key(x.key(i))
+    for i in range(x.key_size()): self.add_key(x.key(i))
     if (x.has_name_space()): self.set_name_space(x.name_space())
     if (x.has_for_cas()): self.set_for_cas(x.for_cas())
     if (x.has_override()): self.mutable_override().MergeFrom(x.override())
@@ -455,7 +455,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.key_)
-    for i in xrange(len(self.key_)): n += self.lengthString(len(self.key_[i]))
+    for i in range(len(self.key_)): n += self.lengthString(len(self.key_[i]))
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_for_cas_): n += 2
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSize())
@@ -464,7 +464,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.key_)
-    for i in xrange(len(self.key_)): n += self.lengthString(len(self.key_[i]))
+    for i in range(len(self.key_)): n += self.lengthString(len(self.key_[i]))
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_for_cas_): n += 2
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSizePartial())
@@ -477,7 +477,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_override()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.key_)):
+    for i in range(len(self.key_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.key_[i])
     if (self.has_name_space_):
@@ -492,7 +492,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
       self.override_.OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.key_)):
+    for i in range(len(self.key_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.key_[i])
     if (self.has_name_space_):
@@ -548,7 +548,7 @@ class MemcacheGetRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kkey = 1
   kname_space = 2
@@ -810,7 +810,7 @@ class MemcacheGetResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -828,26 +828,26 @@ class MemcacheGetResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSize()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSize()
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSizePartial()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSizePartial()
     return n
 
   def Clear(self):
     self.clear_item()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputUnchecked(out)
       out.putVarInt32(12)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputPartial(out)
       out.putVarInt32(12)
@@ -878,7 +878,7 @@ class MemcacheGetResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kItemGroup = 1
   kItemkey = 2
@@ -1262,7 +1262,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
     if (x.has_name_space()): self.set_name_space(x.name_space())
     if (x.has_override()): self.mutable_override().MergeFrom(x.override())
 
@@ -1287,7 +1287,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSize()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSize()
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSize())
     return n
@@ -1295,7 +1295,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSizePartial()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSizePartial()
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSizePartial())
     return n
@@ -1306,7 +1306,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_override()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputUnchecked(out)
       out.putVarInt32(12)
@@ -1319,7 +1319,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
       self.override_.OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputPartial(out)
       out.putVarInt32(12)
@@ -1371,7 +1371,7 @@ class MemcacheSetRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kItemGroup = 1
   kItemkey = 2
@@ -1457,7 +1457,7 @@ class MemcacheSetResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.set_status_size()): self.add_set_status(x.set_status(i))
+    for i in range(x.set_status_size()): self.add_set_status(x.set_status(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -1473,25 +1473,25 @@ class MemcacheSetResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.set_status_)
-    for i in xrange(len(self.set_status_)): n += self.lengthVarInt64(self.set_status_[i])
+    for i in range(len(self.set_status_)): n += self.lengthVarInt64(self.set_status_[i])
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.set_status_)
-    for i in xrange(len(self.set_status_)): n += self.lengthVarInt64(self.set_status_[i])
+    for i in range(len(self.set_status_)): n += self.lengthVarInt64(self.set_status_[i])
     return n
 
   def Clear(self):
     self.clear_set_status()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.set_status_)):
+    for i in range(len(self.set_status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.set_status_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.set_status_)):
+    for i in range(len(self.set_status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.set_status_[i])
 
@@ -1519,7 +1519,7 @@ class MemcacheSetResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kset_status = 1
 
@@ -1711,7 +1711,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
     if (x.has_name_space()): self.set_name_space(x.name_space())
     if (x.has_override()): self.mutable_override().MergeFrom(x.override())
 
@@ -1736,7 +1736,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSize()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSize()
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSize())
     return n
@@ -1744,7 +1744,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSizePartial()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSizePartial()
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSizePartial())
     return n
@@ -1755,7 +1755,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_override()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputUnchecked(out)
       out.putVarInt32(12)
@@ -1768,7 +1768,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
       self.override_.OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputPartial(out)
       out.putVarInt32(12)
@@ -1820,7 +1820,7 @@ class MemcacheDeleteRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kItemGroup = 1
   kItemkey = 2
@@ -1887,7 +1887,7 @@ class MemcacheDeleteResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.delete_status_size()): self.add_delete_status(x.delete_status(i))
+    for i in range(x.delete_status_size()): self.add_delete_status(x.delete_status(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -1903,25 +1903,25 @@ class MemcacheDeleteResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.delete_status_)
-    for i in xrange(len(self.delete_status_)): n += self.lengthVarInt64(self.delete_status_[i])
+    for i in range(len(self.delete_status_)): n += self.lengthVarInt64(self.delete_status_[i])
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.delete_status_)
-    for i in xrange(len(self.delete_status_)): n += self.lengthVarInt64(self.delete_status_[i])
+    for i in range(len(self.delete_status_)): n += self.lengthVarInt64(self.delete_status_[i])
     return n
 
   def Clear(self):
     self.clear_delete_status()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.delete_status_)):
+    for i in range(len(self.delete_status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.delete_status_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.delete_status_)):
+    for i in range(len(self.delete_status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.delete_status_[i])
 
@@ -1949,7 +1949,7 @@ class MemcacheDeleteResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kdelete_status = 1
 
@@ -2264,7 +2264,7 @@ class MemcacheIncrementRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kkey = 1
   kname_space = 4
@@ -2423,7 +2423,7 @@ class MemcacheIncrementResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   knew_value = 1
   kincrement_status = 2
@@ -2507,7 +2507,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_name_space()): self.set_name_space(x.name_space())
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
     if (x.has_override()): self.mutable_override().MergeFrom(x.override())
 
   def Equals(self, x):
@@ -2532,7 +2532,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     n += 1 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.lengthString(self.item_[i].ByteSize())
+    for i in range(len(self.item_)): n += self.lengthString(self.item_[i].ByteSize())
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSize())
     return n
 
@@ -2540,7 +2540,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     if (self.has_name_space_): n += 1 + self.lengthString(len(self.name_space_))
     n += 1 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.lengthString(self.item_[i].ByteSizePartial())
+    for i in range(len(self.item_)): n += self.lengthString(self.item_[i].ByteSizePartial())
     if (self.has_override_): n += 1 + self.lengthString(self.override_.ByteSizePartial())
     return n
 
@@ -2553,7 +2553,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_name_space_):
       out.putVarInt32(10)
       out.putPrefixedString(self.name_space_)
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(18)
       out.putVarInt32(self.item_[i].ByteSize())
       self.item_[i].OutputUnchecked(out)
@@ -2566,7 +2566,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_name_space_):
       out.putVarInt32(10)
       out.putPrefixedString(self.name_space_)
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(18)
       out.putVarInt32(self.item_[i].ByteSizePartial())
       self.item_[i].OutputPartial(out)
@@ -2618,7 +2618,7 @@ class MemcacheBatchIncrementRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname_space = 1
   kitem = 2
@@ -2667,7 +2667,7 @@ class MemcacheBatchIncrementResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -2685,26 +2685,26 @@ class MemcacheBatchIncrementResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.lengthString(self.item_[i].ByteSize())
+    for i in range(len(self.item_)): n += self.lengthString(self.item_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.lengthString(self.item_[i].ByteSizePartial())
+    for i in range(len(self.item_)): n += self.lengthString(self.item_[i].ByteSizePartial())
     return n
 
   def Clear(self):
     self.clear_item()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(10)
       out.putVarInt32(self.item_[i].ByteSize())
       self.item_[i].OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(10)
       out.putVarInt32(self.item_[i].ByteSizePartial())
       self.item_[i].OutputPartial(out)
@@ -2738,7 +2738,7 @@ class MemcacheBatchIncrementResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kitem = 1
 
@@ -2849,7 +2849,7 @@ class MemcacheFlushRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   koverride = 1
 
@@ -2917,7 +2917,7 @@ class MemcacheFlushResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -3025,7 +3025,7 @@ class MemcacheStatsRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   koverride = 1
 
@@ -3144,7 +3144,7 @@ class MergedNamespaceStats(ProtocolBuffer.ProtocolMessage):
     if (x.has_hits()): self.set_hits(x.hits())
     if (x.has_misses()): self.set_misses(x.misses())
     if (x.has_byte_hits()): self.set_byte_hits(x.byte_hits())
-    if (x.has_items()): self.set_items(x.items())
+    if (x.has_items()): self.set_items(list(x.items()))
     if (x.has_bytes()): self.set_bytes(x.bytes())
     if (x.has_oldest_item_age()): self.set_oldest_item_age(x.oldest_item_age())
 
@@ -3303,7 +3303,7 @@ class MergedNamespaceStats(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   khits = 1
   kmisses = 2
@@ -3429,7 +3429,7 @@ class MemcacheStatsResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kstats = 1
 
@@ -3607,7 +3607,7 @@ class MemcacheGrabTailRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kitem_count = 1
   kname_space = 2
@@ -3768,7 +3768,7 @@ class MemcacheGrabTailResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.item_size()): self.add_item().CopyFrom(x.item(i))
+    for i in range(x.item_size()): self.add_item().CopyFrom(x.item(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -3786,26 +3786,26 @@ class MemcacheGrabTailResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSize()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSize()
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 2 * len(self.item_)
-    for i in xrange(len(self.item_)): n += self.item_[i].ByteSizePartial()
+    for i in range(len(self.item_)): n += self.item_[i].ByteSizePartial()
     return n
 
   def Clear(self):
     self.clear_item()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputUnchecked(out)
       out.putVarInt32(12)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.item_)):
+    for i in range(len(self.item_)):
       out.putVarInt32(11)
       self.item_[i].OutputPartial(out)
       out.putVarInt32(12)
@@ -3836,7 +3836,7 @@ class MemcacheGrabTailResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kItemGroup = 1
   kItemvalue = 2

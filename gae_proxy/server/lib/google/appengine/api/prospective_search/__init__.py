@@ -21,4 +21,4 @@
 
 """Prospective search API module."""
 
-from prospective_search import *
+from .prospective_search import *

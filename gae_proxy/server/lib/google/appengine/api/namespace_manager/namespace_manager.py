@@ -129,7 +129,7 @@ def validate_namespace(value, exception=BadValueError):
     value: string, the value to validate.
     exception: exception type to raise.
   """
-  if not isinstance(value, basestring):
+  if not isinstance(value, str):
     raise exception('value should be a string; received %r (a %s):' %
                     (value, type(value)))
   if not _NAMESPACE_RE.match(value):

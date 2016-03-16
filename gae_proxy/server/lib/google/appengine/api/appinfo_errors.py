@@ -151,7 +151,7 @@ class InvalidHttpHeaderValue(Error):
     - url: /static
       static_dir: static
       http_headers:
-        Some-Unicode: "\u2628"
+        Some-Unicode: "\\u2628"
   """
 
 

@@ -50,7 +50,7 @@ from google.appengine.api import yaml_object
 
 _URL_REGEX = r'^/.*$'
 _TIMEZONE_REGEX = r'^.{0,100}$'
-_DESCRIPTION_REGEX = ur'^.{0,499}$'
+_DESCRIPTION_REGEX = r'^.{0,499}$'
 
 
 SERVER_ID_RE_STRING = r'(?!-)[a-z\d\-]{1,63}'
@@ -70,11 +70,11 @@ class GrocValidator(validation.Validator):
     """Validates a schedule."""
     if value is None:
       raise validation.MissingAttribute('schedule must be specified')
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
       raise TypeError('schedule must be a string, not \'%r\''%type(value))
     try:
       groctimespecification.GrocTimeSpecification(value)
-    except groc.GrocException, e:
+    except groc.GrocException as e:
       raise validation.ValidationError('schedule \'%s\' failed to parse: %s'%(
           value, e.args[0]))
     return value
@@ -88,7 +88,7 @@ class TimezoneValidator(validation.Validator):
     if value is None:
 
       return
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
       raise TypeError('timezone must be a string, not \'%r\'' % type(value))
     if pytz is None:
 

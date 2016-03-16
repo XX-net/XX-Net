@@ -21,4 +21,4 @@
 """Logging API module."""
 
 
-from logservice import *
+from .logservice import *

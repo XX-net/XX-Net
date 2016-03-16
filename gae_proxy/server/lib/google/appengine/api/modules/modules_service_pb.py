@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -102,7 +102,7 @@ class ModulesServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -167,7 +167,7 @@ class GetModulesRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -206,7 +206,7 @@ class GetModulesResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.module_size()): self.add_module(x.module(i))
+    for i in range(x.module_size()): self.add_module(x.module(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -222,25 +222,25 @@ class GetModulesResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.module_)
-    for i in xrange(len(self.module_)): n += self.lengthString(len(self.module_[i]))
+    for i in range(len(self.module_)): n += self.lengthString(len(self.module_[i]))
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.module_)
-    for i in xrange(len(self.module_)): n += self.lengthString(len(self.module_[i]))
+    for i in range(len(self.module_)): n += self.lengthString(len(self.module_[i]))
     return n
 
   def Clear(self):
     self.clear_module()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.module_)):
+    for i in range(len(self.module_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.module_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.module_)):
+    for i in range(len(self.module_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.module_[i])
 
@@ -268,7 +268,7 @@ class GetModulesResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
 
@@ -363,7 +363,7 @@ class GetVersionsRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
 
@@ -405,7 +405,7 @@ class GetVersionsResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.version_size()): self.add_version(x.version(i))
+    for i in range(x.version_size()): self.add_version(x.version(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -421,25 +421,25 @@ class GetVersionsResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.version_)
-    for i in xrange(len(self.version_)): n += self.lengthString(len(self.version_[i]))
+    for i in range(len(self.version_)): n += self.lengthString(len(self.version_[i]))
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.version_)
-    for i in xrange(len(self.version_)): n += self.lengthString(len(self.version_[i]))
+    for i in range(len(self.version_)): n += self.lengthString(len(self.version_[i]))
     return n
 
   def Clear(self):
     self.clear_version()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.version_)):
+    for i in range(len(self.version_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.version_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.version_)):
+    for i in range(len(self.version_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.version_[i])
 
@@ -467,7 +467,7 @@ class GetVersionsResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kversion = 1
 
@@ -562,7 +562,7 @@ class GetDefaultVersionRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
 
@@ -657,7 +657,7 @@ class GetDefaultVersionResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kversion = 1
 
@@ -783,7 +783,7 @@ class GetNumInstancesRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
   kversion = 2
@@ -881,7 +881,7 @@ class GetNumInstancesResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kinstances = 1
 
@@ -1043,7 +1043,7 @@ class SetNumInstancesRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
   kversion = 2
@@ -1117,7 +1117,7 @@ class SetNumInstancesResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -1250,7 +1250,7 @@ class StartModuleRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
   kversion = 2
@@ -1321,7 +1321,7 @@ class StartModuleResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -1444,7 +1444,7 @@ class StopModuleRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
   kversion = 2
@@ -1515,7 +1515,7 @@ class StopModuleResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -1669,7 +1669,7 @@ class GetHostnameRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule = 1
   kversion = 2
@@ -1770,7 +1770,7 @@ class GetHostnameResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   khostname = 1
 

@@ -30,7 +30,7 @@ Google Storage specific Files API calls."""
 
 
 
-from __future__ import with_statement
+
 
 
 
@@ -38,7 +38,7 @@ __all__ = ['create']
 
 import os
 import re
-from urllib import urlencode
+from urllib.parse import urlencode
 from xml.dom import minidom
 
 from google.appengine.api import app_identity
@@ -101,7 +101,7 @@ def parseGlob(filename):
   """
   if not filename:
     raise files.InvalidFileNameError('filename is None.')
-  if not isinstance(filename, basestring):
+  if not isinstance(filename, str):
     raise files.InvalidFileNameError('filename %s should be of type string' %
                                      filename)
   match = _GS_FILEPATH_REGEX.match(filename)
@@ -175,7 +175,7 @@ def listdir(path, kwargs=None):
   """
   if not path:
     raise files.InvalidFileNameError('Empty path')
-  elif not isinstance(path, basestring):
+  elif not isinstance(path, str):
     raise files.InvalidFileNameError('Expected string for path %s' % path)
   elif not _GS_BUCKETPATH_REGEX.match(path):
     raise files.InvalidFileNameError(
@@ -183,7 +183,7 @@ def listdir(path, kwargs=None):
 
 
 
-  if kwargs and kwargs.has_key('max_keys'):
+  if kwargs and 'max_keys' in kwargs:
     kwargs['max-keys'] = kwargs['max_keys']
     kwargs.pop('max_keys')
 
@@ -244,11 +244,11 @@ def _listdir_local(path, kwargs):
   response = file_service_pb.ListDirResponse()
   request.set_path(path)
 
-  if kwargs and kwargs.has_key('marker'):
+  if kwargs and 'marker' in kwargs:
     request.set_marker(kwargs['marker'])
-  if kwargs and kwargs.has_key('max-keys'):
+  if kwargs and 'max-keys' in kwargs:
     request.set_max_keys(kwargs['max-keys'])
-  if kwargs and kwargs.has_key('prefix'):
+  if kwargs and 'prefix' in kwargs:
     request.set_prefix(kwargs['prefix'])
   files._make_call('ListDir', request, response)
   return response.filenames_list()
@@ -285,47 +285,47 @@ def create(filename,
   """
   if not filename:
     raise files.InvalidArgumentError('Empty filename')
-  elif not isinstance(filename, basestring):
+  elif not isinstance(filename, str):
     raise files.InvalidArgumentError('Expected string for filename', filename)
   elif not filename.startswith(_GS_PREFIX) or filename == _GS_PREFIX:
     raise files.InvalidArgumentError(
         'Google storage files must be of the form /gs/bucket/object', filename)
   elif not mime_type:
     raise files.InvalidArgumentError('Empty mime_type')
-  elif not isinstance(mime_type, basestring):
+  elif not isinstance(mime_type, str):
     raise files.InvalidArgumentError('Expected string for mime_type', mime_type)
 
   params = {_MIME_TYPE_PARAMETER: mime_type}
 
   if acl:
-    if not isinstance(acl, basestring):
+    if not isinstance(acl, str):
       raise files.InvalidArgumentError('Expected string for acl', acl)
     params[_CANNED_ACL_PARAMETER] = acl
 
   if content_encoding:
-    if not isinstance(content_encoding, basestring):
+    if not isinstance(content_encoding, str):
       raise files.InvalidArgumentError('Expected string for content_encoding')
     else:
       params[_CONTENT_ENCODING_PARAMETER] = content_encoding
   if content_disposition:
-    if not isinstance(content_disposition, basestring):
+    if not isinstance(content_disposition, str):
       raise files.InvalidArgumentError(
           'Expected string for content_disposition')
     else:
       params[_CONTENT_DISPOSITION_PARAMETER] = content_disposition
   if cache_control:
-    if not isinstance(cache_control, basestring):
+    if not isinstance(cache_control, str):
       raise files.InvalidArgumentError('Expected string for cache_control')
     else:
       params[_CACHE_CONTROL_PARAMETER] = cache_control
   if user_metadata:
     if not isinstance(user_metadata, dict):
       raise files.InvalidArgumentError('Expected dict for user_metadata')
-    for key, value in user_metadata.items():
-      if not isinstance(key, basestring):
+    for key, value in list(user_metadata.items()):
+      if not isinstance(key, str):
         raise files.InvalidArgumentError(
             'Expected string for key in user_metadata')
-      if not isinstance(value, basestring):
+      if not isinstance(value, str):
         raise files.InvalidArgumentError(
             'Expected string for value in user_metadata for key: ', key)
       params[_USER_METADATA_PREFIX + key] = value

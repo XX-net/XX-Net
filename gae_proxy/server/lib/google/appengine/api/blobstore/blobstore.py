@@ -232,7 +232,7 @@ def _make_async_call(rpc, method, request, response,
 def _get_result_hook(rpc):
   try:
     rpc.check_success()
-  except apiproxy_errors.ApplicationError, err:
+  except apiproxy_errors.ApplicationError as err:
     raise _ToBlobstoreError(err)
   hook = rpc.user_data
   return hook(rpc)
@@ -309,14 +309,14 @@ def create_upload_url_async(success_path,
   request.set_success_path(success_path)
 
   if max_bytes_per_blob is not None:
-    if not isinstance(max_bytes_per_blob, (int, long)):
+    if not isinstance(max_bytes_per_blob, int):
       raise TypeError('max_bytes_per_blob must be integer.')
     if max_bytes_per_blob < 1:
       raise ValueError('max_bytes_per_blob must be positive.')
     request.set_max_upload_size_per_blob_bytes(max_bytes_per_blob)
 
   if max_bytes_total is not None:
-    if not isinstance(max_bytes_total, (int, long)):
+    if not isinstance(max_bytes_total, int):
       raise TypeError('max_bytes_total must be integer.')
     if max_bytes_total < 1:
       raise ValueError('max_bytes_total must be positive.')
@@ -330,7 +330,7 @@ def create_upload_url_async(success_path,
                        ' than max_upload_size_per_blob_bytes')
 
   if gs_bucket_name is not None:
-    if not isinstance(gs_bucket_name, basestring):
+    if not isinstance(gs_bucket_name, str):
       raise TypeError('gs_bucket_name must be a string.')
     request.set_gs_bucket_name(gs_bucket_name)
 
@@ -374,7 +374,7 @@ def delete_async(blob_keys, rpc=None, _token=None):
 
 
 
-  if isinstance(blob_keys, (basestring, BlobKey)):
+  if isinstance(blob_keys, (str, BlobKey)):
     blob_keys = [blob_keys]
   request = blobstore_service_pb.DeleteBlobRequest()
   for blob_key in blob_keys:
@@ -430,17 +430,17 @@ def fetch_data_async(blob_key, start_index, end_index, rpc=None):
   Raises:
     See docstring for ext.blobstore.fetch_data for more details.
   """
-  if not isinstance(start_index, (int, long)):
+  if not isinstance(start_index, int):
     raise TypeError('start_index must be integer.')
 
-  if not isinstance(end_index, (int, long)):
+  if not isinstance(end_index, int):
     raise TypeError('end_index must be integer.')
 
   if isinstance(blob_key, BlobKey):
     blob_key = str(blob_key).decode('utf-8')
   elif isinstance(blob_key, str):
     blob_key = blob_key.decode('utf-8')
-  elif not isinstance(blob_key, unicode):
+  elif not isinstance(blob_key, str):
     raise TypeError('Blob-key must be str, unicode or BlobKey: %s' % blob_key)
 
 
@@ -505,7 +505,7 @@ def create_gs_key_async(filename, rpc=None):
     ValueError: If filename is not in the format '/gs/bucket_name/object_name'
   """
 
-  if not isinstance(filename, basestring):
+  if not isinstance(filename, str):
     raise TypeError('filename must be str: %s' % filename)
   if not filename.startswith(GS_PREFIX):
     raise ValueError('filename must start with "/gs/": %s' % filename)

@@ -228,9 +228,9 @@ def _ConvertToUnicode(some_string):
   """Convert UTF-8 encoded string to unicode."""
   if some_string is None:
     return None
-  if isinstance(some_string, unicode):
+  if isinstance(some_string, str):
     return some_string
-  return unicode(some_string, 'utf-8')
+  return str(some_string, 'utf-8')
 
 
 def _ConcatenateErrorMessages(prefix, status):
@@ -263,7 +263,7 @@ class _RpcOperationFuture(object):
     self._rpc.wait();
     try:
       self._rpc.check_success();
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToSearchError(e)
     return self._get_result_hook()
 
@@ -295,7 +295,7 @@ def _ConvertToUTF8(value):
     value = {'inf': 'Infinity',
              '-inf': '-Infinity',
              'nan': 'NaN'}.get(value, value)
-  elif isinstance(value, (int, long)):
+  elif isinstance(value, int):
     value = str(value)
   return _ConvertToUnicode(value).encode("utf-8")
 
@@ -496,7 +496,7 @@ def _IsFinite(value):
 
   if isinstance(value, float) and -1e30000 < value < 1e30000:
     return True
-  elif isinstance(value, (int, long)):
+  elif isinstance(value, int):
     return True
   else:
     return False
@@ -517,7 +517,7 @@ def _CheckNumber(value, name, should_be_finite=False):
     TypeError: If the value is not a number.
     ValueError: If should_be_finite is set and the value is not finite.
   """
-  if not isinstance(value, (int, long, float)):
+  if not isinstance(value, (int, float)):
     raise TypeError('%s must be a int, long or float, got %s' %
                     (name, value.__class__.__name__))
   if should_be_finite and not _IsFinite(value):
@@ -572,7 +572,7 @@ def _ValidateString(value,
   """
   if value is None and empty_ok:
     return
-  if value is not None and not isinstance(value, basestring):
+  if value is not None and not isinstance(value, str):
     raise type_exception('%s must be a basestring; got %s:' %
                          (name, value.__class__.__name__))
   if not value and not empty_ok:
@@ -649,7 +649,7 @@ def _CheckExpression(expression):
   expression = _ValidateString(expression, max_len=MAXIMUM_EXPRESSION_LENGTH)
   try:
     expression_parser.Parse(expression)
-  except expression_parser.ExpressionException, e:
+  except expression_parser.ExpressionException as e:
     raise ExpressionError('Failed to parse expression "%s"' % expression)
   return expression
 
@@ -671,7 +671,7 @@ def _GetList(a_list):
 
 def _ConvertToList(arg):
   """Converts arg to a list, empty if None, single element if not a list."""
-  if isinstance(arg, basestring):
+  if isinstance(arg, str):
     return [arg]
   if arg is not None:
     try:
@@ -756,7 +756,7 @@ def _CheckLanguage(language):
   """Checks language is None or a string that matches _LANGUAGE_RE."""
   if language is None:
     return None
-  if not isinstance(language, basestring):
+  if not isinstance(language, str):
     raise TypeError('language must be a basestring, got %s' %
                     language.__class__.__name__)
   if not re.match(_LANGUAGE_RE, language):
@@ -802,7 +802,7 @@ def _CheckSortLimit(limit):
 
 def _Repr(class_instance, ordered_dictionary):
   """Generates an unambiguous representation for instance and ordered dict."""
-  return u'search.%s(%s)' % (class_instance.__class__.__name__, ', '.join(
+  return 'search.%s(%s)' % (class_instance.__class__.__name__, ', '.join(
       ['%s=%r' % (key, value) for (key, value) in ordered_dictionary
        if value is not None and value != []]))
 
@@ -870,7 +870,7 @@ def get_indexes_async(namespace='', offset=None, limit=20,
   if namespace is None:
     namespace = namespace_manager.get_namespace()
   if namespace is None:
-    namespace = u''
+    namespace = ''
   namespace_manager.validate_namespace(namespace, exception=ValueError)
   params.set_namespace(namespace)
   if offset is not None:
@@ -1165,7 +1165,7 @@ class FacetRange(object):
     if start is None and end is None:
       raise ValueError(
           'Either start or end need to be provided for a facet range.')
-    none_or_numeric_type = (type(None), int, float, long)
+    none_or_numeric_type = (type(None), int, float, int)
     self._start = _CheckType(start, none_or_numeric_type, 'start')
     self._end = _CheckType(end, none_or_numeric_type, 'end')
     if self._start is not None:
@@ -1234,9 +1234,9 @@ class FacetRequest(object):
     self._ranges = _ConvertToListAndCheckType(
         ranges, FacetRange, 'ranges')
     self._values = _ConvertToListAndCheckType(
-        values, (basestring, int, float, long), 'values')
+        values, (str, int, float, int), 'values')
     for value in self._values:
-      if isinstance(value, (int, float, long)):
+      if isinstance(value, (int, float)):
         NumberFacet._CheckValue(value)
 
   @property
@@ -1355,7 +1355,7 @@ class FacetRefinement(object):
 
     try:
       ref_pb.ParseFromString(base64.b64decode(token_string))
-    except (ProtocolBuffer.ProtocolBufferDecodeError, TypeError), e:
+    except (ProtocolBuffer.ProtocolBufferDecodeError, TypeError) as e:
 
 
       raise ValueError('Invalid refinement token %s' % token_string, e)
@@ -1926,7 +1926,7 @@ class Document(object):
 
   def _CheckRank(self, rank):
     """Checks if rank is valid, then returns it."""
-    return _CheckInteger(rank, 'rank', upper_bound=sys.maxint)
+    return _CheckInteger(rank, 'rank', upper_bound=sys.maxsize)
 
   def _GetDefaultRank(self):
     """Returns a default rank as total seconds since 1st Jan 2011."""
@@ -2028,7 +2028,7 @@ class FieldExpression(object):
     self._name = _CheckFieldName(_ConvertToUnicode(name))
     if expression is None:
       raise ValueError('expression must be a FieldExpression, got None')
-    if not isinstance(expression, basestring):
+    if not isinstance(expression, str):
       raise TypeError('expression must be a FieldExpression, got %s' %
                       expression.__class__.__name__)
     self._expression = _CheckExpression(_ConvertToUnicode(expression))
@@ -2182,7 +2182,7 @@ def _CopySortExpressionToProtocolBuffer(sort_expression, pb):
   if sort_expression.direction == SortExpression.ASCENDING:
     pb.set_sort_descending(False)
   if sort_expression.default_value is not None:
-    if isinstance(sort_expression.default_value, basestring):
+    if isinstance(sort_expression.default_value, str):
       pb.set_default_value_text(sort_expression.default_value.encode('utf-8'))
     elif (isinstance(sort_expression.default_value, datetime.datetime) or
           isinstance(sort_expression.default_value, datetime.date)):
@@ -2248,12 +2248,12 @@ class SortExpression(object):
 
 
   try:
-    MAX_FIELD_VALUE = unichr(0x10ffff) * 80
+    MAX_FIELD_VALUE = chr(0x10ffff) * 80
   except ValueError:
 
-    MAX_FIELD_VALUE = unichr(0xffff) * 80
+    MAX_FIELD_VALUE = chr(0xffff) * 80
 
-  MIN_FIELD_VALUE = u''
+  MIN_FIELD_VALUE = ''
 
 
   ASCENDING, DESCENDING = ('ASCENDING', 'DESCENDING')
@@ -2293,11 +2293,11 @@ class SortExpression(object):
     _CheckExpression(self._expression)
     self._default_value = default_value
     if self._default_value is not None:
-      if isinstance(self.default_value, basestring):
+      if isinstance(self.default_value, str):
         self._default_value = _ConvertToUnicode(default_value)
         _CheckText(self._default_value, 'default_value')
       elif not isinstance(self._default_value,
-                          (int, long, float, datetime.date, datetime.datetime)):
+                          (int, float, datetime.date, datetime.datetime)):
         raise TypeError('default_value must be text, numeric or datetime, got '
                         '%s' % self._default_value.__class__.__name__)
 
@@ -2718,7 +2718,7 @@ def _CheckQuery(query):
   if query.strip():
     try:
       query_parser.Parse(query)
-    except query_parser.QueryException, e:
+    except query_parser.QueryException as e:
       raise QueryError('Failed to parse query "%s"' % query)
   return query
 
@@ -3069,7 +3069,7 @@ def _CopyQueryOptionsToProtocolBuffer(
     for field in returned_fields:
       field_spec_pb.add_name(field.encode('utf-8'))
     for snippeted_field in snippeted_fields:
-      expression = u'snippet(%s, %s)' % (_QuoteString(query), snippeted_field)
+      expression = 'snippet(%s, %s)' % (_QuoteString(query), snippeted_field)
       _CopyFieldExpressionToProtocolBuffer(
           FieldExpression(name=snippeted_field, expression=expression),
           field_spec_pb.add_expression())
@@ -3180,14 +3180,14 @@ class Query(object):
     self._facet_options = facet_options
     self._enable_facet_discovery = enable_facet_discovery
     self._return_facets = _ConvertToListAndCheckType(
-        return_facets, (basestring, FacetRequest), 'return_facet')
+        return_facets, (str, FacetRequest), 'return_facet')
     for index, facet in enumerate(self._return_facets):
-      if isinstance(facet, basestring):
+      if isinstance(facet, str):
         self._return_facets[index] = FacetRequest(self._return_facets[index])
     self._facet_refinements = _ConvertToListAndCheckType(
-        facet_refinements, (basestring, FacetRefinement), 'facet_refinements')
+        facet_refinements, (str, FacetRefinement), 'facet_refinements')
     for index, refinement in enumerate(self._facet_refinements):
-      if isinstance(refinement, basestring):
+      if isinstance(refinement, str):
         self._facet_refinements[index] = FacetRefinement.FromTokenString(
             refinement)
 
@@ -3331,7 +3331,7 @@ class Index(object):
     if self._namespace is None:
       self._namespace = _ConvertToUnicode(namespace_manager.get_namespace())
     if self._namespace is None:
-      self._namespace = u''
+      self._namespace = ''
     namespace_manager.validate_namespace(self._namespace, exception=ValueError)
     self._schema = None
     self._storage_usage = None
@@ -3446,7 +3446,7 @@ class Index(object):
     Identical to put() except that it returns a future. Call
     get_result() on the return value to block on the call and get its result.
     """
-    if isinstance(documents, basestring):
+    if isinstance(documents, str):
       raise TypeError('documents must be a Document or sequence of '
                       'Documents, got %s' % documents.__class__.__name__)
     try:
@@ -3781,7 +3781,7 @@ class Index(object):
     Identical to search() except that it returns a future. Call
     get_result() on the return value to block on the call and get its result.
     """
-    if isinstance(query, basestring):
+    if isinstance(query, str):
       query = Query(query_string=query)
     request = self._NewSearchRequest(query, deadline, **kwargs)
     response = search_service_pb.SearchResponse()
@@ -3804,7 +3804,7 @@ class Index(object):
       request.set_app_id(app_id)
 
     params = request.mutable_params()
-    if isinstance(query, basestring):
+    if isinstance(query, str):
       query = Query(query_string=query)
     _CopyMetadataToProtocolBuffer(self, params.mutable_index_spec())
     _CopyQueryObjectToProtocolBuffer(query, params)
@@ -3995,14 +3995,14 @@ def _MakeSyncSearchServiceCall(call, request, response, deadline):
       rpc.make_call(call, request, response)
       rpc.wait()
       rpc.check_success()
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     raise _ToSearchError(e)
 
 def _ValidateDeadline(deadline):
   if deadline is None:
     return
-  if (not isinstance(deadline, (int, long, float))
-      or isinstance(deadline, (bool,))):
+  if (not isinstance(deadline, (int, float))
+      or isinstance(deadline, bool)):
     raise TypeError('deadline argument should be int/long/float (%r)'
                     % (deadline,))
   if deadline <= 0:

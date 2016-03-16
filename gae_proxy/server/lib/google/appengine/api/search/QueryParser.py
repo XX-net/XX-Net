@@ -382,7 +382,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -544,7 +544,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -728,7 +728,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -890,7 +890,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1007,7 +1007,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1089,7 +1089,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1232,7 +1232,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1429,7 +1429,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1521,7 +1521,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1577,7 +1577,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1685,7 +1685,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1818,7 +1818,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1900,7 +1900,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2020,7 +2020,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2140,7 +2140,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2254,7 +2254,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2360,7 +2360,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2492,7 +2492,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2674,7 +2674,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2813,7 +2813,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2869,7 +2869,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2963,7 +2963,7 @@ class QueryParser(Parser):
                 self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2982,36 +2982,36 @@ class QueryParser(Parser):
 
 
     DFA4_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA4_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA4_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA4_max = DFA.unpack(
-        u"\2\46\2\uffff"
+        "\2\46\2\uffff"
         )
 
     DFA4_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2"
+        "\2\uffff\1\1\1\2"
         )
 
     DFA4_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA4_transition = [
-        DFA.unpack(u"\1\1\7\uffff\1\3\3\uffff\1\3\1\uffff\4\3\4\uffff\1\3"),
-        DFA.unpack(u"\1\1\7\uffff\1\3\3\uffff\1\3\1\uffff\4\3\4\uffff\1"
-        u"\3"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\7\uffff\1\3\3\uffff\1\3\1\uffff\4\3\4\uffff\1\3"),
+        DFA.unpack("\1\1\7\uffff\1\3\3\uffff\1\3\1\uffff\4\3\4\uffff\1"
+        "\3"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3020,35 +3020,35 @@ class QueryParser(Parser):
 
 
     DFA6_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA6_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA6_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA6_max = DFA.unpack(
-        u"\1\31\1\32\2\uffff"
+        "\1\31\1\32\2\uffff"
         )
 
     DFA6_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2"
+        "\2\uffff\1\1\1\2"
         )
 
     DFA6_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA6_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\10\uffff\1\2\1\3"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\10\uffff\1\2\1\3"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3057,35 +3057,35 @@ class QueryParser(Parser):
 
 
     DFA5_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA5_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA5_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA5_max = DFA.unpack(
-        u"\1\31\1\32\2\uffff"
+        "\1\31\1\32\2\uffff"
         )
 
     DFA5_accept = DFA.unpack(
-        u"\2\uffff\1\2\1\1"
+        "\2\uffff\1\2\1\1"
         )
 
     DFA5_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA5_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\10\uffff\1\2\1\3"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\10\uffff\1\2\1\3"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3094,36 +3094,36 @@ class QueryParser(Parser):
 
 
     DFA9_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA9_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA9_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA9_max = DFA.unpack(
-        u"\1\31\1\46\2\uffff"
+        "\1\31\1\46\2\uffff"
         )
 
     DFA9_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2"
+        "\2\uffff\1\1\1\2"
         )
 
     DFA9_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA9_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\7\uffff\1\3\2\2\1\uffff\1\3\1\uffff\4\3\4\uffff"
-        u"\1\3"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\7\uffff\1\3\2\2\1\uffff\1\3\1\uffff\4\3\4\uffff"
+        "\1\3"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3132,36 +3132,36 @@ class QueryParser(Parser):
 
 
     DFA8_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA8_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA8_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA8_max = DFA.unpack(
-        u"\1\31\1\46\2\uffff"
+        "\1\31\1\46\2\uffff"
         )
 
     DFA8_accept = DFA.unpack(
-        u"\2\uffff\1\2\1\1"
+        "\2\uffff\1\2\1\1"
         )
 
     DFA8_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA8_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\7\uffff\1\3\2\2\1\uffff\1\3\1\uffff\4\3\4\uffff"
-        u"\1\3"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\7\uffff\1\3\2\2\1\uffff\1\3\1\uffff\4\3\4\uffff"
+        "\1\3"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3170,35 +3170,35 @@ class QueryParser(Parser):
 
 
     DFA11_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA11_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA11_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA11_max = DFA.unpack(
-        u"\1\31\1\46\2\uffff"
+        "\1\31\1\46\2\uffff"
         )
 
     DFA11_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2"
+        "\2\uffff\1\1\1\2"
         )
 
     DFA11_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA11_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\7\uffff\3\2\1\3\1\2\1\uffff\4\2\4\uffff\1\2"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\7\uffff\3\2\1\3\1\2\1\uffff\4\2\4\uffff\1\2"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3207,35 +3207,35 @@ class QueryParser(Parser):
 
 
     DFA10_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA10_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA10_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA10_max = DFA.unpack(
-        u"\1\31\1\46\2\uffff"
+        "\1\31\1\46\2\uffff"
         )
 
     DFA10_accept = DFA.unpack(
-        u"\2\uffff\1\2\1\1"
+        "\2\uffff\1\2\1\1"
         )
 
     DFA10_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA10_transition = [
-        DFA.unpack(u"\1\1\10\uffff\1\2"),
-        DFA.unpack(u"\1\1\7\uffff\3\2\1\3\1\2\1\uffff\4\2\4\uffff\1\2"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\10\uffff\1\2"),
+        DFA.unpack("\1\1\7\uffff\3\2\1\3\1\2\1\uffff\4\2\4\uffff\1\2"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -3244,35 +3244,35 @@ class QueryParser(Parser):
 
 
     DFA14_eot = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
     DFA14_eof = DFA.unpack(
-        u"\2\2\2\uffff"
+        "\2\2\2\uffff"
         )
 
     DFA14_min = DFA.unpack(
-        u"\2\20\2\uffff"
+        "\2\20\2\uffff"
         )
 
     DFA14_max = DFA.unpack(
-        u"\1\31\1\46\2\uffff"
+        "\1\31\1\46\2\uffff"
         )
 
     DFA14_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2"
+        "\2\uffff\1\1\1\2"
         )
 
     DFA14_special = DFA.unpack(
-        u"\4\uffff"
+        "\4\uffff"
         )
 
 
     DFA14_transition = [
-        DFA.unpack(u"\1\1\7\3\1\uffff\1\2"),
-        DFA.unpack(u"\1\1\7\3\5\2\1\uffff\4\2\4\uffff\1\2"),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\7\3\1\uffff\1\2"),
+        DFA.unpack("\1\1\7\3\5\2\1\uffff\4\2\4\uffff\1\2"),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 

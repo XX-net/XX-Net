@@ -26,7 +26,7 @@
 
 
 
-from file import *
-import blobstore
-import gs
-import shuffler
+from .file import *
+from . import blobstore
+from . import gs
+from . import shuffler

@@ -549,8 +549,8 @@ class Image(object):
         width or if MAX_TRANSFORMS_PER_REQUEST transforms have already been
         requested on this image.
     """
-    if (not isinstance(width, (int, long)) or
-        not isinstance(height, (int, long))):
+    if (not isinstance(width, int) or
+        not isinstance(height, int)):
       raise TypeError("Width and height must be integers.")
     if width < 0 or height < 0:
       raise BadRequestError("Width and height must be >= 0.")
@@ -601,7 +601,7 @@ class Image(object):
       BadRequestError when there is something wrong with the given degrees or
       if MAX_TRANSFORMS_PER_REQUEST transforms have already been requested.
     """
-    if not isinstance(degrees, (int, long)):
+    if not isinstance(degrees, int):
       raise TypeError("Degrees must be integers.")
 
     if degrees % 90 != 0:
@@ -883,7 +883,7 @@ class Image(object):
       """
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _ToImagesError(e, self._blob_key)
       self._image_data = rpc.response.image().content()
       self._blob_key = None
@@ -982,7 +982,7 @@ class Image(object):
       """
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _ToImagesError(e, self._blob_key)
 
       histogram = rpc.response.histogram()
@@ -1002,7 +1002,7 @@ class Image(object):
     """Checks that a parameters is an integer within the specified range."""
 
     if parameter is not None:
-      if not isinstance(parameter, (int, long)):
+      if not isinstance(parameter, int):
         raise TypeError("%s must be an integer." % name)
       if parameter > max_value or parameter < min_value:
         raise BadRequestError("%s must be between %s and %s."
@@ -1583,16 +1583,16 @@ def composite_async(inputs, width, height, color=0, output_encoding=PNG,
     than or equal to 0, if the color is invalid or if for any composition
     option, the opacity is outside the range [0,1] or the anchor is invalid.
   """
-  if (not isinstance(width, (int, long)) or
-      not isinstance(height, (int, long)) or
-      not isinstance(color, (int, long))):
+  if (not isinstance(width, int) or
+      not isinstance(height, int) or
+      not isinstance(color, int)):
     raise TypeError("Width, height and color must be integers.")
   if output_encoding not in OUTPUT_ENCODING_TYPES:
     raise BadRequestError("Output encoding type '%s' not in recognized set "
                           "%s" % (output_encoding, OUTPUT_ENCODING_TYPES))
 
   if quality is not None:
-    if not isinstance(quality, (int, long)):
+    if not isinstance(quality, int):
       raise TypeError("Quality must be an integer.")
     if quality > 100 or quality < 1:
       raise BadRequestError("Quality must be between 1 and 100.")
@@ -1622,8 +1622,8 @@ def composite_async(inputs, width, height, color=0, output_encoding=PNG,
   for (image, x, y, opacity, anchor) in inputs:
     if not image:
       raise BadRequestError("Each input must include an image")
-    if (not isinstance(x, (int, long)) or
-        not isinstance(y, (int, long)) or
+    if (not isinstance(x, int) or
+        not isinstance(y, int) or
         not isinstance(opacity, (float))):
       raise TypeError("x_offset, y_offset must be integers and opacity must"
                       "be a float")
@@ -1674,7 +1674,7 @@ def composite_async(inputs, width, height, color=0, output_encoding=PNG,
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e)
     return rpc.response.image().content()
 
@@ -1888,7 +1888,7 @@ def get_serving_url_async(blob_key,
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e, readable_blob_key)
 
     url = rpc.response.url()
@@ -1960,7 +1960,7 @@ def delete_serving_url_async(blob_key, rpc=None):
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e, blob_key)
 
   return _make_async_call(rpc,

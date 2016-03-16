@@ -25,14 +25,14 @@
 
 Blobstore-specific Files API calls."""
 
-from __future__ import with_statement
+
 
 
 
 __all__ = ['create', 'get_blob_key', 'get_file_name']
 
 import hashlib
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from google.appengine.api import datastore
 from google.appengine.api import namespace_manager
@@ -64,12 +64,12 @@ def create(mime_type='application/octet-stream',
   """
   if not mime_type:
     raise files.InvalidArgumentError('Empty mime_type')
-  if not isinstance(mime_type, basestring):
+  if not isinstance(mime_type, str):
     raise files.InvalidArgumentError('Expected string for mime_type')
 
   params = {_MIME_TYPE_PARAMETER: mime_type}
   if _blobinfo_uploaded_filename:
-    if not isinstance(_blobinfo_uploaded_filename, basestring):
+    if not isinstance(_blobinfo_uploaded_filename, str):
       raise files.InvalidArgumentError(
           'Expected string for _blobinfo_uploaded_filename')
     params[_BLOBINFO_UPLOADED_FILENAME_PARAMETER] = _blobinfo_uploaded_filename
@@ -112,7 +112,7 @@ def get_blob_key(create_file_name):
   """
   if not create_file_name:
     raise files.InvalidArgumentError('Empty file name')
-  if not isinstance(create_file_name, basestring):
+  if not isinstance(create_file_name, str):
     raise files.InvalidArgumentError('Expected string for file name')
   if not create_file_name.startswith(_BLOBSTORE_DIRECTORY):
     raise files.InvalidFileNameError(
@@ -172,6 +172,6 @@ def get_file_name(blob_key):
   """
   if not blob_key:
     raise files.InvalidArgumentError('Empty blob key')
-  if not isinstance(blob_key, (blobstore.BlobKey, basestring)):
+  if not isinstance(blob_key, (blobstore.BlobKey, str)):
     raise files.InvalidArgumentError('Expected string or blobstore.BlobKey')
   return '%s%s' % (_BLOBSTORE_DIRECTORY, blob_key)

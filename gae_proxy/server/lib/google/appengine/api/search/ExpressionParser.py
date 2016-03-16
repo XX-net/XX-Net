@@ -217,7 +217,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -299,7 +299,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -387,7 +387,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -482,7 +482,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -571,7 +571,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -653,7 +653,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -715,7 +715,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -803,7 +803,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -865,7 +865,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -953,7 +953,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1015,7 +1015,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1129,7 +1129,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1274,7 +1274,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1381,7 +1381,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1467,7 +1467,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1797,7 +1797,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1859,7 +1859,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1915,7 +1915,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -2054,7 +2054,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -2116,7 +2116,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -2134,45 +2134,45 @@ class ExpressionParser(Parser):
 
 
     DFA9_eot = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA9_eof = DFA.unpack(
-        u"\2\uffff\7\1\4\uffff"
+        "\2\uffff\7\1\4\uffff"
         )
 
     DFA9_min = DFA.unpack(
-        u"\1\25\1\uffff\7\6\4\uffff"
+        "\1\25\1\uffff\7\6\4\uffff"
         )
 
     DFA9_max = DFA.unpack(
-        u"\1\55\1\uffff\7\44\4\uffff"
+        "\1\55\1\uffff\7\44\4\uffff"
         )
 
     DFA9_accept = DFA.unpack(
-        u"\1\uffff\1\1\7\uffff\1\2\1\3\1\4\1\5"
+        "\1\uffff\1\1\7\uffff\1\2\1\3\1\4\1\5"
         )
 
     DFA9_special = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
 
     DFA9_transition = [
-        DFA.unpack(u"\1\14\2\uffff\1\11\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1"
-        u"\7\1\10\1\11\1\12\1\uffff\11\13"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u"\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\14\2\uffff\1\11\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1"
+        "\7\1\10\1\11\1\12\1\uffff\11\13"),
+        DFA.unpack(""),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack("\4\1\1\uffff\12\1\1\13\2\1\14\uffff\1\1"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -2181,46 +2181,46 @@ class ExpressionParser(Parser):
 
 
     DFA10_eot = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA10_eof = DFA.unpack(
-        u"\1\uffff\10\13\3\uffff\1\13"
+        "\1\uffff\10\13\3\uffff\1\13"
         )
 
     DFA10_min = DFA.unpack(
-        u"\1\32\10\6\1\32\2\uffff\1\6"
+        "\1\32\10\6\1\32\2\uffff\1\6"
         )
 
     DFA10_max = DFA.unpack(
-        u"\1\41\1\72\7\44\1\32\2\uffff\1\72"
+        "\1\41\1\72\7\44\1\32\2\uffff\1\72"
         )
 
     DFA10_accept = DFA.unpack(
-        u"\12\uffff\1\2\1\1\1\uffff"
+        "\12\uffff\1\2\1\1\1\uffff"
         )
 
     DFA10_special = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
 
     DFA10_transition = [
-        DFA.unpack(u"\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"
-        u"\25\uffff\1\11"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
-        DFA.unpack(u"\1\14"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"
-        u"\25\uffff\1\11")
+        DFA.unpack("\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"
+        "\25\uffff\1\11"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"),
+        DFA.unpack("\1\14"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\4\13\1\uffff\12\13\1\uffff\1\13\1\12\14\uffff\1\13"
+        "\25\uffff\1\11")
     ]
 
 

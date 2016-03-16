@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -437,7 +437,7 @@ class RemoteSocketServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksystem_error = 1
   kerror_detail = 2
@@ -602,7 +602,7 @@ class AddressPort(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kport = 1
   kpacked_address = 2
@@ -812,7 +812,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
     assert x is not self
     if (x.has_family()): self.set_family(x.family())
     if (x.has_protocol()): self.set_protocol(x.protocol())
-    for i in xrange(x.socket_options_size()): self.add_socket_options().CopyFrom(x.socket_options(i))
+    for i in range(x.socket_options_size()): self.add_socket_options().CopyFrom(x.socket_options(i))
     if (x.has_proxy_external_ip()): self.mutable_proxy_external_ip().MergeFrom(x.proxy_external_ip())
     if (x.has_listen_backlog()): self.set_listen_backlog(x.listen_backlog())
     if (x.has_remote_ip()): self.mutable_remote_ip().MergeFrom(x.remote_ip())
@@ -864,7 +864,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
     n += self.lengthVarInt64(self.family_)
     n += self.lengthVarInt64(self.protocol_)
     n += 1 * len(self.socket_options_)
-    for i in xrange(len(self.socket_options_)): n += self.lengthString(self.socket_options_[i].ByteSize())
+    for i in range(len(self.socket_options_)): n += self.lengthString(self.socket_options_[i].ByteSize())
     if (self.has_proxy_external_ip_): n += 1 + self.lengthString(self.proxy_external_ip_.ByteSize())
     if (self.has_listen_backlog_): n += 1 + self.lengthVarInt64(self.listen_backlog_)
     if (self.has_remote_ip_): n += 1 + self.lengthString(self.remote_ip_.ByteSize())
@@ -882,7 +882,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthVarInt64(self.protocol_)
     n += 1 * len(self.socket_options_)
-    for i in xrange(len(self.socket_options_)): n += self.lengthString(self.socket_options_[i].ByteSizePartial())
+    for i in range(len(self.socket_options_)): n += self.lengthString(self.socket_options_[i].ByteSizePartial())
     if (self.has_proxy_external_ip_): n += 1 + self.lengthString(self.proxy_external_ip_.ByteSizePartial())
     if (self.has_listen_backlog_): n += 1 + self.lengthVarInt64(self.listen_backlog_)
     if (self.has_remote_ip_): n += 1 + self.lengthString(self.remote_ip_.ByteSizePartial())
@@ -907,7 +907,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
     out.putVarInt32(self.family_)
     out.putVarInt32(16)
     out.putVarInt32(self.protocol_)
-    for i in xrange(len(self.socket_options_)):
+    for i in range(len(self.socket_options_)):
       out.putVarInt32(26)
       out.putVarInt32(self.socket_options_[i].ByteSize())
       self.socket_options_[i].OutputUnchecked(out)
@@ -939,7 +939,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_protocol_):
       out.putVarInt32(16)
       out.putVarInt32(self.protocol_)
-    for i in xrange(len(self.socket_options_)):
+    for i in range(len(self.socket_options_)):
       out.putVarInt32(26)
       out.putVarInt32(self.socket_options_[i].ByteSizePartial())
       self.socket_options_[i].OutputPartial(out)
@@ -1037,7 +1037,7 @@ class CreateSocketRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kfamily = 1
   kprotocol = 2
@@ -1276,7 +1276,7 @@ class CreateSocketReply(_ExtendableProtocolMessage):
     _extensions_by_field_number = {}
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kserver_address = 3
@@ -1422,7 +1422,7 @@ class BindRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kproxy_external_ip = 2
@@ -1536,7 +1536,7 @@ class BindReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kproxy_external_ip = 1
 
@@ -1636,7 +1636,7 @@ class GetSocketNameRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
 
@@ -1747,7 +1747,7 @@ class GetSocketNameReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kproxy_external_ip = 2
 
@@ -1847,7 +1847,7 @@ class GetPeerNameRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
 
@@ -1958,7 +1958,7 @@ class GetPeerNameReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kpeer_ip = 2
 
@@ -2214,7 +2214,7 @@ class SocketOption(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   klevel = 1
   koption = 2
@@ -2279,7 +2279,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_socket_descriptor()): self.set_socket_descriptor(x.socket_descriptor())
-    for i in xrange(x.options_size()): self.add_options().CopyFrom(x.options(i))
+    for i in range(x.options_size()): self.add_options().CopyFrom(x.options(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -2304,7 +2304,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.socket_descriptor_))
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
     return n + 1
 
   def ByteSizePartial(self):
@@ -2313,7 +2313,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.socket_descriptor_))
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -2323,7 +2323,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.socket_descriptor_)
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSize())
       self.options_[i].OutputUnchecked(out)
@@ -2332,7 +2332,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_socket_descriptor_):
       out.putVarInt32(10)
       out.putPrefixedString(self.socket_descriptor_)
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSizePartial())
       self.options_[i].OutputPartial(out)
@@ -2370,7 +2370,7 @@ class SetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   koptions = 2
@@ -2441,7 +2441,7 @@ class SetSocketOptionsReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -2497,7 +2497,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_socket_descriptor()): self.set_socket_descriptor(x.socket_descriptor())
-    for i in xrange(x.options_size()): self.add_options().CopyFrom(x.options(i))
+    for i in range(x.options_size()): self.add_options().CopyFrom(x.options(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -2522,7 +2522,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.socket_descriptor_))
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
     return n + 1
 
   def ByteSizePartial(self):
@@ -2531,7 +2531,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.socket_descriptor_))
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
     return n
 
   def Clear(self):
@@ -2541,7 +2541,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.socket_descriptor_)
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSize())
       self.options_[i].OutputUnchecked(out)
@@ -2550,7 +2550,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_socket_descriptor_):
       out.putVarInt32(10)
       out.putPrefixedString(self.socket_descriptor_)
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSizePartial())
       self.options_[i].OutputPartial(out)
@@ -2588,7 +2588,7 @@ class GetSocketOptionsRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   koptions = 2
@@ -2634,7 +2634,7 @@ class GetSocketOptionsReply(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.options_size()): self.add_options().CopyFrom(x.options(i))
+    for i in range(x.options_size()): self.add_options().CopyFrom(x.options(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -2652,26 +2652,26 @@ class GetSocketOptionsReply(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.options_)
-    for i in xrange(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
+    for i in range(len(self.options_)): n += self.lengthString(self.options_[i].ByteSizePartial())
     return n
 
   def Clear(self):
     self.clear_options()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSize())
       self.options_[i].OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.options_)):
+    for i in range(len(self.options_)):
       out.putVarInt32(18)
       out.putVarInt32(self.options_[i].ByteSizePartial())
       self.options_[i].OutputPartial(out)
@@ -2705,7 +2705,7 @@ class GetSocketOptionsReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   koptions = 2
 
@@ -2876,7 +2876,7 @@ class ConnectRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kremote_ip = 2
@@ -3020,7 +3020,7 @@ class ConnectReply(_ExtendableProtocolMessage):
     _extensions_by_field_number = {}
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kproxy_external_ip = 1
 
@@ -3156,7 +3156,7 @@ class ListenRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kbacklog = 2
@@ -3227,7 +3227,7 @@ class ListenReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -3355,7 +3355,7 @@ class AcceptRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   ktimeout_seconds = 2
@@ -3500,7 +3500,7 @@ class AcceptReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   knew_socket_descriptor = 2
   kremote_address = 3
@@ -3690,7 +3690,7 @@ class ShutDownRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   khow = 2
@@ -3764,7 +3764,7 @@ class ShutDownReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -3892,7 +3892,7 @@ class CloseRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   ksend_offset = 2
@@ -3963,7 +3963,7 @@ class CloseReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -4241,7 +4241,7 @@ class SendRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kdata = 2
@@ -4351,7 +4351,7 @@ class SendReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kdata_sent = 1
 
@@ -4562,7 +4562,7 @@ class ReceiveRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   kdata_size = 2
@@ -4775,7 +4775,7 @@ class ReceiveReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kstream_offset = 2
   kdata = 3
@@ -4993,7 +4993,7 @@ class PollEvent(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ksocket_descriptor = 1
   krequested_events = 2
@@ -5057,7 +5057,7 @@ class PollRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.events_size()): self.add_events().CopyFrom(x.events(i))
+    for i in range(x.events_size()): self.add_events().CopyFrom(x.events(i))
     if (x.has_timeout_seconds()): self.set_timeout_seconds(x.timeout_seconds())
 
   def Equals(self, x):
@@ -5078,14 +5078,14 @@ class PollRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.events_)
-    for i in xrange(len(self.events_)): n += self.lengthString(self.events_[i].ByteSize())
+    for i in range(len(self.events_)): n += self.lengthString(self.events_[i].ByteSize())
     if (self.has_timeout_seconds_): n += 9
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.events_)
-    for i in xrange(len(self.events_)): n += self.lengthString(self.events_[i].ByteSizePartial())
+    for i in range(len(self.events_)): n += self.lengthString(self.events_[i].ByteSizePartial())
     if (self.has_timeout_seconds_): n += 9
     return n
 
@@ -5094,7 +5094,7 @@ class PollRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_timeout_seconds()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.events_)):
+    for i in range(len(self.events_)):
       out.putVarInt32(10)
       out.putVarInt32(self.events_[i].ByteSize())
       self.events_[i].OutputUnchecked(out)
@@ -5103,7 +5103,7 @@ class PollRequest(ProtocolBuffer.ProtocolMessage):
       out.putDouble(self.timeout_seconds_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.events_)):
+    for i in range(len(self.events_)):
       out.putVarInt32(10)
       out.putVarInt32(self.events_[i].ByteSizePartial())
       self.events_[i].OutputPartial(out)
@@ -5144,7 +5144,7 @@ class PollRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kevents = 1
   ktimeout_seconds = 2
@@ -5190,7 +5190,7 @@ class PollReply(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.events_size()): self.add_events().CopyFrom(x.events(i))
+    for i in range(x.events_size()): self.add_events().CopyFrom(x.events(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -5208,26 +5208,26 @@ class PollReply(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.events_)
-    for i in xrange(len(self.events_)): n += self.lengthString(self.events_[i].ByteSize())
+    for i in range(len(self.events_)): n += self.lengthString(self.events_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.events_)
-    for i in xrange(len(self.events_)): n += self.lengthString(self.events_[i].ByteSizePartial())
+    for i in range(len(self.events_)): n += self.lengthString(self.events_[i].ByteSizePartial())
     return n
 
   def Clear(self):
     self.clear_events()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.events_)):
+    for i in range(len(self.events_)):
       out.putVarInt32(18)
       out.putVarInt32(self.events_[i].ByteSize())
       self.events_[i].OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.events_)):
+    for i in range(len(self.events_)):
       out.putVarInt32(18)
       out.putVarInt32(self.events_[i].ByteSizePartial())
       self.events_[i].OutputPartial(out)
@@ -5261,7 +5261,7 @@ class PollReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kevents = 2
 
@@ -5319,7 +5319,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_name()): self.set_name(x.name())
-    for i in xrange(x.address_families_size()): self.add_address_families(x.address_families(i))
+    for i in range(x.address_families_size()): self.add_address_families(x.address_families(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -5342,7 +5342,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.name_))
     n += 1 * len(self.address_families_)
-    for i in xrange(len(self.address_families_)): n += self.lengthVarInt64(self.address_families_[i])
+    for i in range(len(self.address_families_)): n += self.lengthVarInt64(self.address_families_[i])
     return n + 1
 
   def ByteSizePartial(self):
@@ -5351,7 +5351,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.name_))
     n += 1 * len(self.address_families_)
-    for i in xrange(len(self.address_families_)): n += self.lengthVarInt64(self.address_families_[i])
+    for i in range(len(self.address_families_)): n += self.lengthVarInt64(self.address_families_[i])
     return n
 
   def Clear(self):
@@ -5361,7 +5361,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.name_)
-    for i in xrange(len(self.address_families_)):
+    for i in range(len(self.address_families_)):
       out.putVarInt32(16)
       out.putVarInt32(self.address_families_[i])
 
@@ -5369,7 +5369,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_name_):
       out.putVarInt32(10)
       out.putPrefixedString(self.name_)
-    for i in xrange(len(self.address_families_)):
+    for i in range(len(self.address_families_)):
       out.putVarInt32(16)
       out.putVarInt32(self.address_families_[i])
 
@@ -5401,7 +5401,7 @@ class ResolveRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kname = 1
   kaddress_families = 2
@@ -5516,9 +5516,9 @@ class ResolveReply(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.packed_address_size()): self.add_packed_address(x.packed_address(i))
+    for i in range(x.packed_address_size()): self.add_packed_address(x.packed_address(i))
     if (x.has_canonical_name()): self.set_canonical_name(x.canonical_name())
-    for i in xrange(x.aliases_size()): self.add_aliases(x.aliases(i))
+    for i in range(x.aliases_size()): self.add_aliases(x.aliases(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -5539,19 +5539,19 @@ class ResolveReply(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.packed_address_)
-    for i in xrange(len(self.packed_address_)): n += self.lengthString(len(self.packed_address_[i]))
+    for i in range(len(self.packed_address_)): n += self.lengthString(len(self.packed_address_[i]))
     if (self.has_canonical_name_): n += 1 + self.lengthString(len(self.canonical_name_))
     n += 1 * len(self.aliases_)
-    for i in xrange(len(self.aliases_)): n += self.lengthString(len(self.aliases_[i]))
+    for i in range(len(self.aliases_)): n += self.lengthString(len(self.aliases_[i]))
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.packed_address_)
-    for i in xrange(len(self.packed_address_)): n += self.lengthString(len(self.packed_address_[i]))
+    for i in range(len(self.packed_address_)): n += self.lengthString(len(self.packed_address_[i]))
     if (self.has_canonical_name_): n += 1 + self.lengthString(len(self.canonical_name_))
     n += 1 * len(self.aliases_)
-    for i in xrange(len(self.aliases_)): n += self.lengthString(len(self.aliases_[i]))
+    for i in range(len(self.aliases_)): n += self.lengthString(len(self.aliases_[i]))
     return n
 
   def Clear(self):
@@ -5560,24 +5560,24 @@ class ResolveReply(ProtocolBuffer.ProtocolMessage):
     self.clear_aliases()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.packed_address_)):
+    for i in range(len(self.packed_address_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.packed_address_[i])
     if (self.has_canonical_name_):
       out.putVarInt32(26)
       out.putPrefixedString(self.canonical_name_)
-    for i in xrange(len(self.aliases_)):
+    for i in range(len(self.aliases_)):
       out.putVarInt32(34)
       out.putPrefixedString(self.aliases_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.packed_address_)):
+    for i in range(len(self.packed_address_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.packed_address_[i])
     if (self.has_canonical_name_):
       out.putVarInt32(26)
       out.putPrefixedString(self.canonical_name_)
-    for i in xrange(len(self.aliases_)):
+    for i in range(len(self.aliases_)):
       out.putVarInt32(34)
       out.putPrefixedString(self.aliases_[i])
 
@@ -5618,7 +5618,7 @@ class ResolveReply(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kpacked_address = 2
   kcanonical_name = 3

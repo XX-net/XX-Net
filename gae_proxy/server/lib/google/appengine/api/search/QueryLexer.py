@@ -1405,45 +1405,45 @@ class QueryLexer(Lexer):
 
 
     DFA7_eot = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA7_eof = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA7_min = DFA.unpack(
-        u"\1\41\14\uffff"
+        "\1\41\14\uffff"
         )
 
     DFA7_max = DFA.unpack(
-        u"\1\uffee\14\uffff"
+        "\1\uffee\14\uffff"
         )
 
     DFA7_accept = DFA.unpack(
-        u"\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14"
+        "\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14"
         )
 
     DFA7_special = DFA.unpack(
-        u"\1\0\14\uffff"
+        "\1\0\14\uffff"
         )
 
 
     DFA7_transition = [
-        DFA.unpack(u"\1\1\1\uffff\5\2\2\uffff\1\3\3\uffff\1\4\1\5\13\uffff"
-        u"\1\6\3\uffff\1\7\1\10\32\11\1\12\1\uffff\41\13\43\uffff\uff4e\14"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\1\uffff\5\2\2\uffff\1\3\3\uffff\1\4\1\5\13\uffff"
+        "\1\6\3\uffff\1\7\1\10\32\11\1\12\1\uffff\41\13\43\uffff\uff4e\14"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -1513,43 +1513,43 @@ class QueryLexer(Lexer):
 
 
     DFA9_eot = DFA.unpack(
-        u"\13\uffff"
+        "\13\uffff"
         )
 
     DFA9_eof = DFA.unpack(
-        u"\13\uffff"
+        "\13\uffff"
         )
 
     DFA9_min = DFA.unpack(
-        u"\1\134\1\42\11\uffff"
+        "\1\134\1\42\11\uffff"
         )
 
     DFA9_max = DFA.unpack(
-        u"\1\134\1\176\11\uffff"
+        "\1\134\1\176\11\uffff"
         )
 
     DFA9_accept = DFA.unpack(
-        u"\2\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11"
+        "\2\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11"
         )
 
     DFA9_special = DFA.unpack(
-        u"\13\uffff"
+        "\13\uffff"
         )
 
 
     DFA9_transition = [
-        DFA.unpack(u"\1\1"),
-        DFA.unpack(u"\1\11\10\uffff\1\7\1\2\15\uffff\1\3\1\uffff\1\5\1\4"
-        u"\1\6\35\uffff\1\12\41\uffff\1\10"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1"),
+        DFA.unpack("\1\11\10\uffff\1\7\1\2\15\uffff\1\3\1\uffff\1\5\1\4"
+        "\1\6\35\uffff\1\12\41\uffff\1\10"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
 
@@ -1558,103 +1558,103 @@ class QueryLexer(Lexer):
 
 
     DFA10_eot = DFA.unpack(
-        u"\2\uffff\3\22\2\uffff\1\33\4\uffff\1\35\1\37\1\41\1\uffff\1\42"
-        u"\2\uffff\1\44\2\43\1\47\1\uffff\3\47\12\uffff\1\53\1\54\2\uffff"
-        u"\2\47\3\uffff\1\47\1\uffff\1\47"
+        "\2\uffff\3\22\2\uffff\1\33\4\uffff\1\35\1\37\1\41\1\uffff\1\42"
+        "\2\uffff\1\44\2\43\1\47\1\uffff\3\47\12\uffff\1\53\1\54\2\uffff"
+        "\2\47\3\uffff\1\47\1\uffff\1\47"
         )
 
     DFA10_eof = DFA.unpack(
-        u"\61\uffff"
+        "\61\uffff"
         )
 
     DFA10_min = DFA.unpack(
-        u"\1\11\1\uffff\1\122\1\116\1\117\2\uffff\1\42\4\uffff\3\75\1\uffff"
-        u"\1\60\2\uffff\1\41\1\104\1\124\1\41\1\60\3\41\12\uffff\2\41\1\uffff"
-        u"\1\60\2\41\2\uffff\1\60\1\41\1\60\1\41"
+        "\1\11\1\uffff\1\122\1\116\1\117\2\uffff\1\42\4\uffff\3\75\1\uffff"
+        "\1\60\2\uffff\1\41\1\104\1\124\1\41\1\60\3\41\12\uffff\2\41\1\uffff"
+        "\1\60\2\41\2\uffff\1\60\1\41\1\60\1\41"
         )
 
     DFA10_max = DFA.unpack(
-        u"\1\uffee\1\uffff\1\122\1\116\1\117\2\uffff\1\176\4\uffff\3\75\1"
-        u"\uffff\1\71\2\uffff\1\uffee\1\104\1\124\1\uffee\1\146\3\uffee\12"
-        u"\uffff\2\uffee\1\uffff\1\146\2\uffee\2\uffff\1\146\1\uffee\1\146"
-        u"\1\uffee"
+        "\1\uffee\1\uffff\1\122\1\116\1\117\2\uffff\1\176\4\uffff\3\75\1"
+        "\uffff\1\71\2\uffff\1\uffee\1\104\1\124\1\uffee\1\146\3\uffee\12"
+        "\uffff\2\uffee\1\uffff\1\146\2\uffee\2\uffff\1\146\1\uffee\1\146"
+        "\1\uffee"
         )
 
     DFA10_accept = DFA.unpack(
-        u"\1\uffff\1\1\3\uffff\1\5\1\6\1\uffff\1\10\1\11\1\12\1\13\3\uffff"
-        u"\1\22\1\uffff\1\24\1\25\10\uffff\1\14\1\20\1\15\1\17\1\16\1\21"
-        u"\1\25\1\23\1\25\1\2\2\uffff\1\7\3\uffff\1\3\1\4\4\uffff"
+        "\1\uffff\1\1\3\uffff\1\5\1\6\1\uffff\1\10\1\11\1\12\1\13\3\uffff"
+        "\1\22\1\uffff\1\24\1\25\10\uffff\1\14\1\20\1\15\1\17\1\16\1\21"
+        "\1\25\1\23\1\25\1\2\2\uffff\1\7\3\uffff\1\3\1\4\4\uffff"
         )
 
     DFA10_special = DFA.unpack(
-        u"\16\uffff\1\0\42\uffff"
+        "\16\uffff\1\0\42\uffff"
         )
 
 
     DFA10_transition = [
-        DFA.unpack(u"\2\10\1\uffff\2\10\22\uffff\1\10\1\16\1\21\5\22\1\11"
-        u"\1\12\1\22\1\6\1\13\1\20\14\22\1\1\1\22\1\14\1\17\1\15\2\22\1\3"
-        u"\14\22\1\4\1\2\14\22\1\7\41\22\1\5\42\uffff\uff4e\22"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\23"),
-        DFA.unpack(u"\1\24"),
-        DFA.unpack(u"\1\25"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\26\10\uffff\2\22\3\uffff\4\31\4\32\2\uffff\1\22"
-        u"\1\uffff\3\22\35\uffff\1\30\30\uffff\1\27\10\uffff\1\22"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\34"),
-        DFA.unpack(u"\1\36"),
-        DFA.unpack(u"\1\40"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\12\43"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\1\45"),
-        DFA.unpack(u"\1\46"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\12\50\7\uffff\6\50\32\uffff\6\50"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\51"
-        u"\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\52"
-        u"\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\12\55\7\uffff\6\55\32\uffff\6\55"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\56"
-        u"\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\12\57\7\uffff\6\57\32\uffff\6\57"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
-        DFA.unpack(u"\12\60\7\uffff\6\60\32\uffff\6\60"),
-        DFA.unpack(u"\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
-        u"\1\43\3\uffff\77\43\43\uffff\uff4e\43")
+        DFA.unpack("\2\10\1\uffff\2\10\22\uffff\1\10\1\16\1\21\5\22\1\11"
+        "\1\12\1\22\1\6\1\13\1\20\14\22\1\1\1\22\1\14\1\17\1\15\2\22\1\3"
+        "\14\22\1\4\1\2\14\22\1\7\41\22\1\5\42\uffff\uff4e\22"),
+        DFA.unpack(""),
+        DFA.unpack("\1\23"),
+        DFA.unpack("\1\24"),
+        DFA.unpack("\1\25"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\26\10\uffff\2\22\3\uffff\4\31\4\32\2\uffff\1\22"
+        "\1\uffff\3\22\35\uffff\1\30\30\uffff\1\27\10\uffff\1\22"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\34"),
+        DFA.unpack("\1\36"),
+        DFA.unpack("\1\40"),
+        DFA.unpack(""),
+        DFA.unpack("\12\43"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\1\45"),
+        DFA.unpack("\1\46"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\12\50\7\uffff\6\50\32\uffff\6\50"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\51"
+        "\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\52"
+        "\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack(""),
+        DFA.unpack("\12\55\7\uffff\6\55\32\uffff\6\55"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\3\43\10\56"
+        "\2\43\1\uffff\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\12\57\7\uffff\6\57\32\uffff\6\57"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43"),
+        DFA.unpack("\12\60\7\uffff\6\60\32\uffff\6\60"),
+        DFA.unpack("\1\43\1\uffff\5\43\2\uffff\2\43\1\uffff\15\43\1\uffff"
+        "\1\43\3\uffff\77\43\43\uffff\uff4e\43")
     ]
 
 

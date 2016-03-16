@@ -174,7 +174,7 @@ class ObjectBuilder(yaml_builder.Builder):
     except validation.ValidationError:
 
       raise
-    except Exception, e:
+    except Exception as e:
 
 
 
@@ -214,7 +214,7 @@ class ObjectBuilder(yaml_builder.Builder):
 
     try:
       attribute = subject.value.GetValidator(key)
-    except validation.ValidationError, err:
+    except validation.ValidationError as err:
       raise yaml_errors.UnexpectedAttribute(err)
 
     if isinstance(value, _ObjectMapper):
@@ -230,7 +230,7 @@ class ObjectBuilder(yaml_builder.Builder):
     subject.see(key)
     try:
       subject.value.Set(key, value)
-    except validation.ValidationError, e:
+    except validation.ValidationError as e:
 
 
 
@@ -249,7 +249,7 @@ class ObjectBuilder(yaml_builder.Builder):
       e.message = ("Unable to assign value '%s' to attribute '%s':\n%s" %
                    (value_str, key, error_str))
       raise e
-    except Exception, e:
+    except Exception as e:
       try:
         error_str = str(e)
       except Exception:

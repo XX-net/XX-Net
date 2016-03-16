@@ -20,7 +20,7 @@
 
 """Task Queue API module."""
 
-from taskqueue import *
+from .taskqueue import *
 
 __all__ = [
 

@@ -77,8 +77,8 @@ import math
 import os
 import re
 import time
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
 from google.appengine.api import apiproxy_stub_map
 from google.appengine.api import app_identity
@@ -368,7 +368,7 @@ def _parse_relative_url(relative_url):
   """
   if not relative_url:
     raise _RelativeUrlError('Relative URL is empty')
-  (scheme, netloc, path, query, fragment) = urlparse.urlsplit(relative_url)
+  (scheme, netloc, path, query, fragment) = urllib.parse.urlsplit(relative_url)
   if scheme or netloc:
     raise _RelativeUrlError('Relative URL may not have a scheme or location')
   if fragment:
@@ -394,8 +394,8 @@ def _flatten_params(params):
   """
 
   def get_string(value):
-    if isinstance(value, unicode):
-      return unicode(value).encode('utf-8')
+    if isinstance(value, str):
+      return str(value).encode('utf-8')
     else:
 
 
@@ -404,9 +404,9 @@ def _flatten_params(params):
       return str(value)
 
   param_list = []
-  for key, value in params.iteritems():
+  for key, value in params.items():
     key = get_string(key)
-    if isinstance(value, basestring):
+    if isinstance(value, str):
       param_list.append((key, get_string(value)))
     else:
       try:
@@ -461,7 +461,7 @@ def _TranslateError(error, detail=''):
 
     class JointException(datastore_exception.__class__, DatastoreError):
       """There was a datastore error while accessing the queue."""
-      __msg = (u'taskqueue.DatastoreError caused by: %s %s' %
+      __msg = ('taskqueue.DatastoreError caused by: %s %s' %
                (datastore_exception.__class__, detail))
 
       def __str__(self):
@@ -477,7 +477,7 @@ def _TranslateError(error, detail=''):
 
 
 def _ValidateDeadline(deadline):
-  if not isinstance(deadline, (int, long, float)):
+  if not isinstance(deadline, (int, float)):
     raise TypeError(
         'deadline must be numeric')
 
@@ -532,7 +532,7 @@ class TaskRetryOptions(object):
     Raises:
       InvalidTaskRetryOptionsError if any of the parameters are invalid.
     """
-    args_diff = set(kwargs.iterkeys()) - self.__CONSTRUCTOR_KWARGS
+    args_diff = set(kwargs.keys()) - self.__CONSTRUCTOR_KWARGS
     if args_diff:
       raise TypeError('Invalid arguments: %s' % ', '.join(args_diff))
 
@@ -664,7 +664,7 @@ class Task(object):
       InvalidUrlError: if the task URL is invalid or too long;
       TaskTooLargeError: if the task with its payload is too large.
     """
-    args_diff = set(kwargs.iterkeys()) - self.__CONSTRUCTOR_KWARGS
+    args_diff = set(kwargs.keys()) - self.__CONSTRUCTOR_KWARGS
     if args_diff:
       raise TypeError('Invalid arguments: %s' % ', '.join(args_diff))
 
@@ -901,7 +901,7 @@ class Task(object):
       default_url = False
       try:
         relative_url, query = _parse_relative_url(relative_url)
-      except _RelativeUrlError, e:
+      except _RelativeUrlError as e:
         raise InvalidUrlError(e)
 
     if len(relative_url) > MAX_URL_LENGTH:
@@ -969,7 +969,7 @@ class Task(object):
       URL-encoded version of the params, ready to be added to a query string or
       POST body.
     """
-    return urllib.urlencode(_flatten_params(params))
+    return urllib.parse.urlencode(_flatten_params(params))
 
   @staticmethod
   def __convert_payload(payload, headers):
@@ -985,7 +985,7 @@ class Task(object):
     Raises:
       InvalidTaskError if the payload is not a string or unicode instance.
     """
-    if isinstance(payload, unicode):
+    if isinstance(payload, str):
       headers.setdefault('content-type', 'text/plain; charset=utf-8')
       payload = payload.encode('utf-8')
     elif not isinstance(payload, str):
@@ -1153,7 +1153,7 @@ class Task(object):
 
       query = self.__payload
     else:
-      query = urlparse.urlparse(self.__relative_url).query
+      query = urllib.parse.urlparse(self.__relative_url).query
 
     p = {}
     if not query:
@@ -1163,7 +1163,7 @@ class Task(object):
         query, keep_blank_values=True, strict_parsing=True):
       p.setdefault(key, []).append(value)
 
-    for key, value in p.items():
+    for key, value in list(p.items()):
       if len(value) == 1:
         p[key] = value[0]
 
@@ -1293,7 +1293,7 @@ class QueueStatistics(object):
     wants_list = True
 
 
-    if isinstance(queue_or_queues, basestring):
+    if isinstance(queue_or_queues, str):
       queue_or_queues = [queue_or_queues]
       wants_list = False
 
@@ -1303,7 +1303,7 @@ class QueueStatistics(object):
       queues_list = [queue_or_queues]
       wants_list = False
 
-    contains_strs = any(isinstance(queue, basestring) for queue in queues_list)
+    contains_strs = any(isinstance(queue, str) for queue in queues_list)
     contains_queues = any(isinstance(queue, Queue) for queue in queues_list)
 
     if contains_strs and contains_queues:
@@ -1358,7 +1358,7 @@ class QueueStatistics(object):
       """Process the TaskQueueFetchQueueStatsResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert len(queues) == rpc.response.queuestats_size(), (
@@ -1440,7 +1440,7 @@ class Queue(object):
                                      'PurgeQueue',
                                      request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _TranslateError(e.application_error, e.error_detail)
 
   def delete_tasks_by_name_async(self, task_name, rpc=None):
@@ -1563,7 +1563,7 @@ class Queue(object):
       """Process the TaskQueueDeleteResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert rpc.response.result_size() == len(tasks), (
@@ -1620,7 +1620,7 @@ class Queue(object):
   @staticmethod
   def _ValidateLeaseSeconds(lease_seconds):
 
-    if not isinstance(lease_seconds, (float, int, long)):
+    if not isinstance(lease_seconds, (float, int)):
       raise TypeError(
           'lease_seconds must be a float or an integer')
     lease_seconds = float(lease_seconds)
@@ -1636,7 +1636,7 @@ class Queue(object):
 
   @staticmethod
   def _ValidateMaxTasks(max_tasks):
-    if not isinstance(max_tasks, (int, long)):
+    if not isinstance(max_tasks, int):
       raise TypeError(
           'max_tasks must be an integer')
 
@@ -1654,7 +1654,7 @@ class Queue(object):
       """Process the TaskQueueQueryAndOwnTasksResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       tasks = []
@@ -1946,7 +1946,7 @@ class Queue(object):
       """Process the TaskQueueBulkAddResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert rpc.response.taskresult_size() == len(tasks), (
@@ -2168,7 +2168,7 @@ class Queue(object):
                                      'ModifyTaskLease',
                                      request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _TranslateError(e.application_error, e.error_detail)
 
     task._Task__eta_posix = response.updated_eta_usec() * 1e-6

@@ -25,4 +25,4 @@
 
 
 
-from namespace_manager import *
+from .namespace_manager import *

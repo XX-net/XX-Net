@@ -131,10 +131,10 @@ def _ValidateClientId(client_id):
     InvalidChannelClientIdError: if client id is not an instance of str or
         unicode, or if the (utf-8 encoded) string is longer than 64 characters.
   """
-  if not isinstance(client_id, basestring):
+  if not isinstance(client_id, str):
     raise InvalidChannelClientIdError('"%s" is not a string.' % client_id)
 
-  if isinstance(client_id, unicode):
+  if isinstance(client_id, str):
     client_id = client_id.encode('utf-8')
 
 
@@ -170,7 +170,7 @@ def create_channel(client_id, duration_minutes=None):
   client_id = _ValidateClientId(client_id)
 
   if not duration_minutes is None:
-    if not isinstance(duration_minutes, (int, long)):
+    if not isinstance(duration_minutes, int):
       raise InvalidChannelTokenDurationError(
          'Argument duration_minutes must be integral')
     elif duration_minutes < 1:
@@ -194,7 +194,7 @@ def create_channel(client_id, duration_minutes=None):
                                    'CreateChannel',
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     raise _ToChannelError(e)
 
   return response.token()
@@ -217,7 +217,7 @@ def send_message(client_id, message):
 
   client_id = _ValidateClientId(client_id)
 
-  if isinstance(message, unicode):
+  if isinstance(message, str):
     message = message.encode('utf-8')
   elif not isinstance(message, str):
     raise InvalidMessageError('Message must be a string')
@@ -237,5 +237,5 @@ def send_message(client_id, message):
                                    'SendChannelMessage',
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     raise _ToChannelError(e)

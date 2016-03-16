@@ -27,10 +27,10 @@ programmatically access their request and application logs.
 
 
 
-from __future__ import with_statement
+
 import base64
 import collections
-import cStringIO
+import io
 import logging
 import os
 import re
@@ -137,7 +137,7 @@ def cleanup_message(message):
   message = message.replace('\r\n', _NEWLINE_REPLACEMENT)
   message = message.replace('\r', _NEWLINE_REPLACEMENT)
   message = message.replace('\n', _NEWLINE_REPLACEMENT)
-  if isinstance(message, unicode):
+  if isinstance(message, str):
     message = message.encode('UTF-8')
   return message
 
@@ -178,7 +178,7 @@ class _LogsDequeBuffer(object):
     """Returns the underlying file-like object used to buffer logs."""
 
 
-    return cStringIO.StringIO(self.contents())
+    return io.StringIO(self.contents())
 
   def lines(self):
     """Returns the number of log lines currently buffered."""
@@ -274,7 +274,7 @@ class _LogsDequeBuffer(object):
 
         self._reset()
       record = logsutil.LoggingRecord(
-          level, long(created * 1000 * 1000), message, source_location)
+          level, int(created * 1000 * 1000), message, source_location)
       self._buffer.append(record)
       self._bytes += len(record)
       self._autoflush()
@@ -283,7 +283,7 @@ class _LogsDequeBuffer(object):
     """Writes a line to the logs buffer."""
     with self._lock:
 
-      for line in cStringIO.StringIO(lines):
+      for line in io.StringIO(lines):
         self._write(line)
 
   def writelines(self, seq):
@@ -392,7 +392,7 @@ class _LogsDequeBuffer(object):
 
       records_to_be_flushed.reverse()
       self._buffer.extendleft(records_to_be_flushed)
-    except Exception, e:
+    except Exception as e:
       records_to_be_flushed.reverse()
       self._buffer.extendleft(records_to_be_flushed)
       line = '-' * 80
@@ -558,7 +558,7 @@ class _LogQueryResult(object):
     try:
       apiproxy_stub_map.MakeSyncCall('logservice', 'Read', self._request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       if e.application_error == log_service_pb.LogServiceError.INVALID_REQUEST:
         raise InvalidArgumentError(e.error_detail)
       raise Error(e.error_detail)
@@ -1014,14 +1014,14 @@ def fetch(start_time=None,
   request.set_app_id(os.environ['APPLICATION_ID'])
 
   if start_time is not None:
-    if not isinstance(start_time, (float, int, long)):
+    if not isinstance(start_time, (float, int)):
       raise InvalidArgumentError('start_time must be a float or integer')
-    request.set_start_time(long(start_time * 1000000))
+    request.set_start_time(int(start_time * 1000000))
 
   if end_time is not None:
-    if not isinstance(end_time, (float, int, long)):
+    if not isinstance(end_time, (float, int)):
       raise InvalidArgumentError('end_time must be a float or integer')
-    request.set_end_time(long(end_time * 1000000))
+    request.set_end_time(int(end_time * 1000000))
 
   if offset is not None:
     try:
@@ -1111,12 +1111,12 @@ def fetch(start_time=None,
 
   timeout = kwargs.get('timeout')
   if timeout is not None:
-    if not isinstance(timeout, (float, int, long)):
+    if not isinstance(timeout, (float, int)):
       raise InvalidArgumentError('timeout must be a float or integer')
 
   batch_size = kwargs.get('batch_size')
   if batch_size is not None:
-    if not isinstance(batch_size, (int, long)):
+    if not isinstance(batch_size, int):
       raise InvalidArgumentError('batch_size must be an integer')
 
     if batch_size < 1:
@@ -1158,7 +1158,7 @@ class _LogsStreamBuffer(object):
     if self._stderr:
       assert stream is None
     else:
-      self._stream = stream or cStringIO.StringIO()
+      self._stream = stream or io.StringIO()
     self._lock = threading.RLock()
     self._reset()
 
@@ -1252,7 +1252,7 @@ class _LogsStreamBuffer(object):
 
 
     self.write('LOG %d %d %s\n' % (level,
-                                   long(created * 1000 * 1000),
+                                   int(created * 1000 * 1000),
                                    message))
 
   def write(self, line):

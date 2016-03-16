@@ -136,7 +136,7 @@ def _CheckAsyncResult(rpc,
                       ignored_application_errors):
   try:
     rpc.check_success()
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if e.application_error in ignored_application_errors:
       logging.info(ignored_application_errors.get(e.application_error))
       return
@@ -310,7 +310,7 @@ def set_num_instances_async(
                      modules_service_pb.ModulesServiceError.TRANSIENT_ERROR]
     _CheckAsyncResult(rpc, mapped_errors, {})
 
-  if not isinstance(instances, (long, int)):
+  if not isinstance(instances, int):
     raise TypeError("'instances' arg must be of type long or int.")
   request = modules_service_pb.SetNumInstancesRequest()
   request.set_instances(instances)
@@ -447,7 +447,7 @@ def get_hostname(module=None,
   if version:
     request.set_version(version)
   if instance or instance == 0:
-    if not isinstance(instance, (basestring, long, int)):
+    if not isinstance(instance, (str, int)):
       raise TypeError(
           "'instance' arg must be of type basestring, long or int.")
     request.set_instance(str(instance))

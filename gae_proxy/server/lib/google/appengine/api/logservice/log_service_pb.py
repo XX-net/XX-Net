@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -100,7 +100,7 @@ class LogServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -316,7 +316,7 @@ class UserAppLogLine(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ktimestamp_usec = 1
   klevel = 2
@@ -368,7 +368,7 @@ class UserAppLogGroup(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.log_line_size()): self.add_log_line().CopyFrom(x.log_line(i))
+    for i in range(x.log_line_size()): self.add_log_line().CopyFrom(x.log_line(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -386,26 +386,26 @@ class UserAppLogGroup(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.log_line_)
-    for i in xrange(len(self.log_line_)): n += self.lengthString(self.log_line_[i].ByteSize())
+    for i in range(len(self.log_line_)): n += self.lengthString(self.log_line_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.log_line_)
-    for i in xrange(len(self.log_line_)): n += self.lengthString(self.log_line_[i].ByteSizePartial())
+    for i in range(len(self.log_line_)): n += self.lengthString(self.log_line_[i].ByteSizePartial())
     return n
 
   def Clear(self):
     self.clear_log_line()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.log_line_)):
+    for i in range(len(self.log_line_)):
       out.putVarInt32(18)
       out.putVarInt32(self.log_line_[i].ByteSize())
       self.log_line_[i].OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.log_line_)):
+    for i in range(len(self.log_line_)):
       out.putVarInt32(18)
       out.putVarInt32(self.log_line_[i].ByteSizePartial())
       self.log_line_[i].OutputPartial(out)
@@ -439,7 +439,7 @@ class UserAppLogGroup(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   klog_line = 2
 
@@ -534,7 +534,7 @@ class FlushRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   klogs = 1
 
@@ -634,7 +634,7 @@ class SetStatusRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kstatus = 1
 
@@ -760,7 +760,7 @@ class LogOffset(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   krequest_id = 1
   krequest_id_set = 101
@@ -982,7 +982,7 @@ class LogLine(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   ktime = 1
   klevel = 2
@@ -1641,7 +1641,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
     if (x.has_replica_index()): self.set_replica_index(x.replica_index())
     if (x.has_finished()): self.set_finished(x.finished())
     if (x.has_clone_key()): self.set_clone_key(x.clone_key())
-    for i in xrange(x.line_size()): self.add_line().CopyFrom(x.line(i))
+    for i in range(x.line_size()): self.add_line().CopyFrom(x.line(i))
     if (x.has_lines_incomplete()): self.set_lines_incomplete(x.lines_incomplete())
     if (x.has_app_engine_release()): self.set_app_engine_release(x.app_engine_release())
     if (x.has_trace_id()): self.set_trace_id(x.trace_id())
@@ -1834,7 +1834,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
     if (self.has_finished_): n += 3
     if (self.has_clone_key_): n += 2 + self.lengthString(len(self.clone_key_))
     n += 2 * len(self.line_)
-    for i in xrange(len(self.line_)): n += self.lengthString(self.line_[i].ByteSize())
+    for i in range(len(self.line_)): n += self.lengthString(self.line_[i].ByteSize())
     if (self.has_lines_incomplete_): n += 3
     if (self.has_app_engine_release_): n += 2 + self.lengthString(len(self.app_engine_release_))
     if (self.has_trace_id_): n += 2 + self.lengthString(len(self.trace_id_))
@@ -1908,7 +1908,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
     if (self.has_finished_): n += 3
     if (self.has_clone_key_): n += 2 + self.lengthString(len(self.clone_key_))
     n += 2 * len(self.line_)
-    for i in xrange(len(self.line_)): n += self.lengthString(self.line_[i].ByteSizePartial())
+    for i in range(len(self.line_)): n += self.lengthString(self.line_[i].ByteSizePartial())
     if (self.has_lines_incomplete_): n += 3
     if (self.has_app_engine_release_): n += 2 + self.lengthString(len(self.app_engine_release_))
     if (self.has_trace_id_): n += 2 + self.lengthString(len(self.trace_id_))
@@ -2030,7 +2030,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
     if (self.has_clone_key_):
       out.putVarInt32(226)
       out.putPrefixedString(self.clone_key_)
-    for i in xrange(len(self.line_)):
+    for i in range(len(self.line_)):
       out.putVarInt32(234)
       out.putVarInt32(self.line_[i].ByteSize())
       self.line_[i].OutputUnchecked(out)
@@ -2151,7 +2151,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
     if (self.has_clone_key_):
       out.putVarInt32(226)
       out.putPrefixedString(self.clone_key_)
-    for i in xrange(len(self.line_)):
+    for i in range(len(self.line_)):
       out.putVarInt32(234)
       out.putVarInt32(self.line_[i].ByteSizePartial())
       self.line_[i].OutputPartial(out)
@@ -2374,7 +2374,7 @@ class RequestLog(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kapp_id = 1
   kmodule_id = 37
@@ -2676,7 +2676,7 @@ class LogModuleVersion(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kmodule_id = 1
   kmodule_id_set = 101
@@ -3143,14 +3143,14 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_app_id()): self.set_app_id(x.app_id())
-    for i in xrange(x.version_id_size()): self.add_version_id(x.version_id(i))
-    for i in xrange(x.module_version_size()): self.add_module_version().CopyFrom(x.module_version(i))
+    for i in range(x.version_id_size()): self.add_version_id(x.version_id(i))
+    for i in range(x.module_version_size()): self.add_module_version().CopyFrom(x.module_version(i))
     if (x.has_start_time()): self.set_start_time(x.start_time())
     if (x.has_start_time_set()): self.set_start_time_set(x.start_time_set())
     if (x.has_end_time()): self.set_end_time(x.end_time())
     if (x.has_end_time_set()): self.set_end_time_set(x.end_time_set())
     if (x.has_offset()): self.mutable_offset().MergeFrom(x.offset())
-    for i in xrange(x.request_id_size()): self.add_request_id(x.request_id(i))
+    for i in range(x.request_id_size()): self.add_request_id(x.request_id(i))
     if (x.has_minimum_log_level()): self.set_minimum_log_level(x.minimum_log_level())
     if (x.has_minimum_log_level_set()): self.set_minimum_log_level_set(x.minimum_log_level_set())
     if (x.has_include_incomplete()): self.set_include_incomplete(x.include_incomplete())
@@ -3249,16 +3249,16 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.app_id_))
     n += 1 * len(self.version_id_)
-    for i in xrange(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
+    for i in range(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
     n += 2 * len(self.module_version_)
-    for i in xrange(len(self.module_version_)): n += self.lengthString(self.module_version_[i].ByteSize())
+    for i in range(len(self.module_version_)): n += self.lengthString(self.module_version_[i].ByteSize())
     if (self.has_start_time_): n += 1 + self.lengthVarInt64(self.start_time_)
     if (self.has_start_time_set_): n += 3
     if (self.has_end_time_): n += 1 + self.lengthVarInt64(self.end_time_)
     if (self.has_end_time_set_): n += 3
     if (self.has_offset_): n += 1 + self.lengthString(self.offset_.ByteSize())
     n += 1 * len(self.request_id_)
-    for i in xrange(len(self.request_id_)): n += self.lengthString(len(self.request_id_[i]))
+    for i in range(len(self.request_id_)): n += self.lengthString(len(self.request_id_[i]))
     if (self.has_minimum_log_level_): n += 1 + self.lengthVarInt64(self.minimum_log_level_)
     if (self.has_minimum_log_level_set_): n += 3
     if (self.has_include_incomplete_): n += 2
@@ -3286,16 +3286,16 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.app_id_))
     n += 1 * len(self.version_id_)
-    for i in xrange(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
+    for i in range(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
     n += 2 * len(self.module_version_)
-    for i in xrange(len(self.module_version_)): n += self.lengthString(self.module_version_[i].ByteSizePartial())
+    for i in range(len(self.module_version_)): n += self.lengthString(self.module_version_[i].ByteSizePartial())
     if (self.has_start_time_): n += 1 + self.lengthVarInt64(self.start_time_)
     if (self.has_start_time_set_): n += 3
     if (self.has_end_time_): n += 1 + self.lengthVarInt64(self.end_time_)
     if (self.has_end_time_set_): n += 3
     if (self.has_offset_): n += 1 + self.lengthString(self.offset_.ByteSizePartial())
     n += 1 * len(self.request_id_)
-    for i in xrange(len(self.request_id_)): n += self.lengthString(len(self.request_id_[i]))
+    for i in range(len(self.request_id_)): n += self.lengthString(len(self.request_id_[i]))
     if (self.has_minimum_log_level_): n += 1 + self.lengthVarInt64(self.minimum_log_level_)
     if (self.has_minimum_log_level_set_): n += 3
     if (self.has_include_incomplete_): n += 2
@@ -3350,7 +3350,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.app_id_)
-    for i in xrange(len(self.version_id_)):
+    for i in range(len(self.version_id_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.version_id_[i])
     if (self.has_start_time_):
@@ -3363,7 +3363,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(42)
       out.putVarInt32(self.offset_.ByteSize())
       self.offset_.OutputUnchecked(out)
-    for i in xrange(len(self.request_id_)):
+    for i in range(len(self.request_id_)):
       out.putVarInt32(50)
       out.putPrefixedString(self.request_id_[i])
     if (self.has_minimum_log_level_):
@@ -3402,7 +3402,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_num_shards_):
       out.putVarInt32(144)
       out.putVarInt32(self.num_shards_)
-    for i in xrange(len(self.module_version_)):
+    for i in range(len(self.module_version_)):
       out.putVarInt32(154)
       out.putVarInt32(self.module_version_[i].ByteSize())
       self.module_version_[i].OutputUnchecked(out)
@@ -3438,7 +3438,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_app_id_):
       out.putVarInt32(10)
       out.putPrefixedString(self.app_id_)
-    for i in xrange(len(self.version_id_)):
+    for i in range(len(self.version_id_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.version_id_[i])
     if (self.has_start_time_):
@@ -3451,7 +3451,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
       out.putVarInt32(42)
       out.putVarInt32(self.offset_.ByteSizePartial())
       self.offset_.OutputPartial(out)
-    for i in xrange(len(self.request_id_)):
+    for i in range(len(self.request_id_)):
       out.putVarInt32(50)
       out.putPrefixedString(self.request_id_[i])
     if (self.has_minimum_log_level_):
@@ -3490,7 +3490,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_num_shards_):
       out.putVarInt32(144)
       out.putVarInt32(self.num_shards_)
-    for i in xrange(len(self.module_version_)):
+    for i in range(len(self.module_version_)):
       out.putVarInt32(154)
       out.putVarInt32(self.module_version_[i].ByteSizePartial())
       self.module_version_[i].OutputPartial(out)
@@ -3675,7 +3675,7 @@ class LogReadRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kapp_id = 1
   kversion_id = 2
@@ -3836,7 +3836,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.log_size()): self.add_log().CopyFrom(x.log(i))
+    for i in range(x.log_size()): self.add_log().CopyFrom(x.log(i))
     if (x.has_offset()): self.mutable_offset().MergeFrom(x.offset())
     if (x.has_last_end_time()): self.set_last_end_time(x.last_end_time())
 
@@ -3861,7 +3861,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.log_)
-    for i in xrange(len(self.log_)): n += self.lengthString(self.log_[i].ByteSize())
+    for i in range(len(self.log_)): n += self.lengthString(self.log_[i].ByteSize())
     if (self.has_offset_): n += 1 + self.lengthString(self.offset_.ByteSize())
     if (self.has_last_end_time_): n += 1 + self.lengthVarInt64(self.last_end_time_)
     return n
@@ -3869,7 +3869,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.log_)
-    for i in xrange(len(self.log_)): n += self.lengthString(self.log_[i].ByteSizePartial())
+    for i in range(len(self.log_)): n += self.lengthString(self.log_[i].ByteSizePartial())
     if (self.has_offset_): n += 1 + self.lengthString(self.offset_.ByteSizePartial())
     if (self.has_last_end_time_): n += 1 + self.lengthVarInt64(self.last_end_time_)
     return n
@@ -3880,7 +3880,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
     self.clear_last_end_time()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.log_)):
+    for i in range(len(self.log_)):
       out.putVarInt32(10)
       out.putVarInt32(self.log_[i].ByteSize())
       self.log_[i].OutputUnchecked(out)
@@ -3893,7 +3893,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
       out.putVarInt64(self.last_end_time_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.log_)):
+    for i in range(len(self.log_)):
       out.putVarInt32(10)
       out.putVarInt32(self.log_[i].ByteSizePartial())
       self.log_[i].OutputPartial(out)
@@ -3948,7 +3948,7 @@ class LogReadResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   klog = 1
   koffset = 2
@@ -4204,7 +4204,7 @@ class LogUsageRecord(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kversion_id = 1
   kstart_time = 2
@@ -4397,7 +4397,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
   def MergeFrom(self, x):
     assert x is not self
     if (x.has_app_id()): self.set_app_id(x.app_id())
-    for i in xrange(x.version_id_size()): self.add_version_id(x.version_id(i))
+    for i in range(x.version_id_size()): self.add_version_id(x.version_id(i))
     if (x.has_start_time()): self.set_start_time(x.start_time())
     if (x.has_end_time()): self.set_end_time(x.end_time())
     if (x.has_resolution_hours()): self.set_resolution_hours(x.resolution_hours())
@@ -4444,7 +4444,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
     n = 0
     n += self.lengthString(len(self.app_id_))
     n += 1 * len(self.version_id_)
-    for i in xrange(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
+    for i in range(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
     if (self.has_start_time_): n += 1 + self.lengthVarInt64(self.start_time_)
     if (self.has_end_time_): n += 1 + self.lengthVarInt64(self.end_time_)
     if (self.has_resolution_hours_): n += 1 + self.lengthVarInt64(self.resolution_hours_)
@@ -4461,7 +4461,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
       n += 1
       n += self.lengthString(len(self.app_id_))
     n += 1 * len(self.version_id_)
-    for i in xrange(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
+    for i in range(len(self.version_id_)): n += self.lengthString(len(self.version_id_[i]))
     if (self.has_start_time_): n += 1 + self.lengthVarInt64(self.start_time_)
     if (self.has_end_time_): n += 1 + self.lengthVarInt64(self.end_time_)
     if (self.has_resolution_hours_): n += 1 + self.lengthVarInt64(self.resolution_hours_)
@@ -4487,7 +4487,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
   def OutputUnchecked(self, out):
     out.putVarInt32(10)
     out.putPrefixedString(self.app_id_)
-    for i in xrange(len(self.version_id_)):
+    for i in range(len(self.version_id_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.version_id_[i])
     if (self.has_start_time_):
@@ -4519,7 +4519,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
     if (self.has_app_id_):
       out.putVarInt32(10)
       out.putPrefixedString(self.app_id_)
-    for i in xrange(len(self.version_id_)):
+    for i in range(len(self.version_id_)):
       out.putVarInt32(18)
       out.putPrefixedString(self.version_id_[i])
     if (self.has_start_time_):
@@ -4607,7 +4607,7 @@ class LogUsageRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kapp_id = 1
   kversion_id = 2
@@ -4699,7 +4699,7 @@ class LogUsageResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.usage_size()): self.add_usage().CopyFrom(x.usage(i))
+    for i in range(x.usage_size()): self.add_usage().CopyFrom(x.usage(i))
     if (x.has_summary()): self.mutable_summary().MergeFrom(x.summary())
 
   def Equals(self, x):
@@ -4721,14 +4721,14 @@ class LogUsageResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.usage_)
-    for i in xrange(len(self.usage_)): n += self.lengthString(self.usage_[i].ByteSize())
+    for i in range(len(self.usage_)): n += self.lengthString(self.usage_[i].ByteSize())
     if (self.has_summary_): n += 1 + self.lengthString(self.summary_.ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.usage_)
-    for i in xrange(len(self.usage_)): n += self.lengthString(self.usage_[i].ByteSizePartial())
+    for i in range(len(self.usage_)): n += self.lengthString(self.usage_[i].ByteSizePartial())
     if (self.has_summary_): n += 1 + self.lengthString(self.summary_.ByteSizePartial())
     return n
 
@@ -4737,7 +4737,7 @@ class LogUsageResponse(ProtocolBuffer.ProtocolMessage):
     self.clear_summary()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.usage_)):
+    for i in range(len(self.usage_)):
       out.putVarInt32(10)
       out.putVarInt32(self.usage_[i].ByteSize())
       self.usage_[i].OutputUnchecked(out)
@@ -4747,7 +4747,7 @@ class LogUsageResponse(ProtocolBuffer.ProtocolMessage):
       self.summary_.OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.usage_)):
+    for i in range(len(self.usage_)):
       out.putVarInt32(10)
       out.putVarInt32(self.usage_[i].ByteSizePartial())
       self.usage_[i].OutputPartial(out)
@@ -4795,7 +4795,7 @@ class LogUsageResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kusage = 1
   ksummary = 2

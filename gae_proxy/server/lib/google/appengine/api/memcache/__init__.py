@@ -32,8 +32,8 @@ required and higher performance is desired.
 
 
 
-import cPickle
-import cStringIO
+import pickle
+import io
 import hashlib
 import math
 import types
@@ -156,9 +156,9 @@ def _key_string(key, key_prefix='', server_to_user_dict=None):
   """
   if _is_pair(key):
     key = key[1]
-  if not isinstance(key, basestring):
+  if not isinstance(key, str):
     raise TypeError('Key must be a string instance, received %r' % key)
-  if not isinstance(key_prefix, basestring):
+  if not isinstance(key_prefix, str):
     raise TypeError('key_prefix must be a string instance, received %r' %
                     key_prefix)
 
@@ -167,7 +167,7 @@ def _key_string(key, key_prefix='', server_to_user_dict=None):
 
 
   server_key = key_prefix + key
-  if isinstance(server_key, unicode):
+  if isinstance(server_key, str):
     server_key = server_key.encode('utf-8')
 
   if len(server_key) > MAX_KEY_SIZE:
@@ -210,7 +210,7 @@ def _validate_encode_value(value, do_pickle):
 
   if isinstance(value, str):
     pass
-  elif isinstance(value, unicode):
+  elif isinstance(value, str):
     stored_value = value.encode('utf-8')
     flags |= TYPE_UNICODE
   elif isinstance(value, bool):
@@ -221,7 +221,7 @@ def _validate_encode_value(value, do_pickle):
   elif isinstance(value, int):
     stored_value = str(value)
     flags |= TYPE_INT
-  elif isinstance(value, long):
+  elif isinstance(value, int):
     stored_value = str(value)
     flags |= TYPE_LONG
   else:
@@ -257,7 +257,7 @@ def _decode_value(stored_value, flags, do_unpickle):
     pickle.UnpicklingError: If the value could not be unpickled.
   """
   assert isinstance(stored_value, str)
-  assert isinstance(flags, (int, long))
+  assert isinstance(flags, int)
 
   type_number = flags & FLAG_TYPE_MASK
   value = stored_value
@@ -267,7 +267,7 @@ def _decode_value(stored_value, flags, do_unpickle):
   if type_number == TYPE_STR:
     return value
   elif type_number == TYPE_UNICODE:
-    return unicode(value, 'utf-8')
+    return str(value, 'utf-8')
   elif type_number == TYPE_PICKLED:
     return do_unpickle(value)
   elif type_number == TYPE_BOOL:
@@ -275,7 +275,7 @@ def _decode_value(stored_value, flags, do_unpickle):
   elif type_number == TYPE_INT:
     return int(value)
   elif type_number == TYPE_LONG:
-    return long(value)
+    return int(value)
   else:
     assert False, "Unknown stored type"
   assert False, "Shouldn't get here."
@@ -321,9 +321,9 @@ class Client(object):
   """
 
   def __init__(self, servers=None, debug=0,
-               pickleProtocol=cPickle.HIGHEST_PROTOCOL,
-               pickler=cPickle.Pickler,
-               unpickler=cPickle.Unpickler,
+               pickleProtocol=pickle.HIGHEST_PROTOCOL,
+               pickler=pickle.Pickler,
+               unpickler=pickle.Unpickler,
                pload=None,
                pid=None,
                make_sync_call=None,
@@ -385,7 +385,7 @@ class Client(object):
 
   def _do_pickle(self, value):
     """Pickles a provided value."""
-    pickle_data = cStringIO.StringIO()
+    pickle_data = io.StringIO()
     pickler = self._pickler_factory(pickle_data,
                                     protocol=self._pickle_protocol)
     if self._persistent_id is not None:
@@ -395,7 +395,7 @@ class Client(object):
 
   def _do_unpickle(self, value):
     """Unpickles a provided value."""
-    pickle_data = cStringIO.StringIO(value)
+    pickle_data = io.StringIO(value)
     unpickler = self._unpickler_factory(pickle_data)
     if self._persistent_load is not None:
       unpickler.persistent_load = self._persistent_load
@@ -501,7 +501,7 @@ class Client(object):
       STAT_HITS: stats.hits(),
       STAT_MISSES: stats.misses(),
       STAT_BYTE_HITS: stats.byte_hits(),
-      STAT_ITEMS: stats.items(),
+      STAT_ITEMS: list(stats.items()),
       STAT_BYTES: stats.bytes(),
       STAT_OLDEST_ITEM_AGES: stats.oldest_item_age(),
     }
@@ -697,7 +697,7 @@ class Client(object):
       DELETE_SUCCESSFUL, DELETE_ITEM_MISSING, or DELETE_NETWORK_FAILURE
       (see delete() docstring for details).
     """
-    if not isinstance(seconds, (int, long, float)):
+    if not isinstance(seconds, (int, float)):
       raise TypeError('Delete timeout must be a number.')
     if seconds < 0:
       raise ValueError('Delete timeout must not be negative.')
@@ -909,7 +909,7 @@ class Client(object):
     server_keys, user_key = rpc.user_data
 
     if not status_dict:
-      return user_key.values()
+      return list(user_key.values())
 
 
     unset_list = []
@@ -932,7 +932,7 @@ class Client(object):
       status values otherwise, where each status is one of STORED,
       NOT_STORED, ERROR, or EXISTS.
     """
-    if not isinstance(time, (int, long, float)):
+    if not isinstance(time, (int, float)):
       raise TypeError('Expiration must be a number.')
     if time < 0.0:
       raise ValueError('Expiration must not be negative.')
@@ -943,7 +943,7 @@ class Client(object):
     user_key = {}
     server_keys = []
     set_cas_id = (policy == MemcacheSetRequest.CAS)
-    for key, value in mapping.iteritems():
+    for key, value in mapping.items():
       server_key = _key_string(key, key_prefix, user_key)
       stored_value, flags = _validate_encode_value(value, self._do_pickle)
       server_keys.append(server_key)
@@ -1261,13 +1261,13 @@ class Client(object):
       A UserRPC instance whose get_result() method returns the same
       kind of value as _incrdecr() returns.
     """
-    if not isinstance(delta, (int, long)):
+    if not isinstance(delta, int):
       raise TypeError('Delta must be an integer or long, received %r' % delta)
     if delta < 0:
       raise ValueError('Delta must not be negative.')
 
 
-    if not isinstance(key, basestring):
+    if not isinstance(key, str):
       try:
         it = iter(key)
       except TypeError:
@@ -1294,11 +1294,11 @@ class Client(object):
       request.set_direction(MemcacheIncrementRequest.INCREMENT)
     if initial_value is not None:
 
-      request.set_initial_value(long(initial_value))
+      request.set_initial_value(int(initial_value))
       initial_flags = None
       if isinstance(initial_value, int):
         initial_flags = TYPE_INT
-      elif isinstance(initial_value, long):
+      elif isinstance(initial_value, int):
         initial_flags = TYPE_LONG
       if initial_flags is not None:
         request.set_initial_flags(initial_flags)
@@ -1352,7 +1352,7 @@ class Client(object):
     """
     initial_flags = None
     if initial_value is not None:
-      if not isinstance(initial_value, (int, long)):
+      if not isinstance(initial_value, int):
         raise TypeError('initial_value must be an integer')
       if initial_value < 0:
         raise ValueError('initial_value must be >= 0')
@@ -1366,8 +1366,8 @@ class Client(object):
     response = MemcacheBatchIncrementResponse()
     _add_name_space(request, namespace)
 
-    for key, delta in mapping.iteritems():
-      if not isinstance(delta, (int, long)):
+    for key, delta in mapping.items():
+      if not isinstance(delta, int):
         raise TypeError('Delta must be an integer or long, received %r' % delta)
       if delta >= 0:
         direction = MemcacheIncrementRequest.INCREMENT
@@ -1394,13 +1394,13 @@ class Client(object):
     try:
       rpc.check_success()
     except apiproxy_errors.Error:
-      return dict((k, None) for k in mapping.iterkeys())
+      return dict((k, None) for k in mapping.keys())
 
     response = rpc.response
     assert response.item_size() == len(mapping)
 
     result_dict = {}
-    for key, resp_item in zip(mapping.iterkeys(), response.item_list()):
+    for key, resp_item in zip(iter(mapping.keys()), response.item_list()):
       if (resp_item.increment_status() == MemcacheIncrementResponse.OK and
           resp_item.has_new_value()):
         result_dict[key] = resp_item.new_value()

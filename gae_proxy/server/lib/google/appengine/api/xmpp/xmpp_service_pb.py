@@ -19,7 +19,7 @@
 
 from google.net.proto import ProtocolBuffer
 import array
-import dummy_thread as thread
+import _dummy_thread as thread
 
 __pychecker__ = """maxreturns=0 maxbranches=0 no-callinit
                    unusednames=printElemNumber,debug_strs no-special"""
@@ -112,7 +112,7 @@ class XmppServiceError(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -240,7 +240,7 @@ class PresenceRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kjid = 1
   kfrom_jid = 2
@@ -422,7 +422,7 @@ class PresenceResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kis_available = 1
   kpresence = 2
@@ -485,7 +485,7 @@ class BulkPresenceRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.jid_size()): self.add_jid(x.jid(i))
+    for i in range(x.jid_size()): self.add_jid(x.jid(i))
     if (x.has_from_jid()): self.set_from_jid(x.from_jid())
 
   def Equals(self, x):
@@ -504,14 +504,14 @@ class BulkPresenceRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.jid_)
-    for i in xrange(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
+    for i in range(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
     if (self.has_from_jid_): n += 1 + self.lengthString(len(self.from_jid_))
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.jid_)
-    for i in xrange(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
+    for i in range(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
     if (self.has_from_jid_): n += 1 + self.lengthString(len(self.from_jid_))
     return n
 
@@ -520,7 +520,7 @@ class BulkPresenceRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_from_jid()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.jid_)):
+    for i in range(len(self.jid_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.jid_[i])
     if (self.has_from_jid_):
@@ -528,7 +528,7 @@ class BulkPresenceRequest(ProtocolBuffer.ProtocolMessage):
       out.putPrefixedString(self.from_jid_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.jid_)):
+    for i in range(len(self.jid_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.jid_[i])
     if (self.has_from_jid_):
@@ -563,7 +563,7 @@ class BulkPresenceRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kjid = 1
   kfrom_jid = 2
@@ -609,7 +609,7 @@ class BulkPresenceResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.presence_response_size()): self.add_presence_response().CopyFrom(x.presence_response(i))
+    for i in range(x.presence_response_size()): self.add_presence_response().CopyFrom(x.presence_response(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -627,26 +627,26 @@ class BulkPresenceResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.presence_response_)
-    for i in xrange(len(self.presence_response_)): n += self.lengthString(self.presence_response_[i].ByteSize())
+    for i in range(len(self.presence_response_)): n += self.lengthString(self.presence_response_[i].ByteSize())
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.presence_response_)
-    for i in xrange(len(self.presence_response_)): n += self.lengthString(self.presence_response_[i].ByteSizePartial())
+    for i in range(len(self.presence_response_)): n += self.lengthString(self.presence_response_[i].ByteSizePartial())
     return n
 
   def Clear(self):
     self.clear_presence_response()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.presence_response_)):
+    for i in range(len(self.presence_response_)):
       out.putVarInt32(10)
       out.putVarInt32(self.presence_response_[i].ByteSize())
       self.presence_response_[i].OutputUnchecked(out)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.presence_response_)):
+    for i in range(len(self.presence_response_)):
       out.putVarInt32(10)
       out.putVarInt32(self.presence_response_[i].ByteSizePartial())
       self.presence_response_[i].OutputPartial(out)
@@ -680,7 +680,7 @@ class BulkPresenceResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kpresence_response = 1
 
@@ -782,7 +782,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.jid_size()): self.add_jid(x.jid(i))
+    for i in range(x.jid_size()): self.add_jid(x.jid(i))
     if (x.has_body()): self.set_body(x.body())
     if (x.has_raw_xml()): self.set_raw_xml(x.raw_xml())
     if (x.has_type()): self.set_type(x.type())
@@ -814,7 +814,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.jid_)
-    for i in xrange(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
+    for i in range(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
     n += self.lengthString(len(self.body_))
     if (self.has_raw_xml_): n += 2
     if (self.has_type_): n += 1 + self.lengthString(len(self.type_))
@@ -824,7 +824,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.jid_)
-    for i in xrange(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
+    for i in range(len(self.jid_)): n += self.lengthString(len(self.jid_[i]))
     if (self.has_body_):
       n += 1
       n += self.lengthString(len(self.body_))
@@ -841,7 +841,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
     self.clear_from_jid()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.jid_)):
+    for i in range(len(self.jid_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.jid_[i])
     out.putVarInt32(18)
@@ -857,7 +857,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
       out.putPrefixedString(self.from_jid_)
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.jid_)):
+    for i in range(len(self.jid_)):
       out.putVarInt32(10)
       out.putPrefixedString(self.jid_[i])
     if (self.has_body_):
@@ -913,7 +913,7 @@ class XmppMessageRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kjid = 1
   kbody = 2
@@ -982,7 +982,7 @@ class XmppMessageResponse(ProtocolBuffer.ProtocolMessage):
 
   def MergeFrom(self, x):
     assert x is not self
-    for i in xrange(x.status_size()): self.add_status(x.status(i))
+    for i in range(x.status_size()): self.add_status(x.status(i))
 
   def Equals(self, x):
     if x is self: return 1
@@ -998,25 +998,25 @@ class XmppMessageResponse(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
     n = 0
     n += 1 * len(self.status_)
-    for i in xrange(len(self.status_)): n += self.lengthVarInt64(self.status_[i])
+    for i in range(len(self.status_)): n += self.lengthVarInt64(self.status_[i])
     return n
 
   def ByteSizePartial(self):
     n = 0
     n += 1 * len(self.status_)
-    for i in xrange(len(self.status_)): n += self.lengthVarInt64(self.status_[i])
+    for i in range(len(self.status_)): n += self.lengthVarInt64(self.status_[i])
     return n
 
   def Clear(self):
     self.clear_status()
 
   def OutputUnchecked(self, out):
-    for i in xrange(len(self.status_)):
+    for i in range(len(self.status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.status_[i])
 
   def OutputPartial(self, out):
-    for i in xrange(len(self.status_)):
+    for i in range(len(self.status_)):
       out.putVarInt32(8)
       out.putVarInt32(self.status_[i])
 
@@ -1044,7 +1044,7 @@ class XmppMessageResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kstatus = 1
 
@@ -1268,7 +1268,7 @@ class XmppSendPresenceRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kjid = 1
   ktype = 2
@@ -1348,7 +1348,7 @@ class XmppSendPresenceResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({
@@ -1476,7 +1476,7 @@ class XmppInviteRequest(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
   kjid = 1
   kfrom_jid = 2
@@ -1547,7 +1547,7 @@ class XmppInviteResponse(ProtocolBuffer.ProtocolMessage):
 
 
   def _BuildTagLookupTable(sparse, maxtag, default=None):
-    return tuple([sparse.get(i, default) for i in xrange(0, 1+maxtag)])
+    return tuple([sparse.get(i, default) for i in range(0, 1+maxtag)])
 
 
   _TEXT = _BuildTagLookupTable({

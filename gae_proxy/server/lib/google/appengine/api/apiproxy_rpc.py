@@ -30,6 +30,7 @@
 
 
 import sys
+import collections
 
 
 class RPC(object):
@@ -85,7 +86,7 @@ class RPC(object):
       raise AssertionError('Cannot clone a call already in progress')
 
     clone = self.__class__()
-    for k, v in self.__dict__.iteritems():
+    for k, v in self.__dict__.items():
       setattr(clone, k, v)
     return clone
 
@@ -112,7 +113,7 @@ class RPC(object):
 
     assert self._state is RPC.IDLE, ('RPC for %s.%s has already been started' %
                                       (self.package, self.call))
-    assert self.callback is None or callable(self.callback)
+    assert self.callback is None or isinstance(self.callback, collections.Callable)
     self._MakeCallImpl()
 
   def Wait(self):
@@ -129,7 +130,7 @@ class RPC(object):
       Exception of the API call or the callback, if any.
     """
     if self.exception and self._traceback:
-      raise self.exception.__class__, self.exception, self._traceback
+      raise self.exception.__class__(self.exception).with_traceback(self._traceback)
     elif self.exception:
       raise self.exception
 

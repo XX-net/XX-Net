@@ -51,7 +51,7 @@ import os
 import re
 import string
 import time
-import urlparse
+import urllib.parse
 from xml.sax import saxutils
 
 from google.appengine.datastore import entity_pb
@@ -174,7 +174,7 @@ def ValidateString(value,
   """
   if value is None and empty_ok:
     return
-  if not isinstance(value, basestring) or isinstance(value, Blob):
+  if not isinstance(value, str) or isinstance(value, Blob):
     raise exception('%s should be a string; received %s (a %s):' %
                     (name, value, typename(value)))
   if not value and not empty_ok:
@@ -206,7 +206,7 @@ def ValidateInteger(value,
   """
   if value is None and empty_ok:
     return
-  if not isinstance(value, (int, long)):
+  if not isinstance(value, int):
     raise exception('%s should be an integer; received %s (a %s).' %
                     (name, value, typename(value)))
   if not value and not zero_ok:
@@ -346,7 +346,7 @@ class Key(object):
     """
     self._str = None
     if encoded is not None:
-      if not isinstance(encoded, basestring):
+      if not isinstance(encoded, str):
         try:
           repr_encoded = repr(encoded)
         except:
@@ -374,10 +374,10 @@ class Key(object):
 
         self._str = self._str.rstrip('=')
 
-      except (AssertionError, TypeError), e:
+      except (AssertionError, TypeError) as e:
         raise datastore_errors.BadKeyError(
           'Invalid string key %s. Details: %s' % (encoded, e))
-      except Exception, e:
+      except Exception as e:
 
 
 
@@ -506,9 +506,9 @@ class Key(object):
 
 
     path = ref.mutable_path()
-    for i in xrange(0, len(args), 2):
+    for i in range(0, len(args), 2):
       kind, id_or_name = args[i:i+2]
-      if isinstance(kind, basestring):
+      if isinstance(kind, str):
         kind = kind.encode('utf-8')
       else:
         raise datastore_errors.BadArgumentError(
@@ -516,9 +516,9 @@ class Key(object):
             (i + 1, kind, typename(kind)))
       elem = path.add_element()
       elem.set_type(kind)
-      if isinstance(id_or_name, (int, long)):
+      if isinstance(id_or_name, int):
         elem.set_id(id_or_name)
-      elif isinstance(id_or_name, basestring):
+      elif isinstance(id_or_name, str):
         ValidateString(id_or_name, 'name')
         elem.set_name(id_or_name.encode('utf-8'))
       else:
@@ -550,7 +550,7 @@ class Key(object):
     """Returns this entity's kind, as a string."""
     if self.__reference.path().element_size() > 0:
       encoded = self.__reference.path().element_list()[-1].type()
-      return unicode(encoded.decode('utf-8'))
+      return str(encoded.decode('utf-8'))
     else:
       return None
 
@@ -624,7 +624,7 @@ class Key(object):
       raise datastore_errors.BadKeyError(
         'ToTagUri() called for an entity with an incomplete key.')
 
-    return u'tag:%s.%s,%s:%s[%s]' % (
+    return 'tag:%s.%s,%s:%s[%s]' % (
 
         saxutils.escape(EncodeAppIdNamespace(self.app(), self.namespace())),
         os.environ['AUTH_DOMAIN'],
@@ -738,7 +738,7 @@ class Key(object):
     if self.__reference.has_name_space():
       args.append('namespace=%r' %
           self.__reference.name_space().decode('utf-8'))
-    return u'datastore_types.Key.from_path(%s)' % ', '.join(args)
+    return 'datastore_types.Key.from_path(%s)' % ', '.join(args)
 
   def __cmp__(self, other):
     """Returns negative, zero, or positive when comparing two keys.
@@ -814,7 +814,7 @@ def _When(val):
 
 
 
-class Category(unicode):
+class Category(str):
   """A tag, ie a descriptive word or phrase. Entities may be tagged by users,
   and later returned by a queries for that tag. Tags can also be used for
   ranking results (frequency), photo captions, clustering, activity, etc.
@@ -834,11 +834,11 @@ class Category(unicode):
     ValidateString(tag, 'tag')
 
   def ToXml(self):
-    return u'<category term="%s" label=%s />' % (Category.TERM,
+    return '<category term="%s" label=%s />' % (Category.TERM,
                                                  saxutils.quoteattr(self))
 
 
-class Link(unicode):
+class Link(str):
   """A fully qualified URL. Usually http: scheme, but may also be file:, ftp:,
   news:, among others.
 
@@ -855,16 +855,16 @@ class Link(unicode):
     super(Link, self).__init__()
     ValidateString(link, 'link', max_len=_MAX_LINK_PROPERTY_LENGTH)
 
-    scheme, domain, path, params, query, fragment = urlparse.urlparse(link)
+    scheme, domain, path, params, query, fragment = urllib.parse.urlparse(link)
     if (not scheme or (scheme != 'file' and not domain) or
                       (scheme == 'file' and not path)):
       raise datastore_errors.BadValueError('Invalid URL: %s' % link)
 
   def ToXml(self):
-    return u'<link href=%s />' % saxutils.quoteattr(self)
+    return '<link href=%s />' % saxutils.quoteattr(self)
 
 
-class Email(unicode):
+class Email(str):
   """An RFC2822 email address. Makes no attempt at validation; apart from
   checking MX records, email address validation is a rathole.
 
@@ -879,7 +879,7 @@ class Email(unicode):
     ValidateString(email, 'email')
 
   def ToXml(self):
-    return u'<gd:email address=%s />' % saxutils.quoteattr(self)
+    return '<gd:email address=%s />' % saxutils.quoteattr(self)
 
 
 class GeoPt(object):
@@ -962,13 +962,13 @@ class GeoPt(object):
     return 'datastore_types.GeoPt(%r, %r)' % (self.lat, self.lon)
 
   def __unicode__(self):
-    return u'%s,%s' % (unicode(self.lat), unicode(self.lon))
+    return '%s,%s' % (str(self.lat), str(self.lon))
 
   __str__ = __unicode__
 
   def ToXml(self):
-    return u'<georss:point>%s %s</georss:point>' % (unicode(self.lat),
-                                                    unicode(self.lon))
+    return '<georss:point>%s %s</georss:point>' % (str(self.lat),
+                                                    str(self.lon))
 
 
 class IM(object):
@@ -1052,20 +1052,20 @@ class IM(object):
     return 'datastore_types.IM(%r, %r)' % (self.protocol, self.address)
 
   def __unicode__(self):
-    return u'%s %s' % (self.protocol, self.address)
+    return '%s %s' % (self.protocol, self.address)
 
   __str__ = __unicode__
 
   def ToXml(self):
-    return (u'<gd:im protocol=%s address=%s />' %
+    return ('<gd:im protocol=%s address=%s />' %
             (saxutils.quoteattr(self.protocol),
              saxutils.quoteattr(self.address)))
 
   def __len__(self):
-    return len(unicode(self))
+    return len(str(self))
 
 
-class PhoneNumber(unicode):
+class PhoneNumber(str):
   """A human-readable phone number or address.
 
   No validation is performed. Phone numbers have many different formats -
@@ -1084,10 +1084,10 @@ class PhoneNumber(unicode):
     ValidateString(phone, 'phone')
 
   def ToXml(self):
-    return u'<gd:phoneNumber>%s</gd:phoneNumber>' % saxutils.escape(self)
+    return '<gd:phoneNumber>%s</gd:phoneNumber>' % saxutils.escape(self)
 
 
-class PostalAddress(unicode):
+class PostalAddress(str):
   """A human-readable mailing address. Again, mailing address formats vary
   widely, so no validation is performed.
 
@@ -1102,7 +1102,7 @@ class PostalAddress(unicode):
     ValidateString(address, 'address')
 
   def ToXml(self):
-    return u'<gd:postalAddress>%s</gd:postalAddress>' % saxutils.escape(self)
+    return '<gd:postalAddress>%s</gd:postalAddress>' % saxutils.escape(self)
 
 
 class Rating(long):
@@ -1128,7 +1128,7 @@ class Rating(long):
         (rating, typename(rating)))
 
     try:
-      if long(rating) < Rating.MIN or long(rating) > Rating.MAX:
+      if int(rating) < Rating.MIN or int(rating) > Rating.MAX:
         raise datastore_errors.BadValueError()
     except ValueError:
 
@@ -1137,11 +1137,11 @@ class Rating(long):
         (rating, typename(rating)))
 
   def ToXml(self):
-    return (u'<gd:rating value="%d" min="%d" max="%d" />' %
+    return ('<gd:rating value="%d" min="%d" max="%d" />' %
             (self, Rating.MIN, Rating.MAX))
 
 
-class Text(unicode):
+class Text(str):
   """A long string type.
 
   Strings of any length can be stored in the datastore using this
@@ -1160,8 +1160,8 @@ class Text(unicode):
                 defaults to 'ascii' when isinstance(arg, str);
     """
     if arg is None:
-      arg = u''
-    if isinstance(arg, unicode):
+      arg = ''
+    if isinstance(arg, str):
       if encoding is not None:
         raise TypeError('Text() with a unicode argument '
                         'should not specify an encoding')
@@ -1290,7 +1290,7 @@ class BlobKey(object):
 
     if type(other) is type(self):
       return cmp(str(self), str(other))
-    elif isinstance(other, basestring):
+    elif isinstance(other, str):
       return cmp(self.__blob_key, other)
     else:
       return NotImplemented
@@ -1342,14 +1342,14 @@ _PROPERTY_TYPES = frozenset([
   int,
   Key,
   Link,
-  long,
+  int,
   PhoneNumber,
   PostalAddress,
   Rating,
   str,
   Text,
   type(None),
-  unicode,
+  str,
   users.User,
   BlobKey,
 ])
@@ -1388,7 +1388,7 @@ def ValidateStringLength(name, value, max_len):
     OverflowError if the value is larger than the maximum length.
   """
 
-  if isinstance(value, unicode):
+  if isinstance(value, str):
     value = value.encode('utf-8')
 
   if len(value) > max_len:
@@ -1463,50 +1463,50 @@ _VALIDATE_PROPERTY_VALUES = {
   int: ValidatePropertyInteger,
   Key: ValidatePropertyKey,
   Link: ValidatePropertyNothing,
-  long: ValidatePropertyInteger,
+  int: ValidatePropertyInteger,
   PhoneNumber: ValidatePropertyNothing,
   PostalAddress: ValidatePropertyNothing,
   Rating: ValidatePropertyInteger,
   str: ValidatePropertyNothing,
   Text: ValidatePropertyNothing,
   type(None): ValidatePropertyNothing,
-  unicode: ValidatePropertyNothing,
+  str: ValidatePropertyNothing,
   users.User: ValidatePropertyNothing,
   BlobKey: ValidatePropertyNothing,
 }
 
 _PROPERTY_TYPE_TO_INDEX_VALUE_TYPE = {
-  basestring: str,
+  str: str,
   Blob: str,
   EmbeddedEntity: str,
   ByteString: str,
   bool: bool,
   Category: str,
-  datetime.datetime: long,
-  datetime.date: long,
-  datetime.time: long,
-  _OverflowDateTime: long,
+  datetime.datetime: int,
+  datetime.date: int,
+  datetime.time: int,
+  _OverflowDateTime: int,
   Email: str,
   float: float,
   GeoPt: GeoPt,
   IM: str,
-  int: long,
+  int: int,
   Key: Key,
   Link: str,
-  long: long,
+  int: int,
   PhoneNumber: str,
   PostalAddress: str,
-  Rating: long,
+  Rating: int,
   str: str,
   Text: str,
   type(None): type(None),
-  unicode: str,
+  str: str,
   users.User: users.User,
   BlobKey: str,
 }
 
 
-assert set(_VALIDATE_PROPERTY_VALUES.iterkeys()) == _PROPERTY_TYPES
+assert set(_VALIDATE_PROPERTY_VALUES.keys()) == _PROPERTY_TYPES
 
 
 def ValidateProperty(name, values, read_only=False):
@@ -1547,7 +1547,7 @@ def ValidateProperty(name, values, read_only=False):
           'Unsupported type for property %s: %s' % (name, v.__class__))
       prop_validator(name, v)
 
-  except (KeyError, ValueError, TypeError, IndexError, AttributeError), msg:
+  except (KeyError, ValueError, TypeError, IndexError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error type checking values for property %s: %s' % (name, msg))
 
@@ -1578,7 +1578,7 @@ def PackString(name, value, pbvalue):
     value: A string, unicode, or string-like value instance.
     pbvalue: The entity_pb.PropertyValue to pack this value into.
   """
-  pbvalue.set_stringvalue(unicode(value).encode('utf-8'))
+  pbvalue.set_stringvalue(str(value).encode('utf-8'))
 
 
 def PackDatetime(name, value, pbvalue):
@@ -1602,7 +1602,7 @@ def DatetimeToTimestamp(value):
   if value.tzinfo:
 
     value = value.astimezone(UTC)
-  return long(calendar.timegm(value.timetuple()) * 1000000L) + value.microsecond
+  return int(calendar.timegm(value.timetuple()) * 1000000) + value.microsecond
 
 
 def PackGeoPt(name, value, pbvalue):
@@ -1714,20 +1714,20 @@ _PACK_PROPERTY_VALUES = {
   int: PackInteger,
   Key: PackKey,
   Link: PackString,
-  long: PackInteger,
+  int: PackInteger,
   PhoneNumber: PackString,
   PostalAddress: PackString,
   Rating: PackInteger,
   str: PackString,
   Text: PackString,
   type(None): lambda name, value, pbvalue: None,
-  unicode: PackString,
+  str: PackString,
   users.User: PackUser,
   BlobKey: PackString,
 }
 
 
-assert set(_PACK_PROPERTY_VALUES.iterkeys()) == _PROPERTY_TYPES
+assert set(_PACK_PROPERTY_VALUES.keys()) == _PROPERTY_TYPES
 
 
 def ToPropertyPb(name, values):
@@ -1861,11 +1861,11 @@ def FromPropertyPb(pb):
   if pbval.has_stringvalue():
     value = pbval.stringvalue()
     if not pb.has_meaning() or meaning not in _NON_UTF8_MEANINGS:
-      value = unicode(value, 'utf-8')
+      value = str(value, 'utf-8')
   elif pbval.has_int64value():
 
 
-    value = long(pbval.int64value())
+    value = int(pbval.int64value())
   elif pbval.has_booleanvalue():
 
 
@@ -1877,14 +1877,14 @@ def FromPropertyPb(pb):
   elif pbval.has_pointvalue():
     value = GeoPt(pbval.pointvalue().x(), pbval.pointvalue().y())
   elif pbval.has_uservalue():
-    email = unicode(pbval.uservalue().email(), 'utf-8')
-    auth_domain = unicode(pbval.uservalue().auth_domain(), 'utf-8')
+    email = str(pbval.uservalue().email(), 'utf-8')
+    auth_domain = str(pbval.uservalue().auth_domain(), 'utf-8')
     obfuscated_gaiaid = pbval.uservalue().obfuscated_gaiaid().decode('utf-8')
-    obfuscated_gaiaid = unicode(pbval.uservalue().obfuscated_gaiaid(), 'utf-8')
+    obfuscated_gaiaid = str(pbval.uservalue().obfuscated_gaiaid(), 'utf-8')
 
     federated_identity = None
     if pbval.uservalue().has_federated_identity():
-      federated_identity = unicode(pbval.uservalue().federated_identity(),
+      federated_identity = str(pbval.uservalue().federated_identity(),
                                    'utf-8')
 
 
@@ -1901,7 +1901,7 @@ def FromPropertyPb(pb):
     if pb.has_meaning() and meaning in _PROPERTY_CONVERSIONS:
       conversion = _PROPERTY_CONVERSIONS[meaning]
       value = conversion(value)
-  except (KeyError, ValueError, IndexError, TypeError, AttributeError), msg:
+  except (KeyError, ValueError, IndexError, TypeError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error converting pb: %s\nException was: %s' % (pb, msg))
 
@@ -1950,7 +1950,7 @@ def RestoreFromIndexValue(index_value, data_type):
 
 
   if isinstance(index_value, str) and meaning not in _NON_UTF8_MEANINGS:
-    index_value = unicode(index_value, 'utf-8')
+    index_value = str(index_value, 'utf-8')
 
 
   conv = _PROPERTY_CONVERSIONS.get(meaning)
@@ -1959,7 +1959,7 @@ def RestoreFromIndexValue(index_value, data_type):
 
   try:
     value = conv(index_value)
-  except (KeyError, ValueError, IndexError, TypeError, AttributeError), msg:
+  except (KeyError, ValueError, IndexError, TypeError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error converting value: %r\nException was: %s' % (index_value, msg))
   return value
@@ -1980,11 +1980,11 @@ def PropertyTypeName(value):
     meaning = _PROPERTY_MEANINGS[value.__class__]
     name = entity_pb.Property._Meaning_NAMES[meaning]
     return name.lower().replace('_', ':')
-  elif isinstance(value, basestring):
+  elif isinstance(value, str):
     return 'string'
   elif isinstance(value, users.User):
     return 'user'
-  elif isinstance(value, long):
+  elif isinstance(value, int):
     return 'int'
   elif value is None:
     return 'null'
@@ -1993,9 +1993,9 @@ def PropertyTypeName(value):
 
 
 _PROPERTY_TYPE_STRINGS = {
-    'string':           unicode,
+    'string':           str,
     'bool':             bool,
-    'int':              long,
+    'int':              int,
     'null':             type(None),
     'float':            float,
     'key':              Key,

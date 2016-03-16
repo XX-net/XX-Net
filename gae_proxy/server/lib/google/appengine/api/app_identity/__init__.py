@@ -20,4 +20,4 @@
 
 """App identity API Provides access functions for the app identity service ."""
 
-from app_identity import *
+from .app_identity import *
