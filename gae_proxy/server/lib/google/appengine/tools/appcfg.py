@@ -857,7 +857,7 @@ class IndexOperation(object):
 class VacuumIndexesOperation(IndexOperation):
   """Provide facilities to request the deletion of datastore indexes."""
 
-  def __init__(self, rpcserver, force, confirmation_fn=raw_input,
+  def __init__(self, rpcserver, force, confirmation_fn=input,
                error_fh=sys.stderr):
     """Creates a new VacuumIndexesOperation.
 

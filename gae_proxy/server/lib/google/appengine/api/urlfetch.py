@@ -38,7 +38,7 @@ import http.client
 import os
 import io
 import threading
-import UserDict
+from collections import UserDict
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 
@@ -73,7 +73,7 @@ _VALID_METHODS = frozenset(list(_URL_STRING_MAP.values()))
 _thread_local_settings = threading.local()
 
 
-class _CaselessDict(UserDict.IterableUserDict):
+class _CaselessDict(UserDict):
   """Case insensitive dictionary.
 
   This class was lifted from os.py and slightly modified.
@@ -81,7 +81,7 @@ class _CaselessDict(UserDict.IterableUserDict):
 
   def __init__(self, dict=None, **kwargs):
     self.caseless_keys = {}
-    UserDict.IterableUserDict.__init__(self, dict, **kwargs)
+    UserDict.__init__(self, dict, **kwargs)
 
   def __setitem__(self, key, item):
     """Set dictionary item.

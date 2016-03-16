@@ -784,7 +784,7 @@ class Key(object):
     return hash(type(args)) ^ hash(tuple(args))
 
 
-class _OverflowDateTime(long):
+class _OverflowDateTime(int):
   """Container for GD_WHEN values that don't fit into a datetime.datetime.
 
   This class only exists to safely round-trip GD_WHEN values that are too large
@@ -1105,7 +1105,7 @@ class PostalAddress(str):
     return '<gd:postalAddress>%s</gd:postalAddress>' % saxutils.escape(self)
 
 
-class Rating(long):
+class Rating(int):
   """A user-provided integer rating for a piece of content. Normalized to a
   0-100 scale.
 

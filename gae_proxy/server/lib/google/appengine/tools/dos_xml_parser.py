@@ -26,7 +26,7 @@ BlacklistEntry: describes a blacklisted IP.
 import re
 from xml.etree import ElementTree
 
-import ipaddr
+import ipaddress
 
 from google.appengine.tools import xml_parser_utils
 from google.appengine.tools.app_engine_config_exception import AppEngineConfigException

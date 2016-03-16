@@ -381,7 +381,7 @@ class SDKUpdateChecker(object):
     print('for the latest SDK')
     print('****************************************************************')
 
-  def AllowedToCheckForUpdates(self, input_fn=raw_input):
+  def AllowedToCheckForUpdates(self, input_fn=input):
     """Determines if the user wants to check for updates.
 
     On startup, the dev_appserver wants to check for updates to the SDK.

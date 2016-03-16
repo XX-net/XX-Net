@@ -32,7 +32,7 @@ Library for parsing dos.yaml files and working with these in memory.
 
 import re
 import google
-import ipaddr
+import ipaddress
 
 from google.appengine.api import appinfo
 from google.appengine.api import validation
@@ -54,7 +54,7 @@ class SubnetValidator(validation.Validator):
     """Validates a subnet."""
     if value is None:
       raise validation.MissingAttribute('subnet must be specified')
-    if not isinstance(value, str):
+    if not isinstance(value, basestring):
       raise validation.ValidationError('subnet must be a string, not \'%r\'' %
                                        type(value))
     try:
