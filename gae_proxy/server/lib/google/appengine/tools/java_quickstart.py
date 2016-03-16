@@ -16,9 +16,9 @@
 #
 """Handles the generation of quickstart-web.xml based on servlet annotations."""
 
-from __future__ import with_statement
 
-import cStringIO
+
+import io
 import itertools
 import os
 import subprocess
@@ -149,7 +149,7 @@ def remove_mappings(quickstart_xml, webdefault_xml):
   for child in to_remove:
     quickstart_root.remove(child)
 
-  output = cStringIO.StringIO()
+  output = io.StringIO()
   xml.etree.ElementTree.ElementTree(quickstart_root).write(output)
   return output.getvalue()
 

@@ -20,8 +20,8 @@
 
 import google
 
-import cookielib
-import cStringIO
+import http.cookiejar
+import io
 import fancy_urllib
 import gzip
 import hashlib
@@ -31,8 +31,8 @@ import re
 import socket
 import sys
 import time
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 logger = logging.getLogger('google.appengine.tools.appengine_rpc')
 
@@ -83,11 +83,11 @@ def HttpRequestToString(req, include_data=True):
       'data': req.get_data(),
       }
 
-class ClientLoginError(urllib2.HTTPError):
+class ClientLoginError(urllib.error.HTTPError):
   """Raised to indicate there was an error authenticating with ClientLogin."""
 
   def __init__(self, url, code, msg, headers, args):
-    urllib2.HTTPError.__init__(self, url, code, msg, headers, None)
+    urllib.error.HTTPError.__init__(self, url, code, msg, headers, None)
     self.args = args
     self._reason = args.get("Error")
     self.info = args.get("Info")
@@ -162,7 +162,7 @@ class AbstractRpcServer(object):
 
     self.save_cookies = save_cookies
 
-    self.cookie_jar = cookielib.MozillaCookieJar()
+    self.cookie_jar = http.cookiejar.MozillaCookieJar()
     self.opener = self._GetOpener()
     if self.host_override:
       logger.debug("Server: %s; Host: %s", self.host, self.host_override)
@@ -187,7 +187,7 @@ class AbstractRpcServer(object):
     req = fancy_urllib.FancyRequest(url, data=data)
     if self.host_override:
       req.add_header("Host", self.host_override)
-    for key, value in self.extra_headers.iteritems():
+    for key, value in self.extra_headers.items():
       req.add_header(key, value)
     return req
 
@@ -227,7 +227,7 @@ class AbstractRpcServer(object):
     req = self._CreateRequest(
         url=("https://%s/accounts/ClientLogin" %
              os.getenv("APPENGINE_AUTH_SERVER", "www.google.com")),
-        data=urllib.urlencode(data))
+        data=urllib.parse.urlencode(data))
     try:
       response = self.opener.open(req)
       response_body = response.read()
@@ -237,7 +237,7 @@ class AbstractRpcServer(object):
         self.extra_headers["Cookie"] = (
             'SID=%s; Path=/;' % response_dict["SID"])
       return response_dict["Auth"]
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       if e.code == 403:
         body = e.read()
         response_dict = dict(x.split("=", 1) for x in body.split("\n") if x)
@@ -261,14 +261,14 @@ class AbstractRpcServer(object):
     login_path = os.environ.get("APPCFG_LOGIN_PATH", "/_ah")
     req = self._CreateRequest("%s://%s%s/login?%s" %
                               (self.scheme, self.host, login_path,
-                               urllib.urlencode(args)))
+                               urllib.parse.urlencode(args)))
     try:
       response = self.opener.open(req)
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       response = e
     if (response.code != 302 or
         response.info()["location"] != continue_location):
-      raise urllib2.HTTPError(req.get_full_url(), response.code, response.msg,
+      raise urllib.error.HTTPError(req.get_full_url(), response.code, response.msg,
                               response.headers, response.fp)
     self.authenticated = True
 
@@ -293,33 +293,33 @@ class AbstractRpcServer(object):
         auth_token = self._GetAuthToken(credentials[0], credentials[1])
         if os.getenv("APPENGINE_RPC_USE_SID", "0") == "1":
           return
-      except ClientLoginError, e:
+      except ClientLoginError as e:
 
 
         if e.reason == "CaptchaRequired":
-          print >>sys.stderr, (
+          print((
               "Please go to\n"
               "https://www.google.com/accounts/DisplayUnlockCaptcha\n"
-              "and verify you are a human.  Then try again.")
+              "and verify you are a human.  Then try again."), file=sys.stderr)
           break
         if e.reason == "NotVerified":
-          print >>sys.stderr, "Account not verified."
+          print("Account not verified.", file=sys.stderr)
           break
         if e.reason == "TermsNotAgreed":
-          print >>sys.stderr, "User has not agreed to TOS."
+          print("User has not agreed to TOS.", file=sys.stderr)
           break
         if e.reason == "AccountDeleted":
-          print >>sys.stderr, "The user account has been deleted."
+          print("The user account has been deleted.", file=sys.stderr)
           break
         if e.reason == "AccountDisabled":
-          print >>sys.stderr, "The user account has been disabled."
+          print("The user account has been disabled.", file=sys.stderr)
           break
         if e.reason == "ServiceDisabled":
-          print >>sys.stderr, ("The user's access to the service has been "
-                               "disabled.")
+          print(("The user's access to the service has been "
+                               "disabled."), file=sys.stderr)
           break
         if e.reason == "ServiceUnavailable":
-          print >>sys.stderr, "The service is not available; try again later."
+          print("The service is not available; try again later.", file=sys.stderr)
           break
         raise
       self._GetAuthCookie(auth_token)
@@ -378,7 +378,7 @@ class AbstractRpcServer(object):
         if kwargs:
 
 
-          url += "?" + urllib.urlencode(sorted(kwargs.items()))
+          url += "?" + urllib.parse.urlencode(sorted(kwargs.items()))
         req = self._CreateRequest(url=url, data=payload)
         req.add_header("Content-Type", content_type)
 
@@ -395,7 +395,7 @@ class AbstractRpcServer(object):
           f.close()
 
           return response
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
           logger.debug("Got http error, this is try #%s", tries)
 
 
@@ -435,7 +435,7 @@ class AbstractRpcServer(object):
       socket.setdefaulttimeout(old_timeout)
 
 
-class ContentEncodingHandler(urllib2.BaseHandler):
+class ContentEncodingHandler(urllib.request.BaseHandler):
   """Request and handle HTTP Content-Encoding."""
 
   def http_request(self, request):
@@ -485,7 +485,7 @@ class ContentEncodingHandler(urllib2.BaseHandler):
 
     fp = resp
     while encodings and encodings[-1].lower() == "gzip":
-      fp = cStringIO.StringIO(fp.read())
+      fp = io.StringIO(fp.read())
       fp = gzip.GzipFile(fileobj=fp, mode="r")
       encodings.pop()
 
@@ -539,7 +539,7 @@ class HttpRpcServer(AbstractRpcServer):
       if cookie.domain == self.host and not cookie.is_expired(min_expire):
         break
     else:
-      print >>sys.stderr, "\nError: Machine system clock is incorrect.\n"
+      print("\nError: Machine system clock is incorrect.\n", file=sys.stderr)
 
 
   def _Authenticate(self):
@@ -565,11 +565,11 @@ To learn more, see https://developers.google.com/appengine/kb/general#rpcssl""")
     Returns:
       A urllib2.OpenerDirector object.
     """
-    opener = urllib2.OpenerDirector()
+    opener = urllib.request.OpenerDirector()
     opener.add_handler(fancy_urllib.FancyProxyHandler())
-    opener.add_handler(urllib2.UnknownHandler())
-    opener.add_handler(urllib2.HTTPHandler())
-    opener.add_handler(urllib2.HTTPDefaultErrorHandler())
+    opener.add_handler(urllib.request.UnknownHandler())
+    opener.add_handler(urllib.request.HTTPHandler())
+    opener.add_handler(urllib.request.HTTPDefaultErrorHandler())
     opener.add_handler(fancy_urllib.FancyHTTPSHandler())
     opener.add_handler(urllib2.HTTPErrorProcessor())
     opener.add_handler(ContentEncodingHandler())
@@ -584,7 +584,7 @@ To learn more, see https://developers.google.com/appengine/kb/general#rpcssl""")
           self.authenticated = True
           logger.debug("Loaded authentication cookies from %s",
                        self.cookie_jar.filename)
-        except (OSError, IOError, cookielib.LoadError), e:
+        except (OSError, IOError, http.cookiejar.LoadError) as e:
 
           logger.debug("Could not load authentication cookies; %s: %s",
                        e.__class__.__name__, e)
@@ -593,13 +593,13 @@ To learn more, see https://developers.google.com/appengine/kb/general#rpcssl""")
 
 
         try:
-          fd = os.open(self.cookie_jar.filename, os.O_CREAT, 0600)
+          fd = os.open(self.cookie_jar.filename, os.O_CREAT, 0o600)
           os.close(fd)
-        except (OSError, IOError), e:
+        except (OSError, IOError) as e:
 
           logger.debug("Could not create authentication cookies file; %s: %s",
                        e.__class__.__name__, e)
           self.cookie_jar.filename = None
 
-    opener.add_handler(urllib2.HTTPCookieProcessor(self.cookie_jar))
+    opener.add_handler(urllib.request.HTTPCookieProcessor(self.cookie_jar))
     return opener

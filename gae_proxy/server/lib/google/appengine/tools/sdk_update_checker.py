@@ -23,7 +23,7 @@ import socket
 import ssl
 import sys
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import google
 import yaml
@@ -185,7 +185,7 @@ class SDKUpdateChecker(object):
                     'requested in app.yaml.')
       return
     unsupported_api_versions_found = False
-    for runtime, api_versions in self.runtime_to_api_version.items():
+    for runtime, api_versions in list(self.runtime_to_api_version.items()):
       supported_api_versions = _GetSupportedApiVersions(version, runtime)
       unsupported_api_versions = sorted(api_versions -
                                         set(supported_api_versions))
@@ -241,14 +241,14 @@ class SDKUpdateChecker(object):
             timestamp=version['timestamp'],
             api_versions=version['api_versions'],
             runtime=runtime))
-    except (urllib2.URLError, socket.error, ssl.SSLError), e:
+    except (urllib.error.URLError, socket.error, ssl.SSLError) as e:
       logging.info('Update check failed: %s', e)
       return
 
 
 
     try:
-      latest = sorted(responses.values(), reverse=True,
+      latest = sorted(list(responses.values()), reverse=True,
                       key=lambda release: _VersionList(release['release']))[0]
     except ValueError:
       logging.warn('Could not parse this release version')
@@ -273,7 +273,7 @@ class SDKUpdateChecker(object):
           logging.info('This SDK release is newer than the advertised release.')
           return
 
-    for runtime, response in responses.items():
+    for runtime, response in list(responses.items()):
       api_versions = _GetSupportedApiVersions(response, runtime)
       obsolete_versions = sorted(
           self.runtime_to_api_version[runtime] - set(api_versions))
@@ -339,7 +339,7 @@ class SDKUpdateChecker(object):
         fh.write(nag.ToYAML())
       finally:
         fh.close()
-    except (OSError, IOError), e:
+    except (OSError, IOError) as e:
       logging.error('Could not write nag file to %s. Error: %s', nagfilename, e)
 
   def _Nag(self, msg, latest, version, force=False):
@@ -368,18 +368,18 @@ class SDKUpdateChecker(object):
     nag.timestamp = time.time()
     self._WriteNagFile(nag)
 
-    print '****************************************************************'
-    print msg
-    print '-----------'
-    print 'Latest SDK:'
-    print yaml.dump(latest)
-    print '-----------'
-    print 'Your SDK:'
-    print yaml.dump(version)
-    print '-----------'
-    print 'Please visit https://developers.google.com/appengine/downloads'
-    print 'for the latest SDK'
-    print '****************************************************************'
+    print('****************************************************************')
+    print(msg)
+    print('-----------')
+    print('Latest SDK:')
+    print(yaml.dump(latest))
+    print('-----------')
+    print('Your SDK:')
+    print(yaml.dump(version))
+    print('-----------')
+    print('Please visit https://developers.google.com/appengine/downloads')
+    print('for the latest SDK')
+    print('****************************************************************')
 
   def AllowedToCheckForUpdates(self, input_fn=raw_input):
     """Determines if the user wants to check for updates.
@@ -409,14 +409,14 @@ class SDKUpdateChecker(object):
                         '(Y/n): ')
       answer = answer.strip().lower()
       if answer == 'n' or answer == 'no':
-        print ('dev_appserver will not check for updates on startup.  To '
+        print(('dev_appserver will not check for updates on startup.  To '
                'change this setting, edit %s' %
-               SDKUpdateChecker.MakeNagFilename())
+               SDKUpdateChecker.MakeNagFilename()))
         nag.opt_in = False
       else:
 
-        print ('dev_appserver will check for updates on startup.  To change '
-               'this setting, edit %s' % SDKUpdateChecker.MakeNagFilename())
+        print(('dev_appserver will check for updates on startup.  To change '
+               'this setting, edit %s' % SDKUpdateChecker.MakeNagFilename()))
         nag.opt_in = True
       self._WriteNagFile(nag)
     return nag.opt_in

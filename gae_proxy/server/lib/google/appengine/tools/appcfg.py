@@ -26,7 +26,7 @@ The bulk of this work is handled by the AppVersionUpload class, which exposes
 methods to add to the list of files, fetch a list of modified files, upload
 files, and commit or rollback the transaction.
 """
-from __future__ import with_statement
+
 
 
 
@@ -47,8 +47,8 @@ import subprocess
 import sys
 import tempfile
 import time
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 
 
@@ -198,7 +198,7 @@ def PrintUpdate(msg, error_fh=sys.stderr):
   """
   if verbosity > 0:
     timestamp = datetime.datetime.now()
-    print >>error_fh, '%s %s' % (timestamp.strftime('%I:%M %p'), msg)
+    print('%s %s' % (timestamp.strftime('%I:%M %p'), msg), file=error_fh)
 
 
 def StatusUpdate(msg, error_fh=sys.stderr):
@@ -394,8 +394,8 @@ class FileClassification(object):
   def __MimeType(self, filename, default='application/octet-stream'):
     guess = mimetypes.guess_type(filename)[0]
     if guess is None:
-      print >>self.__error_fh, ('Could not guess mimetype for %s.  Using %s.'
-                                % (filename, default))
+      print(('Could not guess mimetype for %s.  Using %s.'
+                                % (filename, default)), file=self.__error_fh)
       return default
     return guess
 
@@ -453,7 +453,7 @@ def _GetRemoteResourceLimits(logging_context):
   try:
     yaml_data = logging_context.Send('/api/appversion/getresourcelimits')
 
-  except urllib2.HTTPError, err:
+  except urllib.error.HTTPError as err:
 
 
 
@@ -753,7 +753,7 @@ class DefaultVersionSet(object):
 
         params = [('app_id', self.app_id), ('version', self.version)]
         params.extend(('module', module) for module in modules)
-        url = '/api/appversion/setdefault?' + urllib.urlencode(sorted(params))
+        url = '/api/appversion/setdefault?' + urllib.parse.urlencode(sorted(params))
         self.rpcserver.Send(url)
         return
 
@@ -895,10 +895,10 @@ class VacuumIndexesOperation(IndexOperation):
     """
     while True:
 
-      print 'This index is no longer defined in your index.yaml file.'
-      print
-      print index.ToYAML()
-      print
+      print('This index is no longer defined in your index.yaml file.')
+      print()
+      print(index.ToYAML())
+      print()
 
 
       confirmation = self.confirmation_fn(
@@ -914,7 +914,7 @@ class VacuumIndexesOperation(IndexOperation):
         self.force = True
         return True
       else:
-        print 'Did not understand your response.'
+        print('Did not understand your response.')
 
   def DoVacuum(self, definitions):
     """Vacuum indexes in datastore.
@@ -1074,7 +1074,7 @@ class LogsRequester(object):
       else:
         try:
           of = open(self.output_file, self.write_mode)
-        except IOError, err:
+        except IOError as err:
           StatusUpdate('Can\'t write %r: %s.' % (self.output_file, err))
           sys.exit(1)
       try:
@@ -1268,7 +1268,7 @@ def CopyReversedLines(instream, outstream, blocksize=2**16):
   instream.seek(0, 2)
   last_block = instream.tell() // blocksize
   spillover = ''
-  for iblock in xrange(last_block + 1, -1, -1):
+  for iblock in range(last_block + 1, -1, -1):
     instream.seek(iblock * blocksize)
     data = instream.read(blocksize)
     lines = data.splitlines(True)
@@ -1306,7 +1306,7 @@ def FindSentinel(filename, blocksize=2**16, error_fh=sys.stderr):
     sys.exit(2)
   try:
     fp = open(filename, 'rb')
-  except IOError, err:
+  except IOError as err:
     StatusUpdate('Append mode disabled: can\'t read %r: %s.' % (filename, err),
                  error_fh)
     return None
@@ -1364,7 +1364,7 @@ class UploadBatcher(object):
         boundary += '%04x' % random.randint(0, 0xffff)
         assert len(boundary) < 80, 'Unexpected error, please try again.'
       part = '\n'.join(['',
-                        'X-Appcfg-File: %s' % urllib.quote(path),
+                        'X-Appcfg-File: %s' % urllib.parse.quote(path),
                         'X-Appcfg-Hash: %s' % _Hash(payload),
                         'Content-Type: %s' % mime_type,
                         'Content-Length: %d' % len(payload),
@@ -1412,7 +1412,7 @@ class UploadBatcher(object):
       return
     try:
       self.SendBatch()
-    except urllib2.HTTPError, err:
+    except urllib.error.HTTPError as err:
       if err.code != 404:
         raise
 
@@ -1516,7 +1516,7 @@ def EnsureDir(path):
   """
   try:
     os.makedirs(path)
-  except OSError, exc:
+  except OSError as exc:
 
 
     if not (exc.errno == errno.EEXIST and os.path.isdir(path)):
@@ -1593,7 +1593,7 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
         contents = rpcserver.Send('/api/files/get', app_id=app_id,
                                   version=full_version, id=file_id)
         return True, contents
-      except urllib2.HTTPError, exc:
+      except urllib.error.HTTPError as exc:
 
 
         if exc.code == 503:
@@ -1627,14 +1627,14 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
     full_dir = os.path.dirname(full_path)
     try:
       EnsureDir(full_dir)
-    except OSError, exc:
+    except OSError as exc:
       logging.error('Couldn\'t create directory "%s": %s', full_dir, exc)
       num_errors += 1
       continue
 
     try:
       out_file = open(full_path, 'wb')
-    except IOError, exc:
+    except IOError as exc:
       logging.error('Couldn\'t open file "%s": %s', full_path, exc)
       num_errors += 1
       continue
@@ -1642,7 +1642,7 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
     try:
       try:
         out_file.write(contents)
-      except IOError, exc:
+      except IOError as exc:
         logging.error('Couldn\'t write to file "%s": %s', full_path, exc)
         num_errors += 1
         continue
@@ -1697,7 +1697,7 @@ class _ClientDeployLoggingContext(object):
       self._RegisterReqestForLogging(url, 200, start_time_usec,
                                      request_size_bytes)
       return result
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       self._RegisterReqestForLogging(url, e.code, start_time_usec,
                                      request_size_bytes)
       raise e
@@ -1743,7 +1743,7 @@ class _ClientDeployLoggingContext(object):
           success=success,
           sdk_version=self.GetSdkVersion())
       self.Send('/api/logclientdeploy', info.ToYAML())
-    except BaseException, e:
+    except BaseException as e:
       logging.debug('Exception logging deploy info continuing - %s', e)
 
 
@@ -1932,7 +1932,7 @@ class AppVersionUpload(object):
     files_to_clone = []
     blobs_to_clone = []
     errorblobs = {}
-    for path, content_hash in self.files.iteritems():
+    for path, content_hash in self.files.items():
       file_classification = FileClassification(
           self.config, path, error_fh=self.error_fh)
 
@@ -1972,7 +1972,7 @@ class AppVersionUpload(object):
                    self.error_fh)
 
       max_files = self.resource_limits['max_files_to_clone']
-      for i in xrange(0, len(files), max_files):
+      for i in range(0, len(files), max_files):
         if i > 0 and i % max_files == 0:
           StatusUpdate('Cloned %d files.' % i, self.error_fh)
 
@@ -1994,10 +1994,10 @@ class AppVersionUpload(object):
 
     logging.debug('Files to upload: %s', files_to_upload)
 
-    for (path, content_hash) in errorblobs.iteritems():
+    for (path, content_hash) in errorblobs.items():
       files_to_upload[path] = content_hash
     self.files = files_to_upload
-    return sorted(files_to_upload.iterkeys())
+    return sorted(files_to_upload.keys())
 
   def UploadFile(self, path, file_handle):
     """Uploads a file to the hosting service.
@@ -2272,7 +2272,7 @@ class AppVersionUpload(object):
     """Get the URL for the app's logs."""
     module = '%s:' % self.module if self.module else ''
     return ('https://appengine.google.com/logs?' +
-            urllib.urlencode((('app_id', self.app_id),
+            urllib.parse.urlencode((('app_id', self.app_id),
                               ('version_id', module + self.version))))
 
   def IsEndpointsConfigUpdated(self):
@@ -2388,7 +2388,7 @@ class AppVersionUpload(object):
     except KeyboardInterrupt:
       logging.info('User interrupted. Aborting.')
       raise
-    except EnvironmentError, e:
+    except EnvironmentError as e:
       if self._IsExceptionClientDeployLoggable(e):
         self.logging_context.LogClientDeploy(self.config.runtime,
                                              start_time_usec, False)
@@ -2405,7 +2405,7 @@ class AppVersionUpload(object):
           appinfo.PYTHON_PRECOMPILED in self.config.derived_file_type):
         try:
           self.Precompile()
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
           ErrorUpdate('Error %d: --- begin server output ---\n'
                       '%s\n--- end server output ---' %
                       (e.code, e.read().rstrip('\n')))
@@ -2417,17 +2417,17 @@ class AppVersionUpload(object):
 
 
             raise
-          print >>self.error_fh, (
+          print((
               'Precompilation failed. Your app can still serve but may '
               'have reduced startup performance. You can retry the update '
-              'later to retry the precompilation step.')
+              'later to retry the precompilation step.'), file=self.error_fh)
 
 
       app_summary = self.Commit()
       StatusUpdate('Completed update of %s' % self.Describe(), self.error_fh)
       self.logging_context.LogClientDeploy(self.config.runtime, start_time_usec,
                                            True)
-    except BaseException, e:
+    except BaseException as e:
       try:
         self._LogDoUploadException(e)
         self.Rollback()
@@ -2455,7 +2455,7 @@ class AppVersionUpload(object):
     if isinstance(exception, KeyboardInterrupt):
       return False
 
-    if (isinstance(exception, urllib2.HTTPError)
+    if (isinstance(exception, urllib.error.HTTPError)
         and 400 <= exception.code <= 499):
       return False
 
@@ -2555,7 +2555,7 @@ class AppVersionUpload(object):
 
     if InstanceOf(KeyboardInterrupt):
       logging.info('User interrupted. Aborting.')
-    elif InstanceOf(urllib2.HTTPError):
+    elif InstanceOf(urllib.error.HTTPError):
       logging.info('HTTP Error (%s)', exception)
     elif InstanceOf(CannotStartServingError):
       logging.error(exception.message)
@@ -2584,7 +2584,7 @@ class DoLockAction(object):
     state = yaml.safe_load(yaml_data)
     done = state['state'] != 'PENDING'
     if done:
-      print >> self.file_handle, state['message']
+      print(state['message'], file=self.file_handle)
     return (done, state['message'])
 
   def PrintRetryMessage(self, msg, delay):
@@ -2599,7 +2599,7 @@ class DoLockAction(object):
       kwargs['instance'] = self.instance
 
     response = self.rpcserver.Send(self.url, **kwargs)
-    print >> self.file_handle, response
+    print(response, file=self.file_handle)
     RetryWithBackoff(self.GetState, self.PrintRetryMessage, 1, 2, 5, 20)
 
 
@@ -2736,8 +2736,8 @@ def _ReadUrlContents(url):
   Raises:
     urllib2.URLError: If the URL cannot be read.
   """
-  req = urllib2.Request(url, headers={'Metadata-Flavor': 'Google'})
-  return urllib2.urlopen(req).read()
+  req = urllib.request.Request(url, headers={'Metadata-Flavor': 'Google'})
+  return urllib.request.urlopen(req).read()
 
 
 class AppCfgApp(object):
@@ -2831,7 +2831,7 @@ class AppCfgApp(object):
 
 
     self.parser = self._GetOptionParser()
-    for action in self.actions.itervalues():
+    for action in self.actions.values():
       action.options(self, self.parser)
 
 
@@ -2851,8 +2851,8 @@ class AppCfgApp(object):
             '|'.join(appinfo.GetAllRuntimes()))
 
     if self.options.redundant_oauth2:
-      print >>sys.stderr, (
-          '\nNote: the --oauth2 flag is now the default and can be omitted.\n')
+      print((
+          '\nNote: the --oauth2 flag is now the default and can be omitted.\n'), file=sys.stderr)
 
     action = self.args.pop(0)
 
@@ -2949,7 +2949,7 @@ class AppCfgApp(object):
     """
     try:
       self.action(self)
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       body = e.read()
       if self.wrap_server_error_message:
         error_format = ('Error %d: --- begin server output ---\n'
@@ -2957,19 +2957,19 @@ class AppCfgApp(object):
       else:
         error_format = 'Error %d: %s'
 
-      print >>self.error_fh, (error_format % (e.code, body.rstrip('\n')))
+      print((error_format % (e.code, body.rstrip('\n'))), file=self.error_fh)
       return 1
-    except yaml_errors.EventListenerError, e:
-      print >>self.error_fh, ('Error parsing yaml file:\n%s' % e)
+    except yaml_errors.EventListenerError as e:
+      print(('Error parsing yaml file:\n%s' % e), file=self.error_fh)
       return 1
     except CannotStartServingError:
-      print >>self.error_fh, 'Could not start serving the given version.'
+      print('Could not start serving the given version.', file=self.error_fh)
       return 1
     return 0
 
   def _GetActionDescriptions(self):
     """Returns a formatted string containing the short_descs for all actions."""
-    action_names = self.actions.keys()
+    action_names = list(self.actions.keys())
     action_names.sort()
     desc = ''
     for action_name in action_names:
@@ -2989,7 +2989,7 @@ class AppCfgApp(object):
       """Validates the source reference string and appends it to the list."""
       try:
         appinfo.ValidateSourceReference(value)
-      except validation.ValidationError, e:
+      except validation.ValidationError as e:
         raise optparse.OptionValueError('option %s: %s' % (opt_str, e.message))
       getattr(parser.values, option.dest).append(value)
 
@@ -3259,7 +3259,7 @@ class AppCfgApp(object):
       url = '%s/%s/scopes' % (METADATA_BASE, SERVICE_ACCOUNT_BASE)
       try:
         vm_scopes_string = self.read_url_contents(url)
-      except urllib2.URLError, e:
+      except urllib.error.URLError as e:
         raise RuntimeError('Could not obtain scope list from metadata service: '
                            '%s: %s. This may be because we are not running in '
                            'a Google Compute Engine VM.' % (url, e))
@@ -3311,7 +3311,7 @@ class AppCfgApp(object):
     """
     try:
       appyaml = self._ParseYamlFile(basepath, basename, appinfo_includes.Parse)
-    except yaml_errors.EventListenerError, e:
+    except yaml_errors.EventListenerError as e:
       self.parser.error('Error parsing %s.yaml: %s.' % (
           os.path.join(basepath, basename), e))
     if not appyaml:
@@ -3351,7 +3351,7 @@ class AppCfgApp(object):
         if appyaml.beta_settings is None:
           appyaml.beta_settings = appinfo.BetaSettings()
         appyaml.beta_settings['source_reference'] = combined_refs
-      except validation.ValidationError, e:
+      except validation.ValidationError as e:
         self.parser.error(e.message)
 
     if not appyaml.application:
@@ -3692,7 +3692,7 @@ class AppCfgApp(object):
           p = subprocess.Popen(gab_argv, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, env=env)
           (stdout, stderr) = p.communicate()
-        except Exception, e:
+        except Exception as e:
           raise RuntimeError('failed running go-app-builder', e)
         if p.returncode != 0:
           raise RuntimeError(stderr)
@@ -3707,7 +3707,7 @@ class AppCfgApp(object):
           if path in overlay:
             return self.opener(overlay[path], 'rb')
           return self.opener(os.path.join(basepath, path), 'rb')
-        paths = app_paths + overlay.keys()
+        paths = app_paths + list(overlay.keys())
         openfunc = Open
 
     appversion = AppVersionUpload(
@@ -3851,39 +3851,39 @@ class AppCfgApp(object):
       index_upload = IndexDefinitionUpload(rpcserver, index_defs, self.error_fh)
       try:
         index_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib.error.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'indexes. Please retry later with appcfg.py update_indexes.')
+            'indexes. Please retry later with appcfg.py update_indexes.'), file=self.error_fh)
 
 
     if cron_yaml:
       cron_upload = CronEntryUpload(rpcserver, cron_yaml, self.error_fh)
       try:
         cron_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib.error.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'cron tasks. Please retry later with appcfg.py update_cron.')
+            'cron tasks. Please retry later with appcfg.py update_cron.'), file=self.error_fh)
 
 
     if queue_yaml:
       queue_upload = QueueEntryUpload(rpcserver, queue_yaml, self.error_fh)
       try:
         queue_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib.error.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'queues. Please retry later with appcfg.py update_queues.')
+            'queues. Please retry later with appcfg.py update_queues.'), file=self.error_fh)
 
 
     if dos_yaml:
@@ -3954,8 +3954,8 @@ class AppCfgApp(object):
       cron_upload = CronEntryUpload(rpcserver, cron_yaml, self.error_fh)
       cron_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find cron configuration. No action taken.')
+      print((
+          'Could not find cron configuration. No action taken.'), file=self.error_fh)
 
   def UpdateIndexes(self):
     """Updates indexes."""
@@ -3970,8 +3970,8 @@ class AppCfgApp(object):
       index_upload = IndexDefinitionUpload(rpcserver, index_defs, self.error_fh)
       index_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find index configuration. No action taken.')
+      print((
+          'Could not find index configuration. No action taken.'), file=self.error_fh)
 
   def UpdateQueues(self):
     """Updates any new or changed task queue definitions."""
@@ -3985,8 +3985,8 @@ class AppCfgApp(object):
       queue_upload = QueueEntryUpload(rpcserver, queue_yaml, self.error_fh)
       queue_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find queue configuration. No action taken.')
+      print((
+          'Could not find queue configuration. No action taken.'), file=self.error_fh)
 
   def UpdateDispatch(self):
     """Updates new or changed dispatch definitions."""
@@ -4003,8 +4003,8 @@ class AppCfgApp(object):
                                             self.error_fh)
       dispatch_upload.DoUpload()
     else:
-      print >>self.error_fh, ('Could not find dispatch configuration. No action'
-                              ' taken.')
+      print(('Could not find dispatch configuration. No action'
+                              ' taken.'), file=self.error_fh)
 
   def UpdateDos(self):
     """Updates any new or changed dos definitions."""
@@ -4018,8 +4018,8 @@ class AppCfgApp(object):
       dos_upload = DosEntryUpload(rpcserver, dos_yaml, self.error_fh)
       dos_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find dos configuration. No action taken.')
+      print((
+          'Could not find dos configuration. No action taken.'), file=self.error_fh)
 
   def BackendsAction(self):
     """Placeholder; we never expect this action to be invoked."""
@@ -4116,7 +4116,7 @@ class AppCfgApp(object):
     BackendsStatusUpdate(appyaml.runtime, self.error_fh)
     rpcserver = self._GetRpcServer()
     response = rpcserver.Send('/api/backends/list', app_id=appyaml.application)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsRollback(self):
     """Does a rollback of an existing transaction on this backend."""
@@ -4138,7 +4138,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/start',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsStop(self):
     """Stops a backend."""
@@ -4152,7 +4152,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/stop',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsDelete(self):
     """Deletes a backend."""
@@ -4166,7 +4166,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/delete',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsConfigure(self):
     """Changes the configuration of an existing backend."""
@@ -4183,7 +4183,7 @@ class AppCfgApp(object):
                               app_id=appyaml.application,
                               backend=backend,
                               payload=backends_yaml.ToYAML())
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def ListVersions(self):
     """Lists all versions for an app."""
@@ -4204,9 +4204,9 @@ class AppCfgApp(object):
 
     parsed_response = yaml.safe_load(response)
     if not parsed_response:
-      print >> self.out_fh, ('No versions uploaded for app: %s.' % app_id)
+      print(('No versions uploaded for app: %s.' % app_id), file=self.out_fh)
     else:
-      print >> self.out_fh, response
+      print(response, file=self.out_fh)
 
   def DeleteVersion(self):
     """Deletes the specified version for an app."""
@@ -4224,7 +4224,7 @@ class AppCfgApp(object):
                               version_match=self.options.version,
                               module=module)
 
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def _LockingAction(self, url):
     """Changes the locking state for a given version."""
@@ -4283,7 +4283,7 @@ class AppCfgApp(object):
     rpcserver = self._GetRpcServer()
     response = rpcserver.Send('/api/vms/prepare',
                               app_id=self.options.app_id)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def _ParseAndValidateModuleYamls(self, yaml_paths):
     """Validates given yaml paths and returns the parsed yaml objects.
@@ -4382,7 +4382,7 @@ class AppCfgApp(object):
                                 app_id=app_id,
                                 module=module,
                                 version=version)
-      print >> self.out_fh, response
+      print(response, file=self.out_fh)
 
   def StartModuleVersion(self):
     """Starts one or more versions."""
@@ -4645,19 +4645,19 @@ class AppCfgApp(object):
         if not entry.timezone:
           entry.timezone = 'UTC'
 
-        print >>output, '\n%s:\nURL: %s\nSchedule: %s (%s)' % (description,
+        print('\n%s:\nURL: %s\nSchedule: %s (%s)' % (description,
                                                                entry.url,
                                                                entry.schedule,
-                                                               entry.timezone)
+                                                               entry.timezone), file=output)
         if entry.timezone != 'UTC':
-          print >>output, ('Note: Schedules with timezones won\'t be calculated'
-                           ' correctly here')
+          print(('Note: Schedules with timezones won\'t be calculated'
+                           ' correctly here'), file=output)
         schedule = groctimespecification.GrocTimeSpecification(entry.schedule)
 
         matches = schedule.GetMatches(now, self.options.num_runs)
         for match in matches:
-          print >>output, '%s, %s from now' % (
-              match.strftime('%Y-%m-%d %H:%M:%SZ'), match - now)
+          print('%s, %s from now' % (
+              match.strftime('%Y-%m-%d %H:%M:%SZ'), match - now), file=output)
 
   def _CronInfoOptions(self, parser):
     """Adds cron_info-specific options to 'parser'.
@@ -4990,7 +4990,7 @@ class AppCfgApp(object):
 
 
     for attr_name in sorted(resource_limits):
-      print >>output, '%s: %s' % (attr_name, resource_limits[attr_name])
+      print('%s: %s' % (attr_name, resource_limits[attr_name]), file=output)
 
   class Action(object):
     """Contains information about a command line action.

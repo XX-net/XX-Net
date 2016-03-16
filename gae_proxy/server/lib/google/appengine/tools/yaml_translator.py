@@ -215,7 +215,7 @@ class AppYamlTranslator(object):
 
     variables = self.app_engine_web_xml.env_variables
     statements = ['env_variables:']
-    for name, value in sorted(variables.iteritems()):
+    for name, value in sorted(variables.items()):
       statements.append(
           '  %s: %s' % (
               self.SanitizeForYaml(name), self.SanitizeForYaml(value)))
@@ -364,7 +364,7 @@ class AppYamlTranslator(object):
         'runtime': self.GetRuntime(),
         'threadsafe': self.app_engine_web_xml.threadsafe_value_provided,
     }
-    missing = [field for (field, value) in required.items() if not value]
+    missing = [field for (field, value) in list(required.items()) if not value]
     if missing:
       raise AppEngineConfigException('Missing required fields: %s' %
                                      ', '.join(missing))
