@@ -1,0 +1,17 @@
+.index-name {
+  font-weight:bold;
+  padding:9px 2px;
+}
+
+.index-defs {
+  padding:5px 20px;
+}
+
+.unimportant {
+  color: #666;
+  font-size: 80%;
+}
+
+li {
+  list-style-type: none;
+}

@@ -1,0 +1,3 @@
+handlers:
+- url: /_ah/admin.*
+  script: $PYTHON_LIB/google/appengine/ext/admin_redirect/main.py

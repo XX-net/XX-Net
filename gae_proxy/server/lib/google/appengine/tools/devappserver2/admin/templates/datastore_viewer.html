@@ -1,0 +1,192 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Datastore Viewer{% endblock %}
+
+{% block page_head %}
+  <script>{% include "datastore_viewer.js" %}</script>
+  <style type="text/css">{% include "datastore_viewer.css" %}</style>
+{% endblock %}
+
+{% block body %}
+<div id="datastore-viewer">
+  <h3>Datastore Viewer</h3>
+
+  {% if message %}
+  <div>
+    {{ message }}
+  </div>
+  {% endif %}
+
+  <form action="{{ request.path }}" method="get">
+  {% if kinds %}
+    <div id="entity-manager" class="ae-settings-block">
+      <table>
+        <thead>
+          <tr>
+            {% if show_namespace %}
+              <th>
+                Namespace
+              </th>
+            {% endif %}
+            <th>
+              Entity Kind
+            </th>
+            <th>
+              &nbsp;
+            </th>
+          </tr>
+        </thead>
+        <tr>
+          {% if show_namespace %}
+            <td>
+              <input id="namespace_input" name="namespace" type="text" size="20" value="{{ namespace }}"/>
+            </td>
+          {% endif %}
+          <td>
+            <select name="kind" class="ae-button" id="kind_input">
+              {% for a_kind in kinds %}
+              <option value="{{ a_kind }}"{% if a_kind == kind %} selected="selected"{% endif %}>{{ a_kind }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <input type="submit" class="ae-button" value="List Entities"/>
+            <input type="button" id="create_button" class="ae-button" value="Create New Entity"/>
+            {% if not show_namespace %}
+              <a href="{{ select_namespace_url }}">Select a different namespace</a>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+    {% else %}
+    <p id="datastore_empty">
+      {% if namespace %}
+        Datastore has no entities in namespace
+        &quot;{{ namespace }}&quot;.
+      {% else %}
+        Datastore has no entities in the Empty namespace. You need to
+        add data programatically before you can use this tool to view
+        and edit it.
+      {% endif %}
+      <br>
+      {% if show_namespace %}
+        <input id="namespace_input" name="namespace" type="text" size="20" value="{{ namespace }}"/>
+        <input type="submit" class="ae-button" value="Change Namespace"/>
+      {% else %}
+      <a href="{{ select_namespace_url }}">Select different namespace</a>
+      {% endif %}
+    </p>
+  {% endif %}
+  </form>
+
+  {% if entities %}
+    <form action="{{ request.path }}" method="post">
+      <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+      <input type="hidden" name="kind" value="{{ kind }}"/>
+      <table class="ae-table ae-settings-block">
+        <thead>
+        <tr>
+          <th><input id="allkeys" type="checkbox" /></th>
+          <th>Key</th>
+          <th>Write Ops</th>
+          <th>ID</th>
+          <th>Key Name</th>
+          {% for header in headers %}
+            <th ><a href="{{ order_base_url }}&amp;order={% if order == header.name %}-{% endif %}{{ header.name }}">{{ header.name }}</a></th>
+          {% endfor %}
+          {% if property_overflow %}
+            <th>Properties Elided&hellip;</th>
+          {% endif %}
+        </tr>
+        {% for entity in entities %}
+          <tr>
+            <td>
+              <input id="key{{ loop.index }}" type="checkbox" name="entity_key" value="{{ entity.key }}"/>
+            </td>
+            <td>
+              <a href="{{ entity.edit_uri }}">{{ entity.shortened_key }}</a>
+            </td>
+            <td>
+              {{entity.write_ops}}
+            </td>
+            <td>
+              {% if entity.key_id %}
+                {{entity.key_id}}
+              {% endif %}
+            </td>
+            <td>
+              {% if entity.key_name %}
+                {{entity.key_name}}
+              {% endif %}
+            </td>
+            {% for attribute in entity.attributes %}
+              <td>{{ attribute.short_value }}</td>
+            {% endfor %}
+            {% if property_overflow %}
+              <td></td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </table>
+      <div>
+          <div class="ae-settings-block">
+            <div>
+              <input id="delete_button" class="ae-button" name="action:delete_entities" type="submit" value="Delete" />
+              <input id="memcache_flush_button" class="ae-button" type="submit" name="action:flush_memcache" value="Flush Memcache" />
+            </div>
+          </div>
+          <div class="ae-settings-block">
+            <div>
+              {% if num_pages > 1 %}
+                <div class="ae-paginator">
+                  {% if page != 1 %}
+                    <a href="{{ paging_base_url }}&amp;page={{ page - 1 }}">Previous</a>
+                  {% endif %}
+
+                  {% for page_count in range(1, num_pages+1) %}
+                    {% if page_count == page %}
+                      {{ page_count }}
+                    {% else %}
+                      <a href="{{ paging_base_url }}&amp;page={{ page_count }}">{{ page_count }}</a>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if page != num_pages %}
+                    <a href="{{ paging_base_url }}&amp;page={{ page + 1 }}">Next</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="ae-result-count">
+              {% if entities %}
+                <div>
+                  Results {{ start + 1 }} - {{ entities|length + start }} of
+                  {{ total_entities }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+    </form>
+  {% else %}
+    {% if kind and kinds %}
+    <p>
+      Datastore contains no entities of kind &quot;{{ kind }}&quot; in the
+      {% if namespace %}
+        namespace &quot;<strong>{{ namespace }}</strong>&quot;.
+      {% else %}
+        <strong>Empty</strong> namespace.
+      {% endif %}
+    </p>
+    {% endif %}
+  <form action="" method="post">
+    <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+    <input type="hidden" name="kind" value="{{ kind }}"/>
+    {% if show_namespace %}
+      <input type="hidden" name="namespace" value="{{ namespace }}"/>
+    {% endif %}
+    <input id="memcache_flush_button" class="ae-button" type="submit" name="action:flush_memcache" value="Flush Memcache" />
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

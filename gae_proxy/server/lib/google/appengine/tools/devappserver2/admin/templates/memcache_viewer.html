@@ -1,0 +1,111 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Memcache Viewer{% endblock %}
+
+{% block page_head %}
+  <style type="text/css">{% include "memcache_viewer.css" %}</style>
+{% endblock %}
+
+{% block body %}
+<h3>Memcache Viewer</h3>
+
+{% if message %}
+<div class="message">
+{{ message }}
+</div>
+{% endif %}
+
+{% if show_stats %}
+<div id="stats" class="ae-settings-block-segment">
+  <div>
+    Hit ratio: {{ hitratio }}% (hits: {{ stats.hits }} misses: {{ stats.misses }})
+  </div>
+  <div>
+    Size of cache: items: {{ stats["items"] }} size: {{ stats.bytes|bytesizeformat }}
+          <form id="flush_form" action="{{ request.path }}" method="post">
+            <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+            <input type="submit" class="ae-button" name="action:flush" value="Flush Cache" onclick="return confirm('Are you sure you want to flush all keys from the cache?');"/>
+          </form>
+  </div>
+</div>
+
+<div id="memcache-editor" class="ae-settings-block">
+  <form action="{{ request.path }}" method="post">
+    <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+    <label for="key_input">Key</label>
+    <input id="key_input" name="key" type="text" size="40" value="{{ key }}"/>
+    <span class="buttons">
+      <input type="submit" class="ae-button" name="action:display" value="Display"/>
+      <input type="submit" class="ae-button" name="action:edit" value="Edit/Create"/>
+      <input type="submit" class="ae-button" name="action:delete" value="Delete" onclick="return confirm('Are you sure you want to permanently delete this key?');"/>
+    </span>
+  </form>
+</div>
+{% endif %}
+
+{% if show_value %}
+{% if key_exists %}
+{% if type == "error" %}
+<div class="message">Error fetching {{ key }}: {{ value }}</div>
+{% else %}
+<div id="value_display">
+  <div id="value_display_key">"<b>{{ key }}</b>" is a <b>{{ type }}</b>:</div>
+  <pre id="value_display_value">{{ value }}</pre>
+</div>
+{% endif %}
+{% else %}
+<div class="message">No such key: {{ key }}</div>
+{% endif %}
+{% endif %}
+
+{% if show_valueform %}
+<div id="memcache_edit">
+  <form action="{{ request.path }}" method="post">
+    <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+    <table>
+      <tr>
+        <th>Key</th>
+        <td>
+          <input name="key" type="hidden" value="{{ key }}"/>
+          {{ key }}
+        </td>
+      </tr>
+      <tr>
+        <th>Type</th>
+        <td>
+          {% if key_exists %}
+          <input name="type" type="hidden" value="{{ type }}"/>
+          {{ type }}
+          {% else %}
+          <select name="type" size="1">
+            {% for typeopt in types %}
+            <option>{{ typeopt }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th id="value_key"><div id="value_key_text">Value</div></th>
+        <td>
+          <textarea id="value_input" name="value" cols="80" rows="10"
+                    {% if not writable %}
+                      readonly
+                    {% elif value_placeholder %}
+                      placeholder="{{ value_placeholder }}"
+                    {% endif %}>{{ value }}</textarea>
+        </td>
+      </tr>
+      <tr>
+        <th>&nbsp;</th>
+        <td>
+          {% if writable %}
+          <input type="submit" class="ae-button ae-button-submit" name="action:save" value="Save"/>
+          {% endif %}
+          <input type="submit" class="ae-button" name="action:cancel" value="Cancel"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

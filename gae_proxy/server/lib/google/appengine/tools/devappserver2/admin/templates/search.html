@@ -1,0 +1,53 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Full Text Search{% endblock %}
+
+{% block page_head %}
+  <style type="text/css">{% include "search.css" %}</style>
+{% endblock %}
+
+{% block body %}
+<div id="search">
+  <h3>Full Text Search</h3>
+  {% if has_namespace %}
+  <form method="get" action="{{ request.uri }}">
+    Namespace: <input type="text" name="namespace" value="{{ namespace }}"/>
+    <input type="submit" class="ae-button" value="View"/>
+  </form>
+  {% else %}
+  Showing indexes in default namespace. <a href="?namespace=">Select different namespace</a>
+  {% endif %}
+  <br/><br/>
+  {% if indexes %}
+    <table>
+      <thead>
+        <tr>
+          <th>Search Indexes:</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for index in indexes %}
+          <tr>
+            <td>
+              <a href="/search/index?namespace={{ namespace|urlencode }}&amp;index={{ index.name|urlencode }}">{{ index.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+        {% if paging %}
+        <div class="pagination">
+          {% if previous_url %}
+          <a href="{{ previous_url }}">&lsaquo; Previous</a>{% endif %}
+          {% if next_url %}<a href="{{ next_url }}">Next &rsaquo;</a>{% endif %}
+        </div>
+        {% endif %}
+  {% else %}
+    No full text search indexes found in
+    {% if namespace %}
+      namespace &quot;{{ namespace }}&quot;.
+    {% else %}
+    the default namespace.
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

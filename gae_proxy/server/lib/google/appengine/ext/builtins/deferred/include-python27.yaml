@@ -1,0 +1,4 @@
+handlers:
+- url: /_ah/queue/deferred
+  script: google.appengine.ext.deferred.application
+  login: admin

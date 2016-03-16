@@ -1,0 +1,40 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Interactive Console{% endblock %}
+
+{% block page_head %}
+  <script>{% include "console.js" %}</script>
+  <style type="text/css">{% include "console.css" %}</style>
+{% endblock %}
+
+{% block body %}
+<div id="console">
+  <h3>Interactive Console</h3>
+  {% if modules %}
+  <form id="console-form" action="{{ request.uri }}" method="post">
+    <div>
+      {% if modules|length > 1 %}
+        <select id="module_name" class="ae-button" name="module_name">
+          {% for module in modules|sort(attribute='name') %}
+          <option value="{{ module.name }}">{{ module.name }}</option>
+          {% endfor %}
+        </select>
+      {% else %}
+        <input  name="module_name" type="hidden" value="{{ modules[0].name }}" id="module_name">
+      {% endif %}
+      <input id="restart_button" type="button" class="ae-button" value="Restart Instance">
+    </div>
+    <div>
+      <textarea id="code_text" name="code" rows="20" cols="80"></textarea>
+    </div>
+    <input id="execute_button" type="submit" class="ae-button ae-button-submit" value="Execute">
+  </form>
+  <hr>
+  <pre id="output">Click Execute!</pre>
+  <hr>
+  {% else %}
+    <p>
+    None of the running modules support an interactive console.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

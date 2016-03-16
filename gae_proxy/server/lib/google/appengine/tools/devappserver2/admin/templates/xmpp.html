@@ -1,0 +1,157 @@
+{% extends "skeleton.html" %}
+{% block page_title %}XMPP Viewer{% endblock %}
+
+{% block page_head %}
+  <style type="text/css">{% include "xmpp.css" %}</style>
+{% endblock %}
+
+
+{% block body %}
+<div id="xmpp">
+  <h3>XMPP</h3>
+  <div id="xmpp-feedback"></div>
+  <form id="xmpp-form" action="/xmpp" method="post">
+    <div class="ae-settings-block ae-settings-block-segment">
+      <label>Message type</label>
+      <fieldset>
+        <div class="radio">
+          <input type="radio" name="message_type" id="message-type-chat" value="chat" checked="checked">
+          <label for="message-type-chat">Chat message</label>
+        </div>
+        <div class="radio">
+          <input type="radio" name="message_type" id="message-type-presence" value="presence">
+          <label for="message-type-presence">Presence</label>
+        </div>
+        <div class="radio">
+          <input type="radio" name="message_type" id="message-type-subscribe" value="subscribe">
+          <label for="message-type-subscribe">Subscription</label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="ae-settings-block">
+      <label for="from">From</label>
+      <input type="text" id="from" name="from" size="40">
+    </div>
+
+
+    <div class="ae-settings-block">
+      <label for="to">To</label>
+      <input type="text" id="to" name="to" size="40">
+    </div>
+
+
+    <div id="chat-fields" class="ae-settings-block">
+      <label for="chat">Chat (plain text)</label>
+      <textarea id="chat" name="chat" rows="10" cols="50"></textarea>
+    </div>
+
+    <div id="presence-fields" style="display: none" class="ae-settings-block">
+      <label>Status</label>
+      <fieldset>
+        <div class="radio">
+          <input type="radio" id="presence-online" name="presence" value="online" checked>
+          <label for="presence-online">Available</label>
+        </div>
+
+        <div class="radio">
+          <input type="radio" id="presence-offline" name="presence" value="offline">
+          <label for="presence-offline">Unavailable</label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div id="subscribe-fields" style="display: none" class="ae-settings-block">
+      <label>Notification Type</label>
+
+      <fieldset>
+        <div class="radio">
+          <input type="radio" id="subscribe-subscribe" name="subscribe" value="subscribe" checked>
+          <label for="subscribe-subscribe">Subscribe initiated (subscribe)</label>
+        </div>
+
+        <div class="radio">
+          <input type="radio" id="subscribe-subscribed" name="subscribe" value="subscribed">
+          <label for="subscribe-subscribed">Subscribe confirmed (subscribed)</label>
+        </div>
+
+        <div class="radio">
+          <input type="radio" id="subscribe-unsubscribe" name="subscribe" value="unsubscribe">
+          <label for="subscribe-unsubscribe">Unsubscribe initiated (unsubscribe)</label>
+        </div>
+
+        <div class="radio">
+          <input type="radio" id="subscribe-unsubscribed" name="subscribe" value="unsubscribed">
+          <label for="subscribe-unsubscribed">Unsubscribe confirmed (unsubscribed)</label>
+        </div>
+
+      </fieldset>
+    </div>
+
+    <div id="xmpp-submit">
+      <input type="submit" class="ae-button ae-button-submit" value="Make Request">
+    </div>
+  </form>
+
+  <script>
+$("#message-type-chat, #message-type-presence, #message-type-subscribe").change(function() {
+  if ($("#message-type-chat").prop("checked")) {
+    $("#chat-fields").show();
+    $("#presence-fields").hide();
+    $("#subscribe-fields").hide();
+  } else if ($("#message-type-presence").prop("checked")) {
+    $("#chat-fields").hide();
+    $("#presence-fields").show();
+    $("#subscribe-fields").hide();
+  } else if ($("#message-type-subscribe").prop("checked")) {
+    $("#chat-fields").hide();
+    $("#presence-fields").hide();
+    $("#subscribe-fields").show();
+  }
+});
+
+$('#xmpp-form').submit(function() {
+  var data = {'from': $('#from').val(), 'to': $('#to').val(),
+              'xsrf_token': '{{ xsrf_token }}' };
+
+  if ($("#message-type-chat").prop("checked")) {
+    data['message_type'] = 'chat';
+    data['chat'] = $('#chat').val();
+  } else if ($("#message-type-presence").prop("checked")) {
+    data['message_type'] = 'presence';
+    if ($("#presence-online").prop("checked")) {
+      data['presence'] =  "available";
+    } else {
+      data['presence'] =  "unavailable";
+    }
+  } else if ($("#message-type-subscribe").prop("checked")) {
+    data['message_type'] = 'subscribe';
+    if ($("#subscribe-subscribe").prop("checked")) {
+      data['subscription_type'] =  "subscribe";
+    } else if ($("#subscribe-subscribed").prop("checked")) {
+      data['subscription_type'] =  "subscribed";
+    } else if ($("#subscribe-unsubscribe").prop("checked")) {
+      data['subscription_type'] =  "unsubscribe";
+    } else {
+      data['subscription_type'] =  "unsubscribed";
+    }
+  }
+
+  var request = $.ajax({
+    url: 'xmpp',
+    type: 'POST',
+    data: data
+  })
+  .done(function() {
+    $('#xmpp-feedback').removeClass().addClass('messagebox').text(
+        'Request succeeded!');
+  })
+  .fail(function(xhr, textStatus) {
+    $('#xmpp-feedback').removeClass().addClass('errorbox').text(
+        'Request failured with status: ' + request.status);
+  });
+  return false;
+});
+  </script>
+</div>
+{% endblock %}

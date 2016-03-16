@@ -1,0 +1,48 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Full Text Search{% endblock %}
+
+{% block body %}
+<div id="search">
+<h3><a href="/search">Full Text Search</a> >
+  <a href="/search/index?index={{ index }}&amp;namespace={{ namespace }}">
+    {{ index }}</a>
+{% if namespace %}
+  <div>
+  Namespace: {{ namespace }}
+  </div>
+{% endif %}</h3>
+
+{% if doc %}
+  <table class="ae-table">
+    <thead>
+      <tr>
+        <td colspan="2">Document Id: {{ doc_id }}</td>
+      </tr>
+      {% if doc.order_id %}
+      <tr>
+        <td colspan="2">Order Id: {{ doc.order_id }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <th>Field Name</th>
+        <th>Field Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field in doc.fields|sort(attribute="name") %}
+      <tr>
+        <td>
+          {{ field.name }}
+        </td>
+        <td>
+          {{ field.value }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  No document with id: "{{ doc_id }}".
+{% endif %}
+</div>
+{% endblock %}

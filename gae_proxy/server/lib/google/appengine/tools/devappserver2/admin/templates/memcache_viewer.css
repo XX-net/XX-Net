@@ -1,0 +1,58 @@
+.message {
+  color: red;
+  margin-bottom: 1em;
+}
+
+#flush_form {
+  display: inline;
+  margin-left: 2em;
+}
+
+#memcache_search {
+  margin-bottom: 2em;
+}
+
+#value_display {
+  border: 1px solid #c5d7ef;
+}
+
+#value_display_key {
+  text-align: left;
+  padding: 1ex;
+  background: #e5ecf9;
+}
+
+#value_display_value {
+  margin: 0;
+  padding: 1ex;
+  background: #f9f9f9;
+  font-family: monospace;
+  overflow: auto;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#memcache_edit th {
+  font-weight: bold;
+  padding: 2ex 3ex 0 0;
+}
+
+#memcache_edit td {
+  padding: 2ex 0 0 0;
+}
+
+#memcache_edit th#value_key {
+  vertical-align: top;
+}
+
+#memcache_edit div#value_key_text {
+  padding-top: 3px;
+}
+
+#memcache-editor label {
+  font-weight: bold;
+  margin-right: 40px;
+}

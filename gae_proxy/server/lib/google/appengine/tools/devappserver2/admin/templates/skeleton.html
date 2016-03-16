@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+{% macro menu_item(caption, path) -%}
+   <li class="ae-sidebarlistitem{% if request.path_info.startswith(path + '/') or request.path_info == path %} selected{% endif %}">
+    <a href="{{ path }}">{{ caption }}</a>
+  </li>
+{%- endmacro %}
+
+<html>
+<head>
+  <title>{% block page_title %}{% endblock %}</title>
+  <link rel="stylesheet" href="/assets/common.css" type="text/css" media="screen">
+  <script src='/assets/jquery-1.8.2.min.js'></script>
+  {% block page_head %}{% endblock %}
+</head>
+
+<body>
+  <header id="ae-googlebar" role="banner">
+    <aside>
+        Development SDK {{ sdk_version }}
+    </aside>
+    <h1>
+        <a href="/">
+          <img alt="Google" src="/assets/google_logo_41.png">
+        App Engine
+      </a>
+    </h1>
+  </header>
+  <div id="leftnavc">
+    <div class="sidebarHolder">
+      <h4><a href="/">{{ app_id }}</a></h4>
+      <div class="ae-content-sidebar">
+        <ul>
+          {{ menu_item('Instances', '/instances') }}
+          {{ menu_item('Datastore Viewer', '/datastore') }}
+          {{ menu_item('Datastore Indexes', '/datastore-indexes') }}
+          {{ menu_item('Datastore Stats', '/datastore-stats') }}
+          {{ menu_item('Interactive Console', '/console') }}
+          {{ menu_item('Memcache Viewer', '/memcache') }}
+          {{ menu_item('Blobstore Viewer', '/blobstore') }}
+          {{ menu_item('Task Queues', '/taskqueue') }}
+          {{ menu_item('Cron Jobs', '/cron') }}
+          {{ menu_item('XMPP', '/xmpp') }}
+          {{ menu_item('Inbound Mail', '/mail') }}
+          {{ menu_item('Full Text Search', '/search') }}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div id="rcnt">
+    <div id="content">
+      {% block body %}
+      {% endblock %}
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+builtins:
+- mapreduce: on
+
+handlers:
+- url: /_ah/datastore_admin.*
+  script: $PYTHON_LIB/google/appengine/ext/datastore_admin/main.py
+  login: admin
+
+admin_console:
+  pages:
+  - name: Datastore Admin
+    url: /_ah/datastore_admin/

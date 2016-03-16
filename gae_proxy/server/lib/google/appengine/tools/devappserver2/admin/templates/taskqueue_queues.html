@@ -1,0 +1,98 @@
+{% extends "skeleton.html" %}
+{% block page_title %}Taskqueue Queue Viewer{% endblock %}
+
+{% block body %}
+<h3>Task Queues</h3>
+
+<table class="ae-table">
+  <caption>Push Queues</caption>
+  <thead>
+    <tr>
+      <th>Queue Name</th>
+      <th>Maximum Rate</th>
+      <th>Bucket Size</th>
+      <th>Oldest Task (UTC)</th>
+      <th>Tasks in Queue</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for queue in push_queues %}
+      <tr>
+        <td>
+          <a href="/taskqueue/queue/{{ queue.name }}">
+          {{ queue.name }}</a>
+        </td>
+        <td>
+          {{ queue.rate }}
+        </td>
+        <td>
+          {{ queue.bucket_size }}
+        </td>
+        <td>
+          {% if queue.oldest_eta_usec %}
+            {{ queue.human_readable_oldest_task_eta }}<br/>
+            ({{ queue.human_readable_oldest_task_eta_delta }})
+          {% else %}
+            None
+          {% endif %}
+        </td>
+        <td>
+          {{ queue.tasks_in_queue }}
+        </td>
+        <td>
+          <form action="{{ request.uri }}" method="post">
+          <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+          <input type="hidden" name="queue" value="{{ queue.name }}"/>
+          <input type="submit" class="ae-button" name="action:purgequeue" value="Purge Queue"
+          onclick="return confirm('Are you sure you want to purge all ' +
+                                  'tasks from {{ queue.name }}?');"/>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<br/>
+<table class="ae-table">
+  <caption>Pull Queues</caption>
+  <thead>
+    <tr>
+      <th>Queue Name</th>
+      <th>Oldest Task (UTC)</th>
+      <th>Tasks in Queue</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for queue in pull_queues %}
+      <tr>
+        <td>
+          <a href="/taskqueue/queue/{{ queue.name }}">
+          {{ queue.name }}</a>
+        </td>
+        <td>
+          {% if queue.oldest_eta_usec %}
+            {{ queue.human_readable_oldest_task_eta }}<br/>
+            ({{ queue.human_readable_oldest_task_eta_delta }})
+          {% else %}
+            None
+          {% endif %}
+        </td>
+        <td>
+          {{ queue.tasks_in_queue }}
+        </td>
+        <td>
+          <form action="" method="post">
+          <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
+          <input type="hidden" name="queue" value="{{ queue.name }}"/>
+          <input type="submit" class="ae-button" name="action:purgequeue" value="Purge Queue"
+          onclick="return confirm('Are you sure you want to purge all ' +
+                                  'tasks from {{ queue.name }}?');"/>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
