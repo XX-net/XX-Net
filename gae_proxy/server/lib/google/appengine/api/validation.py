@@ -892,10 +892,10 @@ class Regex(Validator):
       AttributeDefinitionError: if string_type is not a kind of string.
     """
     super(Regex, self).__init__(default)
-    if (not issubclass(string_type, str) or
-        string_type is str):
-      raise AttributeDefinitionError(
-          'Regex fields must be a string type not %s.' % str(string_type))
+    # if (not issubclass(string_type, str) or
+        # string_type is str):
+      # raise AttributeDefinitionError(
+          # 'Regex fields must be a string type not %s.' % str(string_type))
     if isinstance(regex, str):
       self.re = re.compile('^(?:%s)$' % regex)
     else:
@@ -1054,10 +1054,10 @@ class RegexStr(Validator):
       default = _RegexStrValue(self, default, None)
       re.compile(str(default))
     super(RegexStr, self).__init__(default)
-    if (not issubclass(string_type, str) or
-        string_type is str):
-      raise AttributeDefinitionError(
-          'RegexStr fields must be a string type not %s.' % str(string_type))
+    # if (not issubclass(string_type, str) or
+        # string_type is str):
+      # raise AttributeDefinitionError(
+          # 'RegexStr fields must be a string type not %s.' % str(string_type))
 
     self.expected_type = string_type
 
