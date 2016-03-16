@@ -331,7 +331,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
 
 
-    return self.items.keys()
+    return list(self.items.keys())
 
   def NumMessages(self):
 
@@ -384,7 +384,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
     assert other is not self
 
-    for (type_id, item) in other.items.items():
+    for (type_id, item) in list(other.items.items()):
       if type_id in self.items:
         self.items[type_id].MergeFrom(item)
       else:
@@ -395,7 +395,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
     if other is self: return 1
     if len(self.items) != len(other.items): return 0
 
-    for (type_id, item) in other.items.items():
+    for (type_id, item) in list(other.items.items()):
       if type_id not in self.items: return 0
       if not self.items[type_id].Equals(item): return 0
 
@@ -414,7 +414,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
 
     initialized = 1
-    for item in self.items.values():
+    for item in list(self.items.values()):
       if not item.IsInitialized(debug_strs):
         initialized = 0
     return initialized
@@ -422,7 +422,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
   def ByteSize(self):
 
     n = 2 * len(self.items)
-    for (type_id, item) in self.items.items():
+    for (type_id, item) in list(self.items.items()):
       n += item.ByteSize(self, type_id)
     return n
 
@@ -430,7 +430,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
 
     n = 2 * len(self.items)
-    for (type_id, item) in self.items.items():
+    for (type_id, item) in list(self.items.items()):
       n += item.ByteSizePartial(self, type_id)
     return n
 
@@ -440,7 +440,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
   def OutputUnchecked(self, out):
 
-    for (type_id, item) in self.items.items():
+    for (type_id, item) in list(self.items.items()):
       out.putVarInt32(TAG_BEGIN_ITEM_GROUP)
       item.OutputUnchecked(out, type_id)
       out.putVarInt32(TAG_END_ITEM_GROUP)
@@ -448,7 +448,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
   def OutputPartial(self, out):
 
 
-    for (type_id, item) in self.items.items():
+    for (type_id, item) in list(self.items.items()):
       out.putVarInt32(TAG_BEGIN_ITEM_GROUP)
       item.OutputPartial(out, type_id)
       out.putVarInt32(TAG_END_ITEM_GROUP)
@@ -499,7 +499,7 @@ class MessageSet(ProtocolBuffer.ProtocolMessage):
 
   def __str__(self, prefix="", printElemNumber=0):
     text = ""
-    for (type_id, item) in self.items.items():
+    for (type_id, item) in list(self.items.items()):
       if item.message_class is None:
         text += "%s[%d] <\n" % (prefix, type_id)
         text += "%s  (%d bytes)\n" % (prefix, len(item.message))
