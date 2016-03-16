@@ -1,3 +1,0 @@
-handlers:
-- url: /_ah/stats.*
-  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py

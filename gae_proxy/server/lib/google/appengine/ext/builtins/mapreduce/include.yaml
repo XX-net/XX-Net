@@ -1,4 +1,0 @@
-handlers:
-- url: /_ah/mapreduce.*
-  script: $PYTHON_LIB/google/appengine/ext/mapreduce/main.py
-  login: admin

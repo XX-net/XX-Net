@@ -1,3 +1,0 @@
-handlers:
-- url: /_ah/remote_api(/.*)?
-  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py

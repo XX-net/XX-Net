@@ -1,3 +1,0 @@
-handlers:
-- url: /_ah/admin.*
-  script: google.appengine.ext.admin_redirect.main.APP

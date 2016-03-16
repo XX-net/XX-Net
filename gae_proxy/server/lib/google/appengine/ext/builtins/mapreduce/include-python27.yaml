@@ -1,4 +1,0 @@
-handlers:
-- url: /_ah/mapreduce.*
-  script: google.appengine.ext.mapreduce.main.APP
-  login: admin

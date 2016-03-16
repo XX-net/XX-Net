@@ -1,4 +1,0 @@
-handlers:
-- url: /.*
-  script: google.appengine.ext.django.main.app
-  position: tail
