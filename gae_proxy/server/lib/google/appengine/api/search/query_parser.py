@@ -18,8 +18,8 @@
 
 """Wrapper for QueryParser."""
 
-from google.appengine._internal import antlr3
-from google.appengine._internal.antlr3 import tree
+import antlr3
+from antlr3 import tree
 from google.appengine.api.search import QueryLexer
 from google.appengine.api.search import QueryParser
 

@@ -22,7 +22,7 @@
 
 
 
-from google.appengine._internal import antlr3
+import antlr3
 from google.appengine.api.search import ExpressionLexer
 from google.appengine.api.search import ExpressionParser
 
