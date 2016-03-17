@@ -55,10 +55,9 @@ Modifications made by Anorov (https://github.com/Anorov)
 __version__ = "1.5.1"
 
 import os, sys
-current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
 if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    win32_lib = os.path.abspath( os.path.join(current_path, os.pardir, 'win32'))
     sys.path.append(win32_lib)
 
 import socket

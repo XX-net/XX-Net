@@ -13,13 +13,12 @@ import threading
 import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
 data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
 if not os.path.isdir(data_path):
     data_path = current_path
 
 if __name__ == "__main__":
+    root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
     noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
 
