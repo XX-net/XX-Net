@@ -1981,7 +1981,7 @@ class AppVersionUpload(object):
                                            payload=BuildClonePostBody(chunk))
         if result:
           to_upload = {}
-          for f in result.split(LIST_DELIMITER):
+          for f in result.split(LIST_DELIMITER.encode()):
             for entry in files:
               real_path, upload_path = entry[:2]
               if f == upload_path:
