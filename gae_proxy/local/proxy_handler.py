@@ -238,7 +238,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.warn("read request line len:%d", len(self.raw_requestline))
                 return
             if not self.raw_requestline:
-                xlog.warn("read request line empty")
+                #xlog.warn("read request line empty")
                 return
             if not self.parse_request():
                 xlog.warn("parse request fail:%s", self.raw_requestline)
