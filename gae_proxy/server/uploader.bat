@@ -1,1 +1,2 @@
-..\..\python27\1.0\python.exe uploader.py %1 %2 %3 %4
+..\..\python3\python.exe uploader.py %1 %2 %3 %4 %5
+pause

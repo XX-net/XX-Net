@@ -25,6 +25,7 @@ a handler object.
 """
 
 
+
 from google.appengine.api import yaml_errors
 import yaml
 
@@ -135,7 +136,7 @@ class EventListener(object):
         'Must provide event handler of type yaml_listener.EventHandler')
     self._event_method_map = {}
 
-    for event, method in _EVENT_METHOD_MAP.iteritems():
+    for event, method in _EVENT_METHOD_MAP.items():
 
       self._event_method_map[event] = getattr(event_handler, method)
 
@@ -172,7 +173,7 @@ class EventListener(object):
     for event in events:
       try:
         self.HandleEvent(*event)
-      except Exception, e:
+      except Exception as e:
         event_object, loader = event
         raise yaml_errors.EventError(e, event_object)
 
@@ -208,7 +209,7 @@ class EventListener(object):
       loader = loader_class(stream)
       while loader.check_event():
         yield (loader.get_event(), loader)
-    except yaml.error.YAMLError, e:
+    except yaml.error.YAMLError as e:
       raise yaml_errors.EventListenerYAMLError(e)
 
   def Parse(self, stream, loader_class=yaml.loader.SafeLoader):

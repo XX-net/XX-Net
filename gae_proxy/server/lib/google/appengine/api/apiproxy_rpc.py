@@ -28,7 +28,9 @@
 
 
 
+
 import sys
+import collections
 
 
 class RPC(object):
@@ -60,9 +62,9 @@ class RPC(object):
                 seconds from the current time. Ignored if non-positive.
       stub: APIProxyStub instance, used in default _WaitImpl to do real call
     """
-    self.__exception = None
-    self.__state = RPC.IDLE
-    self.__traceback = None
+    self._exception = None
+    self._state = RPC.IDLE
+    self._traceback = None
 
     self.package = package
     self.call = call
@@ -84,7 +86,7 @@ class RPC(object):
       raise AssertionError('Cannot clone a call already in progress')
 
     clone = self.__class__()
-    for k, v in self.__dict__.iteritems():
+    for k, v in self.__dict__.items():
       setattr(clone, k, v)
     return clone
 
@@ -109,9 +111,9 @@ class RPC(object):
     self.response = response or self.response
     self.deadline = deadline or self.deadline
 
-    assert self.__state is RPC.IDLE, ('RPC for %s.%s has already been started' %
+    assert self._state is RPC.IDLE, ('RPC for %s.%s has already been started' %
                                       (self.package, self.call))
-    assert self.callback is None or callable(self.callback)
+    assert self.callback is None or isinstance(self.callback, collections.Callable)
     self._MakeCallImpl()
 
   def Wait(self):
@@ -127,22 +129,22 @@ class RPC(object):
     Raises:
       Exception of the API call or the callback, if any.
     """
-    if self.exception and self.__traceback:
-      raise self.exception.__class__, self.exception, self.__traceback
+    if self.exception and self._traceback:
+      raise self.exception.__class__(self.exception).with_traceback(self._traceback)
     elif self.exception:
       raise self.exception
 
   @property
   def exception(self):
-    return self.__exception
+    return self._exception
 
   @property
   def state(self):
-    return self.__state
+    return self._state
 
   def _MakeCallImpl(self):
     """Override this method to implement a real asynchronous call rpc."""
-    self.__state = RPC.RUNNING
+    self._state = RPC.RUNNING
 
   def _WaitImpl(self):
     """Override this method to implement a real asynchronous call rpc.
@@ -155,18 +157,18 @@ class RPC(object):
         self.stub.MakeSyncCall(self.package, self.call,
                                self.request, self.response)
       except Exception:
-        _, self.__exception, self.__traceback = sys.exc_info()
+        _, self._exception, self._traceback = sys.exc_info()
     finally:
-      self.__state = RPC.FINISHING
-      self.__Callback()
+      self._state = RPC.FINISHING
+      self._Callback()
 
     return True
 
-  def __Callback(self):
+  def _Callback(self):
     if self.callback:
       try:
         self.callback()
       except:
-        _, self.__exception, self.__traceback = sys.exc_info()
-        self.__exception._appengine_apiproxy_rpc = self
+        _, self._exception, self._traceback = sys.exc_info()
+        self._exception._appengine_apiproxy_rpc = self
         raise

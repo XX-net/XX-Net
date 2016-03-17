@@ -280,6 +280,8 @@ def send_response(wfile, status=404, headers={}, body=''):
     if 'Transfer-Encoding' in headers:
         del headers['Transfer-Encoding']
     if 'Content-Length' not in headers:
+        if isinstance(body,str):
+            body = body.encode()
         headers['Content-Length'] = len(body)
     if 'Connection' not in headers:
         headers['Connection'] = 'close'
@@ -289,7 +291,9 @@ def send_response(wfile, status=404, headers={}, body=''):
         #wfile.write("%s: %s\r\n" % (key, value))
         send_header(wfile, key, value)
     wfile.write(b"\r\n")
-    wfile.write(body.encode())
+    if isinstance(body,str):
+        body = body.encode()
+    wfile.write(body)
 
 def return_fail_message(wfile):
     html = generate_message_html('504 GAEProxy Proxy Time out', '连接超时，先休息一会再来！')
@@ -410,7 +414,7 @@ def handler(method, url, headers, body, wfile):
 
         send_to_browser = True
         try:
-            wfile.write(("HTTP/1.1 %d %s\r\n" % (response.status, response.reason)).encode())
+            wfile.write(("HTTP/1.1 %d %s\r\n" % (response.status, response.reason.decode())).encode())
             for key in response_headers:
                 value = response_headers[key]
                 send_header(wfile, key, value)

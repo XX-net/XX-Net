@@ -5,8 +5,10 @@ import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+    common_lib = os.path.join(root_path, 'lib', 'common')
+    sys.path.append(common_lib)
+    noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
 
 import re

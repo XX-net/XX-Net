@@ -73,6 +73,7 @@ Example library use:
 """
 
 
+
 __all__ = ['DEFAULT_MODNAME',
            'LibConfigRegistry',
            'ConfigHandle',
@@ -162,7 +163,7 @@ class LibConfigRegistry(object):
         return
       try:
         import_func(self._modname)
-      except ImportError, err:
+      except ImportError as err:
         if str(err) != 'No module named %s' % self._modname:
 
           raise
@@ -185,7 +186,7 @@ class LibConfigRegistry(object):
         return
 
       self._module = None
-      handles = self._registrations.values()
+      handles = list(self._registrations.values())
     finally:
       self._lock.release()
     for handle in handles:
@@ -206,7 +207,7 @@ class LibConfigRegistry(object):
       mapping = getattr(self._module, '__dict__', None)
       if not mapping:
         return
-      items = mapping.items()
+      items = list(mapping.items())
     finally:
       self._lock.release()
     nskip = len(prefix)
@@ -221,13 +222,13 @@ class LibConfigRegistry(object):
     self._lock.acquire()
     try:
       if not hasattr(self._module, '__dict__'):
-        print 'Module %s.py does not exist.' % self._modname
+        print('Module %s.py does not exist.' % self._modname)
       elif not self._registrations:
-        print 'No registrations for %s.py.' % self._modname
+        print('No registrations for %s.py.' % self._modname)
       else:
-        print 'Registrations in %s.py:' % self._modname
-        print '-'*40
-        handles = self._registrations.items()
+        print('Registrations in %s.py:' % self._modname)
+        print('-'*40)
+        handles = list(self._registrations.items())
     finally:
       self._lock.release()
     for _, handle in sorted(handles):
@@ -267,7 +268,7 @@ class ConfigHandle(object):
     """
     self._lock.acquire()
     try:
-      for key, value in mapping.iteritems():
+      for key, value in mapping.items():
         if key.startswith('__') and key.endswith('__'):
           continue
         self._defaults[key] = value
@@ -302,6 +303,7 @@ class ConfigHandle(object):
     try:
       self._initialized = False
       for key in self._defaults:
+        self._overrides.pop(key, None)
         try:
           delattr(self, key)
         except AttributeError:
@@ -313,20 +315,20 @@ class ConfigHandle(object):
     """Print info about this set of registrations to stdout."""
     self._lock.acquire()
     try:
-      print 'Prefix %s:' % self._prefix
+      print('Prefix %s:' % self._prefix)
       if self._overrides:
-        print '  Overrides:'
+        print('  Overrides:')
         for key in sorted(self._overrides):
-          print '    %s = %r' % (key, self._overrides[key])
+          print('    %s = %r' % (key, self._overrides[key]))
       else:
-        print '  No overrides'
+        print('  No overrides')
       if self._defaults:
-        print '  Defaults:'
+        print('  Defaults:')
         for key in sorted(self._defaults):
-          print '    %s = %r' % (key, self._defaults[key])
+          print('    %s = %r' % (key, self._defaults[key]))
       else:
-        print '  No defaults'
-      print '-'*40
+        print('  No defaults')
+      print('-'*40)
     finally:
       self._lock.release()
 
@@ -395,16 +397,16 @@ def main():
     from google.appengine.api import users
     if not users.is_current_user_admin():
       if users.get_current_user() is None:
-        print 'Status: 302'
-        print 'Location:', users.create_login_url(os.getenv('PATH_INFO', ''))
+        print('Status: 302')
+        print('Location:', users.create_login_url(os.getenv('PATH_INFO', '')))
       else:
-        print 'Status: 403'
-        print
-        print 'Forbidden'
+        print('Status: 403')
+        print()
+        print('Forbidden')
       return
 
-  print 'Content-type: text/plain'
-  print
+  print('Content-type: text/plain')
+  print()
   _default_registry._dump()
 
 
