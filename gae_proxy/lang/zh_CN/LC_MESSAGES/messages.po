@@ -448,3 +448,9 @@ msgstr "全局代理已禁用"
 
 msgid "Download"
 msgstr "下载"
+
+msgid "new:"
+msgstr "新:"
+
+msgid " used:"
+msgstr " 已用:"
