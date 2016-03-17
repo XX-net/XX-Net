@@ -354,14 +354,14 @@ msgstr "بحث"
 msgid "Show Details"
 msgstr "نمایش جزئیات"
 
-msgid "The Post to Github Issue needs to sign in your Github account"
+msgid "Post to Github issue needs to sign in your Github account"
 msgstr "بازخورد یک کلید نیاز به ثبت نام در حساب github خود را"
 
 msgid "To Google Groups"
 msgstr "به Google Groups"
 
-msgid "Post to Github Issue"
-msgstr "بررسی مسائل _Github_"
+msgid "Post to Github Issue..."
+msgstr "بررسی مسائل _Github_..."
 
 msgid "GAE Proxy Status Info"
 msgstr "GAE پروکسی وضعیت"
