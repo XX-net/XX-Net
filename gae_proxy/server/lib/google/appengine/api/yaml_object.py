@@ -32,6 +32,7 @@ using the validation mechanism (see google.appengine.api.validation.py).
 
 
 
+
 from google.appengine.api import validation
 from google.appengine.api import yaml_listener
 from google.appengine.api import yaml_builder
@@ -163,12 +164,17 @@ class ObjectBuilder(yaml_builder.Builder):
       top_value: Parent of closing mapping object.
       mapping: _ObjectMapper instance that is leaving scope.
     """
+
+
+    if not hasattr(mapping.value, 'CheckInitialized'):
+      raise validation.ValidationError('Cannot convert map to non-map value.')
+
     try:
       mapping.value.CheckInitialized()
     except validation.ValidationError:
 
       raise
-    except Exception, e:
+    except Exception as e:
 
 
 
@@ -179,7 +185,7 @@ class ObjectBuilder(yaml_builder.Builder):
         error_str = '<unknown>'
 
 
-      raise validation.ValidationError("Invalid object:\n%s" % error_str, e)
+      raise validation.ValidationError(error_str, e)
 
   def BuildSequence(self, top_value):
     """New instance of object sequence.
@@ -208,7 +214,7 @@ class ObjectBuilder(yaml_builder.Builder):
 
     try:
       attribute = subject.value.GetValidator(key)
-    except validation.ValidationError, err:
+    except validation.ValidationError as err:
       raise yaml_errors.UnexpectedAttribute(err)
 
     if isinstance(value, _ObjectMapper):
@@ -224,7 +230,7 @@ class ObjectBuilder(yaml_builder.Builder):
     subject.see(key)
     try:
       subject.value.Set(key, value)
-    except validation.ValidationError, e:
+    except validation.ValidationError as e:
 
 
 
@@ -243,7 +249,7 @@ class ObjectBuilder(yaml_builder.Builder):
       e.message = ("Unable to assign value '%s' to attribute '%s':\n%s" %
                    (value_str, key, error_str))
       raise e
-    except Exception, e:
+    except Exception as e:
       try:
         error_str = str(e)
       except Exception:

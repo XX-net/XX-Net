@@ -14,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-
-
 """A thread-safe queue in which removed objects put back to the front."""
 
 
+
 import logging
-import Queue
+import queue
 import threading
 import time
 
@@ -44,7 +41,7 @@ class ReQueue(object):
   def __init__(self,
                queue_capacity,
                requeue_capacity=None,
-               queue_factory=Queue.Queue,
+               queue_factory=queue.Queue,
                get_time=time.time):
     """Initialize a ReQueue instance.
 
@@ -112,7 +109,7 @@ class ReQueue(object):
         try:
           result = action()
           success = True
-        except Exception, e:
+        except Exception as e:
 
           if not isinstance(e, exc):
             raise e
@@ -142,7 +139,7 @@ class ReQueue(object):
     def PutAction():
       self.queue.put(item, block=False)
     self._DoWithTimeout(PutAction,
-                        Queue.Full,
+                        queue.Full,
                         self.get_cond,
                         self.put_cond,
                         self.lock,
@@ -168,7 +165,7 @@ class ReQueue(object):
     def ReputAction():
       self.requeue.put(item, block=False)
     self._DoWithTimeout(ReputAction,
-                        Queue.Full,
+                        queue.Full,
                         self.get_cond,
                         self.put_cond,
                         self.lock,
@@ -195,13 +192,13 @@ class ReQueue(object):
 
 
         self.requeue.task_done()
-      except Queue.Empty:
+      except queue.Empty:
 
         result = self.queue.get(block=False)
 
       return result
     return self._DoWithTimeout(GetAction,
-                               Queue.Empty,
+                               queue.Empty,
                                self.put_cond,
                                self.get_cond,
                                self.lock,

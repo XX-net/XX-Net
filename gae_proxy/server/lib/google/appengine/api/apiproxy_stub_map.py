@@ -36,6 +36,7 @@ Classes/variables/functions defined here:
 
 
 
+
 import inspect
 import sys
 import threading
@@ -244,14 +245,16 @@ class APIProxyStubMap(object):
     """Gets a collection for all precall hooks."""
     return self.__postcall_hooks
 
-  def RegisterStub(self, service, stub):
-    """Register the provided stub for the specified service.
+  def ReplaceStub(self, service, stub):
+    """Replace the existing stub for the specified service with a new one.
+
+    NOTE: This is a risky operation; external callers should use this with
+    caution.
 
     Args:
       service: string
       stub: stub
     """
-    assert not self.__stub_map.has_key(service), repr(service)
     self.__stub_map[service] = stub
 
 
@@ -262,6 +265,16 @@ class APIProxyStubMap(object):
 
     if service == 'datastore':
       self.RegisterStub('datastore_v3', stub)
+
+  def RegisterStub(self, service, stub):
+    """Register the provided stub for the specified service.
+
+    Args:
+      service: string
+      stub: stub
+    """
+    assert service not in self.__stub_map, repr(service)
+    self.ReplaceStub(service, stub)
 
   def GetStub(self, service):
     """Retrieve the stub registered for the specified service.
@@ -276,6 +289,14 @@ class APIProxyStubMap(object):
     if no such stub is found.
     """
     return self.__stub_map.get(service, self.__default_stub)
+
+  def _CopyStubMap(self):
+    """Get a copy of the stub map. For testing only.
+
+    Returns:
+      Get a shallow copy of the stub map.
+    """
+    return dict(self.__stub_map)
 
   def MakeSyncCall(self, service, call, request, response):
     """The APIProxy entry point.
@@ -306,7 +327,7 @@ class APIProxyStubMap(object):
         rpc.MakeCall(service, call, request, response)
         rpc.Wait()
         rpc.CheckSuccess()
-      except Exception, err:
+      except Exception as err:
         self.__postcall_hooks.Call(service, call, request, response, rpc, err)
         raise
       else:
@@ -315,7 +336,7 @@ class APIProxyStubMap(object):
       self.__precall_hooks.Call(service, call, request, response)
       try:
         returned_response = stub.MakeSyncCall(service, call, request, response)
-      except Exception, err:
+      except Exception as err:
         self.__postcall_hooks.Call(service, call, request, response, None, err)
         raise
       else:
@@ -556,7 +577,7 @@ class UserRPC(object):
     self.wait()
     try:
       self.__rpc.CheckSuccess()
-    except Exception, err:
+    except Exception as err:
 
       if not self.__postcall_hooks_called:
         self.__postcall_hooks_called = True
@@ -653,14 +674,14 @@ class UserRPC(object):
       cls.__local.may_interrupt_wait = True
       try:
         running.__rpc.Wait()
-      except apiproxy_errors.InterruptedError, err:
+      except apiproxy_errors.InterruptedError as err:
 
 
 
 
 
-        err.rpc._RPC__exception = None
-        err.rpc._RPC__traceback = None
+        err.rpc._exception = None
+        err.rpc._traceback = None
     finally:
       cls.__local.may_interrupt_wait = False
     finished, runnning = cls.__check_one(rpcs)
