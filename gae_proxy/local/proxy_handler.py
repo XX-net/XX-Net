@@ -6,6 +6,7 @@ import errno
 import socket
 import ssl
 import urllib.parse
+import re
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
@@ -15,12 +16,13 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 import simple_http_client
 import simple_http_server
-from .cert_util import CertUtil
-from .config import config
-from . import gae_handler
-from . import direct_handler
-from .connect_control import touch_active
-from . import web_control
+
+from local.cert_util import CertUtil
+from local.config import config
+from local import gae_handler
+from local import direct_handler
+from local.connect_control import touch_active
+from local import web_control
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
@@ -268,8 +270,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     fwd_set.append(host)
                     config.HOSTS_DIRECT = tuple(fwd_set)
                 xlog.warn("Method %s not support in GAE, Redirect to DIRECT for %s", self.command, self.path)
-                return self.wfile.write(
-                    ('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path).encode())
+
+                if re.match(r'clients\d\.google\.com', host):
+                    content_length = ''
+                else:
+                    content_length = 'Content-Length: 0\r\n'
+
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n%s\r\n' % (self.path, content_length)).encode())
             else:
                 xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())

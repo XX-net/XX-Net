@@ -480,7 +480,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
                         if not check_local_network.check_ipv6():
-                            xlog.warn("Enable Ipv6 but check failed.")
+                            xlog.warn("IPv6 was enabled, but check failed.")
                             return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 
                     user_config.user_special.use_ipv6 = use_ipv6
