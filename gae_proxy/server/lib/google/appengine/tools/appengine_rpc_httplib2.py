@@ -73,7 +73,7 @@ class MemoryCache(object):
 def RaiseHttpError(url, response_info, response_body, extra_msg=''):
   """Raise a urllib2.HTTPError based on an httplib2 response tuple."""
   if response_body is not None:
-    stream = io.StringIO()
+    stream = io.BytesIO()
     stream.write(response_body)
     stream.seek(0)
   else:

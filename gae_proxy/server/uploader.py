@@ -29,7 +29,7 @@ ch.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(fh)
 logger.addHandler(ch)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 sys.modules.pop('google', None)
 lib_path = os.path.join(code_path, "lib")
