@@ -29,7 +29,7 @@ ch.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(fh)
 logger.addHandler(ch)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 sys.modules.pop('google', None)
 lib_path = os.path.join(code_path, "lib")
@@ -191,6 +191,7 @@ def main():
 
     appids = sys.argv[1]
 
+    os.environ['HTTP_PROXY'] = 'http://127.0.0.1:8087'
     os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
     logging.info("set proxy to http://127.0.0.1:8087")
 

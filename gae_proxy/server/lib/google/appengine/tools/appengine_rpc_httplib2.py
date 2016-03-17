@@ -197,8 +197,10 @@ class HttpRpcServerHttpLib2(object):
 
 
     self.http = self.http_class(
-        cache=self.memory_cache, ca_certs=self.certpath,
-        disable_ssl_certificate_validation=(not self.cert_file_available))
+        cache=self.memory_cache,
+        disable_ssl_certificate_validation=True)
+    #, ca_certs=self.certpath
+    #(not self.cert_file_available)
     self.http.follow_redirects = False
     self.http.timeout = timeout
     url = '%s://%s%s' % (self.scheme, self.host, request_path)

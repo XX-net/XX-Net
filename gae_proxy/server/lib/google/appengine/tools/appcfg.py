@@ -2181,7 +2181,7 @@ class AppVersionUpload(object):
 
     StatusUpdate('Checking if deployment succeeded.', self.error_fh)
     result = self.logging_context.Send('/api/appversion/isready')
-    return result == '1'
+    return result == b'1'
 
   def StartServing(self):
     """Start serving with the newly created version.

@@ -117,14 +117,16 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if host in config.HOSTS_GAE:
             return self.do_AGENT()
 
-        if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
-            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+        if not self.https:
+            if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
 
-        if host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_DIRECT_ENDSWITH):
-            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+        if not self.https:
+            if host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_DIRECT_ENDSWITH):
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         return self.do_AGENT()
 
