@@ -467,8 +467,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
                 user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
-                if not user_config.user_special.proxy_port:
+                try:
+                    user_config.user_special.proxy_port = int(user_config.user_special.proxy_port)
+                except:
                     user_config.user_special.proxy_port = 0
+
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
@@ -527,10 +530,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         os.remove(log_path)
                     script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
 
-                    email = self.postvars['email'][0]
-                    passwd = self.postvars['passwd'][0]
-                    rc4_passwd = self.postvars['rc4_passwd'][0]
-                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
+                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid])
                     xlog.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:

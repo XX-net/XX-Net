@@ -37,8 +37,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
         self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
-               "Access-Control-Allow-Origin: *\r\n"\
-               "Content-Type: text/plain\r\n"\
+               "Access-Control-Allow-Origin: *\r\n" \
+                                        "Cache-Control: no-cache, no-store, must-revalidate\r\n" \
+                                        "Pragma: no-cache\r\n" \
+                                        "Expires: 0\r\n" \
+                                        "Content-Type: text/plain\r\n"\
                "Content-Length: 2\r\n\r\nOK"
         self.self_check_response_data = self.self_check_response_data.encode()
 
@@ -106,6 +109,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
+        if host_ip in socket.gethostbyname_ex(socket.gethostname())[-1]:
+            xlog.info("Browse localhost by proxy")
+            return self.forward_local()
+
         if self.path == "http://www.twitter.com/xxnet" or self.path == "https://www.twitter.com/xxnet":
             xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
@@ -119,14 +126,18 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         if not self.https:
             if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+                return self.wfile.write((
+                                        'HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace(
+                                            'http://', 'https://', 1)).encode())
 
         if host.endswith(config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
 
         if not self.https:
             if host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_DIRECT_ENDSWITH):
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+                return self.wfile.write((
+                                        'HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace(
+                                            'http://', 'https://', 1)).encode())
 
         return self.do_AGENT()
 
@@ -257,7 +268,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     fwd_set.append(host)
                     config.HOSTS_DIRECT = tuple(fwd_set)
                 xlog.warn("Method %s not support in GAE, Redirect to DIRECT for %s", self.command, self.path)
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n\r\n' % self.path).encode())
+                return self.wfile.write(
+                    ('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path).encode())
             else:
                 xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())

@@ -58,7 +58,7 @@ msgstr "کنترل از راه دور را فعال کنید وب"
 msgid "Help"
 msgstr "کمک"
 
-msgid "Display System Tray(Restarting XX-Net Needed)"
+msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "نمایش سینی سیستم (شروع مجدد _XX-Net_ مورد نیاز)"
 
 msgid "Upgrade Management"

@@ -44,7 +44,7 @@ button[type=submit] {
 }
 
 select:focus {
-    border-color: #1abc9c;
+    border-color: #3498db;
     outline: none;
 }
 
@@ -287,7 +287,8 @@ div#info.tab-pane form#register-form {
     max-width: 640px;
 }
 
-div#info.tab-pane div#account-information p {
+div#info.tab-pane div#account-information p, 
+div#help.tab-pane p {
     margin-top: 10px;
 }
 

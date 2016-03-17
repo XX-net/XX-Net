@@ -183,21 +183,23 @@
         </table>
     </div> <!-- #history -->
     <div id="help" class="tab-pane fade in">
+        <h4>{{ _("Help") }}</h4>
         <div class="row-fluid">
-            <div class="span6">
-                <h4>{{ _("Help") }}</h4>
-            </div> <!-- .span6 -->
+            <div class="span4">
+                <label>Socks5</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <p>127.0.0.1:1080</p>
+            </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
-
         <div class="row-fluid">
-            <div class="span2">Socks5</div>
-            <div class="span2">127.0.0.1:1080</div>
-        </div>
-
-        <div class="row-fluid">
-            <div class="span2">Wiki:</div>
-            <div class="span8"><a href="https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B">https://github.com/XX-net/XX-Net/wiki/x-tunnel</a></div>
-        </div>
+            <div class="span4">
+                <label>Wiki</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <p><a href="https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B" target="_blank">X-Tunnel Wiki@GitHub</a></p>
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
     </div> <!-- #help -->
 </div> <!-- #tab-content -->
 
@@ -208,6 +210,7 @@
         <h5>{{ _("Charge") }}</h5>
     </div> <!-- .modal-header -->
     <div class="modal-body">
+        <div class="alert alert-warning hide">{{ _("You haven't enough credit. Please charge first.") }}</div> <!-- .alert-warning -->
         <!-- Plan Field -->
         <input type="hidden" name="on0" value="Plan">
         <label for="charge-plan">{{ _("Plan") }}:</label>
@@ -275,7 +278,7 @@
 
 <!-- Java Script -->
 <script type="text/javascript">
-    title('X Tunnel');
+    title('X-Tunnel');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -314,7 +317,7 @@
 <script type="text/javascript">
     function getUserInfo(force) {
         var url = '/module/x_tunnel/control/info';
-        if( force ){
+        if ( force ) {
             url = url + "?force=1";
         }
         $.ajax({
@@ -326,8 +329,17 @@
                     tipClose();
                     return;
                 }else if( result['res'] != 'success' ){
-                    tip('Get Fail:' + result['reason'], 'warning', false);
-                    return;
+                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
+                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
+                        $('#login-form').addClass('hide');
+                        $('#account-information').removeClass('hide');
+                        $('#login-account').html(result['login_account']);
+                        $('.login-account').val(result['login_account']);
+                        return;
+                    }else{
+                        tip('Get Fail:' + result['reason'], 'warning', false);
+                        return;
+                    }
                 } else {
                     tipClose();
                 }
@@ -414,8 +426,10 @@
 
         if ( !isEmailLegal(username) ) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
+            return;
         } else if ( password.length < 6 ) {
             tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+            return;
         }
 
         $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
@@ -440,7 +454,13 @@
                 if ( result['res'] == 'success' ) {
                     window.location.reload();
                 } else {
-                    tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
+                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
+                    }else if ( result['reason'] == "auth fail" ){
+                        tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    }else{
+                        tip('Login fail:' + result['reason'], 'error', false);
+                    }
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                     $('button[type=submit]', '#login-form').removeAttr('disabled');
@@ -456,8 +476,10 @@
 
         if ( !isEmailLegal(username) ) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
+            return;
         } else if ( password.length < 6 ) {
             tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+            return;
         }
 
         $('button[type=submit]', '#register-form').html('{{ _("Please wait...") }}');
@@ -482,7 +504,6 @@
                 if ( result['res'] == 'success' ) {
                     return doLoginAction(username, password);
                 } else {
-
                     if ( result['reason'] == 'user exist' ) {
                         tip('{{ _("Email has been taken by another user.") }}', 'error', false);
                     } else {
@@ -507,6 +528,9 @@
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');
+
+                // Fix bugs in Firefox
+                $('button[type=submit]').removeAttr('disabled');
             },
             error: function(result) {
                 tip('{{ _("Failed to log out.") }}', false);   
@@ -516,6 +540,7 @@
 </script>
 <script type="text/javascript">
     $('#charge-trigger').click(function() {
+        $('.alert-warning', '#charge-modal').addClass('hide');
         $('#charge-modal').modal();
     });
 </script>
@@ -617,11 +642,11 @@
     }
 
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
-        var amount_unit = parseUnit(transferAmount)
-        if ( amount_unit[1].toUpperCase() == "G" ){
-            var amount = amount_unit[0] * 1000 * 1000 * 1000;
+        var amountUnit = parseUnit(transferAmount)
+        if ( amountUnit[1].toUpperCase() == "G" ){
+            var amount = amountUnit[0] * 1000 * 1000 * 1000;
         } else {
-            var amount = amount_unit[0] * 1000 * 1000;
+            var amount = amountUnit[0] * 1000 * 1000;
         }
         var postData = {
             'to_account': transferAccount,
@@ -651,20 +676,18 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        var amount_unit = parseUnit(obj.value)
-        if ( isNaN(amount_unit[0]) ) {
-            console.log("is NaN");
+        var amountUnit = parseUnit(obj.value)
+        if ( isNaN(amountUnit[0]) ) {
             obj.value = '';
             return;
         }
-        if ( amount_unit[1].toUpperCase() != "G" && amount_unit[1].toUpperCase() != "M" && amount_unit[1] != "" ){
+        if ( amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "" ){
             alert('{{ _("Unit should be M or G.") }}');
             return;
         }
         if ( obj != null ) {
-            if ( amount_unit[0].toString().split('.').length > 1 &&
-                   amount_unit[0].toString().split(".")[1].length > 2 ) {
-                console.log("more");
+            if ( amountUnit[0].toString().split('.').length > 1 &&
+                   amountUnit[0].toString().split(".")[1].length > 2 ) {
                 alert('{{ _("Transfer amount should not more than 2 decimal places.") }}');
             }
         }
@@ -673,29 +696,35 @@
 <!-- Plans -->
 <script type="text/javascript">
     $('#quarterly-plan-trigger').click(function() {
-        order_plan('Quarterly', 'quarterly');
+        orderPlan('Quarterly', 'quarterly');
     });
 
     $('#yearly-plan-trigger').click(function() {
-        order_plan('Yearly', "yearly");
+        orderPlan('Yearly', "yearly");
     });
-
-    function order_plan(title, plan){
+</script>
+<script type="text/javascript">
+    function orderPlan(planName, planValue) {
         $.ajax({
-            data: {'product':'x_tunnel', 'plan':plan},
+            data: {
+                'product': 'x_tunnel', 
+                'plan': planValue
+            },
             type: 'POST',
             url: '/module/x_tunnel/control/order',
             dataType: 'JSON',
             success: function(result) {
-                if( result['res'] != "success" ){
-                    if (result['reason'] == "balance not enough"){
-                        $('#charge-plan', '#charge-modal').val(title);
+                if( result['res'] != 'success' ){
+                    if ( result['reason'] == "balance not enough" ) {
+                        $('#charge-plan', '#charge-modal').val(planName);
+                        $('.alert-warning', '#charge-modal').removeClass('hide');
+
                         $('#charge-modal').modal();
-                    }else{
-                        tip('Order Fail:' + result['reason'], 'warning', false);
+                    } else {
+                        tip('{{ _("Failed to order: ") }}' + result['reason'], 'warning', false);
                     }
                 } else {
-                    tip('Order success:', 'info', false);
+                    tip('{{ _("Order successfully complete.") }}', 'info', false);
                     setTimeout(function () {
                         getUserInfo(1);
                         setTimeout(function () {
@@ -703,9 +732,6 @@
                         }, 1 * 1000);
                     }, 3 * 1000);
                 }
-            },
-            error: function(result) {
-                tip('order fail.', 'warning', false);
             }
         });
     }

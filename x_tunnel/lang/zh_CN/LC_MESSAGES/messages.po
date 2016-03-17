@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
 "POT-Creation-Date: 2016-02-17 14:30+0800\n"
-"PO-Revision-Date: 2016-02-17 14:30+0800\n"
+"PO-Revision-Date: 2016-02-19 19:30+0800\n"
 "Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
@@ -27,6 +27,9 @@ msgstr "套餐"
 
 msgid "History"
 msgstr "历史"
+
+msgid "Help"
+msgstr "帮助"
 
 msgid "Login"
 msgstr "登录"
@@ -53,7 +56,7 @@ msgid "Account"
 msgstr "账户"
 
 msgid "Logout"
-msgstr "注销"
+msgstr "登出"
 
 msgid "Credit"
 msgstr "余额"
@@ -105,6 +108,9 @@ msgstr "获取"
 
 msgid "Action"
 msgstr "操作"
+
+msgid "You haven't enough credit. Please charge first."
+msgstr "您的余额不足，请先充值。"
 
 msgid "Plan"
 msgstr "套餐"
@@ -171,3 +177,12 @@ msgstr "最大可用流量："
 
 msgid "Transfer amount should not more than 2 decimal places."
 msgstr "转账金额不得超过2位小数。"
+
+msgid "Order successfully complete."
+msgstr "订购成功完成。"
+
+msgid "Failed to order: "
+msgstr "订购失败："
+
+msgid "X-Tunnel Log"
+msgstr "X-Tunnel 日志"

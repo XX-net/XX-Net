@@ -150,7 +150,7 @@ class ProxySession():
 
             time_cost = time.time() - start_time
             if status != 200:
-                g.last_api_error = "session server login fail:%d" % status
+                g.last_api_error = "session server login fail:%r" % status
                 xlog.warn("login session fail, status:%r", status)
                 return False
 
@@ -235,7 +235,7 @@ class ProxySession():
                     conn_id = struct.unpack("<I", data.get(4))[0]
                     payload = data.get_buf(data_len - 4)
                     if conn_id not in self.conn_list:
-                        xlog.warn("DATA conn_id %d not in list", conn_id)
+                        xlog.debug("DATA conn_id %d not in list", conn_id)
                     else:
                         # xlog.debug("down conn:%d len:%d", conn_id, len(payload))
                         self.conn_list[conn_id].put_cmd_data(payload)
@@ -507,6 +507,7 @@ def request_balance(account, password, is_register=False, update_server=True):
     if update_server:
         g.server_host = str(info["host"])
         g.server_port = info["port"]
+        xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
 
     g.balance = info["balance"]
     xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
