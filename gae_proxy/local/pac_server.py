@@ -35,7 +35,7 @@ def get_serving_pacfile():
     return serving_pacfile
 
 def get_opener():
-    autoproxy = '127.0.0.1:8087'
+    autoproxy = '127.0.0.1:%s' % config.LISTEN_PORT
 
     import ssl
     if getattr(ssl, "create_default_context", None):

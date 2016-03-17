@@ -21,6 +21,7 @@ import gae_handler
 import direct_handler
 from connect_control import touch_active
 import web_control
+import re
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
@@ -255,7 +256,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     fwd_set.append(host)
                     config.HOSTS_DIRECT = tuple(fwd_set)
                 xlog.warn("Method %s not support in GAE, Redirect to DIRECT for %s", self.command, self.path)
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path).encode())
+                content_length = 'Content-Length: 0\r\n'
+                if re.match(r'clients\d\.google\.com', host):
+                    content_length = ''
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\n%s\r\n' % (self.path, content_length)).encode())
             else:
                 xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
                 return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
