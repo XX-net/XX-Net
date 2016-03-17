@@ -80,7 +80,7 @@ msgstr "注意：appid部署之前无法使用。"
 msgid "Advanced options"
 msgstr "高级选项"
 
-msgid "Enable IPv6(CERNet only)"
+msgid "Enable IPv6(If it's available)"
 msgstr "使用IPv6(一般教育网才开)"
 
 msgid "LAN proxy(Generally not needed)"

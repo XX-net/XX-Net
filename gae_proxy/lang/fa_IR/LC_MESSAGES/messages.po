@@ -82,7 +82,7 @@ msgstr "توجه: غیر قابل دسترس قبل از appids مستقر هس�
 msgid "Advanced options"
 msgstr "گزینه های پیشرفته"
 
-msgid "Enable IPv6(CERNet only)"
+msgid "Enable IPv6(If it's available)"
 msgstr "فعال کردن IPv6 را (سرنت تنها)"
 
 msgid "LAN proxy(Generally not needed)"
