@@ -86,10 +86,10 @@ def download_file(url, filename):
     return False
 
 
-def parse_readme_versions(readme_file):
+def parse_versions(version_file):
     versions = []
     try:
-        fd = open(readme_file, "r")
+        fd = open(version_file, "r")
         lines = fd.readlines()
         p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
         for line in lines:
@@ -101,16 +101,18 @@ def parse_readme_versions(readme_file):
                     return versions
     except Exception as e:
         xlog.exception("xxnet_version fail:%r", e)
-        raise "get_version_fail:" % readme_file
+        raise "get_version_fail:" % version_file
 
 
 def current_version():
-    readme_file = os.path.join(root_path, "README.md")
+    version_file = os.path.join(root_path, "version.txt")
     try:
-        versions = parse_readme_versions(readme_file)
-        return versions[0][1]
-    except:
-        return "get_version_fail"
+        fd = open(version_file, "r")
+        version = fd.readline()
+        return version
+    except Exception as e:
+        xlog.exception("get_version_fail")
+    return "0.0.0"
 
 
 def get_github_versions():
@@ -120,7 +122,7 @@ def get_github_versions():
     if not download_file(readme_url, readme_target):
         raise IOError("get README %s fail:" % readme_url)
 
-    versions = parse_readme_versions(readme_target)
+    versions = parse_versions(readme_target)
     return versions
 
 

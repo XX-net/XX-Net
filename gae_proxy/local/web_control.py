@@ -350,21 +350,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     @staticmethod
     def xxnet_version():
-        readme_file = os.path.join(root_path, "README.md")
+        readme_file = os.path.join(root_path, "version.txt")
         try:
             fd = open(readme_file, "r")
-            lines = fd.readlines()
-            import re
-            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') #zip/([0-9]+).([0-9]+).([0-9]+)
-            #m = p.match(content)
-            for line in lines:
-                m = p.match(line)
-                if m:
-                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
-                    return version
+            version = fd.readline()
+            return version
         except Exception as e:
             xlog.exception("xxnet_version fail")
-        return "get_version_fail"
+        return "0.0.0"
 
     def get_os_language(self):
         if hasattr(self, "lang_code"):

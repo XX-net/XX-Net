@@ -42,20 +42,14 @@ def get_XXNet():
             xlog.info("download %s to %s fail", url, file)
             return False
 
-    def get_xxnet_url_version(readme_file):
-
+    def get_xxnet_url_version(version_file):
         try:
-            fd = open(readme_file, "r")
-            lines = fd.readlines()
-            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)')
-            for line in lines:
-                m = p.match(line)
-                if m:
-                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
-                    return m.group(0), version
+            fd = open(version_file, "r")
+            version = fd.readline()
+                return version
         except Exception as e:
             xlog.exception("xxnet_version fail:%s", e)
-        raise "get_version_fail:" % readme_file
+        raise "get_version_fail:" % version_file
 
     readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/README.md"
     readme_targe = os.path.join(download_path, "README.md")
@@ -74,8 +68,6 @@ def get_XXNet():
     with zipfile.ZipFile(xxnet_zip_file, "r") as dz:
         dz.extractall(download_path)
         dz.close()
-
-
 
 def get_new_new_config():
     global xxnet_unzip_path
