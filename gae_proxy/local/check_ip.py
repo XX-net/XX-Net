@@ -174,7 +174,7 @@ def check_goagent(ssl_sock, appid):
         return False
 
     content = response.read()
-    if "GoAgent" not in content:
+    if b"GoAgent" not in content:
         if __name__ == "__main__":
             xlog.warn("app check %s content:%s", appid, content)
         return False

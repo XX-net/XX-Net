@@ -238,6 +238,7 @@ class Https_connection_manager(object):
 
         response = None
         try:
+            start_time = time.time()
             ssl_sock.settimeout(10)
             ssl_sock._sock.settimeout(10)
 
@@ -256,6 +257,8 @@ class Https_connection_manager(object):
             if status != 200:
                 xlog.debug("app head fail status:%d", status)
                 raise Exception("app check fail %r" % status)
+            end_time = time.time()
+            xlog.debug("%s head time:%d", ssl_sock.ip, 1000*(end_time-start_time))
             return True
         except http.client.BadStatusLine as e:
             inactive_time = time.time() - ssl_sock.last_use_time
@@ -466,15 +469,6 @@ class Https_connection_manager(object):
             connect_time = int((time_connected - time_begin) * 1000)
             handshake_time = int((time_handshaked - time_connected) * 1000)
 
-            google_ip.update_ip(ip, handshake_time)
-            xlog.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
-            ssl_sock.fd = sock.fileno()
-            ssl_sock.create_time = time_begin
-            ssl_sock.received_size = 0
-            ssl_sock.load = 0
-            ssl_sock.handshake_time = handshake_time
-            ssl_sock.host = ''
-
             def verify_SSL_certificate_issuer(ssl_sock):
                 cert = ssl_sock.get_peer_certificate()
                 if not cert:
@@ -495,6 +489,15 @@ class Https_connection_manager(object):
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
 
             verify_SSL_certificate_issuer(ssl_sock)
+
+            google_ip.update_ip(ip, handshake_time)
+            xlog.debug("create_ssl update ip:%s time:%d", ip, handshake_time)
+            ssl_sock.fd = sock.fileno()
+            ssl_sock.create_time = time_begin
+            ssl_sock.received_size = 0
+            ssl_sock.load = 0
+            ssl_sock.handshake_time = handshake_time
+            ssl_sock.host = ''
 
             connect_control.report_connect_success()
             return ssl_sock
