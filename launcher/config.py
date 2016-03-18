@@ -60,7 +60,7 @@ def recheck_module_path():
     global config
     need_save_config = False
 
-    modules = ["gae_proxy", "launcher", "php_proxy", "x_tunnel"]
+    modules = ["gae_proxy", "launcher", "php_proxy"]
     for module in modules:
         if module not in ["launcher", "php_proxy"]:
             if not os.path.isdir(os.path.join(root_path, module)):

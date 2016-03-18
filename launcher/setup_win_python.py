@@ -6,7 +6,7 @@ from instances import xlog
 import time
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python3'))
 
 def copy_VCR_files():
     src_path = os.path.join(python_path, "WinSxS")

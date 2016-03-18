@@ -44,7 +44,7 @@ if sys.platform == 'win32':
         winreg.DeleteValue(key, name)
         winreg.CloseKey(key)
 
-    run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
+    run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python3", "python.exe")) + "\" \"" +\
               os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
 elif sys.platform.startswith('linux'):
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
