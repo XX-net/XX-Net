@@ -3,13 +3,13 @@ import http.client
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-from .connect_manager import https_manager
+from local.connect_manager import https_manager
 
 
 def test_appid_exist(ssl_sock, appid):
     request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
-    response = http.client.HTTPResponse(ssl_sock, buffering=True)
+    response = http.client.HTTPResponse(ssl_sock)
 
     response.begin()
     if response.status == 404:
@@ -24,7 +24,7 @@ def test_appid_exist(ssl_sock, appid):
         xlog.warn("test appid %s status:%d", appid, response.status)
 
     content = response.read()
-    if "GoAgent" not in content:
+    if b"GoAgent" not in content:
         #xlog.warn("app check %s content:%s", appid, content)
         return False
 

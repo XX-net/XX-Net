@@ -352,7 +352,7 @@ class IpManager():
 
         handshake_time = int(handshake_time)
         if handshake_time < 5: # that's impossible
-            xlog.warn("%s handshake:%d impossible", ip, 1000 * handshake_time)
+            xlog.debug("%s handshake:%d impossible or wrong", ip, 1000 * handshake_time)
             return
 
         time_now = time.time()

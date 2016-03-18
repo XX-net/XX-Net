@@ -4,7 +4,7 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python3'))
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 

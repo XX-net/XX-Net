@@ -13,7 +13,7 @@ import codecs
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-python_path = os.path.join(root_path, 'python27', '1.0')
+python_path = os.path.join(root_path, 'python3')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 

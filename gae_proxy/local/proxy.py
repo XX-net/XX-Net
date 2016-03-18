@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # coding:utf-8
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang.2008@gmail.com>
 # Based on WallProxy 0.4.0 by Hust Moon <www.ehust@gmail.com>

@@ -7,19 +7,22 @@ import time
 import socket
 import threading
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+    gae_path = os.path.join(root_path, "gae_proxy")
+    sys.path.append(gae_path)
 
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.join(root_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
+    common_lib = os.path.join(root_path, 'lib', 'common')
+    sys.path.append(common_lib)
 
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.join(root_path, 'lib', 'win32')
         sys.path.append(win32_lib)
     elif sys.platform.startswith("linux"):
-        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        linux_lib = os.path.join(root_path, 'lib', 'linux')
         sys.path.append(linux_lib)
 
 import OpenSSL
