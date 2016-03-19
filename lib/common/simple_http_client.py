@@ -134,7 +134,7 @@ class HTTP_client():
                     if start > end:
                         self.sock_pool.put(response.conn)
                         #logging.info("POST t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, req_path)
-                        response_data = "".join(data_buffer)
+                        response_data = b"".join(data_buffer).decode("iso-8859-1")
                         return response_data, 200, response
 
                     data = response.read(65535)
@@ -162,7 +162,7 @@ class HTTP_client():
 
     def fetch(self, method, host, path, headers, payload, bufsize=8192, timeout=20):
         request_data = '%s %s HTTP/1.1\r\n' % (method, path)
-        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
+        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in list(headers.items()))
         request_data += '\r\n'
 
         #print("request:%s" % request_data)
@@ -174,7 +174,9 @@ class HTTP_client():
             return
 
         if len(request_data) + len(payload) < 1300:
-            payload = request_data.encode() + payload
+            if isinstance(payload,bytes):
+                payload = payload.decode('iso-8859-1')
+            payload = request_data + payload
         else:
             conn.sock.send(request_data.encode())
 
@@ -182,7 +184,7 @@ class HTTP_client():
         start = 0
         while start < payload_len:
             send_size = min(payload_len - start, 65535)
-            sended = conn.sock.send(payload[start:start+send_size])
+            sended = conn.sock.send(payload[start:start+send_size].encode())
             start += sended
 
         conn.sock.settimeout(timeout)

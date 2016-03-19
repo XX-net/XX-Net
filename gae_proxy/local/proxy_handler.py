@@ -68,6 +68,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         else:
             path = self.parsed_url[2]
         content, status, response = http_client.request(self.command, path, request_headers, payload)
+        # xlog.info("browse local server through proxy : %s%s ",host,path)
         if not status:
             xlog.warn("forward_local fail")
             return
@@ -80,7 +81,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         out_list.append("\r\n")
         out_list.append(content)
 
-        self.wfile.write("".join(out_list))
+        self.wfile.write("".join(out_list).encode())
 
     def do_METHOD(self):
         touch_active()
@@ -108,11 +109,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             host = urllib.parse.urlparse(self.path).netloc
 
         if host.startswith("127.0.0.1") or host.startswith("localhost"):
-            #xlog.warn("Your browser forward localhost to proxy.")
             return self.forward_local()
 
         if host_ip in socket.gethostbyname_ex(socket.gethostname())[-1]:
-            xlog.info("Browse localhost by proxy")
             return self.forward_local()
 
         if self.path == "http://www.twitter.com/xxnet" or self.path == "https://www.twitter.com/xxnet":
