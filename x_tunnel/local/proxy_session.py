@@ -2,16 +2,16 @@ import time
 import json
 import threading
 import struct
-import urlparse
+import urllib.parse
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 from simple_http_client import HTTP_client
 import utils
-import base_container
+from . import base_container
 import encrypt
-import global_var as g
+from . import global_var as g
 
 
 def encrypt_data(data):
@@ -43,7 +43,7 @@ class ProxySession():
 
         self.roundtrip_thread = {}
 
-        self.session_id = utils.generate_random_lowercase(8)
+        self.session_id = bytes(utils.generate_random_lowercase(8))
         self.last_conn_id = 0
         self.last_transfer_no = 0
         self.conn_list = {}
@@ -77,7 +77,7 @@ class ProxySession():
             return
 
         self.running = False
-        self.session_id = ""
+        self.session_id = b""
         self.balance = 0
         self.close_all_connection()
         self.upload_task_queue.stop()
@@ -109,7 +109,7 @@ class ProxySession():
 
         out_string += "on_road_num:%d<br>\n" % self.on_road_num
         out_string += "transfer_list:<br>\r\n"
-        for transfer_no in sorted(self.transfer_list.iterkeys()):
+        for transfer_no in sorted(self.transfer_list.keys()):
             transfer = self.transfer_list[transfer_no]
             if "start" in self.transfer_list[transfer_no]:
                 time_way = " t:" + str((time.time() - self.transfer_list[transfer_no]["start"]))
@@ -133,13 +133,13 @@ class ProxySession():
         try:
             start_time = time.time()
 
-            magic = "P"
+            magic = b"P"
             pack_type = 1
-            upload_data_head = struct.pack("<cBB8sIHII", magic, g.protocol_version, pack_type, str(self.session_id),
+            upload_data_head = struct.pack("<cBB8sIHII", magic, g.protocol_version, pack_type, self.session_id,
                                            g.config.block_max_size, g.config.send_delay, g.config.windows_size,
-                                           g.config.windows_ack)
-            upload_data_head += struct.pack("<H", len(g.config.login_account)) + str(g.config.login_account)
-            upload_data_head += struct.pack("<H", len(g.config.login_password)) + str(g.config.login_password)
+                                           int(g.config.windows_ack))
+            upload_data_head += struct.pack("<H", len(g.config.login_account.encode('iso-8859-1'))) + g.config.login_account.encode('iso-8859-1')
+            upload_data_head += struct.pack("<H", len(g.config.login_password.encode('iso-8859-1'))) + g.config.login_password.encode('iso-8859-1')
 
             upload_post_data = encrypt_data(upload_data_head)
 
@@ -158,10 +158,11 @@ class ProxySession():
                 xlog.error("login data len:%d fail", len(content))
                 return False
 
+
             info = decrypt_data(content)
             magic, protocol_version, pack_type, res, message_len = struct.unpack("<cBBBH", info[:6])
             message = info[6:]
-            if magic != "P" or protocol_version != 1 or pack_type != 1:
+            if magic != b"P" or protocol_version != 1 or pack_type != 1:
                 xlog.error("login_session time:%d head error:%s", 1000 * time_cost, utils.str2hex(info[:6]))
                 return False
 
@@ -190,6 +191,8 @@ class ProxySession():
         seq = 0
         cmd_type = 0  # create connection
         sock_type = 0  # TCP
+        if isinstance(host, str):
+            host = host.encode("utf-8")
         data = struct.pack("<IBBH", seq, cmd_type, sock_type, len(host)) + host + struct.pack("<H", port)
         self.send_conn_data(conn_id, data)
 
@@ -288,7 +291,7 @@ class ProxySession():
             send_data_len = len(upload_data)
             upload_ack_data = self.ack_pool.get()
             send_ack_len = len(upload_ack_data)
-            magic = "P"
+            magic = b"P"
             pack_type = 2
 
             if self.on_road_num > g.config.concurent_thread_num * 0.8:
@@ -296,13 +299,13 @@ class ProxySession():
             else:
                 server_timeout = g.config.roundtrip_timeout / 2
 
-            upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, str(self.session_id),
+            upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, self.session_id,
                                            transfer_no,
-                                           send_sn, server_timeout, send_data_len, send_ack_len)
+                                           send_sn, int(server_timeout), send_data_len, send_ack_len)
             upload_post_buf = base_container.WriteBuffer(upload_data_head)
             upload_post_buf.append(upload_data)
             upload_post_buf.append(upload_ack_data)
-            upload_post_data = str(upload_post_buf)
+            upload_post_data = upload_post_buf.get_bytes()
             upload_post_data = encrypt_data(upload_post_data)
             try_no = 0
             while self.running:
@@ -353,7 +356,7 @@ class ProxySession():
                     data = base_container.ReadBuffer(content)
 
                     magic, version, pack_type = struct.unpack("<cBB", data.get(3))
-                    if magic != "P" or version != g.protocol_version:
+                    if magic != b"P" or version != g.protocol_version:
                         xlog.error("get data head:%s", utils.str2hex(content[:2]))
                         time.sleep(100)
                         break
@@ -437,7 +440,7 @@ def calculate_quota_left(quota_list):
 
 
 def get_api_server_http_client():
-    api_server = urlparse.urlparse(g.config.api_server)
+    api_server = urllib.parse.urlparse(g.config.api_server)
     http_client = HTTP_client((api_server.hostname, api_server.port), g.proxy, g.config.use_https, g.config.conn_life,
                               cert=g.cert)
     return http_client
@@ -464,6 +467,7 @@ def call_api(path, req_info):
 
 
         content = decrypt_data(content)
+        content = content.decode("utf-8")
         try:
             info = json.loads(content)
         except Exception as e:

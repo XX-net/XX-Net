@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import urlparse
+import urllib.parse
 import os
 import cgi
 import time
@@ -11,11 +11,10 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import simple_http_server
-import global_var as g
-import proxy_session
+from . import global_var as g
+from . import proxy_session
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
@@ -29,7 +28,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile = wfile
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/debug":
@@ -45,18 +44,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def do_POST(self):
         xlog.debug('x-tunnel web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+            ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             if ctype == 'multipart/form-data':
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
-                self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                length = int(self.headers.get('content-length'))
+                self.postvars = urllib.parse.parse_qs(self.rfile.read(length).decode("utf-8"), keep_blank_values=1)
             else:
                 self.postvars = {}
         except:
             self.postvars = {}
 
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == '/login':
             return self.req_login_handler()
         elif path == "/logout":
@@ -72,8 +71,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_not_found()
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs["cmd"]:
@@ -108,8 +107,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "res": "logout"
             })
 
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         force = False
         if 'force' in reqs:
@@ -158,8 +157,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             else:
                 return True
 
-        username    = str(self.postvars['username'][0])
-        password    = str(self.postvars['password'][0])
+        username    = self.postvars['username'][0]
+        password    = self.postvars['password'][0]
         is_register = int(self.postvars['is_register'][0])
 
         pa = check_email(username)
@@ -174,7 +173,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "Password needs at least 6 charactors."
             })
 
-        password_hash = str(hashlib.sha256(password).hexdigest())
+        password_hash = str(hashlib.sha256(password.encode('iso-8859-1')).hexdigest())
         res, reason = proxy_session.request_balance(username, password_hash, is_register, update_server=True)
         if res:
             g.config.login_account  = username
@@ -269,8 +268,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json({"res": "success"})
 
     def req_get_history_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         req_info = {
             "account": g.config.login_account,

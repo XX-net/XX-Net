@@ -14,8 +14,9 @@ class Config(object):
 
     def load(self):
         if os.path.isfile(self.config_path):
-            with file(self.config_path, 'r') as f:
-                self.file_config = json.loads(f.read())
+            with open(self.config_path, 'r') as f:
+                content = f.read()
+                self.file_config = json.loads(content)
 
         for var_name in self.default_config:
             if self.file_config and var_name in self.file_config:
@@ -32,7 +33,7 @@ class Config(object):
             else:
                 self.file_config[var_name] = getattr(self, var_name)
 
-        with file(self.config_path, "w") as f:
+        with open(self.config_path, "w") as f:
             f.write(json.dumps(self.file_config, indent=2))
 
     def set_var(self, var_name, default_value):

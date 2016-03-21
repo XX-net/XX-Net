@@ -4,6 +4,7 @@ import os
 
 g_ip_check = re.compile(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
 
+
 def check_ip_valid(ip):
     ret = g_ip_check.match(ip)
     if ret is not None:
@@ -17,7 +18,17 @@ def check_ip_valid(ip):
 
 
 def str2hex(data):
-    return ":".join("{:02x}".format(ord(c)) for c in data)
+    out_list = []
+    if isinstance(data, bytes):
+        data1 = data.decode('iso-8859-1')
+
+    for c in data1:
+        #print(c)
+        cc = ord(c)
+        ccc = "{:02x}".format(cc)
+        out_list.append(ccc)
+    out_str = ":".join(out_list)
+    return out_str
 
 
 def generate_random_lowercase(n):

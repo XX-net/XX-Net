@@ -3,17 +3,16 @@ import sys
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
-
-noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+
+noarch_lib = os.path.abspath(os.path.join(root_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+lib_path = os.path.abspath(os.path.join(root_path, 'lib', 'common'))
+sys.path.append(lib_path)
+
 data_path = os.path.join(root_path, 'data')
 data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
-
-lib_path = os.path.abspath(os.path.join(current_path, os.pardir, 'common'))
-sys.path.append(lib_path)
 
 ready = False
 # don't remove, launcher web_control need it.
@@ -35,12 +34,13 @@ log_file = os.path.join(data_xtunnel_path, "client.log")
 xlog = getLogger("x_tunnel", buffer_size=500, file_name=log_file)
 
 import xconfig
-from proxy_handler import Socks5Server
-import global_var as g
-import proxy_session
 import simple_http_server
 
-import web_control
+from x_tunnel.local.proxy_handler import Socks5Server
+from x_tunnel.local import global_var as g
+from x_tunnel.local import proxy_session
+
+from x_tunnel.local import web_control
 # don't remove, launcher web_control need it.
 
 
