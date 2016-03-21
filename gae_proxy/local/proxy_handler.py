@@ -74,14 +74,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return
 
         out_list = []
-        out_list.append("HTTP/1.1 %d\r\n" % status)
+        out_list.append(b"HTTP/1.1 %d\r\n" % status)
         for key, value in response.getheaders():
             key = key.title()
-            out_list.append("%s: %s\r\n" % (key, value))
-        out_list.append("\r\n")
+            out_list.append(("%s: %s\r\n" % (key, value)).encode('iso-8859-1'))
+        out_list.append(b"\r\n")
         out_list.append(content)
 
-        self.wfile.write("".join(out_list).encode())
+        self.wfile.write(b"".join(out_list))
 
     def do_METHOD(self):
         touch_active()
