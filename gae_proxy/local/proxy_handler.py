@@ -2,10 +2,44 @@
 # coding:utf-8
 
 
+"""
+GAEProxyHandler is the handler of http proxy port. default to 8087
+
+    if HTTP request:
+        do_METHOD()
+
+    elif HTTPS request:
+        do_CONNECT()
+
+
+What is Direct mode:
+    if user access google site like www.google.com, client.google.com,
+    we don't need forward request to GAE server.
+    we can send the original request to google ip directly.
+    because most google ip act as general front server.
+
+    Youtube content server do not support direct mode.
+
+    look direct_handler.py for more detail.
+
+What GAE mode:
+    Google App Engine support urlfetch for proxy.
+    every google account can apply 12 appid.
+    after deploy server code under gae_proxy/server/gae to GAE server, user can
+    use GAE server as http proxy.
+
+    Here is the global link view:
+
+     Browser => GAE_proxy => GAE server => target http/https server.
+
+    look gae_hander.py for more detail.
+"""
+
 import errno
 import socket
 import ssl
 import urlparse
+import re
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
@@ -21,11 +55,12 @@ import gae_handler
 import direct_handler
 from connect_control import touch_active
 import web_control
-import re
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
     gae_support_methods = tuple(["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])
+    # GAE don't support command like OPTION
+
     bufsize = 256*1024
     max_retry = 3
 
@@ -46,6 +81,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                "Content-Length: 2\r\n\r\nOK"
 
     def forward_local(self):
+        """
+        If browser send localhost:xxx request to GAE_proxy,
+        we forward it to localhost.
+        """
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
         http_client = simple_http_client.HTTP_client((host_ip, int(port)))
@@ -82,6 +121,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
     def do_METHOD(self):
         touch_active()
+        # record active time.
+        # backgroud thread will stop keep connection pool if no request for long time.
 
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
@@ -119,6 +160,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if host in config.HOSTS_GAE:
             return self.do_AGENT()
 
+        # redirect http request to https request
+        # avoid key word filter when pass through GFW
         if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
@@ -189,7 +232,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         return self.do_CONNECT_AGENT()
 
     def do_CONNECT_AGENT(self):
-        """deploy fake cert to client"""
+        """send fake cert to client"""
         # GAE supports the following HTTP methods: GET, POST, HEAD, PUT, DELETE, and PATCH
         host, _, port = self.path.rpartition(':')
         port = int(port)

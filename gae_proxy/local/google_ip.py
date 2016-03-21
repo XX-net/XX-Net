@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # based on checkgoogleip 'moonshawdo@gmail.com'
 
+
 import threading
 import operator
 import time
@@ -35,6 +36,16 @@ from scan_ip_log import scan_ip_log
 # bad case is 1300ms and more.
 
 class IpManager():
+    # Functions:
+    # 1. Scan ip in back ground
+    # 2. sort ip by RTT and fail times
+    #     RTT + fail_times * 1000
+    # 3. count ip connection number
+    #    keep max one link every ip.
+    #    more link may be block by GFW if large traffic on some ip.
+    # 4. scan all exist ip
+    #    stop scan ip thread then start 10 threads to scan all exist ip.
+    #    called by web_control.
 
     def __init__(self):
         self.scan_thread_lock = threading.Lock()

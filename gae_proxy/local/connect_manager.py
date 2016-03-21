@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+
+"""
+This file manage the ssl connection pool.
+For faster access the target host,
+
+ssl link will save to pool after use.
+and need keep alive every 60 seconds.
+
+We create multi-thread to try-connect google cloud ip.
+
+we also keep host connect for direct connect.
+every ssl connect can't change host after request.
+"""
+
+
 import os
 import binascii
 import time
@@ -213,6 +228,8 @@ class Https_connection_manager(object):
         self.host_conn_pool = {}
 
     def clean_old_connection(self):
+        # We should clean old connection if update appid.
+        # because ssl connection can't change host name after first request.
         self.gae_conn_pool.clear()
 
     def head_request(self, ssl_sock):

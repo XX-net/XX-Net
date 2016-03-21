@@ -2,6 +2,49 @@
 # coding:utf-8
 
 
+"""
+GoAgent local-server protocol 3.2
+
+request:
+  POST /_gh/ HTTP/1.1
+  HOST: appid.appspot.com
+  content-length: xxx
+
+  http content:
+  {
+    pack_req_head_len: 2 bytes,
+    pack_req_head : deflate{
+      original request line,
+      original request headers,
+      X-URLFETCH-kwargs HEADS, {
+        password,
+        maxsize, defined in config AUTO RANGE MAX SIZE
+        timeout, request timeout for GAE urlfetch.
+      }
+    }
+    body
+  }
+
+response:
+  200 OK
+  http-Heads:
+    Content-type: image/gif
+
+  http-content:{
+      response_head{
+        data_len: 2 bytes,
+        data: deflate{
+         HTTP/1.1 status, status_code
+         headers
+         content = error_message, if GAE server fail
+        }
+      }
+
+      body
+  }
+"""
+
+
 import errno
 import time
 import struct
