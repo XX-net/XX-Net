@@ -12,7 +12,6 @@ if os.path.islink(__file__):
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
 sys.path.append(root_path)
-#sys.path.insert(0, current_path)
 import x_tunnel.local.client as client
 
 

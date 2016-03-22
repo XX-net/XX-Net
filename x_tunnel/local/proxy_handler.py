@@ -20,11 +20,13 @@ class Socks5Server():
         try:
             # xlog.debug('Connected from %r', self.client_address)
 
-            socks_version = ord(self.read_bytes(1))
-            if socks_version == 4:
+            socks_version = self.read_bytes(1)
+            if socks_version == b'\x04':
                 self.socks4_handler()
-            elif socks_version == 5:
+            elif socks_version == b'\x05':
                 self.socks5_handler()
+            elif socks_version == b'C':
+                self.https_handler()
             else:
                 xlog.warn("socks version:%d not supported", socks_version)
                 return
@@ -40,12 +42,14 @@ class Socks5Server():
         try:
             while True:
                 n1 = self.read_buffer.find(b"\x00", self.buffer_start)
+                if n1 == -1:
+                    n1 = self.read_buffer.find(b"\r", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
                     return line
                 time.sleep(0.001)
-                data = sock.recv(256)
+                data = sock.recv(65535)
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -168,5 +172,37 @@ class Socks5Server():
 
         if len(self.read_buffer) - self.buffer_start:
             g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
+
+        g.session.conn_list[conn_id].start(block=True)
+
+    def https_handler(self):
+        line = self.read_line()
+        line = line.decode('iso-8859-1')
+        words = line.split()
+        if len(words) == 3:
+            command, path, version = words
+        elif len(words) == 2:
+            command, path = words
+            version = "HTTP/1.1"
+        else:
+            xlog.warn("https req line fail:%s", line)
+            return
+
+        if command != "ONNECT":
+            xlog.warn("https req line fail:%s", line)
+            return
+
+        host, _, port = path.rpartition(':')
+        port = int(port)
+
+        sock = self.connection
+        conn_id = g.session.create_conn(sock, host, port)
+        if not conn_id:
+            xlog.warn("create conn fail")
+            sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
+            return
+
+        xlog.info("https %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
+        sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
 
         g.session.conn_list[conn_id].start(block=True)
