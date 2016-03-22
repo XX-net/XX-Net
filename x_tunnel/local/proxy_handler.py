@@ -143,7 +143,7 @@ class Socks5Server():
             domain_len_pack = self.read_bytes(1)[0]
             domain_len = int(domain_len_pack)
             domain = self.read_bytes(domain_len)
-            addr_pack = bytes(domain_len_pack) + domain
+            addr_pack = bytes([domain_len_pack]) + domain
             addr = domain
         elif addrtype == 4:  # IPv6
             addr_pack = self.read_bytes(16)
@@ -158,12 +158,12 @@ class Socks5Server():
         conn_id = g.session.create_conn(sock, addr, port)
         if not conn_id:
             xlog.warn("create conn fail")
-            reply = b"\x05\x01\x00" + bytes(addrtype_pack) + addr_pack + struct.pack(">H", port)
+            reply = b"\x05\x01\x00" + bytes([addrtype_pack]) + addr_pack + struct.pack(">H", port)
             sock.send(reply)
             return
 
         xlog.info("socks5 %r connect to %s:%d conn_id:%d", self.client_address, addr, port, conn_id)
-        reply = b"\x05\x00\x00" + bytes(addrtype_pack) + addr_pack + struct.pack(">H", port)
+        reply = b"\x05\x00\x00" + bytes([addrtype_pack]) + addr_pack + struct.pack(">H", port)
         sock.send(reply)
 
         if len(self.read_buffer) - self.buffer_start:
