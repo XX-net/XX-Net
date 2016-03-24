@@ -706,9 +706,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         filename = cert_util.CertUtil.ca_keyfile
         with open(filename, 'rb') as fp:
             data = fp.read()
-        mimetype = 'application/octet-stream'
+        mimetype = 'application/x-x509-ca-cert'
 
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: attachment; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: inline; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)
 
     def req_is_ready_handler(self):
