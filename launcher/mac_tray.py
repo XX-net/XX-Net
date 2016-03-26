@@ -22,6 +22,7 @@ import subprocess
 import webbrowser
 
 from AppKit import *
+from SystemConfiguration import *
 from instances import xlog
 from PyObjCTools import AppHelper
 
@@ -32,43 +33,30 @@ class MacTrayObject(NSObject):
     def applicationDidFinishLaunching_(self, notification):
         self.setupUI()
         self.registerObserver()
-        self.loadConfig()
 
-    def loadConfig(self):
-        proxySetting = config.get(["modules", "launcher", "proxy"], "pac")
-        if proxySetting == "pac":
-            self.on_enable_pac()
-        elif proxySetting == "gae":
-            self.on_enable_gae_proxy()
-        elif proxySetting == "disable":
-            # Don't disable proxy setting, just do nothing.
-            pass
-        else:
-            xlog.warn("proxy_setting:%r", proxySetting)
+    def getProxyState(self, service):
+        if not service:
+            return
 
-    def getProxyState(self):
         # Check if auto proxy is enabled
-        checkAutoProxyUrlEthernetCommand    =   "networksetup -getautoproxyurl Ethernet"
-        checkAutoProxyUrlThunderboltCommand = "networksetup -getautoproxyurl \\\"Thunderbolt Ethernet\\\""
-        checkAutoProxyUrlWiFiCommand        = "networksetup -getautoproxyurl Wi-Fi"
-
-        executeCommand = "%s;%s;%s;" % (checkAutoProxyUrlEthernetCommand, checkAutoProxyUrlThunderboltCommand, checkAutoProxyUrlWiFiCommand)
-        executeResult  = subprocess.check_output(executeCommand, shell=True)
-
+        checkAutoProxyUrlCommand = 'networksetup -getautoproxyurl "%s"' % service
+        executeResult = subprocess.check_output(checkAutoProxyUrlCommand, shell=True)
         if ( executeResult.find('http://127.0.0.1:8086/proxy.pac\nEnabled: Yes') != -1 ):
             return "pac"
 
         # Check if global proxy is enabled
-        checkGlobalProxyUrlEthernetCommand =   "networksetup -getwebproxy Ethernet"
-        checkGlobalProxyUrlThunderboltCommand = "networksetup -getwebproxy \\\"Thunderbolt Ethernet\\\""
-        checkGlobalProxyUrlWiFiCommand = "networksetup -getwebproxy Wi-Fi"
-
-        executeCommand = "%s;%s;%s;" % (checkGlobalProxyUrlEthernetCommand, checkGlobalProxyUrlThunderboltCommand, checkGlobalProxyUrlWiFiCommand)
-        executeResult  = subprocess.check_output(executeCommand, shell=True)
+        checkGlobalProxyUrlCommand = 'networksetup -getwebproxy "%s"' % service
+        executeResult = subprocess.check_output(checkGlobalProxyUrlCommand, shell=True)
         if ( executeResult.find('Enabled: Yes\nServer: 127.0.0.1\nPort: 8087') != -1 ):
             return "gae"
 
         return "disable"
+
+    def getCurrentServiceMenuItemTitle(self):
+        if currentService:
+            return 'Connection: %s' % currentService
+        else:
+            return 'Connection: None'
 
     def setupUI(self):
         self.statusbar = NSStatusBar.systemStatusBar()
@@ -86,7 +74,7 @@ class MacTrayObject(NSObject):
         self.statusitem.setToolTip_("XX-Net")
 
         # Get current selected mode
-        proxyState = self.getProxyState()
+        proxyState = self.getProxyState(currentService)
 
         # Build a very simple menu
         self.menu = NSMenu.alloc().initWithTitle_('XX-Net')
@@ -94,20 +82,27 @@ class MacTrayObject(NSObject):
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(self.getCurrentServiceMenuItemTitle(), None, '')
+        self.menu.addItem_(menuitem)
+        self.currentServiceMenuItem = menuitem
+
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy', 'enableAutoProxy:', '')
         if proxyState == 'pac':
             menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
+        self.autoGaeProxyMenuItem = menuitem
 
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy', 'enableGlobalProxy:', '')
         if proxyState == 'gae':
             menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
+        self.globalGaeProxyMenuItem = menuitem
 
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable GAEProxy', 'disableProxy:', '')
         if proxyState == 'disable':
             menuitem.setState_(NSOnState)
         self.menu.addItem_(menuitem)
+        self.disableGaeProxyMenuItem = menuitem
 
         # Reset Menu Item
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
@@ -122,25 +117,31 @@ class MacTrayObject(NSObject):
         NSApp.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
 
     def updateStatusBarMenu(self):
-        autoGaeProxyMenuItem    = self.menu.itemWithTitle_('Enable Auto GAEProxy')
-        globalGaeProxyMenuItem  = self.menu.itemWithTitle_('Enable Global GAEProxy')
-        disableGaeProxyMenuItem = self.menu.itemWithTitle_('Disable GAEProxy')
+        self.currentServiceMenuItem.setTitle_(self.getCurrentServiceMenuItemTitle())
 
         # Remove Tick before All Menu Items
-        autoGaeProxyMenuItem.setState_(NSOffState)
-        globalGaeProxyMenuItem.setState_(NSOffState)
-        disableGaeProxyMenuItem.setState_(NSOffState)
+        self.autoGaeProxyMenuItem.setState_(NSOffState)
+        self.globalGaeProxyMenuItem.setState_(NSOffState)
+        self.disableGaeProxyMenuItem.setState_(NSOffState)
 
         # Get current selected mode
-        proxyState = self.getProxyState()
+        proxyState = self.getProxyState(currentService)
 
         # Update Tick before Menu Item
         if proxyState == 'pac':
-            autoGaeProxyMenuItem.setState_(NSOnState)
+            self.autoGaeProxyMenuItem.setState_(NSOnState)
         elif proxyState == 'gae':
-            globalGaeProxyMenuItem.setState_(NSOnState)
+            self.globalGaeProxyMenuItem.setState_(NSOnState)
         elif proxyState == 'disable':
-            disableGaeProxyMenuItem.setState_(NSOnState)
+            self.disableGaeProxyMenuItem.setState_(NSOnState)
+
+        # Trigger autovalidation
+        self.menu.update()
+
+    def validateMenuItem_(self, menuItem):
+        return currentService or (menuItem != self.autoGaeProxyMenuItem and
+                                  menuItem != self.globalGaeProxyMenuItem and
+                                  menuItem != self.disableGaeProxyMenuItem)
 
     def updateConfig(self, newStatus):
         config.set(["modules", "launcher", "proxy"], newStatus)
@@ -151,13 +152,25 @@ class MacTrayObject(NSObject):
         nc.addObserver_selector_name_object_(self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
 
     def windowWillClose_(self, notification):
-        self.disableProxy_(None)
+        listNetworkServicesCommand = 'networksetup -listallnetworkservices'
+        executeResult = subprocess.check_output(listNetworkServicesCommand, shell=True)
+        services = executeResult.split('\n')
+        services = filter(lambda service : service and service.find('*') == -1 and self.getProxyState(service) != 'disable', services) # Remove disabled services and empty lines
+
+        if len(services) > 0:
+            disableAutoProxyCommand   = ';'.join(map(self.getDisableAutoProxyCommand, services))
+            disableGlobalProxyCommand = ';'.join(map(self.getDisableGlobalProxyCommand, services))
+            rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
+            executeCommand            = rootCommand.encode('utf-8')
+
+            xlog.info("try disable proxy:%s", executeCommand)
+            os.system(executeCommand)
+
+        self.updateConfig('disable')
         module_init.stop_all()
         os._exit(0)
         NSApp.terminate_(self)
 
-    #Note: the function name for action can include '_'
-    # limited by Mac cocoa
     def config_(self, notification):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
@@ -167,104 +180,87 @@ class MacTrayObject(NSObject):
         module_init.start("gae_proxy")
 
     def enableAutoProxy_(self, _):
-        disableProxyCommand                 = self.getDisableProxyCommand()
-        enableAutoProxyCommand              = self.getEnableAutoProxyCommand()
-        rootCommand                         = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableProxyCommand, enableAutoProxyCommand)
-        executeCommand                      = rootCommand.encode('utf-8')
+        disableGlobalProxyCommand = self.getDisableGlobalProxyCommand(currentService)
+        enableAutoProxyCommand    = self.getEnableAutoProxyCommand(currentService)
+        rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableGlobalProxyCommand, enableAutoProxyCommand)
+        executeCommand            = rootCommand.encode('utf-8')
 
-        xlog.info("try enable proxy:%s", executeCommand)
+        xlog.info("try enable auto proxy:%s", executeCommand)
         os.system(executeCommand)
         self.updateStatusBarMenu()
         self.updateConfig('pac')
 
-    def getEnableAutoProxyCommand(self):
-        enableAutoProxyEthernetCommand      = "networksetup -setautoproxyurl Ethernet \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        enableAutoProxyThunderboltCommand   = "networksetup -setautoproxyurl \\\"Thunderbolt Ethernet\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        enableAutoProxyWiFiCommand          = "networksetup -setautoproxyurl Wi-Fi \\\"http://127.0.0.1:8086/proxy.pac\\\""
-        executeCommand                      = "%s;%s;%s" % (enableAutoProxyEthernetCommand, enableAutoProxyThunderboltCommand, enableAutoProxyWiFiCommand)
-
-        return executeCommand
-
     def enableGlobalProxy_(self, _):
-        disableProxyCommand                 = self.getDisableProxyCommand()
-        enableGlobalProxyCommand            = self.getEnableGlobalProxyCommand()
-        rootCommand                         = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableProxyCommand, enableGlobalProxyCommand)
-        executeCommand                      = rootCommand.encode('utf-8')
+        disableAutoProxyCommand   = self.getDisableAutoProxyCommand(currentService)
+        enableGlobalProxyCommand  = self.getEnableGlobalProxyCommand(currentService)
+        rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, enableGlobalProxyCommand)
+        executeCommand            = rootCommand.encode('utf-8')
 
-        xlog.info("try enable proxy:%s", executeCommand)
+        xlog.info("try enable global proxy:%s", executeCommand)
         os.system(executeCommand)
         self.updateStatusBarMenu()
         self.updateConfig('gae')
 
-    def getEnableGlobalProxyCommand(self):
-        enableHttpProxyEthernetCommand      = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
-        enableHttpProxyThunderboltCommand   = "networksetup -setwebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
-        enableHttpProxyWiFiCommand          = "networksetup -setwebproxy Wi-Fi 127.0.0.1 8087"
-        enableHttpsProxyEthernetCommand     = "networksetup -setsecurewebproxy Ethernet 127.0.0.1 8087"
-        enableHttpsProxyThunderboltCommand  = "networksetup -setsecurewebproxy \\\"Thunderbolt Ethernet\\\" 127.0.0.1 8087"
-        enableHttpsProxyWiFiCommand         = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
-
-        executeCommand = "%s;%s;%s;%s;%s;%s" % (enableHttpProxyEthernetCommand, enableHttpProxyThunderboltCommand, enableHttpProxyWiFiCommand,
-                            enableHttpsProxyEthernetCommand, enableHttpsProxyThunderboltCommand, enableHttpsProxyWiFiCommand)
-        return executeCommand
-
     def disableProxy_(self, _):
-        disableProxyCommand                 = self.getDisableProxyCommand()
-        rootCommand                         = """osascript -e 'do shell script "%s" with administrator privileges' """ % disableProxyCommand
-        executeCommand                      = rootCommand.encode('utf-8')
+        disableAutoProxyCommand   = self.getDisableAutoProxyCommand(currentService)
+        disableGlobalProxyCommand = self.getDisableGlobalProxyCommand(currentService)
+        rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
+        executeCommand            = rootCommand.encode('utf-8')
 
         xlog.info("try disable proxy:%s", executeCommand)
         os.system(executeCommand)
         self.updateStatusBarMenu()
         self.updateConfig('disable')
 
-    def getDisableProxyCommand(self):
-        disableHttpProxyEthernetCommand     = "networksetup -setwebproxystate Ethernet off"
-        disableHttpProxyThunderboltCommand  = "networksetup -setwebproxystate \\\"Thunderbolt Ethernet\\\" off"
-        disableHttpProxyWiFiCommand         = "networksetup -setwebproxystate Wi-Fi off"
-        disableHttpsProxyEthernetCommand    = "networksetup -setsecurewebproxystate Ethernet off"
-        disableHttpsProxyThunderboltCommand = "networksetup -setsecurewebproxystate \\\"Thunderbolt Ethernet\\\" off"
-        disableHttpsProxyWiFiCommand        = "networksetup -setsecurewebproxystate Wi-Fi off"
-        disableAutoProxyEthernetCommand     = "networksetup -setautoproxystate Ethernet off"
-        disableAutoProxyThunderboltCommand  = "networksetup -setautoproxystate \\\"Thunderbolt Ethernet\\\" off"
-        disableAutoProxyWiFiCommand         = "networksetup -setautoproxystate Wi-Fi off"
+    # Generate commands for Apple Script
+    def getEnableAutoProxyCommand(self, service):
+        return "networksetup -setautoproxyurl \\\"%s\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\"" % service
 
-        executeCommand = "%s;%s;%s;%s;%s;%s;%s;%s;%s" % (disableHttpProxyEthernetCommand, disableHttpProxyThunderboltCommand, disableHttpProxyWiFiCommand,
-                            disableHttpsProxyEthernetCommand, disableHttpsProxyThunderboltCommand, disableHttpsProxyWiFiCommand,
-                            disableAutoProxyEthernetCommand, disableAutoProxyThunderboltCommand, disableAutoProxyWiFiCommand)
-        return executeCommand
+    def getDisableAutoProxyCommand(self, service):
+        return "networksetup -setautoproxystate \\\"%s\\\" off" % service
 
-class Mac_tray():
-    def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
-        msg = unicode(msg)
-        title = unicode(title)
-        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
-            title, "OK", "Cancel", None, msg)
-        alert.setAlertStyle_(0)  # informational style
-        res = alert.runModal()
-        xlog.debug("dialog_yes_no return %d", res)
+    def getEnableGlobalProxyCommand(self, service):
+        enableHttpProxyCommand   = "networksetup -setwebproxy \\\"%s\\\" 127.0.0.1 8087" % service
+        enableHttpsProxyCommand  = "networksetup -setsecurewebproxy \\\"%s\\\" 127.0.0.1 8087" % service
+        return "%s;%s" % (enableHttpProxyCommand, enableHttpsProxyCommand)
 
-        # The "ok" button is ``1`` and "cancel" is ``0``.
-        if res == 0:
-            res = 2
-            return res
-
-        # Yes:1 No:2
-        if callback:
-            callback(data, res)
-        return res
-
-    def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
-        xlog.error("Mac notify_general not implemented.")
+    def getDisableGlobalProxyCommand(self, service):
+        disableHttpProxyCommand  = "networksetup -setwebproxystate \\\"%s\\\" off" % service
+        disableHttpsProxyCommand = "networksetup -setsecurewebproxystate \\\"%s\\\" off" % service
+        return "%s;%s" % (disableHttpProxyCommand, disableHttpsProxyCommand)
 
 
-sys_tray = Mac_tray()
+sys_tray = MacTrayObject.alloc().init()
+currentService = None
+
+def fetchCurrentService(protocol):
+    global currentService
+    status = SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
+    if not status:
+        currentService = None
+        return
+    serviceID = status['PrimaryService']
+    service = SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
+    if not service:
+        currentService = None
+        return
+    currentService = service['UserDefinedName']
+
+@objc.callbackFor(CFNotificationCenterAddObserver)
+def networkChanged(center, observer, name, object, userInfo):
+    fetchCurrentService('IPv4')
+    sys_tray.updateStatusBarMenu()
 
 # Note: the following code can't run in class
 def serve_forever():
     app = NSApplication.sharedApplication()
-    delegate = MacTrayObject.alloc().init()
-    app.setDelegate_(delegate)
+    app.setDelegate_(sys_tray)
+
+    # Listen for network change
+    nc = CFNotificationCenterGetDarwinNotifyCenter()
+    CFNotificationCenterAddObserver(nc, None, networkChanged, "com.apple.system.config.network_change", None, CFNotificationSuspensionBehaviorDeliverImmediately)
+
+    fetchCurrentService('IPv4')
     AppHelper.runEventLoop()
 
 def main():
@@ -272,4 +268,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #sys_tray.dialog_yes_no("test", "test message")
