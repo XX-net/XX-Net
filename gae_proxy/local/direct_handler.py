@@ -31,15 +31,15 @@ def send_header(wfile, keyword, value):
     if keyword == 'Set-Cookie':
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
-            #logging.debug("Head1 %s: %s", keyword, cookie)
+            #xlog.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
     elif keyword == "Alternate-Protocol":
         return
     else:
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
         wfile.write("%s: %s\r\n" % (keyword, value))
 
 

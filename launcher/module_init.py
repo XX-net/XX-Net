@@ -98,7 +98,7 @@ def start_all_auto():
             start(module)
             # web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
             finished_time = time.time()
-            xlog.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
+            xlog.info("start %s time cost:%d ms", module, (finished_time - start_time) * 1000)
 
 
 def stop_all():
