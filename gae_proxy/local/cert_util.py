@@ -186,7 +186,7 @@ class CertUtil(object):
             ])
         ca.sign(key, CertUtil.ca_digest)
         #xlog.debug("CA key:%s", key)
-        xlog.info("create ca")
+        xlog.info("create CA")
         return key, ca
 
     @staticmethod

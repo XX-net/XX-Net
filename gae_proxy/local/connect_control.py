@@ -28,7 +28,7 @@ def get_connect_interval():
 
     win_version = env_info.win32_version()
     if win_version == 10:
-        xlog.info("detect Win10, enable connect concurent control, interval:%d", config.connect_interval)
+        xlog.info("detected Win10, enable connect concurrency control, interval:%d", config.connect_interval)
         return config.connect_interval
 
     return 0
