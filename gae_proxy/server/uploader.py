@@ -157,9 +157,11 @@ def uploads(appids, rc4_password=""):
 
     except appengine_rpc.ClientLoginError as e:
         logging.info("Auth fail. Please check you password.")
+        logging.info("If you've enabled the 2-Step-Verification, please sign in using App Passwords: https://security.google.com/settings/security/apppasswords")
+        logging.info("If you are not enabled the 2-Step-Verification, please allowing less secure apps to access: https://www.google.com/settings/security/lesssecureapps")
         logging.info("登录失败，请检查你的帐号密码。")
-        logging.info("如果启用两阶段登录，请申请应用专用密码: https://security.google.com/settings/security/apppasswords")
-        logging.info("如果没有启用两阶段登录，请允许弱安全应用: https://www.google.com/settings/security/lesssecureapps")
+        logging.info("如果已启用两步验证，请申请应用专用密码: https://security.google.com/settings/security/apppasswords")
+        logging.info("如果没有启用两步验证，请允许弱安全应用: https://www.google.com/settings/security/lesssecureapps")
 
         fail_appid_list = appids.split('|')
 

@@ -48,7 +48,7 @@ msgid "Needless to configure generally"
 msgstr ""
 
 #: web_ui/config.html:37
-msgid "Enable IPv6(CERNet only)"
+msgid "Enable IPv6(If it's available)"
 msgstr ""
 
 #: web_ui/config.html:45

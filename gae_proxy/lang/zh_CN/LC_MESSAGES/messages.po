@@ -80,7 +80,7 @@ msgstr "注意：appid部署之前无法使用。"
 msgid "Advanced options"
 msgstr "高级选项"
 
-msgid "Enable IPv6(CERNet only)"
+msgid "Enable IPv6(If it's available)"
 msgstr "使用IPv6(一般教育网才开)"
 
 msgid "LAN proxy(Generally not needed)"
@@ -335,25 +335,25 @@ msgid "Diagnostic Info"
 msgstr "诊断信息"
 
 msgid "Check Github issues"
-msgstr "查看Github的问题讨论"
+msgstr "查看Github上的问题讨论区"
 
 msgid " or "
-msgstr "或者"
+msgstr " 或者"
 
 msgid " Discussions"
-msgstr "讨论"
+msgstr "讨论组"
 
 msgid "Show Details"
 msgstr "显示详细信息"
 
-msgid "The Post to Github Issue needs to sign in your Github account"
-msgstr "发到github问题区需要登录Github账号"
+msgid "Post to Github issue needs to sign in your Github account"
+msgstr "贴到Github问题区需要登录Github账号"
 
 msgid "To Google Groups"
 msgstr "前往Google论坛"
 
-msgid "Post to Github Issue"
-msgstr "发到github问题区"
+msgid "Post to Github Issue..."
+msgstr "贴到Github问题区..."
 
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
@@ -448,3 +448,13 @@ msgstr "全局代理已禁用"
 
 msgid "Download"
 msgstr "下载"
+
+msgid "new:"
+msgstr "新:"
+
+msgid " used:"
+msgstr " 已用:"
+
+msgid "-----------%0AProblem Description:%0APlease describe your problem, running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
+msgstr "-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A"
+

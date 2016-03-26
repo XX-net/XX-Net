@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+
+"""
+This file manage the ssl connection pool.
+For faster access the target host,
+
+ssl link will save to pool after use.
+and need keep alive every 60 seconds.
+
+We create multi-thread to try-connect google cloud ip.
+
+we also keep host connect for direct connect.
+every ssl connect can't change host after request.
+"""
+
+
 import os
 import binascii
 import time
@@ -137,7 +152,7 @@ class Connect_pool():
             pool = tuple(self.pool)
             for sock in pool:
                 inactive_time = time.time() -sock.last_use_time
-                #logging.debug("inactive_time:%d", inactive_time * 1000)
+                #xlog.debug("inactive_time:%d", inactive_time * 1000)
                 if inactive_time >= maxtime:
                     return_list.append(sock)
                     del self.pool[sock]
@@ -213,6 +228,8 @@ class Https_connection_manager(object):
         self.host_conn_pool = {}
 
     def clean_old_connection(self):
+        # We should clean old connection if update appid.
+        # because ssl connection can't change host name after first request.
         self.gae_conn_pool.clear()
 
     def head_request(self, ssl_sock):
@@ -227,12 +244,12 @@ class Https_connection_manager(object):
             host = ssl_sock.host
 
         # public appid don't keep alive, for quota limit.
-        if ssl_sock.appid.startswith("xxnet-") and ssl_sock.appid[7:].isdigit():
-            #logging.info("public appid don't keep alive")
+        if ssl_sock.appid in config.PUBLIC_APPIDS:
+            #xlog.info("public appid don't keep alive")
             #self.keep_alive = 0
             return False
 
-        #logging.debug("head request %s", host)
+        #xlog.debug("head request %s", host)
 
         request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
 
@@ -383,7 +400,7 @@ class Https_connection_manager(object):
                 return
 
             port = 443
-            #logging.debug("create ssl conn %s", ip_str)
+            #xlog.debug("create ssl conn %s", ip_str)
             ssl_sock = self._create_ssl_connection( (ip_str, port) )
             if ssl_sock:
                 ssl_sock.last_use_time = time.time()
@@ -408,7 +425,7 @@ class Https_connection_manager(object):
                     break
 
                 port = 443
-                #logging.debug("create ssl conn %s", ip_str)
+                #xlog.debug("create ssl conn %s", ip_str)
                 ssl_sock = self._create_ssl_connection( (ip_str, port) )
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()

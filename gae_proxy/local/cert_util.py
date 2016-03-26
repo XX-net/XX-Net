@@ -185,8 +185,8 @@ class CertUtil(object):
                 'basicConstraints', False, 'CA:TRUE', subject=ca, issuer=ca)
             ])
         ca.sign(key, CertUtil.ca_digest)
-        #logging.debug("CA key:%s", key)
-        xlog.info("create ca")
+        #xlog.debug("CA key:%s", key)
+        xlog.info("create CA")
         return key, ca
 
     @staticmethod

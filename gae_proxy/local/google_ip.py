@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # based on checkgoogleip 'moonshawdo@gmail.com'
 
+
 import threading
 import operator
 import time
@@ -35,6 +36,16 @@ from scan_ip_log import scan_ip_log
 # bad case is 1300ms and more.
 
 class IpManager():
+    # Functions:
+    # 1. Scan ip in back ground
+    # 2. sort ip by RTT and fail times
+    #     RTT + fail_times * 1000
+    # 3. count ip connection number
+    #    keep max one link every ip.
+    #    more link may be block by GFW if large traffic on some ip.
+    # 4. scan all exist ip
+    #    stop scan ip thread then start 10 threads to scan all exist ip.
+    #    called by web_control.
 
     def __init__(self):
         self.scan_thread_lock = threading.Lock()
@@ -137,7 +148,7 @@ class IpManager():
                 else:
                     fail_times = 0
 
-                #logging.info("load ip: %s time:%d domain:%s server:%s", ip, handshake_time, domain, server)
+                #xlog.info("load ip: %s time:%d domain:%s server:%s", ip, handshake_time, domain, server)
                 self.add_ip(ip, handshake_time, domain, server, fail_times)
             except Exception as e:
                 xlog.exception("load_ip line:%s err:%s", line, e)
@@ -257,7 +268,7 @@ class IpManager():
         try:
             ip_num = len(self.gws_ip_list)
             if ip_num == 0:
-                #logging.warning("no gws ip")
+                #xlog.warning("no gws ip")
                 #time.sleep(10)
                 return None
 
@@ -384,7 +395,7 @@ class IpManager():
 
                 self.iplist_need_save = True
 
-            #logging.debug("update ip:%s not exist", ip)
+            #xlog.debug("update ip:%s not exist", ip)
         except Exception as e:
             xlog.error("update_ip err:%s", e)
         finally:
@@ -544,7 +555,7 @@ class IpManager():
                     continue
 
                 if self.add_ip(ip, result.handshake_time, result.domain, "gws"):
-                    #logging.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip,
+                    #xlog.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
                     xlog.info("scan_ip add ip:%s time:%d", ip, result.handshake_time)
                     scan_ip_log.info("Add %s time:%d CN:%s ", ip, result.handshake_time, result.domain)
