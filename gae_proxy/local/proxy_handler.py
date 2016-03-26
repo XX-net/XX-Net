@@ -186,7 +186,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if 'Content-Length' in request_headers:
             try:
                 payload_len = int(request_headers.get('Content-Length', 0))
-                #logging.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
+                #xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
                 payload = self.rfile.read(payload_len)
             except NetWorkIOError as e:
                 xlog.error('handle_method_urlfetch read payload failed:%s', e)
@@ -400,7 +400,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if 'Content-Length' in request_headers:
                 try:
                     payload_len = int(request_headers.get('Content-Length', 0))
-                    #logging.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
+                    #xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
                     payload = self.rfile.read(payload_len)
                 except NetWorkIOError as e:
                     xlog.error('handle_method_urlfetch read payload failed:%s', e)

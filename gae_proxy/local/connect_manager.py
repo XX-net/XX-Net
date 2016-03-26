@@ -152,7 +152,7 @@ class Connect_pool():
             pool = tuple(self.pool)
             for sock in pool:
                 inactive_time = time.time() -sock.last_use_time
-                #logging.debug("inactive_time:%d", inactive_time * 1000)
+                #xlog.debug("inactive_time:%d", inactive_time * 1000)
                 if inactive_time >= maxtime:
                     return_list.append(sock)
                     del self.pool[sock]
@@ -245,11 +245,11 @@ class Https_connection_manager(object):
 
         # public appid don't keep alive, for quota limit.
         if ssl_sock.appid in config.PUBLIC_APPIDS:
-            #logging.info("public appid don't keep alive")
+            #xlog.info("public appid don't keep alive")
             #self.keep_alive = 0
             return False
 
-        #logging.debug("head request %s", host)
+        #xlog.debug("head request %s", host)
 
         request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % host
 
@@ -400,7 +400,7 @@ class Https_connection_manager(object):
                 return
 
             port = 443
-            #logging.debug("create ssl conn %s", ip_str)
+            #xlog.debug("create ssl conn %s", ip_str)
             ssl_sock = self._create_ssl_connection( (ip_str, port) )
             if ssl_sock:
                 ssl_sock.last_use_time = time.time()
@@ -425,7 +425,7 @@ class Https_connection_manager(object):
                     break
 
                 port = 443
-                #logging.debug("create ssl conn %s", ip_str)
+                #xlog.debug("create ssl conn %s", ip_str)
                 ssl_sock = self._create_ssl_connection( (ip_str, port) )
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
