@@ -244,7 +244,7 @@ class Https_connection_manager(object):
             host = ssl_sock.host
 
         # public appid don't keep alive, for quota limit.
-        if ssl_sock.appid.startswith("xxnet-") and ssl_sock.appid[7:].isdigit():
+        if ssl_sock.appid in config.PUBLIC_APPIDS:
             #logging.info("public appid don't keep alive")
             #self.keep_alive = 0
             return False
