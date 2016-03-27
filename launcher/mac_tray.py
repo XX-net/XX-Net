@@ -143,6 +143,18 @@ class MacTrayObject(NSObject):
                                   menuItem != self.globalGaeProxyMenuItem and
                                   menuItem != self.disableGaeProxyMenuItem)
 
+    def presentAlert_withTitle_(self, msg, title):
+        self.performSelectorOnMainThread_withObject_waitUntilDone_('presentAlertWithInfo:', [title, msg], True)
+        return self.alertReturn
+
+    def presentAlertWithInfo_(self, info):
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(info[0])
+        alert.setInformativeText_(info[1])
+        alert.addButtonWithTitle_("OK")
+        alert.addButtonWithTitle_("Cancel")
+        self.alertReturn = alert.runModal() == NSAlertFirstButtonReturn
+
     def updateConfig(self, newStatus):
         config.set(["modules", "launcher", "proxy"], newStatus)
         config.save()

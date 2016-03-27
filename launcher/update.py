@@ -192,7 +192,7 @@ def download_module(module, new_version):
                     ignore_module(module, new_version)
             elif sys.platform == "darwin":
                 from  mac_tray import sys_tray
-                if sys_tray.dialog_yes_no(msg, u"Install", None, None) == 1:
+                if sys_tray.presentAlert_withTitle_(msg, "Install"):
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
@@ -314,7 +314,7 @@ def check_push_update():
                 elif sys.platform == "darwin":
                     from mac_tray import sys_tray
                     msg = "Module %s new version: %s, Download?" % (module,  new_version)
-                    if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
+                    if sys_tray.presentAlert_withTitle_(msg, "Download"):
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
