@@ -6,7 +6,7 @@ import sys
 import config
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-helper_path = os.path.join(current_path, '..', 'data', 'launcher', 'helper')
+helper_path = os.path.join(current_path, os.pardir, 'data', 'launcher', 'helper')
 
 if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
@@ -32,45 +32,9 @@ class MacTrayObject(NSObject):
         pass
 
     def applicationDidFinishLaunching_(self, notification):
-        self.setupHelper()
+        setupHelper()
         self.setupUI()
         self.registerObserver()
-
-    def getProxyState(self, service):
-        if not service:
-            return
-
-        # Check if auto proxy is enabled
-        executeResult = subprocess.check_output(['networksetup', '-getautoproxyurl', service])
-        if ( executeResult.find('http://127.0.0.1:8086/proxy.pac\nEnabled: Yes') != -1 ):
-            return "pac"
-
-        # Check if global proxy is enabled
-        executeResult = subprocess.check_output(['networksetup', '-getwebproxy', service])
-        if ( executeResult.find('Enabled: Yes\nServer: 127.0.0.1\nPort: 8087') != -1 ):
-            return "gae"
-
-        return "disable"
-
-    def setupHelper(self):
-        try:
-            with open(os.devnull) as devnull:
-                subprocess.check_call(helper_path, stderr=devnull)
-        except:
-            cpCommand      = "cp \\\"%s\\\" \\\"%s\\\"" % (os.path.join(current_path, 'mac_helper'), helper_path)
-            chmodCommand   = "chmod 4777 \\\"%s\\\"" % helper_path
-            chownCommand   = "chown root \\\"%s\\\"" % helper_path
-            rootCommand    = """osascript -e 'do shell script "%s;%s;%s" with administrator privileges' """ % (cpCommand, chmodCommand, chownCommand)
-            executeCommand = rootCommand.encode('utf-8')
-
-            xlog.info("try setup helper:%s", executeCommand)
-            os.system(executeCommand)
-
-    def getCurrentServiceMenuItemTitle(self):
-        if currentService:
-            return 'Connection: %s' % currentService
-        else:
-            return 'Connection: None'
 
     def setupUI(self):
         self.statusbar = NSStatusBar.systemStatusBar()
@@ -88,7 +52,7 @@ class MacTrayObject(NSObject):
         self.statusitem.setToolTip_("XX-Net")
 
         # Get current selected mode
-        proxyState = self.getProxyState(currentService)
+        proxyState = getProxyState(currentService)
 
         # Build a very simple menu
         self.menu = NSMenu.alloc().initWithTitle_('XX-Net')
@@ -96,7 +60,7 @@ class MacTrayObject(NSObject):
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(self.getCurrentServiceMenuItemTitle(), None, '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
         self.menu.addItem_(menuitem)
         self.currentServiceMenuItem = menuitem
 
@@ -131,7 +95,7 @@ class MacTrayObject(NSObject):
         NSApp.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
 
     def updateStatusBarMenu(self):
-        self.currentServiceMenuItem.setTitle_(self.getCurrentServiceMenuItemTitle())
+        self.currentServiceMenuItem.setTitle_(getCurrentServiceMenuItemTitle())
 
         # Remove Tick before All Menu Items
         self.autoGaeProxyMenuItem.setState_(NSOffState)
@@ -139,7 +103,7 @@ class MacTrayObject(NSObject):
         self.disableGaeProxyMenuItem.setState_(NSOffState)
 
         # Get current selected mode
-        proxyState = self.getProxyState(currentService)
+        proxyState = getProxyState(currentService)
 
         # Update Tick before Menu Item
         if proxyState == 'pac':
@@ -176,15 +140,15 @@ class MacTrayObject(NSObject):
     def windowWillClose_(self, notification):
         executeResult = subprocess.check_output(['networksetup', '-listallnetworkservices'])
         services = executeResult.split('\n')
-        services = filter(lambda service : service and service.find('*') == -1 and self.getProxyState(service) != 'disable', services) # Remove disabled services and empty lines
+        services = filter(lambda service : service and service.find('*') == -1 and getProxyState(service) != 'disable', services) # Remove disabled services and empty lines
 
         if len(services) > 0:
             try:
-                map(self.helperDisableAutoProxy, services)
-                map(self.helperDisableGlobalProxy, services)
+                map(helperDisableAutoProxy, services)
+                map(helperDisableGlobalProxy, services)
             except:
-                disableAutoProxyCommand   = ';'.join(map(self.getDisableAutoProxyCommand, services))
-                disableGlobalProxyCommand = ';'.join(map(self.getDisableGlobalProxyCommand, services))
+                disableAutoProxyCommand   = ';'.join(map(getDisableAutoProxyCommand, services))
+                disableGlobalProxyCommand = ';'.join(map(getDisableGlobalProxyCommand, services))
                 rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
                 executeCommand            = rootCommand.encode('utf-8')
 
@@ -205,11 +169,11 @@ class MacTrayObject(NSObject):
 
     def enableAutoProxy_(self, _):
         try:
-            self.helperDisableGlobalProxy(currentService)
-            self.helperEnableAutoProxy(currentService)
+            helperDisableGlobalProxy(currentService)
+            helperEnableAutoProxy(currentService)
         except:
-            disableGlobalProxyCommand = self.getDisableGlobalProxyCommand(currentService)
-            enableAutoProxyCommand    = self.getEnableAutoProxyCommand(currentService)
+            disableGlobalProxyCommand = getDisableGlobalProxyCommand(currentService)
+            enableAutoProxyCommand    = getEnableAutoProxyCommand(currentService)
             rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableGlobalProxyCommand, enableAutoProxyCommand)
             executeCommand            = rootCommand.encode('utf-8')
 
@@ -219,11 +183,11 @@ class MacTrayObject(NSObject):
 
     def enableGlobalProxy_(self, _):
         try:
-            self.helperDisableAutoProxy(currentService)
-            self.helperEnableGlobalProxy(currentService)
+            helperDisableAutoProxy(currentService)
+            helperEnableGlobalProxy(currentService)
         except:
-            disableAutoProxyCommand   = self.getDisableAutoProxyCommand(currentService)
-            enableGlobalProxyCommand  = self.getEnableGlobalProxyCommand(currentService)
+            disableAutoProxyCommand   = getDisableAutoProxyCommand(currentService)
+            enableGlobalProxyCommand  = getEnableGlobalProxyCommand(currentService)
             rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, enableGlobalProxyCommand)
             executeCommand            = rootCommand.encode('utf-8')
 
@@ -233,11 +197,11 @@ class MacTrayObject(NSObject):
 
     def disableProxy_(self, _):
         try:
-            self.helperDisableAutoProxy(currentService)
-            self.helperDisableGlobalProxy(currentService)
+            helperDisableAutoProxy(currentService)
+            helperDisableGlobalProxy(currentService)
         except:
-            disableAutoProxyCommand   = self.getDisableAutoProxyCommand(currentService)
-            disableGlobalProxyCommand = self.getDisableGlobalProxyCommand(currentService)
+            disableAutoProxyCommand   = getDisableAutoProxyCommand(currentService)
+            disableGlobalProxyCommand = getDisableGlobalProxyCommand(currentService)
             rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
             executeCommand            = rootCommand.encode('utf-8')
             
@@ -245,37 +209,74 @@ class MacTrayObject(NSObject):
             os.system(executeCommand)
         self.updateStatusBarMenu()
 
-    # Generate commands for Apple Script
-    def getEnableAutoProxyCommand(self, service):
-        return "networksetup -setautoproxyurl \\\"%s\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\"" % service
 
-    def getDisableAutoProxyCommand(self, service):
-        return "networksetup -setautoproxystate \\\"%s\\\" off" % service
+def setupHelper():
+    try:
+        with open(os.devnull) as devnull:
+            subprocess.check_call(helper_path, stderr=devnull)
+    except:
+        cpCommand      = "cp \\\"%s\\\" \\\"%s\\\"" % (os.path.join(current_path, 'mac_helper'), helper_path)
+        chmodCommand   = "chmod 4777 \\\"%s\\\"" % helper_path
+        chownCommand   = "chown root \\\"%s\\\"" % helper_path
+        rootCommand    = """osascript -e 'do shell script "%s;%s;%s" with administrator privileges' """ % (cpCommand, chmodCommand, chownCommand)
+        executeCommand = rootCommand.encode('utf-8')
 
-    def getEnableGlobalProxyCommand(self, service):
-        enableHttpProxyCommand   = "networksetup -setwebproxy \\\"%s\\\" 127.0.0.1 8087" % service
-        enableHttpsProxyCommand  = "networksetup -setsecurewebproxy \\\"%s\\\" 127.0.0.1 8087" % service
-        return "%s;%s" % (enableHttpProxyCommand, enableHttpsProxyCommand)
+        xlog.info("try setup helper:%s", executeCommand)
+        os.system(executeCommand)
 
-    def getDisableGlobalProxyCommand(self, service):
-        disableHttpProxyCommand  = "networksetup -setwebproxystate \\\"%s\\\" off" % service
-        disableHttpsProxyCommand = "networksetup -setsecurewebproxystate \\\"%s\\\" off" % service
-        return "%s;%s" % (disableHttpProxyCommand, disableHttpsProxyCommand)
+def getCurrentServiceMenuItemTitle():
+    if currentService:
+        return 'Connection: %s' % currentService
+    else:
+        return 'Connection: None'
 
-    # Call helper
-    def helperEnableAutoProxy(self, service):
-        subprocess.check_call([helper_path, 'enableauto', service, 'http://127.0.0.1:8086/proxy.pac'])
+def getProxyState(service):
+    if not service:
+        return
 
-    def helperDisableAutoProxy(self, service):
-        subprocess.check_call([helper_path, 'disableauto', service])
+    # Check if auto proxy is enabled
+    executeResult = subprocess.check_output(['networksetup', '-getautoproxyurl', service])
+    if ( executeResult.find('http://127.0.0.1:8086/proxy.pac\nEnabled: Yes') != -1 ):
+        return "pac"
 
-    def helperEnableGlobalProxy(self, service):
-        subprocess.check_call([helper_path, 'enablehttp', service, '127.0.0.1', '8087'])
-        subprocess.check_call([helper_path, 'enablehttps', service, '127.0.0.1', '8087'])
+    # Check if global proxy is enabled
+    executeResult = subprocess.check_output(['networksetup', '-getwebproxy', service])
+    if ( executeResult.find('Enabled: Yes\nServer: 127.0.0.1\nPort: 8087') != -1 ):
+        return "gae"
 
-    def helperDisableGlobalProxy(self, service):
-        subprocess.check_call([helper_path, 'disablehttp', service])
-        subprocess.check_call([helper_path, 'disablehttps', service])
+    return "disable"
+
+# Generate commands for Apple Script
+def getEnableAutoProxyCommand(service):
+    return "networksetup -setautoproxyurl \\\"%s\\\" \\\"http://127.0.0.1:8086/proxy.pac\\\"" % service
+
+def getDisableAutoProxyCommand(service):
+    return "networksetup -setautoproxystate \\\"%s\\\" off" % service
+
+def getEnableGlobalProxyCommand(service):
+    enableHttpProxyCommand   = "networksetup -setwebproxy \\\"%s\\\" 127.0.0.1 8087" % service
+    enableHttpsProxyCommand  = "networksetup -setsecurewebproxy \\\"%s\\\" 127.0.0.1 8087" % service
+    return "%s;%s" % (enableHttpProxyCommand, enableHttpsProxyCommand)
+
+def getDisableGlobalProxyCommand(service):
+    disableHttpProxyCommand  = "networksetup -setwebproxystate \\\"%s\\\" off" % service
+    disableHttpsProxyCommand = "networksetup -setsecurewebproxystate \\\"%s\\\" off" % service
+    return "%s;%s" % (disableHttpProxyCommand, disableHttpsProxyCommand)
+
+# Call helper
+def helperEnableAutoProxy(service):
+    subprocess.check_call([helper_path, 'enableauto', service, 'http://127.0.0.1:8086/proxy.pac'])
+
+def helperDisableAutoProxy(service):
+    subprocess.check_call([helper_path, 'disableauto', service])
+
+def helperEnableGlobalProxy(service):
+    subprocess.check_call([helper_path, 'enablehttp', service, '127.0.0.1', '8087'])
+    subprocess.check_call([helper_path, 'enablehttps', service, '127.0.0.1', '8087'])
+
+def helperDisableGlobalProxy(service):
+    subprocess.check_call([helper_path, 'disablehttp', service])
+    subprocess.check_call([helper_path, 'disablehttps', service])
 
 
 sys_tray = MacTrayObject.alloc().init()
