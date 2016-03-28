@@ -140,9 +140,6 @@ msgstr "保存设置失败"
 msgid "Deploy XX-Net onto GAE"
 msgstr "部署XX-Net至GAE"
 
-msgid "Current status"
-msgstr "当前状态"
-
 msgid "idle"
 msgstr "空闲"
 
