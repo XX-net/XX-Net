@@ -544,10 +544,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['show_detail'] != 0 ) {
-                    $( "#show-detail").bootstrapSwitch('setState', true);
+                    $( "#show-detail").parent().bootstrapSwitch('setState', true);
                     $( "#details" ).slideDown();
                 } else {
-                    $( "#show-detail").bootstrapSwitch('setState', false);
+                    $( "#show-detail").parent().bootstrapSwitch('setState', false);
                     $( "#details" ).slideUp();
                 }
             }
