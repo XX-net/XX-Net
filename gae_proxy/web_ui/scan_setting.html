@@ -75,7 +75,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['auto_adjust_scan_ip_thread_num'] != 0 ) {
-                    $( "#auto-adjust-scan-ip-thread-num").parent().bootstrapSwitch('setState', true);
+                    $( "#auto-adjust-scan-ip-thread-num").parent().removeClass('switch-off');
+                    $( "#auto-adjust-scan-ip-thread-num").parent().addClass('switch-on');
+
+                    $( "#auto-adjust-scan-ip-thread-num").prop('checked', true);
                 }
                 $('#scan-ip-thread-num').val(result['scan_ip_thread_num']);
             },
