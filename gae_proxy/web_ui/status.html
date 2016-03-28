@@ -548,6 +548,11 @@
                     $( "#show-detail").parent().addClass('switch-on');
                     $( "#show-detail").prop('checked', true);
                     $( "#details" ).slideDown();
+                } else {
+                    $( "#show-detail").parent().addClass('switch-off');
+                    $( "#show-detail").parent().removeClass('switch-on');
+                    $( "#show-detail").prop('checked', false);
+                    $( "#details" ).slideUp();
                 }
             }
         });
