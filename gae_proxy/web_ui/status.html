@@ -444,7 +444,7 @@
     }
 
     function test_http_proxy_setting() {
-        if (window.http_proxy_setting === "OK") {
+        if (window.http_proxy_setting === "OK" || window.https_proxy_setting === "OK") {
             return "OK";
         }
 
