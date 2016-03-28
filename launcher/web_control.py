@@ -59,7 +59,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
-        #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
+        #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
         refer = self.headers.getheader('Referer')
@@ -193,7 +193,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         current_version = update_from_github.current_version()
         menu_content = ''
         for module,v in module_menus:
-            #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
+            #xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += '<li class="nav-header">%s</li>\n' % title
             for sub_id in v['sub_menus']:
@@ -458,7 +458,7 @@ def http_request(url, method="GET"):
         req = opener.open(url, timeout=30)
         return req
     except Exception as e:
-        #logging.exception("web_control http_request:%s fail:%s", url, e)
+        #xlog.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
 def confirm_xxnet_exit():
@@ -507,7 +507,7 @@ def confirm_module_ready(port):
 
         content = req.read(1024)
         req.close()
-        #logging.debug("cert_import_ready return:%s", content)
+        #xlog.debug("cert_import_ready return:%s", content)
         if content == "True":
             return True
         else:

@@ -444,7 +444,7 @@
     }
 
     function test_http_proxy_setting() {
-        if (window.http_proxy_setting === "OK") {
+        if (window.http_proxy_setting === "OK" || window.https_proxy_setting === "OK") {
             return "OK";
         }
 
@@ -544,10 +544,11 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['show_detail'] != 0 ) {
-                    $( "#show-detail").parent().removeClass('switch-off');
-                    $( "#show-detail").parent().addClass('switch-on');
-                    $( "#show-detail").prop('checked', true);
+                    $( "#show-detail").bootstrapSwitch('setState', true);
                     $( "#details" ).slideDown();
+                } else {
+                    $( "#show-detail").bootstrapSwitch('setState', false);
+                    $( "#details" ).slideUp();
                 }
             }
         });

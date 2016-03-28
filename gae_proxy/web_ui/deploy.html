@@ -47,21 +47,6 @@
     });
 </script>
 <script type="text/javascript">
-    $('label[for=advanced-options]').click(function() {
-        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
-
-        if ( !isAdvancedOptionsShown ) {
-            $('i.icon', this).removeClass('icon-chevron-right');
-            $('i.icon', this).addClass('icon-chevron-down');
-            $('#advanced-options').slideDown();
-        } else {
-            $('i.icon', this).removeClass('icon-chevron-down');
-            $('i.icon', this).addClass('icon-chevron-right');
-            $('#advanced-options').slideUp();
-        }
-    });
-</script>
-<script type="text/javascript">
     $('#log').scroll(function() {
         var preservedHeight = $('#log').height() + 10,
             scrollHeight    = $('#log')[0].scrollHeight,
