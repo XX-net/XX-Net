@@ -85,13 +85,15 @@ class Win_tray():
                         (u"全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked),
                         (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
                         (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                        (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0))
+                        (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0),
+                        (u'退出', None, SysTrayIcon.QUIT, False))
         else:
             menu_options = ((u"Config", None, self.on_show, 0),
                         (u"Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked),
                         (u"Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
                         (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
-                        (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0))
+                        (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0),
+                        (u'Quit', None, SysTrayIcon.QUIT, False))
         return menu_options
 
     def on_show(self, widget=None, data=None):
