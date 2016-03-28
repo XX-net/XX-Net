@@ -48,10 +48,6 @@ select:focus {
     outline: none;
 }
 
-.color-red {
-    color: red;
-}
-
 div#header a {
     color: #fff;
     text-decoration: none;
