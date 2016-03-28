@@ -365,7 +365,7 @@
 
                 if ( result['good_ip_num'] < 1){
                     if ( result['scan_ip_thread_num'] < 3 ){
-                        return updateProperty('#noob-info', '{{ _( "You may want to <a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">turn on IP scaner</a>." ) }}', 'none');
+                        return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">').replace('$2', '</a>'), 'none');
                     }else{
                         return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}', 'none');
                     }
