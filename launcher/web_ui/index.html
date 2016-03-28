@@ -34,16 +34,17 @@
                             <img src="/img/logo.png" alt="Logo">
                             XX-Net
                         </a>
+                        <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
                     </div> <!-- #logo -->
                     <div class="span4 text-right">
                         <ul class="inline">
                             <li>
-                                <a id="resize-window-trigger" href="javascript:void(0);" title="自适应宽度">
+                                <a id="resize-window-trigger" href="javascript:void(0);" title='{{ _( "Adaptive width" ) }}'>
                                     <img src="/img/fixed-width.png" alt="resize-window">
                                 </a>
                             </li>
                             <li>
-                                <a id="quit-trigger" href="javascript:void(0);" title="退出">
+                                <a id="quit-trigger" href="javascript:void(0);" title='{{ _( "Exit the program" ) }}'>
                                     <img src="/img/quit.png" alt="quit">
                                 </a>
                             </li>
@@ -111,6 +112,23 @@
                     tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
                 }
             });
+        });
+    </script>
+    <script type="text/javascript">
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['allow_remote_connect'] != 0 ) {
+                    $('#remote-connection-identifier').show();
+                }
+            }
         });
     </script>
 </body>
