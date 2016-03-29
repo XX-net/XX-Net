@@ -52,7 +52,6 @@ class SysTrayIcon(object):
         self._menu_actions_by_id = set()
 
         menu_options = menu_options or ()
-        menu_options = menu_options + (('Quit', None, SysTrayIcon.QUIT, False),)
         self._menu_options = self._add_ids_to_menu_options(list(menu_options))
         self._menu_actions_by_id = dict(self._menu_actions_by_id)
 

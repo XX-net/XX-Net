@@ -388,10 +388,6 @@ msgstr "به عیب یابی."
 msgid "Your local network failed. Please check your network and firewall. "
 msgstr "شبکه محلی شما را شکست خورده است. لطفا شبکه و فایروال خود را چک کنید."
 
-msgid ""
-"You may want to <a "
-msgstr ""
-
 msgid "XX-Net is scanning IP. Please wait about half an hour."
 msgstr "_XX-Net_ اسکن است. لطفا صبر کنید."
 

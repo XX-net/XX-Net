@@ -145,3 +145,11 @@ msgstr "配置"
 msgid "About"
 msgstr "关于"
 
+msgid "(Remote Web Control Enabled)"
+msgstr "(已允许远程连接)"
+
+msgid "Adaptive width"
+msgstr "自适应宽度"
+
+msgid "Exit the program"
+msgstr "退出程序"

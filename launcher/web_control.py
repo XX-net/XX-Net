@@ -420,7 +420,7 @@ process = 0
 server = 0
 def start():
     global process, server
-    # should use config.yaml to bing ip
+    # should use config.yaml to bind ip
     allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
     host_port = config.get(["modules", "launcher", "control_port"], 8085)
 

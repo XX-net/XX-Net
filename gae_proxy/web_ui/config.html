@@ -158,11 +158,16 @@
                 }
 
                 if ( result['host_appengine_mode'] == 'gae' ) {
-                    $('#deploy-via-gae').bootstrapSwitch('setState', true);
+                    $('#deploy-via-gae').parent().removeClass('switch-off');
+                    $('#deploy-via-gae').parent().addClass('switch-on');
+                    $('#deploy-via-gae').prop('checked', true);
                 }
 
                 if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
-                    $('#enable-proxy').bootstrapSwitch('setState', true)
+                    $('#enable-proxy').parent().removeClass('switch-off');
+                    $('#enable-proxy').parent().addClass('switch-on');
+
+                    $('#enable-proxy').prop('checked', true);
                     $('#proxy-options').slideDown();
                 }
                 $('#proxy-type').val(result['proxy_type']);
@@ -171,7 +176,9 @@
                 $('#proxy-username').val(result['proxy_user']);
                 $('#proxy-password').val(result['proxy_passwd']);
                 if ( result['use_ipv6'] == 1 ) {
-                    $('#use-ipv6').bootstrapSwitch('setState', true);
+                    $('#use-ipv6').parent().removeClass('switch-off');
+                    $('#use-ipv6').parent().addClass('switch-on');
+                    $('#use-ipv6').prop('checked', true);
                 }
             },
             error: function(){
