@@ -98,7 +98,10 @@
                 $('#php-password').val(result['php_password']);
 
                 if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
-                    $('#enable-front-proxy').parent().bootstrapSwitch('setState', true);
+                    $('#enable-front-proxy').parent().removeClass('switch-off');
+                    $('#enable-front-proxy').parent().addClass('switch-on');
+
+                    $('#enable-front-proxy').prop('checked', true);
                     $('#front-proxy-options').slideDown();
                 }
                 $('#proxy-host').val(result['proxy_host']);

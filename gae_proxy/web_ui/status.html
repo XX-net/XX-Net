@@ -544,10 +544,14 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['show_detail'] != 0 ) {
-                    $( "#show-detail").parent().bootstrapSwitch('setState', true);
+                    $( "#show-detail").parent().removeClass('switch-off');
+                    $( "#show-detail").parent().addClass('switch-on');
+                    $( "#show-detail").prop('checked', true);
                     $( "#details" ).slideDown();
                 } else {
-                    $( "#show-detail").parent().bootstrapSwitch('setState', false);
+                    $( "#show-detail").parent().addClass('switch-off');
+                    $( "#show-detail").parent().removeClass('switch-on');
+                    $( "#show-detail").prop('checked', false);
                     $( "#details" ).slideUp();
                 }
             }
