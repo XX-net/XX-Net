@@ -319,7 +319,10 @@ class CertUtil(object):
                 #    return -1
 
                 import win32elevate
-                win32elevate.elevateAdminRun(os.path.abspath(__file__))
+                try:
+                    win32elevate.elevateAdminRun(os.path.abspath(__file__))
+                except Exception as e:
+                    xlog.warning('CertUtil.import_windows_ca failed: %r', e)
                 return True
             else:
                 CertUtil.win32_notify(msg=u'已经导入GoAgent证书，请重启浏览器.', title=u'Restart browser need.')
