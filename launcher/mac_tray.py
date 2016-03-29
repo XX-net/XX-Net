@@ -42,7 +42,7 @@ class MacTrayObject(NSObject):
 
         # Set initial image icon
         icon_path = os.path.join(current_path, "web_ui", "favicon-mac.ico")
-        image = NSImage.alloc().initByReferencingFile_(icon_path)
+        image = NSImage.alloc().initByReferencingFile_(icon_path.decode('utf-8'))
         image.setScalesWhenResized_(True)
         image.setSize_((20, 20))
         self.statusitem.setImage_(image)
@@ -149,11 +149,10 @@ class MacTrayObject(NSObject):
             except:
                 disableAutoProxyCommand   = ';'.join(map(getDisableAutoProxyCommand, services))
                 disableGlobalProxyCommand = ';'.join(map(getDisableGlobalProxyCommand, services))
-                rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
-                executeCommand            = rootCommand.encode('utf-8')
+                executeCommand            = 'do shell script "%s;%s" with administrator privileges' % (disableAutoProxyCommand, disableGlobalProxyCommand)
 
                 xlog.info("try disable proxy:%s", executeCommand)
-                os.system(executeCommand)
+                subprocess.call(['osascript', '-e', executeCommand])
 
         module_init.stop_all()
         os._exit(0)
@@ -174,11 +173,10 @@ class MacTrayObject(NSObject):
         except:
             disableGlobalProxyCommand = getDisableGlobalProxyCommand(currentService)
             enableAutoProxyCommand    = getEnableAutoProxyCommand(currentService)
-            rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableGlobalProxyCommand, enableAutoProxyCommand)
-            executeCommand            = rootCommand.encode('utf-8')
+            executeCommand            = 'do shell script "%s;%s" with administrator privileges' % (disableGlobalProxyCommand, enableAutoProxyCommand)
 
             xlog.info("try enable auto proxy:%s", executeCommand)
-            os.system(executeCommand)
+            subprocess.call(['osascript', '-e', executeCommand])
         self.updateStatusBarMenu()
 
     def enableGlobalProxy_(self, _):
@@ -188,11 +186,10 @@ class MacTrayObject(NSObject):
         except:
             disableAutoProxyCommand   = getDisableAutoProxyCommand(currentService)
             enableGlobalProxyCommand  = getEnableGlobalProxyCommand(currentService)
-            rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, enableGlobalProxyCommand)
-            executeCommand            = rootCommand.encode('utf-8')
+            executeCommand            = 'do shell script "%s;%s" with administrator privileges' % (disableAutoProxyCommand, enableGlobalProxyCommand)
 
             xlog.info("try enable global proxy:%s", executeCommand)
-            os.system(executeCommand)
+            subprocess.call(['osascript', '-e', executeCommand])
         self.updateStatusBarMenu()
 
     def disableProxy_(self, _):
@@ -202,11 +199,10 @@ class MacTrayObject(NSObject):
         except:
             disableAutoProxyCommand   = getDisableAutoProxyCommand(currentService)
             disableGlobalProxyCommand = getDisableGlobalProxyCommand(currentService)
-            rootCommand               = """osascript -e 'do shell script "%s;%s" with administrator privileges' """ % (disableAutoProxyCommand, disableGlobalProxyCommand)
-            executeCommand            = rootCommand.encode('utf-8')
+            executeCommand            = 'do shell script "%s;%s" with administrator privileges' % (disableAutoProxyCommand, disableGlobalProxyCommand)
             
             xlog.info("try disable proxy:%s", executeCommand)
-            os.system(executeCommand)
+            subprocess.call(['osascript', '-e', executeCommand])
         self.updateStatusBarMenu()
 
 
@@ -215,14 +211,14 @@ def setupHelper():
         with open(os.devnull) as devnull:
             subprocess.check_call(helper_path, stderr=devnull)
     except:
+        rmCommand      = "rm \\\"%s\\\"" % helper_path
         cpCommand      = "cp \\\"%s\\\" \\\"%s\\\"" % (os.path.join(current_path, 'mac_helper'), helper_path)
-        chmodCommand   = "chmod 4777 \\\"%s\\\"" % helper_path
+        chmodCommand   = "chmod 4755 \\\"%s\\\"" % helper_path
         chownCommand   = "chown root \\\"%s\\\"" % helper_path
-        rootCommand    = """osascript -e 'do shell script "%s;%s;%s" with administrator privileges' """ % (cpCommand, chmodCommand, chownCommand)
-        executeCommand = rootCommand.encode('utf-8')
+        executeCommand = 'do shell script "%s;%s;%s;%s" with administrator privileges' % (rmCommand, cpCommand, chmodCommand, chownCommand)
 
         xlog.info("try setup helper:%s", executeCommand)
-        os.system(executeCommand)
+        subprocess.call(['osascript', '-e', executeCommand])
 
 def getCurrentServiceMenuItemTitle():
     if currentService:
