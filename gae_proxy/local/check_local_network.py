@@ -85,12 +85,7 @@ def _check_worker():
     _checking_lock.release()
     try:
         conn = http.client.HTTPSConnection("github.com", 443, timeout=30)
-        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                  "accept":"application/json, text/javascript, */*; q=0.01",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                  "connection":"keep-alive"
-                  }
+        header = {}
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
@@ -125,12 +120,7 @@ def _simple_check_worker():
     _checking_lock.release()
     try:
         conn = http.client.HTTPConnection("www.baidu.com", 80, timeout=3)
-        header = {"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36",
-                  "accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'zh-CN,zh;q=0.8,zh-TW;q=0.6,en-US;q=0.4,en;q=0.2',
-                  "connection":"keep-alive"
-                  }
+        header = {}
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
