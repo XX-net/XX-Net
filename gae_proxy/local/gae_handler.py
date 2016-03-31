@@ -452,6 +452,7 @@ def handler(method, url, headers, body, wfile):
 
         if len(response.app_msg):
             xlog.warn("APPID error:%d url:%s", response.status, url)
+            xlog.warn("response.app_msg:%s", urllib.quote(response.app_msg))
             wfile.write(response.app_msg)
             google_ip.report_connect_closed(response.ssl_sock.ip, "app err")
             response.close()
