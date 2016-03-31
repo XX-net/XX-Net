@@ -282,7 +282,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 return
         except:
             pass
-            
+
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -600,13 +600,17 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         time_now = time.time()
         data = "<html><body><div  style='float: left; white-space:nowrap;font-family: monospace;'>"
         data += "time:%d  pointer:%d<br>\r\n" % (time_now, google_ip.gws_ip_pointer)
-        data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th><th>links</th><th>get_time</th><th>success_time</th><th>fail_time</th>"
-        data += "<th>data_active</th><th>transfered_data</th><th>Trans</th><th>history</th></tr>\n"
+        data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th>"
+        data += "<th>down_fail</th><th>links</th>"
+        data += "<th>get_time</th><th>success_time</th><th>fail_time</th><th>down_fail_time</th>"
+        data += "<th>data_active</th><th>transfered_data</th><th>Trans</th>"
+        data += "<th>history</th></tr>\n"
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
 
             fail_times = google_ip.ip_dict[ip]["fail_times"]
+            down_fail = google_ip.ip_dict[ip]["down_fail"]
             links = google_ip.ip_dict[ip]["links"]
 
             get_time = google_ip.ip_dict[ip]["get_time"]
@@ -620,6 +624,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             fail_time = google_ip.ip_dict[ip]["fail_time"]
             if fail_time:
                 fail_time = time_now - fail_time
+
+            down_fail_time = google_ip.ip_dict[ip]["down_fail_time"]
+            if down_fail_time:
+                down_fail_time = time_now - down_fail_time
 
             data_active = google_ip.ip_dict[ip]["data_active"]
             if data_active:
@@ -641,9 +649,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 time_per = int((t - t0) * 1000)
                 t0 = t
                 str_out += "%d(%s) " % (time_per, v)
-            data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
-                    "<td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
-                    (i, ip, handshake_time, fail_times, links, get_time, success_time, fail_time,
+            data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
+                    "<td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
+                    (i, ip, handshake_time, fail_times, down_fail, links, get_time, success_time, fail_time, down_fail_time, \
                     active_time, transfered_data, transfered_quota, str_out)
             i += 1
 
