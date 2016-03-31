@@ -30,7 +30,6 @@ from scan_ip_log import scan_ip_log
 #
 # connect time is zero if you use socks proxy.
 #
-#
 # most case, connect time is 300ms - 600ms.
 # good case is 60ms
 # bad case is 1300ms and more.
@@ -73,6 +72,8 @@ class IpManager():
                  # 'fail_times' => N   continue timeout num, if connect success, reset to 0
                  # 'fail_time' => time.time(),  last fail time, next time retry will need more time.
                  # 'transfered_data' => X bytes
+                 # 'down_fail' => times of fails when download content data
+                 # 'down_fail_time'
                  # 'data_active' => transfered_data - n second, for select
                  # 'get_time' => ip used time.
                  # 'success_time' => last connect success time.
@@ -133,7 +134,7 @@ class IpManager():
             try:
                 if line.startswith("#"):
                     continue
-                    
+
                 str_l = line.split(' ')
 
                 if len(str_l) < 4:
@@ -148,8 +149,13 @@ class IpManager():
                 else:
                     fail_times = 0
 
+                if len(str_l) > 5:
+                    down_fail = int(str_l[5])
+                else:
+                    down_fail = 0
+
                 #xlog.info("load ip: %s time:%d domain:%s server:%s", ip, handshake_time, domain, server)
-                self.add_ip(ip, handshake_time, domain, server, fail_times)
+                self.add_ip(ip, handshake_time, domain, server, fail_times, down_fail)
             except Exception as e:
                 xlog.exception("load_ip line:%s err:%s", line, e)
 
@@ -170,8 +176,12 @@ class IpManager():
             ip_dict = sorted(self.ip_dict.items(),  key=lambda x: (x[1]['handshake_time'] + x[1]['fail_times'] * 1000))
             with open(self.good_ip_file, "w") as fd:
                 for ip, property in ip_dict:
-                    fd.write( "%s %s %s %d %d\n" %
-                        (ip, property['domain'], property['server'], property['handshake_time'], property['fail_times']) )
+                    fd.write( "%s %s %s %d %d %d\n" %
+                        (ip, property['domain'],
+                            property['server'],
+                            property['handshake_time'],
+                            property['fail_times'],
+                            property['down_fail']) )
 
             self.iplist_need_save = False
         except Exception as e:
@@ -191,7 +201,9 @@ class IpManager():
             for ip in self.ip_dict:
                 if 'gws' not in self.ip_dict[ip]['server']:
                     continue
-                ip_rate[ip] = self.ip_dict[ip]['handshake_time'] + (self.ip_dict[ip]['fail_times'] * 1000)
+                ip_rate[ip] = self.ip_dict[ip]['handshake_time'] + \
+                    (self.ip_dict[ip]['fail_times'] * 1000 ) + \
+                    (self.ip_dict[ip]['down_fail'] * 500 )
                 if self.ip_dict[ip]['fail_times'] == 0:
                     self.good_ip_num += 1
 
@@ -300,6 +312,12 @@ class IpManager():
                     self.gws_ip_pointer += 1
                     continue
 
+                down_fail_connect_interval = 600
+                down_fail_time = self.ip_dict[ip]["down_fail_time"]
+                if time_now - down_fail_time < down_fail_connect_interval:
+                    self.gws_ip_pointer += 1
+                    continue
+
                 if self.ip_dict[ip]['links'] >= config.max_links_per_ip:
                     self.gws_ip_pointer += 1
                     continue
@@ -316,7 +334,7 @@ class IpManager():
         finally:
             self.ip_lock.release()
 
-    def add_ip(self, ip, handshake_time, domain=None, server='', fail_times=0):
+    def add_ip(self, ip, handshake_time, domain=None, server='', fail_times=0, down_fail=0):
         if not isinstance(ip, basestring):
             xlog.error("add_ip input")
             return
@@ -345,7 +363,8 @@ class IpManager():
                                     "transfered_data":0, 'data_active':0,
                                     'domain':domain, 'server':server,
                                     "history":[[time.time(), handshake_time]], "fail_time":0,
-                                    "success_time":0, "get_time":0, "links":0}
+                                    "success_time":0, "get_time":0, "links":0,
+                                    "down_fail":down_fail, "down_fail_time":0}
 
             if 'gws' in server:
                 self.gws_ip_list.append(ip)
@@ -418,7 +437,7 @@ class IpManager():
 
                 if ip in self.gws_ip_list:
                     self.gws_ip_list.remove(ip)
-                
+
                 xlog.info("remove ip:%s left amount:%d gws_num:%d", ip, len(self.ip_dict), len(self.gws_ip_list))
                 return
 
@@ -450,7 +469,7 @@ class IpManager():
             check_local_network.triger_check_network()
             self.to_check_ip_queue.put((ip, time_now + 10))
             xlog.debug("report_connect_fail:%s", ip)
-        
+
         except Exception as e:
             xlog.exception("report_connect_fail err:%s", e)
         finally:
@@ -462,6 +481,26 @@ class IpManager():
 
     def report_connect_closed(self, ip, reason=""):
         xlog.debug("%s close:%s", ip, reason)
+        if reason != "down fail":
+            return
+
+        self.ip_lock.acquire()
+        try:
+            time_now = time.time()
+            if not ip in self.ip_dict:
+                return
+
+            if self.ip_dict[ip]['down_fail'] == 0:
+                self.good_ip_num -= 1
+
+            self.ip_dict[ip]['down_fail'] += 1
+            self.append_ip_history(ip, reason)
+            self.ip_dict[ip]["down_fail_time"] = time_now
+            xlog.debug("ssl_closed %s", ip)
+        except Exception as e:
+            xlog.error("ssl_closed %s err:%s", ip, e)
+        finally:
+            self.ip_lock.release()
 
     def ssl_closed(self, ip, reason=""):
         #xlog.debug("%s ssl_closed:%s", ip, reason)
@@ -596,7 +635,7 @@ class IpManager():
 
         self.keep_scan_all_exist_ip = True
         scan_threads = []
-        for i in range(0, 10):
+        for i in range(0, 50):
             th = threading.Thread(target=self.scan_exist_ip_worker, )
             th.start()
             scan_threads.append(th)
