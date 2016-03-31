@@ -116,7 +116,7 @@ def _simple_check_worker():
     _checking_num += 1
     _checking_lock.release()
     try:
-        conn = httplib.HTTPConnection("www.baidu.com", 80, timeout=3)
+        conn = httplib.HTTPConnection("www.google.cn", 80, timeout=3)
         header = {}
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
