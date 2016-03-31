@@ -119,7 +119,7 @@ def _simple_check_worker():
     _checking_num += 1
     _checking_lock.release()
     try:
-        conn = http.client.HTTPConnection("www.baidu.com", 80, timeout=3)
+        conn = http.client.HTTPConnection("www.google.cn", 80, timeout=3)
         header = {}
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
