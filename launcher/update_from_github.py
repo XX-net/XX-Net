@@ -114,7 +114,7 @@ def current_version():
 
 
 def get_github_versions():
-    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/README.md"
+    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/download.md"
     readme_target = os.path.join(download_path, "README.md")
 
     if not download_file(readme_url, readme_target):
