@@ -109,6 +109,14 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+# check for SSL
+try:
+    import ssl
+except ImportError:
+    _have_ssl = False
+else:
+    _have_ssl = True
+
 from urllib import (unwrap, unquote, splittype, splithost, quote,
      addinfourl, splitport, splittag, toBytes,
      splitattr, ftpwrapper, splituser, splitpasswd, splitvalue)
@@ -120,11 +128,30 @@ from urllib import localhost, url2pathname, getproxies, proxy_bypass
 __version__ = sys.version[:3]
 
 _opener = None
-def urlopen(url, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+def urlopen(url, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
+            cafile=None, capath=None, cadefault=False, context=None):
     global _opener
-    if _opener is None:
-        _opener = build_opener()
-    return _opener.open(url, data, timeout)
+    if cafile or capath or cadefault:
+        if context is not None:
+            raise ValueError(
+                "You can't pass both context and any of cafile, capath, and "
+                "cadefault"
+            )
+        if not _have_ssl:
+            raise ValueError('SSL support not available')
+        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                             cafile=cafile,
+                                             capath=capath)
+        https_handler = HTTPSHandler(context=context)
+        opener = build_opener(https_handler)
+    elif context:
+        https_handler = HTTPSHandler(context=context)
+        opener = build_opener(https_handler)
+    elif _opener is None:
+        _opener = opener = build_opener()
+    else:
+        opener = _opener
+    return opener.open(url, data, timeout)
 
 def install_opener(opener):
     global _opener
@@ -843,23 +870,13 @@ class AbstractBasicAuthHandler:
             password_mgr = HTTPPasswordMgr()
         self.passwd = password_mgr
         self.add_password = self.passwd.add_password
-        self.retried = 0
 
-    def reset_retry_count(self):
-        self.retried = 0
 
     def http_error_auth_reqed(self, authreq, host, req, headers):
         # host may be an authority (without userinfo) or a URL with an
         # authority
         # XXX could be multiple headers
         authreq = headers.get(authreq, None)
-
-        if self.retried > 5:
-            # retry sending the username:password 5 times before failing.
-            raise HTTPError(req.get_full_url(), 401, "basic auth failed",
-                            headers, None)
-        else:
-            self.retried += 1
 
         if authreq:
             mo = AbstractBasicAuthHandler.rx.search(authreq)
@@ -869,17 +886,14 @@ class AbstractBasicAuthHandler:
                     warnings.warn("Basic Auth Realm was unquoted",
                                   UserWarning, 2)
                 if scheme.lower() == 'basic':
-                    response = self.retry_http_basic_auth(host, req, realm)
-                    if response and response.code != 401:
-                        self.retried = 0
-                    return response
+                    return self.retry_http_basic_auth(host, req, realm)
 
     def retry_http_basic_auth(self, host, req, realm):
         user, pw = self.passwd.find_user_password(realm, host)
         if pw is not None:
             raw = "%s:%s" % (user, pw)
             auth = 'Basic %s' % base64.b64encode(raw).strip()
-            if req.headers.get(self.auth_header, None) == auth:
+            if req.get_header(self.auth_header, None) == auth:
                 return None
             req.add_unredirected_header(self.auth_header, auth)
             return self.parent.open(req, timeout=req.timeout)
@@ -895,7 +909,6 @@ class HTTPBasicAuthHandler(AbstractBasicAuthHandler, BaseHandler):
         url = req.get_full_url()
         response = self.http_error_auth_reqed('www-authenticate',
                                               url, req, headers)
-        self.reset_retry_count()
         return response
 
 
@@ -911,7 +924,6 @@ class ProxyBasicAuthHandler(AbstractBasicAuthHandler, BaseHandler):
         authority = req.get_host()
         response = self.http_error_auth_reqed('proxy-authenticate',
                                           authority, req, headers)
-        self.reset_retry_count()
         return response
 
 
@@ -1136,7 +1148,7 @@ class AbstractHTTPHandler(BaseHandler):
 
         return request
 
-    def do_open(self, http_class, req):
+    def do_open(self, http_class, req, **http_conn_args):
         """Return an addinfourl object for the request, using http_class.
 
         http_class must implement the HTTPConnection API from httplib.
@@ -1150,7 +1162,8 @@ class AbstractHTTPHandler(BaseHandler):
         if not host:
             raise URLError('no host given')
 
-        h = http_class(host, timeout=req.timeout) # will parse host:port
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
         h.set_debuglevel(self._debuglevel)
 
         headers = dict(req.unredirected_hdrs)
@@ -1218,8 +1231,13 @@ class HTTPHandler(AbstractHTTPHandler):
 if hasattr(httplib, 'HTTPS'):
     class HTTPSHandler(AbstractHTTPHandler):
 
+        def __init__(self, debuglevel=0, context=None):
+            AbstractHTTPHandler.__init__(self, debuglevel)
+            self._context = context
+
         def https_open(self, req):
-            return self.do_open(httplib.HTTPSConnection, req)
+            return self.do_open(httplib.HTTPSConnection, req,
+                context=self._context)
 
         https_request = AbstractHTTPHandler.do_request_
 

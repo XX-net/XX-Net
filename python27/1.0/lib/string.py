@@ -145,7 +145,11 @@ class Template:
         raise ValueError('Invalid placeholder in string: line %d, col %d' %
                          (lineno, colno))
 
-    def substitute(self, *args, **kws):
+    def substitute(*args, **kws):
+        if not args:
+            raise TypeError("descriptor 'substitute' of 'Template' object "
+                            "needs an argument")
+        self, args = args[0], args[1:]  # allow the "self" keyword be passed
         if len(args) > 1:
             raise TypeError('Too many positional arguments')
         if not args:
@@ -171,7 +175,11 @@ class Template:
                              self.pattern)
         return self.pattern.sub(convert, self.template)
 
-    def safe_substitute(self, *args, **kws):
+    def safe_substitute(*args, **kws):
+        if not args:
+            raise TypeError("descriptor 'safe_substitute' of 'Template' object "
+                            "needs an argument")
+        self, args = args[0], args[1:]  # allow the "self" keyword be passed
         if len(args) > 1:
             raise TypeError('Too many positional arguments')
         if not args:
@@ -182,24 +190,18 @@ class Template:
             mapping = args[0]
         # Helper function for .sub()
         def convert(mo):
-            named = mo.group('named')
+            named = mo.group('named') or mo.group('braced')
             if named is not None:
                 try:
                     # We use this idiom instead of str() because the latter
                     # will fail if val is a Unicode containing non-ASCII
                     return '%s' % (mapping[named],)
                 except KeyError:
-                    return self.delimiter + named
-            braced = mo.group('braced')
-            if braced is not None:
-                try:
-                    return '%s' % (mapping[braced],)
-                except KeyError:
-                    return self.delimiter + '{' + braced + '}'
+                    return mo.group()
             if mo.group('escaped') is not None:
                 return self.delimiter
             if mo.group('invalid') is not None:
-                return self.delimiter
+                return mo.group()
             raise ValueError('Unrecognized named group in pattern',
                              self.pattern)
         return self.pattern.sub(convert, self.template)
@@ -541,7 +543,19 @@ except ImportError:
 # The field name parser is implemented in str._formatter_field_name_split
 
 class Formatter(object):
-    def format(self, format_string, *args, **kwargs):
+    def format(*args, **kwargs):
+        if not args:
+            raise TypeError("descriptor 'format' of 'Formatter' object "
+                            "needs an argument")
+        self, args = args[0], args[1:]  # allow the "self" keyword be passed
+        try:
+            format_string, args = args[0], args[1:] # allow the "format_string" keyword be passed
+        except IndexError:
+            if 'format_string' in kwargs:
+                format_string = kwargs.pop('format_string')
+            else:
+                raise TypeError("format() missing 1 required positional "
+                                "argument: 'format_string'")
         return self.vformat(format_string, args, kwargs)
 
     def vformat(self, format_string, args, kwargs):

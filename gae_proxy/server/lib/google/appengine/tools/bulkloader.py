@@ -14,20 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 """Imports data over HTTP.
 
 Usage:
@@ -60,7 +46,6 @@ Usage:
     --download              Export entities to a file.
     --dry_run               Do not execute any remote_api calls.
     --dump                  Use zero-configuration dump format.
-    --email=<string>        The username to use. Will prompt if omitted.
     --exporter_opts=<string>
                             A string to pass to the Exporter.initialize method.
     --filename=<path>       Path to the file to import/export. (Required when
@@ -78,7 +63,6 @@ Usage:
     --mapper_opts=<string>  A string to pass to the Mapper.Initialize method.
     --num_threads=<int>     Number of threads to use for uploading/downloading
                             entities (Default: 10)
-    --passin                Read the login password from stdin.
     --restore               Restore from zero-configuration dump format.
     --result_db_filename=<path>
                             Result database to write to for downloads.
@@ -111,7 +95,6 @@ Example:
 import csv
 import errno
 import getopt
-import getpass
 import imp
 import logging
 import os
@@ -220,6 +203,9 @@ DEFAULT_REQUEST_LIMIT = 8
 
 MAXIMUM_INCREASE_DURATION = 5.0
 MAXIMUM_HOLD_DURATION = 12.0
+
+AUTH_FAILED_MESSAGE = ('Authentication Failed: Incorrect credentials or '
+                       'unsupported authentication type (e.g. OpenId).')
 
 
 def ImportStateMessage(state):
@@ -1193,45 +1179,36 @@ class MapperItem(KeyRangeItem):
     return transfer_time
 
 
-def IncrementId(high_id_key):
-  """Increment unique id counter associated with high_id_key beyond high_id_key.
+def ConvertKeys(keys):
+  """Convert a list of keys to a list of keys with the app_id of the caller.
 
   Args:
-    high_id_key: A key with a full path to the desired kind and id
-        value to which to increment the unique id counter beyond.
-  """
-  unused_start, end = datastore.AllocateIds(high_id_key, max=high_id_key.id())
-  assert end >= high_id_key.id()
-
-
-def _AuthFunction(host, email, passin, raw_input_fn, password_input_fn):
-  """Internal method shared between RequestManager and _GetRemoteAppId.
-
-  Args:
-    host: Hostname to present to the user.
-    email: Existing email address to use; if none, will prompt the user.
-    passin: Value of the --passin command line flag. If true, will get the
-      password using raw_input_fn insetad of password_input_fn.
-    raw_input_fn: Method to get a string, typically raw_input.
-    password_input_fn: Method to get a string, typically getpass.
+    keys: A list of datastore Entity Keys.
 
   Returns:
-    Pair, (email, password).
+    A new list of keys in the same order as the input with app_id set to the
+    default app_id in the calling context. Whichever input keys were already
+    of this app_id are copied by reference.
   """
-  if not email:
-    print 'Please enter login credentials for %s' % host
-    email = raw_input_fn('Email: ')
+  def ChangeApp(key, app_id):
+    if key.app() == app_id:
+      return key
+    return datastore.Key.from_path(namespace=key.namespace(),
+                                   _app=app_id, *key.to_path())
 
-  if email:
-    password_prompt = 'Password for %s: ' % email
-    if passin:
-      password = raw_input_fn(password_prompt)
-    else:
-      password = password_input_fn(password_prompt)
-  else:
-    password = None
+  app_id = datastore.Key.from_path('kind', 'name').app()
+  return [ChangeApp(key, app_id) for key in keys]
 
-  return email, password
+
+def ReserveKeys(keys):
+  """Reserve all ids in the paths of the given keys.
+
+  Args:
+    keys: A list of keys with ids in their paths, for which the corresponding
+        id sequences should be advanced to prevent id collisions.
+  """
+
+  datastore._GetConnection()._reserve_keys(ConvertKeys(keys))
 
 
 class RequestManager(object):
@@ -1245,11 +1222,10 @@ class RequestManager(object):
                throttle,
                batch_size,
                secure,
-               email,
-               passin,
                dry_run=False,
                server=None,
-               throttle_class=None):
+               throttle_class=None,
+               oauth2_parameters=None):
     """Initialize a RequestManager object.
 
     Args:
@@ -1260,8 +1236,6 @@ class RequestManager(object):
       throttle: A Throttle instance.
       batch_size: The number of entities to transfer per request.
       secure: Use SSL when communicating with server.
-      email: If not none, the username to log in with.
-      passin: If True, the password will be read from standard in.
       server: An existing AbstractRpcServer to reuse.
       throttle_class: A class to use instead of the default
         ThrottledHttpRpcServer.
@@ -1279,8 +1253,6 @@ class RequestManager(object):
     self.authenticated = False
     self.auth_called = False
     self.parallel_download = True
-    self.email = email
-    self.passin = passin
     self.mapper = None
     self.dry_run = dry_run
 
@@ -1298,13 +1270,14 @@ class RequestManager(object):
     if server:
       remote_api_stub.ConfigureRemoteApiFromServer(server, url_path, app_id)
     else:
-      remote_api_stub.ConfigureRemoteApi(
-          app_id,
-          url_path,
-          self.AuthFunction,
+      remote_api_stub.ConfigureRemoteApiForOAuth(
           servername=host_port,
-          rpc_server_factory=throttled_rpc_server_factory,
-          secure=self.secure)
+          path=url_path,
+          secure=self.secure,
+          oauth2_parameters=oauth2_parameters,
+          save_cookies=True,
+          auth_tries=3,
+          rpc_server_factory=throttled_rpc_server_factory)
 
     remote_api_throttle.ThrottleRemoteDatastore(self.throttle)
     logger.debug('Bulkloader using app_id: %s', os.environ['APPLICATION_ID'])
@@ -1319,50 +1292,53 @@ class RequestManager(object):
     remote_api_stub.MaybeInvokeAuthentication()
     self.authenticated = True
 
-  def AuthFunction(self,
-                   raw_input_fn=raw_input,
-                   password_input_fn=getpass.getpass):
-    """Prompts the user for a username and password.
-
-    Caches the results the first time it is called and returns the
-    same result every subsequent time.
+  def ReserveKeys(self, keys):
+    """Reserve all ids in the paths of the given keys.
 
     Args:
-      raw_input_fn: Used for dependency injection.
-      password_input_fn: Used for dependency injection.
-
-    Returns:
-      A pair of the username and password.
-    """
-    self.auth_called = True
-    return _AuthFunction(self.host, self.email, self.passin,
-                         raw_input_fn, password_input_fn)
-
-  def IncrementId(self, ancestor_path, kind, high_id):
-    """Increment the unique id counter associated with ancestor_path and kind.
-
-    Args:
-      ancestor_path: A list encoding the path of a key.
-      kind: The string name of a kind.
-      high_id: The int value to which to increment the unique id counter.
+      keys: A list of keys with ids in their paths, for which the corresponding
+          id sequences should be advanced to prevent id collisions.
     """
     if self.dry_run:
       return
-    high_id_key = datastore.Key.from_path(*(ancestor_path + [kind, high_id]))
-    IncrementId(high_id_key)
+    ReserveKeys(keys)
 
   def GetSchemaKinds(self):
-    """Returns the list of kinds for this app."""
-    global_stat = stats.GlobalStat.all().get()
+    """Returns the list of kinds for this app.
+
+    There can be 3 possible cases using namespaces:
+      a.) No namespace specified and Datastore has only default namespace ->
+          Query GlobalStat and KindStat.
+      b.) No namespace specified but Datastore has multiple namespace ->
+          Query NamespaceGlobalStat and NamespaceKindStat.
+      c.) Namespace specified and Datastore has multiple namespaces ->
+          Query NamespaceGlobalStat and NamespaceKindStat.
+
+    Returns:
+      A list of kinds.
+    """
+    namespaces = False
+
+    if (namespace_manager.get_namespace() or
+        stats.NamespaceStat.all().count() > 1):
+      namespaces = True
+
+    if namespaces:
+      global_kind = stats.NamespaceGlobalStat
+    else:
+      global_kind = stats.GlobalStat
+
+    kinds_kind = stats.NamespaceKindStat if namespaces else stats.KindStat
+
+    global_stat = global_kind.all().get()
     if not global_stat:
       raise KindStatError()
     timestamp = global_stat.timestamp
-    kind_stat = stats.KindStat.all().filter(
+    kind_stat = kinds_kind.all().filter(
         "timestamp =", timestamp).fetch(1000)
     kind_list = [stat.kind_name for stat in kind_stat
                  if stat.kind_name and not stat.kind_name.startswith('__')]
-    kind_set = set(kind_list)
-    return list(kind_set)
+    return list(set(kind_list))
 
   def EncodeContent(self, rows, loader=None):
     """Encodes row data to the wire format.
@@ -2637,7 +2613,6 @@ class Loader(object):
         For example:
           [('name', str),
            ('id_number', int),
-           ('email', datastore_types.Email),
            ('user', users.User),
            ('birthdate', lambda x: datetime.datetime.fromtimestamp(float(x))),
            ('description', datastore_types.Text),
@@ -2668,13 +2643,14 @@ class Loader(object):
     """
     Loader.__loaders[loader.kind] = loader
 
-  def get_high_ids(self):
-    """Returns dict {ancestor_path : {kind : id}} with high id values.
+  def get_keys_to_reserve(self):
+    """Returns keys with ids in their paths to be reserved.
 
-    The returned dictionary is used to increment the id counters
-    associated with each ancestor_path and kind to be at least id.
+    Returns:
+      A list of keys used to advance the id sequences associated with
+      each id to prevent collisions with future ids.
     """
-    return {}
+    return []
 
   def alias_old_names(self):
     """Aliases method names so that Loaders defined with old names work."""
@@ -2761,7 +2737,7 @@ class Loader(object):
     uploaded entities. The value returned should be None (to use a
     server generated numeric key), or a string which neither starts
     with a digit nor has the form __*__ (see
-    http://code.google.com/appengine/docs/python/datastore/keysandentitygroups.html),
+    https://developers.google.com/appengine/docs/python/datastore/entities),
     or a datastore.Key instance.
 
     If you generate your own string keys, keep in mind:
@@ -2882,39 +2858,38 @@ class RestoreLoader(Loader):
     self.queue = Queue.Queue(1000)
     restore_thread = RestoreThread(self.queue, filename)
     restore_thread.start()
-    self.high_id_table = self._find_high_id(self.generate_records(filename))
+    self.keys_to_reserve = self._find_keys_to_reserve(
+        self.generate_records(filename))
     restore_thread = RestoreThread(self.queue, filename)
     restore_thread.start()
 
-  def get_high_ids(self):
-    return dict(self.high_id_table)
+  def get_keys_to_reserve(self):
+    """Returns keys with ids in their paths to be reserved.
 
-  def _find_high_id(self, record_generator):
-    """Find the highest numeric id used for each ancestor-path, kind pair.
+    Returns:
+      A list of keys used to advance the id sequences associated with
+      each id to prevent collisions with future ids.
+    """
+    return self.keys_to_reserve
+
+  def _find_keys_to_reserve(self, record_generator):
+    """Find all entity keys with ids in their paths.
 
     Args:
       record_generator: A generator of entity_encoding strings.
 
     Returns:
-      A map from ancestor-path to maps from kind to id. {path : {kind : id}}
+      A list of keys to reserve.
     """
-    high_id = {}
+    keys_to_reserve = []
     for values in record_generator:
       entity = self.create_entity(values)
       key = entity.key()
-
-      if not key.id():
-        continue
-      kind = key.kind()
-      ancestor_path = []
-      if key.parent():
-        ancestor_path = key.parent().to_path()
-      if tuple(ancestor_path) not in high_id:
-        high_id[tuple(ancestor_path)] = {}
-      kind_map = high_id[tuple(ancestor_path)]
-      if kind not in kind_map or kind_map[kind] < key.id():
-        kind_map[kind] = key.id()
-    return high_id
+      for id_or_name in key.to_path()[1::2]:
+        if isinstance(id_or_name, (int, long)):
+          keys_to_reserve.append(key)
+          break
+    return keys_to_reserve
 
   def generate_records(self, filename):
     while True:
@@ -3010,7 +2985,6 @@ class Exporter(object):
       For example:
         [('name', str, None),
          ('id_number', str, None),
-         ('email', str, ''),
          ('user', str, None),
          ('birthdate',
           lambda x: str(datetime.datetime.fromtimestamp(float(x))),
@@ -3263,6 +3237,7 @@ class QueueJoinThread(threading.Thread):
       queue: The queue for this thread to join.
     """
     threading.Thread.__init__(self)
+    self.setDaemon(True)
     assert isinstance(queue, (Queue.Queue, ReQueue))
     self.queue = queue
 
@@ -3348,7 +3323,9 @@ class BulkTransporterApp(object):
                datasourcethread_factory=DataSourceThread,
                progress_queue_factory=Queue.Queue,
                thread_pool_factory=adaptive_thread_pool.AdaptiveThreadPool,
-               server=None):
+               throttle_class=None,
+               server=None,
+               oauth2_parameters=None):
     """Instantiate a BulkTransporterApp.
 
     Uploads or downloads data to or from application using HTTP requests.
@@ -3369,7 +3346,10 @@ class BulkTransporterApp(object):
       datasourcethread_factory: Used for dependency injection.
       progress_queue_factory: Used for dependency injection.
       thread_pool_factory: Used for dependency injection.
+      throttle_class: None, or class to use for throttling.
       server: An existing AbstractRpcServer to reuse.
+      oauth2_parameters: None, or an
+        appengine_rpc_httplib2.HttpRpcServerOAuth2.OAuth2Parameters instance.
     """
     self.app_id = arg_dict['application']
     self.post_url = arg_dict['url']
@@ -3377,10 +3357,7 @@ class BulkTransporterApp(object):
     self.batch_size = arg_dict['batch_size']
     self.input_generator_factory = input_generator_factory
     self.num_threads = arg_dict['num_threads']
-    self.email = arg_dict['email']
-    self.passin = arg_dict['passin']
     self.dry_run = arg_dict['dry_run']
-    self.throttle_class = arg_dict['throttle_class']
     self.throttle = throttle
     self.progress_db = progress_db
     self.progresstrackerthread_factory = progresstrackerthread_factory
@@ -3389,11 +3366,13 @@ class BulkTransporterApp(object):
     self.datasourcethread_factory = datasourcethread_factory
     self.progress_queue_factory = progress_queue_factory
     self.thread_pool_factory = thread_pool_factory
+    self.throttle_class = throttle_class
     self.server = server
     (scheme,
      self.host_port, self.url_path,
      unused_query, unused_fragment) = urlparse.urlsplit(self.post_url)
     self.secure = (scheme == 'https')
+    self.oauth2_parameters = oauth2_parameters
 
   def RunPostAuthentication(self):
     """Method that gets called after authentication."""
@@ -3415,18 +3394,18 @@ class BulkTransporterApp(object):
         self.num_threads, queue_size=self.max_queue_size)
 
     progress_queue = self.progress_queue_factory(self.max_queue_size)
-    self.request_manager = self.request_manager_factory(self.app_id,
-                                                        self.host_port,
-                                                        self.url_path,
-                                                        self.kind,
-                                                        self.throttle,
-                                                        self.batch_size,
-                                                        self.secure,
-                                                        self.email,
-                                                        self.passin,
-                                                        self.dry_run,
-                                                        self.server,
-                                                        self.throttle_class)
+    self.request_manager = self.request_manager_factory(
+        app_id=self.app_id,
+        host_port=self.host_port,
+        url_path=self.url_path,
+        kind=self.kind,
+        throttle=self.throttle,
+        batch_size=self.batch_size,
+        secure=self.secure,
+        dry_run=self.dry_run,
+        server=self.server,
+        throttle_class=self.throttle_class,
+        oauth2_parameters=self.oauth2_parameters)
     try:
 
 
@@ -3576,10 +3555,7 @@ class BulkUploaderApp(BulkTransporterApp):
 
   def RunPostAuthentication(self):
     loader = Loader.RegisteredLoader(self.kind)
-    high_id_table = loader.get_high_ids()
-    for ancestor_path, kind_map in high_id_table.iteritems():
-      for kind, high_id in kind_map.iteritems():
-        self.request_manager.IncrementId(list(ancestor_path), kind, high_id)
+    self.request_manager.ReserveKeys(loader.get_keys_to_reserve())
     return [self.kind]
 
   def ReportStatus(self):
@@ -3684,12 +3660,12 @@ REQUIRED_OPTION = object()
 
 
 BOOL_ARGS = ('create_config', 'debug', 'download', 'dry_run', 'dump',
-             'has_header', 'map', 'passin', 'restore')
+             'has_header', 'map', 'restore')
 INT_ARGS = ('bandwidth_limit', 'batch_size', 'http_limit', 'num_threads',
             'rps_limit')
 FILENAME_ARGS = ('config_file', 'db_filename', 'filename', 'log_file',
                  'result_db_filename')
-STRING_ARGS = ('application', 'auth_domain', 'email', 'exporter_opts',
+STRING_ARGS = ('application', 'auth_domain', 'exporter_opts',
                'kind', 'loader_opts', 'mapper_opts', 'namespace', 'url')
 DEPRECATED_OPTIONS = {'csv_has_header': 'has_header', 'app_id': 'application'}
 FLAG_SPEC = (['csv_has_header', 'help', 'app_id='] +
@@ -3734,7 +3710,6 @@ def ParseArguments(argv, die_fn=lambda: PrintUsageExit(1)):
   arg_dict['download'] = False
   arg_dict['dry_run'] = False
   arg_dict['dump'] = False
-  arg_dict['email'] = None
   arg_dict['exporter_opts'] = None
   arg_dict['has_header'] = False
   arg_dict['loader_opts'] = None
@@ -3742,7 +3717,6 @@ def ParseArguments(argv, die_fn=lambda: PrintUsageExit(1)):
   arg_dict['map'] = False
   arg_dict['mapper_opts'] = None
   arg_dict['namespace'] = ''
-  arg_dict['passin'] = False
   arg_dict['restore'] = False
   arg_dict['result_db_filename'] = None
   arg_dict['throttle_class'] = None
@@ -3759,7 +3733,7 @@ def ParseArguments(argv, die_fn=lambda: PrintUsageExit(1)):
       continue
     option = option[2:]
     if option in DEPRECATED_OPTIONS:
-      print >>sys.stderr, ('--%s is deprecated, please use --%s.' %
+      print >> sys.stderr, ('--%s is deprecated, please use --%s.' %
                            (option, DEPRECATED_OPTIONS[option]))
       option = DEPRECATED_OPTIONS[option]
 
@@ -3818,7 +3792,7 @@ def LoadYamlConfig(config_file_name):
     config_file_name: The name of the configuration file.
   """
   (loaders, exporters) = bulkloader_config.load_config(config_file_name,
-                                                       increment_id=IncrementId)
+                                                       reserve_keys=ReserveKeys)
   for cls in loaders:
     Loader.RegisterLoader(cls())
   for cls in exporters:
@@ -3865,7 +3839,7 @@ def LoadConfig(config_file_name, exit_fn=sys.exit):
 
       m = re.search(r"[^']*'([^']*)'.*", str(e))
       if m.groups() and m.group(1) == 'Loader':
-        print >>sys.stderr, """
+        print >> sys.stderr, """
 The config file format has changed and you appear to be using an old-style
 config file.  Please make the following changes:
 
@@ -3896,7 +3870,7 @@ to have access to.
           hasattr(bulkloader_config, 'bulkloader') and
           isinstance(e, bulkloader_config.bulkloader.NameClashError)):
         print >> sys.stderr, (
-            'Found both %s and %s while aliasing old names on %s.'%
+            'Found both %s and %s while aliasing old names on %s.' %
             (e.old_name, e.new_name, e.klass))
         exit_fn(1)
       else:
@@ -3916,7 +3890,7 @@ def GetArgument(kwargs, name, die_fn):
   if name in kwargs:
     return kwargs[name]
   else:
-    print >>sys.stderr, '%s argument required' % name
+    print >> sys.stderr, '%s argument required' % name
     die_fn()
 
 
@@ -4041,15 +4015,13 @@ def ProcessArguments(arg_dict,
 
 
   if errors:
-    print >>sys.stderr, '\n'.join(errors)
+    print >> sys.stderr, '\n'.join(errors)
     die_fn()
 
   return arg_dict
 
 
-def _GetRemoteAppId(url, throttle, email, passin,
-                    raw_input_fn=raw_input, password_input_fn=getpass.getpass,
-                    throttle_class=None):
+def _GetRemoteAppId(url, throttle, oauth2_parameters, throttle_class=None):
   """Get the App ID from the remote server."""
   scheme, host_port, url_path, _, _ = urlparse.urlsplit(url)
 
@@ -4059,12 +4031,8 @@ def _GetRemoteAppId(url, throttle, email, passin,
       remote_api_throttle.ThrottledHttpRpcServerFactory(
             throttle, throttle_class=throttle_class))
 
-  def AuthFunction():
-    return _AuthFunction(host_port, email, passin, raw_input_fn,
-                         password_input_fn)
-
   app_id, server = remote_api_stub.GetRemoteAppId(
-      host_port, url_path, AuthFunction,
+      servername=host_port, path=url_path, auth_func=oauth2_parameters,
       rpc_server_factory=throttled_rpc_server_factory, secure=secure)
 
   return app_id, server
@@ -4078,12 +4046,14 @@ def ParseKind(kind):
 
 
 def _PerformBulkload(arg_dict,
+                     oauth2_parameters=None,
                      check_file=CheckFile,
                      check_output_file=CheckOutputFile):
   """Runs the bulkloader, given the command line options.
 
   Args:
     arg_dict: Dictionary of bulkloader options.
+    oauth2_parameters: Parameters for OAuth2 authentication.
     check_file: Used for dependency injection.
     check_output_file: Used for dependency injection.
 
@@ -4111,21 +4081,20 @@ def _PerformBulkload(arg_dict,
   loader_opts = arg_dict['loader_opts']
   exporter_opts = arg_dict['exporter_opts']
   mapper_opts = arg_dict['mapper_opts']
-  email = arg_dict['email']
-  passin = arg_dict['passin']
   perform_map = arg_dict['map']
   dump = arg_dict['dump']
   restore = arg_dict['restore']
   create_config = arg_dict['create_config']
   namespace = arg_dict['namespace']
   dry_run = arg_dict['dry_run']
-  throttle_class = arg_dict['throttle_class']
+  throttle_class = (arg_dict['throttle_class']
+                    or remote_api_throttle.ThrottledHttpRpcServerOAuth2)
 
   if namespace:
     namespace_manager.set_namespace(namespace)
   os.environ['AUTH_DOMAIN'] = auth_domain
 
-  kind = ParseKind(kind)
+  kind = arg_dict['kind'] = ParseKind(kind)
 
   if not dump and not restore and not create_config:
 
@@ -4157,8 +4126,8 @@ def _PerformBulkload(arg_dict,
     if dry_run:
 
       raise ConfigurationError('Must sepcify application ID in dry run mode.')
-    app_id, server = _GetRemoteAppId(url, throttle, email, passin,
-                                       throttle_class=throttle_class)
+    app_id, server = _GetRemoteAppId(url, throttle, oauth2_parameters,
+                                     throttle_class=throttle_class)
 
     arg_dict['application'] = app_id
 
@@ -4231,11 +4200,13 @@ def _PerformBulkload(arg_dict,
                             RequestManager,
                             DataSourceThread,
                             Queue.Queue,
-                            server=server)
+                            throttle_class=throttle_class,
+                            server=server,
+                            oauth2_parameters=oauth2_parameters)
       try:
         return_code = app.Run()
       except AuthenticationError:
-        logger.info('Authentication Failed')
+        logger.error(AUTH_FAILED_MESSAGE)
     finally:
       loader.finalize()
   elif download or dump or create_config:
@@ -4265,11 +4236,12 @@ def _PerformBulkload(arg_dict,
                               RequestManager,
                               DataSourceThread,
                               Queue.Queue,
+                              throttle_class=throttle_class,
                               server=server)
       try:
         return_code = app.Run()
       except AuthenticationError:
-        logger.info('Authentication Failed')
+        logger.error(AUTH_FAILED_MESSAGE)
       except KindStatError:
         logger.error('Unable to download kind stats for all-kinds download.')
         logger.error('Kind stats are generated periodically by the appserver')
@@ -4300,11 +4272,12 @@ def _PerformBulkload(arg_dict,
                           RequestManager,
                           DataSourceThread,
                           Queue.Queue,
+                          throttle_class=throttle_class,
                           server=server)
       try:
         return_code = app.Run()
       except AuthenticationError:
-        logger.info('Authentication Failed')
+        logger.error(AUTH_FAILED_MESSAGE)
     finally:
       mapper.finalize()
   return return_code
@@ -4359,11 +4332,12 @@ def SetupLogging(arg_dict):
   adaptive_thread_pool.logger.propagate = False
 
 
-def Run(arg_dict):
+def Run(arg_dict, oauth2_parameters=None):
   """Sets up and runs the bulkloader, given the options as keyword arguments.
 
   Args:
     arg_dict: Dictionary of bulkloader options
+    oauth2_parameters: None, or the parameters for OAuth2 authentication.
 
   Returns:
     An exit code.
@@ -4372,7 +4346,7 @@ def Run(arg_dict):
 
   SetupLogging(arg_dict)
 
-  return _PerformBulkload(arg_dict)
+  return _PerformBulkload(arg_dict, oauth2_parameters)
 
 
 def main(argv):
@@ -4386,7 +4360,7 @@ def main(argv):
             for (key, value) in arg_dict.iteritems()
             if value is REQUIRED_OPTION]
   if errors:
-    print >>sys.stderr, '\n'.join(errors)
+    print >> sys.stderr, '\n'.join(errors)
     PrintUsageExit(1)
 
   SetupLogging(arg_dict)

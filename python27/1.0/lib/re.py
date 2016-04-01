@@ -104,6 +104,10 @@ This module also defines an exception 'error'.
 import sys
 import sre_compile
 import sre_parse
+try:
+    import _locale
+except ImportError:
+    _locale = None
 
 # public symbols
 __all__ = [ "match", "search", "sub", "subn", "split", "findall",
@@ -225,11 +229,16 @@ _MAXCACHE = 100
 
 def _compile(*key):
     # internal: compile pattern
-    cachekey = (type(key[0]),) + key
-    p = _cache.get(cachekey)
-    if p is not None:
-        return p
     pattern, flags = key
+    bypass_cache = flags & DEBUG
+    if not bypass_cache:
+        cachekey = (type(key[0]),) + key
+        try:
+            p, loc = _cache[cachekey]
+            if loc is None or loc == _locale.setlocale(_locale.LC_CTYPE):
+                return p
+        except KeyError:
+            pass
     if isinstance(pattern, _pattern_type):
         if flags:
             raise ValueError('Cannot process flags argument with a compiled pattern')
@@ -240,9 +249,16 @@ def _compile(*key):
         p = sre_compile.compile(pattern, flags)
     except error, v:
         raise error, v # invalid expression
-    if len(_cache) >= _MAXCACHE:
-        _cache.clear()
-    _cache[cachekey] = p
+    if not bypass_cache:
+        if len(_cache) >= _MAXCACHE:
+            _cache.clear()
+        if p.flags & LOCALE:
+            if not _locale:
+                return p
+            loc = _locale.setlocale(_locale.LC_CTYPE)
+        else:
+            loc = None
+        _cache[cachekey] = p, loc
     return p
 
 def _compile_repl(*key):

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-29 14:44+0800\n"
+"POT-Creation-Date: 2016-01-13 10:08+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -82,7 +82,7 @@ msgstr "توجه: غیر قابل دسترس قبل از appids مستقر هس�
 msgid "Advanced options"
 msgstr "گزینه های پیشرفته"
 
-msgid "Enable IPv6(CERNet only)"
+msgid "Enable IPv6(If it's available)"
 msgstr "فعال کردن IPv6 را (سرنت تنها)"
 
 msgid "LAN proxy(Generally not needed)"
@@ -354,14 +354,14 @@ msgstr "بحث"
 msgid "Show Details"
 msgstr "نمایش جزئیات"
 
-msgid "The Post to Github Issue needs to sign in your Github account"
+msgid "Post to Github issue needs to sign in your Github account"
 msgstr "بازخورد یک کلید نیاز به ثبت نام در حساب github خود را"
 
 msgid "To Google Groups"
 msgstr "به Google Groups"
 
-msgid "Post to Github Issue"
-msgstr "بررسی مسائل _Github_"
+msgid "Post to Github Issue..."
+msgstr "بررسی مسائل _Github_..."
 
 msgid "GAE Proxy Status Info"
 msgstr "GAE پروکسی وضعیت"
@@ -387,10 +387,6 @@ msgstr "به عیب یابی."
 
 msgid "Your local network failed. Please check your network and firewall. "
 msgstr "شبکه محلی شما را شکست خورده است. لطفا شبکه و فایروال خود را چک کنید."
-
-msgid ""
-"You may want to <a "
-msgstr ""
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
 msgstr "_XX-Net_ اسکن است. لطفا صبر کنید."
@@ -430,6 +426,16 @@ msgstr ""
 msgid ", Everything is OK. Welcome to the FREE Internet. "
 msgstr "، همه چی خوبه. به اینترنت خوش آمدید. "
 
+msgid ""
+"The status page is empty. Highly likely that XX-Net failed getting "
+"started. Please follow "
+msgstr ""
+"صفحه وضعیت خالی است. بسیار محتمل است که GAEProxy شروع کار شکست خورده است."
+" لطفا دنبال کنید"
+
+msgid "No response from process. It might have already exited."
+msgstr "هیچ پاسخی از روند GAEProxy. این ممکن است در حال حاضر خارج می شود."
+
 msgid "You are using the public Appid."
 msgstr "شما با استفاده از شناسه های عمومی است."
 
@@ -442,9 +448,5 @@ msgstr "پروکسی را فعال کنید در "
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
 
-
-
-
-
-
-
+msgid "Download"
+msgstr "دانلود"

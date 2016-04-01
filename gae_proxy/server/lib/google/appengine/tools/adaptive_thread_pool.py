@@ -14,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-
-
 """Provides thread-pool-like functionality for workers accessing App Engine.
 
 The pool adapts to slow or timing out requests by reducing the number of
 active workers, or increasing the number when requests latency reduces.
 """
+
 
 
 
@@ -120,7 +117,6 @@ class WorkerThread(threading.Thread):
   def run(self):
     """Perform the work of the thread."""
     logger.debug('[%s] %s: started', self.getName(), self.__class__.__name__)
-
 
 
     try:
@@ -351,11 +347,11 @@ class ThreadGate(object):
   thread_gate.StartWork()
   try:
     status = DoSomeWorkInvolvingLimitedSharedResources()
-    suceeded = IsStatusGood(status)
+    succeeded = IsStatusGood(status)
     badly_failed = IsStatusVeryBad(status)
   finally:
-    if suceeded:
-      # Suceeded, add more simultaneously enabled threads to the task.
+    if succeeded:
+      # Succeeded, add more simultaneously enabled threads to the task.
       thread_gate.FinishWork(instruction=ThreadGate.INCREASE)
     elif badly_failed:
       # Failed, or succeeded but with high resource load, reduce number of

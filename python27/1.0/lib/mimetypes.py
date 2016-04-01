@@ -245,12 +245,9 @@ class MimeTypes:
                     ctype = _winreg.EnumKey(mimedb, i)
                 except EnvironmentError:
                     break
-                try:
-                    ctype = ctype.encode(default_encoding) # omit in 3.x!
-                except UnicodeEncodeError:
-                    pass
                 else:
-                    yield ctype
+                    if '\0' not in ctype:
+                        yield ctype
                 i += 1
 
         default_encoding = sys.getdefaultencoding()
@@ -268,7 +265,6 @@ class MimeTypes:
                             continue
                         try:
                             mimetype = mimetype.encode(default_encoding)
-                            subkeyname = subkeyname.encode(default_encoding)
                         except UnicodeEncodeError:
                             continue
                         self.add_type(mimetype, subkeyname, strict)
@@ -373,9 +369,10 @@ def read_mime_types(file):
         f = open(file)
     except IOError:
         return None
-    db = MimeTypes()
-    db.readfp(f, True)
-    return db.types_map[True]
+    with f:
+        db = MimeTypes()
+        db.readfp(f, True)
+        return db.types_map[True]
 
 
 def _default_mime_types():

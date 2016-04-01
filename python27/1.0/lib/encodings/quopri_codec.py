@@ -21,7 +21,7 @@ def quopri_encode(input, errors='strict'):
     # using str() because of cStringIO's Unicode undesired Unicode behavior.
     f = StringIO(str(input))
     g = StringIO()
-    quopri.encode(f, g, 1)
+    quopri.encode(f, g, quotetabs=True)
     output = g.getvalue()
     return (output, len(input))
 
@@ -72,4 +72,5 @@ def getregentry():
         incrementaldecoder=IncrementalDecoder,
         streamwriter=StreamWriter,
         streamreader=StreamReader,
+        _is_text_encoding=False,
     )

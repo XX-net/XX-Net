@@ -269,7 +269,7 @@ class Pickler:
     def save(self, obj):
         # Check for persistent id (defined by a subclass)
         pid = self.persistent_id(obj)
-        if pid:
+        if pid is not None:
             self.save_pers(pid)
             return
 
@@ -402,7 +402,13 @@ class Pickler:
             write(REDUCE)
 
         if obj is not None:
-            self.memoize(obj)
+            # If the object is already in the memo, this means it is
+            # recursive. In this case, throw away everything we put on the
+            # stack, and fetch the object back from the memo.
+            if id(obj) in self.memo:
+                write(POP + self.get(self.memo[id(obj)][0]))
+            else:
+                self.memoize(obj)
 
         # More new special cases (that work with older protocols as
         # well): when __reduce__ returns a tuple with 4 or 5 items,

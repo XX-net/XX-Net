@@ -594,11 +594,16 @@ class FTP:
 
     def close(self):
         '''Close the connection without assuming anything about it.'''
-        if self.file is not None:
-            self.file.close()
-        if self.sock is not None:
-            self.sock.close()
-        self.file = self.sock = None
+        try:
+            file = self.file
+            self.file = None
+            if file is not None:
+                file.close()
+        finally:
+            sock = self.sock
+            self.sock = None
+            if sock is not None:
+                sock.close()
 
 try:
     import ssl
@@ -638,12 +643,24 @@ else:
         '221 Goodbye.'
         >>>
         '''
-        ssl_version = ssl.PROTOCOL_TLSv1
+        ssl_version = ssl.PROTOCOL_SSLv23
 
         def __init__(self, host='', user='', passwd='', acct='', keyfile=None,
-                     certfile=None, timeout=_GLOBAL_DEFAULT_TIMEOUT):
+                     certfile=None, context=None,
+                     timeout=_GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+            if context is not None and keyfile is not None:
+                raise ValueError("context and keyfile arguments are mutually "
+                                 "exclusive")
+            if context is not None and certfile is not None:
+                raise ValueError("context and certfile arguments are mutually "
+                                 "exclusive")
             self.keyfile = keyfile
             self.certfile = certfile
+            if context is None:
+                context = ssl._create_stdlib_context(self.ssl_version,
+                                                     certfile=certfile,
+                                                     keyfile=keyfile)
+            self.context = context
             self._prot_p = False
             FTP.__init__(self, host, user, passwd, acct, timeout)
 
@@ -656,12 +673,12 @@ else:
             '''Set up secure control connection by using TLS/SSL.'''
             if isinstance(self.sock, ssl.SSLSocket):
                 raise ValueError("Already using TLS")
-            if self.ssl_version == ssl.PROTOCOL_TLSv1:
+            if self.ssl_version >= ssl.PROTOCOL_SSLv23:
                 resp = self.voidcmd('AUTH TLS')
             else:
                 resp = self.voidcmd('AUTH SSL')
-            self.sock = ssl.wrap_socket(self.sock, self.keyfile, self.certfile,
-                                        ssl_version=self.ssl_version)
+            self.sock = self.context.wrap_socket(self.sock,
+                                                 server_hostname=self.host)
             self.file = self.sock.makefile(mode='rb')
             return resp
 
@@ -692,8 +709,8 @@ else:
         def ntransfercmd(self, cmd, rest=None):
             conn, size = FTP.ntransfercmd(self, cmd, rest)
             if self._prot_p:
-                conn = ssl.wrap_socket(conn, self.keyfile, self.certfile,
-                                       ssl_version=self.ssl_version)
+                conn = self.context.wrap_socket(conn,
+                                                server_hostname=self.host)
             return conn, size
 
         def retrbinary(self, cmd, callback, blocksize=8192, rest=None):

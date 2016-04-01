@@ -14,11 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-
-
 """A thread-safe queue in which removed objects put back to the front."""
+
 
 
 import logging

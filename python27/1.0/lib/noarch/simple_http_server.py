@@ -5,12 +5,15 @@ import threading
 import mimetools
 import socket
 import errno
-import xlog
 import sys
 import select
 import time
+import json
 
-logging = xlog.Logger()
+
+import xlog
+logging = xlog.getLogger("simple_http_server")
+
 
 class HttpServerHandler():
     default_request_version = "HTTP/1.1"
@@ -137,7 +140,7 @@ class HttpServerHandler():
             elif self.command == "PUT":
                 self.do_PUT()
             else:
-                logging.warn("unhandler cmd:%s", self.command)
+                logging.warn("unhandler cmd:%s path:%s from:%s", self.command, self.path, self.address_string())
                 return
 
             self.wfile.flush() #actually send the response if not already done.
@@ -155,41 +158,32 @@ class HttpServerHandler():
         #except OpenSSL.SSL.SysCallError as e:
         #    logging.warn("socket error:%r", e)
         except Exception as e:
-            logging.exception("handler:%r", e)
+            logging.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
             pass
 
     def do_GET(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_POST(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_PUT(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_DELETE(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_OPTIONS(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_HEAD(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def do_CONNECT(self):
-        pass
+        logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
-
-    def send_response(self, mimetype, data):
-        no_cache = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
-        try:
-            self.wfile.write(('HTTP/1.1 200\r\n%sAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n'
-                 % (no_cache, mimetype, len(data))).encode())
-            self.wfile.write(data)
-        except:
-            pass
 
     def send_error(self, code, message=None):
         self.wfile.write('HTTP/1.1 %d\r\n' % code)
@@ -197,17 +191,22 @@ class HttpServerHandler():
         if message:
             self.wfile.write(message)
 
-    def send_response_data(self, mimetype="", content="", heads="", status=200):
+    def send_response(self, mimetype="", content="", headers="", status=200):
         data = []
         data.append('HTTP/1.1 %d\r\n' % status)
         if len(mimetype):
             data.append('Content-Type: %s\r\n' % mimetype)
+
         data.append('Content-Length: %s\r\n' % len(content))
-        if len(heads):
-            data.append(heads)
+        if len(headers):
+            if isinstance(headers, dict):
+                for key in headers:
+                    data.append("%s: %s\r\n" % (key, headers[key]))
+            elif isinstance(headers, basestring):
+                data.append(headers)
         data.append("\r\n")
 
-        if len(content) + len(heads) < 1024:
+        if len(content) < 1024:
             data.append(content)
             data_str = "".join(data)
             self.wfile.write(data_str)
@@ -239,9 +238,14 @@ class HttpServerHandler():
             pass
             #logging.warn("download broken")
 
+    def response_json(self, res_arr):
+        data = json.dumps(res_arr, indent=0, sort_keys=True)
+        self.send_response('application/json', data)
+
 
 class HTTPServer():
     def __init__(self, address, handler, args=(), use_https=False, cert=""):
+        self.sockets = []
         self.running = True
         if isinstance(address, tuple):
             self.server_address = [address]
@@ -256,31 +260,40 @@ class HTTPServer():
         #logging.info("server %s:%d started.", address[0], address[1])
 
     def init_socket(self):
-        self.sockets = []
         for addr in self.server_address:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                sock.bind(addr)
-            except Exception as e:
-                logging.error("bind to %s:%d fail", addr[0], addr[1])
-                raise e
+            self.add_listen(addr)
 
-            if self.use_https:
-                import OpenSSL
-                ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
-                #server.pem's location (containing the server private key and the server certificate).
-                fpem = self.cert
-                ctx.use_privatekey_file(fpem)
-                ctx.use_certificate_file(fpem)
-                sock = OpenSSL.SSL.Connection(ctx, sock)
-            sock.listen(200)
-            self.sockets.append(sock)
-            logging.info("server %s:%d started.", addr[0], addr[1])
+    def add_listen(self, addr):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(addr)
+        except Exception as e:
+            logging.error("bind to %s:%d fail", addr[0], addr[1])
+            raise e
+
+        if self.use_https:
+            import OpenSSL
+            if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_2_METHOD
+            elif hasattr(OpenSSL.SSL, "TLSv1_1_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_1_METHOD
+            elif hasattr(OpenSSL.SSL, "TLSv1_METHOD"):
+                ssl_version = OpenSSL.SSL.TLSv1_METHOD
+
+            ctx = OpenSSL.SSL.Context(ssl_version)
+            #server.pem's location (containing the server private key and the server certificate).
+            fpem = self.cert
+            ctx.use_privatekey_file(fpem)
+            ctx.use_certificate_file(fpem)
+            sock = OpenSSL.SSL.Connection(ctx, sock)
+        sock.listen(200)
+        self.sockets.append(sock)
+        logging.info("server %s:%d started.", addr[0], addr[1])
 
     def serve_forever(self):
         while self.running:
-            r, w, e = select.select(self.sockets, [], [], 1)
+            r, w, e = select.select(self.sockets, [], [], 3)
             for rsock in r:
                 try:
                     (sock, address) = rsock.accept()
@@ -288,8 +301,9 @@ class HTTPServer():
                     logging.warn("socket accept fail(errno: %s).", e.args[0])
                     if e.args[0] == 10022:
                         logging.info("restart socket server.")
+                        self.server_close()
                         self.init_socket()
-                    return
+                    break
                 self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
@@ -304,7 +318,7 @@ class HTTPServer():
     def server_close(self):
         for sock in self.sockets:
             sock.close()
-
+        self.sockets = []
 
 class TestHttpServer(HttpServerHandler):
     def __init__(self, sock, client, args):
@@ -325,7 +339,7 @@ class TestHttpServer(HttpServerHandler):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
-        #logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
+        logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 
         if url_path == '/':
             data = "OK\r\n"
@@ -351,6 +365,7 @@ class TestHttpServer(HttpServerHandler):
                 self.send_file(target, "application/x-binary")
             else:
                 self.wfile.write('HTTP/1.1 404\r\nContent-Length: 0\r\n\r\n' )
+
 
 def main(data_path="."):
     logging.info("listen http on 8880")

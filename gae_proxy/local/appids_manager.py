@@ -15,62 +15,36 @@ class APPID_manager(object):
     lock = threading.Lock()
 
     def __init__(self):
-        if len(config.GAE_APPIDS) == 0:
-            xlog.error("No usable appid left, add new appid to continue use GAEProxy")
-            return
-
-        self.lock.acquire()
-        try:
-            self.working_appid_list = list(config.GAE_APPIDS)
-            self.not_exist_appids = []
-            self.out_of_quota_appids = []
-        finally:
-            self.lock.release()
-
-        self.last_reset_time = 0
+        self.reset_appid()
 
     def reset_appid(self):
         # called by web_control
-        self.lock.acquire()
-        try:
-            self.working_appid_list = list(config.GAE_APPIDS)
+        with self.lock:
+            if len(config.GAE_APPIDS) == 0:
+                self.working_appid_list = list(config.PUBLIC_APPIDS)
+            else:
+                self.working_appid_list = list(config.GAE_APPIDS)
             self.not_exist_appids = []
             self.out_of_quota_appids = []
-        finally:
-            self.lock.release()
-
+        self.last_reset_time = time.time()
 
     def get_appid(self):
         if len(self.working_appid_list) == 0:
-            if len(config.GAE_APPIDS) == 0:
-                xlog.warn("no usable appid left")
-                time.sleep(60)
-                return None
-                
             if time.time() - self.last_reset_time < 600:
                 xlog.warn("all appid out of quota, need 10 min to reset")
                 return None
             else:
                 xlog.warn("reset appid")
-                self.lock.acquire()
-                self.working_appid_list = list(config.GAE_APPIDS)
-                self.out_of_quota_appids = []
-                self.lock.release()
-                self.last_reset_time = time.time()
+                self.reset_appid()
 
         return random.choice(self.working_appid_list)
 
     def report_out_of_quota(self, appid):
         xlog.warn("report_out_of_quota:%s", appid)
-        self.lock.acquire()
-        try:
+        with self.lock:
             if appid not in self.out_of_quota_appids:
                 self.out_of_quota_appids.append(appid)
             self.working_appid_list.remove(appid)
-        except:
-            pass
-        finally:
-            self.lock.release()
 
     def report_not_exist(self, appid, ip):
         xlog.debug("report_not_exist:%s %s", appid, ip)
@@ -87,14 +61,11 @@ class APPID_manager(object):
 
     def set_appid_not_exist(self, appid):
         xlog.warn("APPID_manager, set_appid_not_exist %s", appid)
-        self.lock.acquire()
-        try:
+        with self.lock:
             if appid not in self.not_exist_appids:
                 self.not_exist_appids.append(appid)
                 config.GAE_APPIDS.remove(appid)
                 self.working_appid_list.remove(appid)
-        finally:
-            self.lock.release()
 
     def appid_exist(self, appids):
         for appid in appids.split('|'):
@@ -106,5 +77,4 @@ class APPID_manager(object):
 
 
 appid_manager = APPID_manager()
-
 

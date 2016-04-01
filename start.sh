@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPTPATH=`dirname "${BASH_SOURCE[0]}"`
+SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPTPATH
 
 if hash python2 2>/dev/null; then

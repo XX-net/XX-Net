@@ -31,12 +31,13 @@
 
 
 
+
 import logging
 import os
 
 from google.appengine.api import appinfo
 from google.appengine.api import appinfo_errors
-#from google.appengine.ext import builtins
+from google.appengine.ext import builtins
 
 
 class IncludeFileNotFound(Exception):
@@ -44,7 +45,31 @@ class IncludeFileNotFound(Exception):
 
 
 def Parse(appinfo_file, open_fn=open):
-  """Parse an AppYaml file and merge referenced includes and builtins."""
+  """Parse an AppYaml file and merge referenced includes and builtins.
+
+  Args:
+    appinfo_file: an opened file, for example the result of open('app.yaml').
+    open_fn: a function to open included files.
+
+  Returns:
+    The parsed appinfo.AppInfoExternal object.
+  """
+  appyaml, _ = ParseAndReturnIncludePaths(appinfo_file, open_fn)
+  return appyaml
+
+
+def ParseAndReturnIncludePaths(appinfo_file, open_fn=open):
+  """Parse an AppYaml file and merge referenced includes and builtins.
+
+  Args:
+    appinfo_file: an opened file, for example the result of open('app.yaml').
+    open_fn: a function to open included files.
+
+  Returns:
+    A tuple where the first element is the parsed appinfo.AppInfoExternal
+    object and the second element is a list of the absolute paths of the
+    included files, in no particular order.
+  """
   try:
     appinfo_path = appinfo_file.name
     if not os.path.isfile(appinfo_path):
@@ -55,12 +80,17 @@ def Parse(appinfo_file, open_fn=open):
                     'attribute "name" as as full file path.')
 
   appyaml = appinfo.LoadSingleAppInfo(appinfo_file)
-  #appyaml = _MergeBuiltinsIncludes(appinfo_path, appyaml, open_fn)
+  appyaml, include_paths = _MergeBuiltinsIncludes(appinfo_path, appyaml,
+                                                  open_fn)
 
 
   if not appyaml.handlers:
-    raise appinfo_errors.MissingURLMapping(
-        'No URLMap entries found in application configuration')
+
+    if appyaml.IsVm():
+      appyaml.handlers = [appinfo.URLMap(url='.*', script='PLACEHOLDER')]
+    else:
+      raise appinfo_errors.MissingURLMapping(
+          'No URLMap entries found in application configuration')
   if len(appyaml.handlers) > appinfo.MAX_URL_MAPS:
     raise appinfo_errors.TooManyURLMappings(
         'Found more than %d URLMap entries in application configuration' %
@@ -73,7 +103,7 @@ def Parse(appinfo_file, open_fn=open):
             'Threadsafe cannot be enabled with CGI handler: %s' %
             handler.script)
 
-  return appyaml
+  return appyaml, include_paths
 
 
 def _MergeBuiltinsIncludes(appinfo_path, appyaml, open_fn=open):
@@ -86,7 +116,9 @@ def _MergeBuiltinsIncludes(appinfo_path, appyaml, open_fn=open):
              reading yaml files.
 
   Returns:
-    the modified appyaml object which incorporates referenced yaml files.
+    A tuple where the first element is the modified appyaml object
+    incorporating the referenced yaml files, and the second element is a list
+    of the absolute paths of the included files, in no particular order.
   """
 
 
@@ -99,16 +131,22 @@ def _MergeBuiltinsIncludes(appinfo_path, appyaml, open_fn=open):
       appyaml.builtins.append(appinfo.BuiltinHandler(default='on'))
 
 
-  aggregate_appinclude = (
+
+  runtime_for_including = appyaml.runtime
+  if runtime_for_including == 'vm':
+    runtime_for_including = appyaml.vm_settings.get('vm_runtime', 'python27')
+  aggregate_appinclude, include_paths = (
       _ResolveIncludes(appinfo_path,
                        appinfo.AppInclude(builtins=appyaml.builtins,
                                           includes=appyaml.includes),
                        os.path.dirname(appinfo_path),
-                       appyaml.runtime,
+                       runtime_for_including,
                        open_fn=open_fn))
 
-  return appinfo.AppInclude.MergeAppYamlAppInclude(appyaml,
-                                                   aggregate_appinclude)
+  return (
+      appinfo.AppInclude.MergeAppYamlAppInclude(appyaml,
+                                                aggregate_appinclude),
+      include_paths)
 
 
 def _ResolveIncludes(included_from, app_include, basepath, runtime, state=None,
@@ -131,12 +169,14 @@ def _ResolveIncludes(included_from, app_include, basepath, runtime, state=None,
     open_fn: file opening function udes, used when reading yaml files.
 
   Returns:
-    AppInclude object merged from following all builtins/includes defined in
-    provided AppInclude object.
+    A two-element tuple where the first element is the AppInclude object merged
+    from following all builtins/includes defined in provided AppInclude object;
+    and the second element is a list of the absolute paths of the included
+    files, in no particular order.
 
   Raises:
     IncludeFileNotFound: if file specified in an include statement cannot be
-    resolved to an includeable file (result from _ResolvePath is False).
+      resolved to an includeable file (result from _ResolvePath is False).
   """
 
   class RecurseState(object):
@@ -187,7 +227,7 @@ def _ResolveIncludes(included_from, app_include, basepath, runtime, state=None,
           logging.warning('Nothing to include in %s', inc_path)
 
 
-  return state.aggregate_appinclude
+  return state.aggregate_appinclude, state.includes.keys()
 
 
 def _ConvertBuiltinsToIncludes(included_from, app_include, state, runtime):

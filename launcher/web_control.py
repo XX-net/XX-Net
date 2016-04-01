@@ -47,7 +47,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1: # skip php_proxy module
                 continue
 
-            #version = values["current_version"]
             menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml") # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
@@ -60,7 +59,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
         #for k,v in self.module_menus:
-        #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
+        #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
         refer = self.headers.getheader('Referer')
@@ -144,15 +143,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 mimetype = 'text/css'
             elif file_path.endswith('.html'):
                 mimetype = 'text/html'
-
             elif file_path.endswith('.jpg'):
                 mimetype = 'image/jpeg'
             elif file_path.endswith('.png'):
                 mimetype = 'image/png'
             else:
                 mimetype = 'text/plain'
-
-
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
@@ -194,9 +190,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
         index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
 
+        current_version = update_from_github.current_version()
         menu_content = ''
         for module,v in module_menus:
-            #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
+            #xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += '<li class="nav-header">%s</li>\n' % title
             for sub_id in v['sub_menus']:
@@ -217,7 +214,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = (index_content.decode('utf-8') % (current_version, current_version, menu_content, right_content.decode('utf-8') )).encode('utf-8')
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -233,7 +230,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif check_update == 1:
                 check_update = "stable"
 
-            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
+            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
+             "show_systray": %d, "auto_start": %d, "show_detail": %d, "php_enable": %d, "gae_proxy_enable": %d, \
+             "x_tunnel_enable": %d}' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
@@ -242,7 +241,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "php_proxy", "auto_start"], 0)
-                    , config.get(["modules", "gae_proxy", "auto_start"], 0))
+                    , config.get(["modules", "gae_proxy", "auto_start"], 0)
+                    , config.get(["modules", "x_tunnel", "auto_start"], 0)
+                    )
         elif reqs['cmd'] == ['set_config']:
             if 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
@@ -355,6 +356,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.stop("php_proxy")
                     self.load_module_menus()
                     data = '{"res":"success"}'
+            elif 'x_tunnel_enable' in reqs :
+                x_tunnel_enable = int(reqs['x_tunnel_enable'][0])
+                if x_tunnel_enable != 0 and x_tunnel_enable != 1:
+                    data = '{"res":"fail, x_tunnel_enable:%s"}' % x_tunnel_enable
+                else:
+                    config.set(["modules", "x_tunnel", "auto_start"], x_tunnel_enable)
+                    config.save()
+                    if x_tunnel_enable:
+                        module_init.start("x_tunnel")
+                    else:
+                        module_init.stop("x_tunnel")
+                    self.load_module_menus()
+                    data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
 
@@ -406,7 +420,7 @@ process = 0
 server = 0
 def start():
     global process, server
-    # should use config.yaml to bing ip
+    # should use config.yaml to bind ip
     allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
     host_port = config.get(["modules", "launcher", "control_port"], 8085)
 
@@ -444,7 +458,7 @@ def http_request(url, method="GET"):
         req = opener.open(url, timeout=30)
         return req
     except Exception as e:
-        #logging.exception("web_control http_request:%s fail:%s", url, e)
+        #xlog.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
 def confirm_xxnet_exit():
@@ -493,7 +507,7 @@ def confirm_module_ready(port):
 
         content = req.read(1024)
         req.close()
-        #logging.debug("cert_import_ready return:%s", content)
+        #xlog.debug("cert_import_ready return:%s", content)
         if content == "True":
             return True
         else:
@@ -501,5 +515,6 @@ def confirm_module_ready(port):
     return False
 
 if __name__ == "__main__":
+    pass
     #confirm_xxnet_exit()
-    http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")
+    # http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

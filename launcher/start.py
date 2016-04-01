@@ -8,7 +8,10 @@ import atexit
 # reduce resource request for threading
 # for OpenWrt
 import threading
-threading.stack_size(128*1024)
+try:
+    threading.stack_size(128*1024)
+except:
+    pass
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))

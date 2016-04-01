@@ -282,7 +282,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 return
         except:
             pass
-            
+
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -350,18 +350,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     @staticmethod
     def xxnet_version():
-        readme_file = os.path.join(root_path, "README.md")
+        version_file = os.path.join(root_path, "version.txt")
         try:
-            fd = open(readme_file, "r")
-            lines = fd.readlines()
-            import re
-            p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+)') #zip/([0-9]+).([0-9]+).([0-9]+)
-            #m = p.match(content)
-            for line in lines:
-                m = p.match(line)
-                if m:
-                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
-                    return version
+            fd = open(version_file, "r")
+            version = fd.read()
+            return version
         except Exception as e:
             xlog.exception("xxnet_version fail")
         return "get_version_fail"
@@ -467,8 +460,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
                 user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
                 user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
-                if not user_config.user_special.proxy_port:
+                try:
+                    user_config.user_special.proxy_port = int(user_config.user_special.proxy_port)
+                except:
                     user_config.user_special.proxy_port = 0
+
                 user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
@@ -477,7 +473,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
                         if not check_local_network.check_ipv6():
-                            xlog.warn("Enable Ipv6 but check failed.")
+                            xlog.warn("IPv6 was enabled, but check failed.")
                             return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 
                     user_config.user_special.use_ipv6 = use_ipv6
@@ -527,10 +523,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         os.remove(log_path)
                     script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
 
-                    email = self.postvars['email'][0]
-                    passwd = self.postvars['passwd'][0]
-                    rc4_passwd = self.postvars['rc4_passwd'][0]
-                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid, email, passwd, rc4_passwd])
+                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid])
                     xlog.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:
@@ -607,13 +600,17 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         time_now = time.time()
         data = "<html><body><div  style='float: left; white-space:nowrap;font-family: monospace;'>"
         data += "time:%d  pointer:%d<br>\r\n" % (time_now, google_ip.gws_ip_pointer)
-        data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th><th>links</th><th>get_time</th><th>success_time</th><th>fail_time</th>"
-        data += "<th>data_active</th><th>transfered_data</th><th>Trans</th><th>history</th></tr>\n"
+        data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th>"
+        data += "<th>down_fail</th><th>links</th>"
+        data += "<th>get_time</th><th>success_time</th><th>fail_time</th><th>down_fail_time</th>"
+        data += "<th>data_active</th><th>transfered_data</th><th>Trans</th>"
+        data += "<th>history</th></tr>\n"
         i = 1
         for ip in google_ip.gws_ip_list:
             handshake_time = google_ip.ip_dict[ip]["handshake_time"]
 
             fail_times = google_ip.ip_dict[ip]["fail_times"]
+            down_fail = google_ip.ip_dict[ip]["down_fail"]
             links = google_ip.ip_dict[ip]["links"]
 
             get_time = google_ip.ip_dict[ip]["get_time"]
@@ -627,6 +624,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             fail_time = google_ip.ip_dict[ip]["fail_time"]
             if fail_time:
                 fail_time = time_now - fail_time
+
+            down_fail_time = google_ip.ip_dict[ip]["down_fail_time"]
+            if down_fail_time:
+                down_fail_time = time_now - down_fail_time
 
             data_active = google_ip.ip_dict[ip]["data_active"]
             if data_active:
@@ -648,9 +649,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 time_per = int((t - t0) * 1000)
                 t0 = t
                 str_out += "%d(%s) " % (time_per, v)
-            data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
-                    "<td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
-                    (i, ip, handshake_time, fail_times, links, get_time, success_time, fail_time,
+            data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
+                    "<td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
+                    (i, ip, handshake_time, fail_times, down_fail, links, get_time, success_time, fail_time, down_fail_time, \
                     active_time, transfered_data, transfered_quota, str_out)
             i += 1
 
@@ -706,9 +707,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         filename = cert_util.CertUtil.ca_keyfile
         with open(filename, 'rb') as fp:
             data = fp.read()
-        mimetype = "text/plain"
+        mimetype = 'application/x-x509-ca-cert'
 
-        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: attachment; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
+        self.wfile.write(('HTTP/1.1 200\r\nContent-Disposition: inline; filename=CA.crt\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
         self.wfile.write(data)
 
     def req_is_ready_handler(self):

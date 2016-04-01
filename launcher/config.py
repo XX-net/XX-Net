@@ -60,7 +60,9 @@ def recheck_module_path():
     global config
     need_save_config = False
 
-    modules = ["gae_proxy", "launcher", "php_proxy"]
+    xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
+
+    modules = ["gae_proxy", "launcher", "php_proxy", "x_tunnel"]
     for module in modules:
         if module not in ["launcher", "php_proxy"]:
             if not os.path.isdir(os.path.join(root_path, module)):
@@ -69,6 +71,9 @@ def recheck_module_path():
 
             if get(["modules", module, "auto_start"], -1) == -1:
                 set(["modules", module, "auto_start"], 1)
+
+    if get(["modules", "launcher", "xxnet_port"], 0) == 0:
+        set(["modules", "launcher", "xxnet_port"], xxnet_port)
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         set(["modules", "launcher", "control_port"], 8085)

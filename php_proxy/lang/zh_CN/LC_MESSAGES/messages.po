@@ -1,0 +1,68 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2016-02-20 18:30+0800\n"
+"PO-Revision-Date: 2015-02-02 18:30+0800\n"
+"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
+"Language: zh_Hans_CN\n"
+"Language-Team: zh_Hans_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+msgid "Config"
+msgstr "配置"
+
+msgid "Log"
+msgstr "日志"
+
+msgid "PHP Server URL"
+msgstr "PHP 服务器地址"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Default: "
+msgstr "默认："
+
+msgid "Frontend Proxy"
+msgstr "前置代理"
+
+msgid "Address"
+msgstr "地址"
+
+msgid "Example: "
+msgstr "例如："
+
+msgid "Port"
+msgstr "端口"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Save and Restart PHP Proxy"
+msgstr "保存并重启PHP代理"
+
+msgid "Help: "
+msgstr "帮助："
+
+msgid "PHP Proxy Config"
+msgstr "PHP代理配置"
+
+msgid "PHP proxy is disabled. Please enable it in <a href=\"/?module=launcher&menu=config\">system settings</a>."
+msgstr "PHP代理被禁用，请先在<a href="/?module=launcher&menu=config">系统配置</a>的高级选项中启用PHP代理。"
+
+msgid "Settings saved."
+msgstr "设置已保存。"
+
+msgid "Unknown error occurred."
+msgstr "发生了未知错误。"
+
+msgid "PHP Proxy Log"
+msgstr "PHP Proxy 日志 "

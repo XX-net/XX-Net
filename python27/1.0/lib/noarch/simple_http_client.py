@@ -23,6 +23,7 @@ class Connection():
 
 class HTTP_client():
     def __init__(self, address, http_proxy=None, use_https=False, conn_life=30, cert="CA.crt"):
+        # address can be set or tuple [host, port]
         self.address = address
         self.http_proxy = http_proxy
         self.use_https = use_https
@@ -78,19 +79,20 @@ class HTTP_client():
             conn = Connection(sock)
             return conn
 
-    def request(self, method="GET", path="", header=None, data="", timeout=60):
+    def request(self, method="GET", path="", header={}, data="", timeout=60):
         response = None
         start_time = time.time()
         end_time = start_time + timeout
         try:
             time_request = time.time()
-            url = self.address[0]
-            header = {"Content-Length": str(len(data)), "Host": self.address[0]}
+            header["Content-Length"] = str(len(data))
+            host = self.address[0] + ":" + str(self.address[1])
+            header["Host"] = host
             if path.startswith("/"):
                 req_path = self.path_base + path
             else:
                 req_path = self.path_base + "/" + path
-            response = self.fetch(method, self.address[0], req_path, header, data, timeout)
+            response = self.fetch(method, host, req_path, header, data, timeout=timeout)
             if not response:
                 #logging.warn("post return fail")
                 return "", False, response
@@ -99,32 +101,56 @@ class HTTP_client():
                 #logging.warn("post status:%r", response.status)
                 return "", response.status, response
 
-            content_length = int(response.getheader('Content-Length', 0))
-            start, end, length = 0, content_length-1, content_length
+            response_headers = dict((k.title(), v) for k, v in response.getheaders())
 
-            last_read_time = time.time()
-            data_buffer = []
-            while True:
-                if start > end:
-                    self.sock_pool.put(response.conn)
-                    #logging.info("POST t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
-                    response_data = "".join(data_buffer)
-                    return response_data, 200, response
-
-                data = response.read(65535)
-                if not data:
-                    if time.time() - last_read_time > 20 or time.time() > end_time:
-                        response.close()
-                        #logging.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
+            if 'Transfer-Encoding' in response_headers:
+                length = 0
+                data_buffer = []
+                while True:
+                    try:
+                        data = response.read(8192)
+                    except httplib.IncompleteRead, e:
+                        data = e.partial
+                    except Exception as e:
+                        xlog.warn("Transfer-Encoding e:%r ", e)
                         return "", False, response
+                    
+
+                    if not data:
+                        break
                     else:
-                        time.sleep(0.1)
-                        continue
+                        data_buffer.append(data)
+
+                #self.sock_pool.put(response.conn)
+                response_data = "".join(data_buffer)
+                return response_data, 200, response
+            else:
+                content_length = int(response.getheader('Content-Length', 0))
+                start, end, length = 0, content_length-1, content_length
 
                 last_read_time = time.time()
-                data_len = len(data)
-                start += data_len
-                data_buffer.append(data)
+                data_buffer = []
+                while True:
+                    if start > end:
+                        self.sock_pool.put(response.conn)
+                        #logging.info("POST t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, req_path)
+                        response_data = "".join(data_buffer)
+                        return response_data, 200, response
+
+                    data = response.read(65535)
+                    if not data:
+                        if time.time() - last_read_time > 20 or time.time() > end_time:
+                            response.close()
+                            #logging.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), req_path)
+                            return "", False, response
+                        else:
+                            time.sleep(0.1)
+                            continue
+
+                    last_read_time = time.time()
+                    data_len = len(data)
+                    start += data_len
+                    data_buffer.append(data)
         except IOError, e:
             if e.errno == errno.EPIPE:
                 pass
@@ -138,6 +164,9 @@ class HTTP_client():
         request_data = '%s %s HTTP/1.1\r\n' % (method, path)
         request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
         request_data += '\r\n'
+
+        #print("request:%s" % request_data)
+        #print("payload:%s" % payload)
 
         conn = self.get_conn()
         if not conn:

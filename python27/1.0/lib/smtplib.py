@@ -57,6 +57,7 @@ __all__ = ["SMTPException", "SMTPServerDisconnected", "SMTPResponseException",
 SMTP_PORT = 25
 SMTP_SSL_PORT = 465
 CRLF = "\r\n"
+_MAXLINE = 8192 # more than 8 times larger than RFC 821, 4.5.3
 
 OLDSTYLE_AUTH = re.compile(r"auth=(.*)", re.I)
 
@@ -179,10 +180,14 @@ else:
         def __init__(self, sslobj):
             self.sslobj = sslobj
 
-        def readline(self):
+        def readline(self, size=-1):
+            if size < 0:
+                size = None
             str = ""
             chr = None
             while chr != "\n":
+                if size is not None and len(str) >= size:
+                    break
                 chr = self.sslobj.read(1)
                 if not chr:
                     break
@@ -353,7 +358,7 @@ class SMTP:
             self.file = self.sock.makefile('rb')
         while 1:
             try:
-                line = self.file.readline()
+                line = self.file.readline(_MAXLINE + 1)
             except socket.error as e:
                 self.close()
                 raise SMTPServerDisconnected("Connection unexpectedly closed: "
@@ -363,6 +368,8 @@ class SMTP:
                 raise SMTPServerDisconnected("Connection unexpectedly closed")
             if self.debuglevel > 0:
                 print>>stderr, 'reply:', repr(line)
+            if len(line) > _MAXLINE:
+                raise SMTPResponseException(500, "Line too long.")
             resp.append(line[4:].strip())
             code = line[:3]
             # Check that the error code is syntactically correct.
@@ -743,17 +750,25 @@ class SMTP:
 
     def close(self):
         """Close the connection to the SMTP server."""
-        if self.file:
-            self.file.close()
-        self.file = None
-        if self.sock:
-            self.sock.close()
-        self.sock = None
+        try:
+            file = self.file
+            self.file = None
+            if file:
+                file.close()
+        finally:
+            sock = self.sock
+            self.sock = None
+            if sock:
+                sock.close()
 
 
     def quit(self):
         """Terminate the SMTP session."""
         res = self.docmd("quit")
+        # A new EHLO is required after reconnecting with connect()
+        self.ehlo_resp = self.helo_resp = None
+        self.esmtp_features = {}
+        self.does_esmtp = False
         self.close()
         return res
 

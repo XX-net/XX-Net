@@ -11,6 +11,7 @@ except ImportError:
 import warnings
 
 from collections import deque as _deque
+from itertools import count as _count
 from time import time as _time, sleep as _sleep
 from traceback import format_exc as _format_exc
 
@@ -564,7 +565,7 @@ class _Event(_Verbose):
 
     def _reset_internal_locks(self):
         # private!  called by Thread._reset_internal_locks by _after_fork()
-        self.__cond.__init__()
+        self.__cond.__init__(Lock())
 
     def isSet(self):
         'Return true if and only if the internal flag is true.'
@@ -579,12 +580,9 @@ class _Event(_Verbose):
         that call wait() once the flag is true will not block at all.
 
         """
-        self.__cond.acquire()
-        try:
+        with self.__cond:
             self.__flag = True
             self.__cond.notify_all()
-        finally:
-            self.__cond.release()
 
     def clear(self):
         """Reset the internal flag to false.
@@ -593,11 +591,8 @@ class _Event(_Verbose):
         set the internal flag to true again.
 
         """
-        self.__cond.acquire()
-        try:
+        with self.__cond:
             self.__flag = False
-        finally:
-            self.__cond.release()
 
     def wait(self, timeout=None):
         """Block until the internal flag is true.
@@ -614,20 +609,16 @@ class _Event(_Verbose):
         True except if a timeout is given and the operation times out.
 
         """
-        self.__cond.acquire()
-        try:
+        with self.__cond:
             if not self.__flag:
                 self.__cond.wait(timeout)
             return self.__flag
-        finally:
-            self.__cond.release()
 
 # Helper to generate new thread names
-_counter = 0
+_counter = _count().next
+_counter() # Consume 0 so first non-main thread has id 1.
 def _newname(template="Thread-%d"):
-    global _counter
-    _counter = _counter + 1
-    return template % _counter
+    return template % _counter()
 
 # Active thread administration
 _active_limbo_lock = _allocate_lock()
@@ -818,10 +809,10 @@ class Thread(_Verbose):
                 # shutdown) use self.__stderr.  Otherwise still use sys (as in
                 # _sys) in case sys.stderr was redefined since the creation of
                 # self.
-                if _sys:
-                    _sys.stderr.write("Exception in thread %s:\n%s\n" %
-                                      (self.name, _format_exc()))
-                else:
+                if _sys and _sys.stderr is not None:
+                    print>>_sys.stderr, ("Exception in thread %s:\n%s" %
+                                         (self.name, _format_exc()))
+                elif self.__stderr is not None:
                     # Do the best job possible w/o a huge amt. of code to
                     # approximate a traceback (code ideas from
                     # Lib/traceback.py)

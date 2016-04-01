@@ -59,18 +59,6 @@ try:
 except NameError:
     _unicode = False
 
-#
-# _srcfile is used when walking the stack to check when we've got the first
-# caller stack frame.
-#
-if hasattr(sys, 'frozen'): #support for py2exe
-    _srcfile = "logging%s__init__%s" % (os.sep, __file__[-4:])
-elif __file__[-4:].lower() in ['.pyc', '.pyo']:
-    _srcfile = __file__[:-4] + '.py'
-else:
-    _srcfile = __file__
-_srcfile = os.path.normcase(_srcfile)
-
 # next bit filched from 1.5.2's inspect.py
 def currentframe():
     """Return the frame object for the caller's stack frame."""
@@ -81,6 +69,12 @@ def currentframe():
 
 if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(3)
 # done filching
+
+#
+# _srcfile is used when walking the stack to check when we've got the first
+# caller stack frame.
+#
+_srcfile = os.path.normcase(currentframe.__code__.co_filename)
 
 # _srcfile is only used in conjunction with sys._getframe().
 # To provide compatibility with older versions of Python, set _srcfile
@@ -916,14 +910,19 @@ class FileHandler(StreamHandler):
         """
         self.acquire()
         try:
-            if self.stream:
-                self.flush()
-                if hasattr(self.stream, "close"):
-                    self.stream.close()
-                self.stream = None
-            # Issue #19523: call unconditionally to
-            # prevent a handler leak when delay is set
-            StreamHandler.close(self)
+            try:
+                if self.stream:
+                    try:
+                        self.flush()
+                    finally:
+                        stream = self.stream
+                        self.stream = None
+                        if hasattr(stream, "close"):
+                            stream.close()
+            finally:
+                # Issue #19523: call unconditionally to
+                # prevent a handler leak when delay is set
+                StreamHandler.close(self)
         finally:
             self.release()
 

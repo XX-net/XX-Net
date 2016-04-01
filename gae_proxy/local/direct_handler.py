@@ -22,6 +22,8 @@ from config import config
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
+#"GAE", "Google Frontend", "GSE", "GFE/2.0",
+google_server_types = ["ClientMapServer"]
 
 
 def send_header(wfile, keyword, value):
@@ -29,15 +31,15 @@ def send_header(wfile, keyword, value):
     if keyword == 'Set-Cookie':
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
-            #logging.debug("Head1 %s: %s", keyword, cookie)
+            #xlog.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
     elif keyword == "Alternate-Protocol":
         return
     else:
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
         wfile.write("%s: %s\r\n" % (keyword, value))
 
 
@@ -96,9 +98,10 @@ def handler(method, host, url, headers, body, wfile):
             if response:
                 if response.status > 400:
                     server_type = response.getheader('Server', "")
-                    if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
-                        xlog.warn("IP:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, server_type, response.status)
-                        google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+
+                    if "G" not in server_type and "g" not in server_type and server_type not in google_server_types:
+                        xlog.warn("IP:%s host:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, host, server_type, response.status)
+                        google_ip.report_connect_fail(response.ssl_sock.ip)
                         response.close()
                         continue
                 break

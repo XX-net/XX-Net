@@ -4,7 +4,6 @@
 import sys
 import os
 import re
-import socket
 import time
 
 #patch for ArchLinux: CERTIFICATE_VERIFY_FAILED
@@ -18,79 +17,40 @@ except:
 code_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(code_path)
 
+import logging
+#logging.basicConfig(filename='upload1.log',level=logging.DEBUG)
+fh = logging.FileHandler('upload.log')
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+logger = logging.getLogger()
+logger.addHandler(fh)
+logger.addHandler(ch)
+logger.setLevel(logging.INFO)
 
 sys.modules.pop('google', None)
 lib_path = os.path.join(code_path, "lib")
 sys.path.insert(0, lib_path)
 
+noarch_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, "python27", "1.0", "lib", "noarch"))
+sys.path.append(noarch_path)
+
 import mimetypes
 mimetypes._winreg = None
 
-import urllib2
-import fancy_urllib
-fancy_urllib.FancyHTTPSHandler = urllib2.HTTPSHandler
-
 
 from google.appengine.tools import appengine_rpc, appcfg
-appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH = './.appcfg_cookies'
 
 
 
-defined_password = ''
-def getpass_getpass(prompt='Password:', stream=None):
-    global defined_password
-    return defined_password
-
-defined_input = ''
-def my_input(prompt):
-    global defined_input
-    return defined_input
-
-
-
-class Logger(object):
-    def __init__(self, log_file_name):
-        self.terminal = sys.stdout
-        self.fd = open(log_file_name, "w")
-    def write(self, message):
-        if message == '\n':
-            time_string = ""
-        else:
-            time_string = '%s - ' % (time.ctime()[4:-5])
-        self.terminal.write(message)
-        out_msg = time_string + message
-        self.fd.write(out_msg.decode('utf-8').encode('utf-8'))
-        self.fd.flush()
-    def flush(self):
-        pass
-    def encoding(self, input):
-        return input
-
-my_stdout = Logger("upload.log")
-org_stderr = sys.stderr
-org_stdout = sys.stdout
-sys.stderr = my_stdout
-sys.stdout = my_stdout
-
-def do_clean_up():
-    sys.stderr = org_stderr
-    sys.stdout = org_stdout
-
-try:
-    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
-    os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
-except:
-    pass
-
-def upload(appid, email, password):
-    global defined_input
-    global defined_password
+def upload(appid):
     global code_path
-    defined_input = email
-    defined_password = password
 
-    my_stdout.write("============  Begin upload  ============\r\nappid:%s \r\n\r\n" % (appid))
-
+    logging.info("============  Begin upload  ============")
+    logging.info("appid:%s", appid)
 
     dirname = os.path.join(code_path, "gae")
     assert isinstance(dirname, basestring) and isinstance(appid, basestring)
@@ -104,25 +64,26 @@ def upload(appid, email, password):
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
     try:
-        for i in range(100):
+        for i in range(3):
             try:
-                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
+                #"--noauth_local_webserver"
+                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname ]).Run()
                 if result != 0:
                     continue
-                result = appcfg.AppCfgApp(['appcfg', 'update', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'update', dirname]).Run()
                 if result != 0:
                     continue
                 return True
             except appengine_rpc.ClientLoginError as e:
-                my_stdout.write("upload  fail: %s\n\n" % e)
+                logging.info("upload  fail: %s" % e)
                 raise e
             except Exception as e:
-                my_stdout.write("upload  fail: %s\n\n" % e)
+                logging.exception("upload fail:%r", e)
                 if i < 99:
-                    my_stdout.write("Retry %d time...\n\n" % (i + 1))
+                    logging.info("Retry %d time..." % (i + 1))
                     time.sleep(i)
                 else:
-                    my_stdout.write("Retry max time, failed.\n\n" )
+                    logging.info("Retry max time, failed." )
 
         return False
 
@@ -133,29 +94,33 @@ def upload(appid, email, password):
             pass
 
 
-
 def println(s, file=sys.stderr):
     assert type(s) is type(u'')
     file.write(s.encode(sys.getfilesystemencoding(), 'replace') + os.linesep)
 
+
 def appid_is_valid(appid):
     if len(appid) < 6:
-        my_stdout.write("appid wrong:%s\n" % appid)
+        logging.info("appid wrong:%s" % appid)
         return False
     if not re.match(r'[0-9a-zA-Z\-|]+', appid):
-        my_stdout.write(u'appid:%s format err, check http://appengine.google.com !' % appid)
+        logging.info(u'appid:%s format err, check http://appengine.google.com !' % appid)
         return False
     if any(x in appid.lower() for x in ('ios', 'android', 'mobile')):
-        my_stdout.write(u'appid:%s format err, check http://appengine.google.com !' % appid)
-        my_stdout.write(u'appid 不能包含 ios/android/mobile 等字样。')
+        logging.info(u'appid:%s format err, check http://appengine.google.com !' % appid)
+        logging.info(u'appid 不能包含 ios/android/mobile 等字样。')
         return False
     return True
 
+
 def clean_cookie_file():
+    cookie_file = "~/.appcfg_oauth2_tokens"
+    cookie_file = os.path.expanduser(cookie_file)
     try:
-        os.remove(appengine_rpc.HttpRpcServer.DEFAULT_COOKIE_FILE_PATH)
+        os.remove(cookie_file)
     except OSError:
         pass
+
 
 def update_rc4_password(rc4_password):
     global code_path
@@ -169,9 +134,10 @@ def update_rc4_password(rc4_password):
                 fp.write(re.sub(r"__password__ = '.*?'", "__password__ = '%s'" % rc4_password, file_data))
 
         except IOError as e:
-            my_stdout.write('Setting in the %s password failed!\n' % file_name)
+            logging.info('Setting in the %s password failed!' % file_name)
 
-def uploads(appids, email, password, rc4_password):
+
+def uploads(appids, rc4_password=""):
     update_rc4_password(rc4_password)
 
     clean_cookie_file()
@@ -184,60 +150,52 @@ def uploads(appids, email, password, rc4_password):
                 continue
             if not appid_is_valid(appid):
                 continue
-            if upload(appid, email, password):
+            if upload(appid):
                 success_appid_list.append(appid)
             else:
                 fail_appid_list.append(appid)
 
     except appengine_rpc.ClientLoginError as e:
-        my_stdout.write("Auth fail. Please check you password.\n")
-        my_stdout.write("登录失败，请检查你的帐号密码。\n")
-        my_stdout.write("如果启用两阶段登录，请申请应用专用密码: https://security.google.com/settings/security/apppasswords\n")
-        my_stdout.write("如果没有启用两阶段登录，请允许弱安全应用: https://www.google.com/settings/security/lesssecureapps\n")
+        logging.info("Auth fail. Please check you password.")
+        logging.info("If you've enabled the 2-Step-Verification, please sign in using App Passwords: https://security.google.com/settings/security/apppasswords")
+        logging.info("If you are not enabled the 2-Step-Verification, please allowing less secure apps to access: https://www.google.com/settings/security/lesssecureapps")
+        logging.info("登录失败，请检查你的帐号密码。")
+        logging.info("如果已启用两步验证，请申请应用专用密码: https://security.google.com/settings/security/apppasswords")
+        logging.info("如果没有启用两步验证，请允许弱安全应用: https://www.google.com/settings/security/lesssecureapps")
 
         fail_appid_list = appids.split('|')
 
     clean_cookie_file()
-    my_stdout.write("=======================\n")
+    logging.info("=======================")
 
     if len(success_appid_list) > 0:
-        my_stdout.write("Deploy %d appid successed.\n" % len(success_appid_list))
+        logging.info("Deploy %d appid successed." % len(success_appid_list))
 
     if len(fail_appid_list) > 0:
-        my_stdout.write("Deploy failed appid list:\n")
+        logging.info("Deploy failed appid list:")
         for appid in fail_appid_list:
-            my_stdout.write("- %s\n" % appid)
+            logging.info("- %s" % appid)
 
-
-    my_stdout.write("== END ==\n\n")
-
-    do_clean_up()
+    logging.info("== END ==")
 
     update_rc4_password('')
 
+
 def main():
-    if len(sys.argv) < 3:
-        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password]\r\n")
+    if len(sys.argv) < 2:
+        logging.info("Usage: uploader.py <appids> ")
         input_line = " ".join(sys.argv)
-        my_stdout.write("input err: %s \r\n" % input_line)
-        my_stdout.write("== END ==\n")
+        logging.info("input err: %s " % input_line)
+        logging.info("== END ==")
         exit()
 
     appids = sys.argv[1]
-    email = sys.argv[2]
 
-    if len(sys.argv) >= 4:
-        password = sys.argv[3]
-    else:
-        import getpass
-        password = getpass.getpass("password:")
+    os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
+    logging.info("set proxy to http://127.0.0.1:8087")
 
-    if len(sys.argv) >= 5:
-        rc4_password = sys.argv[4]
-    else:
-        rc4_password = ''
+    uploads(appids)
 
-    uploads(appids, email, password, rc4_password)
 
 if __name__ == '__main__':
     main()

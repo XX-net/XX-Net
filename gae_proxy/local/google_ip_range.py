@@ -93,7 +93,7 @@ class IpRange(object):
         while True:
             index = random.randint(0, len(self.ip_range_list) - 1)
             ip_range = self.ip_range_list[index]
-            #logging.debug("random.randint %d - %d", ip_range[0], ip_range[1])
+            #xlog.debug("random.randint %d - %d", ip_range[0], ip_range[1])
             if ip_range[1] == ip_range[0]:
                 return ip_utils.ip_num_to_string(ip_range[1])
 

@@ -33,7 +33,7 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Needed)" ) }}</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Required)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
@@ -111,6 +111,12 @@
                 <input id="php-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
+        <div class="row-fluid" >
+            <div class="span4">{{ _( "Enable" ) }} X_tunnel</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
         <hr>
     </div> <!-- #advanced-options -->
 </div> <!-- #options -->
@@ -177,6 +183,12 @@
                     $( "#php-enable").parent().addClass('switch-on');
 
                     $( "#php-enable").prop('checked', true);
+                }
+                if ( result['x_tunnel_enable'] != 0 ) {
+                    $( "#x-tunnel-enable").parent().removeClass('switch-off');
+                    $( "#x-tunnel-enable").parent().addClass('switch-on');
+
+                    $( "#x-tunnel-enable").prop('checked', true);
                 }
                 $( "#language").val(result['language']);
                 $( "#check-update").val(result['check_update']);
@@ -269,6 +281,13 @@
 
         setConfig(key, value);
     });
+    $('#x-tunnel-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'x_tunnel_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
 </script>
 <script type="text/javascript">
     function setConfig(key, value) {
@@ -284,7 +303,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    if ( key == 'gae_proxy_enable' || key == 'php_enable' ) {
+                    if ( key == 'gae_proxy_enable' || key == 'php_enable' || key == 'x_tunnel_enable') {
                         restartingService(key);
                     } else {
                         tip('{{ _( "Settings saved successfully." ) }}', 'success');
@@ -315,6 +334,8 @@
             serviceName     = '{{ _( "GAE Proxy" ) }}';
         } else if ( serviceNameSlug == 'php_enable' ) {
             serviceName     = '{{ _( "PHP proxy" ) }}';
+        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
+            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
         } else {
             serviceName     = 'Unknown';
         }

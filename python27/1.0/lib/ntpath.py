@@ -12,6 +12,7 @@ import genericpath
 import warnings
 
 from genericpath import *
+from genericpath import _unicode
 
 __all__ = ["normcase","isabs","join","splitdrive","split","splitext",
            "basename","dirname","commonprefix","getsize","getmtime",
@@ -59,73 +60,79 @@ def isabs(s):
 
 
 # Join two (or more) paths.
-
-def join(a, *p):
-    """Join two or more pathname components, inserting "\\" as needed.
-    If any component is an absolute path, all previous path components
-    will be discarded."""
-    path = a
-    for b in p:
-        b_wins = 0  # set to 1 iff b makes path irrelevant
-        if path == "":
-            b_wins = 1
-
-        elif isabs(b):
-            # This probably wipes out path so far.  However, it's more
-            # complicated if path begins with a drive letter:
-            #     1. join('c:', '/a') == 'c:/a'
-            #     2. join('c:/', '/a') == 'c:/a'
-            # But
-            #     3. join('c:/a', '/b') == '/b'
-            #     4. join('c:', 'd:/') = 'd:/'
-            #     5. join('c:/', 'd:/') = 'd:/'
-            if path[1:2] != ":" or b[1:2] == ":":
-                # Path doesn't start with a drive letter, or cases 4 and 5.
-                b_wins = 1
-
-            # Else path has a drive letter, and b doesn't but is absolute.
-            elif len(path) > 3 or (len(path) == 3 and
-                                   path[-1] not in "/\\"):
-                # case 3
-                b_wins = 1
-
-        if b_wins:
-            path = b
-        else:
-            # Join, and ensure there's a separator.
-            assert len(path) > 0
-            if path[-1] in "/\\":
-                if b and b[0] in "/\\":
-                    path += b[1:]
-                else:
-                    path += b
-            elif path[-1] == ":":
-                path += b
-            elif b:
-                if b[0] in "/\\":
-                    path += b
-                else:
-                    path += "\\" + b
-            else:
-                # path is not empty and does not end with a backslash,
-                # but b is empty; since, e.g., split('a/') produces
-                # ('a', ''), it's best if join() adds a backslash in
-                # this case.
-                path += '\\'
-
-    return path
+def join(path, *paths):
+    """Join two or more pathname components, inserting "\\" as needed."""
+    result_drive, result_path = splitdrive(path)
+    for p in paths:
+        p_drive, p_path = splitdrive(p)
+        if p_path and p_path[0] in '\\/':
+            # Second path is absolute
+            if p_drive or not result_drive:
+                result_drive = p_drive
+            result_path = p_path
+            continue
+        elif p_drive and p_drive != result_drive:
+            if p_drive.lower() != result_drive.lower():
+                # Different drives => ignore the first path entirely
+                result_drive = p_drive
+                result_path = p_path
+                continue
+            # Same drive in different case
+            result_drive = p_drive
+        # Second path is relative to the first
+        if result_path and result_path[-1] not in '\\/':
+            result_path = result_path + '\\'
+        result_path = result_path + p_path
+    ## add separator between UNC and non-absolute path
+    if (result_path and result_path[0] not in '\\/' and
+        result_drive and result_drive[-1:] != ':'):
+        return result_drive + sep + result_path
+    return result_drive + result_path
 
 
 # Split a path in a drive specification (a drive letter followed by a
 # colon) and the path specification.
 # It is always true that drivespec + pathspec == p
 def splitdrive(p):
-    """Split a pathname into drive and path specifiers. Returns a 2-tuple
-"(drive,path)";  either part may be empty"""
-    if p[1:2] == ':':
-        return p[0:2], p[2:]
-    return '', p
+    """Split a pathname into drive/UNC sharepoint and relative path specifiers.
+    Returns a 2-tuple (drive_or_unc, path); either part may be empty.
 
+    If you assign
+        result = splitdrive(p)
+    It is always true that:
+        result[0] + result[1] == p
+
+    If the path contained a drive letter, drive_or_unc will contain everything
+    up to and including the colon.  e.g. splitdrive("c:/dir") returns ("c:", "/dir")
+
+    If the path contained a UNC path, the drive_or_unc will contain the host name
+    and share up to but not including the fourth directory separator character.
+    e.g. splitdrive("//host/computer/dir") returns ("//host/computer", "/dir")
+
+    Paths cannot contain both a drive letter and a UNC path.
+
+    """
+    if len(p) > 1:
+        normp = p.replace(altsep, sep)
+        if (normp[0:2] == sep*2) and (normp[2:3] != sep):
+            # is a UNC path:
+            # vvvvvvvvvvvvvvvvvvvv drive letter or UNC path
+            # \\machine\mountpoint\directory\etc\...
+            #           directory ^^^^^^^^^^^^^^^
+            index = normp.find(sep, 2)
+            if index == -1:
+                return '', p
+            index2 = normp.find(sep, index + 1)
+            # a UNC path can't have two slashes in a row
+            # (after the initial two)
+            if index2 == index + 1:
+                return '', p
+            if index2 == -1:
+                index2 = len(p)
+            return p[:index2], p[index2:]
+        if normp[1] == ':':
+            return p[:2], p[2:]
+    return '', p
 
 # Parse UNC paths
 def splitunc(p):
@@ -144,15 +151,18 @@ def splitunc(p):
         # vvvvvvvvvvvvvvvvvvvv equivalent to drive letter
         # \\machine\mountpoint\directories...
         #           directory ^^^^^^^^^^^^^^^
-        normp = normcase(p)
-        index = normp.find('\\', 2)
-        if index == -1:
-            ##raise RuntimeError, 'illegal UNC path: "' + p + '"'
-            return ("", p)
-        index = normp.find('\\', index + 1)
-        if index == -1:
-            index = len(p)
-        return p[:index], p[index:]
+        normp = p.replace('\\', '/')
+        index = normp.find('/', 2)
+        if index <= 2:
+            return '', p
+        index2 = normp.find('/', index + 1)
+        # a UNC path can't have two slashes in a row
+        # (after the initial two)
+        if index2 == index + 1:
+            return '', p
+        if index2 == -1:
+            index2 = len(p)
+        return p[:index2], p[index2:]
     return '', p
 
 
@@ -322,6 +332,13 @@ def expandvars(path):
         return path
     import string
     varchars = string.ascii_letters + string.digits + '_-'
+    if isinstance(path, _unicode):
+        encoding = sys.getfilesystemencoding()
+        def getenv(var):
+            return os.environ[var.encode(encoding)].decode(encoding)
+    else:
+        def getenv(var):
+            return os.environ[var]
     res = ''
     index = 0
     pathlen = len(path)
@@ -334,7 +351,7 @@ def expandvars(path):
                 index = path.index('\'')
                 res = res + '\'' + path[:index + 1]
             except ValueError:
-                res = res + path
+                res = res + c + path
                 index = pathlen - 1
         elif c == '%':  # variable or '%'
             if path[index + 1:index + 2] == '%':
@@ -350,9 +367,9 @@ def expandvars(path):
                     index = pathlen - 1
                 else:
                     var = path[:index]
-                    if var in os.environ:
-                        res = res + os.environ[var]
-                    else:
+                    try:
+                        res = res + getenv(var)
+                    except KeyError:
                         res = res + '%' + var + '%'
         elif c == '$':  # variable or '$$'
             if path[index + 1:index + 2] == '$':
@@ -364,9 +381,9 @@ def expandvars(path):
                 try:
                     index = path.index('}')
                     var = path[:index]
-                    if var in os.environ:
-                        res = res + os.environ[var]
-                    else:
+                    try:
+                        res = res + getenv(var)
+                    except KeyError:
                         res = res + '${' + var + '}'
                 except ValueError:
                     res = res + '${' + path
@@ -379,9 +396,9 @@ def expandvars(path):
                     var = var + c
                     index = index + 1
                     c = path[index:index + 1]
-                if var in os.environ:
-                    res = res + os.environ[var]
-                else:
+                try:
+                    res = res + getenv(var)
+                except KeyError:
                     res = res + '$' + var
                 if c != '':
                     index = index - 1
@@ -398,7 +415,7 @@ def expandvars(path):
 def normpath(path):
     """Normalize path, eliminating double slashes, etc."""
     # Preserve unicode (if path is unicode)
-    backslash, dot = (u'\\', u'.') if isinstance(path, unicode) else ('\\', '.')
+    backslash, dot = (u'\\', u'.') if isinstance(path, _unicode) else ('\\', '.')
     if path.startswith(('\\\\.\\', '\\\\?\\')):
         # in the case of paths with these prefixes:
         # \\.\ -> device names
@@ -455,7 +472,7 @@ except ImportError: # not running on Windows - mock up something sensible
     def abspath(path):
         """Return the absolute version of a path."""
         if not isabs(path):
-            if isinstance(path, unicode):
+            if isinstance(path, _unicode):
                 cwd = os.getcwdu()
             else:
                 cwd = os.getcwd()
@@ -471,7 +488,7 @@ else:  # use native Windows method on Windows
                 path = _getfullpathname(path)
             except WindowsError:
                 pass # Bad path - return unchanged.
-        elif isinstance(path, unicode):
+        elif isinstance(path, _unicode):
             path = os.getcwdu()
         else:
             path = os.getcwd()

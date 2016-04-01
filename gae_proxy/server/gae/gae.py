@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+# GAE limit:
+# only support http/https request, don't support tcp/udp connect for unpaid user.
+# max timeout for every request is 60 seconds
+# max upload data size is 30M
+# max download data size is 10M
+
+# How to Download file large then 10M?
+# HTTP protocol support range fetch.
+# If server return header include "accept-ranges", then client can request special range
+# by put Content-Range in request header.
+#
+# GAE server will return 206 status code if file is too large and server support range fetch.
+# Then GAE_proxy local client will switch to range fetch mode.
+
+
 __version__ = '3.3.1'
 __password__ = ''
 __hostsdeny__ = ()

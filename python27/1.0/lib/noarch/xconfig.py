@@ -7,7 +7,7 @@ import os
 
 class Config(object):
     default_config = {}
-    file_config = None
+    file_config = {}
 
     def __init__(self, config_path):
         self.config_path = config_path

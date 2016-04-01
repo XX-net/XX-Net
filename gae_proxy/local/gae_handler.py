@@ -2,6 +2,49 @@
 # coding:utf-8
 
 
+"""
+GoAgent local-server protocol 3.2
+
+request:
+  POST /_gh/ HTTP/1.1
+  HOST: appid.appspot.com
+  content-length: xxx
+
+  http content:
+  {
+    pack_req_head_len: 2 bytes,
+    pack_req_head : deflate{
+      original request line,
+      original request headers,
+      X-URLFETCH-kwargs HEADS, {
+        password,
+        maxsize, defined in config AUTO RANGE MAX SIZE
+        timeout, request timeout for GAE urlfetch.
+      }
+    }
+    body
+  }
+
+response:
+  200 OK
+  http-Heads:
+    Content-type: image/gif
+
+  http-content:{
+      response_head{
+        data_len: 2 bytes,
+        data: deflate{
+         HTTP/1.1 status, status_code
+         headers
+         content = error_message, if GAE server fail
+        }
+      }
+
+      body
+  }
+"""
+
+
 import errno
 import time
 import struct
@@ -90,14 +133,14 @@ def send_header(wfile, keyword, value):
         # https://cloud.google.com/appengine/docs/python/urlfetch/responseobjects
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
-            #logging.debug("Head1 %s: %s", keyword, cookie)
+            #xlog.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
     else:
         wfile.write("%s: %s\r\n" % (keyword, value))
-        #logging.debug("Head1 %s: %s", keyword, value)
+        #xlog.debug("Head1 %s: %s", keyword, value)
 
 def _request(sock, headers, payload, bufsize=8192):
     request_data = 'POST /_gh/ HTTP/1.1\r\n'
@@ -129,7 +172,7 @@ def _request(sock, headers, payload, bufsize=8192):
         response.begin()
         sock.settimeout(orig_timeout)
     except httplib.BadStatusLine as e:
-        #logging.warn("_request bad status line:%r", e)
+        #xlog.warn("_request bad status line:%r", e)
         response.close()
         response = None
     except Exception as e:
@@ -214,7 +257,7 @@ def fetch(method, url, headers, body):
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items() if k not in skip_headers)
     #for k, v in headers.items():
-    #    logging.debug("Send %s: %s", k, v)
+    #    xlog.debug("Send %s: %s", k, v)
     payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v) for k, v in kwargs.items() if v)
 
     request_headers = {}
@@ -379,7 +422,6 @@ def handler(method, url, headers, body, wfile):
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
 
     try:
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
         response_headers = {}
         for key, value in response.getheaders():
             key = key.title()
@@ -397,10 +439,11 @@ def handler(method, url, headers, body, wfile):
 
         send_to_browser = True
         try:
+            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             for key in response_headers:
                 value = response_headers[key]
                 send_header(wfile, key, value)
-                #logging.debug("Head- %s: %s", key, value)
+                #xlog.debug("Head- %s: %s", key, value)
             wfile.write("\r\n")
         except Exception as e:
             send_to_browser = False
@@ -409,6 +452,7 @@ def handler(method, url, headers, body, wfile):
 
         if len(response.app_msg):
             xlog.warn("APPID error:%d url:%s", response.status, url)
+            xlog.warn("response.app_msg:%s", urllib.quote(response.app_msg))
             wfile.write(response.app_msg)
             google_ip.report_connect_closed(response.ssl_sock.ip, "app err")
             response.close()
@@ -523,7 +567,7 @@ class RangeFetch(object):
                 if key in skip_headers:
                     continue
                 value = response_headers[key]
-                #logging.debug("Head %s: %s", key.title(), value)
+                #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
             self.wfile.write("\r\n")
         except Exception as e:

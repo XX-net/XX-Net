@@ -1,10 +1,10 @@
 """Temporary files.
 
 This module provides generic, low- and high-level interfaces for
-creating temporary files and directories.  The interfaces listed
-as "safe" just below can be used without fear of race conditions.
-Those listed as "unsafe" cannot, and are provided for backward
-compatibility only.
+creating temporary files and directories.  All of the interfaces
+provided by this module can be used without fear of race conditions
+except for 'mktemp'.  'mktemp' is subject to race conditions and
+should not be used; it is provided for backward compatibility only.
 
 This module also provides some data items to the user:
 
@@ -205,9 +205,14 @@ def _get_default_tempdir():
                     _os.unlink(filename)
                 return dir
             except (OSError, IOError) as e:
-                if e.args[0] != _errno.EEXIST:
-                    break # no point trying more names in this directory
-                pass
+                if e.args[0] == _errno.EEXIST:
+                    continue
+                if (_os.name == 'nt' and e.args[0] == _errno.EACCES and
+                    _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
+                    # On windows, when a directory with the chosen name already
+                    # exists, EACCES error code is returned instead of EEXIST.
+                    continue
+                break # no point trying more names in this directory
     raise IOError, (_errno.ENOENT,
                     ("No usable temporary directory found in %s" % dirlist))
 
@@ -242,7 +247,8 @@ def _mkstemp_inner(dir, pre, suf, flags):
         except OSError, e:
             if e.errno == _errno.EEXIST:
                 continue # try again
-            if _os.name == 'nt' and e.errno == _errno.EACCES:
+            if (_os.name == 'nt' and e.errno == _errno.EACCES and
+                _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                 # On windows, when a directory with the chosen name already
                 # exists, EACCES error code is returned instead of EEXIST.
                 continue
@@ -335,6 +341,11 @@ def mkdtemp(suffix="", prefix=template, dir=None):
         except OSError, e:
             if e.errno == _errno.EEXIST:
                 continue # try again
+            if (_os.name == 'nt' and e.errno == _errno.EACCES and
+                _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
+                # On windows, when a directory with the chosen name already
+                # exists, EACCES error code is returned instead of EEXIST.
+                continue
             raise
 
     raise IOError, (_errno.EEXIST, "No usable temporary directory name found")
@@ -413,9 +424,11 @@ class _TemporaryFileWrapper:
         def close(self):
             if not self.close_called:
                 self.close_called = True
-                self.file.close()
-                if self.delete:
-                    self.unlink(self.name)
+                try:
+                    self.file.close()
+                finally:
+                    if self.delete:
+                        self.unlink(self.name)
 
         def __del__(self):
             self.close()
@@ -460,8 +473,12 @@ def NamedTemporaryFile(mode='w+b', bufsize=-1, suffix="",
         flags |= _os.O_TEMPORARY
 
     (fd, name) = _mkstemp_inner(dir, prefix, suffix, flags)
-    file = _os.fdopen(fd, mode, bufsize)
-    return _TemporaryFileWrapper(file, name, delete)
+    try:
+        file = _os.fdopen(fd, mode, bufsize)
+        return _TemporaryFileWrapper(file, name, delete)
+    except:
+        _os.close(fd)
+        raise
 
 if _os.name != 'posix' or _os.sys.platform == 'cygwin':
     # On non-POSIX and Cygwin systems, assume that we cannot unlink a file
