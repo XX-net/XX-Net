@@ -33,6 +33,7 @@ class MacTrayObject(AppKit.NSObject):
 
     def applicationDidFinishLaunching_(self, notification):
         setupHelper()
+        loadConfig()
         self.setupUI()
         self.registerObserver()
 
@@ -177,6 +178,8 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable auto proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "pac")
+        config.save()
         self.updateStatusBarMenu()
 
     def enableGlobalProxy_(self, _):
@@ -190,6 +193,8 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable global proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "gae")
+        config.save()
         self.updateStatusBarMenu()
 
     def disableProxy_(self, _):
@@ -203,6 +208,8 @@ class MacTrayObject(AppKit.NSObject):
             
             xlog.info("try disable proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "disable")
+        config.save()
         self.updateStatusBarMenu()
 
 
@@ -274,6 +281,27 @@ def helperDisableGlobalProxy(service):
     subprocess.check_call([helper_path, 'disablehttp', service])
     subprocess.check_call([helper_path, 'disablehttps', service])
 
+def loadConfig():
+    if not currentService:
+        return
+    proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
+    if getProxyState(currentService) == proxy_setting:
+        return
+    try:
+        if proxy_setting == "pac":
+            helperDisableGlobalProxy(currentService)
+            helperEnableAutoProxy(currentService)
+        elif proxy_setting == "gae":
+            helperDisableAutoProxy(currentService)
+            helperEnableGlobalProxy(currentService)
+        elif proxy_setting == "disable":
+            helperDisableAutoProxy(currentService)
+            helperDisableGlobalProxy(currentService)
+        else:
+            xlog.warn("proxy_setting:%r", proxy_setting)
+    except:
+        xlog.warn("helper failed, please manually reset proxy settings after switching connection")
+
 
 sys_tray = MacTrayObject.alloc().init()
 currentService = None
@@ -294,6 +322,7 @@ def fetchCurrentService(protocol):
 @AppKit.objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
 def networkChanged(center, observer, name, object, userInfo):
     fetchCurrentService('IPv4')
+    loadConfig()
     sys_tray.updateStatusBarMenu()
 
 # Note: the following code can't run in class
