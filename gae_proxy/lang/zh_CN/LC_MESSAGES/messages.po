@@ -120,7 +120,7 @@ msgid "Failed reading the settings."
 msgstr "读取设置失败"
 
 msgid "Wait for checking setting..."
-msgstr "请等待后台检查设置有效性。。。"
+msgstr "请等待后台检查设置有效性…"
 
 msgid "Settings saved successfully"
 msgstr "设置保存成功"
