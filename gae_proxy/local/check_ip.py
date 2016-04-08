@@ -98,9 +98,9 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     time_handshaked = time.time()
 
     # report network ok
-    check_local_network.network_stat = "OK"
-    check_local_network.last_check_time = time_handshaked
-    check_local_network.continue_fail_count = 0
+    #check_local_network.network_stat = "OK"
+    #check_local_network.last_check_time = time_handshaked
+    #check_local_network.continue_fail_count = 0
 
     cert = ssl_sock.get_peer_certificate()
     if not cert:
