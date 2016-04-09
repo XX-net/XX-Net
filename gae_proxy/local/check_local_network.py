@@ -121,7 +121,7 @@ def _simple_check_worker():
     _checking_num += 1
     _checking_lock.release()
     try:
-        conn = httplib.HTTPConnection("www.baidu.com", 80, timeout=3)
+        conn = httplib.HTTPSConnection("www.microsoft.com", 443, timeout=30)
         header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                   "accept":"application/json, text/javascript, */*; q=0.01",
                   "accept-encoding":"gzip, deflate, sdch",
