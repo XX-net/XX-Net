@@ -58,6 +58,7 @@ import ssl
 import httplib
 import Queue
 import urlparse
+import urllib
 import threading
 
 

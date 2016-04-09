@@ -350,7 +350,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     @staticmethod
     def xxnet_version():
-        version_file = os.path.join(root_path, "version.txt")
+        version_file = os.path.join(root_path, "launcher", "version.txt")
         try:
             fd = open(version_file, "r")
             version = fd.read()

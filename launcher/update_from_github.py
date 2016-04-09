@@ -105,7 +105,7 @@ def parse_readme_versions(readme_file):
 
 
 def current_version():
-    readme_file = os.path.join(root_path, "README.md")
+    readme_file = os.path.join(root_path, "launcher", "version.txt")
     try:
         versions = parse_readme_versions(readme_file)
         return versions[0][1]
@@ -114,8 +114,8 @@ def current_version():
 
 
 def get_github_versions():
-    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/README.md"
-    readme_target = os.path.join(download_path, "README.md")
+    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/launcher/update_version.txt"
+    readme_target = os.path.join(download_path, "version.txt")
 
     if not download_file(readme_url, readme_target):
         raise IOError("get README %s fail:" % readme_url)
