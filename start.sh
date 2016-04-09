@@ -2,9 +2,10 @@
 
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPTPATH
-
-if hash python2 2>/dev/null; then
-    python2 launcher/start.py
+if python -V | grep -q "Python 3" ;then
+    PYTHON="/usr/bin/python2"
 else
-    python launcher/start.py
+    PYTHON="python"
 fi
+
+${PYTHON} launcher/start.py
