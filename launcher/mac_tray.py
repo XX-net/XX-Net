@@ -22,27 +22,28 @@ import module_init
 import subprocess
 import webbrowser
 
-from AppKit import *
-from SystemConfiguration import *
+import AppKit
+import SystemConfiguration
 from instances import xlog
 from PyObjCTools import AppHelper
 
-class MacTrayObject(NSObject):
+class MacTrayObject(AppKit.NSObject):
     def __init__(self):
         pass
 
     def applicationDidFinishLaunching_(self, notification):
         setupHelper()
+        loadConfig()
         self.setupUI()
         self.registerObserver()
 
     def setupUI(self):
-        self.statusbar = NSStatusBar.systemStatusBar()
-        self.statusitem = self.statusbar.statusItemWithLength_(NSSquareStatusItemLength) #NSSquareStatusItemLength #NSVariableStatusItemLength
+        self.statusbar = AppKit.NSStatusBar.systemStatusBar()
+        self.statusitem = self.statusbar.statusItemWithLength_(AppKit.NSSquareStatusItemLength) #NSSquareStatusItemLength #NSVariableStatusItemLength
 
         # Set initial image icon
         icon_path = os.path.join(current_path, "web_ui", "favicon-mac.ico")
-        image = NSImage.alloc().initByReferencingFile_(icon_path.decode('utf-8'))
+        image = AppKit.NSImage.alloc().initByReferencingFile_(icon_path.decode('utf-8'))
         image.setScalesWhenResized_(True)
         image.setSize_((20, 20))
         self.statusitem.setImage_(image)
@@ -55,63 +56,63 @@ class MacTrayObject(NSObject):
         proxyState = getProxyState(currentService)
 
         # Build a very simple menu
-        self.menu = NSMenu.alloc().initWithTitle_('XX-Net')
+        self.menu = AppKit.NSMenu.alloc().initWithTitle_('XX-Net')
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
         self.menu.addItem_(menuitem)
         self.currentServiceMenuItem = menuitem
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy', 'enableAutoProxy:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy', 'enableAutoProxy:', '')
         if proxyState == 'pac':
-            menuitem.setState_(NSOnState)
+            menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.autoGaeProxyMenuItem = menuitem
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy', 'enableGlobalProxy:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy', 'enableGlobalProxy:', '')
         if proxyState == 'gae':
-            menuitem.setState_(NSOnState)
+            menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.globalGaeProxyMenuItem = menuitem
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable GAEProxy', 'disableProxy:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable GAEProxy', 'disableProxy:', '')
         if proxyState == 'disable':
-            menuitem.setState_(NSOnState)
+            menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.disableGaeProxyMenuItem = menuitem
 
         # Reset Menu Item
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
         # Default event
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
         self.menu.addItem_(menuitem)
         # Bind it to the status item
         self.statusitem.setMenu_(self.menu)
 
         # Hide dock icon
-        NSApp.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
+        AppKit.NSApp.setActivationPolicy_(AppKit.NSApplicationActivationPolicyProhibited)
 
     def updateStatusBarMenu(self):
         self.currentServiceMenuItem.setTitle_(getCurrentServiceMenuItemTitle())
 
         # Remove Tick before All Menu Items
-        self.autoGaeProxyMenuItem.setState_(NSOffState)
-        self.globalGaeProxyMenuItem.setState_(NSOffState)
-        self.disableGaeProxyMenuItem.setState_(NSOffState)
+        self.autoGaeProxyMenuItem.setState_(AppKit.NSOffState)
+        self.globalGaeProxyMenuItem.setState_(AppKit.NSOffState)
+        self.disableGaeProxyMenuItem.setState_(AppKit.NSOffState)
 
         # Get current selected mode
         proxyState = getProxyState(currentService)
 
         # Update Tick before Menu Item
         if proxyState == 'pac':
-            self.autoGaeProxyMenuItem.setState_(NSOnState)
+            self.autoGaeProxyMenuItem.setState_(AppKit.NSOnState)
         elif proxyState == 'gae':
-            self.globalGaeProxyMenuItem.setState_(NSOnState)
+            self.globalGaeProxyMenuItem.setState_(AppKit.NSOnState)
         elif proxyState == 'disable':
-            self.disableGaeProxyMenuItem.setState_(NSOnState)
+            self.disableGaeProxyMenuItem.setState_(AppKit.NSOnState)
 
         # Trigger autovalidation
         self.menu.update()
@@ -126,16 +127,16 @@ class MacTrayObject(NSObject):
         return self.alertReturn
 
     def presentAlertWithInfo_(self, info):
-        alert = NSAlert.alloc().init()
+        alert = AppKit.NSAlert.alloc().init()
         alert.setMessageText_(info[0])
         alert.setInformativeText_(info[1])
         alert.addButtonWithTitle_("OK")
         alert.addButtonWithTitle_("Cancel")
-        self.alertReturn = alert.runModal() == NSAlertFirstButtonReturn
+        self.alertReturn = alert.runModal() == AppKit.NSAlertFirstButtonReturn
 
     def registerObserver(self):
-        nc = NSWorkspace.sharedWorkspace().notificationCenter()
-        nc.addObserver_selector_name_object_(self, 'windowWillClose:', NSWorkspaceWillPowerOffNotification, None)
+        nc = AppKit.NSWorkspace.sharedWorkspace().notificationCenter()
+        nc.addObserver_selector_name_object_(self, 'windowWillClose:', AppKit.NSWorkspaceWillPowerOffNotification, None)
 
     def windowWillClose_(self, notification):
         executeResult = subprocess.check_output(['networksetup', '-listallnetworkservices'])
@@ -156,7 +157,7 @@ class MacTrayObject(NSObject):
 
         module_init.stop_all()
         os._exit(0)
-        NSApp.terminate_(self)
+        AppKit.NSApp.terminate_(self)
 
     def config_(self, notification):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
@@ -177,6 +178,8 @@ class MacTrayObject(NSObject):
 
             xlog.info("try enable auto proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "pac")
+        config.save()
         self.updateStatusBarMenu()
 
     def enableGlobalProxy_(self, _):
@@ -190,6 +193,8 @@ class MacTrayObject(NSObject):
 
             xlog.info("try enable global proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "gae")
+        config.save()
         self.updateStatusBarMenu()
 
     def disableProxy_(self, _):
@@ -203,6 +208,8 @@ class MacTrayObject(NSObject):
             
             xlog.info("try disable proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
+        config.set(["modules", "launcher", "proxy"], "disable")
+        config.save()
         self.updateStatusBarMenu()
 
 
@@ -274,36 +281,58 @@ def helperDisableGlobalProxy(service):
     subprocess.check_call([helper_path, 'disablehttp', service])
     subprocess.check_call([helper_path, 'disablehttps', service])
 
+def loadConfig():
+    if not currentService:
+        return
+    proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
+    if getProxyState(currentService) == proxy_setting:
+        return
+    try:
+        if proxy_setting == "pac":
+            helperDisableGlobalProxy(currentService)
+            helperEnableAutoProxy(currentService)
+        elif proxy_setting == "gae":
+            helperDisableAutoProxy(currentService)
+            helperEnableGlobalProxy(currentService)
+        elif proxy_setting == "disable":
+            helperDisableAutoProxy(currentService)
+            helperDisableGlobalProxy(currentService)
+        else:
+            xlog.warn("proxy_setting:%r", proxy_setting)
+    except:
+        xlog.warn("helper failed, please manually reset proxy settings after switching connection")
+
 
 sys_tray = MacTrayObject.alloc().init()
 currentService = None
 
 def fetchCurrentService(protocol):
     global currentService
-    status = SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
+    status = SystemConfiguration.SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
     if not status:
         currentService = None
         return
     serviceID = status['PrimaryService']
-    service = SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
+    service = SystemConfiguration.SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
     if not service:
         currentService = None
         return
     currentService = service['UserDefinedName']
 
-@objc.callbackFor(CFNotificationCenterAddObserver)
+@AppKit.objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
 def networkChanged(center, observer, name, object, userInfo):
     fetchCurrentService('IPv4')
+    loadConfig()
     sys_tray.updateStatusBarMenu()
 
 # Note: the following code can't run in class
 def serve_forever():
-    app = NSApplication.sharedApplication()
+    app = AppKit.NSApplication.sharedApplication()
     app.setDelegate_(sys_tray)
 
     # Listen for network change
-    nc = CFNotificationCenterGetDarwinNotifyCenter()
-    CFNotificationCenterAddObserver(nc, None, networkChanged, "com.apple.system.config.network_change", None, CFNotificationSuspensionBehaviorDeliverImmediately)
+    nc = AppKit.CFNotificationCenterGetDarwinNotifyCenter()
+    AppKit.CFNotificationCenterAddObserver(nc, None, networkChanged, "com.apple.system.config.network_change", None, AppKit.CFNotificationSuspensionBehaviorDeliverImmediately)
 
     fetchCurrentService('IPv4')
     AppHelper.runEventLoop()
