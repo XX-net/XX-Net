@@ -20,24 +20,22 @@ set -e
 PACKAGE_NAME=xx_net
 PACKAGE_DESC="xx_net proxy server"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH}
+if python -V | grep -q "Python 3" ;then
+    PYTHON="/usr/bin/python2"
+else
+    PYTHON="python"
+fi
 
 start() {
     echo -n "Starting ${PACKAGE_DESC}: "
     if hash python2 2>/dev/null; then
-        nohup python2 launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
-    else
-        nohup python launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
-    fi
+        nohup "${PYTHON}" launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
     echo "${PACKAGE_NAME}."
 }
 
 stop() {
     echo -n "Stopping ${PACKAGE_DESC}: "
-    if hash python2 2>/dev/null; then
-        kill -9 `ps aux | grep 'python2 launcher/start.py' | grep -v grep | awk '{print $2}'` || true
-    else
-        kill -9 `ps aux | grep 'python launcher/start.py' | grep -v grep | awk '{print $2}'` || true
-    fi
+    kill -9 `ps aux | grep ${PYTHON} 'launcher/start.py' | grep -v grep | awk '{print $2}'` || truei
     echo "${PACKAGE_NAME}."
 }
 
@@ -59,7 +57,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # `readlink -f` won't work on Mac, this hack should work on all systems.
-cd $(python -c "import os; print os.path.dirname(os.path.realpath('$0'))")
+cd $("${PYTHON}" -c "import os; print os.path.dirname(os.path.realpath('$0'))")
 
 case "$1" in
     # If no arg is given, start the goagent.
