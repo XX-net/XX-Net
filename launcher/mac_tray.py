@@ -3,7 +3,6 @@
 
 import os
 import sys
-import config
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 helper_path = os.path.join(current_path, os.pardir, 'data', 'launcher', 'helper')
