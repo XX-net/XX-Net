@@ -38,6 +38,7 @@ import test_appid
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
@@ -75,7 +76,7 @@ class User_config(object):
 
 
         self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
 
         try:
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
@@ -126,7 +127,7 @@ class User_config(object):
             xlog.warn("User_config.load except:%s", e)
 
     def save(self):
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(root_path, 'data', 'gae_proxy', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
         try:
             f = open(CONFIG_USER_FILENAME, 'w')
             if self.user_special.appid != "":
