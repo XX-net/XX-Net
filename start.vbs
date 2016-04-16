@@ -8,7 +8,7 @@ Function CurrentPath()
     CurrentPath = objFSO.GetParentFolderName(objFile)
 End Function
 
-Function CurrentVersoin()
+Function CurrentVersion()
     strCurrentPath = CurrentPath()
     strVersionFile = strCurrentPath & "/code/version.txt"
 
@@ -16,12 +16,12 @@ Function CurrentVersoin()
     If (fso.FileExists(strVersionFile)) Then
 
         Set objFileToRead = CreateObject("Scripting.FileSystemObject").OpenTextFile(strVersionFile,1)
-        CurrentVersoin = objFileToRead.ReadLine()
+        CurrentVersion = objFileToRead.ReadLine()
 
         objFileToRead.Close
         Set objFileToRead = Nothing
     Else
-       CurrentVersoin = "default"
+       CurrentVersion = "default"
     End If
 
 End Function
@@ -41,7 +41,7 @@ End Function
 
 
 strCurrentPath = CurrentPath()
-strVersion = CurrentVersoin()
+strVersion = CurrentVersion()
 Dim strArgs
 quo = """"
 strExecutable = quo & strCurrentPath & "\code\" & strVersion & "\python27\1.0\python.exe" & quo
