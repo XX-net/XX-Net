@@ -30,7 +30,7 @@ import socks
 import check_local_network
 from config import config
 import cert_util
-from openssl_wrap import SSLConnection, init_context
+from openssl_wrap import SSLConnection
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
