@@ -10,15 +10,27 @@ else
 fi
 
 
+if [ -f code/version.txt ]; then
+  VERSION=`cat code/version.txt`
+else
+  VERSION="default"
+fi
+
+
+if [ ! -d "code/$VERSION" ]; then
+  VERSION="default"
+fi
+echo "XX-Net version:$VERSION"
+
 
 # launch xx-net service by ignore hungup signal
 function launchWithNoHungup() {
-    nohup ${PYTHON} launcher/start.py 2&> /dev/null &
+    nohup ${PYTHON} code/${VERSION}/launcher/start.py 2&> /dev/null &
 }
 
 # launch xx-net service by hungup signal
 function launchWithHungup() {
-    ${PYTHON} launcher/start.py
+    ${PYTHON} code/${VERSION}/launcher/start.py
 }
 
 # get operating system name

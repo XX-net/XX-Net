@@ -13,7 +13,7 @@ XX-Net
   
   
 ## 下载(Download)：  
-https://github.com/XX-net/XX-Net/blob/master/launcher/download.md
+[Download](https://github.com/XX-net/XX-Net/blob/master/code/default/launcher/download.md)
   
   
 ## 链接
