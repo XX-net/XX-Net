@@ -222,14 +222,13 @@ def update_current_version(xxnet_version):
         fd.write(xxnet_version)
 
 
-def restart_xxnet():
+def restart_xxnet(version):
     import module_init
     module_init.stop_all()
     import web_control
     web_control.stop()
 
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    start_script = os.path.join(current_path, "start.py")
+    start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
 
     subprocess.Popen([sys.executable, start_script])
     time.sleep(10)
@@ -245,7 +244,7 @@ def update_version(version):
 
         progress["update_status"] = "Restarting"
         xlog.info("update try restart xxnet")
-        restart_xxnet()
+        restart_xxnet(version)
     except Exception as e:
         xlog.warn("update version %s fail:%r", version, e)
 
