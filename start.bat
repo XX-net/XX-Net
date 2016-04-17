@@ -1,3 +1,3 @@
 SET PYTHONPATH=
-%~dp0start.vbs console
+"%~dp0%start.vbs" console
 
