@@ -513,6 +513,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         if reqs['cmd'] == ['deploy']:
             appid = self.postvars['appid'][0]
+            debug = int(self.postvars['debug'][0])
 
             if deploy_proc and deploy_proc.poll() == None:
                 xlog.warn("deploy is running, request denied.")
@@ -524,7 +525,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         os.remove(log_path)
                     script_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'uploader.py'))
 
-                    deploy_proc = subprocess.Popen([sys.executable, script_path, appid])
+                    args = [sys.executable, script_path, appid]
+                    if debug:
+                        args.append("-debug")
+
+                    deploy_proc = subprocess.Popen(args)
                     xlog.info("deploy begin.")
                     data = '{"res":"success", "time":"%s"}' % time_now
                 except Exception as e:

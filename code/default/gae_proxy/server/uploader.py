@@ -183,13 +183,16 @@ def uploads(appids, rc4_password=""):
 
 def main():
     if len(sys.argv) < 2:
-        logging.info("Usage: uploader.py <appids> ")
+        logging.info("Usage: uploader.py <appids> [-debug]")
         input_line = " ".join(sys.argv)
         logging.info("input err: %s " % input_line)
         logging.info("== END ==")
         exit()
 
     appids = sys.argv[1]
+    if len(sys.argv) > 2 and sys.argv[2] == "-debug":
+        logger.setLevel(logging.DEBUG)
+        logging.info("enable debug logging")
 
     os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
     logging.info("set proxy to http://127.0.0.1:8087")
