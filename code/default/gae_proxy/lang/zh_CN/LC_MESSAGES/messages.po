@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-01-13 10:08+0800\n"
+"POT-Creation-Date: 2016-04-17 22:25+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -140,6 +140,9 @@ msgstr "保存设置失败"
 msgid "Deploy XX-Net onto GAE"
 msgstr "部署XX-Net至GAE"
 
+msgid "Current status: "
+msgstr "当前状态："
+
 msgid "idle"
 msgstr "空闲"
 
@@ -152,28 +155,14 @@ msgstr "日志"
 msgid "Delimit multiple appids with |"
 msgstr "批量部署多个AppID, 请用|分割"
 
-msgid "If the 2-step verification is in-use, please use your exclusive password."
-msgstr "如果启用两步验证, 请使用应用专用密码"
-
-msgid "Configure now"
-msgstr "立即设置"
-
-msgid ""
-"If the 2-step verification is NOT in-use, please enable the less secure "
-"apps."
-msgstr "如果没有启用两步验证, 请开启弱安全应用登录"
-
-msgid "Details"
-msgstr "详细说明"
+msgid "Show Debug Log"
+msgstr ""
 
 msgid "Start to deploy"
 msgstr "开始部署"
 
-msgid "Redploy the server if XX-Net version is prior to 1.13.6."
-msgstr "XX-Net 1.13.6之前的服务端, 请重新部署。"
-
-msgid "Current status: "
-msgstr "当前状态："
+msgid "Auth window will popup, make sure don't block popup in browser."
+msgstr "认证会弹出窗口，请确认浏览器不会阻止弹窗。"
 
 msgid "XX-Net was reset."
 msgstr "XX-Net被重置。"
@@ -207,12 +196,6 @@ msgstr "部署已被取消。"
 
 msgid "Your AppID is either empty or invalid."
 msgstr "您的AppID为空或无效。"
-
-msgid "Your Email address is either empty or invalid."
-msgstr "您的email为空或无效。"
-
-msgid "Please fill in your account & its password."
-msgstr "请填写您账户的密码。"
 
 msgid "Export format"
 msgstr "导入或导出格式"
@@ -295,6 +278,9 @@ msgstr "浏览器代理设置"
 msgid "CA status"
 msgstr "CA证书状态"
 
+msgid "Download"
+msgstr "下载"
+
 msgid "Number of IP-Scanning Threads"
 msgstr "扫描IP线程数"
 
@@ -354,6 +340,11 @@ msgstr "贴到Github问题区..."
 
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
+
+msgid ""
+"-----------%0AProblem Description:%0APlease describe your problem, "
+"running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
+msgstr "-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A"
 
 msgid "Disabled"
 msgstr "禁用"
@@ -433,6 +424,12 @@ msgstr "GAEProxy进程无响应, 可能已退出。"
 msgid "You are using the public Appid."
 msgstr "你正使用公共AppID"
 
+msgid "new:"
+msgstr "新:"
+
+msgid " used:"
+msgstr " 已用:"
+
 msgid "Auto proxy enabled at "
 msgstr "智能代理已启用："
 
@@ -441,16 +438,4 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
-
-msgid "Download"
-msgstr "下载"
-
-msgid "new:"
-msgstr "新:"
-
-msgid " used:"
-msgstr " 已用:"
-
-msgid "-----------%0AProblem Description:%0APlease describe your problem, running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
-msgstr "-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A"
 
