@@ -86,7 +86,7 @@ elif sys.platform.startswith('linux'):
         if(exists(name)):
             os.unlink(getfilename(name))
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir, "xxnet"))
 elif sys.platform == 'darwin':
     plist_template = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -100,6 +100,7 @@ elif sys.platform == 'darwin':
 
 	<key>ProgramArguments</key>
 	<array>
+	  <string>/usr/bin/python2.7</string>
 	  <string>%s</string>
 	</array>
 
@@ -113,7 +114,7 @@ elif sys.platform == 'darwin':
 </dict>
 </plist>"""
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath( os.path.join(root_path, "launcher", "start.py"))
     from os.path import expanduser
     home = expanduser("~")
     launch_path = os.path.join(home, "Library/LaunchAgents")
