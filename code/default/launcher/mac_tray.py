@@ -5,7 +5,7 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-helper_path = os.path.join(current_path, os.pardir, 'data', 'launcher', 'helper')
+helper_path = os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'launcher', 'helper')
 
 if __name__ == "__main__":
     python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
