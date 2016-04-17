@@ -207,7 +207,7 @@ def download_overwrite_new_version(xxnet_version):
     except Exception as e:
         xlog.warn("unzip %s fail:%r", xxnet_zip_file, e)
         progress["update_status"] = "Unzip Fail:%s" % e
-        raise
+        raise e
     xlog.info("update finished unzip")
 
     overwrite(xxnet_version, xxnet_unzip_path)
