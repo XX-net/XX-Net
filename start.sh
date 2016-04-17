@@ -38,6 +38,7 @@ os_name=`uname -s`
 
 # Darwin for os x
 if [ $os_name = 'Darwin' ];then
+	PYTHON="/usr/bin/python2.7"
 	launchWithNoHungup
 else
 	launchWithHungup
