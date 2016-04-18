@@ -20,7 +20,7 @@ import shutil
 opener = urllib2.build_opener()
 
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-download_path = os.path.abspath( os.path.join(root_path, 'data', 'downloads'))
+download_path = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
 
 xxnet_unzip_path = ""
 

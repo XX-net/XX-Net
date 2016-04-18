@@ -340,7 +340,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response(mimetype, data)
 
     def get_launcher_version(self):
-        data_path = os.path.abspath( os.path.join(root_path, 'data', 'launcher', 'config.yaml'))
+        data_path = os.path.abspath( os.path.join(top_path, 'data', 'launcher', 'config.yaml'))
         try:
             config = yaml.load(file(data_path, 'r'))
             return config["modules"]["launcher"]["current_version"]
