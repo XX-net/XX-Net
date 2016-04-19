@@ -62,29 +62,19 @@
     $('#submit').click(function() {
         // set_auto_adjust_scan_ip_thread_num
         var isChecked = $("#auto-adjust-scan-ip-thread-num").is(':checked');
-        $.ajax({
-            type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_auto_adjust_scan_ip_thread_num',
-            data: {"auto_adjust_scan_ip_thread_num": isChecked ? 1 : 0},
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip('{{ _("Settings saved successfully") }}', 'success');
-                } else {
-                    tip('{{ _("Unkown error occurred") }}', 'error');
-                }
-            }
-        });
-        
+
         // scan-ip-thread-num
         var scanIpThreadNum = $('#scan-ip-thread-num').val();
-        var config = {
-            'scan_ip_thread_num': scanIpThreadNum
-        };
+
+        // ip-range
+        var ipRangeContent = $('#ip-range-content').val();
+        
         $.ajax({
             type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_scan_thread_num',
-            data: config,
+            url: '/module/gae_proxy/control/scan_ip?cmd=update',
+            data: {"auto_adjust_scan_ip_thread_num": isChecked ? 1 : 0,
+                   "scan_ip_thread_num": scanIpThreadNum,
+                   "ip_range": ipRangeContent},
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
@@ -95,23 +85,5 @@
             }
         });
 
-        // ip-range
-        var ipRangeContent = $('#ip-range-content').val();
-        var config = {
-            'ip_range': ipRangeContent
-        };
-        $.ajax({
-            type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_range',
-            data: config,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip('{{ _("Settings saved successfully") }}', 'success');
-                } else {
-                    tip('{{ _("Unkown error occurred") }}', 'error');
-                }
-            }
-        });
     });
 </script>
