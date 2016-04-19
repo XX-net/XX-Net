@@ -15,6 +15,7 @@ import sys
 import datetime
 import locale
 import time
+import hashlib
 
 
 
@@ -671,24 +672,37 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         data = ""
         if reqs['cmd'] == ['get_range']:
             data = ip_range.load_range_content()
-        elif reqs['cmd'] == ['set_range']:
+
+        elif reqs['cmd'] == ['update']:
+            #update ip_range if needed
             content = self.postvars['ip_range'][0]
-            ip_range.update_range_content(content)
-            ip_range.load_ip_range()
-            data = '{"res":"success"}'
-        elif reqs['cmd'] == ['set_auto_adjust_scan_ip_thread_num']:
-            user_config.user_special.auto_adjust_scan_ip_thread_num = int(self.postvars['auto_adjust_scan_ip_thread_num'][0])
+
+            #check ip_range checksums, update if needed
+            old_digest = hashlib.md5(ip_range.load_range_content()).hexdigest()
+            new_digest = hashlib.md5(content).hexdigest()
+
+            if old_digest != new_digest:
+                ip_range.update_range_content(content)
+                ip_range.load_ip_range()
+
+            #update auto_adjust_scan_ip and scan_ip_thread_num
+            should_auto_adjust_scan_ip = int(self.postvars['auto_adjust_scan_ip_thread_num'][0])
+            thread_num_for_scan_ip = int(self.postvars['scan_ip_thread_num'][0])
+
+            #update user config settings
+            user_config.user_special.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
+            user_config.user_special.scan_ip_thread_num = thread_num_for_scan_ip
             user_config.save()
 
-            google_ip.auto_adjust_scan_ip_thread_num = user_config.user_special.auto_adjust_scan_ip_thread_num
-            data = '{"res":"success"}'
-        elif reqs['cmd'] == ['set_scan_thread_num']:
-            user_config.user_special.scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
-            user_config.save()
+            #update google_ip settings
+            google_ip.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
 
-            scan_ip_thread_num = int(self.postvars['scan_ip_thread_num'][0])
-            google_ip.adjust_scan_thread_num(scan_ip_thread_num)
-            data = '{"res":"success"}'
+            if google_ip.max_scan_ip_thread_num != thread_num_for_scan_ip:
+                google_ip.adjust_scan_thread_num(thread_num_for_scan_ip)
+
+            #reponse 
+            data='{"res":"success"}'
+
         elif reqs['cmd'] == ['get_scan_ip_log']:
             data = scan_ip_log.get_log_content()
 
