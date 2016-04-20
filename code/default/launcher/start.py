@@ -101,11 +101,19 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    xlog.info("start XX-Net %s", update_from_github.current_version())
+    current_version = update_from_github.current_version()
+
+    xlog.info("start XX-Net %s", current_version)
 
     web_control.confirm_xxnet_exit()
 
     setup_win_python.check_setup()
+
+    last_run_version = config.get(["modules", "launcher", "last_run_version"], "0.0.0")
+    if last_run_version != current_version:
+        import post_update
+        post_update.run(last_run_version)
+        config.set(["modules", "launcher", "last_run_version"], current_version)
 
     module_init.start_all_auto()
 

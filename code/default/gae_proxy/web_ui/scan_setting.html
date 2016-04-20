@@ -15,9 +15,6 @@
                 <div class="span6">
                     <input id="scan-ip-thread-num" type="text" />
                 </div> <!-- .span6 -->
-                <div class="span3" >
-                    <button class="btn btn-primary " id="update-thread-num">{{ _("Update") }}</button>
-                </div>
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span3">
@@ -29,7 +26,7 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span12">
-                    <button class="btn btn-primary btn-block" id="submit-ip-range" type="submit">{{ _("Submit") }}</button>
+                    <button class="btn btn-primary btn-block" id="submit" type="submit">{{ _("Submit") }}</button>
                 </div> <!-- .span12 -->
             </div> <!-- .row-fluid -->
         </form>
@@ -37,35 +34,6 @@
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
-
-    $('#auto-adjust-scan-ip-thread-num').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'auto_adjust_scan_ip_thread_num',
-            value     = isChecked ? 1 : 0;
-
-        return setConfig(key, value);
-    });
-    function setConfig(key, value) {
-        var pageRequests = {};
-        pageRequests[key]   = value;
-
-        $.ajax({
-            type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_auto_adjust_scan_ip_thread_num',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip('{{ _("Settings saved successfully") }}', 'success');
-                } else {
-                    displayErrorMessage();
-                }
-            },
-            error: function() {
-                displayErrorMessage();
-            }
-        });
-    }
 </script>
 <script type="text/javascript">
     $(function() {
@@ -91,38 +59,22 @@
     $('#ip-range-content').load('/module/gae_proxy/control/scan_ip?cmd=get_range');
 </script>
 <script type="text/javascript">
-    $('#update-thread-num').click(function(){
+    $('#submit').click(function() {
+        // set_auto_adjust_scan_ip_thread_num
+        var isChecked = $("#auto-adjust-scan-ip-thread-num").is(':checked');
+
+        // scan-ip-thread-num
         var scanIpThreadNum = $('#scan-ip-thread-num').val();
-        var config = {
-            'scan_ip_thread_num': scanIpThreadNum
-        };
 
-        $.ajax({
-            type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_scan_thread_num',
-            data: config,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip('{{ _("Settings saved successfully") }}', 'success');
-                } else {
-                    tip('{{ _("Unkown error occurred") }}', 'error');
-                }
-            }
-        });
-    });
-</script>
-<script type="text/javascript">
-    $('#submit-ip-range').click(function(){
+        // ip-range
         var ipRangeContent = $('#ip-range-content').val();
-        var config = {
-            'ip_range': ipRangeContent
-        };
-
+        
         $.ajax({
             type: 'POST',
-            url: '/module/gae_proxy/control/scan_ip?cmd=set_range',
-            data: config,
+            url: '/module/gae_proxy/control/scan_ip?cmd=update',
+            data: {"auto_adjust_scan_ip_thread_num": isChecked ? 1 : 0,
+                   "scan_ip_thread_num": scanIpThreadNum,
+                   "ip_range": ipRangeContent},
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
@@ -132,5 +84,6 @@
                 }
             }
         });
+
     });
 </script>
