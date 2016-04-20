@@ -1,0 +1,11 @@
+# Files not on this list (including itself) will be deleted
+# 不在此列表上的文件（包括本文件）会被删除
+
+# D: Directory, F: File, X: Unix Executable
+
+D data
+D code
+F README.md
+F xxnet.bat
+F xxnet.vbs
+X xxnet

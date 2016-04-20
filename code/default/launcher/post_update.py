@@ -23,17 +23,33 @@ def run(last_run_version):
     if config.get(["modules", "launcher", "auto_start"], 0):
         import autorun
         autorun.enable()
-    
-    if older_or_equal(last_run_version, '3.0.4'):
-        xlog.info("migrating to 3.0.5")
+
+    dirs = []
+    files = []
+    unix_exec = None
+
+    with open(os.path.join(top_path, 'manifest.txt')) as f:
+        for line in f:
+            filename = line.rstrip('\n')[2:]
+            if line.startswith('D '):
+                dirs.append(filename)
+            if line.startswith('F '):
+                files.append(filename)
+            if line.startswith('X '):
+                unix_exec = filename
+                files.append(filename)
+
+#    if older_or_equal(last_run_version, '3.0.4'):
+#        xlog.info("migrating to latest version")
+    if dirs and files and unix_exec:
         for filename in os.listdir(top_path):
             filepath = os.path.join(top_path, filename)
             if os.path.isfile(filepath):
-                if sys.platform != 'win32' and filename == 'xxnet':
+                if sys.platform != 'win32' and filename == unix_exec:
                     st = os.stat(filepath)
                     os.chmod(filepath, st.st_mode | stat.S_IEXEC)
-                if not filename.startswith('.') and filename not in ['README.md', 'xxnet', 'xxnet.bat', 'xxnet.vbs']:
+                if not filename.startswith('.') and filename not in files:
                     os.remove(filepath)
             else:
-                if not filename.startswith('.') and filename not in ['code', 'data']:
+                if not filename.startswith('.') and filename not in dirs:
                     shutil.rmtree(filepath)
