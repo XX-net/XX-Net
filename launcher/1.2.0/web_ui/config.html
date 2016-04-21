@@ -1,0 +1,117 @@
+
+<br><br>
+    <h4 >开机自动启动:
+        <div class="pull-right">
+            <input id="auto_start" type="checkbox" checked>
+        </div>
+    </h4>
+    <h4 >检查版本更新:
+        <div class="pull-right">
+            <input id="check_update" type="checkbox" checked>
+        </div>
+    </h4>
+    <h4 >启动时弹出状态页:
+        <div class="pull-right">
+            <input id="popup_webui" type="checkbox" checked>
+        </div>
+    </h4>
+<br><br>
+<div id="status"></div>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/highlight.js"></script>
+<script src="/js/bootstrap-switch.min.js"></script>
+<script type="text/javascript">
+    var check_update = 1;
+    var popup_webui = 1;
+    var auto_start = 0;
+
+    $('#check_update').on('init.bootstrapSwitch', function (event) {
+        $.getJSON( "/config?cmd=get_config", function( data ) {
+            check_update = data.check_update;
+            if(data.check_update == 1){
+                $('#check_update').bootstrapSwitch('state', true);
+            }else{
+                $('#check_update').bootstrapSwitch('state', false);
+            }
+
+            popup_webui = data.popup_webui;
+            if(data.popup_webui == 1){
+                $('#popup_webui').bootstrapSwitch('state', true);
+            }else{
+                $('#popup_webui').bootstrapSwitch('state', false);
+            }
+
+            auto_start = data.auto_start;
+            if(data.auto_start == 1){
+                $('#auto_start').bootstrapSwitch('state', true);
+            }else{
+                $('#auto_start').bootstrapSwitch('state', false);
+            }
+        });
+    });
+
+    $('#check_update').on('switchChange.bootstrapSwitch', function (event, state) {
+        if(state){
+            val = 1;
+        }else{
+            val = 0;
+        }
+        if(val == check_update){
+            return;
+        }else{
+            check_update = val;
+        }
+        $.getJSON( "/config?cmd=set_config&check_update="+val, function( data ) {
+            res = data.res
+            $("#status").html(res)
+        });
+    });
+
+    ///////////////////////////////////////////////////////////////////////
+
+
+    $('#popup_webui').on('switchChange.bootstrapSwitch', function (event, state) {
+        if(state){
+            val = 1;
+        }else{
+            val = 0;
+        }
+        if(val == popup_webui){
+            return;
+        }else{
+            popup_webui = val;
+        }
+        $.getJSON( "/config?cmd=set_config&popup_webui="+val, function( data ) {
+            res = data.res
+            $("#status").html(res)
+        });
+    });
+
+    $('#auto_start').on('switchChange.bootstrapSwitch', function (event, state) {
+        if(state){
+            val = 1;
+        }else{
+            val = 0;
+        }
+        if(val == auto_start){
+            return;
+        }else{
+            auto_start = val;
+        }
+        $.getJSON( "/config?cmd=set_config&auto_start="+val, function( data ) {
+            res = data.res
+            $("#status").html(res)
+        });
+    });
+
+    ///////////////////////////////////////////////////////////////////////
+    // initialize all the inputs
+    $('input[type="checkbox"], input[type="radio"]')
+            .not("[data-switch-no-init]")
+            .bootstrapSwitch();
+
+
+</script>
