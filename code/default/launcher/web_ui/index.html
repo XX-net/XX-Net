@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><!-- See http://www.w3schools.com/tags/ref_language_codes.asp -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+    <title>XX-Net</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap-responsive.css">
+    <link rel="stylesheet" type="text/css" href="/css/flat-ui.css">
+    <link rel="stylesheet" type="text/css" href="/css/ladda-themeless.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css?ver=%s">
+    <!-- JavaScript -->
+    <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/js/flat-ui.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.timer.js"></script>
+    <script type="text/javascript" src="/js/spin.min.js"></script>
+    <script type="text/javascript" src="/js/ladda.min.js"></script>
+    <script type="text/javascript" src="/js/site.js?ver=%s"></script>
+    <!--[if lte IE 9]>
+        <script type="text/javascript" src="/js/jquery.placeholder.min.js"></script>
+        <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div id="header" class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <div class="row-fluid">
+                    <div id="logo" class="span8">
+                        <a href="/" title="XX-Net">
+                            <img src="/img/logo.png" alt="Logo">
+                            XX-Net
+                        </a>
+                        <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
+                    </div> <!-- #logo -->
+                    <div class="span4 text-right">
+                        <ul class="inline">
+                            <li>
+                                <a id="resize-window-trigger" href="javascript:void(0);" title='{{ _( "Adaptive width" ) }}'>
+                                    <img src="/img/fixed-width.png" alt="resize-window">
+                                </a>
+                            </li>
+                            <li>
+                                <a id="quit-trigger" href="javascript:void(0);" title='{{ _( "Exit the program" ) }}'>
+                                    <img src="/img/quit.png" alt="quit">
+                                </a>
+                            </li>
+                        </ul>
+                    </div> <!-- .span4 -->
+                </div> <!-- .row-fluid -->
+            </div> <!-- .container -->
+        </div> <!-- .navbar-inner -->
+    </div> <!-- #header -->
+    <div id="content">
+        <div class="container">
+            <div class="row-fluid">
+                <div id="sidebar" class="span3">
+                    <div class="sidebar-nav well">
+                        <ul class="nav nav-list">%s</ul>
+                    </div> <!-- .sidebar-nav -->
+                </div> <!-- #sidebar -->
+                <div class="span9">
+                    <h2 id="title"></h2>
+                    <div id="tip" class="alert fade in hide">
+                        <button id="tip-close" type="button" class="close">×</button>
+                        <p id="tip-message" class="message"></p>
+                    </div> <!-- #tip -->
+                    %s
+                </div>
+            </div> <!-- .row-fluid -->
+        </div> <!-- .container -->
+    </div> <!-- #content -->
+    <!-- JavaScript -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript">
+        $(function() {
+            window.isFullWidth = false;
+        });
+    </script>
+    <script type="text/javascript">
+        $('#resize-window-trigger').click(function() {
+            isFullWidth = !isFullWidth;
+
+            if ( isFullWidth ) {
+                $('img', this).attr('src', '/img/full-width.png');
+                $('.container').addClass('container-fluid');
+                $('.container').removeClass('container');
+            } else {
+                $('img', this).attr('src', '/img/fixed-width.png');
+                $('.container-fluid').addClass('container');
+                $('.container-fluid').removeClass('container-fluid');
+            }
+        });
+    </script>
+    <script type="text/javascript">
+        $('#quit-trigger').click(function() {
+            $.ajax({
+                type: 'GET',
+                url: '/quit',
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['status'] == 'success' ) {
+                        tip('{{ _( "Exited successfully" ) }}', 'success');
+                    } else {
+                        tip('{{ _( "Exitting failed" ) }}', 'error');
+                    }
+                },
+                error: function() {
+                    tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
+                }
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['allow_remote_connect'] != 0 ) {
+                    $('#remote-connection-identifier').show();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

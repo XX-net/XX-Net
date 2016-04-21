@@ -1,0 +1,12 @@
+module_title: {{ _( "System" ) }}
+menu_sort_id: 100
+sub_menus: {
+  1:{
+    title: {{ _( "Configuration" ) }},
+    url: config
+  },
+  2:{
+    title: {{ _( "About" ) }},
+    url: about
+  }
+}

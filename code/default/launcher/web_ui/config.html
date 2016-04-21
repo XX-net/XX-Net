@@ -1,0 +1,566 @@
+<div id="options">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="language">{{ _( "Language" ) }}</label>
+        </div>
+        <div class="span4">
+            <select id="language">
+                <!-- <option value="de_DE">Deutsch</option> -->
+                <option value="en_US">English</option>
+                <!-- <option value="es_VE">Español</option> -->
+                <option value="fa_IR">فارسی</option>
+                <!-- <option value="ja_JP">日本語</option> -->
+                <option value="zh_CN">简体中文</option>
+            </select>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="auto-start" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Popup Status Page on Startup" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="popup-webui" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Enable Remote Web Control" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
+        <div class="span8">
+            <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Required)" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="show-systray" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="update-options" class="pull-down-control">
+                <i class="icon icon-chevron-right" id="upgrade-pull-icon"></i> {{ _( "Upgrade Management" ) }}
+            </label>
+        </div> <!-- .span4 -->
+    </div> <!-- .row-fluid -->
+    <div id="update-options" style="display: none;">
+        <hr>
+        <div class="row-fluid">
+            <div class="span3">
+                <label for="check-update">{{ _( "Auto-Upgrade to" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">({{ _( "Help" ) }})</a></label>
+            </div>
+            <div class="span6">
+                <select id="check-update">
+                    <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
+                    <option value="stable">{{ _( "Stable version" ) }}</option>
+                    <option value="test">{{ _( "Test version" ) }}</option>
+                </select>
+            </div>
+            <div class="span2">
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">{{ _( "Check the latest version" ) }}</button>
+            </div>
+            <div class="span1" id="check-new-version-process">
+            </div>
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid version-line hide">
+            <div class="span2">
+                <label for="current-version-no">{{ _( "Current version" ) }}: </label>
+            </div>
+            <div class="span4" id="current-version-no" style="margin-top:10px"></div>
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid version-line hide">
+            <div class="span2">
+                <label for="test-version-no">{{ _( "Version of the test one" ) }}: </label>
+            </div>
+            <div class="span4" id="test-version-no" style="margin-top:10px"></div>
+            <div class="span2" >
+                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">{{ _( "Update now" ) }}</button>
+            </div>
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid version-line hide">
+            <div class="span2">
+                <label for="stable-version-no">{{ _( "Version of the stable one" ) }}: </label>
+            </div>
+            <div class="span4" id="stable-version-no" style="margin-top:10px"></div>
+            <div class="span2">
+                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
+            </div>
+        </div> <!-- .row-fluid -->
+        <hr>
+    </div> <!-- #advanced-options -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="modules-manager" class="pull-down-control">
+                <i class="icon icon-chevron-right"></i> {{ _( "Module management" ) }}
+            </label>
+        </div> <!-- .span4 -->
+    </div> <!-- .row-fluid -->
+    <div id="modules-manager" style="display: none;">
+        <hr>
+        <div class="row-fluid">
+            <div class="span4">{{ _( "Enable" ) }} GAE proxy</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid" >
+            <div class="span4">{{ _( "Enable" ) }} PHP proxy</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="php-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid" >
+            <div class="span4">{{ _( "Enable" ) }} X_tunnel</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <hr>
+    </div> <!-- #advanced-options -->
+</div> <!-- #options -->
+
+<!-- JavaScript -->
+<script type="text/javascript">
+    title('{{ _( "System configuration options" ) }}');
+</script>
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        getConfig();
+    });
+</script>
+<script type="text/javascript">
+    function getConfig() {
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['auto_start'] != 0 ) {
+                    $( "#auto-start").parent().removeClass('switch-off');
+                    $( "#auto-start").parent().addClass('switch-on');
+
+                    $( "#auto-start").prop('checked', true);
+                }
+                if ( result['popup_webui'] != 0 ) {
+                    $( "#popup-webui").parent().removeClass('switch-off');
+                    $( "#popup-webui").parent().addClass('switch-on');
+
+                    $( "#popup-webui").prop('checked', true);
+                }
+                if ( result['allow_remote_connect'] != 0 ) {
+                    $( "#allow-remote-connect").parent().removeClass('switch-off');
+                    $( "#allow-remote-connect").parent().addClass('switch-on');
+
+                    $( "#allow-remote-connect").prop('checked', true);
+                }
+                if ( result['show_systray'] != 0 ) {
+                    $( "#show-systray").parent().removeClass('switch-off');
+                    $( "#show-systray").parent().addClass('switch-on');
+
+                    $( "#show-systray").prop('checked', true);
+                }
+                if ( result['gae_proxy_enable'] != 0 ) {
+                    $( "#gae_proxy-enable").parent().removeClass('switch-off');
+                    $( "#gae_proxy-enable").parent().addClass('switch-on');
+
+
+                    $( "#gae_proxy-enable").prop('checked', true);
+                }
+                if ( result['php_enable'] != 0 ) {
+                    $( "#php-enable").parent().removeClass('switch-off');
+                    $( "#php-enable").parent().addClass('switch-on');
+
+                    $( "#php-enable").prop('checked', true);
+                }
+                if ( result['x_tunnel_enable'] != 0 ) {
+                    $( "#x-tunnel-enable").parent().removeClass('switch-off');
+                    $( "#x-tunnel-enable").parent().addClass('switch-on');
+
+                    $( "#x-tunnel-enable").prop('checked', true);
+                }
+                $( "#language").val(result['language']);
+                $( "#check-update").val(result['check_update']);
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $('.pull-down-control').click(function() {
+        var isShown = $('i.icon', this).hasClass('icon-chevron-down');
+        var id = $(this).attr('for');
+
+        if ( !isShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#'+id).slideDown();
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#'+id).slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
+    $('#language').change(function() {
+        var key   = 'language',
+            value = $(this).val();
+
+        setConfig(key, value);
+
+        setTimeout(function () {
+            location.reload();
+        }, 500);
+    });
+
+    $('#auto-start').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'auto_start',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#show-systray').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'show_systray',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#check-update').change(function() {
+        var key   = 'check_update',
+            value = $(this).val();
+
+        return setConfig(key, value);
+    });
+
+    $('#popup-webui').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'popup_webui',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#allow-remote-connect').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'allow_remote_connect',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#gae_proxy-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'gae_proxy_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+
+    $('#php-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'php_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+    $('#x-tunnel-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'x_tunnel_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+</script>
+<script type="text/javascript">
+    function setConfig(key, value) {
+        var pageRequests = {};
+
+        pageRequests['cmd'] = 'set_config';
+        pageRequests[key]   = value;
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    if ( key == 'gae_proxy_enable' || key == 'php_enable' || key == 'x_tunnel_enable') {
+                        restartingService(key);
+                    } else {
+                        tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                    }
+
+                } else {
+                    displayErrorMessage();
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    function displayErrorMessage() {
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
+    }
+</script>
+<script type="text/javascript">
+    function restartingService(serviceNameSlug) {
+        var serviceName     = '',
+            restatingTime   = 5,
+            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
+
+        if ( serviceNameSlug == 'gae_proxy_enable' ) {
+            serviceName     = '{{ _( "GAE Proxy" ) }}';
+        } else if ( serviceNameSlug == 'php_enable' ) {
+            serviceName     = '{{ _( "PHP proxy" ) }}';
+        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
+            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
+        } else {
+            serviceName     = 'Unknown';
+        }
+
+        tip(messageTemplate.format(serviceName, restatingTime), 'warning');
+
+        setTimeout(function () {
+            location.reload();
+        }, restatingTime * 1000);
+    }
+</script>
+<script type="text/javascript">
+    function versionCompare(v1, v2, options) {
+        var lexicographical = options && options.lexicographical,
+            zeroExtend = options && options.zeroExtend,
+            v1parts = v1.split('.'),
+            v2parts = v2.split('.');
+
+        function isValidPart(x) {
+            return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
+        }
+
+        if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+            return NaN;
+        }
+
+        if (zeroExtend) {
+            while (v1parts.length < v2parts.length) v1parts.push("0");
+            while (v2parts.length < v1parts.length) v2parts.push("0");
+        }
+
+        if (!lexicographical) {
+            v1parts = v1parts.map(Number);
+            v2parts = v2parts.map(Number);
+        }
+
+        for (var i = 0; i < v1parts.length; ++i) {
+            if (v2parts.length == i) {
+                return 1;
+            }
+
+            if (v1parts[i] == v2parts[i]) {
+                continue;
+            }
+            else if (v1parts[i] > v2parts[i]) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        }
+
+        if (v1parts.length != v2parts.length) {
+            return -1;
+        }
+
+        return 0;
+    }
+    $('#check-new-version').click(function(){
+        check_new_version();
+    });
+
+    function check_new_version(){
+        var button = $('#check-new-version');
+        var loading = Ladda.create(button[0]);
+        loading.start();
+
+        var pageRequests = {};
+        pageRequests['cmd'] = 'get_new_version';
+
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    $('#current-version-no').html(result['current_version']);
+                    $('#test-version-no').html(result['test_version']);
+                    $('#stable-version-no').html(result['stable_version']);
+
+                    if(versionCompare(result['test_version'], result['current_version']) <= 0){
+                        $('#update-test-version').addClass("hide");
+                    }
+                    if(versionCompare(result['stable_version'], result['current_version']) <= 0){
+                        $('#update-stable-version').addClass("hide");
+                    }
+
+                    $('.version-line').removeClass('hide');
+                    $('.alert').removeClass('alert-error').addClass('hide');
+                } else {
+                    displayErrorMessage();
+                }
+                $('#check-new-version-process').addClass('hide');
+            },
+            error: function() {
+                displayErrorMessage();
+                $('#check-new-version-process').addClass('hide');
+            },
+            complete: function () {
+                loading.stop();
+            }
+        });
+    }
+</script>
+
+<script type="text/javascript">
+
+    $('.update-button').click(function(){
+        var pageRequests = {};
+        pageRequests['cmd'] = 'update_version';
+
+        var id = $(this).attr('id');
+        if(id == 'update-test-version'){
+            pageRequests['version'] = $('#test-version-no').html();
+            //window.updating_button = $('#update-test-version');
+        }else if(id == 'update-stable-version'){
+            pageRequests['version'] = $('#stable-version-no').html();
+            //window.updating_button = $('#update-stable-version');
+        }
+
+        window.loading = Ladda.create(this);
+        window.loading.start();
+
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip( '{{ _( "Updating in progress ..." ) }}', "info");
+                    window.timer.play()
+                } else {
+                    tip( result['reason'], "warning");
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    });
+
+    function updateProgress(){
+        $.getJSON('update?cmd=get_progress', function (rst) {
+            Object.keys(rst).forEach(function (v) {
+                if ( v == "update_status"){
+                    var stat = rst[v];
+
+                    if ( stat === "Idle"){
+                        window.timer.stop();
+                        return;
+                    }
+
+                    if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
+                        var current_version = $('#current-version-no').html();
+                        if ( current_version == ""){
+                            $('#current-version-no').html(" ");
+                            // avoid check next time.
+
+                            check_new_version();
+                        }
+
+                        $('.version-line').slideDown('fast');
+
+                        $('#upgrade-pull-icon').removeClass('icon-chevron-right');
+                        $('#upgrade-pull-icon').addClass('icon-chevron-down');
+                        $('#update-options').slideDown();
+                    }
+
+                    if( stat == "Finished"){
+                        tip( stat, 'info');
+                        window.loading.stop();
+                        window.timer.stop();
+                        return;
+                    }else if ( stat.indexOf('Fail') > -1){
+                        tip( stat, 'warning');
+                        window.timer.stop();
+                    }else{
+                        tip( stat, 'info');
+                    }
+                }else if (v.indexOf('XX-Net/zip') > -1) {
+                    if (!window.updating_button){
+                        var p = v.indexOf('XX-Net/zip') + 11;
+                        var version = v.substring(p, v.length);
+                        var button;
+                        if ( version == $('#test-version-no').html() ){
+                            button = $('#update-test-version');
+                        }else if ( version == $('#stable-version-no').html() ){
+                            button = $('#update-stable-version');
+                        }else{
+                            return;
+                        }
+                        window.updating_button = button;
+                    }
+
+                    if (!window.loading){
+                        window.loading = Ladda.create(window.updating_button[0]);
+                        window.loading.start();
+                    }
+                    var data = rst[v];
+                    if ( data.status === 'downloading'){
+                        var progress =  (+data.downloaded / +data.size) * 100 ;
+
+                        window.loading.setProgress(progress);
+                        window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '%');
+                    }else if (data.status === "finished"){
+                        window.updating_button.html( '{{ _( "Download completed" ) }}');
+                        window.updating_button.prop('disabled', true);
+                    }
+                }
+            });
+        });
+    }
+
+    $(document).ready(function(){
+        window.timer = $.timer(function() {
+            updateProgress();
+        });
+
+        window.timer.set({
+            time: 1000,
+            autostart: true
+        });
+
+        updateProgress();
+    });
+</script>
