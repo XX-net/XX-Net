@@ -23,9 +23,11 @@ def run(last_run_version):
     if config.get(["modules", "launcher", "auto_start"], 0):
         import autorun
         autorun.enable()
-    
+
+    shutil.rmtree(os.path.join(top_path, 'launcher')) # launcher is for auto-update from 2.X
+
     if older_or_equal(last_run_version, '3.0.4'):
-        xlog.info("migrating to 3.0.5")
+        xlog.info("migrating to 3.0.5+")
         for filename in os.listdir(top_path):
             filepath = os.path.join(top_path, filename)
             if os.path.isfile(filepath):
