@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>XX-Net</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="/css/bootstrap-switch.min.css" rel="stylesheet">
+
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        .sidebar-nav {
+            padding: 9px 0;
+        }
+
+        @media (max-width: 980px) {
+            /* Enable use of floated navbar text */
+            .navbar-text.pull-right {
+                float: none;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+        }
+        html {
+            overflow-y: scroll;
+        }
+    </style>
+
+    <script src="/js/jquery-1.11.2.min.js"></script>
+    <script src="/js/jquery.timer.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/ie-emulation-modes-warning.js"></script>
+
+</head>
+<body>
+
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container" id="nav_container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#">XX-Net</a>
+            <div class="nav-collapse collapse">
+                <p class="navbar-text pull-right">
+
+                </p>
+                <ul class="nav">
+                </ul>
+            </div><!--/.nav-collapse -->
+            <nav>
+                <ul class="nav navbar-nav navbar-right pull-right">
+                    <li ><a href="#"><img src="/img/wide-screen2.png"  id="wide_screen"></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="content_container">
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav">
+                <ul class="nav nav-list">
+                    %s
+                </ul>
+            </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9" id="right_content">
+            %s
+        </div><!--/span-->
+    </div><!--/row-->
+
+
+
+</div><!--/.fluid-container-->
+
+
+
+    <script src="/js/frame_action.js"></script>
+<script type="text/javascript">
+    var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+    // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+    var isFirefox = typeof InstallTrigger !== 'undefined';   // Firefox 1.0+
+    var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+    // At least Safari 3+: "[object HTMLElementConstructor]"
+    var isChrome = !!window.chrome && !isOpera;              // Chrome 1+
+    var isIE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+
+    function getInternetExplorerVersion()
+    {
+        var ua = navigator.userAgent;
+        var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+        if (re.exec(ua) != null){
+          rv = parseFloat( RegExp.$1 );
+          return rv;
+        }
+        var re  = new RegExp("rv:([0-9]{1,}[\.0-9]{0,})");
+        if (re.exec(ua) != null){
+          rv = parseFloat( RegExp.$1 );
+          return rv;
+        }
+        return -1;
+    }
+
+
+
+    if (isIE ) {
+        ver = getInternetExplorerVersion();
+        if(ver < "11"){
+            alert("XX-Net WebUI not work in IE before version 11 !");
+        }
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<h2>配置PHP代理</h2>
+<form id="form-goagent-config">
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" id="php_enable"> 启用PHP代理<a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy">帮助</a>
+        </label>
+    </div>
+    <input type="text" class="input-large" placeholder="fetch server" id="php_server">
+    <br>
+    <input type="password" class="input-middle" placeholder="php_password" id="php_password">
+    <hr>
+
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" id="proxy_enable"> 前置代理
+        </label>
+    </div>
+    <div id="proxy_detail" style="display:none";>
+        <input type="text" class="input-medium" placeholder="host" id="proxy_host">
+        <input type="text" class="input-small" placeholder="port" id="proxy_port">
+        <br>
+        <input type="text" class="input-small" placeholder="User name" id="proxy_username">
+        <input type="password" class="input-small" placeholder="Password" id="proxy_password">
+    </div>
+    <br>
+    <hr>
+    <button type="submit" class="btn">保存并重启</button>
+    <div id="status"></div>
+</form>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+    $.post( "http://127.0.0.1:8083/config?cmd=get_config", {}, function( data ) {
+        if(data.php_enable == 1){
+            $("#php_enable").prop('checked', true);
+        }else{
+            $("#php_enable").prop('checked', false);
+        }
+        $( "#php_server" ).val(data.php_server);
+        $( "#php_password" ).val(data.php_password);
+
+        if(data.proxy_enable == 1){
+            $("#proxy_enable").prop('checked', true);
+            $('#proxy_detail').show();
+        }else{
+            $("#proxy_enable").prop('checked', false);
+            $('#proxy_detail').hide();
+        }
+        $("#proxy_host").val(data.proxy_host);
+        $("#proxy_port").val(data.proxy_port);
+        $("#proxy_username").val(data.proxy_username);
+        $("#proxy_password").val(data.proxy_password);
+    });
+
+    $('#proxy_enable').click(function(data){
+        if($("#proxy_enable").prop('checked')){
+            $('#proxy_detail').show();
+        }else{
+            $('#proxy_detail').hide();
+        }
+    });
+
+
+    $( "#form-goagent-config" ).submit(function( event ) {
+        event.preventDefault();
+
+        if($("#php_enable").prop('checked')){
+            php_enable = 1;
+        }else{
+            php_enable = 0;
+        }
+        php_server = $( "#php_server" ).val()
+        php_password = $( "#php_password" ).val()
+
+        if($("#proxy_enable").prop('checked')){
+            proxy_enable = 1;
+        }else{
+            proxy_enable = 0;
+        }
+        proxy_host = $("#proxy_host").val();
+        proxy_port = $("#proxy_port").val();
+        proxy_username = $("#proxy_username").val();
+        proxy_password = $("#proxy_password").val();
+
+        $.post( "http://127.0.0.1:8083/config?cmd=set_config", {"php_enable":php_enable, "php_server":php_server, "php_password": php_password,
+                "proxy_enable":proxy_enable, "proxy_host":proxy_host, "proxy_port":proxy_port,
+                "proxy_username":proxy_username, "proxy_password":proxy_password,},
+            function( data ) {
+
+            res = data.res
+            if(res == "success") {
+                $("#status").html(res)
+            }
+        });
+    });
+</script>

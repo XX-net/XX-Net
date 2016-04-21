@@ -1,0 +1,92 @@
+<h2>配置GoAgent</h2>
+<form id="form-goagent-config">
+    <input type="text" class="input-middle" placeholder="appid" id="gae_appid">
+    清空将使用公共appid(<font color="red">公共appid不能看视频</font>)
+    建议申请自己的appid(<a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a>)
+    <br>
+    <input type="password" class="input-small" placeholder="RC4 password" id="gae_passwd">
+    一般不需要填
+    <br>
+
+    <hr>
+
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" id="proxy_enable"> 局域网代理（大部分情况不需要配置）<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy">帮助</a>
+        </label>
+    </div>
+    <div id="proxy_detail" style="display:none";>
+        <select class="input-medium" id="proxy_type">
+            <option>HTTP</option>
+            <option>SOCKS4</option>
+            <option>SOCKS5</option>
+        </select>
+        <input type="text" class="input-medium" placeholder="host" id="proxy_host">
+        <input type="text" class="input-small" placeholder="port" id="proxy_port">
+        <br>
+        <input type="text" class="input-small" placeholder="User name" id="proxy_user">
+        <input type="password" class="input-small" placeholder="Password" id="proxy_passwd">
+    </div>
+    <br>
+    <hr>
+    <button type="submit" class="btn">保存并重启</button>
+    <div id="status"></div>
+</form>
+
+
+<script src="/js/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+    $.post( "http://127.0.0.1:8084/config?cmd=get_config", {}, function( data ) {
+        $( "#gae_appid" ).val(data.appid);
+        $( "#gae_passwd" ).val(data.passwd);
+        if(data.proxy_enable == 1){
+            $("#proxy_enable").prop('checked', true);
+            $('#proxy_detail').show();
+        }else{
+            $("#proxy_enable").prop('checked', false);
+        }
+        $("#proxy_type").val(data.proxy_type);
+        $("#proxy_host").val(data.proxy_host);
+        $("#proxy_port").val(data.proxy_port);
+        $("#proxy_user").val(data.proxy_user);
+        $("#proxy_passwd").val(data.proxy_passwd);
+    });
+
+    $('#proxy_enable').click(function(data){
+        if($("#proxy_enable").prop('checked')){
+            $('#proxy_detail').show();
+        }else{
+            $('#proxy_detail').hide();
+        }
+    });
+
+
+    $( "#form-goagent-config" ).submit(function( event ) {
+        event.preventDefault();
+
+        appid = $( "#gae_appid" ).val()
+        passwd = $( "#gae_passwd" ).val()
+
+        if($("#proxy_enable").prop('checked')){
+            proxy_enable = 1;
+        }else{
+            proxy_enable = 0;
+        }
+        proxy_type = $("#proxy_type").val();
+        proxy_host = $("#proxy_host").val();
+        proxy_port = $("#proxy_port").val();
+        proxy_user = $("#proxy_user").val();
+        proxy_passwd = $("#proxy_passwd").val();
+
+        $.post( "http://127.0.0.1:8084/config?cmd=set_config", {"appid":appid, "passwd": passwd,
+                "proxy_enable":proxy_enable, "proxy_type":proxy_type, "proxy_host":proxy_host, "proxy_port":proxy_port,
+                "proxy_user":proxy_user, "proxy_passwd":proxy_passwd,},
+            function( data ) {
+
+            res = data.res
+            if(res == "success") {
+                $("#status").html(res)
+            }
+        });
+    });
+</script>
