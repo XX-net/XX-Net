@@ -24,7 +24,8 @@ def run(last_run_version):
         import autorun
         autorun.enable()
 
-    shutil.rmtree(os.path.join(top_path, 'launcher')) # launcher is for auto-update from 2.X
+    if os.path.isdir(os.path.join(top_path, 'launcher')):
+        shutil.rmtree(os.path.join(top_path, 'launcher')) # launcher is for auto-update from 2.X
 
     if older_or_equal(last_run_version, '3.0.4'):
         xlog.info("migrating to 3.0.5+")
