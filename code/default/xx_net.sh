@@ -30,12 +30,13 @@ start() {
     echo -n "Starting ${PACKAGE_DESC}: "
     if hash python2 2>/dev/null; then
         nohup "${PYTHON}" launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
+    fi
     echo "${PACKAGE_NAME}."
 }
 
 stop() {
     echo -n "Stopping ${PACKAGE_DESC}: "
-    kill -9 `ps aux | grep ${PYTHON} 'launcher/start.py' | grep -v grep | awk '{print $2}'` || truei
+    kill -9 `ps aux | grep "${PYTHON} launcher/start.py" | grep -v grep | awk '{print $2}'` || true
     echo "${PACKAGE_NAME}."
 }
 
