@@ -32,20 +32,22 @@ class HTTP1_worker(HTTP_worker):
         last_ssl_active_time = self.ssl_sock.create_time
         last_request_time = time.time()
         while connect_control.keep_running and self.keep_running:
-            time_to_ping = min(0, 50 - (time.time() - last_ssl_active_time))
+            time_to_ping = min(0, 55 - (time.time() - last_ssl_active_time))
             try:
                 task = self.task_queue.get(True, timeout=time_to_ping)
                 if not task:
                     # None task to exit
                     return
             except:
-                if time.time() - last_request_time > 4 * 60:
-                    self.close("idle 4 mins")
+                if time.time() - last_request_time > 2 * 60:
+                    self.close("idle 2 mins")
                     return
 
                 last_ssl_active_time = time.time()
                 if not self.head_request():
-                    self.close("keep alive")
+                    google_ip.report_connect_fail(self.ssl_sock.ip, force_remove=True)
+                    # now many gvs don't support gae
+                    self.close("keep alive, maybe not support")
                     return
                 else:
                     continue

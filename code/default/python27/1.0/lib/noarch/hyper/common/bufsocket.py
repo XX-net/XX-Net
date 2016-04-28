@@ -107,18 +107,20 @@ class BufferedSocket(object):
         self.send_buffer.append(buf)
 
         if len(self.send_buffer) > 1300:
-            data = self.send_buffer.get_string()
-            self.send_buffer.reset()
-            return self._sck.send(data)
+            self.flush()
 
     def flush(self):
         if len(self.send_buffer):
             data = self.send_buffer.get_string()
             logger.debug("buffer socket flush:%d", len(data))
             self.send_buffer.reset()
-            sended = self._sck.send(data)
-            if sended != len(data):
-                raise Exception("send fail")
+
+            data_len = len(data)
+            start = 0
+            while start < data_len:
+                send_size = min(data_len - start, 65535)
+                sended = self._sck.send(data[start:start+send_size])
+                start += sended
 
     @property
     def _remaining_capacity(self):

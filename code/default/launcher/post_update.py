@@ -35,7 +35,7 @@ def run(last_run_version):
                 if sys.platform != 'win32' and filename == 'xxnet':
                     st = os.stat(filepath)
                     os.chmod(filepath, st.st_mode | stat.S_IEXEC)
-                if not filename.startswith('.') and filename not in ['README.md', 'xxnet', 'xxnet.bat', 'xxnet.vbs']:
+                if not filename.startswith('.') and filename not in ['README.md', 'start', 'start.bat', 'start.vbs']:
                     os.remove(filepath)
             else:
                 if not filename.startswith('.') and filename not in ['code', 'data']:
