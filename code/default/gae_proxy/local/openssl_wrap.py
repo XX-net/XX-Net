@@ -27,7 +27,8 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 ssl_version = ''
-
+openssl_version = OpenSSL.version.__version__
+support_alpn_npn = "no"
 
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
@@ -51,7 +52,7 @@ class SSLConnection(object):
         if attr not in ('_context', '_sock', '_connection', '_makefile_refs'):
             return getattr(self._connection, attr)
 
-    def __iowait2(self, io_func, *args, **kwargs):
+    def __iowait(self, io_func, *args, **kwargs):
         timeout = self._sock.gettimeout() or 0.1
         fd = self._sock.fileno()
         time_start = time.time()
@@ -77,30 +78,6 @@ class SSLConnection(object):
             except Exception as e:
                 #xlog.exception("e:%r", e)
                 raise e
-
-    def __iowait(self, io_func, *args, **kwargs):
-        timeout = self._sock.gettimeout() or 0.1
-        fd = self._sock.fileno()
-        time_start = time.time()
-        while True:
-            try:
-                return io_func(*args, **kwargs)
-            except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
-                sys.exc_clear()
-                _, _, errors = select.select([fd], [], [fd], timeout)
-                if errors:
-                    break
-                time_now = time.time()
-                if time_now - time_start > timeout:
-                    break
-            except OpenSSL.SSL.WantWriteError:
-                sys.exc_clear()
-                _, _, errors = select.select([], [fd], [fd], timeout)
-                if errors:
-                    break
-                time_now = time.time()
-                if time_now - time_start > timeout:
-                    break
 
     def accept(self):
         sock, addr = self._sock.accept()
@@ -209,7 +186,7 @@ class SSLConnection(object):
 
     @staticmethod
     def context_builder(ca_certs=None, cipher_suites=None):
-        global  ssl_version
+        global ssl_version, support_alpn_npn
 
         if not ca_certs:
             ca_certs = os.path.join(current_path, "cacert.pem")
@@ -258,6 +235,7 @@ class SSLConnection(object):
         try:
             ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
             xlog.info("OpenSSL support alpn")
+            support_alpn_npn = "alpn"
             return ssl_context
         except Exception as e:
             #xlog.exception("set_alpn_protos:%r", e)
@@ -266,6 +244,7 @@ class SSLConnection(object):
         try:
             ssl_context.set_npn_select_callback(SSLConnection.npn_select_callback)
             xlog.info("OpenSSL support npn")
+            support_alpn_npn = "npn"
         except Exception as e:
             #xlog.exception("set_npn_select_callback:%r", e)
             xlog.info("OpenSSL dont't support npn/alpn, no HTTP/2 supported.")

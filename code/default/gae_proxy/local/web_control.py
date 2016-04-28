@@ -18,8 +18,9 @@ import time
 import hashlib
 
 
-
 from xlog import getLogger
+
+
 xlog = getLogger("gae_proxy")
 from config import config
 from appids_manager import appid_manager
@@ -36,6 +37,8 @@ import cert_util
 import simple_http_server
 import test_appid
 from http_dispatcher import http_dispatch
+import openssl_wrap
+
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -170,7 +173,10 @@ class User_config(object):
 user_config = User_config()
 
 
-
+def get_openssl_version():
+    return "%s %s h2:%s" % (openssl_wrap.openssl_version,
+                           openssl_wrap.ssl_version,
+                           openssl_wrap.support_alpn_npn)
 
 def http_request(url, method="GET"):
     proxy_handler = urllib2.ProxyHandler({})
@@ -414,6 +420,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "browser": user_agent,
                    "xxnet_version": self.xxnet_version(),
                    "python_version": platform.python_version(),
+                   "openssl_version": get_openssl_version(),
 
                    "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "pac_url": config.pac_url,

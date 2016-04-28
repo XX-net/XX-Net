@@ -364,9 +364,10 @@ class HTTP2_worker(HTTP_worker):
             # If an error occured, try to read the error description from
             # code registry otherwise use the frame's additional data.
             error_string = frame._extra_info()
-            xlog.warn("goaway:%s", error_string)
+            if frame.additional_data != "session_timed_out":
+                xlog.warn("goaway:%s", error_string)
 
-            self.close("GoAway")
+            self.close("GoAway:%s" % error_string)
 
         elif frame.type == BlockedFrame.type:
             xlog.warn("%s get BlockedFrame", self.ip)

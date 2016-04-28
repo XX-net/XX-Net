@@ -231,38 +231,41 @@ def fetch_by_gae(method, url, headers, body):
     if response.app_status != 200:
         return response
 
-    data = response.body.get(2)
-    if len(data) < 2:
-        xlog.warn("fetch too short lead byte len:%d %s", len(data), url)
-        response.app_status = 502
-        # 502: Bad gateway
-        response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
-        response.read = response.fp.read
+    try:
+        data = response.body.get(2)
+        if len(data) < 2:
+            xlog.warn("fetch too short lead byte len:%d %s", len(data), url)
+            response.app_status = 502
+            # 502: Bad gateway
+            response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
+            response.read = response.fp.read
+            return response
+
+        headers_length, = struct.unpack('!h', data)
+        data = response.body.get(headers_length)
+        if len(data) < headers_length:
+            xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
+            response.app_status = 509
+            response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
+            response.read = response.fp.read
+            return response
+
+        raw_response_line, headers_data = inflate(data).split('\r\n', 1)
+        _, response.status, response.reason = raw_response_line.split(None, 2)
+        response.status = int(response.status)
+        response.reason = response.reason.strip()
+
+        headers_pairs = headers_data.split('\r\n')
+        response.headers = {}
+        for pair in headers_pairs:
+            if not pair:
+                break
+            k, v = pair.split(': ', 1)
+            response.headers[k] = v
+
         return response
-
-    headers_length, = struct.unpack('!h', data)
-    data = response.body.get(headers_length)
-    if len(data) < headers_length:
-        xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
-        response.app_status = 509
-        response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
-        response.read = response.fp.read
-        return response
-
-    raw_response_line, headers_data = inflate(data).split('\r\n', 1)
-    _, response.status, response.reason = raw_response_line.split(None, 2)
-    response.status = int(response.status)
-    response.reason = response.reason.strip()
-
-    headers_pairs = headers_data.split('\r\n')
-    response.headers = {}
-    for pair in headers_pairs:
-        if not pair:
-            break
-        k, v = pair.split(': ', 1)
-        response.headers[k] = v
-
-    return response
+    except Exception as e:
+        raise GAE_Exception("unpack protocol:%r", e)
 
 
 def request_gae_proxy(method, url, headers, body):

@@ -88,12 +88,23 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True):
     ssl_sock.connect(ip_port)
     time_connected = time.time()
     ssl_sock.do_handshake()
-    if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-        ssl_sock.h2 = True
-        # xlog.debug("ip:%s http/2", ip)
-    else:
-        ssl_sock.h2 = False
-        # xlog.debug("ip:%s http/1.1", ip)
+
+    try:
+        h2 = ssl_sock.get_alpn_proto_negotiated()
+        if h2 == "h2":
+            ssl_sock.h2 = True
+            # xlog.debug("ip:%s http/2", ip)
+        else:
+            ssl_sock.h2 = False
+
+        #xlog.deubg("alpn h2:%s", h2)
+    except:
+        if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
+            ssl_sock.h2 = True
+            # xlog.debug("ip:%s http/2", ip)
+        else:
+            ssl_sock.h2 = False
+            # xlog.debug("ip:%s http/1.1", ip)
     time_handshaked = time.time()
 
     # report network ok
