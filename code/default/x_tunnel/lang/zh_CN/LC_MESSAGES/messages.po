@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
+"POT-Creation-Date: 2016-02-17 14:30+0800\n"
+"PO-Revision-Date: 2016-02-19 19:30+0800\n"
+"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
+"Language: zh_Hans_CN\n"
+"Language-Team: zh_Hans_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+msgid "Config"
+msgstr "配置"
+
+msgid "Log"
+msgstr "日志"
+
+msgid "Info"
+msgstr "信息"
+
+msgid "Plans"
+msgstr "套餐"
+
+msgid "History"
+msgstr "历史"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "Login"
+msgstr "登录"
+
+msgid "Email"
+msgstr "电子邮件地址"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Haven't an account?"
+msgstr "没有账户?"
+
+msgid "Register"
+msgstr "注册"
+
+msgid "Already have an account?"
+msgstr "已有账户?"
+
+msgid "Summary"
+msgstr "概况"
+
+msgid "Account"
+msgstr "账户"
+
+msgid "Logout"
+msgstr "登出"
+
+msgid "Credit"
+msgstr "余额"
+
+msgid "Charge"
+msgstr "充值"
+
+msgid "Transfer"
+msgstr "转让"
+
+msgid "Bandwidth"
+msgstr "流量"
+
+msgid "Available Bandwidth"
+msgstr "可用流量"
+
+msgid "No bandwidth available."
+msgstr "暂无可用流量。"
+
+msgid "Expire Time"
+msgstr "到期时间"
+
+msgid "Left Bandwidth"
+msgstr "剩余流量"
+
+msgid "Plans and Pricing"
+msgstr "套餐和价格"
+
+msgid "Months"
+msgstr "个月"
+
+msgid "Buy Now"
+msgstr "立即购买"
+
+msgid "Billing History"
+msgstr "历史账单"
+
+msgid "No billing history."
+msgstr "暂无历史账单。"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Description"
+msgstr "描述"
+
+msgid "Get"
+msgstr "获取"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "You haven't enough credit. Please charge first."
+msgstr "您的余额不足，请先充值。"
+
+msgid "Plan"
+msgstr "套餐"
+
+msgid "Quarterly"
+msgstr "季度"
+
+msgid "Yearly"
+msgstr "年度"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Transfer Credit"
+msgstr "余额转账"
+
+msgid "Username transfer to"
+msgstr "转账用户名"
+
+msgid "Email Address"
+msgstr "电子邮件地址"
+
+msgid "Credit to transfer"
+msgstr "转账金额"
+
+msgid "Transfer Bandwidth"
+msgstr "流量转账"
+
+msgid "Bandwidth to transfer"
+msgstr "转账流量"
+
+msgid "Email seems invalid."
+msgstr "电子邮件地址似乎是无效的。"
+
+msgid "Password needs at least 6 charactors."
+msgstr "密码至少需要6个字符组成。"
+
+msgid "Please wait..."
+msgstr "请稍后..."
+
+msgid "Incorrect Email or password."
+msgstr "用户名或密码不正确。"
+
+msgid "Email has been taken by another user."
+msgstr "电子邮件地址已被他人使用。"
+
+msgid "Unknown error occurred."
+msgstr "发生了位置错误。"
+
+msgid "Failed to log out."
+msgstr "注销失败。"
+
+msgid "Please refresh page"
+msgstr "请刷新页面"
+
+msgid "Transfer username seems not a valid Email address."
+msgstr "转账用户名似乎不是有效的电子邮件地址。"
+
+msgid "Error occurred: "
+msgstr "发生了错误："
+
+msgid "Max Available Bandwidth: "
+msgstr "最大可用流量："
+
+msgid "Transfer amount should not more than 2 decimal places."
+msgstr "转账金额不得超过2位小数。"
+
+msgid "Order successfully complete."
+msgstr "订购成功完成。"
+
+msgid "Failed to order: "
+msgstr "订购失败："
+
+msgid "X-Tunnel Log"
+msgstr "X-Tunnel 日志"

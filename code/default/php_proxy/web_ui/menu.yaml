@@ -1,0 +1,12 @@
+module_title: PHP_proxy
+menu_sort_id: 2
+sub_menus: {
+  1:{
+    title: {{ _("Config") }},
+    url: config
+  },
+  2:{
+    title: {{ _("Log") }},
+    url: logging
+  }
+}

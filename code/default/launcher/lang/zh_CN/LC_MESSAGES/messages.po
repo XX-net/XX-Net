@@ -1,0 +1,155 @@
+
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-12-23 22:35+0800\n"
+"PO-Revision-Date: 2015-12-16 20:43+0800\n"
+"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Language-Team: zh_Hans_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+
+msgid "Project main page"
+msgstr "项目主页"
+
+msgid "Bug feedback"
+msgstr "Bug反馈"
+
+msgid "When submitting a bug, please attach "
+msgstr "报告问题时, 请附上"
+
+msgid "the status page "
+msgstr "状态页"
+
+msgid "info and "
+msgstr "信息和"
+
+msgid "the log page "
+msgstr "日志页"
+
+msgid "contents"
+msgstr "内容"
+
+msgid "Google Groups"
+msgstr "讨论区"
+
+msgid "Thanks the following projects"
+msgstr "感谢以下项目"
+
+msgid "About XX-Net"
+msgstr "关于XX-Net"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Auto-Startup"
+msgstr "开机自动启动"
+
+msgid "Popup Status Page on Startup"
+msgstr "启动时弹出状态页"
+
+msgid "Enable Remote Web Control"
+msgstr "允许远程连接Web控制端"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "Display System Tray(Restarting XX-Net Required)"
+msgstr "显示托盘图标(需要重启XX-Net)"
+
+msgid "Upgrade Management"
+msgstr "升级管理"
+
+msgid "Auto-Upgrade to"
+msgstr "自动升级到"
+
+msgid "Do not upgrade"
+msgstr "不升级"
+
+msgid "Stable version"
+msgstr "稳定版"
+
+msgid "Test version"
+msgstr "测试版"
+
+msgid "Check the latest version"
+msgstr "检查最新版本"
+
+msgid "Current version"
+msgstr "当前版本"
+
+msgid "Version of the test one"
+msgstr "测试版版本"
+
+msgid "Update now"
+msgstr "立即更新"
+
+msgid "Version of the stable one"
+msgstr "稳定版版本"
+
+msgid "Module management"
+msgstr "模块管理"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "System configuration options"
+msgstr "系统配置选项"
+
+msgid "Settings saved successfully."
+msgstr "设置已成功保存"
+
+msgid "Unkown error occured. Please refresh the page and try again"
+msgstr "发生未知错误, 请刷新页面重试。"
+
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
+
+msgid "GAE Proxy"
+msgstr "GAE代理"
+
+msgid "PHP proxy"
+msgstr "PHP代理"
+
+msgid "Updating in progress ..."
+msgstr "更新进行中..."
+
+msgid "Updating ..."
+msgstr "正在更新..."
+
+msgid "Update completed"
+msgstr "更新完毕"
+
+msgid "Unkown error occurred"
+msgstr "发生未知错误"
+
+msgid "Exited successfully"
+msgstr "退出成功。"
+
+msgid "Exitting failed"
+msgstr "退出失败。"
+
+msgid "Exitting failed. A network error occurred."
+msgstr "退出失败，网络错误。"
+
+msgid "System"
+msgstr "系统"
+
+msgid "Configuration"
+msgstr "配置"
+
+msgid "About"
+msgstr "关于"
+
+msgid "(Remote Web Control Enabled)"
+msgstr "(已允许远程连接)"
+
+msgid "Adaptive width"
+msgstr "自适应宽度"
+
+msgid "Exit the program"
+msgstr "退出程序"
