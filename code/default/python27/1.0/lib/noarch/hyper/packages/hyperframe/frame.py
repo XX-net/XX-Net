@@ -11,6 +11,7 @@ import collections
 import struct
 
 from .flags import Flag, Flags
+from ...http20 import errors
 
 # The maximum initial length of a frame. Some frames have shorter maximum lengths.
 FRAME_MAX_LEN = (2 ** 14)
@@ -46,14 +47,22 @@ class Frame(object):
         if self.stream_association == 'no-stream' and self.stream_id:
             raise ValueError('Stream ID must be zero')
 
+    def _extra_info(self):
+        return ""
+
     def __repr__(self):
-        flags = ", ".join(self.flags) or "None"
-        body = self.serialize_body()
-        if len(body) > 100:
-            body = str(body[:100]) + "..."
-        return (
-            "{type}(Stream: {stream}; Flags: {flags}): {body}"
-        ).format(type=type(self).__name__, stream=self.stream_id, flags=flags, body=body)
+        out_str = "{type}".format(type=type(self).__name__)
+        if self.stream_id:
+            out_str += " %d" % self.stream_id
+
+        if len(self.flags):
+            out_str += " F:" + ", ".join(self.flags)
+
+        extra_str = self._extra_info()
+        if extra_str:
+            out_str += " " + extra_str
+
+        return out_str
 
     @staticmethod
     def parse_frame_header(header):
@@ -73,7 +82,7 @@ class Frame(object):
 
         frame = FRAMES[type](stream_id)
         frame.parse_flags(flags)
-        return (frame, length)
+        return frame, length
 
     def parse_flags(self, flag_byte):
         for flag, flag_bit in self.defined_flags:
@@ -137,6 +146,12 @@ class Padding(object):
     def total_padding(self):
         """Return the total length of the padding, if any."""
         return self.pad_length
+
+    def _extra_info(self):
+        if self.pad_length:
+            return "pad_len:%d" % self.pad_length
+        else:
+            return ""
 
 
 class Priority(object):
@@ -211,6 +226,9 @@ class DataFrame(Padding, Frame):
         padding_len = self.total_padding + 1 if self.total_padding else 0
         return len(self.data) + padding_len
 
+    def _extra_info(self):
+        return "len:%d" % len(self.data)
+
 
 class PriorityFrame(Priority, Frame):
     """
@@ -262,6 +280,9 @@ class RstStreamFrame(Frame):
         self.error_code = struct.unpack("!L", data)[0]
         self.body_len = len(data)
 
+    def _extra_info(self):
+        return "error_code:%d" % self.error_code
+
 
 class SettingsFrame(Frame):
     """
@@ -310,6 +331,16 @@ class SettingsFrame(Frame):
             self.settings[name] = value
 
         self.body_len = len(data)
+
+    def _extra_info(self):
+        if not len(self.settings):
+            return ""
+
+        kv = []
+        for k in self.settings:
+            kv.append(str(k) + ":" + str(self.settings[k]))
+
+        return ";".join(kv)
 
 
 class PushPromiseFrame(Padding, Frame):
@@ -413,6 +444,19 @@ class GoAwayFrame(Frame):
         if len(data) > 8:
             self.additional_data = data[8:].tobytes()
 
+    def _extra_info(self):
+        if self.error_code != 0:
+            try:
+                name, number, description = errors.get_data(self.error_code)
+            except ValueError:
+                error_string = ("Encountered error code %d, extra data %s" % (self.error_code, self.additional_data))
+            else:
+                error_string = ("Encountered error %s %s: %s" % (name, number, description))
+        else:
+            error_string = ""
+
+        return "error_string:%s additional_data:%s" % (error_string, self.additional_data)
+
 
 class WindowUpdateFrame(Frame):
     """
@@ -442,6 +486,9 @@ class WindowUpdateFrame(Frame):
     def parse_body(self, data):
         self.window_increment = struct.unpack("!L", data)[0]
         self.body_len = len(data)
+
+    def _extra_info(self):
+        return "win_inc:%d" % self.window_increment
 
 
 class HeadersFrame(Padding, Priority, Frame):
@@ -510,7 +557,7 @@ class ContinuationFrame(Frame):
 
     stream_association = 'has-stream'
 
-    defined_flags = [Flag('END_HEADERS', 0x04),]
+    defined_flags = [Flag('END_HEADERS', 0x04), ]
 
     def __init__(self, stream_id, data=b'', **kwargs):
         super(ContinuationFrame, self).__init__(stream_id, **kwargs)

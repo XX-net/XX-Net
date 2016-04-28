@@ -16,6 +16,7 @@ import os
 import select
 import time
 import socket
+import errno
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
@@ -26,6 +27,7 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 ssl_version = ''
+
 
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
@@ -60,7 +62,7 @@ class SSLConnection(object):
                 sys.exc_clear()
                 _, _, errors = select.select([fd], [], [fd], timeout)
                 if errors:
-                    break
+                    raise
                 time_now = time.time()
                 if time_now - time_start > timeout:
                     break
@@ -68,10 +70,13 @@ class SSLConnection(object):
                 sys.exc_clear()
                 _, _, errors = select.select([], [fd], [fd], timeout)
                 if errors:
-                    break
+                    raise
                 time_now = time.time()
                 if time_now - time_start > timeout:
                     break
+            except Exception as e:
+                #xlog.exception("e:%r", e)
+                raise e
 
     def accept(self):
         sock, addr = self._sock.accept()
@@ -92,6 +97,9 @@ class SSLConnection(object):
                 # errors when writing empty strings are expected and can be ignored
                 return 0
             raise
+        except Exception as e:
+            xlog.exception("ssl send:%r", e)
+            raise
 
     def __send_memoryview(self, data, flags=0):
         if hasattr(data, 'tobytes'):
@@ -104,15 +112,46 @@ class SSLConnection(object):
         pending = self._connection.pending()
         if pending:
             return self._connection.recv(min(pending, bufsiz))
+
         try:
             return self.__iowait(self._connection.recv, bufsiz, flags)
         except OpenSSL.SSL.ZeroReturnError:
             return ''
         except OpenSSL.SSL.SysCallError as e:
             if e[0] == -1 and 'Unexpected EOF' in e[1]:
-                # errors when reading empty strings are expected and can be ignored
-                return ''
+                # remote closed
+                #raise e
+                return ""
             raise
+
+    def recv_into(self, buf):
+        pending = self._connection.pending()
+        if pending:
+            ret = self._connection.recv_into(buf)
+            if not ret:
+                xlog.debug("recv_into 0")
+            return ret
+
+        while True:
+            try:
+                ret = self.__iowait(self._connection.recv_into, buf)
+                if not ret:
+                    xlog.debug("recv_into 0")
+                return ret
+            except OpenSSL.SSL.ZeroReturnError:
+                continue
+            except OpenSSL.SSL.SysCallError as e:
+                if e[0] == -1 and 'Unexpected EOF' in e[1]:
+                    # errors when reading empty strings are expected and can be ignored
+                    return 0
+                elif e[0] == 11 and e[1] == 'EAGAIN':
+                    continue
+                raise
+            except errno.EAGAIN:
+                continue
+            except Exception as e:
+                xlog.exception("recv_into:%r", e)
+                raise e
 
     def read(self, bufsiz, flags=0):
         return self.recv(bufsiz, flags)
@@ -136,10 +175,16 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
     @staticmethod
-    def context_builder(ca_certs=None, cipher_suites=('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)):
-        # 'ALL', '!aNULL', '!eNULL'
-        # change default cipher suites.
-        # Google video ip can act as Google FrontEnd if cipher suits not include RC4-SHA:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256
+    def npn_select_callback(conn, protocols):
+        # xlog.debug("npn protocl:%s", ";".join(protocols))
+        if b"h2" in protocols:
+            conn.protos = "h2"
+            return b"h2"
+        else:
+            return b"http/1.1"
+
+    @staticmethod
+    def context_builder(ca_certs=None, cipher_suites=None):
         global  ssl_version
 
         if not ca_certs:
@@ -168,14 +213,53 @@ class SSLConnection(object):
 
             xlog.info("SSL use version:%s", ssl_version)
 
+
+        # 'ALL', '!aNULL', '!eNULL'
+        # change default cipher suites.
+        # Google video ip can act as Google FrontEnd if cipher suits not include
+        # RC4-SHA:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256
+        #
+        if not cipher_suites:
+            cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)
+            """
+            cipher_suites = (
+                   "DHE-RSA-AES256-SHA256",
+                   "DHE-RSA-AES256-SHA",
+                   "DHE-RSA-AES128-SHA",
+                   "ECDHE-ECDSA-AES256-SHA",
+                   "ECDHE-ECDSA-AES128-SHA",
+                   "ECDHE-RSA-AES128-SHA",
+                   "ECDHE-ECDSA-RC4-SHA",
+                   "AES256-SHA",
+                   "AES128-SHA",
+                   "RC4-MD5",
+                   "DES-CBC3-SHA"
+                   )"""
+
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
         if ca_certs:
             ssl_context.load_verify_locations(os.path.abspath(ca_certs))
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
-            ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
+            ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
         ssl_context.set_cipher_list(':'.join(cipher_suites))
+
+        try:
+            ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
+            xlog.info("OpenSSL support alpn")
+            return ssl_context
+        except Exception as e:
+            #xlog.exception("set_alpn_protos:%r", e)
+            pass
+
+        try:
+            ssl_context.set_npn_select_callback(SSLConnection.npn_select_callback)
+            xlog.info("OpenSSL support npn")
+        except Exception as e:
+            #xlog.exception("set_npn_select_callback:%r", e)
+            xlog.info("OpenSSL dont't support npn/alpn, no HTTP/2 supported.")
+
         return ssl_context
 
 

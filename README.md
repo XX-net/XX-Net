@@ -30,7 +30,6 @@ XX-Net
 |使用方法:|https://github.com/XX-net/XX-Net/wiki/使用方法|
 |更新历史:|https://github.com/XX-net/XX-Net/wiki/更新历史|
 |问题报告:  |https://github.com/XX-net/XX-Net/issues|
-|讨论群:  |https://groups.google.com/forum/#!forum/xx-net|
 
 
 ## 如何帮助项目

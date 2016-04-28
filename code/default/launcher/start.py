@@ -17,7 +17,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 data_launcher_path = os.path.join(data_path, 'launcher')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
@@ -57,6 +57,9 @@ if sys.platform.startswith("linux"):
         from non_tray import sys_tray
         has_desktop = False
 
+
+    linux_lib = os.path.join(python_path, 'lib', 'linux')
+    sys.path.append(linux_lib)
 elif sys.platform == "win32":
     win32_lib = os.path.join(python_path, 'lib', 'win32')
     sys.path.append(win32_lib)
@@ -76,6 +79,13 @@ else:
     from non_tray import sys_tray
     has_desktop = False
 
+try:
+    import OpenSSL
+except Exception as e:
+    xlog.exception("import openssl fail:%r", e)
+    print("please install python-openssl")
+    input('Press any to exit...')
+    os._exit(0)
 
 import config
 import web_control
@@ -119,7 +129,6 @@ def main():
 
     web_control.start()
 
-
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         import webbrowser
@@ -135,7 +144,6 @@ def main():
 
     module_init.stop_all()
     sys.exit()
-
 
 
 if __name__ == '__main__':

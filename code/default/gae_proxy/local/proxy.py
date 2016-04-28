@@ -107,84 +107,6 @@ ready = False
 
 def pre_start():
 
-    def get_windows_running_process_list():
-        import os
-        import glob
-        import ctypes
-        import collections
-        Process = collections.namedtuple('Process', 'pid name exe')
-        process_list = []
-        if os.name == 'nt':
-            PROCESS_QUERY_INFORMATION = 0x0400
-            PROCESS_VM_READ = 0x0010
-            lpidProcess= (ctypes.c_ulong * 1024)()
-            cb = ctypes.sizeof(lpidProcess)
-            cbNeeded = ctypes.c_ulong()
-            ctypes.windll.psapi.EnumProcesses(ctypes.byref(lpidProcess), cb, ctypes.byref(cbNeeded))
-            nReturned = cbNeeded.value/ctypes.sizeof(ctypes.c_ulong())
-            pidProcess = [i for i in lpidProcess][:nReturned]
-            has_queryimage = hasattr(ctypes.windll.kernel32, 'QueryFullProcessImageNameA')
-            for pid in pidProcess:
-                hProcess = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
-                if hProcess:
-                    modname = ctypes.create_string_buffer(2048)
-                    count = ctypes.c_ulong(ctypes.sizeof(modname))
-                    if has_queryimage:
-                        ctypes.windll.kernel32.QueryFullProcessImageNameA(hProcess, 0, ctypes.byref(modname), ctypes.byref(count))
-                    else:
-                        ctypes.windll.psapi.GetModuleFileNameExA(hProcess, 0, ctypes.byref(modname), ctypes.byref(count))
-                    exe = modname.value
-                    name = os.path.basename(exe)
-                    process_list.append(Process(pid=pid, name=name, exe=exe))
-                    ctypes.windll.kernel32.CloseHandle(hProcess)
-        elif sys.platform.startswith('linux'):
-            for filename in glob.glob('/proc/[0-9]*/cmdline'):
-                pid = int(filename.split('/')[2])
-                exe_link = '/proc/%d/exe' % pid
-                if os.path.exists(exe_link):
-                    exe = os.readlink(exe_link)
-                    name = os.path.basename(exe)
-                    process_list.append(Process(pid=pid, name=name, exe=exe))
-        else:
-            try:
-                import psutil
-                process_list = psutil.get_process_list()
-            except Exception as e:
-                xlog.exception('psutil.get_windows_running_process_list() failed: %r', e)
-        return process_list
-
-
-    if sys.platform == 'cygwin':
-        xlog.info('cygwin is not officially supported, please continue at your own risk :)')
-        #sys.exit(-1)
-    elif os.name == 'posix':
-        try:
-            import resource
-            resource.setrlimit(resource.RLIMIT_NOFILE, (8192, -1))
-        except Exception as e:
-            pass
-    elif os.name == 'nt':
-        import ctypes
-        ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent ')
-        if not config.LISTEN_VISIBLE:
-            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-        else:
-            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 1)
-        if config.LOVE_ENABLE and random.randint(1, 100) <= 5:
-            title = ctypes.create_unicode_buffer(1024)
-            ctypes.windll.kernel32.GetConsoleTitleW(ctypes.byref(title), len(title)-1)
-            ctypes.windll.kernel32.SetConsoleTitleW('%s %s' % (title.value, random.choice(config.LOVE_TIP)))
-        blacklist = {'360safe': False,
-                     'QQProtect': False, }
-        softwares = [k for k, v in blacklist.items() if v]
-        if softwares:
-            tasklist = '\n'.join(x.name for x in get_windows_running_process_list()).lower()
-            softwares = [x for x in softwares if x.lower() in tasklist]
-            if softwares:
-                title = u'GoAgent 建议'
-                error = u'某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
-                ctypes.windll.user32.MessageBoxW(None, error, title, 0)
-                #sys.exit(0)
     if config.PAC_ENABLE:
         pac_ip = config.PAC_IP
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
@@ -196,8 +118,6 @@ def log_info():
     xlog.info('Python Version     : %s', platform.python_version())
     xlog.info('OS                 : %s', env_info.os_detail())
     xlog.info('Listen Address     : %s:%d', config.LISTEN_IP, config.LISTEN_PORT)
-    if config.CONTROL_ENABLE:
-        xlog.info('Control Address    : %s:%d', config.CONTROL_IP, config.CONTROL_PORT)
     if config.PROXY_ENABLE:
         xlog.info('%s Proxy    : %s:%s', config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
     xlog.info('GAE APPID          : %s', '|'.join(config.GAE_APPIDS))

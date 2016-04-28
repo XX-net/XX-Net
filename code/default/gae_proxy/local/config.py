@@ -48,8 +48,6 @@ class Config(object):
 
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
-        self.LISTEN_VISIBLE = self.CONFIG.getint('listen', 'visible')
-        self.LISTEN_DEBUGINFO = self.CONFIG.getint('listen', 'debuginfo')
 
         self.PUBLIC_APPIDS = [x.strip() for x in self.CONFIG.get('gae', 'public_appid').split("|")]
         if self.CONFIG.get('gae', 'appid'):
@@ -101,10 +99,6 @@ class Config(object):
         self.PAC_EXPIRED = self.CONFIG.getint('pac', 'expired')
         self.pac_url = 'http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
 
-        self.CONTROL_ENABLE = self.CONFIG.getint('control', 'enable')
-        self.CONTROL_IP = self.CONFIG.get('control', 'ip')
-        self.CONTROL_PORT = self.CONFIG.getint('control', 'port')
-
         self.PROXY_ENABLE = self.CONFIG.getint('proxy', 'enable')
         self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')
         self.PROXY_HOST = self.CONFIG.get('proxy', 'host')
@@ -116,14 +110,10 @@ class Config(object):
         self.PROXY_USER = self.CONFIG.get('proxy', 'user')
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
-        self.LOVE_ENABLE = self.CONFIG.getint('love', 'enable')
-        self.LOVE_TIP = self.CONFIG.get('love', 'tip').encode('utf8').decode('unicode-escape').split('|')
-
         self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
-        self.ip_traffic_quota = self.CONFIG.getint('google_ip', 'ip_traffic_quota')
-        self.ip_traffic_quota_base = self.CONFIG.getint('google_ip', 'ip_traffic_quota_base')
         self.max_links_per_ip = self.CONFIG.getint('google_ip', 'max_links_per_ip')
         self.record_ip_history = self.CONFIG.getint('google_ip', 'record_ip_history')
+        self.ip_connect_interval = self.CONFIG.getint('google_ip', 'ip_connect_interval')
 
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
