@@ -454,7 +454,13 @@ class GoAwayFrame(Frame):
         else:
             error_string = ""
 
-        return "error_string:%s additional_data:%s" % (error_string, self.additional_data)
+        out_str = ""
+        if error_string:
+            out_str += "error_string:%s" % error_string
+        if self.additional_data:
+            out_str += " additional_data:%s" % self.additional_data
+
+        return out_str
 
 
 class WindowUpdateFrame(Frame):

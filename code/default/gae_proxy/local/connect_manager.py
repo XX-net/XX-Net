@@ -231,6 +231,7 @@ class Https_connection_manager(object):
             p.daemon = True
             p.start()
 
+        self.create_more_connection()
 
     def load_config(self):
         self.max_thread_num = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
@@ -433,10 +434,22 @@ class Https_connection_manager(object):
             connect_time = int((time_connected - time_begin) * 1000)
             handshake_time = int((time_handshaked - time_connected) * 1000)
 
-            if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-                ssl_sock.h2 = True
-            else:
-                ssl_sock.h2 = False
+            try:
+                h2 = ssl_sock.get_alpn_proto_negotiated()
+                if h2 == "h2":
+                    ssl_sock.h2 = True
+                    # xlog.debug("ip:%s http/2", ip)
+                else:
+                    ssl_sock.h2 = False
+
+                #xlog.deubg("alpn h2:%s", h2)
+            except:
+                if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
+                    ssl_sock.h2 = True
+                    # xlog.debug("ip:%s http/2", ip)
+                else:
+                    ssl_sock.h2 = False
+                    # xlog.debug("ip:%s http/1.1", ip)
 
             google_ip.update_ip(ip, handshake_time)
             xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, handshake_time, ssl_sock.h2)

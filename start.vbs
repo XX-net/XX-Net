@@ -18,6 +18,11 @@ Function CurrentVersion()
         Set objFileToRead = CreateObject("Scripting.FileSystemObject").OpenTextFile(strVersionFile,1)
         CurrentVersion = objFileToRead.ReadLine()
 
+        version_path = strCurrentPath & "/code/" & CurrentVersion
+        If( Not fso.FolderExists(version_path) ) Then
+            CurrentVersion = "default"
+        End If
+
         objFileToRead.Close
         Set objFileToRead = Nothing
     Else

@@ -8,7 +8,7 @@ function CreateShortcut()
 
    link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\XX-Net.lnk');
    link.TargetPath = target_path;
-   link.Arguments = '"'"';
+   link.Arguments = '';
    link.WindowStyle = 7;
    link.IconLocation = icon_path;
    link.Description = 'XX-Net';
