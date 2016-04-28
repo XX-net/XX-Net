@@ -127,11 +127,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
         if host_ip == "127.0.0.1" and port == str(config.LISTEN_PORT):
-            controler = web_control.ControlHandler(self.client_address, self.headers, self.command, self.path, self.rfile, self.wfile)
+            controller = web_control.ControlHandler(self.client_address, self.headers, self.command, self.path, self.rfile, self.wfile)
             if self.command == "GET":
-                return controler.do_GET()
+                return controller.do_GET()
             elif self.command == "POST":
-                return controler.do_POST()
+                return controller.do_POST()
             else:
                 xlog.warn("method not defined: %s", self.command)
                 return

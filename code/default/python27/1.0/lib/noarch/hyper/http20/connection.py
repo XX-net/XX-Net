@@ -65,11 +65,12 @@ class HTTP20Connection(object):
     :param proxy_port: (optional) The proxy port to connect to. If not provided
         and one also isn't provided in the ``proxy`` parameter, defaults to 8080.
     """
-    def __init__(self, host, ip=None, port=None, secure=None, window_manager=None, enable_push=False,
+    def __init__(self, ssl_sock, host=None, ip=None, port=None, secure=None, window_manager=None, enable_push=False,
                  ssl_context=None, proxy_host=None, proxy_port=None, **kwargs):
         """
         Creates an HTTP/2 connection to a specific server.
         """
+
         self.ip = ip
 
         if port is None:
@@ -106,6 +107,11 @@ class HTTP20Connection(object):
         # Create the mutable state.
         self.__wm_class = window_manager or FlowControlManager
         self.__init_state()
+
+        if ssl_sock:
+            self._sock = BufferedSocket(ssl_sock, self.network_buffer_size)
+
+            self._send_preamble()
 
         return
 

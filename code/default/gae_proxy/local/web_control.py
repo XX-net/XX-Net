@@ -35,6 +35,7 @@ import check_ip
 import cert_util
 import simple_http_server
 import test_appid
+from http_dispatcher import http_dispatch
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -144,10 +145,12 @@ class User_config(object):
             f.write("user = %s\n" % self.user_special.proxy_user)
             f.write("passwd = %s\n\n" % self.user_special.proxy_passwd)
 
+            """
             if self.user_special.host_appengine_mode != "gae":
                 f.write("[hosts]\n")
                 f.write("appengine.google.com = %s\n" % self.user_special.host_appengine_mode)
                 f.write("www.google.com = %s\n\n" % self.user_special.host_appengine_mode)
+            """
 
             f.write("[google_ip]\n")
 
@@ -213,6 +216,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_scan_ip_handler()
         elif path == "/ssl_pool":
             return self.req_ssl_pool_handler()
+        elif path == "/workers":
+            return self.req_workers_handler()
         elif path == "/download_cert":
             return self.req_download_cert_handler()
         elif path == "/is_ready":
@@ -424,6 +429,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "good_ip_num": good_ip_num,
                    "connected_link_new": len(https_manager.new_conn_pool.pool),
                    "connected_link_used": len(https_manager.gae_conn_pool.pool),
+                   "worker_h1": http_dispatch.h1_num,
+                   "worker_h2": http_dispatch.h2_num,
                    "scan_ip_thread_num": google_ip.scan_thread_count,
                    "ip_quality": google_ip.ip_quality(),
                    "block_stat": connect_control.block_stat(),
@@ -642,9 +649,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             else:
                 active_time = 0
 
-            transfered_data = google_ip.ip_dict[ip]["transfered_data"]
-            transfered_quota = transfered_data - (active_time * config.ip_traffic_quota)
-
             history = google_ip.ip_dict[ip]["history"]
             t0 = 0
             str_out = ''
@@ -657,9 +661,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 t0 = t
                 str_out += "%d(%s) " % (time_per, v)
             data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
-                    "<td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
+                    "<td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
                     (i, ip, handshake_time, fail_times, down_fail, links, get_time, success_time, fail_time, down_fail_time, \
-                    active_time, transfered_data, transfered_quota, str_out)
+                    active_time, str_out)
             i += 1
 
         data += "</table></div></body></html>"
@@ -719,6 +723,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         for host in https_manager.host_conn_pool:
             data += "\nHost:%s\n" % host
             data += https_manager.host_conn_pool[host].to_string()
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+
+    def req_workers_handler(self):
+        data = http_dispatch.to_string()
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)

@@ -30,7 +30,7 @@ import socks
 import check_local_network
 from config import config
 import cert_util
-from openssl_wrap import SSLConnection
+import openssl_wrap
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -38,10 +38,10 @@ xlog = getLogger("gae_proxy")
 import hyper
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
-openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
-openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
-if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
-    openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
+openssl_context = openssl_wrap.SSLConnection.context_builder(ca_certs=g_cacertfile)
+#openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+#if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
+#    openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
 
@@ -66,11 +66,8 @@ def load_proxy_config():
 load_proxy_config()
 
 
-def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
+def connect_ssl(ip, port=443, timeout=5, check_cert=True):
     ip_port = (ip, port)
-
-    if not openssl_context:
-        openssl_context = SSLConnection.context_builder()
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET)
@@ -84,13 +81,19 @@ def connect_ssl(ip, port=443, timeout=5, openssl_context=None, check_cert=True):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = SSLConnection(openssl_context, sock, ip)
+    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
     ssl_sock.set_connect_state()
 
     time_begin = time.time()
     ssl_sock.connect(ip_port)
     time_connected = time.time()
     ssl_sock.do_handshake()
+    if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
+        ssl_sock.h2 = True
+        # xlog.debug("ip:%s http/2", ip)
+    else:
+        ssl_sock.h2 = False
+        # xlog.debug("ip:%s http/1.1", ip)
     time_handshaked = time.time()
 
     # report network ok
@@ -175,7 +178,7 @@ def check_goagent(ssl_sock, appid):
 # export api for google_ip, appid_manager
 def test_gae_ip(ip, appid=None):
     try:
-        ssl_sock = connect_ssl(ip, timeout=max_timeout, openssl_context=openssl_context)
+        ssl_sock = connect_ssl(ip, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)
 
         if not appid:
@@ -194,15 +197,41 @@ def test_gae_ip(ip, appid=None):
         return False
 
 
-def test_gae_ip2(ip, appid="xxnet-1"):
-    content = init_context()
-    conn = hyper.HTTP20Connection(host='%s.appspot.com'%appid, ip=ip, port=443, ssl_content=content)
+def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
+    if use_openssl:
+        try:
+            ssl_sock = connect_ssl(ip, timeout=max_timeout)
+            get_ssl_cert_domain(ssl_sock)
+        except socket.timeout:
+            if __name__ == "__main__":
+                xlog.warn("connect timeout")
+            return False
+        except Exception as e:
+            if __name__ == "__main__":
+                xlog.exception("test_gae_ip %s e:%r",ip, e)
+            return False
+
+        if not hasattr(ssl_sock._connection, "protos"):
+            #xlog.warn("ip:%s not support http/2", ip)
+            try:
+                if not check_goagent(ssl_sock, appid):
+                    return False
+                else:
+                    return ssl_sock
+            except:
+                return False
+    else:
+        ssl_sock = None
+
+    conn = hyper.HTTP20Connection(ssl_sock, host='%s.appspot.com'%appid, ip=ip, port=443)
     try:
         conn.request('GET', '/_gh/')
     except Exception as e:
-        xlog.exception("gae %r", e)
+        #xlog.exception("gae %r", e)
+        xlog.debug("ip:%s http/1.1:%r", ip, e )
         return False
     response = conn.get_response()
+    xlog.debug("ip:%s http/2", ip)
 
     if response.status == 404:
         if __name__ == "__main__":
@@ -211,7 +240,7 @@ def test_gae_ip2(ip, appid="xxnet-1"):
 
     if response.status == 503:
         # out of quota
-        server_type = response.getheader('Server', "")
+        server_type = response.headers.get('Server', "")
         if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
             if __name__ == "__main__":
                 xlog.warn("503 but server type:%s", server_type)
@@ -219,7 +248,7 @@ def test_gae_ip2(ip, appid="xxnet-1"):
         else:
             if __name__ == "__main__":
                 xlog.info("503 server type:%s", server_type)
-            return True
+            return ssl_sock
 
     if response.status != 200:
         if __name__ == "__main__":
@@ -234,7 +263,7 @@ def test_gae_ip2(ip, appid="xxnet-1"):
 
     if __name__ == "__main__":
         xlog.info("check_goagent ok")
-    return True
+    return ssl_sock
 
 
 if __name__ == "__main__":

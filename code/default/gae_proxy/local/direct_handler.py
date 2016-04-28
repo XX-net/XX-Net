@@ -22,7 +22,6 @@ from config import config
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-#"GAE", "Google Frontend", "GSE", "GFE/2.0",
 google_server_types = ["ClientMapServer"]
 
 
@@ -43,8 +42,7 @@ def send_header(wfile, keyword, value):
         wfile.write("%s: %s\r\n" % (keyword, value))
 
 
-
-def fetch(method, host, path, headers, payload, bufsize=8192):
+def fetch(method, host, path, headers, payload):
     request_data = '%s %s HTTP/1.1\r\n' % (method, path)
     request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
     request_data += '\r\n'

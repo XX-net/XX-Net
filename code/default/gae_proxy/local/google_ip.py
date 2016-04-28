@@ -7,9 +7,23 @@ import threading
 import operator
 import time
 import Queue
-import os
+import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+
+
+if __name__ == "__main__":
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
+    if sys.platform == "win32":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        sys.path.append(win32_lib)
+    elif sys.platform.startswith("linux"):
+        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        sys.path.append(linux_lib)
 
 import check_local_network
 import check_ip
@@ -670,7 +684,7 @@ class IpManager():
                 break
 
             connect_control.start_connect_register()
-            result = check_ip.test_gae_ip(ip)
+            result = check_ip.test_gae_ip2(ip)
             connect_control.end_connect_register()
             if not result:
                 self.ip_lock.acquire()
@@ -688,3 +702,8 @@ class IpManager():
                 self.add_ip(ip, result.handshake_time, result.domain, "gws")
 
 google_ip = IpManager()
+
+if __name__ == "__main__":
+    google_ip.scan_all_exist_ip()
+    while True:
+        time.sleep(1)

@@ -125,11 +125,15 @@ class Socks5Server():
         sock = self.connection
         auth_mode_num = ord(self.read_bytes(1))
         data = self.read_bytes(auth_mode_num)
-        # xlog.debug("client version:%d, auth num:%d, list:%s", 5, auth_mode_num, utils.str2hex(data))
 
         sock.send(b"\x05\x00")  # socks version 5, no auth needed.
+        try:
+            data = self.read_bytes(4)
+        except Exception as e:
+            xlog.debug("socks5 auth num:%d, list:%s", auth_mode_num, utils.str2hex(data))
+            xlog.exception("socks5 protocol error:%r", e)
+            return
 
-        data = self.read_bytes(4)
         socks_version = ord(data[0])
         if socks_version != 5:
             xlog.warn("request version:%d error", socks_version)

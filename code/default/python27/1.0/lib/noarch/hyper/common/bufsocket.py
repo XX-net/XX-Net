@@ -12,6 +12,56 @@ process.
 """
 import select
 from .exceptions import ConnectionResetError, LineTooLongError
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+
+class WriteBuffer(object):
+    def __init__(self, s=None):
+        if isinstance(s, str):
+            self.string_len = len(s)
+            self.buffer_list = [s]
+        else:
+            self.reset()
+
+    def reset(self):
+        self.buffer_list = []
+        self.string_len = 0
+
+    def __len__(self):
+        return self.string_len
+
+    def __add__(self, other):
+        self.append(other)
+        return self
+
+    def insert(self, s):
+        if isinstance(s, WriteBuffer):
+            self.buffer_list = s.buffer_list + self.buffer_list
+            self.string_len += s.string_len
+        elif isinstance(s, str):
+            self.buffer_list.insert(0, s)
+            self.string_len += len(s)
+        else:
+            raise Exception("WriteBuffer append not string or StringBuffer")
+
+    def append(self, s):
+        if isinstance(s, WriteBuffer):
+            self.buffer_list.extend(s.buffer_list)
+            self.string_len += s.string_len
+        elif isinstance(s, str):
+            self.buffer_list.append(s)
+            self.string_len += len(s)
+        else:
+            raise Exception("WriteBuffer append not string or StringBuffer")
+
+    def __str__(self):
+        return self.get_string()
+
+    def get_string(self):
+        return "".join(self.buffer_list)
+
 
 class BufferedSocket(object):
     """
@@ -47,6 +97,28 @@ class BufferedSocket(object):
 
         # The number of bytes in the buffer.
         self._bytes_in_buffer = 0
+
+        # following is define for send buffer
+        # all send will be cache and send when flush called,
+        # combine data to reduce the api call
+        self.send_buffer = WriteBuffer()
+
+    def send(self, buf, flush=True):
+        self.send_buffer.append(buf)
+
+        if len(self.send_buffer) > 1300:
+            data = self.send_buffer.get_string()
+            self.send_buffer.reset()
+            return self._sck.send(data)
+
+    def flush(self):
+        if len(self.send_buffer):
+            data = self.send_buffer.get_string()
+            logger.debug("buffer socket flush:%d", len(data))
+            self.send_buffer.reset()
+            sended = self._sck.send(data)
+            if sended != len(data):
+                raise Exception("send fail")
 
     @property
     def _remaining_capacity(self):
@@ -140,8 +212,7 @@ class BufferedSocket(object):
         else:
             should_read = True
 
-        if ((self._remaining_capacity > self._bytes_in_buffer) and
-            (should_read)):
+        if ((self._remaining_capacity > self._bytes_in_buffer) and (should_read)):
             count = self._sck.recv_into(self._buffer_view[self._buffer_end:])
 
             # The socket just got closed. We should throw an exception if we
