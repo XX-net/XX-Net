@@ -9,6 +9,7 @@ from instances import xlog
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+top_path = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir))
 
 if sys.platform == 'win32':
     import _winreg
@@ -44,8 +45,7 @@ if sys.platform == 'win32':
         _winreg.DeleteValue(key, name)
         _winreg.CloseKey(key)
 
-    run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
-              os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
+    run_cmd = "\"" + os.path.join(top_path, "start.vbs") + "\""
 elif sys.platform.startswith('linux'):
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
     home_config_path = os.path.expanduser(_xdg_config_home)
@@ -86,7 +86,7 @@ elif sys.platform.startswith('linux'):
         if(exists(name)):
             os.unlink(getfilename(name))
 
-    run_cmd = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir, "xxnet"))
+    run_cmd = os.path.join(top_path, "start")
 elif sys.platform == 'darwin':
     plist_template = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -100,7 +100,6 @@ elif sys.platform == 'darwin':
 
 	<key>ProgramArguments</key>
 	<array>
-	  <string>/usr/bin/python2.7</string>
 	  <string>%s</string>
 	</array>
 
@@ -114,7 +113,7 @@ elif sys.platform == 'darwin':
 </dict>
 </plist>"""
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "launcher", "start.py"))
+    run_cmd = os.path.join(top_path, "start")
     from os.path import expanduser
     home = expanduser("~")
     launch_path = os.path.join(home, "Library/LaunchAgents")

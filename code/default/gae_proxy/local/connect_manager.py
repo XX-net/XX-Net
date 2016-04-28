@@ -334,7 +334,11 @@ class Https_connection_manager(object):
             ssl_sock = self._create_ssl_connection( (ip_str, port) )
             if ssl_sock:
                 ssl_sock.last_use_time = time.time()
-                self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
+
+                if self.new_conn_pool.qsize() >= self.connection_pool_max_num and self.ssl_timeout_cb:
+                    self.ssl_timeout_cb(ssl_sock)
+                else:
+                    self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
         finally:
             self.thread_num_lock.acquire()
             self.thread_num -= 1
@@ -375,7 +379,7 @@ class Https_connection_manager(object):
                 ssl_sock = self._create_ssl_connection( (ip_str, port) )
                 if ssl_sock:
                     ssl_sock.last_use_time = time.time()
-                    if self.new_conn_pool.qsize() > self.connection_pool_max_num and self.ssl_timeout_cb:
+                    if self.new_conn_pool.qsize() >= self.connection_pool_max_num and self.ssl_timeout_cb:
                         self.ssl_timeout_cb(ssl_sock)
                     else:
                         self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))

@@ -102,18 +102,38 @@ class HttpsDispatcher(object):
         self.workers.append(worker)
         return worker
 
+    def create_worker_thread(self):
+        ssl_sock = https_manager.get_ssl_connection()
+        if not ssl_sock:
+            xlog.warn("create_worker_thread get ssl_sock fail")
+
+        self.on_ssl_created_cb(ssl_sock)
+
+    def create_more_worker(self):
+        threading.Thread(target=self.create_worker_thread).start()
+
     def get_worker(self):
         best_rtt = 9999
         best_worker = None
+        idle_num = 0
         for worker in self.workers:
             if not worker.accept_task:
                 continue
+
+            if worker.version == "1.1":
+                idle_num += 1
+            else:
+                if len(worker.streams) == 0:
+                    idle_num += 1
 
             rtt = worker.get_rtt_rate()
 
             if rtt < best_rtt:
                 best_rtt = rtt
                 best_worker = worker
+
+        if idle_num == 0:
+            self.create_more_worker()
 
         if best_worker:
             return best_worker

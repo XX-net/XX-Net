@@ -130,7 +130,6 @@ class Padding(object):
 
         self.pad_length = pad_length
 
-
     def serialize_padding_data(self):
         if 'PADDED' in self.flags:
             return struct.pack('!B', self.pad_length)

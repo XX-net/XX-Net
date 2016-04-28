@@ -51,7 +51,7 @@ class SSLConnection(object):
         if attr not in ('_context', '_sock', '_connection', '_makefile_refs'):
             return getattr(self._connection, attr)
 
-    def __iowait(self, io_func, *args, **kwargs):
+    def __iowait2(self, io_func, *args, **kwargs):
         timeout = self._sock.gettimeout() or 0.1
         fd = self._sock.fileno()
         time_start = time.time()
@@ -77,6 +77,30 @@ class SSLConnection(object):
             except Exception as e:
                 #xlog.exception("e:%r", e)
                 raise e
+
+    def __iowait(self, io_func, *args, **kwargs):
+        timeout = self._sock.gettimeout() or 0.1
+        fd = self._sock.fileno()
+        time_start = time.time()
+        while True:
+            try:
+                return io_func(*args, **kwargs)
+            except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
+                sys.exc_clear()
+                _, _, errors = select.select([fd], [], [fd], timeout)
+                if errors:
+                    break
+                time_now = time.time()
+                if time_now - time_start > timeout:
+                    break
+            except OpenSSL.SSL.WantWriteError:
+                sys.exc_clear()
+                _, _, errors = select.select([], [fd], [fd], timeout)
+                if errors:
+                    break
+                time_now = time.time()
+                if time_now - time_start > timeout:
+                    break
 
     def accept(self):
         sock, addr = self._sock.accept()
@@ -221,20 +245,6 @@ class SSLConnection(object):
         #
         if not cipher_suites:
             cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)
-            """
-            cipher_suites = (
-                   "DHE-RSA-AES256-SHA256",
-                   "DHE-RSA-AES256-SHA",
-                   "DHE-RSA-AES128-SHA",
-                   "ECDHE-ECDSA-AES256-SHA",
-                   "ECDHE-ECDSA-AES128-SHA",
-                   "ECDHE-RSA-AES128-SHA",
-                   "ECDHE-ECDSA-RC4-SHA",
-                   "AES256-SHA",
-                   "AES128-SHA",
-                   "RC4-MD5",
-                   "DES-CBC3-SHA"
-                   )"""
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)

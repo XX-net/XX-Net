@@ -212,7 +212,9 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
             return False
 
         if not hasattr(ssl_sock._connection, "protos"):
-            #xlog.warn("ip:%s not support http/2", ip)
+            if __name__ == "__main__":
+                xlog.warn("ip:%s not support http/2", ip)
+
             try:
                 if not check_goagent(ssl_sock, appid):
                     return False
@@ -230,7 +232,13 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
         #xlog.exception("gae %r", e)
         xlog.debug("ip:%s http/1.1:%r", ip, e )
         return False
-    response = conn.get_response()
+    try:
+        response = conn.get_response()
+    except Exception as e:
+        if __name__ == "__main__":
+            xlog.exception("http2 get response fail:%r", e)
+        return False
+
     xlog.debug("ip:%s http/2", ip)
 
     if response.status == 404:

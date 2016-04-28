@@ -248,8 +248,8 @@ def restart_xxnet(version):
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
 
     subprocess.Popen([sys.executable, start_script])
-    time.sleep(10)
-    os._exit(0)
+    time.sleep(20)
+    #os._exit(0)
 
 
 def update_version(version):

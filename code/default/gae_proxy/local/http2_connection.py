@@ -168,7 +168,10 @@ class HTTP2_worker(HTTP_worker):
             except socket.error as e:
                 if e.errno not in (errno.EPIPE, errno.ECONNRESET):
                     xlog.warn("%s http2 send fail:%r", self.ip, e)
-                    self.close("send fail")
+                else:
+                    xlog.exceptiong("send error:%r", e)
+
+                self.close("send fail:%r", e)
 
     def recv_loop(self):
         while connect_control.keep_running and self.keep_running:
