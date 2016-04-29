@@ -11,6 +11,17 @@ import sys
 import urllib2
 import math
 
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+
+noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+sys.path.append(noarch_lib)
+
+
 from config import config
 import ip_utils
 
@@ -232,21 +243,21 @@ def generate_ip_range():
     with open(input_file, "r") as inf:
         input_good_range_lines = inf.read()
 
-    input_bad_ip_range_lines = load_bad_ip_range()
-
     ip_range_list = parse_range_string(input_good_range_lines)
     ip_range_list = merge_range(ip_range_list)
     PRINT("Good ip range:\n")
     print_range_list(ip_range_list)
 
-    bad_range_list = parse_range_string(input_bad_ip_range_lines)
-    bad_range_list = merge_range(bad_range_list)
-    PRINT("Bad ip range:\n")
-    print_range_list(ip_range_list)
+    if False:
+        input_bad_ip_range_lines = load_bad_ip_range()
+        bad_range_list = parse_range_string(input_bad_ip_range_lines)
+        bad_range_list = merge_range(bad_range_list)
+        PRINT("Bad ip range:\n")
+        print_range_list(ip_range_list)
 
-    ip_range_list = filter_ip_range(ip_range_list, bad_range_list)
-    PRINT("Output ip range:\n")
-    print_range_list(ip_range_list)
+        ip_range_list = filter_ip_range(ip_range_list, bad_range_list)
+        PRINT("Output ip range:\n")
+        print_range_list(ip_range_list)
 
     # write out
     output_file = os.path.join(config.DATA_PATH, file_name)

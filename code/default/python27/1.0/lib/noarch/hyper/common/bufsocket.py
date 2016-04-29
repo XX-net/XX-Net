@@ -106,7 +106,7 @@ class BufferedSocket(object):
     def send(self, buf, flush=True):
         self.send_buffer.append(buf)
 
-        if len(self.send_buffer) > 1300:
+        if len(self.send_buffer) > 1300 or flush:
             self.flush()
 
     def flush(self):

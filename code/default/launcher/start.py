@@ -79,13 +79,15 @@ else:
     from non_tray import sys_tray
     has_desktop = False
 
+
 try:
     import OpenSSL
 except Exception as e:
     xlog.exception("import openssl fail:%r", e)
-    print("please install python-openssl")
-    input('Press any to exit...')
+    print("Try install python-openssl or cffi\r\n")
+    raw_input("Press Enter to continue...")
     os._exit(0)
+
 
 import config
 import web_control
@@ -154,4 +156,6 @@ if __name__ == '__main__':
         os._exit(0)
     except Exception as e:
         xlog.exception("launcher except:%r", e)
-        input('Press any to exit...')
+
+        raw_input("Press Enter to continue...")
+
