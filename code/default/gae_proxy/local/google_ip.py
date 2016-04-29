@@ -602,7 +602,7 @@ class IpManager():
                     continue
 
                 connect_control.start_connect_register()
-                result = check_ip.test_gae_ip(ip)
+                result = check_ip.test_gae_ip2(ip)
                 connect_control.end_connect_register()
                 if not result:
                     continue
