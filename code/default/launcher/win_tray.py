@@ -46,6 +46,12 @@ class Win_tray():
         else:
             xlog.warn("proxy_setting:%r", proxy_setting)
 
+        # HideWindows
+        if config.get(["modules", "launcher", "terminal_visible"], 1):
+            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 1)
+        else:
+            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
     def get_proxy_state(self):
         try:
             AutoConfigURL, reg_type = winreg.QueryValueEx(self.INTERNET_SETTINGS, 'AutoConfigURL')
