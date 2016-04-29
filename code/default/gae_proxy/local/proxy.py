@@ -63,7 +63,6 @@ elif sys.platform == "darwin":
 import time
 import traceback
 import platform
-import random
 import threading
 import urllib2
 
