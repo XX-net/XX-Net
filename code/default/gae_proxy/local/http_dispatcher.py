@@ -56,9 +56,7 @@ def load_proxy_config():
 load_proxy_config()
 
 
-from google_ip import google_ip
 from appids_manager import appid_manager
-from openssl_wrap import SSLConnection
 
 NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
 
@@ -69,13 +67,18 @@ from http1 import HTTP1_worker
 from http2_connection import HTTP2_worker
 from http_common import *
 
+
 class HttpsDispatcher(object):
+    min_worker_num = 20
+    idle_time = 10 * 60
 
     def __init__(self):
         self.request_queue = Queue.Queue()
         self.workers = []
         self.h1_num = 0
         self.h2_num = 0
+        self.create_worker_th = None
+        self.last_request_time = time.time()
         th = threading.Thread(target=self.dispatcher)
         th.start()
 
@@ -103,14 +106,27 @@ class HttpsDispatcher(object):
         return worker
 
     def create_worker_thread(self):
-        ssl_sock = https_manager.get_ssl_connection()
-        if not ssl_sock:
-            xlog.warn("create_worker_thread get ssl_sock fail")
+        try:
+            while True:
+                ssl_sock = https_manager.get_ssl_connection()
+                if not ssl_sock:
+                    #xlog.warn("create_worker_thread get ssl_sock fail")
+                    continue
 
-        self.on_ssl_created_cb(ssl_sock)
+                self.on_ssl_created_cb(ssl_sock)
+
+                if len(self.workers) > self.min_worker_num:
+                    break
+
+        finally:
+            self.create_worker_th = None
 
     def create_more_worker(self):
-        threading.Thread(target=self.create_worker_thread).start()
+        if self.create_worker_th:
+            return
+
+        self.create_worker_th = threading.Thread(target=self.create_worker_thread)
+        self.create_worker_th.start()
 
     def get_worker(self):
         best_rtt = 9999
@@ -132,7 +148,7 @@ class HttpsDispatcher(object):
                 best_rtt = rtt
                 best_worker = worker
 
-        if idle_num == 0:
+        if idle_num == 0 or len(self.workers) < self.min_worker_num:
             self.create_more_worker()
 
         if best_worker:
@@ -147,6 +163,7 @@ class HttpsDispatcher(object):
         return worker
 
     def request(self, headers, body):
+        self.last_request_time = time.time()
         q = Queue.Queue()
         task = Task(headers, body, q)
         self.request_queue.put(task)

@@ -13,6 +13,7 @@ from config import config
 
 class HTTP1_worker(HTTP_worker):
     version = "1.1"
+    idle_time = 10 * 60
 
     def __init__(self, ssl_sock, close_cb, retry_task_cb):
         super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb)
@@ -39,7 +40,7 @@ class HTTP1_worker(HTTP_worker):
                     # None task to exit
                     return
             except:
-                if time.time() - last_request_time > 2 * 60:
+                if time.time() - last_request_time > self.idle_time:
                     self.close("idle 2 mins")
                     return
 

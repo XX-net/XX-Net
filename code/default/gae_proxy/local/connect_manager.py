@@ -210,7 +210,7 @@ class Https_connection_manager(object):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
         self.timeout = 4
-        self.max_timeout = 15
+        self.max_timeout = 60
         self.thread_num = 0
 
         # after new created ssl_sock timeout(50 seconds)
@@ -355,7 +355,7 @@ class Https_connection_manager(object):
             self.thread_num_lock.release()
             p = threading.Thread(target=self.connect_thread)
             p.start()
-            time.sleep(1)
+            time.sleep(0.5)
 
         self.connecting_more_thread = None
 
