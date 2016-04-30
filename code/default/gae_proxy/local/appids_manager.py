@@ -52,7 +52,7 @@ class APPID_manager(object):
         th.start()
 
     def process_appid_not_exist(self, appid, ip):
-        if check_ip.test_gae_ip(ip, "xxnet-1"):
+        if check_ip.test_gae_ip2(ip, "xxnet-1"):
             self.set_appid_not_exist(appid)
         else:
             xlog.warn("process_appid_not_exist, remove ip:%s", ip)

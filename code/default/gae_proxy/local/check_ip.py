@@ -186,28 +186,6 @@ def check_goagent(ssl_sock, appid):
     return True
 
 
-# export api for google_ip, appid_manager
-def test_gae_ip(ip, appid=None):
-    try:
-        ssl_sock = connect_ssl(ip, timeout=max_timeout)
-        get_ssl_cert_domain(ssl_sock)
-
-        if not appid:
-            appid = "xxnet-1"
-        if not check_goagent(ssl_sock, appid):
-            return False
-
-        return ssl_sock
-    except socket.timeout:
-        if __name__ == "__main__":
-            xlog.warn("connect timeout")
-        return False
-    except Exception as e:
-        if __name__ == "__main__":
-            xlog.exception("test_gae_ip %s e:%r",ip, e)
-        return False
-
-
 def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
     if use_openssl:
         try:
@@ -231,7 +209,9 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
                     return False
                 else:
                     return ssl_sock
-            except:
+            except Exception as e:
+                if __name__ == "__main__":
+                    xlog.exception("check fail:%r", e)
                 return False
     else:
         ssl_sock = None

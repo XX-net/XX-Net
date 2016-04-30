@@ -67,6 +67,7 @@ from appids_manager import appid_manager
 
 from config import config
 from google_ip import google_ip
+import check_local_network
 from http_dispatcher import http_dispatch
 from http_common import *
 
@@ -231,6 +232,7 @@ def fetch_by_gae(method, url, headers, body):
     if response.app_status != 200:
         return response
 
+    check_local_network.report_network_ok()
     try:
         data = response.body.get(2)
         if len(data) < 2:
@@ -390,7 +392,6 @@ class RangeFetch(object):
     threads = config.AUTORANGE_THREADS
     maxsize = config.AUTORANGE_MAXSIZE
     bufsize = config.AUTORANGE_BUFSIZE
-    waitsize = config.AUTORANGE_WAITSIZE
 
     def __init__(self, method, url, headers, body, response, wfile):
         self.method = method
@@ -441,9 +442,11 @@ class RangeFetch(object):
         self.expect_begin = start
         for begin in range(end+1, length, self.maxsize):
             range_queue.put((begin, min(begin+self.maxsize-1, length-1), None))
-        for i in xrange(0, self.threads):
+
+        thread_num = min(self.threads, range_queue.qsize())
+        for i in xrange(0, thread_num):
             range_delay_size = i * self.maxsize
-            spawn_later(float(range_delay_size)/self.waitsize, self.__fetchlet, range_queue, data_queue, range_delay_size)
+            spawn_later(i*0.1, self.__fetchlet, range_queue, data_queue, range_delay_size)
 
         has_peek = hasattr(data_queue, 'peek')
         peek_timeout = 120
@@ -496,9 +499,9 @@ class RangeFetch(object):
             except Queue.Empty:
                 continue
 
-            if self.expect_begin < start and data_queue.qsize() * self.bufsize + range_delay_size > 30*1024*1024:
+            if start > self.expect_begin and data_queue.qsize() * self.bufsize + range_delay_size > 30*1024*1024:
                 range_queue.put((start, end, response))
-                time.sleep(10)
+                time.sleep(2)
                 continue
             headers['Range'] = 'bytes=%d-%d' % (start, end)
 

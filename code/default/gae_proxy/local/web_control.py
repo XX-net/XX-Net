@@ -438,6 +438,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "connected_link_used": len(https_manager.gae_conn_pool.pool),
                    "worker_h1": http_dispatch.h1_num,
                    "worker_h2": http_dispatch.h2_num,
+                   "is_idle": int(http_dispatch.is_idle()),
                    "scan_ip_thread_num": google_ip.scan_thread_count,
                    "ip_quality": google_ip.ip_quality(),
                    "block_stat": connect_control.block_stat(),
@@ -608,7 +609,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
         ip = reqs['ip'][0]
-        result = check_ip.test_gae_ip(ip)
+        result = check_ip.test_gae_ip2(ip)
         if not result:
             data = "{'res':'fail'}"
         else:
