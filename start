@@ -11,14 +11,14 @@ fi
 
 
 if [ -f code/version.txt ]; then
-  VERSION=`cat code/version.txt`
+    VERSION=`cat code/version.txt`
 else
-  VERSION="default"
+    VERSION="default"
 fi
 
 
 if [ ! -d "code/$VERSION" ]; then
-  VERSION="default"
+    VERSION="default"
 fi
 echo "XX-Net version:$VERSION"
 
@@ -36,10 +36,29 @@ function launchWithHungup() {
 # get operating system name
 os_name=`uname -s`
 
-# Darwin for os x
-if [ $os_name = 'Darwin' ];then
-	PYTHON="/usr/bin/python2.7"
-	launchWithNoHungup
+# Install Packages
+echo 'Install python-openssl and libnss3-tools for your system'
+if [ $os_name = 'Linux' ]; then
+    if [ -f /etc/debian_version ]; then
+        if [ `dpkg-query -l | grep python-openssl | wc -l` == 0 ]; then
+            sudo apt-get install -y python-openssl
+        fi
+    elif [ -f /etc/redhat-release ]; then
+        if [ `yum -q list installed pyOpenSSL | wc -l` == 0 ]; then
+            sudo yum install -y pyOpenSSL
+        fi
+    # Do Someting for ArchLinux
+    # Do Someting for OpenSUSE
+    # Do Someting for OpenWRT
+    fi
+# elif [ $os_name = 'Darwin' ]; then
+    # Do Someting for Mac
+fi
+
+# Start Application
+if [ $os_name = 'Darwin' ]; then
+    PYTHON="/usr/bin/python2.7"
+    launchWithNoHungup
 else
-	launchWithHungup
+    launchWithHungup
 fi
