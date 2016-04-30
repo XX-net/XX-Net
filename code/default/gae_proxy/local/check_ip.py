@@ -28,8 +28,20 @@ if __name__ == "__main__":
 
 
 else:
-    from xlog import getLogger
-    xlog = getLogger("gae_proxy")
+    class xlog():
+        @staticmethod
+        def debug(fmt, *args, **kwargs):
+            pass
+        @staticmethod
+        def info(fmt, *args, **kwargs):
+            pass
+        @staticmethod
+        def warn(fmt, *args, **kwargs):
+            pass
+        @staticmethod
+        def exception(fmt, *args, **kwargs):
+            pass
+
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
