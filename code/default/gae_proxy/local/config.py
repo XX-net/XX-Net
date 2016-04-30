@@ -86,7 +86,6 @@ class Config(object):
         self.HOSTS_DIRECT = tuple(direct_hosts)
 
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
-        self.AUTORANGE_WAITSIZE = self.CONFIG.getint('autorange', 'waitsize')
         self.AUTORANGE_BUFSIZE = self.CONFIG.getint('autorange', 'bufsize')
         self.AUTORANGE_THREADS = self.CONFIG.getint('autorange', 'threads')
 

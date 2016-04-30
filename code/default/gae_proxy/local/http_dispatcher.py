@@ -19,25 +19,27 @@ performance:
 
 
 import os
-import binascii
 import time
-import socket
-import struct
 import threading
 import operator
-import httplib
 import Queue
 
 import socks
 
+from config import config
+from appids_manager import appid_manager
+import connect_control
+from connect_manager import https_manager
+from http1 import HTTP1_worker
+from http2_connection import HTTP2_worker
+from http_common import *
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
 
-from config import config
+current_path = os.path.dirname(os.path.abspath(__file__))
+g_cacertfile = os.path.join(current_path, "cacert.pem")
+
 
 def load_proxy_config():
     if config.PROXY_ENABLE:
@@ -54,18 +56,6 @@ def load_proxy_config():
 
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 load_proxy_config()
-
-
-from appids_manager import appid_manager
-
-NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
-
-g_cacertfile = os.path.join(current_path, "cacert.pem")
-import connect_control
-from connect_manager import https_manager
-from http1 import HTTP1_worker
-from http2_connection import HTTP2_worker
-from http_common import *
 
 
 class HttpsDispatcher(object):
@@ -86,6 +76,9 @@ class HttpsDispatcher(object):
         https_manager.set_ssl_time_handler(self.on_ssl_created_cb)
 
     def on_ssl_created_cb(self, ssl_sock):
+        if not ssl_sock:
+            raise Exception("on_ssl_created_cb ssl_sock None")
+
         appid = appid_manager.get_appid()
         if not appid:
             time.sleep(60)
@@ -195,6 +188,9 @@ class HttpsDispatcher(object):
 
             worker.request(task)
 
+    def is_idle(self):
+        return time.time() - self.last_request_time > 20 * 60
+
     def close_cb(self, worker):
         try:
             self.workers.remove(worker)
@@ -204,6 +200,9 @@ class HttpsDispatcher(object):
                 self.h1_num -= 1
         except:
             pass
+
+        if len(self.workers) == 0 and not self.is_idle():
+            https_manager.create_more_connection()
 
     def to_string(self):
         worker_rate = {}

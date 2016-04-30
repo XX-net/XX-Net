@@ -70,6 +70,23 @@ def report_network_ok():
     last_check_time = time.time()
     continue_fail_count = 0
 
+
+def report_network_fail():
+    global network_stat, last_check_time, continue_fail_count
+    continue_fail_count += 1
+    last_check_time = time.time()
+
+    if continue_fail_count > 10:
+        network_stat = "unkown"
+        xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
+        triger_check_network()
+
+
+def is_ok():
+    global network_stat, last_check_time, continue_fail_count
+    return network_stat == "OK"
+
+
 def _check_worker():
     global _checking_lock, _checking_num, network_stat, last_check_time
     time_now = time.time()

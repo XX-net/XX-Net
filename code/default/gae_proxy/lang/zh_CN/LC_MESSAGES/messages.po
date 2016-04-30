@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-17 22:25+0800\n"
+"POT-Creation-Date: 2016-04-30 14:57+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -242,9 +242,6 @@ msgstr "自动调整扫描线程数"
 msgid "Max scan thread count"
 msgstr "最大扫描线程数"
 
-msgid "Update"
-msgstr "更新"
-
 msgid "IP range list"
 msgstr "IP段列表"
 
@@ -265,6 +262,9 @@ msgstr "本地网络状态"
 
 msgid "IP Number"
 msgstr "IP数量"
+
+msgid "Is Idle"
+msgstr "空闲"
 
 msgid "IP Quality"
 msgstr "IP延迟"
@@ -332,12 +332,6 @@ msgstr "显示详细信息"
 msgid "Post to Github issue needs to sign in your Github account"
 msgstr "贴到Github问题区需要登录Github账号"
 
-msgid "To Google Groups"
-msgstr "前往Google论坛"
-
-msgid "Post to Github Issue..."
-msgstr "贴到Github问题区..."
-
 msgid "GAE Proxy Status Info"
 msgstr "GAEProxy状态信息"
 
@@ -390,6 +384,9 @@ msgstr ""
 msgid "No working appid. Please check. "
 msgstr "没有可用APPID，请检查。"
 
+msgid "System is Idle. "
+msgstr ""
+
 msgid "Connection not established yet. "
 msgstr "尚未建立连接"
 
@@ -427,8 +424,11 @@ msgstr "你正使用公共AppID"
 msgid "new:"
 msgstr "新:"
 
-msgid " used:"
-msgstr " 已用:"
+msgid " h1:"
+msgstr ""
+
+msgid " h2:"
+msgstr ""
 
 msgid "Auto proxy enabled at "
 msgstr "智能代理已启用："
@@ -438,4 +438,8 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
+
+
+
+
 

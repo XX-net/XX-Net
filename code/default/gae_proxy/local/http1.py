@@ -41,13 +41,14 @@ class HTTP1_worker(HTTP_worker):
                     return
             except:
                 if time.time() - last_request_time > self.idle_time:
-                    self.close("idle 2 mins")
+                    self.close("idle")
                     return
 
                 last_ssl_active_time = time.time()
                 if not self.head_request():
-                    google_ip.report_connect_fail(self.ssl_sock.ip, force_remove=True)
+                    # google_ip.report_connect_fail(self.ssl_sock.ip, force_remove=True)
                     # now many gvs don't support gae
+                    google_ip.recheck_ip(self.ssl_sock.ip)
                     self.close("keep alive, maybe not support")
                     return
                 else:

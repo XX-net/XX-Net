@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-17 22:25+0800\n"
+"POT-Creation-Date: 2016-04-30 14:57+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -246,9 +246,6 @@ msgstr "خودکار تنظیم تعداد موضوع اسکن"
 msgid "Max scan thread count"
 msgstr "حداکثر تعداد موضوع اسکن"
 
-msgid "Update"
-msgstr "به روز رسانی"
-
 msgid "IP range list"
 msgstr "لیست محدوده IP"
 
@@ -269,6 +266,9 @@ msgstr "شبکه محلی ما شکست خورده است."
 
 msgid "IP Number"
 msgstr "IP شماره"
+
+msgid "Is Idle"
+msgstr "آماده به کار"
 
 msgid "IP Quality"
 msgstr "IP کیفیت"
@@ -336,12 +336,6 @@ msgstr "نمایش جزئیات"
 msgid "Post to Github issue needs to sign in your Github account"
 msgstr "بازخورد یک کلید نیاز به ثبت نام در حساب github خود را"
 
-msgid "To Google Groups"
-msgstr "به Google Groups"
-
-msgid "Post to Github Issue..."
-msgstr "بررسی مسائل _Github_..."
-
 msgid "GAE Proxy Status Info"
 msgstr "GAE پروکسی وضعیت"
 
@@ -392,6 +386,9 @@ msgstr ""
 msgid "No working appid. Please check. "
 msgstr "بدون APPID کارگر. لطفا بررسی کنید. "
 
+msgid "System is Idle. "
+msgstr ""
+
 msgid "Connection not established yet. "
 msgstr "اتصال برقرار نشده است"
 
@@ -429,7 +426,10 @@ msgstr "شما با استفاده از شناسه های عمومی است."
 msgid "new:"
 msgstr ""
 
-msgid " used:"
+msgid " h1:"
+msgstr ""
+
+msgid " h2:"
 msgstr ""
 
 msgid "Auto proxy enabled at "
@@ -440,4 +440,8 @@ msgstr "پروکسی را فعال کنید در "
 
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
+
+
+
+
 
