@@ -23,6 +23,14 @@ if __name__ == "__main__":
         linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
         sys.path.append(linux_lib)
 
+    from xlog import getLogger
+    xlog = getLogger("gae_proxy")
+
+
+else:
+    from xlog import getLogger
+    xlog = getLogger("gae_proxy")
+
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
@@ -32,16 +40,14 @@ from config import config
 import cert_util
 import openssl_wrap
 
-from xlog import getLogger
-xlog = getLogger("gae_proxy")
 
 import hyper
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 openssl_context = openssl_wrap.SSLConnection.context_builder(ca_certs=g_cacertfile)
-#openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
-#if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
-#    openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
+openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
+    openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
 
@@ -93,12 +99,12 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True):
         h2 = ssl_sock.get_alpn_proto_negotiated()
         if h2 == "h2":
             ssl_sock.h2 = True
-            # xlog.debug("ip:%s http/2", ip)
         else:
             ssl_sock.h2 = False
 
-        #xlog.deubg("alpn h2:%s", h2)
-    except:
+        xlog.debug("%s alpn h2:%s", ip, h2)
+    except Exception as e:
+        xlog.exception("alpn:%r", e)
         if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
             ssl_sock.h2 = True
             # xlog.debug("ip:%s http/2", ip)
@@ -142,8 +148,7 @@ def get_ssl_cert_domain(ssl_sock):
 
     #issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
     ssl_cert = cert_util.SSLCert(cert)
-    if __name__ == "__main__":
-        xlog.info("%s CN:%s", ip, ssl_cert.cn)
+    xlog.info("%s CN:%s", ssl_sock.ip, ssl_cert.cn)
     ssl_sock.domain = ssl_cert.cn
 
 
@@ -154,35 +159,29 @@ def check_goagent(ssl_sock, appid):
 
     response.begin()
     if response.status == 404:
-        if __name__ == "__main__":
-            xlog.warn("app check %s status:%d", appid, response.status)
+        xlog.warn("app check %s status:%d", appid, response.status)
         return False
 
     if response.status == 503:
         # out of quota
         server_type = response.getheader('Server', "")
         if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
-            if __name__ == "__main__":
-                xlog.warn("503 but server type:%s", server_type)
+            xlog.warn("503 but server type:%s", server_type)
             return False
         else:
-            if __name__ == "__main__":
-                xlog.info("503 server type:%s", server_type)
+            xlog.info("503 server type:%s", server_type)
             return True
 
     if response.status != 200:
-        if __name__ == "__main__":
-            xlog.warn("app check %s ip:%s status:%d", appid, ip, response.status)
+        xlog.warn("app check %s ip:%s status:%d", appid, ip, response.status)
         return False
 
     content = response.read()
     if "GoAgent" not in content:
-        if __name__ == "__main__":
-            xlog.warn("app check %s content:%s", appid, content)
+        xlog.warn("app check %s content:%s", appid, content)
         return False
 
-    if __name__ == "__main__":
-        xlog.info("check_goagent ok")
+    xlog.info("check_goagent ok")
     return True
 
 
@@ -192,17 +191,14 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
             ssl_sock = connect_ssl(ip, timeout=max_timeout)
             get_ssl_cert_domain(ssl_sock)
         except socket.timeout:
-            if __name__ == "__main__":
-                xlog.warn("connect timeout")
+            xlog.warn("connect timeout")
             return False
         except Exception as e:
-            if __name__ == "__main__":
-                xlog.exception("test_gae_ip %s e:%r",ip, e)
+            xlog.exception("test_gae_ip %s e:%r",ip, e)
             return False
 
-        if not hasattr(ssl_sock._connection, "protos"):
-            if __name__ == "__main__":
-                xlog.warn("ip:%s not support http/2", ip)
+        if not ssl_sock.h2:
+            xlog.warn("ip:%s not support http/2", ip)
 
             try:
                 if not check_goagent(ssl_sock, appid):
@@ -210,8 +206,7 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
                 else:
                     return ssl_sock
             except Exception as e:
-                if __name__ == "__main__":
-                    xlog.exception("check fail:%r", e)
+                xlog.warn("check fail:%r", e)
                 return False
     else:
         ssl_sock = None
@@ -226,42 +221,35 @@ def test_gae_ip2(ip, appid="xxnet-1", use_openssl=True):
     try:
         response = conn.get_response()
     except Exception as e:
-        if __name__ == "__main__":
-            xlog.exception("http2 get response fail:%r", e)
+        xlog.exception("http2 get response fail:%r", e)
         return False
 
     xlog.debug("ip:%s http/2", ip)
 
     if response.status == 404:
-        if __name__ == "__main__":
-            xlog.warn("app check %s status:%d", appid, response.status)
+        xlog.warn("app check %s status:%d", appid, response.status)
         return False
 
     if response.status == 503:
         # out of quota
         server_type = response.headers.get('Server', "")
         if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
-            if __name__ == "__main__":
-                xlog.warn("503 but server type:%s", server_type)
+            xlog.warn("503 but server type:%s", server_type)
             return False
         else:
-            if __name__ == "__main__":
-                xlog.info("503 server type:%s", server_type)
+            xlog.info("503 server type:%s", server_type)
             return ssl_sock
 
     if response.status != 200:
-        if __name__ == "__main__":
-            xlog.warn("app check %s ip:%s status:%d", appid, ip, response.status)
+        xlog.warn("app check %s ip:%s status:%d", appid, ip, response.status)
         return False
 
     content = response.read()
     if "GoAgent" not in content:
-        if __name__ == "__main__":
-            xlog.warn("app check %s content:%s", appid, content)
+        xlog.warn("app check %s content:%s", appid, content)
         return False
 
-    if __name__ == "__main__":
-        xlog.info("check_goagent ok")
+    xlog.info("check_goagent ok")
     return ssl_sock
 
 
