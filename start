@@ -39,12 +39,12 @@ os_name=`uname -s`
 # Install Packages
 echo 'Install python-openssl and libnss3-tools for your system'
 if [ $os_name = 'Linux' ]; then
-    if [ -f /etc/debian_version ]; then
+    if [ `which apt-get | wc -l` != 0 ]; then
         if [ `dpkg-query -l | grep python-openssl | wc -l` == 0 ]; then
             sudo apt-get install -y python-openssl
         fi
-    elif [ -f /etc/redhat-release ]; then
-        if [ `yum -q list installed pyOpenSSL | wc -l` == 0 ]; then
+    elif [ `which yum | wc -l` != 0 ]; then
+        if [ `yum -q list installed | grep pyOpenSSL | wc -l` == 0 ]; then
             sudo yum install -y pyOpenSSL
         fi
     # Do Someting for ArchLinux
