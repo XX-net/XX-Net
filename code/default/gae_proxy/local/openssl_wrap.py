@@ -221,7 +221,7 @@ class SSLConnection(object):
         # RC4-SHA:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256
         #
         if not cipher_suites:
-            cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256',)
+            cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256:!ECDHE-RSA-AES128-SHA:!AES128-SHA',)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
         ssl_context = OpenSSL.SSL.Context(protocol_version)
