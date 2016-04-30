@@ -32,7 +32,7 @@ def run(last_run_version):
         for filename in os.listdir(top_path):
             filepath = os.path.join(top_path, filename)
             if os.path.isfile(filepath):
-                if sys.platform != 'win32' and filename == 'xxnet':
+                if sys.platform != 'win32' and filename == 'start':
                     st = os.stat(filepath)
                     os.chmod(filepath, st.st_mode | stat.S_IEXEC)
                 if not filename.startswith('.') and filename not in ['README.md', 'start', 'start.bat', 'start.vbs']:
