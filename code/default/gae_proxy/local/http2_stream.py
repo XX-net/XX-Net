@@ -50,6 +50,7 @@ class Stream(object):
     pair.
     """
     def __init__(self,
+                 connection,
                  ip,
                  stream_id,
                  host,
@@ -62,6 +63,7 @@ class Stream(object):
                  remote_window_size,
                  max_frame_size):
 
+        self.connection = connection
         self.ip = ip
         self.stream_id = stream_id
         self.host = host
@@ -270,6 +272,8 @@ class Stream(object):
         strip_headers(self.response_headers)
         body = b''.join(self.response_body)
         response = BaseResponse(status=status, headers=self.response_headers, body=body)
+        response.ssl_sock = self.connection.ssl_sock
+        response.worker = self.connection
         self.task.queue.put(response)
 
     def close(self, reason=""):

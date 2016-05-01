@@ -44,7 +44,10 @@ class APPID_manager(object):
         with self.lock:
             if appid not in self.out_of_quota_appids:
                 self.out_of_quota_appids.append(appid)
-            self.working_appid_list.remove(appid)
+            try:
+                self.working_appid_list.remove(appid)
+            except:
+                pass
 
     def report_not_exist(self, appid, ip):
         xlog.debug("report_not_exist:%s %s", appid, ip)
