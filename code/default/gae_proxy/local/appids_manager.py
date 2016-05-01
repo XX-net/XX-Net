@@ -30,8 +30,10 @@ class APPID_manager(object):
 
     def get_appid(self):
         if len(self.working_appid_list) == 0:
-            if time.time() - self.last_reset_time < 600:
-                xlog.warn("all appid out of quota, need 10 min to reset")
+            time_to_reset = 600 - (time.time() - self.last_reset_time)
+            if time_to_reset > 0:
+                xlog.warn("all appid out of quota, wait %d seconds to reset", time_to_reset)
+                time.sleep(time_to_reset)
                 return None
             else:
                 xlog.warn("reset appid")
