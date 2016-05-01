@@ -28,7 +28,7 @@ def run(last_run_version):
         shutil.rmtree(os.path.join(top_path, 'launcher')) # launcher is for auto-update from 2.X
 
     if older_or_equal(last_run_version, '3.0.4'):
-        xlog.info("migrating to 3.0.5+")
+        xlog.info("migrating to 3.x.x")
         for filename in os.listdir(top_path):
             filepath = os.path.join(top_path, filename)
             if os.path.isfile(filepath):
