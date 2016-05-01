@@ -1,0 +1,162 @@
+<form id="goagent-php-config" method="POST" onSubmit="onSubmit(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="php-server">{{ _("PHP Server URL") }}</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="php-server" type="text" placeholder="Example: http://zjhzxhz.com/index.php" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="php-password">{{ _("Password") }}</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="php-password" type="password" placeholder="{{ _("Default: ") }}123456" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="enable-front-proxy">{{ _("Frontend Proxy") }}</label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="enable-front-proxy" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div id="front-proxy-options" style="display: none;">
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-host">{{ _("Address") }}</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-host" type="text" placeholder="{{ _("Example: ") }}127.0.0.1" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-port">{{ _("Port") }}</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-port" type="text" placeholder="{{ _("Example: ") }}808" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-username">{{ _("Username") }}</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-username" type="text" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="proxy-password">{{ _("Password") }}</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="proxy-password" type="password" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+    </div> <!-- #front-proxy-options -->
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">{{ _("Save and Restart PHP Proxy") }}</button>
+        </div> <!-- .span12 -->
+    </div>
+    <div>
+        <p>{{ _("Help: ") }}<a href="https://github.com/XX-net/XX-Net/wiki/PHP-proxy">https://github.com/XX-net/XX-Net/wiki/PHP-proxy</a></p>
+    </div> <!-- .row-fluid -->
+</form> <!-- #goagent-php-config -->
+
+<!-- JavaScript -->
+<script type="text/javascript">
+    title('{{ _("PHP Proxy Config") }}');
+</script>
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $('#enable-front-proxy').change(function() {
+        var isChecked = $(this).is(':checked');
+
+        if ( isChecked ) {
+            $('#front-proxy-options').slideDown();
+        } else {
+            $('#front-proxy-options').slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8083/config?cmd=get_config',
+            dataType: 'JSON',
+            success: function(result) {
+                $('#php-server').val(result['php_server']);
+                $('#php-password').val(result['php_password']);
+
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
+                    $('#enable-front-proxy').parent().removeClass('switch-off');
+                    $('#enable-front-proxy').parent().addClass('switch-on');
+
+                    $('#enable-front-proxy').prop('checked', true);
+                    $('#front-proxy-options').slideDown();
+                }
+                $('#proxy-host').val(result['proxy_host']);
+                $('#proxy-port').val(result['proxy_port']);
+                $('#proxy-username').val(result['proxy_username']);
+                $('#proxy-password').val(result['proxy_password']);
+            },
+            error: function() {
+                tip('{{ _("PHP proxy is disabled. Please enable it in <a href=\"/?module=launcher&menu=config\">system settings</a>.") }}', 'warning');
+            }
+        });
+    });
+</script>
+<script type="text/javascript">
+    function onSubmit() {
+        var phpServer        = $('#php-server').val(),
+            phpPassword      = $('#php-password').val(),
+            enableFrontProxy = $('#enable-front-proxy').is(':checked') ? 1 : 0,
+            proxyHost        = $('#proxy-host').val(),
+            proxyPort        = $('#proxy-port').val(),
+            proxyUsername    = $('#proxy-username').val(),
+            proxyPassword    = $('#proxy-password').val();
+
+        return setConfig(phpServer, phpPassword, enableFrontProxy,
+                            proxyHost, proxyPort, proxyUsername, proxyPassword);
+    }
+</script>
+<script type="text/javascript">
+    function setConfig(phpServer, phpPassword, enableFrontProxy,
+                        proxyHost, proxyPort, proxyUsername, proxyPassword) {
+        var config = {
+            'php_server': phpServer,
+            'php_password': phpPassword,
+            'proxy_enable': enableFrontProxy,
+            'proxy_host': proxyHost,
+            'proxy_port': proxyPort,
+            'proxy_username': proxyUsername,
+            'proxy_password': proxyPassword
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:8083/config?cmd=set_config',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _("Settings saved.") }}', 'success');
+                } else {
+                    tip('{{ _("Unknown error occurred.") }}', 'error');
+                }
+            },
+            error: function() {
+                tip('{{ _("PHP proxy is disabled. Please enable it in <a href=\"/?module=launcher&menu=config\">system settings</a>.") }}', 'warning');
+            }
+        });
+    }
+</script>

@@ -1,1 +1,3 @@
-"%~dp0python27/1.0/python.exe" "%~dp0launcher/start.py"
+SET PYTHONPATH=
+"%~dp0%start.vbs" console
+

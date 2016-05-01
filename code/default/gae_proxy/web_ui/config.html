@@ -1,0 +1,249 @@
+<form id="gae_proxy-config" method="POST" onSubmit="onSubmit(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="gae-appid">GAE AppID </label>
+        </div> <!-- .span4 -->
+        <div id="gae-appid-field" class="span8">
+            <input id="gae-appid" type="text" placeholder='{{ _( "Public appids used by default" ) }}' />
+            <div id="public-appid-tip" class="hide">
+                <p>
+                    <span color="red">{{ _( "The public appids are disabled to access videos or download files." ) }}</span>
+                    <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">({{ _( "How to apply" ) }})</a>
+                </p>
+            </div>
+            <div id="gae-appid-tip" class="hide">
+                <p>
+                    <span >{{ _( "Attention: inaccessable before appids are deployed." ) }}</span>
+                </p>
+            </div>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="advanced-options"><i class="icon icon-chevron-right"></i> {{ _( "Advanced options" ) }}</label>
+        </div> <!-- .span4 -->
+    </div> <!-- .row-fluid -->
+    <div id="advanced-options" style="display: none;">
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="use-ipv6">{{ _( "Enable IPv6(If it's available)" ) }}</label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="use-ipv6" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">
+                <label for="enable-proxy">{{ _( "LAN proxy(Generally not needed)" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
+            </div> <!-- .span4 -->
+            <div class="span8">
+                <input id="enable-proxy" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div id="proxy-options" style="display: none;">
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-type">{{ _( "Proxy type" ) }}</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <select id="proxy-type">
+                        <option value="HTTP">HTTP</option>
+                        <option value="SOCKS4">SOCKS 4</option>
+                        <option value="SOCKS5">SOCKS 5</option>
+                    </select>
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-host">{{ _( "Proxy IP address or domain name" ) }}</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-port">{{ _( "Port" ) }}</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-port" type="text" placeholder="Example: 808" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-username">{{ _( "User name" ) }}</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-username" type="text" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            <div class="row-fluid">
+                <div class="span4">
+                    <label for="proxy-password">{{ _( "Password" ) }}</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="proxy-password" type="password" />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+        </div> <!-- #proxy-options -->
+    </div> <!-- #advanced-options -->
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form> <!-- #gae_proxy-config -->
+
+        <div class="row-fluid">
+            <div class="span12">
+                {{ _( "Advanced tricks:" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
+            </div> <!-- .span4 -->
+        </div> <!-- .row-fluid -->
+<!-- JavaScript -->
+<script type="text/javascript">
+    title('{{ _( "Configure GAEProxy" ) }}');
+</script>
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $('label[for=advanced-options]').click(function() {
+        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
+
+        if ( !isAdvancedOptionsShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#advanced-options').slideDown();
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#advanced-options').slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
+    $('#enable-proxy').change(function() {
+        var isChecked = $(this).is(':checked');
+
+        if ( isChecked ) {
+            $('#proxy-options').slideDown();
+        } else {
+            $('#proxy-options').slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
+    $('#gae-appid-field').click(function(){
+        $('#gae-appid-tip').removeClass('hide');
+    });
+    $('#gae-appid-field').click(function(event){
+        event.stopPropagation();
+    });
+    $('html').click(function() {
+        $('#gae-appid-tip').addClass('hide');
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/config?cmd=get_config',
+            dataType: 'JSON',
+            success: function(result) {
+                $('#gae-appid').val(result['appid']);
+                if( !result['appid'] || result['appid'] == '' ){
+                    $('#public-appid-tip').removeClass("hide");
+                }
+
+                if ( result['host_appengine_mode'] == 'gae' ) {
+                    $('#deploy-via-gae').parent().removeClass('switch-off');
+                    $('#deploy-via-gae').parent().addClass('switch-on');
+                    $('#deploy-via-gae').prop('checked', true);
+                }
+
+                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
+                    $('#enable-proxy').parent().removeClass('switch-off');
+                    $('#enable-proxy').parent().addClass('switch-on');
+
+                    $('#enable-proxy').prop('checked', true);
+                    $('#proxy-options').slideDown();
+                }
+                $('#proxy-type').val(result['proxy_type']);
+                $('#proxy-host').val(result['proxy_host']);
+                $('#proxy-port').val(result['proxy_port']);
+                $('#proxy-username').val(result['proxy_user']);
+                $('#proxy-password').val(result['proxy_passwd']);
+                if ( result['use_ipv6'] == 1 ) {
+                    $('#use-ipv6').parent().removeClass('switch-off');
+                    $('#use-ipv6').parent().addClass('switch-on');
+                    $('#use-ipv6').prop('checked', true);
+                }
+            },
+            error: function(){
+                tip('{{ _( "Failed reading the settings." ) }}', 'error');
+            }
+        });
+    });
+</script>
+<script type="text/javascript">
+    function onSubmit() {
+        var gaeAppId          = $('#gae-appid').val(),
+            hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct',
+            useIpv6           = $('#use-ipv6').is(':checked') ? 1 : 0,
+            enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
+            proxyType         = $('#proxy-type').val(),
+            proxyHost         = $('#proxy-host').val(),
+            proxyPort         = $('#proxy-port').val(),
+            proxyUsername     = $('#proxy-username').val(),
+            proxyPassword     = $('#proxy-password').val();
+
+        proxyPort = parseInt(proxyPort, 10);
+
+        tip('{{ _( "Wait for checking setting..." ) }}', 'info');
+
+        return setConfig(gaeAppId, hostAppEngine, useIpv6,
+                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
+    }
+</script>
+<script type="text/javascript">
+    function setConfig(gaeAppId, hostAppEngine, useIpv6,
+                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
+        var config = {
+            'appid': gaeAppId,
+            'host_appengine_mode': hostAppEngine,
+            'use_ipv6': useIpv6,
+            'proxy_enable': enableProxy,
+            'proxy_type': proxyType,
+            'proxy_host': proxyHost,
+            'proxy_port': proxyPort,
+            'proxy_user': proxyUsername,
+            'proxy_passwd': proxyPassword
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/gae_proxy/control/config?cmd=set_config',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _( "Settings saved successfully" ) }}', 'success');
+                } else {
+                    if (result['reason'].indexOf("appid fail") > -1){
+                        tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before using." ) }}', 'error');
+                    }else if(result['reason'].indexOf("IPv6 fail") > -1){
+                        tip('{{ _( "Enable IPv6 failed. Be sure your network support IPv6." ) }}', 'error');
+                    }else{
+                        tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
+                    }
+                    
+                }
+            },
+            error: function(){
+                tip('{{ _( "Failed saving settings" ) }}' + ".", 'error');
+            }
+        });
+    }
+</script>
