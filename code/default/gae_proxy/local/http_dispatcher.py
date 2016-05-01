@@ -106,7 +106,10 @@ class HttpsDispatcher(object):
                     #xlog.warn("create_worker_thread get ssl_sock fail")
                     continue
 
-                self.on_ssl_created_cb(ssl_sock)
+                try:
+                    self.on_ssl_created_cb(ssl_sock)
+                except:
+                    time.sleep(10)
 
                 if len(self.workers) > self.min_worker_num:
                     break

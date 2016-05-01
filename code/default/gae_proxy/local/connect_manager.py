@@ -262,7 +262,11 @@ class Https_connection_manager(object):
                     ssl_sock.close()
                 else:
                     # put ssl to worker
-                    self.ssl_timeout_cb(ssl_sock)
+                    try:
+                        self.ssl_timeout_cb(ssl_sock)
+                    except:
+                        # no appid avaiable
+                        pass
 
             for host in self.host_conn_pool:
                 host_list = self.host_conn_pool[host].get_need_keep_alive(maxtime=self.keep_alive-3)

@@ -151,7 +151,7 @@ class SSLConnection(object):
             except errno.EAGAIN:
                 continue
             except Exception as e:
-                xlog.exception("recv_into:%r", e)
+                #xlog.exception("recv_into:%r", e)
                 raise e
 
     def read(self, bufsiz, flags=0):

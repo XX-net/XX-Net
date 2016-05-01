@@ -139,7 +139,7 @@ class HTTP2_worker(HTTP_worker):
             # http/2 client use odd stream_id
             self.next_stream_id += 2
 
-        stream = Stream(self.ip, stream_id, self.ssl_sock.host, task,
+        stream = Stream(self, self.ip, stream_id, self.ssl_sock.host, task,
                     self._send_cb, self._close_stream_cb, self.encoder, self.decoder,
                     FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
