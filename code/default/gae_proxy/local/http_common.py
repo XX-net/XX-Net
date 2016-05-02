@@ -53,7 +53,7 @@ class GAE_Exception(Exception):
 
 
 class BaseResponse(object):
-    def __init__(self, status=506, reason="", headers={}, body=""):
+    def __init__(self, status=601, reason="", headers={}, body=""):
         self.status = status
         self.reason = reason
         self.headers = headers

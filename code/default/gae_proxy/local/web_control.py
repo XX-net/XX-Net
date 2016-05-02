@@ -503,7 +503,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
                 if appid_updated:
-                    connect_manager.https_manager.clean_old_connection()
+                    http_dispatch.close_all_worker()
 
                 google_ip.reset()
                 check_ip.load_proxy_config()
@@ -610,7 +610,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         ip = reqs['ip'][0]
         result = check_ip.test_gae_ip2(ip)
-        if not result:
+        if not result or not result.support_gae:
             data = "{'res':'fail'}"
         else:
             data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %

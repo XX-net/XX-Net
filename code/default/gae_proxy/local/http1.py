@@ -33,7 +33,8 @@ class HTTP1_worker(HTTP_worker):
         last_ssl_active_time = self.ssl_sock.create_time
         last_request_time = time.time()
         while connect_control.keep_running and self.keep_running:
-            time_to_ping = min(0, 55 - (time.time() - last_ssl_active_time))
+            time_to_ping0 = 55 - (time.time() - last_ssl_active_time)
+            time_to_ping = max(0, time_to_ping0)
             try:
                 task = self.task_queue.get(True, timeout=time_to_ping)
                 if not task:
@@ -44,12 +45,17 @@ class HTTP1_worker(HTTP_worker):
                     self.close("idle")
                     return
 
+                # public appid don't keep alive, for quota limit.
+                if self.ssl_sock.appid in config.PUBLIC_APPIDS:
+                    #xlog.info("public appid don't keep alive")
+                    self.close("public appid")
+                    return
+
                 last_ssl_active_time = time.time()
                 if not self.head_request():
-                    # google_ip.report_connect_fail(self.ssl_sock.ip, force_remove=True)
                     # now many gvs don't support gae
                     google_ip.recheck_ip(self.ssl_sock.ip)
-                    self.close("keep alive, maybe not support")
+                    self.close("keep alive")
                     return
                 else:
                     continue
@@ -134,11 +140,6 @@ class HTTP1_worker(HTTP_worker):
     def head_request(self):
         # for keep alive
 
-        # public appid don't keep alive, for quota limit.
-        if self.ssl_sock.appid in config.PUBLIC_APPIDS:
-            #xlog.info("public appid don't keep alive")
-            return False
-
         start_time = time.time()
         # xlog.debug("head request %s", host)
         request_data = 'HEAD /_gh/ HTTP/1.1\r\nHost: %s\r\n\r\n' % self.ssl_sock.host
@@ -147,7 +148,7 @@ class HTTP1_worker(HTTP_worker):
             data = request_data.encode()
             ret = self.ssl_sock.send(data)
             if ret != len(data):
-                xlog.warn("head send len:%d %d", ret, len(data))
+                xlog.warn("head send len:%r %d", ret, len(data))
             response = httplib.HTTPResponse(self.ssl_sock, buffering=True)
             self.ssl_sock.settimeout(100)
             response.begin()
@@ -155,7 +156,8 @@ class HTTP1_worker(HTTP_worker):
             status = response.status
             if status != 200:
                 xlog.debug("app head fail status:%d", status)
-                raise Exception("app check fail %r" % status)
+                #raise Exception("app check fail %r" % status)
+                return False
 
             self.rtt = (time.time() - start_time) * 1000
             return True
