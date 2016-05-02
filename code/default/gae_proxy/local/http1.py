@@ -155,8 +155,7 @@ class HTTP1_worker(HTTP_worker):
 
             status = response.status
             if status != 200:
-                xlog.debug("app head fail status:%d", status)
-                #raise Exception("app check fail %r" % status)
+                xlog.debug("appid:%s head fail status:%d", self.ssl_sock.appid, status)
                 return False
 
             self.rtt = (time.time() - start_time) * 1000
@@ -168,7 +167,7 @@ class HTTP1_worker(HTTP_worker):
             xlog.warn("%s keep alive fail, inactive_time:%d head_timeout:%d",
                        self.ssl_sock.ip, inactive_time, head_timeout)
         except Exception as e:
-            xlog.exception("%s head %s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
+            xlog.exception("%s head appid:%s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
 
     def close(self, reason=""):
         # Notify loop to exit
