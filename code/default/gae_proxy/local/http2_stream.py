@@ -220,8 +220,8 @@ class Stream(object):
                 # don't do it if stream is closed.
                 size = frame.flow_controlled_length
                 increment = self.receive_window_manager._handle_frame(size)
-                if increment:
-                    xlog.debug("stream:%d frame size:%d increase win:%d", self.stream_id, size, increment)
+                #if increment:
+                #    xlog.debug("stream:%d frame size:%d increase win:%d", self.stream_id, size, increment)
 
                 #content_len = int(self.request_headers.get("Content-Length")[0])
                 #xlog.debug("%s get:%d s:%d", self.ip, self.response_body_len, size)
@@ -247,7 +247,7 @@ class Stream(object):
         else:  # pragma: no cover
             # Unknown frames belong to extensions. Just drop it on the
             # floor, but log so that users know that something happened.
-            xlog.warning("%s Received unknown frame, type %d", self.ip, frame.type)
+            xlog.error("%s Received unknown frame, type %d", self.ip, frame.type)
             pass
 
         if 'END_HEADERS' in frame.flags:

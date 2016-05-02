@@ -130,6 +130,9 @@ class Connect_pool():
         if not fastest_sock:
             raise Exception("get no ssl")
 
+        if not fastest_sock.h2:
+            self.h1_num -= 1
+
         self.pool.pop(fastest_sock)
         return (fastest_time, fastest_sock)
 
@@ -435,7 +438,20 @@ class Https_connection_manager(object):
             ssl_sock.do_handshake()
             time_handshaked = time.time()
 
-            connect_time = int((time_connected - time_begin) * 1000)
+            def verify_SSL_certificate_issuer(ssl_sock):
+                cert = ssl_sock.get_peer_certificate()
+                if not cert:
+                    #google_ip.report_bad_ip(ssl_sock.ip)
+                    #connect_control.fall_into_honeypot()
+                    raise socket.error(' certficate is none')
+
+                issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+                if not issuer_commonname.startswith('Google'):
+                    google_ip.report_connect_fail(ip, force_remove=True)
+                    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+
+            verify_SSL_certificate_issuer(ssl_sock)
+
             handshake_time = int((time_handshaked - time_connected) * 1000)
 
             try:
@@ -463,20 +479,6 @@ class Https_connection_manager(object):
             ssl_sock.load = 0
             ssl_sock.handshake_time = handshake_time
             ssl_sock.host = ''
-
-            def verify_SSL_certificate_issuer(ssl_sock):
-                cert = ssl_sock.get_peer_certificate()
-                if not cert:
-                    #google_ip.report_bad_ip(ssl_sock.ip)
-                    #connect_control.fall_into_honeypot()
-                    raise socket.error(' certficate is none')
-
-                issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-                if not issuer_commonname.startswith('Google'):
-                    google_ip.report_connect_fail(ip, force_remove=True)
-                    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
-
-            verify_SSL_certificate_issuer(ssl_sock)
 
             connect_control.report_connect_success()
             return ssl_sock

@@ -503,7 +503,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 connect_manager.load_proxy_config()
                 connect_manager.https_manager.load_config()
                 if appid_updated:
-                    connect_manager.https_manager.clean_old_connection()
+                    http_dispatch.close_all_worker()
 
                 google_ip.reset()
                 check_ip.load_proxy_config()
@@ -610,7 +610,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         ip = reqs['ip'][0]
         result = check_ip.test_gae_ip2(ip)
-        if not result:
+        if not result or not result.support_gae:
             data = "{'res':'fail'}"
         else:
             data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %
@@ -690,11 +690,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             content = self.postvars['ip_range'][0]
 
             #check ip_range checksums, update if needed
+            default_digest = hashlib.md5(ip_range.load_range_content(default=True)).hexdigest()
             old_digest = hashlib.md5(ip_range.load_range_content()).hexdigest()
             new_digest = hashlib.md5(content).hexdigest()
 
+            if new_digest == default_digest:
+                ip_range.remove_user_range()
+
+            else:
+                if old_digest != new_digest:
+                    ip_range.update_range_content(content)
+
             if old_digest != new_digest:
-                ip_range.update_range_content(content)
                 ip_range.load_ip_range()
 
             #update auto_adjust_scan_ip and scan_ip_thread_num

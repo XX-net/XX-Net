@@ -57,7 +57,8 @@ class APPID_manager(object):
         th.start()
 
     def process_appid_not_exist(self, appid, ip):
-        if check_ip.test_gae_ip2(ip, "xxnet-1"):
+        ret = check_ip.test_gae_ip2(ip, "xxnet-1")
+        if ret and ret.support_gae:
             self.set_appid_not_exist(appid)
         else:
             xlog.warn("process_appid_not_exist, remove ip:%s", ip)
@@ -69,8 +70,15 @@ class APPID_manager(object):
         with self.lock:
             if appid not in self.not_exist_appids:
                 self.not_exist_appids.append(appid)
-                config.GAE_APPIDS.remove(appid)
-                self.working_appid_list.remove(appid)
+                try:
+                    config.GAE_APPIDS.remove(appid)
+                except:
+                    pass
+
+                try:
+                    self.working_appid_list.remove(appid)
+                except:
+                    pass
 
     def appid_exist(self, appids):
         for appid in appids.split('|'):
