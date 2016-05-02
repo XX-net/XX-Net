@@ -318,7 +318,7 @@ def request_gae_proxy(method, url, headers, body):
 
     while True:
         if time.time() - time_request > 60: #time out
-            raise Exception(600, b"".join(error_msg))
+            raise GAE_Exception(600, b"".join(error_msg))
 
         try:
             response = request_gae_server(request_headers, request_body)
@@ -326,6 +326,20 @@ def request_gae_proxy(method, url, headers, body):
             check_local_network.report_network_ok()
 
             response = unpack_response(response)
+
+            if response.app_msg:
+                xlog.warn("server app return fail, status:%d", response.app_status)
+                if len(response.app_msg) < 2048:
+                    xlog.warn('app_msg:%s', urllib.urlencode(response.app_msg))
+
+                if response.app_status == 510:
+                    # reach 80% of traffic today
+                    # disable for get big file.
+
+                    appid_manager.report_out_of_quota(response.ssl_sock.appid)
+                    response.worker.close("appid out of quota:%s" % response.ssl_sock.appid)
+                    continue
+
             return response
         except GAE_Exception as e:
             err_msg = "gae_exception:%r %s" % (e, url)
@@ -530,13 +544,11 @@ class RangeFetch(object):
                 try:
                     response = request_gae_proxy(self.method, self.url, headers, self.body)
                 except GAE_Exception as e:
-                    xlog.warning('RangeFetch %s return %r', headers['Range'], response)
+                    xlog.warning('RangeFetch %s return %r', headers['Range'], e)
                     range_queue.put((start, end, None))
                     continue
 
             if response.app_msg:
-                if len(response.app_msg) < 2048:
-                    xlog.warn('range fetch return app_msg:%s', urllib.urlencode(response.app_msg))
                 response.worker.close("no range")
                 range_queue.put((start, end, None))
                 continue

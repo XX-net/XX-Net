@@ -83,9 +83,6 @@ class Config(object):
         self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
         self.HOSTS_GAE = tuple(gae_hosts)
 
-        # disable direct temp
-        direct_endswith = []
-        direct_hosts = []
         self.HOSTS_DIRECT_ENDSWITH = tuple(direct_endswith)
         self.HOSTS_DIRECT = tuple(direct_hosts)
 
