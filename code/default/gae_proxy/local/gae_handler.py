@@ -189,7 +189,58 @@ def clean_empty_header(headers):
     return headers
 
 
-def fetch_by_gae(method, url, headers, body):
+def request_gae_server(headers, body):
+    # process on http protocol
+    # process status code return by http server
+    # raise error, let up layer retry.
+
+    response = http_dispatch.request(headers, body)
+    if not response:
+        raise GAE_Exception(600, "fetch gae fail")
+
+    if response.status >= 600:
+        raise GAE_Exception(response.status, "fetch gae fail:%d" % response.status)
+
+    server_type = response.headers.get("server", "")
+    content_type = response.headers.get("content-type", "")
+    if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
+        response.status == 403 or response.status == 405:
+
+        # some ip can connect, and server type can be gws
+        # but can't use as GAE server
+        # so we need remove it immediately
+
+        xlog.warn("IP:%s not support GAE, server:%s status:%d", response.ssl_sock.ip, server_type,
+                   response.status)
+        google_ip.recheck_ip(response.ssl_sock.ip)
+        response.worker.close("ip not support GAE")
+        raise GAE_Exception(602, "ip not support GAE")
+
+    if response.status == 404:
+        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+        appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
+        response.worker.close("appid not exist:%s" % response.ssl_sock.appid)
+        raise GAE_Exception(603, "appid not support GAE")
+
+    if response.status == 503:
+        appid = response.ssl_sock.appid
+        xlog.warning('APPID %r out of Quota, remove it. %s', appid, response.ssl_sock.ip)
+        appid_manager.report_out_of_quota(appid)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
+        response.worker.close("appid out of quota:%s" % appid)
+        raise GAE_Exception(604, "appid out of quota:%s" % appid)
+
+    if response.status > 300:
+        raise GAE_Exception(605, "status:%d" % response.status)
+
+    if response.status != 200:
+        xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip, response.ssl_sock.appid, response.status)
+
+    return response
+
+
+def pack_request(method, url, headers, body):
     if isinstance(body, basestring) and body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
             zbody = deflate(body)
@@ -225,39 +276,24 @@ def fetch_by_gae(method, url, headers, body):
     body = '%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
     request_headers['Content-Length'] = str(len(body))
 
-    response = http_dispatch.request(request_headers, body)
+    return request_headers, body
 
-    response.app_status = response.status
-    response.app_headers = response.headers
-    if response.app_status != 200:
-        return response
 
-    check_local_network.report_network_ok()
+def unpack_response(response):
+
     try:
         data = response.body.get(2)
-        if len(data) < 2:
-            xlog.warn("fetch too short lead byte len:%d %s", len(data), url)
-            response.app_status = 502
-            # 502: Bad gateway
-            response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
-            response.read = response.fp.read
-            return response
 
         headers_length, = struct.unpack('!h', data)
         data = response.body.get(headers_length)
-        if len(data) < headers_length:
-            xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
-            response.app_status = 509
-            response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
-            response.read = response.fp.read
-            return response
 
         raw_response_line, headers_data = inflate(data).split('\r\n', 1)
-        _, response.status, response.reason = raw_response_line.split(None, 2)
-        response.status = int(response.status)
-        response.reason = response.reason.strip()
+        _, status, reason = raw_response_line.split(None, 2)
+        response.app_status = int(status)
+        response.app_reason = reason.strip()
 
-        headers_pairs = headers_data.split('\r\n')
+        headers_block, app_msg = headers_data.split('\r\n\r\n')
+        headers_pairs = headers_block.split('\r\n')
         response.headers = {}
         for pair in headers_pairs:
             if not pair:
@@ -265,72 +301,57 @@ def fetch_by_gae(method, url, headers, body):
             k, v = pair.split(': ', 1)
             response.headers[k] = v
 
+        response.app_msg = app_msg
+
         return response
     except Exception as e:
+        response.worker.close("unpack protocol error")
+        google_ip.recheck_ip(response.ssl_sock.ip)
         raise GAE_Exception("unpack protocol:%r", e)
 
 
 def request_gae_proxy(method, url, headers, body):
+    # make retry and time out
     time_request = time.time()
+    request_headers, request_body = pack_request(method, url, headers, body)
+    error_msg = []
 
     while True:
         if time.time() - time_request > 60: #time out
-            return False
+            raise Exception(600, b"".join(error_msg))
 
         try:
-            response = fetch_by_gae(method, url, headers, body)
-            if response.app_status < 300:
-                return response
+            response = request_gae_server(request_headers, request_body)
 
-            xlog.warn("fetch gae status:%s url:%s", response.app_status, url)
-            if response.app_status == 506:
-                # fetch fail at http request
-                continue
+            check_local_network.report_network_ok()
 
-            server_type = response.app_headers.get('Server', "")
-            if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
-                xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
-                google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
-                response.worker.close("ip not support GAE")
-                continue
-
-            if response.app_status == 404:
-                # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-                appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
-                # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
-                response.worker.close("appid not exist:%s" % response.ssl_sock.appid)
-                continue
-
-            if response.app_status == 403 or response.app_status == 405: #Method not allowed
-                # google have changed from gws to gvs, need to remove.
-                xlog.warning('405 Method not allowed. remove %s ', response.ssl_sock.ip)
-                # some ip can connect, and server type is gws
-                # but can't use as GAE server
-                # so we need remove it immediately
-                google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
-                response.worker.close("ip not support GAE")
-                continue
-
-            if response.app_status == 503:
-                xlog.warning('APPID %r out of Quota, remove it. %s', response.ssl_sock.appid, response.ssl_sock.ip)
-                appid_manager.report_out_of_quota(response.ssl_sock.appid)
-                # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
-                response.worker.close("appid out of quota")
-                continue
-
+            response = unpack_response(response)
+            return response
         except GAE_Exception as e:
+            err_msg = "gae_exception:%r %s" % (e, url)
+            error_msg.append(err_msg)
             xlog.warn("gae_exception:%r %s", e, url)
         except Exception as e:
+            err_msg = 'gae_handler.handler %r %s , retry...' % ( e, url)
+            error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
 
 
 def handler(method, url, headers, body, wfile):
     request_time = time.time()
     headers = clean_empty_header(headers)
-    response = request_gae_proxy(method, url, headers, body)
-    if not response:
-        xlog.warn("GAE %s %s request fail", method, url)
+
+    try:
+        response = request_gae_proxy(method, url, headers, body)
+    except GAE_Exception as e:
+        xlog.warn("GAE %s %s request fail:%r", method, url, e)
+        send_response(wfile, e.type, body=e.message)
         return return_fail_message(wfile)
+
+    if response.app_msg:
+        return send_response(wfile, response.app_status, body=response.app_msg)
+    else:
+        response.status = response.app_status
 
     if response.status == 206:
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
@@ -372,7 +393,7 @@ def handler(method, url, headers, body, wfile):
     body_length = end - start + 1
 
     if body_length != len(response.body):
-        xlog.warn("%s response.body len:%d, expect:%d", url, len(response.body), body_length)
+        xlog.warn("%s %s response.body len:%d, expect:%d", method, url, len(response.body), body_length)
         return
 
     try:
@@ -506,12 +527,12 @@ class RangeFetch(object):
             headers['Range'] = 'bytes=%d-%d' % (start, end)
 
             if not response:
-                response = request_gae_proxy(self.method, self.url, headers, self.body)
-
-            if not response:
-                xlog.warning('RangeFetch %s return %r', headers['Range'], response)
-                range_queue.put((start, end, None))
-                continue
+                try:
+                    response = request_gae_proxy(self.method, self.url, headers, self.body)
+                except GAE_Exception as e:
+                    xlog.warning('RangeFetch %s return %r', headers['Range'], response)
+                    range_queue.put((start, end, None))
+                    continue
 
             if response.headers.get('Location', None):
                 self.url = urlparse.urljoin(self.url, response.headers.get('Location'))

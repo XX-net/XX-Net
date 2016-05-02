@@ -207,6 +207,14 @@ class HttpsDispatcher(object):
         if len(self.workers) == 0 and not self.is_idle():
             https_manager.create_more_connection()
 
+    def close_all_worker(self):
+        for w in self.workers:
+            w.close("close all worker")
+
+        self.workers = []
+        self.h1_num = 0
+        self.h2_num = 0
+
     def to_string(self):
         worker_rate = {}
         for w in self.workers:

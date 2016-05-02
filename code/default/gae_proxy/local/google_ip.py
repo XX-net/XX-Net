@@ -550,7 +550,7 @@ class IpManager():
                 continue
 
             result = check_ip.test_gae_ip2(ip)
-            if result:
+            if result and result.support_gae:
                 self.add_ip(ip, result.handshake_time, result.domain, "gws")
                 xlog.debug("restore ip:%s", ip)
                 continue
@@ -600,6 +600,11 @@ class IpManager():
         result = check_ip.test_gae_ip2(ip)
         connect_control.end_connect_register()
         if not result:
+            # connect fail.
+            # do nothing
+            return
+
+        if not result.support_gae:
             self.report_connect_fail(ip, force_remove=True)
             xlog.debug("recheck_ip:%s real fail, removed.", ip)
         else:
@@ -622,7 +627,7 @@ class IpManager():
                 connect_control.start_connect_register()
                 result = check_ip.test_gae_ip2(ip)
                 connect_control.end_connect_register()
-                if not result:
+                if not result or not result.support_gae:
                     continue
 
                 if self.add_ip(ip, result.handshake_time, result.domain, "gws"):
@@ -716,8 +721,10 @@ class IpManager():
                     self.ip_dict[ip]["fail_time"] = time.time()
                 finally:
                     self.ip_lock.release()
-            else:
+            elif result.support_gae:
                 self.add_ip(ip, result.handshake_time, result.domain, "gws")
+            else:
+                self.report_connect_fail(ip, force_remove=True)
 
 google_ip = IpManager()
 

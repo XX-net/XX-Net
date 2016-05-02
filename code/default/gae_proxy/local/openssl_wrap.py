@@ -99,7 +99,7 @@ class SSLConnection(object):
                 return 0
             raise
         except Exception as e:
-            xlog.exception("ssl send:%r", e)
+            #xlog.exception("ssl send:%r", e)
             raise
 
     def __send_memoryview(self, data, flags=0):
