@@ -534,6 +534,15 @@ class RangeFetch(object):
                     range_queue.put((start, end, None))
                     continue
 
+            if response.app_msg:
+                if len(response.app_msg) < 2048:
+                    xlog.warn('range fetch return app_msg:%s', urllib.urlencode(response.app_msg))
+                response.worker.close("no range")
+                range_queue.put((start, end, None))
+                continue
+            else:
+                response.status = response.app_status
+
             if response.headers.get('Location', None):
                 self.url = urlparse.urljoin(self.url, response.headers.get('Location'))
                 xlog.warn('RangeFetch Redirect(%r)', self.url)
@@ -549,9 +558,10 @@ class RangeFetch(object):
 
             content_range = response.headers.get('Content-Range', "")
             if not content_range:
-                xlog.warning('RangeFetch "%s %s" return Content-Range=%r: response headers=%r, retry %s-%s',
-                    self.method, self.url, content_range, response.headers, start, end)
-                # google_ip.report_connect_closed(response.ssl_sock.ip, "no range")
+                xlog.warning('RangeFetch "%s %s" return headers=%r, retry %s-%s',
+                    self.method, self.url, response.headers, start, end)
+                if len(response.body) < 2048:
+                    xlog.warn('body:%s', urllib.urlencode(response.body))
                 response.worker.close("no range")
                 range_queue.put((start, end, None))
                 continue
