@@ -21,9 +21,8 @@ class IpRange(object):
         self.user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
         self.load_ip_range()
 
-    def load_range_content(self):
-        
-        if os.path.isfile(self.user_range_file):
+    def load_range_content(self, default=False):
+        if not default and os.path.isfile(self.user_range_file):
             self.range_file = self.user_range_file
         else:
             self.range_file = self.default_range_file
@@ -41,6 +40,12 @@ class IpRange(object):
     def update_range_content(self, content):
         with open(self.user_range_file, "w") as fd:
             fd.write(content)
+
+    def remove_user_range(self):
+        try:
+            os.remove(self.user_range_file)
+        except:
+            pass
 
     def load_ip_range(self):
         self.ip_range_map = {}
