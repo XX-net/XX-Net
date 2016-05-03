@@ -63,7 +63,7 @@ if [ $os_name = 'Linux' ]; then
 fi
 
 # Start Application
-if [ $os_name = 'Darwin' ]; then
+if [ $os_name = 'Darwin' ] && ! [ "$1" = '-hungup' ]; then
     PYTHON="/usr/bin/python2.7"
     launchWithNoHungup
 else
