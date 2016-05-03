@@ -127,10 +127,7 @@ class Connect_pool():
                 fastest_time = time
                 fastest_sock = sock
 
-        if not fastest_sock:
-            raise Exception("get no ssl")
-
-        if not fastest_sock.h2:
+        if fastest_sock and not fastest_sock.h2:
             self.h1_num -= 1
 
         self.pool.pop(fastest_sock)
@@ -355,7 +352,8 @@ class Https_connection_manager(object):
     def create_more_connection_worker(self):
         while connect_control.allow_connect() and \
                 self.thread_num < self.max_thread_num and \
-                self.new_conn_pool.qsize() < self.https_new_connect_num:
+                self.new_conn_pool.qsize() < self.https_new_connect_num and \
+                self.new_conn_pool.qsize(only_h1=True) < 1:
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
