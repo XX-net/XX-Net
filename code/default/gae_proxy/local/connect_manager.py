@@ -122,16 +122,16 @@ class Connect_pool():
             if only_h1 and sock.h2:
                 continue
 
-            time = self.pool[sock]
-            if time < fastest_time or not fastest_sock:
-                fastest_time = time
+            hs_time = self.pool[sock]
+            if hs_time < fastest_time or not fastest_sock:
+                fastest_time = hs_time
                 fastest_sock = sock
 
-        if fastest_sock and not fastest_sock.h2:
+        if not fastest_sock.h2:
             self.h1_num -= 1
 
         self.pool.pop(fastest_sock)
-        return (fastest_time, fastest_sock)
+        return fastest_time, fastest_sock
 
     def get_slowest(self):
         self.not_empty.acquire()
@@ -147,8 +147,11 @@ class Connect_pool():
                     slowest_handshake_time = handshake_time
                     slowest_sock = sock
 
+            if not slowest_sock.h2:
+                self.h1_num -= 1
+
             self.pool.pop(slowest_sock)
-            return (slowest_handshake_time, slowest_sock)
+            return slowest_handshake_time, slowest_sock
         finally:
             self.not_empty.release()
 
@@ -159,9 +162,13 @@ class Connect_pool():
             pool = tuple(self.pool)
             for sock in pool:
                 inactive_time = time.time() -sock.last_use_time
-                #xlog.debug("inactive_time:%d", inactive_time * 1000)
+                # xlog.debug("inactive_time:%d", inactive_time * 1000)
                 if inactive_time >= maxtime:
                     return_list.append(sock)
+
+                    if not sock.h2:
+                        self.h1_num -= 1
+
                     del self.pool[sock]
 
             return return_list
@@ -175,6 +182,7 @@ class Connect_pool():
                 sock.close()
 
             self.pool = {}
+            self.h1_num = 0
         finally:
             self.pool_lock.release()
 
@@ -352,8 +360,8 @@ class Https_connection_manager(object):
     def create_more_connection_worker(self):
         while connect_control.allow_connect() and \
                 self.thread_num < self.max_thread_num and \
-                self.new_conn_pool.qsize() < self.https_new_connect_num and \
-                self.new_conn_pool.qsize(only_h1=True) < 1:
+                (self.new_conn_pool.qsize() < self.https_new_connect_num or \
+                self.new_conn_pool.qsize(only_h1=True) < 1):
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
@@ -372,7 +380,8 @@ class Https_connection_manager(object):
     def connect_thread(self, sleep_time=0):
         time.sleep(sleep_time)
         try:
-            while self.new_conn_pool.qsize() < self.https_new_connect_num:
+            while self.new_conn_pool.qsize() < self.https_new_connect_num or \
+                self.new_conn_pool.qsize(only_h1=True) < 1:
 
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
