@@ -43,6 +43,10 @@ if [ $os_name = 'Linux' ]; then
         if [ `dpkg-query -l | grep python-openssl | wc -l` == 0 ]; then
             sudo apt-get install -y python-openssl
         fi
+    elif [ `which dnf | wc -l` != 0 ]; then
+        if [ `dnf -q list installed | grep pyOpenSSL | wc -l` == 0 ]; then
+            sudo dnf install -y pyOpenSSL
+        fi
     elif [ `which yum | wc -l` != 0 ]; then
         if [ `yum -q list installed | grep pyOpenSSL | wc -l` == 0 ]; then
             sudo yum install -y pyOpenSSL
