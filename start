@@ -47,7 +47,10 @@ if [ $os_name = 'Linux' ]; then
         if [ `yum -q list installed | grep pyOpenSSL | wc -l` == 0 ]; then
             sudo yum install -y pyOpenSSL
         fi
-    # Do Someting for ArchLinux
+    elif [ `which pacman | wc -l` != 0 ]; then
+        if [ `pacman -Q | grep python2-pyopenssl | wc -l` == 0 ]; then
+            sudo pacman -S --noconfirm openssl python2-pyopenssl
+        fi
     # Do Someting for OpenSUSE
     # Do Someting for OpenWRT
     fi
