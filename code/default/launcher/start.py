@@ -126,6 +126,7 @@ def main():
         import post_update
         post_update.run(last_run_version)
         config.set(["modules", "launcher", "last_run_version"], current_version)
+        config.save()
 
     module_init.start_all_auto()
 

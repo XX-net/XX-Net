@@ -101,6 +101,7 @@ elif sys.platform == 'darwin':
 	<key>ProgramArguments</key>
 	<array>
 	  <string>%s</string>
+	  <string>-hungup</string>
 	</array>
 
 	<key>RunAtLoad</key>
