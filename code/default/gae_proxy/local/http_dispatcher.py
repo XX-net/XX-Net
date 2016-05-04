@@ -60,7 +60,7 @@ load_proxy_config()
 
 class HttpsDispatcher(object):
     min_worker_num = 20
-    idle_time = 10 * 60
+    idle_time = 20 * 60
 
     def __init__(self):
         self.request_queue = Queue.Queue()
@@ -159,11 +159,13 @@ class HttpsDispatcher(object):
         return worker
 
     def request(self, headers, body):
+        # xlog.debug("task start request")
         self.last_request_time = time.time()
         q = Queue.Queue()
         task = Task(headers, body, q)
         self.request_queue.put(task)
         response = q.get(True)
+        # xlog.debug("task get response")
         return response
 
     def retry_task_cb(self, task):
@@ -182,6 +184,7 @@ class HttpsDispatcher(object):
             except:
                 continue
 
+            # xlog.debug("get task")
             try:
                 worker = self.get_worker()
             except Exception as e:
@@ -189,6 +192,7 @@ class HttpsDispatcher(object):
                 task.response_fail(reason="get worker fail:%r" % e)
                 continue
 
+            # xlog.debug("get worker")
             worker.request(task)
 
     def is_idle(self):

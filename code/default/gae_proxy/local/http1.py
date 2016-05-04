@@ -18,9 +18,12 @@ class HTTP1_worker(HTTP_worker):
     def __init__(self, ssl_sock, close_cb, retry_task_cb):
         super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb)
 
+        self.last_active_time = self.ssl_sock.create_time
+        self.last_request_time = self.ssl_sock.create_time
+
         self.task_queue = Queue.Queue()
-        th = threading.Thread(target=self.work_loop)
-        th.start()
+        threading.Thread(target=self.work_loop).start()
+        threading.Thread(target=self.keep_alive_thread).start()
 
     def get_rtt_rate(self):
         return self.rtt
@@ -29,29 +32,32 @@ class HTTP1_worker(HTTP_worker):
         self.accept_task = False
         self.task_queue.put(task)
 
-    def work_loop(self):
-        last_ssl_active_time = self.ssl_sock.create_time
-        last_request_time = time.time()
+    def keep_alive_thread(self):
+        ping_interval = 55
+
         while connect_control.keep_running and self.keep_running:
-            time_to_ping0 = 55 - (time.time() - last_ssl_active_time)
-            time_to_ping = max(0, time_to_ping0)
-            try:
-                task = self.task_queue.get(True, timeout=time_to_ping)
-                if not task:
-                    # None task to exit
-                    return
-            except:
-                if time.time() - last_request_time > self.idle_time:
-                    self.close("idle")
-                    return
+            time_to_ping = max(ping_interval - (time.time() - self.last_active_time), 0)
+            time.sleep(time_to_ping)
 
-                # public appid don't keep alive, for quota limit.
-                if self.ssl_sock.appid in config.PUBLIC_APPIDS:
-                    #xlog.info("public appid don't keep alive")
-                    self.close("public appid")
-                    return
+            time_now = time.time()
+            if time_now - self.last_active_time < ping_interval:
+                continue
 
-                last_ssl_active_time = time.time()
+            if time_now - self.last_request_time > self.idle_time:
+                self.close("idle timeout")
+                return
+
+            self.last_active_time = time_now
+            self.task_queue.put("ping")
+
+    def work_loop(self):
+        while connect_control.keep_running and self.keep_running:
+            task = self.task_queue.get(True)
+            if not task:
+                # None task to exit
+                return
+            elif task == "ping":
+                self.last_active_time = time.time()
                 if not self.head_request():
                     # now many gvs don't support gae
                     google_ip.recheck_ip(self.ssl_sock.ip)
@@ -60,7 +66,10 @@ class HTTP1_worker(HTTP_worker):
                 else:
                     continue
 
-            last_request_time = time.time()
+            # xlog.debug("http1 get task")
+            time_now = time.time()
+            self.last_request_time = time_now
+            self.last_active_time = time_now
             self.request_task(task)
 
     def request_task(self, task):
@@ -75,6 +84,7 @@ class HTTP1_worker(HTTP_worker):
             self.retry_task_cb(task)
             self.close("request fail")
         else:
+            # xlog.debug("http1 finished task")
             task.queue.put(response)
             self.accept_task = True
             self.processed_tasks += 1

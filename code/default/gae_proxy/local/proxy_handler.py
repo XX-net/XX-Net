@@ -211,6 +211,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 payload += self.rfile.read(chunk_size)
                 get_crlf(self.rfile)
 
+        xlog.debug("GAE %s %s", self.command, self.path)
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
@@ -237,7 +238,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         host, _, port = self.path.rpartition(':')
         port = int(port)
         certfile = CertUtil.get_cert(host)
-        xlog.info('GAE %s %s:%d ', self.command, host, port)
+        # xlog.info('https GAE %s %s:%d ', self.command, host, port)
         self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
@@ -287,7 +288,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             xlog.debug("CONNECT %s %s", self.command, self.path)
             return self.wfile.write(self.self_check_response_data)
 
-        xlog.debug('GAE CONNECT %s %s', self.command, self.path)
+        # xlog.debug('GAE CONNECT %s %s', self.command, self.path)
         if self.command not in self.gae_support_methods:
             if host.endswith(".google.com") or host.endswith(config.HOSTS_DIRECT_ENDSWITH) or host.endswith(config.HOSTS_GAE_ENDSWITH):
                 if host in config.HOSTS_GAE:
