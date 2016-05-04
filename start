@@ -37,8 +37,8 @@ function launchWithHungup() {
 os_name=`uname -s`
 
 # Install Packages
-echo 'Install python-openssl and libnss3-tools for your system'
 if [ $os_name = 'Linux' ]; then
+    echo 'Install python-openssl and libnss3-tools for your system'
     if [ `which apt-get | wc -l` != 0 ]; then
         if [ `dpkg-query -l | grep python-openssl | wc -l` == 0 ]; then
             sudo apt-get install -y python-openssl
@@ -58,13 +58,18 @@ if [ $os_name = 'Linux' ]; then
     # Do Someting for OpenSUSE
     # Do Someting for OpenWRT
     fi
-# elif [ $os_name = 'Darwin' ]; then
-    # Do Someting for Mac
+elif [ $os_name = 'Darwin' ]; then
+    if [ `python -c 'import OpenSSL; print(OpenSSL.SSL.OPENSSL_VERSION_NUMBER > 0x1000200)' 2> /dev/null | grep True | wc -l` != 1 ]; then
+        PYTHON="/usr/bin/python2.7"
+        echo 'Warning: using system python'
+        echo 'Please install python from Homebrew or MacPorts for HTTP/2 support'
+        echo 'brew install python'
+        echo 'pip install pyOpenSSL'
+    fi
 fi
 
 # Start Application
 if [ $os_name = 'Darwin' ] && ! [ "$1" = '-hungup' ]; then
-    PYTHON="/usr/bin/python2.7"
     launchWithNoHungup
 else
     launchWithHungup
