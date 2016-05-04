@@ -52,7 +52,7 @@ import re
 import io
 import string
 import ssl
-import httplib
+import cgi
 import Queue
 import urlparse
 import urllib
@@ -330,7 +330,7 @@ def request_gae_proxy(method, url, headers, body):
             if response.app_msg:
                 xlog.warn("server app return fail, status:%d", response.app_status)
                 if len(response.app_msg) < 2048:
-                    xlog.warn('app_msg:%s', urllib.urlencode(response.app_msg))
+                    xlog.warn('app_msg:%s', cgi.escape(response.app_msg))
 
                 if response.app_status == 510:
                     # reach 80% of traffic today
@@ -563,7 +563,7 @@ class RangeFetch(object):
                 continue
 
             if response.status >= 300:
-                xlog.error('RangeFetch %r return %s :%s', self.url, response.status, urllib.urlencode(response.body))
+                xlog.error('RangeFetch %r return %s :%s', self.url, response.status, cgi.escape(response.body))
                 response.worker.close("range status:%s", response.status)
                 range_queue.put((start, end, None))
                 continue
@@ -573,7 +573,7 @@ class RangeFetch(object):
                 xlog.warning('RangeFetch "%s %s" return headers=%r, retry %s-%s',
                     self.method, self.url, response.headers, start, end)
                 if len(response.body) < 2048:
-                    xlog.warn('body:%s', urllib.urlencode(response.body))
+                    xlog.warn('body:%s', cgi.escape(response.body))
                 response.worker.close("no range")
                 range_queue.put((start, end, None))
                 continue
