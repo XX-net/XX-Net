@@ -6,7 +6,6 @@ hpack/hpack
 Implements the HPACK header compression algorithm as detailed by the IETF.
 """
 import collections
-import logging
 
 from .compat import to_byte
 from .huffman import HuffmanDecoder, HuffmanEncoder
@@ -14,15 +13,13 @@ from .huffman_constants import (
     REQUEST_CODES, REQUEST_CODES_LENGTH
 )
 
-log = logging.getLogger(__name__)
-
 
 def encode_integer(integer, prefix_bits):
     """
     This encodes an integer according to the wacky integer encoding rules
     defined in the HPACK spec.
     """
-    log.debug("Encoding %d with %d bits", integer, prefix_bits)
+    # log.debug("Encoding %d with %d bits", integer, prefix_bits)
 
     max_number = (2 ** prefix_bits) - 1
 
@@ -67,7 +64,7 @@ def decode_integer(data, prefix_bits):
                 number += next_byte * multiple(index)
                 break
 
-    log.debug("Decoded %d, consumed %d bytes", number, index + 1)
+    # log.debug("Decoded %d, consumed %d bytes", number, index + 1)
 
     return (number, index + 1)
 
@@ -184,11 +181,7 @@ class Encoder(object):
 
     @header_table_size.setter
     def header_table_size(self, value):
-        log.debug(
-            "Setting header table size to %d from %d",
-            value,
-            self._header_table_size
-        )
+        # log.debug("Setting header table size to %d from %d", value, self._header_table_size)
 
         # If the new value is larger than the current one, no worries!
         # Otherwise, we may need to shrink the header table.
@@ -202,9 +195,7 @@ class Encoder(object):
                     32 + len(n) + len(v)
                 )
 
-                log.debug(
-                    "Removed %s: %s from the encoder header table", n, v
-                )
+                # log.debug( "Removed %s: %s from the encoder header table", n, v )
 
         if value != self._header_table_size:
             self._table_size_changed = True
@@ -223,7 +214,7 @@ class Encoder(object):
         representation: the same is true if they are in the static table.
         Otherwise, a literal representation will be used.
         """
-        log.debug("HPACK encoding %s", headers)
+        # log.debug("HPACK encoding %s", headers)
         header_block = []
 
         # Turn the headers into a list of tuples if possible. This is the
@@ -247,7 +238,7 @@ class Encoder(object):
 
         header_block = b''.join(header_block)
 
-        log.debug("Encoded header block to %s", header_block)
+        # log.debug("Encoded header block to %s", header_block)
 
         return header_block
 
@@ -255,7 +246,7 @@ class Encoder(object):
         """
         This function takes a header key-value tuple and serializes it.
         """
-        log.debug("Adding %s to the header table", to_add)
+        # log.debug("Adding %s to the header table", to_add)
 
         name, value = to_add
 
@@ -333,7 +324,7 @@ class Encoder(object):
                 32 + len(n) + len(v)
             )
 
-            log.debug("Evicted %s: %s from the header table", n, v)
+            # log.debug("Evicted %s: %s from the header table", n, v)
 
     def _encode_indexed(self, index):
         """
@@ -472,11 +463,7 @@ class Decoder(object):
 
     @header_table_size.setter
     def header_table_size(self, value):
-        log.debug(
-            "Resizing decoder header table to %d from %d",
-            value,
-            self._header_table_size
-        )
+        # log.debug( "Resizing decoder header table to %d from %d", value, self._header_table_size)
 
         # If the new value is larger than the current one, no worries!
         # Otherwise, we may need to shrink the header table.
@@ -490,7 +477,7 @@ class Decoder(object):
                     32 + len(n) + len(v)
                 )
 
-                log.debug("Evicting %s: %s from the header table", n, v)
+                # log.debug("Evicting %s: %s from the header table", n, v)
 
         self._header_table_size = value
 
@@ -498,7 +485,7 @@ class Decoder(object):
         """
         Takes an HPACK-encoded header block and decodes it into a header set.
         """
-        log.debug("Decoding %s", data)
+        # log.debug("Decoding %s", data)
 
         headers = []
         data_len = len(data)
@@ -560,7 +547,7 @@ class Decoder(object):
                 32 + len(n) + len(v)
             )
 
-            log.debug("Evicting %s: %s from the header table", n, v)
+            # log.debug("Evicting %s: %s from the header table", n, v)
 
     def _update_encoding_context(self, data):
         """
@@ -584,7 +571,7 @@ class Decoder(object):
         else:
             header = Decoder.static_table[index]
 
-        log.debug("Decoded %s, consumed %d", header, consumed)
+        # log.debug("Decoded %s, consumed %d", header, consumed)
         return header, consumed
 
     def _decode_literal_no_index(self, data):
@@ -652,11 +639,6 @@ class Decoder(object):
         if should_index:
             self._add_to_header_table(header)
 
-        log.debug(
-            "Decoded %s, total consumed %d bytes, indexed %s",
-            header,
-            total_consumed,
-            should_index
-        )
+        # log.debug(  "Decoded %s, total consumed %d bytes, indexed %s", header, total_consumed, should_index)
 
         return header, total_consumed
