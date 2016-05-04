@@ -12,9 +12,9 @@ process.
 """
 import select
 from .exceptions import ConnectionResetError, LineTooLongError
-import logging
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+# import logging
+# logger = logging.getLogger()
+# logger.setLevel(logging.DEBUG)
 
 
 class WriteBuffer(object):
@@ -112,7 +112,7 @@ class BufferedSocket(object):
     def flush(self):
         if len(self.send_buffer):
             data = self.send_buffer.get_string()
-            logger.debug("buffer socket flush:%d", len(data))
+            # logger.debug("buffer socket flush:%d", len(data))
             self.send_buffer.reset()
 
             data_len = len(data)
