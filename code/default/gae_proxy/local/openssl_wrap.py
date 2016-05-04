@@ -123,6 +123,8 @@ class SSLConnection(object):
                 # remote closed
                 #raise e
                 return ""
+            elif e[0] == 10054 and e[1] == "WSAECONNRESET":
+                return ""
             raise
 
     def recv_into(self, buf):

@@ -153,7 +153,7 @@ class HTTP2_worker(HTTP_worker):
                 # None frame to exist
                 break
 
-            #xlog.debug("%s Send:%s", self.ip, str(frame))
+            # xlog.debug("%s Send:%s", self.ip, str(frame))
             data = frame.serialize()
             try:
                 self._sock.send(data, flush=False)
@@ -296,8 +296,7 @@ class HTTP2_worker(HTTP_worker):
     def _consume_frame_payload(self, frame, data):
         frame.parse_body(data)
 
-        #xlog.debug("Received frame %s on stream %d", frame.__class__.__name__, frame.stream_id)
-        #xlog.debug("%s Recv:%s", self.ip, str(frame))
+        # xlog.debug("%s Recv:%s", self.ip, str(frame))
 
         # Maintain our flow control window. We do this by delegating to the
         # chosen WindowManager.
