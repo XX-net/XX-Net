@@ -68,7 +68,7 @@ if [ $os_name = 'Linux' ]; then
         else
             # non-interactive shell
             echo 1>&2 'Please install pyOpenSSL.'
-            exit 1
+            #exit 1
         fi
     fi
 elif [ $os_name = 'Darwin' ]; then
