@@ -81,15 +81,36 @@ else:
     platform_lib = ""
 
 
+def unload(module):
+    for m in list(sys.modules.keys()):
+        if m == module or m.startswith(module+"."):
+            del sys.modules[m]
+
+    for p in list(sys.path_importer_cache.keys()):
+        if module in p:
+            del sys.path_importer_cache[p]
+
+    try:
+        del module
+    except:
+        pass
+
+
 try:
     sys.path.insert(0, noarch_lib)
     sys.path.insert(0, platform_lib)
-    import OpenSSL
+    import OpenSSL as oss_test
     xlog.info("use build-in openssl lib")
 except Exception as e1:
     xlog.info("import build-in openssl fail:%r", e1)
+    
     sys.path.pop(0)
     sys.path.pop(0)
+    del sys.path_importer_cache[noarch_lib]
+    del sys.path_importer_cache[platform_lib]
+    unload("OpenSSL")
+    unload("cryptography")
+    unload("cffi")
     try:
         import OpenSSL
     except Exception as e2:
