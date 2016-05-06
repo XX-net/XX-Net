@@ -226,7 +226,7 @@ class HttpsDispatcher(object):
 
         w_r = sorted(worker_rate.items(), key=operator.itemgetter(1))
 
-        out_str = ''
+        out_str = 'thread num:%d\r\n' % threading.activeCount()
         for w,r in w_r:
             out_str += "%s rtt:%d a:%d live:%d processed:%d" % \
                        (w.ip, w.rtt, w.accept_task, (time.time()-w.ssl_sock.create_time), w.processed_tasks)
