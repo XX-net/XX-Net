@@ -110,12 +110,12 @@ class HTTP1_worker(HTTP_worker):
             # read response body,
             body_length = int(response.getheader("Content-Length", "0"))
             start = 0
-            end = body_length - 1
+            end = body_length
             last_read_time = time.time()
             time_response = time.time()
             response_body = []
             while True:
-                if start > end:
+                if start >= end:
                     self.ssl_sock.received_size += body_length
                     response.headers = response.msg.dict
                     response.body = ReadBuffer(b''.join(response_body))
@@ -123,7 +123,8 @@ class HTTP1_worker(HTTP_worker):
                     response.worker = self
                     return response
 
-                data = response.read(65535)
+                to_read = end - start
+                data = response.read(to_read)
                 if not data:
                     if time.time() - last_read_time > 20:
                         google_ip.report_connect_closed(self.ssl_sock.ip, "down fail")

@@ -56,7 +56,7 @@ class SSLConnection(object):
         timeout = self._sock.gettimeout() or 0.1
         fd = self._sock.fileno()
         time_start = time.time()
-        while True:
+        while self._connection:
             try:
                 return io_func(*args, **kwargs)
             except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
