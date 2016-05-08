@@ -175,7 +175,7 @@ class HTTP1_worker(HTTP_worker):
             time_now = time.time()
             inactive_time = time_now - self.ssl_sock.last_use_time
             head_timeout = time_now - start_time
-            xlog.warn("%s keep alive fail, inactive_time:%d head_timeout:%d",
+            xlog.debug("%s keep alive fail, inactive_time:%d head_timeout:%d",
                        self.ssl_sock.ip, inactive_time, head_timeout)
         except Exception as e:
             xlog.exception("%s head appid:%s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
