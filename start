@@ -83,8 +83,8 @@ fi
 
 # create a desktop startup file when the distro is Ubuntu.
 function createDesktopStartup() {
-    DESKFILE='start.desktop'
-    if [[ -f $DESKFILE ]]; then
+    DESKFILE='XX-Net.desktop'
+    if [[ -f $DESKFILE ]]; then 
         echo "$DESKFILE already exists"
         return
     else
@@ -104,6 +104,16 @@ function createDesktopStartup() {
     echo "Icon=$ICON" >> $DESKFILE
     echo "Type=$TYPE" >> $DESKFILE
     echo "Categories=$CATEGORIES" >> $DESKFILE
+
+    chmod 744 $DESKFILE
+    DESKDIR=~/Desktop/
+    cp $DESKFILE $DESKDIR
+
+    if [[ -d $DESKDIR ]]; then
+        cp $DESKFILE $DESKDIR
+    else
+        echo "$DESKDIR does not exist"
+    fi
 }
 
 DIS=`cat /etc/issue`
