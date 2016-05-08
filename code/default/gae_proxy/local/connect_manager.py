@@ -318,7 +318,7 @@ class Https_connection_manager(object):
             if self.thread_num > self.max_thread_num:
                 continue
 
-            target_conn_num = (1 - (connect_control.inactive_time()/(10*60))) * self.connection_pool_min_num
+            target_conn_num = self.connection_pool_min_num
             if self.new_conn_pool.qsize() > target_conn_num:
                 time.sleep(1)
                 continue

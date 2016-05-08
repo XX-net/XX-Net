@@ -83,11 +83,21 @@ class Config(object):
         self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
         self.HOSTS_GAE = tuple(gae_hosts)
 
+        # hack here:
+        # 2.x.x version save host mode to direct in data/gae_proxy/config.ini
+        # now(2016.5.5) many google ip don't support direct mode.
+        try:
+            direct_hosts.remove("appengine.google.com")
+        except:
+            pass
+        try:
+            direct_hosts.remove("www.google.com")
+        except:
+            pass
         self.HOSTS_DIRECT_ENDSWITH = tuple(direct_endswith)
         self.HOSTS_DIRECT = tuple(direct_hosts)
 
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
-        self.AUTORANGE_BUFSIZE = self.CONFIG.getint('autorange', 'bufsize')
         self.AUTORANGE_THREADS = self.CONFIG.getint('autorange', 'threads')
 
         self.PAC_ENABLE = self.CONFIG.getint('pac', 'enable')

@@ -123,7 +123,7 @@ class SSLConnection(object):
                 # remote closed
                 #raise e
                 return ""
-            elif e[0] == 10054 and e[1] == "WSAECONNRESET":
+            elif e[0] == 10053:
                 return ""
             raise
 
@@ -132,14 +132,16 @@ class SSLConnection(object):
         if pending:
             ret = self._connection.recv_into(buf)
             if not ret:
-                xlog.debug("recv_into 0")
+                # xlog.debug("recv_into 0")
+                pass
             return ret
 
         while True:
             try:
                 ret = self.__iowait(self._connection.recv_into, buf)
                 if not ret:
-                    xlog.debug("recv_into 0")
+                    # xlog.debug("recv_into 0")
+                    pass
                 return ret
             except OpenSSL.SSL.ZeroReturnError:
                 continue

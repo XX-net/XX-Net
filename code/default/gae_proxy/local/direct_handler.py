@@ -178,7 +178,8 @@ def handler(method, host, url, headers, body, wfile):
                 xlog.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
                 return
 
-            data = response.read(config.AUTORANGE_BUFSIZE)
+            to_read = end - start + 1
+            data = response.read(to_read)
             if not data:
                 if time.time() - time_last_read > 20:
                     google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
