@@ -397,7 +397,8 @@ def handler(method, url, headers, body, wfile):
         # RangeFetch need to known the real range end
         return RangeFetch2(method, url, org_headers, body, response, wfile).run()
 
-    xlog.info("GAE t:%d s:%d %s %s", (time.time()-request_time)*1000, len(response.body), method, url)
+    xlog.info("GAE t:%d s:%d %s %s %s", (time.time()-request_time)*1000, len(response.body), method, url,
+              response.task.get_trace())
 
     response_headers = {}
     for key, value in response.headers.items():
@@ -644,9 +645,9 @@ class RangeFetch2(object):
             self.put_data(begin, data)
 
             percent = begin * 100 / self.req_end
-            xlog.debug('RangeFetch [thread %s] %d%% begin:%d end:%d data_len:%d length:%s range:%s %s',
+            xlog.debug('RangeFetch [thread %s] %d%% begin:%d end:%d data_len:%d length:%s range:%s %s %s',
                     threading.currentThread().ident, percent, begin, end, data_len,
-                    content_length, content_range, self.url)
+                    content_length, content_range, self.url, response.task.get_trace())
 
             begin += data_len
             if begin >= end + 1:

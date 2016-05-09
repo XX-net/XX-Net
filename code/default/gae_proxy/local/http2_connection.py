@@ -129,6 +129,8 @@ class HTTP2_worker(HTTP_worker):
         # this is the export api
         if len(self.streams) > self.max_concurrent:
             self.accept_task = False
+
+        task.set_state("h2_req")
         self.request_task(task)
 
     def request_task(self, task):

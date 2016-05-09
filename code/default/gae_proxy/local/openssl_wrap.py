@@ -123,7 +123,7 @@ class SSLConnection(object):
                 # remote closed
                 #raise e
                 return ""
-            elif e[0] == 10053:
+            elif e[0] == 10053 or e[0] == 10054 or e[0] == 10038:
                 return ""
             raise
 

@@ -204,6 +204,8 @@ class Stream(object):
         elif frame.type == HeadersFrame.type:
             # Begin the header block for the response headers.
             self.response_header_datas = [frame.data]
+            time_now = self.task.set_state("h2_get_head")
+            self.get_head_time = time_now
         elif frame.type == PushPromiseFrame.type:
             xlog.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
         elif frame.type == ContinuationFrame.type:
@@ -274,6 +276,11 @@ class Stream(object):
         response = BaseResponse(status=status, headers=self.response_headers, body=body)
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
+        response.task = self.task
+        time_now = time.time()
+        speed = len(body) / (time_now - self.get_head_time)
+        self.task.set_state("h2_finish[SP:%d]" % speed)
+        self.connection.report_speed(speed)
         self.task.queue.put(response)
 
     def close(self, reason=""):
