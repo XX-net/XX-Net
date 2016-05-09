@@ -124,9 +124,11 @@ class HTTP1_worker(HTTP_worker):
             while True:
                 if start >= end:
                     self.ssl_sock.received_size += body_length
-                    speed = body_length / (time.time() - time_response)
-                    task.set_state("h1_finish[SP:%d]" % speed)
-                    self.report_speed(speed, body_length)
+                    time_cost = (time.time() - time_response)
+                    if time_cost != 0:
+                        speed = body_length / time_cost
+                        task.set_state("h1_finish[SP:%d]" % speed)
+                        self.report_speed(speed, body_length)
                     self.accept_task = True
                     self.processed_tasks += 1
                     return
