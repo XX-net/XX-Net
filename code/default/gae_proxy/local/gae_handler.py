@@ -485,6 +485,7 @@ class RangeFetch2(object):
 
         self.data_list = {}
         # begin => payload
+        self.data_size = 0
 
         self.req_begin = 0
         self.req_end = 0
@@ -496,6 +497,7 @@ class RangeFetch2(object):
                 raise Exception("range_begin:%d expect:%d" % (range_begin, self.wait_begin))
 
             self.data_list[range_begin] = payload
+            self.data_size += len(payload)
 
             if self.wait_begin in self.data_list:
                 self.waiter.notify()
@@ -569,6 +571,7 @@ class RangeFetch2(object):
                     data = self.data_list[self.wait_begin]
                     del self.data_list[self.wait_begin]
                     self.wait_begin += len(data)
+                    self.data_size -= len(data)
 
             try:
                 ret = self.wfile.write(data)
@@ -584,7 +587,7 @@ class RangeFetch2(object):
 
     def fetch_worker(self):
         while self.keep_running:
-            if len(self.data_list) * config.AUTORANGE_MAXSIZE > self.max_buffer_size:
+            if self.data_size > self.max_buffer_size:
                 xlog.debug("fetch_worker blocked %s", self.url)
                 time.sleep(0.5)
                 continue
