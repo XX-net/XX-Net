@@ -38,5 +38,5 @@ def run(last_run_version):
                 if not filename.startswith('.') and filename not in ['README.md', 'start', 'start.bat', 'start.vbs']:
                     os.remove(filepath)
             else:
-                if not filename.startswith('.') and filename not in ['code', 'data']:
+                if not filename.startswith('.') and filename not in ['code', 'data', 'SwitchyOmega']:
                     shutil.rmtree(filepath)
