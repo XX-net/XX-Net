@@ -75,6 +75,21 @@ class SSLConnection(object):
                 time_now = time.time()
                 if time_now - time_start > timeout:
                     break
+            except OpenSSL.SSL.SysCallError as e:
+                if e[0] == 10035 and 'WSAEWOULDBLOCK' in e[1]:
+                    sys.exc_clear()
+                    if io_func == self._connection.send:
+                        _, _, errors = select.select([], [fd], [fd], timeout)
+                    else:
+                        _, _, errors = select.select([fd], [], [fd], timeout)
+
+                    if errors:
+                        raise
+                    time_now = time.time()
+                    if time_now - time_start > timeout:
+                        break
+                else:
+                    raise e
             except Exception as e:
                 #xlog.exception("e:%r", e)
                 raise e

@@ -24,7 +24,6 @@ import threading
 import operator
 import Queue
 
-import socks
 
 from config import config
 from appids_manager import appid_manager
@@ -32,30 +31,13 @@ import connect_control
 from connect_manager import https_manager
 from http1 import HTTP1_worker
 from http2_connection import HTTP2_worker
-from http_common import *
+import http_common
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 g_cacertfile = os.path.join(current_path, "cacert.pem")
-
-
-def load_proxy_config():
-    if config.PROXY_ENABLE:
-        if config.PROXY_TYPE == "HTTP":
-            proxy_type = socks.HTTP
-        elif config.PROXY_TYPE == "SOCKS4":
-            proxy_type = socks.SOCKS4
-        elif config.PROXY_TYPE == "SOCKS5":
-            proxy_type = socks.SOCKS5
-        else:
-            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            config.PROXY_ENABLE = 0
-            return
-
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_proxy_config()
 
 
 class HttpsDispatcher(object):
@@ -83,7 +65,7 @@ class HttpsDispatcher(object):
         if not appid:
             time.sleep(60)
             ssl_sock.close()
-            raise GAE_Exception(1, "no appid can use")
+            raise http_common.GAE_Exception(1, "no appid can use")
 
         ssl_sock.appid = appid
         ssl_sock.host = ssl_sock.appid + ".appspot.com"
@@ -96,6 +78,8 @@ class HttpsDispatcher(object):
             self.h1_num += 1
 
         self.workers.append(worker)
+        self.check_worker_num()
+
         return worker
 
     def create_worker_thread(self):
@@ -152,17 +136,44 @@ class HttpsDispatcher(object):
 
         ssl_sock = https_manager.get_ssl_connection()
         if not ssl_sock:
-            raise GAE_Exception(1, "no ssl_sock")
+            raise http_common.GAE_Exception(1, "no ssl_sock")
 
         worker = self.on_ssl_created_cb(ssl_sock)
 
         return worker
 
+    def check_worker_num(self):
+        if len(self.workers) <= config.max_worker_num:
+            return
+
+        slowest_rtt = 9999
+        slowest_worker = None
+        idle_num = 0
+        for worker in self.workers:
+            if not worker.accept_task:
+                continue
+
+            if worker.version == "2" and len(worker.streams) > 0:
+                continue
+
+            idle_num += 1
+
+            rtt = worker.get_rtt_rate()
+
+            if rtt > slowest_rtt:
+                slowest_rtt = rtt
+                slowest_worker = worker
+
+        if idle_num < 3 or slowest_worker is None:
+            return
+
+        self.close_cb(slowest_worker)
+
     def request(self, headers, body):
         # xlog.debug("task start request")
         self.last_request_time = time.time()
         q = Queue.Queue()
-        task = Task(headers, body, q)
+        task = http_common.Task(headers, body, q)
         task.set_state("start_request")
         self.request_queue.put(task)
         response = q.get(True)

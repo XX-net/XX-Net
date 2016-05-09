@@ -180,7 +180,7 @@ class HTTP2_worker(HTTP_worker):
             try:
                 self._consume_single_frame()
             except Exception as e:
-                #xlog.warn("recv fail:%r", e)
+                xlog.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
     def get_rtt_rate(self):
