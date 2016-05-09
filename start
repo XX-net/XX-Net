@@ -71,14 +71,6 @@ if [ $os_name = 'Linux' ]; then
             #exit 1
         fi
     fi
-elif [ $os_name = 'Darwin' ]; then
-    if [ `python -c 'import OpenSSL; print(OpenSSL.SSL.OPENSSL_VERSION_NUMBER > 0x1000200)' 2> /dev/null | grep True | wc -l` != 1 ]; then
-        PYTHON="/usr/bin/python2.7"
-        echo 'Warning: using system python'
-        echo 'Please install python from Homebrew or MacPorts for HTTP/2 support'
-        echo 'brew install python'
-        echo 'pip install pyOpenSSL'
-    fi
 fi
 
 # create a desktop startup file when the distro is Ubuntu.
@@ -116,13 +108,14 @@ function createDesktopStartup() {
     fi
 }
 
-DIS=`cat /etc/issue`
+DIS=`cat /etc/issue 2> /dev/null`
 if [[ $DIS == *Ubuntu* ]]; then
     createDesktopStartup
 fi
 
 # Start Application
 if [ $os_name = 'Darwin' ] && ! [ "$1" = '-hungup' ]; then
+    PYTHON="/usr/bin/python2.7"
     launchWithNoHungup
 else
     launchWithHungup

@@ -1,13 +1,15 @@
-from warnings import warn
 import sys
+import warnings
 
 from six import PY3, binary_type, text_type
 
 from cryptography.hazmat.bindings.openssl.binding import Binding
+
+
 binding = Binding()
+binding.init_static_locks()
 ffi = binding.ffi
 lib = binding.lib
-
 
 
 def text(charp):
@@ -23,7 +25,6 @@ def text(charp):
     return native(ffi.string(charp))
 
 
-
 def exception_from_error_queue(exception_type):
     """
     Convert an OpenSSL library failure into a Python exception.
@@ -33,7 +34,6 @@ def exception_from_error_queue(exception_type):
     associated with the current thread. The err library provides functions to
     obtain these error codes and textual error messages.
     """
-
     errors = []
 
     while True:
@@ -41,12 +41,26 @@ def exception_from_error_queue(exception_type):
         if error == 0:
             break
         errors.append((
-                text(lib.ERR_lib_error_string(error)),
-                text(lib.ERR_func_error_string(error)),
-                text(lib.ERR_reason_error_string(error))))
+            text(lib.ERR_lib_error_string(error)),
+            text(lib.ERR_func_error_string(error)),
+            text(lib.ERR_reason_error_string(error))))
 
     raise exception_type(errors)
 
+
+def make_assert(error):
+    """
+    Create an assert function that uses :func:`exception_from_error_queue` to
+    raise an exception wrapped by *error*.
+    """
+    def openssl_assert(ok):
+        """
+        If *ok* is not True, retrieve the error from OpenSSL and raise it.
+        """
+        if ok is not True:
+            exception_from_error_queue(error)
+
+    return openssl_assert
 
 
 def native(s):
@@ -68,7 +82,6 @@ def native(s):
         if isinstance(s, text_type):
             return s.encode("utf-8")
     return s
-
 
 
 def path_string(s):
@@ -104,6 +117,7 @@ _TEXT_WARNING = (
     text_type.__name__ + " for {0} is no longer accepted, use bytes"
 )
 
+
 def text_to_bytes_and_warn(label, obj):
     """
     If ``obj`` is text, emit a warning that it should be bytes instead and try
@@ -118,7 +132,7 @@ def text_to_bytes_and_warn(label, obj):
         returned.
     """
     if isinstance(obj, text_type):
-        warn(
+        warnings.warn(
             _TEXT_WARNING.format(label),
             category=DeprecationWarning,
             stacklevel=3
