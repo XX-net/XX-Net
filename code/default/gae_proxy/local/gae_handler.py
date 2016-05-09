@@ -266,10 +266,14 @@ def pack_request(method, url, headers, body):
 
 def unpack_response(response):
     try:
-        data = response.body.get(2)
+        data = response.task.read(size=2)
+        if not data:
+            raise GAE_Exception("get protocol head fail")
 
         headers_length, = struct.unpack('!h', data)
-        data = response.body.get(headers_length)
+        data = response.task.read(size=headers_length)
+        if not data:
+            raise GAE_Exception("get protocol head fail, len:%d" % headers_length)
 
         raw_response_line, headers_data = inflate(data).split('\r\n', 1)
         _, status, reason = raw_response_line.split(None, 2)
@@ -356,7 +360,7 @@ def handler(method, url, headers, body, wfile):
     for key in remove_list:
         del headers[key]
 
-    # force the get file range
+    # force to get content range
     # reduce wait time
     if method == "GET":
         if req_range_begin and not req_range_end:
@@ -376,7 +380,7 @@ def handler(method, url, headers, body, wfile):
             pass
         else:
             # no begin and no end
-            # don't add range, github don't support this it.
+            # don't add range, some host like github don't support Range.
             # headers["Range"] = "bytes=0-%d" % config.AUTORANGE_MAXSIZE
             pass
 
@@ -396,9 +400,6 @@ def handler(method, url, headers, body, wfile):
         # use org_headers
         # RangeFetch need to known the real range end
         return RangeFetch2(method, url, org_headers, body, response, wfile).run()
-
-    xlog.info("GAE t:%d s:%d %s %s %s", (time.time()-request_time)*1000, len(response.body), method, url,
-              response.task.get_trace())
 
     response_headers = {}
     for key, value in response.headers.items():
@@ -432,23 +433,37 @@ def handler(method, url, headers, body, wfile):
         start, end, length = tuple(int(x) for x in re.search(r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
     else:
         start, end, length = 0, content_length-1, content_length
-    body_length = end - start + 1
 
-    if body_length != len(response.body) and method != "HEAD":
-        xlog.warn("%s %s response.body len:%d, expect:%d", method, url, len(response.body), body_length)
-        return
+    if method == "HEAD":
+        body_length = 0
+    else:
+        body_length = end - start + 1
 
-    try:
-        data = response.body.get()
-        ret = wfile.write(data)
-        if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-            xlog.debug("send to browser wfile.write ret:%d", ret)
+    body_sended = 0
+    while True:
+        if body_sended >= body_length:
+            break
+
+        data = response.task.read()
+        if not data:
+            xlog.warn("get body fail, left:%d %s", body_length - body_sended, url)
+            break
+
+        body_sended += len(data)
+        try:
             ret = wfile.write(data)
-    except Exception as e_b:
-        if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-            xlog.warn('gae_handler send to browser return %r %r', e_b, url)
-        else:
-            xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+            if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
+                xlog.debug("send to browser wfile.write ret:%d", ret)
+                ret = wfile.write(data)
+        except Exception as e_b:
+            if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
+                xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+            else:
+                xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+            return
+
+    xlog.info("GAE t:%d s:%d %s %s %s", (time.time()-request_time)*1000, content_length, method, url,
+              response.task.get_trace())
 
 
 class RangeFetch2(object):
@@ -497,10 +512,6 @@ class RangeFetch2(object):
         response_headers = dict((k.title(), v) for k, v in self.response.headers.items())
         content_range = response_headers['Content-Range']
         res_begin, res_end, res_length = tuple(int(x) for x in re.search(r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
-        data = self.response.body.get()
-        if len(data) != res_end - res_begin + 1:
-            xlog.error("RangeFetch first data len:%d header begin:%d end:%d length:%d",
-                       len(data), res_begin, res_end, res_length)
 
         self.req_begin = res_end + 1
         if req_range_begin and req_range_end:
@@ -544,8 +555,7 @@ class RangeFetch2(object):
         for i in xrange(0, thread_num):
             threading.Thread(target=self.fetch_worker).start()
 
-        self.put_data(res_begin, data)
-        del self.response
+        threading.Thread(target=self.fetch, args=(res_begin, res_end, self.response)).start()
 
         while self.keep_running and self.wait_begin < self.req_end + 1:
             with self.lock:
@@ -587,9 +597,9 @@ class RangeFetch2(object):
                 end = min(begin + config.AUTORANGE_MAXSIZE - 1, self.req_end)
                 self.req_begin = end + 1
 
-            self.fetch(begin, end)
+            self.fetch(begin, end, None)
 
-    def fetch(self, begin, end):
+    def fetch(self, begin, end, first_response):
         headers = dict((k.title(), v) for k, v in self.headers.items())
         retry_num = 0
         while self.keep_running:
@@ -602,11 +612,14 @@ class RangeFetch2(object):
             expect_len = end - begin + 1
             headers['Range'] = 'bytes=%d-%d' % (begin, end)
 
-            try:
-                response = request_gae_proxy(self.method, self.url, headers, self.body)
-            except GAE_Exception as e:
-                xlog.warning('RangeFetch %s request fail:%r', headers['Range'], e)
-                continue
+            if first_response:
+                response = first_response
+            else:
+                try:
+                    response = request_gae_proxy(self.method, self.url, headers, self.body)
+                except GAE_Exception as e:
+                    xlog.warning('RangeFetch %s request fail:%r', headers['Range'], e)
+                    continue
 
             if response.app_msg:
                 response.worker.close("range get gae status:%d app_msg:%s" % \
@@ -635,21 +648,33 @@ class RangeFetch2(object):
 
             content_length = int(response.headers.get('Content-Length', 0))
 
-            data = response.body.get()
-            data_len = len(data)
-            if data_len > expect_len:
-                xlog.warn("RangeFetch expect:%d, get:%d", expect_len, data_len)
-                data = data[:expect_len]
-                data_len = expect_len
+            data_readed = 0
+            while True:
+                if data_readed >= content_length:
+                    percent = begin * 100 / self.req_end
 
-            self.put_data(begin, data)
+                    xlog.debug('RangeFetch [thread %s] %d%% length:%s range:%s %s %s',
+                               threading.currentThread().ident, percent,
+                               content_length, content_range, self.url, response.task.get_trace())
+                    break
 
-            percent = begin * 100 / self.req_end
-            xlog.debug('RangeFetch [thread %s] %d%% begin:%d end:%d data_len:%d length:%s range:%s %s %s',
-                    threading.currentThread().ident, percent, begin, end, data_len,
-                    content_length, content_range, self.url, response.task.get_trace())
+                data = response.task.read()
+                if not data:
+                    xlog.warn("RangeFetch [%s] get body fail %s", threading.currentThread().ident, self.url)
+                    break
 
-            begin += data_len
+                data_len = len(data)
+                data_readed += data_len
+                if data_len > expect_len:
+                    xlog.warn("RangeFetch expect:%d, get:%d", expect_len, data_len)
+                    data = data[:expect_len]
+                    data_len = expect_len
+
+                self.put_data(begin, data)
+
+                expect_len -= data_len
+                begin += data_len
+
             if begin >= end + 1:
                 break
 

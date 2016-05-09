@@ -1,5 +1,6 @@
 import time
 import collections
+import Queue
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -68,6 +69,40 @@ class Task(object):
         self.queue = queue
         self.start_time = time.time()
         self.trace_time = {}
+        self.body_queue = Queue.Queue()
+        self.body_len = 0
+        self.body_readed = 0
+        self.content_length = None
+        self.read_buffer = ""
+
+    def put_data(self, data):
+        self.body_queue.put(data)
+        self.body_len += len(data)
+
+    def read(self, size=None):
+        # fail or cloe if return ""
+        if self.body_readed == self.content_length:
+            return ""
+
+        if size:
+            while len(self.read_buffer) < size:
+                data = self.body_queue.get(block=True)
+                if not data:
+                    return ""
+
+                self.read_buffer += data
+
+            data = self.read_buffer[:size]
+            self.read_buffer = self.read_buffer[size:]
+        else:
+            if len(self.read_buffer):
+                data = self.read_buffer
+                self.read_buffer = ""
+            else:
+                data = self.body_queue.get(block=True)
+
+        self.body_readed += len(data)
+        return data
 
     def set_state(self, stat):
         time_now = time.time()
@@ -105,7 +140,10 @@ class HTTP_worker(object):
         self.processed_tasks = 0
         self.speed_history = []
 
-    def report_speed(self, speed):
+    def report_speed(self, speed, body_length):
+        if body_length < 10 * 1024:
+            return
+
         self.speed_history.append(speed)
         if len(self.speed_history) > 10:
             self.speed_history.pop(0)

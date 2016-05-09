@@ -74,70 +74,70 @@ class HTTP1_worker(HTTP_worker):
 
     def request_task(self, task):
         task.set_state("h1_req")
-        response = self._request(task)
-        if not response:
-            google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
-            self.retry_task_cb(task)
-            self.close("request fail")
-        else:
-            # xlog.debug("http1 finished task")
-            response.task = task
-            task.queue.put(response)
-            self.accept_task = True
-            self.processed_tasks += 1
 
-    def _request(self, task):
-        headers = task.headers
-        payload = task.body
-
-        headers['Host'] = self.ssl_sock.host
+        task.headers['Host'] = self.ssl_sock.host
         request_data = 'POST /_gh/ HTTP/1.1\r\n'
-        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
+        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in task.headers.items())
         request_data += '\r\n'
 
         try:
             self.ssl_sock.send(request_data.encode())
-            payload_len = len(payload)
+            payload_len = len(task.body)
             start = 0
             while start < payload_len:
                 send_size = min(payload_len - start, 65535)
-                sended = self.ssl_sock.send(payload[start:start+send_size])
+                sended = self.ssl_sock.send(task.body[start:start+send_size])
                 start += sended
 
             response = httplib.HTTPResponse(self.ssl_sock, buffering=True)
             self.ssl_sock.settimeout(100)
             response.begin()
 
-            task.set_state("h1_get_head")
+        #except httplib.BadStatusLine as e:
+        #    xlog.warn("%s _request bad status line:%r", self.ip, e)
+        except Exception as e:
+            xlog.warn("%s h1_request:%r", self.ip, e)
+            google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
+            self.retry_task_cb(task)
+            self.close("request fail")
+            return
 
-            # read response body,
-            body_length = int(response.getheader("Content-Length", "0"))
+        task.set_state("h1_get_head")
+        body_length = int(response.getheader("Content-Length", "0"))
+        task.content_length = body_length
+        response.headers = response.msg.dict
+        response.worker = self
+        response.task = task
+        response.ssl_sock = self.ssl_sock
+        task.queue.put(response)
+
+        if body_length == 0:
+            self.accept_task = True
+            self.processed_tasks += 1
+            return
+
+        # read response body,
+        try:
             start = 0
             end = body_length
             time_response = last_read_time = time.time()
-            response_body = []
             while True:
                 if start >= end:
                     self.ssl_sock.received_size += body_length
-                    response.headers = response.msg.dict
-                    response.body = ReadBuffer(b''.join(response_body))
-
-                    speed = len(response.body) / (time.time() - time_response)
+                    speed = body_length / (time.time() - time_response)
                     task.set_state("h1_finish[SP:%d]" % speed)
-                    self.report_speed(speed)
-                    response.ssl_sock = self.ssl_sock
-                    response.worker = self
-                    return response
+                    self.report_speed(speed, body_length)
+                    self.accept_task = True
+                    self.processed_tasks += 1
+                    return
 
-                to_read = end - start
+                to_read = max(end - start, 65535)
                 data = response.read(to_read)
                 if not data:
                     if time.time() - last_read_time > 20:
-                        google_ip.report_connect_closed(self.ssl_sock.ip, "down fail")
-                        response.close()
-                        xlog.warn("%s read timeout t:%d len:%d left:%d ",
+                        xlog.warn("%s read timeout t:%d expect:%d left:%d ",
                                   self.ip, (time.time()-time_response)*1000, body_length, (end-start))
-                        return False
+                        break
                     else:
                         time.sleep(0.1)
                         continue
@@ -145,14 +145,14 @@ class HTTP1_worker(HTTP_worker):
                 last_read_time = time.time()
                 data_len = len(data)
                 start += data_len
-                response_body.append(data)
+                task.put_data(data)
 
-        except httplib.BadStatusLine as e:
-            xlog.warn("%s _request bad status line:%r", self.ip, e)
-            pass
         except Exception as e:
-            xlog.warn("%s _request:%r", self.ip, e)
-        return False
+            xlog.warn("%s h1_request:%r", self.ip, e)
+
+        task.put_data("")
+        google_ip.report_connect_closed(self.ssl_sock.ip, "down fail")
+        self.close("request body fail")
 
     def head_request(self):
         # for keep alive
