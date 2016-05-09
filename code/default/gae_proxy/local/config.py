@@ -127,6 +127,7 @@ class Config(object):
 
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
+        self.max_worker_num = config.CONFIG.getint("connect_manager", "max_worker_num")
 
         self.log_file = config.CONFIG.getint("system", "log_file")
 

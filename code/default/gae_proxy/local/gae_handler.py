@@ -653,14 +653,14 @@ class RangeFetch2(object):
                 if data_readed >= content_length:
                     percent = begin * 100 / self.req_end
 
-                    xlog.debug('RangeFetch [thread %s] %d%% length:%s range:%s %s %s',
-                               threading.currentThread().ident, percent,
+                    xlog.debug('RangeFetch [%s] %d%% length:%s range:%s %s %s',
+                               response.ssl_sock.ip, percent,
                                content_length, content_range, self.url, response.task.get_trace())
                     break
 
                 data = response.task.read()
                 if not data:
-                    xlog.warn("RangeFetch [%s] get body fail %s", threading.currentThread().ident, self.url)
+                    xlog.warn("RangeFetch [%s] get body fail %s", response.ssl_sock.ip, self.url)
                     break
 
                 data_len = len(data)

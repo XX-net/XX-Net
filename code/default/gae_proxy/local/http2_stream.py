@@ -259,7 +259,7 @@ class Stream(object):
             # We've handled the headers, zero them out.
             self.response_header_datas = None
 
-            self.task.content_length = int(self.response_headers.get("Content-Length", "0"))
+            self.task.content_length = int(self.response_headers["Content-Length"][0])
             time_now = self.task.set_state("h2_get_head")
             self.get_head_time = time_now
             self.send_response()

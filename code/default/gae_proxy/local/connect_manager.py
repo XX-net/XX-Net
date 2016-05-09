@@ -235,7 +235,7 @@ class Https_connection_manager(object):
         p.start()
 
         if self.connection_pool_min_num:
-            p = threading.Thread(target=self.create_connection_daemon)
+            p = threading.Thread(target=self.keep_connection_daemon)
             p.daemon = True
             p.start()
 
@@ -306,62 +306,40 @@ class Https_connection_manager(object):
                 google_ip.report_connect_closed(ssl_sock.ip, "slowest %d" % ssl_sock.handshake_time)
                 ssl_sock.close()
 
-    def create_connection_daemon(self):
-        connect_start_num = 0
-
+    def keep_connection_daemon(self):
         while connect_control.keep_running:
-            time.sleep(0.1)
             if not connect_control.allow_connect():
                 time.sleep(5)
                 continue
 
-            if self.thread_num > self.max_thread_num:
-                continue
-
-            target_conn_num = self.connection_pool_min_num
-            if self.new_conn_pool.qsize() > target_conn_num:
-                time.sleep(1)
-                continue
-
-            self.thread_num_lock.acquire()
-            self.thread_num += 1
-            self.thread_num_lock.release()
-            p = threading.Thread(target=self.connect_process)
-            p.start()
-            connect_start_num += 1
-
-            if connect_start_num > 10:
+            if self.new_conn_pool.qsize() > self.connection_pool_min_num:
                 time.sleep(5)
-                connect_start_num = 0
+                continue
+
+            self.connect_process()
 
     def connect_process(self):
         try:
             ip_str = google_ip.get_gws_ip()
             if not ip_str:
                 time.sleep(60)
-                xlog.warning("no enough ip")
+                # xlog.warning("no enough ip")
                 return
 
-            port = 443
             #xlog.debug("create ssl conn %s", ip_str)
-            ssl_sock = self._create_ssl_connection( (ip_str, port) )
-            if ssl_sock:
-                ssl_sock.last_use_time = time.time()
+            ssl_sock = self._create_ssl_connection( (ip_str, 443) )
+            if not ssl_sock:
+                return
 
-                if self.new_conn_pool.qsize() >= self.connection_pool_max_num and self.ssl_timeout_cb:
-                    self.ssl_timeout_cb(ssl_sock)
-                else:
-                    self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
-        finally:
-            self.thread_num_lock.acquire()
-            self.thread_num -= 1
-            self.thread_num_lock.release()
+            self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
+        except:
+            pass
 
     def create_more_connection_worker(self):
         while connect_control.allow_connect() and \
                 self.thread_num < self.max_thread_num and \
-                (self.new_conn_pool.qsize() < self.https_new_connect_num or \
-                self.new_conn_pool.qsize(only_h1=True) < 1):
+                (self.new_conn_pool.qsize() < self.https_new_connect_num or
+                    self.new_conn_pool.qsize(only_h1=True) < 1):
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
@@ -381,25 +359,33 @@ class Https_connection_manager(object):
         time.sleep(sleep_time)
         try:
             while self.new_conn_pool.qsize() < self.https_new_connect_num or \
-                self.new_conn_pool.qsize(only_h1=True) < 1:
+                    self.new_conn_pool.qsize(only_h1=True) < 1:
+
+                if self.new_conn_pool.qsize() > self.connection_pool_max_num:
+                    break
+
+                if not connect_control.allow_connect():
+                    break
 
                 ip_str = google_ip.get_gws_ip()
                 if not ip_str:
-                    time.sleep(60)
                     xlog.warning("no enough ip")
+                    time.sleep(60)
                     break
 
-                port = 443
                 #xlog.debug("create ssl conn %s", ip_str)
-                ssl_sock = self._create_ssl_connection( (ip_str, port) )
-                if ssl_sock:
-                    ssl_sock.last_use_time = time.time()
-                    if self.new_conn_pool.qsize() >= self.connection_pool_max_num and self.ssl_timeout_cb:
-                        self.ssl_timeout_cb(ssl_sock)
-                    else:
-                        self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
-                elif not connect_control.allow_connect():
-                    break
+                ssl_sock = self._create_ssl_connection( (ip_str, 443) )
+                if not ssl_sock:
+                    continue
+
+                if self.ssl_timeout_cb and \
+                        self.new_conn_pool.qsize() > self.connection_pool_max_num + 1 and \
+                        self.new_conn_pool.qsize() > self.https_new_connect_num + 1 and \
+                        self.new_conn_pool.qsize(only_h1=True) > 2:
+
+                    self.ssl_timeout_cb(ssl_sock)
+                else:
+                    self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
                 time.sleep(1)
         finally:
             self.thread_num_lock.acquire()
@@ -482,6 +468,7 @@ class Https_connection_manager(object):
             xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, handshake_time, ssl_sock.h2)
             ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin
+            ssl_sock.last_use_time = time.time()
             ssl_sock.received_size = 0
             ssl_sock.load = 0
             ssl_sock.handshake_time = handshake_time
