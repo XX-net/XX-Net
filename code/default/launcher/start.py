@@ -98,16 +98,13 @@ def unload(module):
 
 try:
     sys.path.insert(0, noarch_lib)
-    sys.path.insert(0, platform_lib)
     import OpenSSL as oss_test
     xlog.info("use build-in openssl lib")
 except Exception as e1:
     xlog.info("import build-in openssl fail:%r", e1)
     
     sys.path.pop(0)
-    sys.path.pop(0)
     del sys.path_importer_cache[noarch_lib]
-    del sys.path_importer_cache[platform_lib]
     unload("OpenSSL")
     unload("cryptography")
     unload("cffi")
