@@ -267,9 +267,11 @@ class Stream(object):
         if 'END_STREAM' in frame.flags:
             #xlog.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
             time_now = time.time()
-            speed = self.task.content_length / (time_now - self.get_head_time)
-            self.task.set_state("h2_finish[SP:%d]" % speed)
-            self.connection.report_speed(speed, self.task.content_length)
+            time_cose = time_now - self.get_head_time
+            if time_cose:
+                speed = self.task.content_length / time_cose
+                self.task.set_state("h2_finish[SP:%d]" % speed)
+                self.connection.report_speed(speed, self.task.content_length)
 
             self._close_remote()
 
