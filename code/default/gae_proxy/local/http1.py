@@ -73,23 +73,24 @@ class HTTP1_worker(HTTP_worker):
             self.request_task(task)
 
     def request_task(self, task):
-        headers = task.headers
-        payload = task.body
-
-        headers['Host'] = self.ssl_sock.host
-
-        response = self._request(headers, payload)
+        task.set_state("h1_req")
+        response = self._request(task)
         if not response:
             google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
             self.retry_task_cb(task)
             self.close("request fail")
         else:
             # xlog.debug("http1 finished task")
+            response.task = task
             task.queue.put(response)
             self.accept_task = True
             self.processed_tasks += 1
 
-    def _request(self, headers, payload):
+    def _request(self, task):
+        headers = task.headers
+        payload = task.body
+
+        headers['Host'] = self.ssl_sock.host
         request_data = 'POST /_gh/ HTTP/1.1\r\n'
         request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
         request_data += '\r\n'
@@ -107,18 +108,23 @@ class HTTP1_worker(HTTP_worker):
             self.ssl_sock.settimeout(100)
             response.begin()
 
+            task.set_state("h1_get_head")
+
             # read response body,
             body_length = int(response.getheader("Content-Length", "0"))
             start = 0
             end = body_length
-            last_read_time = time.time()
-            time_response = time.time()
+            time_response = last_read_time = time.time()
             response_body = []
             while True:
                 if start >= end:
                     self.ssl_sock.received_size += body_length
                     response.headers = response.msg.dict
                     response.body = ReadBuffer(b''.join(response_body))
+
+                    speed = len(response.body) / (time.time() - time_response)
+                    task.set_state("h1_finish[SP:%d]" % speed)
+                    self.report_speed(speed)
                     response.ssl_sock = self.ssl_sock
                     response.worker = self
                     return response
@@ -178,7 +184,7 @@ class HTTP1_worker(HTTP_worker):
             xlog.debug("%s keep alive fail, inactive_time:%d head_timeout:%d",
                        self.ssl_sock.ip, inactive_time, head_timeout)
         except Exception as e:
-            xlog.exception("%s head appid:%s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
+            xlog.warn("%s head appid:%s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
 
     def close(self, reason=""):
         # Notify loop to exit

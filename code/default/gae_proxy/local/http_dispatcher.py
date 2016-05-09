@@ -163,12 +163,15 @@ class HttpsDispatcher(object):
         self.last_request_time = time.time()
         q = Queue.Queue()
         task = Task(headers, body, q)
+        task.set_state("start_request")
         self.request_queue.put(task)
         response = q.get(True)
+        task.set_state("get_response")
         # xlog.debug("task get response")
         return response
 
     def retry_task_cb(self, task):
+        task.set_state("retry")
         self.request_queue.put(task)
 
     def retry_task(self, task):
@@ -184,6 +187,7 @@ class HttpsDispatcher(object):
             except:
                 continue
 
+            task.set_state("get_task")
             # xlog.debug("get task")
             try:
                 worker = self.get_worker()
@@ -192,6 +196,7 @@ class HttpsDispatcher(object):
                 task.response_fail(reason="get worker fail:%r" % e)
                 continue
 
+            task.set_state("get_worker")
             # xlog.debug("get worker")
             worker.request(task)
 
@@ -232,6 +237,10 @@ class HttpsDispatcher(object):
                        (w.ip, w.rtt, w.accept_task, (time.time()-w.ssl_sock.create_time), w.processed_tasks)
             if w.version == "2":
                 out_str += " streams:%d ping_on_way:%d\r\n" % (len(w.streams), w.ping_on_way)
+
+            out_str += " Speed:"
+            for speed in w.speed_history:
+                out_str += "%d," % speed
 
             out_str += "\r\n"
 
