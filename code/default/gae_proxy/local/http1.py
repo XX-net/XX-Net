@@ -26,7 +26,7 @@ class HTTP1_worker(HTTP_worker):
         threading.Thread(target=self.keep_alive_thread).start()
 
     def get_rtt_rate(self):
-        return self.rtt
+        return self.rtt + 100
 
     def request(self, task):
         self.accept_task = False
