@@ -29,7 +29,8 @@ fi
 start() {
     echo -n "Starting ${PACKAGE_DESC}: "
     if hash python2 2>/dev/null; then
-        nohup "${PYTHON}" launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
+        #nohup "${PYTHON}" launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
+        nohup "${PYTHON}" launcher/start.py >/dev/null 2>&1 &
     fi
     echo "${PACKAGE_NAME}."
 }
