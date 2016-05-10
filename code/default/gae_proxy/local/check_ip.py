@@ -58,7 +58,11 @@ import hyper
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 openssl_context = openssl_wrap.SSLConnection.context_builder(ca_certs=g_cacertfile)
-openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+try:
+    openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+except:
+    pass
+
 if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
     openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 

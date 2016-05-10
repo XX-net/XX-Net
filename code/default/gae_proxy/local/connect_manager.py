@@ -213,7 +213,11 @@ class Https_connection_manager(object):
 
         # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
         self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
-        self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+        try:
+            self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
+        except:
+            pass
+
         if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
