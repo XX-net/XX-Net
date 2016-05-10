@@ -143,31 +143,29 @@ class HttpsDispatcher(object):
         return worker
 
     def check_worker_num(self):
-        if len(self.workers) <= config.max_worker_num:
-            return
+        while len(self.workers) > config.max_worker_num:
+            slowest_rtt = 9999
+            slowest_worker = None
+            idle_num = 0
+            for worker in self.workers:
+                if not worker.accept_task:
+                    continue
 
-        slowest_rtt = 9999
-        slowest_worker = None
-        idle_num = 0
-        for worker in self.workers:
-            if not worker.accept_task:
-                continue
+                if worker.version == "2" and len(worker.streams) > 0:
+                    continue
 
-            if worker.version == "2" and len(worker.streams) > 0:
-                continue
+                idle_num += 1
 
-            idle_num += 1
+                rtt = worker.get_rtt_rate()
 
-            rtt = worker.get_rtt_rate()
+                if rtt > slowest_rtt:
+                    slowest_rtt = rtt
+                    slowest_worker = worker
 
-            if rtt > slowest_rtt:
-                slowest_rtt = rtt
-                slowest_worker = worker
+            if idle_num < 3 or slowest_worker is None:
+                return
 
-        if idle_num < 3 or slowest_worker is None:
-            return
-
-        self.close_cb(slowest_worker)
+            self.close_cb(slowest_worker)
 
     def request(self, headers, body):
         # xlog.debug("task start request")

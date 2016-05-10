@@ -522,7 +522,7 @@ class RangeFetch2(object):
             self.req_end = res_length - 1
         self.wait_begin = res_begin
 
-        if self.wait_begin == 0 and self.req_end == res_length:
+        if self.wait_begin == 0 and self.req_end == res_length - 1:
             response_headers['Content-Length'] = str(res_length)
             del response_headers['Content-Range']
             state_code = 200
@@ -588,7 +588,7 @@ class RangeFetch2(object):
     def fetch_worker(self):
         while self.keep_running:
             if self.data_size > self.max_buffer_size:
-                xlog.debug("fetch_worker blocked %s", self.url)
+                xlog.debug("fetch_worker blocked, buffer:%d %s", self.data_size, self.url)
                 time.sleep(0.5)
                 continue
 
