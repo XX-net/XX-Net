@@ -108,7 +108,10 @@ class Logger():
         self.buffer_lock.acquire()
         try:
             self.set_console_color(console_color)
-            sys.stderr.write(string)
+            try:
+                sys.stderr.write(string)
+            except:
+                pass
             self.set_console_color(self.reset_color)
     
             if self.log_fd:
@@ -133,7 +136,7 @@ class Logger():
                 if buffer_len > self.buffer_size:
                     del self.buffer[self.last_no - self.buffer_size]
         except Exception as e:
-            string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br>' % (time.ctime()[4:-5], level, fmt % args, e)
+            string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br> %s' % (time.ctime()[4:-5], level, fmt % args, e, traceback.format_exc())
             self.last_no += 1
             self.buffer[self.last_no] = string
             buffer_len = len(self.buffer)
