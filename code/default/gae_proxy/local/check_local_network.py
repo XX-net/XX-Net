@@ -77,7 +77,7 @@ def report_network_fail():
     last_check_time = time.time()
 
     if continue_fail_count > 10:
-        network_stat = "unkown"
+        # network_stat = "unkown"
         xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
         triger_check_network()
 
@@ -87,44 +87,22 @@ def is_ok():
     return network_stat == "OK"
 
 
-def _check_worker():
-    global _checking_lock, _checking_num, network_stat, last_check_time
-    time_now = time.time()
-    if config.PROXY_ENABLE:
-        socket.socket = socks.socksocket
-        xlog.debug("patch socks")
-
-    _checking_lock.acquire()
-    _checking_num += 1
-    _checking_lock.release()
+def _check_one_host(host):
     try:
-        conn = httplib.HTTPSConnection("github.com", 443, timeout=30)
-        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                  "accept":"application/json, text/javascript, */*; q=0.01",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                  "connection":"keep-alive"
-                  }
+        conn = httplib.HTTPSConnection(host, 443, timeout=30)
+        header = {
+            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+            "accept": "application/json, text/javascript, */*; q=0.01",
+            "accept-encoding": "gzip, deflate, sdch",
+            "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+            "connection": "keep-alive"
+            }
         conn.request("HEAD", "/", headers=header)
         response = conn.getresponse()
         if response.status:
-            last_check_time = time.time()
-            report_network_ok()
-            xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
             return True
     except Exception as e:
-        xlog.warn("network fail:%r", e)
-        network_stat = "Fail"
-        last_check_time = time.time()
         return False
-    finally:
-        _checking_lock.acquire()
-        _checking_num -= 1
-        _checking_lock.release()
-
-        if config.PROXY_ENABLE:
-            socket.socket = default_socket
-            xlog.debug("restore socket")
 
 
 def _simple_check_worker():
@@ -137,38 +115,29 @@ def _simple_check_worker():
     _checking_lock.acquire()
     _checking_num += 1
     _checking_lock.release()
-    try:
-        conn = httplib.HTTPSConnection("www.microsoft.com", 443, timeout=30)
-        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                  "accept":"application/json, text/javascript, */*; q=0.01",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                  "connection":"keep-alive"
-                  }
-        conn.request("HEAD", "/", headers=header)
-        response = conn.getresponse()
-        if response.status:
-            last_check_time = time.time()
-            report_network_ok()
-            xlog.debug("network is ok, cost:%d ms", 1000*(time.time() - time_now))
-            return True
-    except Exception as e:
-        xlog.warn("network fail:%r", e)
+
+    network_ok = False
+    for host in ["www.microsoft.com", "www.apple.com", "code.jquery.com", "cdn.bootcss.com", "cdnjs.cloudflare.com"]:
+        if _check_one_host(host):
+            network_ok = True
+            break
+
+    if network_ok:
+        last_check_time = time.time()
+        report_network_ok()
+        xlog.debug("network is ok, cost:%d ms", 1000 * (time.time() - time_now))
+    else:
+        xlog.warn("network fail")
         network_stat = "Fail"
         last_check_time = time.time()
-        return False
-    finally:
-        _checking_lock.acquire()
-        _checking_num -= 1
-        _checking_lock.release()
 
-        if config.PROXY_ENABLE:
-            socket.socket = default_socket
-            xlog.debug("restore socket")
+    _checking_lock.acquire()
+    _checking_num -= 1
+    _checking_lock.release()
 
-
-threading.Thread(target=_simple_check_worker).start()
-
+    if config.PROXY_ENABLE:
+        socket.socket = default_socket
+        xlog.debug("restore socket")
 
 
 def triger_check_network(force=False):
@@ -190,6 +159,8 @@ def triger_check_network(force=False):
     th = threading.Thread(target=_simple_check_worker)
     th.start()
 
+
+triger_check_network()
 
 #===========================================
 

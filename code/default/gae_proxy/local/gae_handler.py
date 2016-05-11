@@ -424,7 +424,7 @@ def handler(method, url, headers, body, wfile):
             #xlog.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")
     except Exception as e:
-        xlog.warn("gae_handler.handler send response fail. e:%r %s", e, url)
+        xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
         return
 
     content_length = int(response.headers.get('Content-Length', 0))
@@ -457,9 +457,9 @@ def handler(method, url, headers, body, wfile):
                 ret = wfile.write(data)
         except Exception as e_b:
             if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                xlog.info('gae_handler send to browser return %r %r', e_b, url)
             else:
-                xlog.warn('gae_handler send to browser return %r %r', e_b, url)
+                xlog.info('gae_handler send to browser return %r %r', e_b, url)
             return
 
     xlog.info("GAE t:%d s:%d %s %s %s", (time.time()-request_time)*1000, content_length, method, url,
@@ -547,8 +547,8 @@ class RangeFetch2(object):
                 send_header(self.wfile, key, value)
             self.wfile.write("\r\n")
         except Exception as e:
-            self._stopped = True
-            xlog.warn("RangeFetch send response fail:%r %s", e, self.url)
+            self.keep_running = False
+            xlog.info("RangeFetch send response fail:%r %s", e, self.url)
             return
 
         data_left_to_fetch = self.req_end - self.req_begin + 1
@@ -581,7 +581,7 @@ class RangeFetch2(object):
                     xlog.debug("send to browser wfile.write ret:%d", ret)
                 del data
             except Exception as e:
-                xlog.warn('RangeFetch client closed(%s). %s', e, self.url)
+                xlog.info('RangeFetch client closed(%s). %s', e, self.url)
                 break
         self.keep_running = False
 
@@ -631,7 +631,7 @@ class RangeFetch2(object):
             response.status = response.app_status
             if response.headers.get('Location', None):
                 self.url = urlparse.urljoin(self.url, response.headers.get('Location'))
-                xlog.warn('RangeFetch Redirect(%r)', self.url)
+                xlog.warn('RangeFetch Redirect(%r) status:%s', self.url, response.status)
                 continue
 
             if response.status >= 300:
@@ -645,7 +645,7 @@ class RangeFetch2(object):
                     self.method, self.url, response.headers, begin, end)
                 #if len(response.body) < 2048:
                     #xlog.warn('body:%s', cgi.escape(response.body))
-                response.worker.close("no range")
+                # response.worker.close("no range")
                 continue
 
             content_length = int(response.headers.get('Content-Length', 0))
