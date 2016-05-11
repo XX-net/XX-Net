@@ -137,7 +137,7 @@ def update_rc4_password(rc4_password):
             logging.info('Setting in the %s password failed!' % file_name)
 
 
-def uploads(appids, rc4_password=""):
+def uploads(appids, rc4_password):
     update_rc4_password(rc4_password)
 
     clean_cookie_file()
@@ -183,21 +183,35 @@ def uploads(appids, rc4_password=""):
 
 def main():
     if len(sys.argv) < 2:
-        logging.info("Usage: uploader.py <appids> [-debug]")
+        logging.info("Usage: uploader.py <appids> [-debug] [-password rc4_password]")
         input_line = " ".join(sys.argv)
         logging.info("input err: %s " % input_line)
         logging.info("== END ==")
         exit()
 
     appids = sys.argv[1]
-    if len(sys.argv) > 2 and sys.argv[2] == "-debug":
-        logger.setLevel(logging.DEBUG)
-        logging.info("enable debug logging")
+    rc4_password = "";
+
+    if len(sys.argv) > 2:
+        i = 2
+        while i < len(sys.argv):
+            if sys.argv[i] == "-debug":
+                logger.setLevel(logging.DEBUG)
+                logging.info("enable debug logging")
+            elif sys.argv[i] == "-password":
+                i += 1
+                if i < len(sys.argv):
+                    rc4_password = sys.argv[i]
+                logging.info("use rc4_password: %s" % rc4_password)
+            else:
+                logging.info("unknow argv: %s" % sys.argv[i])
+
+            i += 1
 
     os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
     logging.info("set proxy to http://127.0.0.1:8087")
 
-    uploads(appids)
+    uploads(appids, rc4_password)
 
 
 if __name__ == '__main__':
