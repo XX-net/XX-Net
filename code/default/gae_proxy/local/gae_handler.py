@@ -340,6 +340,10 @@ def request_gae_proxy(method, url, headers, body):
 
 
 def handler(method, url, headers, body, wfile):
+    if not url.startswith("http"):
+        xlog.error("gae:%s", url)
+        return
+
     request_time = time.time()
 
     org_headers = dict(headers)
@@ -479,6 +483,7 @@ class RangeFetch2(object):
         self.response = response
 
         self.keep_running = True
+        self.blocked = False
 
         self.lock = threading.Lock()
         self.waiter = threading.Condition(self.lock)
@@ -586,11 +591,16 @@ class RangeFetch2(object):
         self.keep_running = False
 
     def fetch_worker(self):
+        self.blocked = False
         while self.keep_running:
             if self.data_size > self.max_buffer_size:
-                xlog.debug("fetch_worker blocked, buffer:%d %s", self.data_size, self.url)
+                if not self.blocked:
+                    xlog.debug("fetch_worker blocked, buffer:%d %s", self.data_size, self.url)
+                self.blocked = True
                 time.sleep(0.5)
                 continue
+
+            self.blocked = False
 
             with self.lock:
                 if self.req_begin >= self.req_end + 1:

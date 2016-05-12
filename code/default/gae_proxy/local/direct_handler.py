@@ -10,6 +10,7 @@ import ssl
 import httplib
 
 import OpenSSL
+import urlparse
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
@@ -79,20 +80,23 @@ def fetch(method, host, path, headers, payload):
     return response
 
 
-def handler(method, host, url, headers, body, wfile):
+def handler(method, url, headers, body, wfile):
     time_request = time.time()
+    parsed_url = urlparse.urlparse(url)
 
     if "Connection" in headers and headers["Connection"] == "close":
         del headers["Connection"]
 
+    host = parsed_url.hostname
+    path = parsed_url.path
     errors = []
     response = None
     while True:
-        if time.time() - time_request > 30:
+        if time.time() - time_request > 120:
             return return_fail_message(wfile)
 
         try:
-            response = fetch(method, host, url, headers, body)
+            response = fetch(method, host, path, headers, body)
             if response:
                 if response.status > 400:
                     server_type = response.getheader('Server', "")
@@ -105,10 +109,10 @@ def handler(method, host, url, headers, body, wfile):
                 break
         except OpenSSL.SSL.SysCallError as e:
             errors.append(e)
-            xlog.warn("direct_handler.handler err:%r %s/%s", e, host, url)
+            xlog.warn("direct_handler.handler err:%r %s", e, url)
         except Exception as e:
             errors.append(e)
-            xlog.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
+            xlog.exception('direct_handler.handler %r %s , retry...', e,url)
 
     try:
         send_to_browser = True
@@ -121,11 +125,11 @@ def handler(method, host, url, headers, body, wfile):
         except Exception as e:
             send_to_browser = False
             wait_time = time.time()-time_request
-            xlog.info("direct_handler.handler send response fail. t:%d e:%r %s%s", wait_time, e, host, url)
+            xlog.info("direct_handler.handler send response fail. t:%d e:%r %s", wait_time, e, url)
 
 
         if method == 'HEAD' or response.status in (204, 304):
-            xlog.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
+            xlog.info("DIRECT t:%d %d %s", (time.time()-time_request)*1000, response.status, url)
             https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
             return
@@ -139,7 +143,7 @@ def handler(method, host, url, headers, body, wfile):
                     data = e.partial
                 except Exception as e:
                     google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-                    xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                    xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s", time.time()-time_request, e, url)
                     response.close()
                     return
 
@@ -154,14 +158,14 @@ def handler(method, host, url, headers, body, wfile):
                         wfile.write('\r\n')
                     except Exception as e:
                         send_to_browser = False
-                        xlog.info("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
+                        xlog.info("direct_handler.handler send Transfer-Encoding t:%d e:%r %s", time.time()-time_request, e,  url)
                 else:
                     if not data:
                         break
 
             https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
             response.close()
-            xlog.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
+            xlog.info("DIRECT chucked t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
             return
 
         content_length = int(response.getheader('Content-Length', 0))
@@ -175,7 +179,7 @@ def handler(method, host, url, headers, body, wfile):
         while True:
             if start > end:
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host, call_time=time_request)
-                xlog.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
+                xlog.info("DIRECT t:%d s:%d %d %s", (time.time()-time_request)*1000, length, response.status, url)
                 return
 
             to_read = end - start + 1
@@ -184,7 +188,7 @@ def handler(method, host, url, headers, body, wfile):
                 if time.time() - time_last_read > 20:
                     google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
                     response.close()
-                    xlog.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
+                    xlog.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
                     return
                 else:
                     time.sleep(0.1)
@@ -201,9 +205,9 @@ def handler(method, host, url, headers, body, wfile):
                         ret = wfile.write(data)
                 except Exception as e_b:
                     if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                        xlog.info('direct_handler send to browser return %r %s %r', e_b, host, url)
+                        xlog.info('direct_handler send to browser return %r %r', e_b, url)
                     else:
-                        xlog.info('direct_handler send to browser return %r %s %r', e_b, host, url)
+                        xlog.info('direct_handler send to browser return %r %r', e_b, url)
                     send_to_browser = False
 
 
@@ -212,9 +216,9 @@ def handler(method, host, url, headers, body, wfile):
         time_except = time.time()
         time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            xlog.exception("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
+            xlog.exception("direct_handler err:%r %s time:%d", e, url, time_cost)
         else:
-            xlog.exception("direct_handler except:%r %s %s", e, host, url)
+            xlog.exception("direct_handler except:%r %s", e, url)
     except Exception as e:
         google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-        xlog.exception("direct_handler except:%r %s %s", e, host, url)
+        xlog.exception("direct_handler except:%r %s", e, url)
