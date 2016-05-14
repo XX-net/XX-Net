@@ -63,14 +63,17 @@ def get_crlf(rfile):
 
 
 self_host = []
-get_self_host = socket.gethostbyname_ex(socket.gethostname())
-for host in get_self_host:
-    if not host or host == "localhost" or host == "127.0.0.1":
-        continue
-    if isinstance(host, list):
-        self_host.append(host[0])
-    else:
-        self_host.append(host)
+try:
+    get_self_host = socket.gethostbyname_ex(socket.gethostname())
+    for host in get_self_host:
+        if not host or host == "localhost" or host == "127.0.0.1":
+            continue
+        if isinstance(host, list):
+            self_host.append(host[0])
+        else:
+            self_host.append(host)
+except:
+    pass
 
 for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]:
     s.connect(('8.8.8.8', 53))
