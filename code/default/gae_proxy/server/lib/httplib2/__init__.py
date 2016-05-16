@@ -746,7 +746,7 @@ class ProxyInfo(object):
     bypass_hosts = ()
 
     def __init__(self, proxy_type, proxy_host, proxy_port,
-        proxy_rdns=None, proxy_user=None, proxy_pass=None):
+        proxy_rdns=True, proxy_user=None, proxy_pass=None):
         """The parameter proxy_type must be set to one of socks.PROXY_TYPE_XXX
         constants. For example:
 
@@ -996,7 +996,7 @@ class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
             proxy_type, proxy_host, proxy_port, proxy_rdns, proxy_user, proxy_pass = self.proxy_info.astuple()
         else:
             use_proxy = False
-        if use_proxy and proxy_rdns:
+        if use_proxy:
             host = proxy_host
             port = proxy_port
         else:
