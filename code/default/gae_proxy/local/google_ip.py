@@ -196,6 +196,7 @@ class IpManager():
                             property['handshake_time'],
                             property['fail_times'],
                             property['down_fail']) )
+                fd.flush()
 
             self.iplist_need_save = False
         except Exception as e:
