@@ -1,7 +1,7 @@
 XX-Net
 =================
-* Web proxy tools.
-* XX-Net is a more functions gae proxy which can help you get through firewalls. 
+* Web proxy tool chains.
+* XX-Net is a more powerful would be better gae proxy which can help you get through firewalls. 
 
 
 Wiki
