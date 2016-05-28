@@ -20,11 +20,11 @@ Downloads
 
 Iinks
 ------
-* Usage :  https://github.com/XX-net/XX-Net/wiki/How_to_use
+* Usage :  https://github.com/XX-net/XX-Net/wiki/How-to-use
 
-* Update :  https://github.com/XX-net/XX-Net/wiki/How_to_update
+* Update :  https://github.com/XX-net/XX-Net/wiki/How-to-update
 
-* Issues :  https://github.com/XX-net/XX-Net/issues
+* Issues :  https://github.com/XX-net/XX-Net/issues?q=sort:updated-desc+is:open
 
 
 Help
