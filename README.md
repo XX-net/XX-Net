@@ -1,6 +1,6 @@
 XX-Net
 =================
-* a web proxy tool.
+* A web proxy tool.
 * XX-Net is a more powerful would be better gae proxy which can help you get through firewalls. 
 
 
@@ -20,9 +20,9 @@ Downloads
 
 Iinks
 ------
-* Usage :  https://github.com/XX-net/XX-Net/wiki/使用方法
+* Usage :  https://github.com/XX-net/XX-Net/wiki/How_to_use
 
-* Update :  https://github.com/XX-net/XX-Net/wiki/更新方法
+* Update :  https://github.com/XX-net/XX-Net/wiki/How_to_update
 
 * Issues :  https://github.com/XX-net/XX-Net/issues
 
