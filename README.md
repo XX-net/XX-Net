@@ -1,7 +1,6 @@
 XX-Net
 =================
-* A web proxy tool.
-* XX-Net is a more powerful would be better gae proxy which can help you get through firewalls. 
+* XX-Net is a free desktop application that delivers fast, reliable and secure access to the open Internet for users in censored regions. It uses Google Engine App (GAE) acts as a proxy server through the firewall.
 
 
 Wiki
