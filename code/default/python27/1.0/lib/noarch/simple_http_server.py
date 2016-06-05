@@ -216,6 +216,10 @@ class HttpServerHandler():
             if len(content):
                 self.wfile.write(content)
 
+    def send_response_nc(self, mimetype="", content="", headers="", status=200):
+        no_cache_headers = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
+        return self.send_response(mimetype, content, no_cache_headers + headers, status)
+
     def send_file(self, filename, mimetype):
         try:
             if not os.path.isfile(filename):
