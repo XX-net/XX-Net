@@ -644,7 +644,7 @@ class IpManager():
         self.scan_thread_lock.acquire()
         self.scan_thread_count -= 1
         self.scan_thread_lock.release()
-        xlog.info("scan_ip_worker exit")
+        #xlog.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
         if config.USE_IPV6:
