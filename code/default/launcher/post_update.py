@@ -12,12 +12,16 @@ from instances import xlog
 import config
 
 def older_or_equal(version, reference_version):
-    p = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
-    m1 = p.match(version)
-    m2 = p.match(reference_version)
-    v1 = map(int, map(m1.group, [1,2,3]))
-    v2 = map(int, map(m2.group, [1,2,3]))
-    return v1 <= v2
+    try:
+        p = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
+        m1 = p.match(version)
+        m2 = p.match(reference_version)
+        v1 = map(int, map(m1.group, [1,2,3]))
+        v2 = map(int, map(m2.group, [1,2,3]))
+        return v1 <= v2
+    except:
+        xlog.warn("older_or_equal fail: %s, %s" % (version, reference_version)) # e.g. "get_version_fail" when post_update.run(last_run_version), "last_run_version" in \data\launcher\config.yaml
+        return False # is not older
 
 def run(last_run_version):
     if config.get(["modules", "launcher", "auto_start"], 0):
