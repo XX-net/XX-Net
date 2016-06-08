@@ -17,7 +17,7 @@ Downloads
 * [__Download page__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
 
 
-Iinks
+Links
 ------
 * Usage :  https://github.com/XX-net/XX-Net/wiki/How-to-use
 
