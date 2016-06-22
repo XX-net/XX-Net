@@ -93,7 +93,7 @@ class MacTrayObject(AppKit.NSObject):
         self.menu.addItem_(AppKit.NSMenuItem.separatorItem())
 
         # Reset Menu Item
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'重载代理' if lang_code == "zh_CN" else 'Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'重启代理' if lang_code == "zh_CN" else 'Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
 
         # Separator
