@@ -8,8 +8,8 @@ CurAppDir=`dirname "$ContentsDir"`
 export LANG=zh_CN.UTF-8
 
 #
-XXNetDir="$CurAppDir/XX-Net"
-StartPath="$XXNetDir/start"
+XXNetDir0="$CurAppDir/XX-Net"
+StartPath="$XXNetDir0/start"
 if [ -f "$StartPath" ]; then
 	echo "$StartPath"
 	"$StartPath"
@@ -44,5 +44,6 @@ if [ $? == 0 ]; then
 fi
 
 #
+echo ln -s "$XXNetDir" "$XXNetDir0"
 $StartPath
 exit 1
