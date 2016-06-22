@@ -26,6 +26,10 @@ import SystemConfiguration
 from instances import xlog
 from PyObjCTools import AppHelper
 
+
+import locale
+lang_code, code_page = locale.getdefaultlocale()
+
 class MacTrayObject(AppKit.NSObject):
     def __init__(self):
         pass
@@ -57,36 +61,46 @@ class MacTrayObject(AppKit.NSObject):
         # Build a very simple menu
         self.menu = AppKit.NSMenu.alloc().initWithTitle_('XX-Net')
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'配置' if lang_code == "zh_CN" else 'Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
         menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
         self.menu.addItem_(menuitem)
         self.currentServiceMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy', 'enableAutoProxy:', '')
+        # Separator
+        self.menu.addItem_(AppKit.NSMenuItem.separatorItem())
+
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'启用自动代理' if lang_code == "zh_CN" else 'Enable Auto GAEProxy', 'enableAutoProxy:', '')
         if proxyState == 'pac':
             menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.autoGaeProxyMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy', 'enableGlobalProxy:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'启用全局代理' if lang_code == "zh_CN" else 'Enable Global GAEProxy', 'enableGlobalProxy:', '')
         if proxyState == 'gae':
             menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.globalGaeProxyMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable GAEProxy', 'disableProxy:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'禁用代理' if lang_code == "zh_CN" else 'Disable GAEProxy', 'disableProxy:', '')
         if proxyState == 'disable':
             menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)
         self.disableGaeProxyMenuItem = menuitem
 
+        # Separator
+        self.menu.addItem_(AppKit.NSMenuItem.separatorItem())
+
         # Reset Menu Item
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'重载代理' if lang_code == "zh_CN" else 'Reload GAEProxy', 'resetGoagent:', '')
         self.menu.addItem_(menuitem)
+
+        # Separator
+        self.menu.addItem_(AppKit.NSMenuItem.separatorItem())
+
         # Default event
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'退出' if lang_code == "zh_CN" else 'Quit', 'windowWillClose:', '')
         self.menu.addItem_(menuitem)
         # Bind it to the status item
         self.statusitem.setMenu_(self.menu)
@@ -228,9 +242,9 @@ def setupHelper():
 
 def getCurrentServiceMenuItemTitle():
     if currentService:
-        return 'Connection: %s' % currentService
+        return (u'连接: %s' if lang_code == "zh_CN" else 'Connection: %s') % currentService
     else:
-        return 'Connection: None'
+        return u'连接: 无' if lang_code == "zh_CN" else 'Connection: None'
 
 def getProxyState(service):
     if not service:
