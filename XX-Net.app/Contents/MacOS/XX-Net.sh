@@ -44,6 +44,6 @@ if [ $? == 0 ]; then
 fi
 
 #
-echo ln -s "$XXNetDir" "$XXNetDir0"
+ln -s "$XXNetDir" "$XXNetDir0"
 $StartPath
 exit 1
