@@ -18,8 +18,8 @@ Function CurrentVersion()
         Set objFileToRead = CreateObject("Scripting.FileSystemObject").OpenTextFile(strVersionFile,1)
         CurrentVersion = objFileToRead.ReadLine()
 
-        version_path = strCurrentPath & "/code/" & CurrentVersion
-        If( Not fso.FolderExists(version_path) ) Then
+        version_path = strCurrentPath & "/code/" & CurrentVersion & "/launcher/start.py"
+        If( Not fso.FileExists(version_path) ) Then
             CurrentVersion = "default"
         End If
 
