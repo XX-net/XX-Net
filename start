@@ -17,7 +17,7 @@ else
 fi
 
 
-if [ ! -d "code/$VERSION" ]; then
+if [ ! -f "code/$VERSION/launcher/start.py" ]; then
     VERSION="default"
 fi
 echo "XX-Net version:$VERSION"
