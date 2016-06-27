@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #
-BaseDir=$(cd `dirname $0`; pwd)
-ContentsDir=`dirname $BaseDir`
+BaseDir=$(cd "`dirname "$0"`"; pwd)
+ContentsDir=`dirname "$BaseDir"`
 CurAppDir=`dirname "$ContentsDir"`
 
 export LANG=zh_CN.UTF-8
@@ -29,7 +29,7 @@ AppName=`basename "$CurAppDir"`
 AppDir="/Applications/$AppName"
 echo $AppDir
 if [ -d "$AppDir" ]; then
-	$StartPath
+	"$StartPath"
 	exit 1
 fi
 
