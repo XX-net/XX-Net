@@ -196,6 +196,7 @@ class IpManager():
                             property['handshake_time'],
                             property['fail_times'],
                             property['down_fail']) )
+                fd.flush()
 
             self.iplist_need_save = False
         except Exception as e:
@@ -643,7 +644,7 @@ class IpManager():
         self.scan_thread_lock.acquire()
         self.scan_thread_count -= 1
         self.scan_thread_lock.release()
-        xlog.info("scan_ip_worker exit")
+        #xlog.info("scan_ip_worker exit")
 
     def search_more_google_ip(self):
         if config.USE_IPV6:

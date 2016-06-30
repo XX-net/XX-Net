@@ -168,8 +168,12 @@ def overwrite(xxnet_version, xxnet_unzip_path):
         for root, subdirs, files in os.walk(xxnet_unzip_path):
             relate_path = root[len(xxnet_unzip_path)+1:]
             target_relate_path = relate_path
-            if target_relate_path.startswith("code/default"):
-                target_relate_path = "code/" + xxnet_version + relate_path[12:]
+            if sys.platform == 'win32':
+                if target_relate_path.startswith("code\\default"):
+                    target_relate_path = "code\\" + xxnet_version + relate_path[12:]
+            else:
+                if target_relate_path.startswith("code/default"):
+                    target_relate_path = "code/" + xxnet_version + relate_path[12:]
 
             for subdir in subdirs:
                 if relate_path == "code" and subdir == "default":
