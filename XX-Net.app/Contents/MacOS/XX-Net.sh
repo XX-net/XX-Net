@@ -5,7 +5,7 @@ BaseDir=$(cd "`dirname "$0"`"; pwd)
 ContentsDir=`dirname "$BaseDir"`
 CurAppDir=`dirname "$ContentsDir"`
 
-export LANG=zh_CN.UTF-8
+export LANG=`defaults read -g AppleLocale`
 
 #
 XXNetDir0="$CurAppDir/XX-Net"
