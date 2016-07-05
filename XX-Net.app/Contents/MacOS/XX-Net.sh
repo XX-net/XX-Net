@@ -71,5 +71,5 @@ fi
 
 #
 ln -s "$XXNetDir" "$XXNetDir0"
-$StartPath
+"$StartPath"
 exit 1
