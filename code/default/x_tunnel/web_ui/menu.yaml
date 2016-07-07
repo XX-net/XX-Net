@@ -1,0 +1,12 @@
+module_title: X-Tunnel
+menu_sort_id: 3
+sub_menus: {
+  1:{
+    title: {{ _( "Config" ) }},
+    url: config
+  },
+  2:{
+    title: {{ _("Log") }},
+    url: logging
+  }
+}

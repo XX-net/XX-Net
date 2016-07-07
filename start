@@ -1,0 +1,122 @@
+#!/bin/bash
+
+SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPTPATH
+
+if python -V | grep -q "Python 3" ;then
+    PYTHON="python2"
+else
+    PYTHON="python"
+fi
+
+
+if [ -f code/version.txt ]; then
+    VERSION=`cat code/version.txt`
+else
+    VERSION="default"
+fi
+
+
+if [ ! -f "code/$VERSION/launcher/start.py" ]; then
+    VERSION="default"
+fi
+echo "XX-Net version:$VERSION"
+
+
+# launch xx-net service by ignore hungup signal
+function launchWithNoHungup() {
+    nohup ${PYTHON} code/${VERSION}/launcher/start.py 2&> /dev/null &
+}
+
+# launch xx-net service by hungup signal
+function launchWithHungup() {
+    ${PYTHON} code/${VERSION}/launcher/start.py
+}
+
+# get operating system name
+os_name=`uname -s`
+
+# check command avalibility
+function has_command() {
+    command -v $1 > /dev/null
+}
+
+# Install Packages
+if [ $os_name = 'Linux' ]; then
+    if ! python -c 'import OpenSSL' 2> /dev/null; then
+        echo 'You have not installed pyOpenSSL yet.'
+        if [[ $- == *i* ]]; then
+            # interactive shell
+            echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
+            if has_command zypper; then
+                # openSUSE
+                sudo zypper in -y python-pyOpenSSL
+            elif has_command apt-get; then
+                # Debian or Debian-like
+                sudo apt-get install -y python-openssl
+            elif has_command dnf; then
+                # Fedora
+                sudo dnf install -y pyOpenSSL
+            elif has_command yum; then
+                # RedHat
+                sudo yum install -y pyOpenSSL
+            elif has_command pacman; then
+                # ArchLinux
+                sudo pacman -S --noconfirm openssl python2-pyopenssl
+            # Do Someting for OpenWRT
+            fi
+        else
+            # non-interactive shell
+            echo 1>&2 'Please install pyOpenSSL.'
+            #exit 1
+        fi
+    fi
+fi
+
+# create a desktop startup file when the distro is Ubuntu.
+function createDesktopStartup() {
+    DESKFILE='XX-Net.desktop'
+    if [[ -f $DESKFILE ]]; then 
+        echo "$DESKFILE already exists"
+        return
+    else
+        echo "$DESKFILE does not exist,ctreat a new one"
+    fi
+    NAME="XX-Net"
+    EXEC="$SCRIPTPATH/start > /dev/null"
+    ICON="$SCRIPTPATH/code/default/launcher/web_ui/favicon.ico"
+    TERMINAL="false"
+    TYPE="Application"
+    CATEGORIES="Development"
+    echo "[Desktop Entry]" >> $DESKFILE
+    echo "Version=$VERSION" >> $DESKFILE
+    echo "Name=$NAME" >> $DESKFILE
+    echo "Exec=$EXEC" >> $DESKFILE
+    echo "Terminal=$TERMINAL" >> $DESKFILE
+    echo "Icon=$ICON" >> $DESKFILE
+    echo "Type=$TYPE" >> $DESKFILE
+    echo "Categories=$CATEGORIES" >> $DESKFILE
+
+    chmod 744 $DESKFILE
+    DESKDIR=~/Desktop/
+    cp $DESKFILE $DESKDIR
+
+    if [[ -d $DESKDIR ]]; then
+        cp $DESKFILE $DESKDIR
+    else
+        echo "$DESKDIR does not exist"
+    fi
+}
+
+DIS=`cat /etc/issue 2> /dev/null`
+if [[ $DIS == *Ubuntu* ]]; then
+    createDesktopStartup
+fi
+
+# Start Application
+if [ $os_name = 'Darwin' ] && ! [ "$1" = '-hungup' ]; then
+    PYTHON="/usr/bin/python2.7"
+    launchWithNoHungup
+else
+    launchWithHungup
+fi
