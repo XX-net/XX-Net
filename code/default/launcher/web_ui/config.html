@@ -106,12 +106,6 @@
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" >
-            <div class="span4">{{ _( "Enable" ) }} PHP proxy</div> <!-- .span4 -->
-            <div class="span8">
-                <input id="php-enable" type="checkbox" data-toggle="switch" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid" >
             <div class="span4">{{ _( "Enable" ) }} X_tunnel</div> <!-- .span4 -->
             <div class="span8">
                 <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
@@ -177,12 +171,6 @@
 
 
                     $( "#gae_proxy-enable").prop('checked', true);
-                }
-                if ( result['php_enable'] != 0 ) {
-                    $( "#php-enable").parent().removeClass('switch-off');
-                    $( "#php-enable").parent().addClass('switch-on');
-
-                    $( "#php-enable").prop('checked', true);
                 }
                 if ( result['x_tunnel_enable'] != 0 ) {
                     $( "#x-tunnel-enable").parent().removeClass('switch-off');
@@ -274,13 +262,6 @@
         setConfig(key, value);
     });
 
-    $('#php-enable').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'php_enable',
-            value     = isChecked ? 1 : 0;
-
-        setConfig(key, value);
-    });
     $('#x-tunnel-enable').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'x_tunnel_enable',
@@ -303,7 +284,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    if ( key == 'gae_proxy_enable' || key == 'php_enable' || key == 'x_tunnel_enable') {
+                    if ( key == 'gae_proxy_enable' || key == 'x_tunnel_enable') {
                         restartingService(key);
                     } else {
                         tip('{{ _( "Settings saved successfully." ) }}', 'success');
@@ -332,8 +313,6 @@
 
         if ( serviceNameSlug == 'gae_proxy_enable' ) {
             serviceName     = '{{ _( "GAE Proxy" ) }}';
-        } else if ( serviceNameSlug == 'php_enable' ) {
-            serviceName     = '{{ _( "PHP proxy" ) }}';
         } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
             serviceName     = '{{ _( "X_tunnel proxy" ) }}';
         } else {
