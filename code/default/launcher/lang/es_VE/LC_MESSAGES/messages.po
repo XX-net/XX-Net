@@ -131,10 +131,6 @@ msgstr ""
 msgid "Enable GAE proxy"
 msgstr ""
 
-#: web_ui/config.html:98
-msgid "Enable PHP proxy"
-msgstr ""
-
 #: web_ui/config.html:109
 msgid "System configuration options"
 msgstr ""
@@ -150,14 +146,6 @@ msgstr ""
 #: web_ui/config.html:289
 #, python-format
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr ""
-
-#: web_ui/config.html:294
-msgid "PHP proxy"
-msgstr ""
-
-#: web_ui/config.html:436
-msgid "Updating in progress ..."
 msgstr ""
 
 #: web_ui/config.html:496
