@@ -365,8 +365,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def xxnet_version():
         version_file = os.path.join(root_path, "version.txt")
         try:
-            fd = open(version_file, "r")
-            version = fd.read()
+            with open(version_file, "r") as fd:
+                version = fd.read()
             return version
         except Exception as e:
             xlog.exception("xxnet_version fail")
