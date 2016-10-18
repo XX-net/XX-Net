@@ -26,18 +26,20 @@ else
     PYTHON="python"
 fi
 
+PACKAGE_PATH=$("${PYTHON}" -c "import os; print os.path.dirname(os.path.realpath('$0'))")
+
 start() {
     echo -n "Starting ${PACKAGE_DESC}: "
     if hash python2 2>/dev/null; then
         #nohup "${PYTHON}" launcher/start.py 2>&1 | /usr/bin/logger -t ${PACKAGE_NAME} &
-        nohup "${PYTHON}" launcher/start.py >/dev/null 2>&1 &
+        nohup "${PYTHON}" ${PACKAGE_PATH}/launcher/start.py >/dev/null 2>&1 &
     fi
     echo "${PACKAGE_NAME}."
 }
 
 stop() {
     echo -n "Stopping ${PACKAGE_DESC}: "
-    kill -9 `ps aux | grep "${PYTHON} launcher/start.py" | grep -v grep | awk '{print $2}'` || true
+    kill -9 `ps aux | grep "${PYTHON} ${PACKAGE_PATH}/launcher/start.py" | grep -v grep | awk '{print $2}'` || true
     echo "${PACKAGE_NAME}."
 }
 
@@ -58,8 +60,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 0
 fi
 
-# `readlink -f` won't work on Mac, this hack should work on all systems.
-cd $("${PYTHON}" -c "import os; print os.path.dirname(os.path.realpath('$0'))")
 
 case "$1" in
     # If no arg is given, start the goagent.

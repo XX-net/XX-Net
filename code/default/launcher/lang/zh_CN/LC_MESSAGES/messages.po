@@ -112,9 +112,6 @@ msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
 msgid "GAE Proxy"
 msgstr "GAE代理"
 
-msgid "PHP proxy"
-msgstr "PHP代理"
-
 msgid "Updating in progress ..."
 msgstr "更新进行中..."
 

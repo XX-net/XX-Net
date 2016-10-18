@@ -62,9 +62,9 @@ def recheck_module_path():
 
     xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
 
-    modules = ["gae_proxy", "launcher", "php_proxy", "x_tunnel"]
+    modules = ["gae_proxy", "launcher", "x_tunnel"]
     for module in modules:
-        if module not in ["launcher", "php_proxy"]:
+        if module not in ["launcher"]:
             if not os.path.isdir(os.path.join(root_path, module)):
                 del config[module]
                 continue
@@ -85,9 +85,6 @@ def recheck_module_path():
 
     #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #    set(["modules", "gae_proxy", "control_port"], 8084)
-
-    if get(["modules", "php_proxy", "control_port"], 0) == 0:
-        set(["modules", "php_proxy", "control_port"], 8083)
 
     return need_save_config
 

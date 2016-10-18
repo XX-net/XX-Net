@@ -1,10 +1,10 @@
 
 ## 下载(Download)：
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.2.4
+https://codeload.github.com/XX-net/XX-Net/zip/3.2.7
 
 稳定版(Stable)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.1.19
+https://codeload.github.com/XX-net/XX-Net/zip/3.2.6
 
 懒人集成浏览器版（Easy Browser Bundle）:
 https://github.com/yeahwu/firefox-xx
