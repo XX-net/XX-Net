@@ -1,8 +1,8 @@
 
 ## 升级(Update)：
 测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.2.6 e96e23855d83530ed3cc53e1a2980a5829ce57ef3c77081cba40dfe24b37d284
+https://codeload.github.com/XX-net/XX-Net/zip/3.2.8 812cbc205588dc89b1ce6113ab710ba615c351156649e366944da05399a4dfdb
 
 稳定版(Stable)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.2.5 70b38af1cf0179848488f138ad62270102cf707971edeec3a56db306a846a649
+https://codeload.github.com/XX-net/XX-Net/zip/3.2.7 639c66751578db7963aeadd1c7c998a6f5b6772dfcb64a9f000e7307870b826f
 

@@ -63,6 +63,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
     bufsize = 256*1024
     max_retry = 3
+    local_names = []
 
     def setup(self):
         self.__class__.do_GET = self.__class__.do_METHOD
@@ -144,6 +145,27 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         self.wfile.write(response)
 
+    def is_local(self, hosts):
+        if 0 == len(self.local_names):
+            self.local_names.append('localhost')
+            self.local_names.append(socket.gethostname().lower());
+            try:
+                self.local_names.append(socket.gethostbyname_ex(socket.gethostname())[-1])
+            except socket.gaierror:
+                # TODO Append local IP address to local_names
+                pass
+
+        for s in hosts:
+            s = s.lower()
+            if s.startswith('127.') \
+                    or s.startswith('192.168.') \
+                    or s.startswith('10.') \
+                    or s.startswith('169.254.') \
+                    or s in self.local_names:
+                print s
+                return True
+        return False
+
     def do_METHOD(self):
         touch_active()
         # record active time.
@@ -166,11 +188,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         elif not host and '://' in self.path:
             host = urlparse.urlparse(self.path).netloc
 
-        if host.startswith("127.0.0.1") or host.startswith("localhost"):
-            #xlog.warn("Your browser forward localhost to proxy.")
-            return self.forward_local()
-
-        if host_ip in socket.gethostbyname_ex(socket.gethostname())[-1]:
+        if self.is_local([host, host_ip]):
             xlog.info("Browse localhost by proxy")
             return self.forward_local()
 
@@ -433,4 +451,3 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     pass
                 finally:
                     self.__realconnection = None
-
