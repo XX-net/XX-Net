@@ -158,8 +158,6 @@ class CertUtil(object):
     ca_certdir = os.path.join(data_path, 'certs')
     ca_digest = 'sha256'
     ca_lock = threading.Lock()
-    ca_validity_years = 10
-    ca_validity = 24 * 60 * 60 * 365 * ca_validity_years
 
     @staticmethod
     def create_ca():
@@ -179,7 +177,7 @@ class CertUtil(object):
         ca.set_version(2)
         ca.set_serial_number(0)
         ca.gmtime_adj_notBefore(0)
-        ca.gmtime_adj_notAfter(CertUtil.ca_validity)
+        ca.gmtime_adj_notAfter(24 * 60 * 60 * 3652)
         ca.set_issuer(req.get_subject())
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
@@ -241,7 +239,7 @@ class CertUtil(object):
         except OpenSSL.SSL.Error:
             cert.set_serial_number(int(time.time()*1000))
         cert.gmtime_adj_notBefore(-600) #avoid crt time error warning
-        cert.gmtime_adj_notAfter(CertUtil.ca_validity)
+        cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
         cert.set_issuer(ca.get_subject())
         cert.set_subject(req.get_subject())
         cert.set_pubkey(req.get_pubkey())
