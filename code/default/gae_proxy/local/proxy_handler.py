@@ -88,7 +88,15 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         """
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
-        http_client = simple_http_client.HTTP_client((host_ip, int(port)))
+        self.parsed_url = urlparse.urlparse(self.path)
+        try:
+            port = int(port)
+        except:
+            if self.parsed_url[0] == 'https':
+                port = 443
+            else:
+                port = 80
+        http_client = simple_http_client.HTTP_client((host_ip, port))
 
         request_headers = dict((k.title(), v) for k, v in self.headers.items())
         payload = b''
@@ -100,14 +108,15 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.warn('forward_local read payload failed:%s', e)
                 return
 
-        self.parsed_url = urlparse.urlparse(self.path)
         if len(self.parsed_url[4]):
             path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
         else:
             path = self.parsed_url[2]
+        xlog.warn("here we go")
         content, status, response = http_client.request(self.command, path, request_headers, payload)
         if not status:
-            xlog.warn("forward_local fail")
+            xlog.warn("forward_local fail: %d, command: %s, path: %s, headers: %s, payload: %s, response: %s",
+                status, self.command, path, request_headers, payload, response)
             return
 
         out_list = []
@@ -164,7 +173,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     or s in self.local_names:
                 print s
                 return True
-        return False
+            if s.startswith('gcr.io') \
+                    or s.endswith('google.com') \
+                    or s.endswith('googleapis.com'):
+                return False
+        return True
 
     def do_METHOD(self):
         touch_active()
