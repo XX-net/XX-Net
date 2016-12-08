@@ -112,7 +112,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
         else:
             path = self.parsed_url[2]
-        xlog.warn("here we go")
         content, status, response = http_client.request(self.command, path, request_headers, payload)
         if not status:
             xlog.warn("forward_local fail: %d, command: %s, path: %s, headers: %s, payload: %s, response: %s",
