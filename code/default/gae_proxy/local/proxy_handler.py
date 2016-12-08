@@ -173,11 +173,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     or s in self.local_names:
                 print s
                 return True
-            if s.startswith('gcr.io') \
-                    or s.endswith('google.com') \
-                    or s.endswith('googleapis.com'):
-                return False
-        return True
+            for h in config.ONLYHOSTS:
+                if s.endswith(h):
+                    return False
+        if len(config.ONLYHOSTS) > 0:
+            return True
+        else:
+            return False
 
     def do_METHOD(self):
         touch_active()
