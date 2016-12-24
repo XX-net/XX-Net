@@ -25,7 +25,7 @@ echo "XX-Net version:$VERSION"
 
 # launch xx-net service by ignore hungup signal
 function launchWithNoHungup() {
-    nohup ${PYTHON} code/${VERSION}/launcher/start.py >/dev/null 2>&1 &
+    nohup ${PYTHON} code/${VERSION}/launcher/start.py 2&> /dev/null &
 }
 
 # launch xx-net service by hungup signal
