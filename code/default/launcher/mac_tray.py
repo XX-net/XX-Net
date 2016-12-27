@@ -219,9 +219,9 @@ def setupHelper():
     except:
         rmCommand      = "rm \\\"%s\\\"" % helper_path
         cpCommand      = "cp \\\"%s\\\" \\\"%s\\\"" % (os.path.join(current_path, 'mac_helper'), helper_path)
-        chmodCommand   = "chmod 4755 \\\"%s\\\"" % helper_path
         chownCommand   = "chown root \\\"%s\\\"" % helper_path
-        executeCommand = 'do shell script "%s;%s;%s;%s" with administrator privileges' % (rmCommand, cpCommand, chmodCommand, chownCommand)
+        chmodCommand   = "chmod 4755 \\\"%s\\\"" % helper_path
+        executeCommand = 'do shell script "%s;%s;%s;%s" with administrator privileges' % (rmCommand, cpCommand, chownCommand, chmodCommand)
 
         xlog.info("try setup helper:%s", executeCommand)
         subprocess.call(['osascript', '-e', executeCommand])
