@@ -111,9 +111,6 @@ msgstr ""
 msgid "GAE Proxy"
 msgstr ""
 
-msgid "PHP proxy"
-msgstr ""
-
 msgid "Updating in progress ..."
 msgstr ""
 

@@ -418,7 +418,7 @@
                     return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'hard');
                 }
 
-                return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'] + '{{ _( ", Everything is OK. Welcome to the FREE Internet. " ) }}', 'fluent');
+                return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'].trim() + '{{ _( ", Everything is OK. Welcome to the FREE Internet. " ) }}', 'fluent');
 
             },
             error: function(result) {

@@ -77,13 +77,13 @@ def report_network_fail():
     last_check_time = time.time()
 
     if continue_fail_count > 10:
-        # network_stat = "unkown"
+        network_stat = "unknown"
         xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
         triger_check_network()
 
 
 def is_ok():
-    global network_stat, last_check_time, continue_fail_count
+    global network_stat
     return network_stat == "OK"
 
 
@@ -185,7 +185,7 @@ def _check_ipv6_host(host):
 
 
 def check_ipv6():
-    hosts = ["www.6rank.edu.cn", "v6.testmyipv6.com", ]
+    hosts = ["bt.neu6.edu.cn", "v6.ipv6-test.com", "ipv6.test-ipv6.jp"]
     for host in hosts:
         if _check_ipv6_host(host):
             return True

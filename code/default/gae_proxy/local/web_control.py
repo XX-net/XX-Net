@@ -334,7 +334,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             if not reqs["buffer_size"]:
                 data = '{"res":"fail", "reason":"size not set"}'
                 mimetype = 'text/plain'
-                self.send_response(mimetype, data)
+                self.send_response_nc(mimetype, data)
                 return
 
             buffer_size = reqs["buffer_size"][0]
@@ -349,7 +349,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def get_launcher_version(self):
         data_path = os.path.abspath( os.path.join(top_path, 'data', 'launcher', 'config.yaml'))
@@ -365,8 +365,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def xxnet_version():
         version_file = os.path.join(root_path, "version.txt")
         try:
-            fd = open(version_file, "r")
-            version = fd.read()
+            with open(version_file, "r") as fd:
+                version = fd.read()
             return version
         except Exception as e:
             xlog.exception("xxnet_version fail")
@@ -449,7 +449,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "low_prior_lock": len(connect_control.low_prior_lock),
                    }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
-        self.send_response('text/html', data)
+        self.send_response_nc('text/html', data)
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -468,7 +468,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         fail_appid_list = test_appid.test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
-                            return self.send_response('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
 
                     appid_updated = True
                     user_config.user_special.appid = appids
@@ -491,7 +491,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     if use_ipv6:
                         if not check_local_network.check_ipv6():
                             xlog.warn("IPv6 was enabled, but check failed.")
-                            return self.send_response('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
+                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 
                     user_config.user_special.use_ipv6 = use_ipv6
 
@@ -509,13 +509,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 check_ip.load_proxy_config()
 
                 data = '{"res":"success"}'
-                self.send_response('text/html', data)
+                self.send_response_nc('text/html', data)
                 #http_request("http://127.0.0.1:8085/init_module?module=gae_proxy&cmd=restart")
                 return
         except Exception as e:
             xlog.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response('text/html', data)
+        self.send_response_nc('text/html', data)
 
 
     def req_deploy_handler(self):
@@ -574,7 +574,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
             data = json.dumps({'status': status, 'log': content, 'time': time_now})
 
-        self.send_response('text/html', data)
+        self.send_response_nc('text/html', data)
 
     def req_importip_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -602,7 +602,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             data = data[0: len(data) - 1]
             data += '"}'
 
-        self.send_response('text/html', data)
+        self.send_response_nc('text/html', data)
 
     def req_test_ip_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -616,7 +616,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %
                   (ip, result.handshake_time, result.server_type, result.domain))
 
-        self.send_response('text/html', data)
+        self.send_response_nc('text/html', data)
 
     def req_ip_list_handler(self):
         time_now = time.time()
@@ -676,7 +676,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         data += "</table></div></body></html>"
         mimetype = 'text/html'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def req_scan_ip_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -726,7 +726,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             data = scan_ip_log.get_log_content()
 
         mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def req_ssl_pool_handler(self):
         data = "New conn:\n"
@@ -740,13 +740,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             data += https_manager.host_conn_pool[host].to_string()
 
         mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def req_workers_handler(self):
         data = http_dispatch.to_string()
 
         mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def req_download_cert_handler(self):
         filename = cert_util.CertUtil.ca_keyfile
@@ -761,7 +761,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         data = "%s" % config.cert_import_ready
 
         mimetype = 'text/plain'
-        self.send_response(mimetype, data)
+        self.send_response_nc(mimetype, data)
 
     def req_check_ip_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -772,20 +772,20 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             left_num = google_ip.scan_exist_ip_queue.qsize()
             good_num = google_ip.good_ip_num
             data = json.dumps(dict(all_ip_num=all_ip_num, left_num=left_num, good_num=good_num))
-            self.send_response('text/plain', data)
+            self.send_response_nc('text/plain', data)
         elif reqs['cmd'] == ['start']:
             left_num = google_ip.scan_exist_ip_queue.qsize()
             if left_num:
-                self.send_response('text/plain', '{"res":"fail", "reason":"running"}')
+                self.send_response_nc('text/plain', '{"res":"fail", "reason":"running"}')
             else:
                 google_ip.start_scan_all_exist_ip()
-                self.send_response('text/plain', '{"res":"success"}')
+                self.send_response_nc('text/plain', '{"res":"success"}')
         elif reqs['cmd'] == ['stop']:
             left_num = google_ip.scan_exist_ip_queue.qsize()
             if not left_num:
-                self.send_response('text/plain', '{"res":"fail", "reason":"not running"}')
+                self.send_response_nc('text/plain', '{"res":"fail", "reason":"not running"}')
             else:
                 google_ip.stop_scan_all_exist_ip()
-                self.send_response('text/plain', '{"res":"success"}')
+                self.send_response_nc('text/plain', '{"res":"success"}')
         else:
             return self.send_not_exist()

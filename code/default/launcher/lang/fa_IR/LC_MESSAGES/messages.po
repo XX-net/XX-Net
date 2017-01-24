@@ -112,9 +112,6 @@ msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عر�
 msgid "GAE Proxy"
 msgstr "GAE پروکسی"
 
-msgid "PHP proxy"
-msgstr "PHP پروکسی"
-
 msgid "Updating in progress ..."
 msgstr "به روز رسانی در حال انجام ..."
 
