@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $SCRIPTPATH
+cd "$SCRIPTPATH"
 
 if python -V | grep -q "Python 3" ;then
     PYTHON="python2"
@@ -43,32 +43,23 @@ function has_command() {
 
 # Install Packages
 if [ $os_name = 'Linux' ]; then
-    if ! python -c 'import OpenSSL' 2> /dev/null; then
-        echo 'You have not installed pyOpenSSL yet.'
-        if [[ $- == *i* ]]; then
-            # interactive shell
-            echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
-            if has_command zypper; then
-                # openSUSE
-                sudo zypper in -y python-pyOpenSSL
-            elif has_command apt-get; then
-                # Debian or Debian-like
-                sudo apt-get install -y python-openssl
-            elif has_command dnf; then
-                # Fedora
-                sudo dnf install -y pyOpenSSL
-            elif has_command yum; then
-                # RedHat
-                sudo yum install -y pyOpenSSL
-            elif has_command pacman; then
-                # ArchLinux
-                sudo pacman -S --noconfirm openssl python2-pyopenssl
-            # Do Someting for OpenWRT
-            fi
-        else
-            # non-interactive shell
-            echo 1>&2 'Please install pyOpenSSL.'
-            #exit 1
+    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
+        echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
+        if has_command zypper; then
+            # openSUSE
+            sudo zypper in -y python-pyOpenSSL
+        elif has_command apt-get; then
+            # Debian or Debian-like
+            sudo apt-get install -y python-openssl
+        elif has_command dnf; then
+            # Fedora
+            sudo dnf install -y pyOpenSSL
+        elif has_command yum; then
+            # RedHat
+            sudo yum install -y pyOpenSSL
+        elif has_command pacman; then
+            # ArchLinux
+            sudo pacman -S --noconfirm openssl python2-pyopenssl
         fi
     fi
 fi
