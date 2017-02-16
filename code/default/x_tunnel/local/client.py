@@ -86,9 +86,9 @@ def load_config():
     # range 1 - 1000
     config.set_var("send_delay", 100)
     # max 10M
-    config.set_var("block_max_size", 512 * 1024)
+    config.set_var("block_max_size", 256 * 1024)
     # range 1 - 60
-    config.set_var("roundtrip_timeout", 20)
+    config.set_var("roundtrip_timeout", 120)
 
     config.load()
 
