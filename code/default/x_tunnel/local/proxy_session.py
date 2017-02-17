@@ -70,6 +70,7 @@ class ProxySession():
             self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker, args=(server_address,))
             self.roundtrip_thread[i].daemon = True
             self.roundtrip_thread[i].start()
+        return True
 
     def stop(self):
         if not self.running:
@@ -179,8 +180,9 @@ class ProxySession():
 
     def create_conn(self, sock, host, port):
         if not self.running:
-            xlog.warn("session not running, can't connect")
-            return
+            #xlog.warn("session not running, can't connect")
+            if not self.start():
+                return None
 
         self.mutex.acquire()
         self.last_conn_id += 1
@@ -330,7 +332,10 @@ class ProxySession():
                     xlog.exception("request except:%r retry %d", e, try_no)
 
                     time.sleep(sleep_time)
-                    continue
+                    if transfer_no not in self.transfer_list:
+                        break
+                    else:
+                        continue
                 finally:
                     with self.mutex:
                         self.on_road_num -= 1
@@ -343,7 +348,7 @@ class ProxySession():
                 elif status == 200:
                     recv_len = len(content)
                     if recv_len < 6:
-                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d status:%r retry:%d",
+                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d len:%d status:%r retry:%d",
                                    (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, len(content),
                                    status, try_no)
                         continue
