@@ -1,12 +1,12 @@
 import time
-import socket, SocketServer, struct
+import socket, struct
 
 import utils
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import global_var as g
-
+import proxy_session
 
 class Socks5Server():
     read_buffer = ""
@@ -105,7 +105,7 @@ class Socks5Server():
         else:
             addr = ip
 
-        conn_id = g.session.create_conn(sock, addr, port)
+        conn_id = proxy_session.create_conn(sock, addr, port)
         if not conn_id:
             xlog.warn("Socks4 connect fail, no conn_id")
             reply = b"\x00\x5b\x00" + addr_pack + struct.pack(">H", port)
@@ -166,7 +166,7 @@ class Socks5Server():
 
         port = struct.unpack('>H', self.rfile.read(2))[0]
 
-        conn_id = g.session.create_conn(sock, addr, port)
+        conn_id = proxy_session.create_conn(sock, addr, port)
         if not conn_id:
             xlog.warn("create conn fail")
             reply = b"\x05\x01\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
@@ -204,7 +204,7 @@ class Socks5Server():
         port = int(port)
 
         sock = self.connection
-        conn_id = g.session.create_conn(sock, host, port)
+        conn_id = proxy_session.create_conn(sock, host, port)
         if not conn_id:
             xlog.warn("create conn fail")
             sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')

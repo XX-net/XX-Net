@@ -1,6 +1,7 @@
 
 protocol_version = 1
 last_refresh_time = 0
+login_process = False
 cert = None
 data_path = None
 config = None
