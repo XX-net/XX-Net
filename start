@@ -71,7 +71,7 @@ function createDesktopStartup() {
         echo "$DESKFILE already exists"
         return
     else
-        echo "$DESKFILE does not exist,ctreat a new one"
+        echo "$DESKFILE does not exist,create a new one"
     fi
     NAME="XX-Net"
     EXEC="$SCRIPTPATH/start > /dev/null"
