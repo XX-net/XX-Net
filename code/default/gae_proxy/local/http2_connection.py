@@ -10,9 +10,6 @@ xlog = getLogger("gae_proxy")
 import connect_control
 from http_common import *
 
-
-from hyper.common.bufsocket import BufferedSocket
-
 from hyper.common.bufsocket import BufferedSocket
 
 from hyper.packages.hyperframe.frame import (
