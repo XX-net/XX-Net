@@ -245,7 +245,7 @@ def pack_request(method, url, headers, body):
         kwargs['password'] = config.GAE_PASSWORD
 
     #kwargs['options'] =
-    #kwargs['validate'] =
+    kwargs['validate'] = config.GAE_VALIDATE
     kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
     kwargs['timeout'] = '19'
 
