@@ -229,11 +229,11 @@ def load_bad_ip_range():
 
     bad_ip_range_lines = generage_range_from_apnic(apnic_lines)
 
-    sepcial_bad_ip_range_lines  = """
+    special_bad_ip_range_lines  = """
     130.211.0.0/16          #Empty ip range, no route to it.
     255.255.255.255/32      #for algorithm
     """
-    return bad_ip_range_lines + sepcial_bad_ip_range_lines
+    return bad_ip_range_lines + special_bad_ip_range_lines
 
 
 def generate_ip_range():
