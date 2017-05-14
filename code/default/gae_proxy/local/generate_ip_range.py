@@ -266,7 +266,7 @@ def generate_ip_range():
         begin = ip_range[0]
         end = ip_range[1]
         #print ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
-        fd.write(ip_utils.ip_num_to_string(begin)+ "-" + ip_utils.ip_num_to_string(nend)+"\n")
+        fd.write(ip_utils.ip_num_to_string(begin)+ "-" + ip_utils.ip_num_to_string(end)+"\n")
 
     fd.close()
 
