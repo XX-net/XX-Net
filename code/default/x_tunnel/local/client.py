@@ -86,9 +86,9 @@ def load_config():
     # range 1 - 1000
     config.set_var("send_delay", 100)
     # max 10M
-    config.set_var("block_max_size", 512 * 1024)
+    config.set_var("block_max_size", 256 * 1024)
     # range 1 - 60
-    config.set_var("roundtrip_timeout", 20)
+    config.set_var("roundtrip_timeout", 25)
 
     config.load()
 
@@ -116,12 +116,7 @@ def start():
             g.server_port = g.config.server_port
             g.balance = 99999999
         elif g.config.api_server:
-            if not (g.config.login_account and g.config.login_password):
-                xlog.debug("x-tunnel no account")
-            else:
-                res, reason = proxy_session.request_balance(g.config.login_account, g.config.login_password)
-                if not res:
-                    xlog.warn("request_balance fail when start:%s", reason)
+            pass
         else:
             xlog.debug("please check x-tunnel server in config")
 

@@ -249,7 +249,7 @@ class CertUtil(object):
             sans = ['*'+commonname] + [s for s in sans if s != '*'+commonname]
         else:
             sans = [commonname] + [s for s in sans if s != commonname]
-        #cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
+        cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
         cert.sign(key, CertUtil.ca_digest)
 
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')

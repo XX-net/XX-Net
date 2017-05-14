@@ -63,7 +63,7 @@
 #            though
 #    0.5.2 - fixed uname() to return '' instead of 'unknown' in all
 #            return values (the system uname command tends to return
-#            'unknown' instead of just leaving the field emtpy)
+#            'unknown' instead of just leaving the field empty)
 #    0.5.1 - included code for slackware dist; added exception handlers
 #            to cover up situations where platforms don't have os.popen
 #            (e.g. Mac) or fail on socket.gethostname(); fixed libc
@@ -567,7 +567,7 @@ def _get_real_winver(maj, min, build):
         return maj, min, build
 
     from ctypes import (c_buffer, POINTER, byref, create_unicode_buffer,
-                        Structure, WinDLL)
+                        Structure, WinDLL, _Pointer)
     from ctypes.wintypes import DWORD, HANDLE
 
     class VS_FIXEDFILEINFO(Structure):
@@ -586,6 +586,8 @@ def _get_real_winver(maj, min, build):
             ("dwFileDateMS", DWORD),
             ("dwFileDateLS", DWORD),
         ]
+    class PVS_FIXEDFILEINFO(_Pointer):
+        _type_ = VS_FIXEDFILEINFO
 
     kernel32 = WinDLL('kernel32')
     version = WinDLL('version')
@@ -611,7 +613,7 @@ def _get_real_winver(maj, min, build):
         not ver_block):
         return maj, min, build
 
-    pvi = POINTER(VS_FIXEDFILEINFO)()
+    pvi = PVS_FIXEDFILEINFO()
     if not version.VerQueryValueW(ver_block, "", byref(pvi), byref(DWORD())):
         return maj, min, build
 
@@ -1314,9 +1316,11 @@ def processor():
 ### Various APIs for extracting information from sys.version
 
 _sys_version_parser = re.compile(
-    r'([\w.+]+)\s*'
-    '\(#?([^,]+),\s*([\w ]+),\s*([\w :]+)\)\s*'
-    '\[([^\]]+)\]?')
+    r'([\w.+]+)\s*'  # "version<space>"
+    r'\(#?([^,]+)'  # "(#buildno"
+    r'(?:,\s*([\w ]*)'  # ", builddate"
+    r'(?:,\s*([\w :]*))?)?\)\s*'  # ", buildtime)<space>"
+    r'\[([^\]]+)\]?')  # "[compiler]"
 
 _ironpython_sys_version_parser = re.compile(
     r'IronPython\s*'
@@ -1395,6 +1399,8 @@ def _sys_version(sys_version=None):
                 'failed to parse Jython sys.version: %s' %
                 repr(sys_version))
         version, buildno, builddate, buildtime, _ = match.groups()
+        if builddate is None:
+            builddate = ''
         compiler = sys.platform
 
     elif "PyPy" in sys_version:
@@ -1417,7 +1423,10 @@ def _sys_version(sys_version=None):
         version, buildno, builddate, buildtime, compiler = \
               match.groups()
         name = 'CPython'
-        builddate = builddate + ' ' + buildtime
+        if builddate is None:
+            builddate = ''
+        elif buildtime:
+            builddate = builddate + ' ' + buildtime
 
     if hasattr(sys, 'subversion'):
         # sys.subversion was added in Python 2.5

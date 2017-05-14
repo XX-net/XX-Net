@@ -34,8 +34,18 @@ class ProxySession():
         self.ack_pool = base_container.AckPool()
         self.mutex = threading.Lock()  # lock for conn_id, sn generation, on_road_num change,
         self.download_order_queue = base_container.BlockReceivePool(process_callback=self.download_data_processor)
+
         self.running = False
-        self.start()
+        self.roundtrip_thread = {}
+        self.session_id = utils.generate_random_lowercase(8)
+        self.last_conn_id = 0
+        self.last_transfer_no = 0
+        self.conn_list = {}
+        self.transfer_list = {}
+        self.last_roundtrip_time = 0
+        self.on_road_num = 0
+        self.last_download_data_time = 0
+        self.traffic = 0
 
     def start(self):
         self.ack_pool.reset()
@@ -54,7 +64,7 @@ class ProxySession():
         self.traffic = 0
 
         if not self.login_session():
-            xlog.warn("x-tunnel session not start")
+            xlog.warn("x-tunnel login_session fail, session not start")
             return False
 
         self.running = True
@@ -70,6 +80,7 @@ class ProxySession():
             self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker, args=(server_address,))
             self.roundtrip_thread[i].daemon = True
             self.roundtrip_thread[i].start()
+        return True
 
     def stop(self):
         if not self.running:
@@ -178,10 +189,6 @@ class ProxySession():
             return False
 
     def create_conn(self, sock, host, port):
-        if not self.running:
-            xlog.warn("session not running, can't connect")
-            return
-
         self.mutex.acquire()
         self.last_conn_id += 1
         conn_id = self.last_conn_id
@@ -330,7 +337,10 @@ class ProxySession():
                     xlog.exception("request except:%r retry %d", e, try_no)
 
                     time.sleep(sleep_time)
-                    continue
+                    if transfer_no not in self.transfer_list:
+                        break
+                    else:
+                        continue
                 finally:
                     with self.mutex:
                         self.on_road_num -= 1
@@ -343,7 +353,7 @@ class ProxySession():
                 elif status == 200:
                     recv_len = len(content)
                     if recv_len < 6:
-                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d status:%r retry:%d",
+                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d len:%d status:%r retry:%d",
                                    (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, len(content),
                                    status, try_no)
                         continue
@@ -411,7 +421,11 @@ class ProxySession():
                               (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, status, try_no)
                     time.sleep(sleep_time)
 
-            del self.transfer_list[transfer_no]
+            try:
+                if transfer_no in self.transfer_list:
+                    del self.transfer_list[transfer_no]
+            except:
+                pass
         xlog.info("roundtrip port:%d thread exit", server_address[1])
 
 
@@ -513,3 +527,29 @@ def request_balance(account, password, is_register=False, update_server=True):
     xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
               g.balance, g.quota)
     return True, "success"
+
+
+def create_conn(sock, host, port):
+    while g.login_process:
+        time.sleep(1)
+
+    if not g.session.running:
+        if not (g.config.login_account and g.config.login_password):
+            xlog.debug("x-tunnel no account")
+            return None
+
+        g.login_process = True
+        try:
+            res, reason = request_balance(g.config.login_account, g.config.login_password)
+            if not res:
+                xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
+                return None
+
+            if not g.session.running:
+                xlog.warn("session not running, try to connect")
+                if not g.session.start():
+                    return None
+        finally:
+            g.login_process = False
+
+    return g.session.create_conn(sock, host, port)

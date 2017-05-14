@@ -185,7 +185,7 @@ def _check_ipv6_host(host):
 
 
 def check_ipv6():
-    hosts = ["www.6rank.edu.cn", "v6.testmyipv6.com", ]
+    hosts = ["bt.neu6.edu.cn", "v6.ipv6-test.com", "ipv6.test-ipv6.jp"]
     for host in hosts:
         if _check_ipv6_host(host):
             return True
