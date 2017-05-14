@@ -55,7 +55,7 @@ class Config(object):
         else:
             self.GAE_APPIDS = []
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
-        self.GAE_VALIDATE = self.CONFIG.getboolean('gae', 'validate')
+        self.GAE_VALIDATE = self.CONFIG.getint('gae', 'validate')
 
         fwd_endswith = []
         fwd_hosts = []
