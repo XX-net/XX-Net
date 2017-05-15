@@ -199,7 +199,7 @@ def download_apic(filename):
     return data
 
 
-def generage_range_from_apnic(input):
+def generate_range_from_apnic(input):
 
     cnregex = re.compile(r'^apnic\|(?:cn)\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
                          re.I | re.M )
@@ -227,13 +227,13 @@ def load_bad_ip_range():
     with open(apnic_file, "r") as inf:
         apnic_lines = inf.read()
 
-    bad_ip_range_lines = generage_range_from_apnic(apnic_lines)
+    bad_ip_range_lines = generate_range_from_apnic(apnic_lines)
 
-    sepcial_bad_ip_range_lines  = """
+    special_bad_ip_range_lines  = """
     130.211.0.0/16          #Empty ip range, no route to it.
     255.255.255.255/32      #for algorithm
     """
-    return bad_ip_range_lines + sepcial_bad_ip_range_lines
+    return bad_ip_range_lines + special_bad_ip_range_lines
 
 
 def generate_ip_range():
