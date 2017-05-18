@@ -163,7 +163,7 @@ def gae_application(environ, start_response):
         else:
             if 'rc4' in options:
                 input_data = rc4crypt(input_data, __password__)
-            metadata_length, = struct.unpack('!h', input_data[:2])
+            metadata_length = struct.unpack('!h', input_data[:2])
             metadata = zlib.decompress(input_data[2:2+metadata_length], -zlib.MAX_WBITS)
             payload = input_data[2+metadata_length:]
         headers = dict(x.split(':', 1) for x in metadata.splitlines() if x)
