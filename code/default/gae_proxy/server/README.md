@@ -16,9 +16,10 @@
 
 ## Linux & Mac 用户
 1. 打开终端并 cd 到 server 目录。
-2. 参考 Windows 用户的说明，并将 <code>uploader.bat</code> 改为 <code>python uploader.py</code>。
+2. 参考 Windows 用户的说明，并将执行 <code>uploader.bat</code> 改为执行 <code>python uploader.py</code>。
 
 ## 其他
+0. 确保运行部署时本地127.0.0.1：8087代理在正常运行，否则部署不成功（此处直接运行好XX-NET即可）
 1. 请保证当前目录为 server，在其他目录部署脚本将无法工作。
 2. 多个 Appid 之间用 | 来分割，同时为了避免 | 被识别为管道，Appid 需要被引号包裹。  
    如：<code>"xxnet-1|xxnet-2|xxnet-3"</code>。
