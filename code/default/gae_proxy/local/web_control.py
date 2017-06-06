@@ -530,6 +530,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         if reqs['cmd'] == ['deploy']:
             appid = self.postvars['appid'][0]
             debug = int(self.postvars['debug'][0])
+            
+            password = self.postvars['password'][0]
 
             if deploy_proc and deploy_proc.poll() == None:
                 xlog.warn("deploy is running, request denied.")
@@ -544,6 +546,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     args = [sys.executable, script_path, appid]
                     if debug:
                         args.append("-debug")
+                        
+                    if password:
+                        args.append("-password")
+                        args.append(password)
 
                     deploy_proc = subprocess.Popen(args)
                     xlog.info("deploy begin.")

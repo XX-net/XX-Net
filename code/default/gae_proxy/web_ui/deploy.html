@@ -20,6 +20,15 @@
 
             <div class="row-fluid">
                 <div class="span4">
+                    <label for="gae-password">Password</label>
+                </div> <!-- .span4 -->
+                <div class="span8">
+                    <input id="gae-password" type="text" placeholder='{{ _("Password") }}' />
+                </div> <!-- .span8 -->
+            </div> <!-- .row-fluid -->
+            
+            <div class="row-fluid">
+                <div class="span4">
                     <label for="show-debug-log">{{ _( "Show Debug Log" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
@@ -182,6 +191,7 @@
     function onStart(){
         var appId        = $('#gae-appid').val();
         var debug = $('#show-debug-log').is(':checked') ? 1 : 0;
+        var password     = $('#gae-password').val();
         var errorMessage = getErrorMessage(appId);
 
         if ( errorMessage.length != 0 ) {
@@ -195,7 +205,7 @@
             $('.alert').addClass('alert-info');
         }
 
-        deployProcess(appId, debug);
+        deployProcess(appId, debug, password);
         changeButtonStatus('cancel');
     }
 </script>
@@ -227,10 +237,11 @@
     }
 </script>
 <script type="text/javascript">
-    function deployProcess(appId, debug) {
+    function deployProcess(appId, debug, password) {
         var authentication = {
             'appid': appId,
-            'debug': debug
+            'debug': debug,
+            'password': password
         };
 
         $.ajax({
