@@ -3592,5 +3592,9 @@ function FindProxyForURLByAutoProxy(url, host) {
     if (host.indexOf("gov.tw") >= 0) return "PROXY GOAGENT_LISTEN";
     if (host.indexOf("174.142.105.153") >= 0) return "PROXY GOAGENT_LISTEN";
     if (host.indexOf("69.65.19.160") >= 0) return "PROXY GOAGENT_LISTEN";
+    if (url.indexOf("https://events.google.com/") == 0) return "PROXY GOAGENT_LISTEN";
+    if (dnsDomainIs(host, ".cloudfront.net") || host == "cloudfront.net") return "PROXY GOAGENT_LISTEN";
+    if (dnsDomainIs(host, ".cloudfront.com") || host == "cloudfront.com") return "PROXY GOAGENT_LISTEN";
+    if (dnsDomainIs(host, ".dwnews.net") || host == "dwnews.net") return "PROXY GOAGENT_LISTEN";
     return "DIRECT";
 }
