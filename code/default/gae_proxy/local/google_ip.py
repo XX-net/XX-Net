@@ -29,6 +29,8 @@ import check_local_network
 import check_ip
 import google_ip_range
 
+
+
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -36,7 +38,8 @@ from config import config
 import connect_control
 from scan_ip_log import scan_ip_log
 
-
+# add ip_blacklist
+import ip_blacklist
 ######################################
 # about ip connect time and handshake time
 # handshake time is double of connect time in common case.
@@ -64,6 +67,7 @@ class IpManager():
         self.scan_thread_lock = threading.Lock()
         self.ip_lock = threading.Lock()
         self.ip_range = google_ip_range.ip_range
+        self.ip_blacklist=ip_blacklist.Ip_BlackList().ip_blacklist
         self.reset()
 
         self.check_ip_thread = threading.Thread(target=self.check_ip_process)
@@ -624,7 +628,11 @@ class IpManager():
 
                 if ip in self.ip_dict:
                     continue
-
+                # skip ip in ip_blacklist
+                if ip in self.ip_blacklist:
+                    xlog.info("skip ip s% because it was in ip_blacklist",ip)
+                    continue
+                
                 connect_control.start_connect_register()
                 result = check_ip.test_gae_ip2(ip)
                 connect_control.end_connect_register()
