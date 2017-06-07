@@ -77,9 +77,9 @@ def report_network_fail():
     last_check_time = time.time()
 
     if continue_fail_count > 10:
-        network_stat = "unknown"
+        # network_stat = "unknown"
         xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
-        triger_check_network()
+        triger_check_network(True)
 
 
 def is_ok():
@@ -140,19 +140,19 @@ def _simple_check_worker():
         xlog.debug("restore socket")
 
 
-def triger_check_network(force=False):
+def triger_check_network(fail=False, force=False):
     global _checking_lock, _checking_num, network_stat, last_check_time
     time_now = time.time()
     if not force:
         if _checking_num > 0:
             return
 
-        if network_stat == "OK":
-            if time_now - last_check_time < 10:
-                return
-        else:
+        if fail or network_stat != "OK":
             # Fail or unknown
             if time_now - last_check_time < 3:
+                return
+        else:
+            if time_now - last_check_time < 10:
                 return
 
     last_check_time = time_now
