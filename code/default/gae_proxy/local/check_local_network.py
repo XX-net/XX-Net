@@ -72,9 +72,9 @@ def report_network_ok():
 
 
 def report_network_fail():
-    global network_stat, last_check_time, continue_fail_count
+    global network_stat, continue_fail_count
     continue_fail_count += 1
-    last_check_time = time.time()
+    #last_check_time = time.time()
 
     if continue_fail_count > 10:
         # network_stat = "unknown"
