@@ -230,7 +230,7 @@ class CertUtil(object):
             subj.commonName = commonname
             subj.organizationName = commonname
             sans = [commonname] + [x for x in sans if x != commonname]
-        #req.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans)).encode()])
+        req.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
         req.set_pubkey(pkey)
         req.sign(pkey, CertUtil.ca_digest)
 
