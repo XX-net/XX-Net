@@ -74,9 +74,11 @@ def report_network_ok():
 def report_network_fail():
     global network_stat, continue_fail_count
     continue_fail_count += 1
-    #last_check_time = time.time()
+    # don't record last_check_time here, it's not a real check
+    # last_check_time = time.time()
 
     if continue_fail_count > 10:
+        # don't set network_stat to "unknown", wait for check
         # network_stat = "unknown"
         xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
         triger_check_network(True)
