@@ -29,8 +29,10 @@ fi
 if [ -L $0 ];then
        PACKAGE_PATH="$(dirname $(readlink -n $0))/"                                         
 else
-       PACKAGE_PATH="./"                                         
+    PACKAGE_PATH=`dirname $0`
 fi
+cd $PACKAGE_PATH
+PACKAGE_PATH="`pwd `/"
 PACKAGE_VER_FILE="${PACKAGE_PATH}code/version.txt"
 PACKAGE_VER="default"
 if [ -f "${PACKAGE_VER_FILE}" ];then
