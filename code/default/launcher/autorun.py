@@ -126,7 +126,7 @@ elif sys.platform == 'darwin':
         xlog.info("create file:%s", plist_file_path)
 
         if not os.path.isdir(launch_path):
-            os.mkdir(launch_path, 0755)
+            os.mkdir(launch_path, 0o755)
             
         with open(plist_file_path, "w") as f:
             f.write(file_content)
