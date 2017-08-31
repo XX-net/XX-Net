@@ -221,6 +221,7 @@ class Https_connection_manager(object):
         if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
+        self.class_name = "Https_connection_manager"
         self.timeout = 4
         self.max_timeout = 60
         self.thread_num = 0
@@ -250,6 +251,7 @@ class Https_connection_manager(object):
         self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max")
         self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min")
         self.keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive")
+        self.keep_active_timeout = config.CONFIG.getint("connect_manager", "keep_active_timeout")
         self.https_new_connect_num = config.CONFIG.getint("connect_manager", "https_new_connect_num")
 
         self.new_conn_pool = Connect_pool()
@@ -407,7 +409,6 @@ class Https_connection_manager(object):
 
         connect_control.start_connect_register(high_prior=True)
 
-        connect_time = 0
         handshake_time = 0
         time_begin = time.time()
         try:
@@ -541,13 +542,21 @@ class Https_connection_manager(object):
         if ssl_sock:
             return ssl_sock
         else:
-            ret = self.new_conn_pool.get(True, self.max_timeout, only_h1=only_h1)
-            if ret:
-                handshake_time, ssl_sock = ret
-                return ssl_sock
-            else:
-                xlog.debug("create ssl timeout fail.")
-                return None
+            while True:
+                ret = self.new_conn_pool.get(True, self.max_timeout, only_h1=only_h1)
+                if ret:
+                    handshake_time, ssl_sock = ret
+                    if time.time() - ssl_sock.last_use_time < self.keep_active_timeout - 1:
+                        xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                        return ssl_sock
+                    else:
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
+                        google_ip.report_connect_closed(ssl_sock.ip, "get_timeout")
+                        ssl_sock.close()
+                        continue
+                else:
+                    xlog.debug("create ssl timeout fail.")
+                    return None
 
     def get_new_ssl(self, only_h1=True):
         self.create_more_connection()
@@ -558,5 +567,4 @@ class Https_connection_manager(object):
         else:
             xlog.debug("get_new_ssl timeout fail.")
             return None
-
 https_manager = Https_connection_manager()

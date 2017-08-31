@@ -174,12 +174,12 @@ def return_fail_message(wfile):
     return
 
 
-def request_gae_server(headers, body):
+def request_gae_server(headers, body, url):
     # process on http protocol
     # process status code return by http server
     # raise error, let up layer retry.
 
-    response = http_dispatch.request(headers, body)
+    response = http_dispatch.request(headers, body, url)
     if not response:
         raise GAE_Exception(600, "fetch gae fail")
 
@@ -309,7 +309,7 @@ def request_gae_proxy(method, url, headers, body):
             raise GAE_Exception(600, b"".join(error_msg))
 
         try:
-            response = request_gae_server(request_headers, request_body)
+            response = request_gae_server(request_headers, request_body, url)
 
             check_local_network.report_network_ok()
 
@@ -392,7 +392,7 @@ def handler(method, url, headers, body, wfile):
         response = request_gae_proxy(method, url, headers, body)
     except GAE_Exception as e:
         xlog.warn("GAE %s %s request fail:%r", method, url, e)
-        send_response(wfile, e.type, body=e.message)
+        send_response(wfile, e.error_code, body=e.message)
         return return_fail_message(wfile)
 
     if response.app_msg:
