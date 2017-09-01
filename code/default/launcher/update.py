@@ -17,6 +17,11 @@ import uuid
 
 import update_from_github
 
+try:
+    reduce         # Python 2 
+except NameError:  # Python 3
+    from functools import reduce
+
 #opener = urllib2.build_opener()
 #update_url = "http://127.0.0.1:8080/update.json"
 update_url = "https://xxnet-update.appspot.com/update.json"
