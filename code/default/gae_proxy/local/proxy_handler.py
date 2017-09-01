@@ -172,10 +172,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     or s in self.local_names:
                 print s
                 return True
-            for h in config.ONLYHOSTS:
+
+            for h in config.PROXY_HOSTS_ONLY:
+                # if PROXY_HOSTS_ONLY is not empty
+                # only proxy these hosts
                 if s.endswith(h):
                     return False
-        if len(config.ONLYHOSTS) > 0:
+
+        if len(config.PROXY_HOSTS_ONLY) > 0:
             return True
         else:
             return False

@@ -61,8 +61,9 @@ class Config(object):
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
         self.GAE_VALIDATE = self.CONFIG.getint('gae', 'validate')
 
-        self.ONLYHOSTS = [x.strip() for x in self.CONFIG.get('proxy', 'hosts').split("|")]
-        xlog.info("Only these hosts will proxy: %s", self.ONLYHOSTS)
+        self.PROXY_HOSTS_ONLY = [x.strip() for x in self.CONFIG.get('switch_rule', 'proxy_hosts_only').split("|")]
+        if len(self.PROXY_HOSTS_ONLY):
+            xlog.info("Only these hosts will proxy: %s", self.PROXY_HOSTS_ONLY)
 
         fwd_endswith = []
         fwd_hosts = []
