@@ -5,7 +5,6 @@ import atexit
 import os
 import sys
 import time
-from instances import xlog
 
 # reduce resource request for threading
 # for OpenWrt
@@ -27,6 +26,8 @@ data_launcher_path = os.path.join(data_path, 'launcher')
 python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+from instances import xlog
 
 
 def create_data_path():
