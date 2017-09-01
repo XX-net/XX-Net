@@ -57,7 +57,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(new_module_menus.iteritems(),
+                              key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
