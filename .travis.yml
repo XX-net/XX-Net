@@ -14,7 +14,7 @@ before_script:
     # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
     - time flake8 . --count --exclude=$EXCLUDE --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
-    - true  # add other tests here
+    - true  # add other tests here...
 notifications:
     on_success: change
     on_failure: always
