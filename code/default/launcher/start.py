@@ -27,8 +27,6 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-from instances import xlog
-
 
 def create_data_path():
     if not os.path.isdir(data_path):
@@ -41,8 +39,9 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
-
 create_data_path()
+from instances import xlog
+
 has_desktop = True
 if sys.platform.startswith("linux"):
     def X_is_running():
