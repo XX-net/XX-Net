@@ -121,7 +121,7 @@ def format_response(status, headers, content):
     if content:
         headers.pop('content-length', None)
         headers['Content-Length'] = str(len(content))
-    data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % 
+    data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % \
             (status,
              httplib.responses.get(status,'Unknown'),
              '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()),
