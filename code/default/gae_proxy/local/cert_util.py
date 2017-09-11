@@ -52,102 +52,6 @@ def get_cmd_out(cmd):
     lines = out.readlines()
     return lines
 
-class _GeneralName(univ.Choice):
-    # We are only interested in dNSNames. We use a default handler to ignore
-    # other types.
-    componentType = namedtype.NamedTypes(
-        namedtype.NamedType('dNSName', char.IA5String().subtype(
-                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
-            )
-        ),
-    )
-
-class _GeneralNames(univ.SequenceOf):
-    componentType = _GeneralName()
-    sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
-
-class SSLCert:
-    def __init__(self, cert):
-        """
-            Returns a (common name, [subject alternative names]) tuple.
-        """
-        self.x509 = cert
-
-    @classmethod
-    def from_pem(klass, txt):
-        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
-        return klass(x509)
-
-    @classmethod
-    def from_der(klass, der):
-        pem = ssl.DER_cert_to_PEM_cert(der)
-        return klass.from_pem(pem)
-
-    def to_pem(self):
-        return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, self.x509)
-
-    def digest(self, name):
-        return self.x509.digest(name)
-
-    @property
-    def issuer(self):
-        return self.x509.get_issuer().get_components()
-
-    @property
-    def notbefore(self):
-        t = self.x509.get_notBefore()
-        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
-
-    @property
-    def notafter(self):
-        t = self.x509.get_notAfter()
-        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
-
-    @property
-    def has_expired(self):
-        return self.x509.has_expired()
-
-    @property
-    def subject(self):
-        return self.x509.get_subject().get_components()
-
-    @property
-    def serial(self):
-        return self.x509.get_serial_number()
-
-    @property
-    def keyinfo(self):
-        pk = self.x509.get_pubkey()
-        types = {
-            OpenSSL.crypto.TYPE_RSA: "RSA",
-            OpenSSL.crypto.TYPE_DSA: "DSA",
-        }
-        return (
-            types.get(pk.type(), "UNKNOWN"),
-            pk.bits()
-        )
-
-    @property
-    def cn(self):
-        c = None
-        for i in self.subject:
-            if i[0] == "CN":
-                c = i[1]
-        return c
-
-    @property
-    def altnames(self):
-        altnames = []
-        for i in range(self.x509.get_extension_count()):
-            ext = self.x509.get_extension(i)
-            if ext.get_short_name() == "subjectAltName":
-                try:
-                    dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
-                except PyAsn1Error:
-                    continue
-                for i in dec[0]:
-                    altnames.append(i[0].asOctets())
-        return altnames
 
 class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
@@ -160,6 +64,8 @@ class CertUtil(object):
     ca_lock = threading.Lock()
     ca_validity_years = 10
     ca_validity = 24 * 60 * 60 * 365 * ca_validity_years
+    cert_validity_years = 2
+    cert_validity = 24 * 60 * 60 * 365 * cert_validity_years
 
     @staticmethod
     def create_ca():
@@ -241,7 +147,7 @@ class CertUtil(object):
         except OpenSSL.SSL.Error:
             cert.set_serial_number(int(time.time()*1000))
         cert.gmtime_adj_notBefore(-600) #avoid crt time error warning
-        cert.gmtime_adj_notAfter(CertUtil.ca_validity)
+        cert.gmtime_adj_notAfter(CertUtil.cert_validity)
         cert.set_issuer(ca.get_subject())
         cert.set_subject(req.get_subject())
         cert.set_pubkey(req.get_pubkey())
@@ -259,23 +165,43 @@ class CertUtil(object):
         return certfile
 
     @staticmethod
-    def get_cert(commonname, sans=(), full_name=False):
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
-        if os.path.exists(certfile):
-            return certfile
-
+    def _get_cert_cn(commonname, full_name=False):
+        yield commonname
         # some site need full name cert
         # like https://about.twitter.com in Google Chrome
         if commonname.count('.') >= 2 and [len(x) for x in reversed(commonname.split('.'))] > [2, 4] and not full_name:
-            commonname = '.'+commonname.partition('.')[-1]
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
-        if os.path.exists(certfile):
+            yield '.' + commonname.partition('.')[-1]
+
+    @staticmethod
+    def _get_old_cert(commonname, full_name=False):
+        for CN in CertUtil._get_cert_cn(commonname, full_name):
+            certfile = os.path.join(CertUtil.ca_certdir, CN + '.crt')
+            if os.path.exists(certfile):
+                if OpenSSL:
+                    with open(certfile, 'rb') as fp:
+                        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read())
+                    if datetime.datetime.strptime(cert.get_notAfter(), '%Y%m%d%H%M%SZ') <= datetime.datetime.utcnow():
+                        try:
+                            os.remove(certfile)
+                        except OSError as e:
+                            xlog.warning('CertUtil._get_old_cert failed: unable to remove outdated cert, %r', e)
+                        else:
+                            continue
+                        # well, have to use the old one
+                return certfile
+
+    @staticmethod
+    def get_cert(commonname, sans=(), full_name=False):
+        certfile = CertUtil._get_old_cert(commonname, full_name)
+        if certfile:
             return certfile
-        elif OpenSSL is None:
+
+        if OpenSSL is None:
             return CertUtil.ca_keyfile
         else:
             with CertUtil.ca_lock:
-                if os.path.exists(certfile):
+                certfile = CertUtil._get_old_cert(commonname, full_name)
+                if certfile:
                     return certfile
                 return CertUtil._get_cert(commonname, sans)
 
