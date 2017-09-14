@@ -18,14 +18,10 @@ import urlparse
 
 from xlog import getLogger
 
-import env_info
 
 xlog = getLogger("cloudflare_front")
 from config import config
-from appids_manager import appid_manager
-from google_ip import google_ip
-from google_ip_range import ip_range
-from connect_manager import https_manager
+
 from scan_ip_log import scan_ip_log
 import ConfigParser
 import connect_control
@@ -34,8 +30,6 @@ import check_local_network
 import check_ip
 import cert_util
 import simple_http_server
-import test_appid
-from http_dispatcher import http_dispatch
 import openssl_wrap
 
 

@@ -37,7 +37,7 @@ low_prior_lock = []
 high_prior_connecting_num = 0
 low_prior_connecting_num = 0
 last_connect_time = 0
-
+https_max_connect_thread = config.getint("connect_manager", "https_max_connect_thread")
 
 def start_connect_register(high_prior=False):
     global high_prior_connecting_num, low_prior_connecting_num, last_connect_time
@@ -46,7 +46,7 @@ def start_connect_register(high_prior=False):
 
     ccc_lock.acquire()
     try:
-        if high_prior_connecting_num + low_prior_connecting_num > config.https_max_connect_thread:
+        if high_prior_connecting_num + low_prior_connecting_num > https_max_connect_thread:
             atom_lock = threading.Lock()
             atom_lock.acquire()
             if high_prior:
@@ -88,7 +88,7 @@ def end_connect_register(high_prior=False):
         else:
             low_prior_connecting_num -= 1
 
-        if high_prior_connecting_num + low_prior_connecting_num < config.https_max_connect_thread:
+        if high_prior_connecting_num + low_prior_connecting_num < https_max_connect_thread:
             if len(high_prior_lock):
                 atom_lock = high_prior_lock.pop()
                 atom_lock.release()
