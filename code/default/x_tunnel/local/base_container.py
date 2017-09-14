@@ -476,8 +476,11 @@ class Conn(object):
         with self.cmd_notice:
             seq = struct.unpack("<I", data.get(4))[0]
             if seq < self.next_cmd_seq:
-                raise Exception("put_send_data %s conn:%d seq:%d next:%d" % (self.session.session_id, self.conn_id,
-                                                                             seq, self.next_cmd_seq))
+                xlog.warn("put_send_data %s conn:%d seq:%d next:%d",
+                               self.session.session_id, self.conn_id,
+                               seq, self.next_cmd_seq)
+                return
+
             self.cmd_queue[seq] = data.get_buf()
 
             if seq == self.next_cmd_seq:

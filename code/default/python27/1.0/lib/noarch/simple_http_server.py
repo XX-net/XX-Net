@@ -268,7 +268,10 @@ class HTTPServer():
             self.add_listen(addr)
 
     def add_listen(self, addr):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ":" in addr[0]:
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind(addr)
@@ -324,6 +327,7 @@ class HTTPServer():
         for sock in self.sockets:
             sock.close()
         self.sockets = []
+
 
 class TestHttpServer(HttpServerHandler):
     def __init__(self, sock, client, args):

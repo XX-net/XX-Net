@@ -211,6 +211,9 @@ class Socks5Server():
             return
 
         xlog.info("https %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
-        sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
+        try:
+            sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
+        except:
+            xlog.warn("https %r connect to %s:%d conn_id:%d closed.", self.client_address, host, port, conn_id)
 
         g.session.conn_list[conn_id].start(block=True)
