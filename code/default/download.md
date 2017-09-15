@@ -5,6 +5,6 @@ https://codeload.github.com/XX-net/XX-Net/zip/3.4.2
 
 
 测试版(Test)：  
-https://codeload.github.com/XX-net/XX-Net/zip/3.5.2
+https://codeload.github.com/XX-net/XX-Net/zip/3.5.3
 
 

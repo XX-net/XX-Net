@@ -236,7 +236,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "plan %s not support" % plan
             })
 
-        res, info = proxy_session.call_api("order", {
+        res, info = proxy_session.call_api("/order", {
             "account": g.config.login_account,
             "password": g.config.login_password,
             "product": "x_tunnel",
@@ -274,7 +274,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "amount": amount
         }
 
-        res, info = proxy_session.call_api("transfer", req_info)
+        res, info = proxy_session.call_api("/transfer", req_info)
         if not res:
             xlog.warn("transfer fail:%s", info)
             return self.response_json({
@@ -296,7 +296,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "limit": int(reqs['limit'][0])
         }
 
-        res, info = proxy_session.call_api("get_history", req_info)
+        res, info = proxy_session.call_api("/get_history", req_info)
         if not res:
             xlog.warn("get history fail:%s", info)
             return self.response_json({
