@@ -62,9 +62,9 @@ def recheck_module_path():
     global config
     need_save_config = False
 
-    xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
-
-    modules = ["gae_proxy", "launcher", "x_tunnel"]
+    # xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
+    socks_port = get(["modules", "x_tunnel", "socks_port"], 1080)
+    modules = ["launcher", "x_tunnel"]
     for module in modules:
         if module not in ["launcher"]:
             if not os.path.isdir(os.path.join(root_path, module)):
@@ -87,6 +87,8 @@ def recheck_module_path():
 
     # if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #     set(["modules", "gae_proxy", "control_port"], 8084)
+	
+	socks_port
 
     return need_save_config
 

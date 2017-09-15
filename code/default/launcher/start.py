@@ -35,8 +35,8 @@ def create_data_path():
     if not os.path.isdir(data_launcher_path):
         os.mkdir(data_launcher_path)
 
-    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-    if not os.path.isdir(data_gae_proxy_path):
+    # data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+    # if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
 create_data_path()
@@ -120,6 +120,23 @@ except Exception as e1:
         raw_input("Press Enter to continue...")
         os._exit(0)
 
+def create_desktop_shortcut():
+    import sys
+    if sys.platform.startswith("linux"):
+        pass
+    elif sys.platform == "win32":
+        # import ctypes
+        # msg = u"是否在桌面创建图标？"
+        # title = u"XX-Net 叉叉网"
+        #res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
+        # Yes:1 No:2
+        #if res == 2:
+        #    return
+        work_path = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(work_path)
+
+        import subprocess
+        subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
 
 import config
 import web_control
@@ -160,6 +177,7 @@ def main():
         post_update.run(last_run_version)
         config.set(["modules", "launcher", "last_run_version"], current_version)
         config.save()
+        create_desktop_shortcut()
 
     module_init.start_all_auto()
 

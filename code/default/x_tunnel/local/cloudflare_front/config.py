@@ -36,7 +36,7 @@ class Config(object):
                 content = fp.read()
                 try:
                     self.CONFIG.readfp(io.BytesIO(content))
-                    xlog.info("load manual.ini success")
+                    xlog.info("load cloudflare_manual.ini success")
                 except Exception as e:
                     xlog.exception("%s load error:%s", self.CONFIG_MANUAL_FILENAME, e)
 
@@ -47,6 +47,7 @@ class Config(object):
                 content = fp.read()
                 try:
                     self.CONFIG.readfp(io.BytesIO(content))
+                    xlog.info("load cloudflare_config.ini success")
                 except Exception as e:
                     xlog.exception("%s load error:%s", self.CONFIG_USER_FILENAME, e)
 

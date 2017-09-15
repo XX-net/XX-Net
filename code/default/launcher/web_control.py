@@ -179,6 +179,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
                 target_module = 'gae_proxy'
                 target_menu = 'status'
+            if config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
+                target_module = 'x_tunnel'
+                target_menu = 'logging'
             else:
                 target_module = 'launcher'
                 target_menu = 'about'
