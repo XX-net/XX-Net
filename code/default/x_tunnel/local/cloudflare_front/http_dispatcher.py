@@ -63,7 +63,7 @@ class HttpsDispatcher(object):
         # move created ssl to worker after ssl timeout
         self.https_manager = connect_manager.Https_connection_manager(host, self.on_ssl_created_cb)
 
-    def on_ssl_created_cb(self, ssl_sock, check_free_worke=True):
+    def on_ssl_created_cb(self, ssl_sock, check_free_work=True):
         if not ssl_sock:
             raise Exception("on_ssl_created_cb ssl_sock None")
 
@@ -78,7 +78,7 @@ class HttpsDispatcher(object):
 
         self.wait_a_worker_cv.notify()
 
-        if check_free_worke:
+        if check_free_work:
             self.check_free_worker()
 
     def _on_worker_idle_cb(self):
@@ -96,7 +96,7 @@ class HttpsDispatcher(object):
                 continue
 
             try:
-                self.on_ssl_created_cb(ssl_sock, check_free_worke=False)
+                self.on_ssl_created_cb(ssl_sock, check_free_work=False)
             except:
                 time.sleep(10)
 

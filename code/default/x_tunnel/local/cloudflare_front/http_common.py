@@ -131,15 +131,6 @@ class HTTP_worker(object):
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
-        self.speed_history = []
-
-    def report_speed(self, speed, body_length):
-        if body_length < 10 * 1024:
-            return
-
-        self.speed_history.append(speed)
-        if len(self.speed_history) > 10:
-            self.speed_history.pop(0)
 
     def close(self, reason):
         self.accept_task = False

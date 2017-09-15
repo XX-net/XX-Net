@@ -8,5 +8,9 @@ sub_menus: {
   2:{
     title: {{ _("Log") }},
     url: logging
+  },
+  3:{
+    title: {{ _("Cloudflare Front Log") }},
+    url: cloudflare_front_logging
   }
 }

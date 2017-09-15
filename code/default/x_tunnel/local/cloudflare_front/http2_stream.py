@@ -275,7 +275,6 @@ class Stream(object):
             if time_cost > 0:
                 speed = self.task.content_length / time_cost
                 self.task.set_state("h2_finish[SP:%d]" % speed)
-                self.connection.report_speed(speed, self.task.content_length)
 
             self._close_remote()
 

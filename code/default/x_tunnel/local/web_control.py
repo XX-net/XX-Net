@@ -41,7 +41,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif path == "/get_history":
             return self.req_get_history_handler()
         elif path.startswith("/cloudflare_front/"):
-            path = path[17:]
+            path = self.path[17:]
             controler = cloudflare_web.ControlHandler(self.client_address,
                              self.headers,
                              self.command, path,

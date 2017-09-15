@@ -180,6 +180,7 @@ def get_ssl_cert_domain(ssl_sock):
 
 
 def check_xtunnel_http1(ssl_sock, host):
+    start_time = time.time()
     request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host
     ssl_sock.send(request_data.encode())
     response = httplib.HTTPResponse(ssl_sock, buffering=True)
@@ -202,8 +203,45 @@ def check_xtunnel_http1(ssl_sock, host):
         xlog.warn("app check content:%s", content)
         return False
 
-    xlog.info("check_xtunnel ok")
+    time_cost = (time.time() - start_time) * 1000
+    ssl_sock.request_time = time_cost
+    xlog.info("check_xtunnel ok, time:%d", time_cost)
+
     return True
+
+
+def check_xtunnel_http2(ssl_sock, host):
+    start_time = time.time()
+    try:
+        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ip, port=443)
+        conn.request('GET', '/')
+    except Exception as e:
+        #xlog.exception("xtunnel %r", e)
+        xlog.debug("ip:%s http/1.1:%r", ip, e )
+        return ssl_sock
+
+    try:
+        response = conn.get_response()
+    except Exception as e:
+        xlog.exception("http2 get response fail:%r", e)
+        return ssl_sock
+
+    xlog.debug("ip:%s http/2", ip)
+
+    if response.status != 200:
+        xlog.warn("app check ip:%s status:%d", ip, response.status)
+        return ssl_sock
+
+    content = response.read()
+    if "X_Tunnel OK" not in content:
+        xlog.warn("app check content:%s", content)
+        return ssl_sock
+
+    ssl_sock.support_xtunnel = True
+    time_cost = (time.time() - start_time) * 1000
+    ssl_sock.request_time = time_cost
+    xlog.info("check_xtunnel ok, time:%d", time_cost)
+    return ssl_sock
 
 
 def test_xtunnel_ip2(ip, host="scan1.xx-net.online"):
@@ -230,41 +268,14 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.online"):
         except Exception as e:
             xlog.warn("check fail:%r", e)
             return False
-
-    try:
-        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ip, port=443)
-        conn.request('GET', '/')
-    except Exception as e:
-        #xlog.exception("xtunnel %r", e)
-        xlog.debug("ip:%s http/1.1:%r", ip, e )
-        return ssl_sock
-
-    try:
-        response = conn.get_response()
-    except Exception as e:
-        xlog.exception("http2 get response fail:%r", e)
-        return ssl_sock
-
-    xlog.debug("ip:%s http/2", ip)
-
-    if response.status != 200:
-        xlog.warn("app check ip:%s status:%d", ip, response.status)
-        return ssl_sock
-
-    content = response.read()
-    if "X_Tunnel OK" not in content:
-        xlog.warn("app check content:%s", content)
-        return ssl_sock
-
-    xlog.info("check_xtunnel ok")
-    ssl_sock.support_xtunnel = True
-    return ssl_sock
+    else:
+        return check_xtunnel_http2(ssl_sock, host)
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        host = "scan1.xx-net.online"
+        host = "scan5.xx-net.online"
         xlog.info("test ip:%s", ip)
         res = test_xtunnel_ip2(ip, host)
         if not res:

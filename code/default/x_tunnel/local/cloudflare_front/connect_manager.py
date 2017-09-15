@@ -265,10 +265,15 @@ class Https_connection_manager(object):
 
             time.sleep(1)
 
+    def create_more_connection(self):
+        if not self.connecting_more_thread:
+            self.connecting_more_thread = threading.Thread(target=self.create_more_connection_worker)
+            self.connecting_more_thread.start()
+
     def create_more_connection_worker(self):
         while connect_control.allow_connect() and \
                 self.thread_num < self.max_connect_thread and \
-                (self.new_conn_pool.qsize() == 0):
+                (self.new_conn_pool.qsize() < self.connection_pool_min):
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
@@ -278,11 +283,6 @@ class Https_connection_manager(object):
             time.sleep(0.5)
 
         self.connecting_more_thread = None
-
-    def create_more_connection(self):
-        if not self.connecting_more_thread:
-            self.connecting_more_thread = threading.Thread(target=self.create_more_connection_worker)
-            self.connecting_more_thread.start()
 
     def connect_thread(self, sleep_time=0):
         time.sleep(sleep_time)
@@ -380,7 +380,11 @@ class Https_connection_manager(object):
                     ssl_sock.h2 = False
                     # xlog.debug("ip:%s http/1.1", ip)
 
-            ip_manager.update_ip(ip, handshake_time)
+            # ip_manager.update_ip(ip, handshake_time)
+            # handshake time is not the response time,
+            # cloudflare don't have global back-bond network like google.
+            # the reasonable response RTT time should be the HTTP test RTT.
+
             xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, handshake_time, ssl_sock.h2)
             ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin

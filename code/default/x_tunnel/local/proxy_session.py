@@ -532,6 +532,7 @@ def create_conn(sock, host, port):
 
         g.login_process = True
         try:
+            xlog.debug("session not running, try login..")
             res, reason = request_balance(g.config.login_account, g.config.login_password)
             if not res:
                 xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)

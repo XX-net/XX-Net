@@ -114,8 +114,8 @@ def start():
     g.http_client = front.Front()
 
     g.session = proxy_session.ProxySession()
-    if g.config.login_account:
-        proxy_session.request_balance(g.config.login_account, g.config.login_password)
+    #if g.config.login_account:
+    #    proxy_session.request_balance(g.config.login_account, g.config.login_password)
 
 
 def terminate():

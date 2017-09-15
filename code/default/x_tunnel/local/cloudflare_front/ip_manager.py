@@ -67,9 +67,8 @@ class IpManager():
         self.ip_lock = threading.Lock()
         self.ip_range = ip_range.ip_range
 
-        self.use_ipv6 = config.getint("ip_manager", "use_ipv6")
         self.reset()
-
+        self.start_scan_all_exist_ip()
         if config.getint("ip_manager", "check_exist_ip_on_startup"):
             self.check_ip_thread = threading.Thread(target=self.check_ip_process)
             self.check_ip_thread.daemon = True
@@ -122,6 +121,7 @@ class IpManager():
             return False
 
     def load_config(self):
+        self.use_ipv6 = config.getint("ip_manager", "use_ipv6")
         if self.use_ipv6:
             good_ip_file_name = "good_ipv6.txt"
             default_good_ip_file_name = "good_ipv6.txt"
@@ -182,6 +182,9 @@ class IpManager():
 
         xlog.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_gws_ip(force=True)
+        if file_path == self.default_good_ip_file:
+            xlog.info("first run, rescan all exist ip")
+            self.start_scan_all_exist_ip()
 
     def save_ip_list(self, force=False):
         if not force:
@@ -558,8 +561,8 @@ class IpManager():
                 continue
 
             result = check_ip.test_xtunnel_ip2(ip)
-            if result and result.support_gae:
-                self.add_ip(ip, result.handshake_time, result.domain, "gws")
+            if result and result.support_xtunnel:
+                self.add_ip(ip, result.request_time, result.domain, "gws")
                 xlog.debug("restore ip:%s", ip)
                 continue
 
@@ -616,7 +619,7 @@ class IpManager():
             self.report_connect_fail(ip, force_remove=True)
             xlog.debug("recheck_ip:%s real fail, removed.", ip)
         else:
-            self.add_ip(ip, result.handshake_time, result.domain, "gws")
+            self.add_ip(ip, result.request_time, result.domain, "gws")
             xlog.debug("recheck_ip:%s restore okl", ip)
 
     def scan_ip_worker(self):
@@ -638,7 +641,7 @@ class IpManager():
                 if not result or not result.support_xtunnel:
                     continue
 
-                if self.add_ip(ip, result.handshake_time, result.domain, "gws"):
+                if self.add_ip(ip, result.request_time, result.domain, "gws"):
                     #xlog.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
                     xlog.info("scan_ip add ip:%s time:%d", ip, result.handshake_time)
@@ -690,6 +693,7 @@ class IpManager():
 
         self.try_sort_gws_ip()
         xlog.debug("finished scan all exist ip")
+        self.save_ip_list(force=True)
 
         self.max_scan_ip_thread_num = max_scan_ip_thread_num
         self.adjust_scan_thread_num()
@@ -730,7 +734,7 @@ class IpManager():
                 finally:
                     self.ip_lock.release()
             elif result.support_xtunnel:
-                self.add_ip(ip, result.handshake_time, result.domain, "gws")
+                self.add_ip(ip, result.request_time, result.domain, "gws")
             else:
                 self.report_connect_fail(ip, force_remove=True)
 
