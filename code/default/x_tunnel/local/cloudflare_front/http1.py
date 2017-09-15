@@ -85,11 +85,7 @@ class HTTP1_worker(HTTP_worker):
             time_now = time.time()
             if time_now - self.last_active_time > 360:
                 xlog.warn("get task but inactive time:%d", time_now - self.last_active_time)
-                self.accept_task = False
-                self.keep_running = False
-                self.retry_task_cb(self.task)
-                self.task = None
-                self.close("keep alive")
+                self.close("inactive timeout %d" % (time_now - self.last_active_time))
                 return
 
             self.last_request_time = time_now

@@ -124,6 +124,7 @@ class HttpServerHandler():
                 return
 
             self.parse_request()
+            self.close_connection = 0
 
             if self.command == "GET":
                 self.do_GET()
@@ -144,10 +145,10 @@ class HttpServerHandler():
                 return
 
             self.wfile.flush() #actually send the response if not already done.
-            self.close_connection = 0
+            
         except socket.error as e:
             #logging.warn("socket error:%r", e)
-            pass
+            self.close_connection = 1
         except IOError as e:
             if e.errno == errno.EPIPE:
                 logging.warn("PIPE error:%r", e)
@@ -157,9 +158,10 @@ class HttpServerHandler():
                 pass
         #except OpenSSL.SSL.SysCallError as e:
         #    logging.warn("socket error:%r", e)
+            self.close_connection = 1
         except Exception as e:
             logging.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
-            pass
+            self.close_connection = 1
 
     def do_GET(self):
         logging.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
