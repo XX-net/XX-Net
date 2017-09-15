@@ -6,12 +6,12 @@ function CreateShortcut()
    icon_path = wsh.CurrentDirectory + '\\web_ui\\favicon.ico';
 
 
-   link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\XX-Net.lnk');
+   link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\x_tunnel.lnk');
    link.TargetPath = target_path;
    link.Arguments = '';
    link.WindowStyle = 7;
    link.IconLocation = icon_path;
-   link.Description = 'XX-Net';
+   link.Description = 'x_tunnel';
    link.WorkingDirectory = wsh.CurrentDirectory;
    link.Save();
 }
