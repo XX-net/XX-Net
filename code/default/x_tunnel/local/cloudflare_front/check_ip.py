@@ -275,7 +275,7 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.online"):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        host = "scan5.xx-net.online"
+        host = "scan1.xx-net.online"
         xlog.info("test ip:%s", ip)
         res = test_xtunnel_ip2(ip, host)
         if not res:

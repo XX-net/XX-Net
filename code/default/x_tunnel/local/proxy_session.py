@@ -183,7 +183,7 @@ class ProxySession():
                 return False
 
             g.last_api_error = ""
-            xlog.info("login_session time:%d msg:%s", 1000 * time_cost, message)
+            xlog.info("login_session %s time:%d msg:%s", self.session_id, 1000 * time_cost, message)
             return True
         except Exception as e:
             xlog.exception("login_session e:%r", e)
@@ -321,7 +321,7 @@ class ProxySession():
                 with self.mutex:
                     self.on_road_num += 1
 
-                # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
+                xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
                 try:
                     self.transfer_list[transfer_no]["try"] = try_no
                     self.transfer_list[transfer_no]["stat"] = "request"

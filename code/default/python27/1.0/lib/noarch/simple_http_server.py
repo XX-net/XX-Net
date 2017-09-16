@@ -352,7 +352,13 @@ class TestHttpServer(HttpServerHandler):
 
         logging.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 
-        if url_path == '/':
+        if url_path == "/test":
+            tme = (datetime.datetime.today() + datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            head = 'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\n'
+            head += 'Expires: %s\r\nContent-Type: text/plain\r\nContent-Length: 4\r\n\r\nOK\r\n' % (tme)
+            self.wfile.write(head.encode())
+
+        elif url_path == '/':
             data = "OK\r\n"
             self.wfile.write('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
         elif url_path == '/null':

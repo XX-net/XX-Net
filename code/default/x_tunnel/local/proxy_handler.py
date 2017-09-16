@@ -30,12 +30,15 @@ class Socks5Server():
                 self.socks5_handler()
             elif socks_version == "C":
                 self.https_handler()
+            elif socks_version in ["G", "P"]:
+                xlog.warn("http proxy protocal is not supported now, please use Socks5.")
+                return
             else:
                 xlog.warn("socks version:%s not supported",  utils.str2hex(socks_version))
                 return
 
         except socket.error as e:
-            xlog.exception('socks handler read error %r', e)
+            xlog.warn('socks handler read error %r', e)
         except Exception as e:
             xlog.exception("any err:%r", e)
 

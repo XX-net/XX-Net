@@ -68,7 +68,7 @@ class IpManager():
         self.ip_range = ip_range.ip_range
 
         self.reset()
-        self.start_scan_all_exist_ip()
+        # self.start_scan_all_exist_ip()
         if config.getint("ip_manager", "check_exist_ip_on_startup"):
             self.check_ip_thread = threading.Thread(target=self.check_ip_process)
             self.check_ip_thread.daemon = True

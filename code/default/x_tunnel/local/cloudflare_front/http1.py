@@ -85,6 +85,7 @@ class HTTP1_worker(HTTP_worker):
             time_now = time.time()
             if time_now - self.last_active_time > 360:
                 xlog.warn("get task but inactive time:%d", time_now - self.last_active_time)
+                self.task = task
                 self.close("inactive timeout %d" % (time_now - self.last_active_time))
                 return
 
@@ -226,7 +227,7 @@ class HTTP1_worker(HTTP_worker):
         # for keep alive
 
         start_time = time.time()
-        xlog.debug("head request %s", self.ssl_sock.ip)
+        # xlog.debug("head request %s", self.ssl_sock.ip)
         request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % self.ssl_sock.host
 
         try:
@@ -243,6 +244,8 @@ class HTTP1_worker(HTTP_worker):
             if status != 200:
                 xlog.debug("%s appid:%s head fail status:%d", self.ip, self.ssl_sock.appid, status)
                 return False
+
+            content = response.read()
 
             self.rtt = (time.time() - start_time) * 1000
             return True
