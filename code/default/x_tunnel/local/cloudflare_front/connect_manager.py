@@ -415,9 +415,12 @@ class Https_connection_manager(object):
             connect_control.end_connect_register(high_prior=True)
 
     def get_ssl_connection(self, max_timeout=120):
-        self.create_more_connection()
+
         start_time = time.time()
         while True:
+            if self.new_conn_pool.qsize() < self.connection_pool_min:
+                self.create_more_connection()
+
             ret = self.new_conn_pool.get(True, 1)
             if ret:
                 handshake_time, ssl_sock = ret

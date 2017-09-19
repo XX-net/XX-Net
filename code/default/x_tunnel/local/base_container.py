@@ -273,15 +273,15 @@ class BlockSendPool():
         out_string = "Block_send_pool:<br>\n"
         out_string += " head_sn:%d<br>\n" % self.head_sn
         out_string += " tail_sn:%d<br>\n" % self.tail_sn
-        out_string += "block_list:<br>\n"
+        out_string += " block_list: %d<br>\n" % len(self.block_list)
         for sn in sorted(self.block_list.iterkeys()):
             data = self.block_list[sn]
-            out_string += "[%d] len:%d<br>\r\n" % (sn, len(data))
+            out_string += "  [%d] len:%d<br>\r\n" % (sn, len(data))
 
-        out_string += "waiters:<br>\n"
+        out_string += " waiters: %d<br>\n" % len(self.waiters)
         for i in range(0, len(self.waiters)):
             end_time, lock = self.waiters[i]
-            out_string += "%d<br>\r\n" % ((end_time - time.time()))
+            out_string += "  %d<br>\r\n" % ((end_time - time.time()))
 
         return out_string
 

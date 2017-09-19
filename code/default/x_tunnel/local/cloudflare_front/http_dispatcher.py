@@ -212,6 +212,7 @@ class HttpsDispatcher(object):
 
     def dispatcher(self):
         while connect_control.keep_running:
+            start_time = time.time()
             try:
                 task = self.request_queue.get(True)
                 if task is None:
@@ -220,8 +221,10 @@ class HttpsDispatcher(object):
             except Exception as e:
                 xlog.exception("http_dispatcher dispatcher request_queue.get fail:%r", e)
                 continue
+            get_time = time.time()
+            get_cost = get_time - start_time
 
-            task.set_state("get_task")
+            task.set_state("get_task(%d)" % get_cost)
             try:
                 worker = self.get_worker()
             except Exception as e:
@@ -232,6 +235,7 @@ class HttpsDispatcher(object):
             if worker is None:
                 # can send because exit.
                 xlog.warn("http_dispatcher get None worker")
+                task.response_fail("get worker fail.")
                 continue
 
             task.set_state("get_worker:%s" % worker.ip)

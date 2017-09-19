@@ -341,7 +341,7 @@ class IpManager():
                     continue
 
                 handshake_time = self.ip_dict[ip]["handshake_time"]
-                xlog.debug("get ip:%s t:%d", ip, handshake_time)
+                # xlog.debug("get ip:%s t:%d", ip, handshake_time)
                 self.append_ip_history(ip, "get")
                 self.ip_dict[ip]['get_time'] = time_now
                 self.ip_dict[ip]['links'] += 1
@@ -510,7 +510,7 @@ class IpManager():
             self.ip_dict[ip]['down_fail'] += 1
             self.append_ip_history(ip, reason)
             self.ip_dict[ip]["down_fail_time"] = time_now
-            xlog.debug("ssl_closed %s", ip)
+            # xlog.debug("ssl_closed %s", ip)
         except Exception as e:
             xlog.error("ssl_closed %s err:%s", ip, e)
         finally:
@@ -524,7 +524,7 @@ class IpManager():
                 if self.ip_dict[ip]['links']:
                     self.ip_dict[ip]['links'] -= 1
                     self.append_ip_history(ip, "C[%s]"%reason)
-                    xlog.debug("ssl_closed %s", ip)
+                    # xlog.debug("ssl_closed %s", ip)
         except Exception as e:
             xlog.error("ssl_closed %s err:%s", ip, e)
         finally:

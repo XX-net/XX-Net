@@ -38,3 +38,6 @@ class Front(object):
                 continue
 
         return "", 500, {}
+
+    def stop(self):
+        connect_control.keep_running = False

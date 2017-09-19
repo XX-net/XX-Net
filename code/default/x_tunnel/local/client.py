@@ -120,6 +120,8 @@ def start():
 
 def terminate():
     global ready
+    g.http_client.stop()
+
     if g.socks5_server:
         xlog.info("Close Socks5 server ")
         g.socks5_server.server_close()

@@ -12,7 +12,7 @@ from http_common import *
 
 class HTTP1_worker(HTTP_worker):
     version = "1.1"
-    idle_time = 370
+    idle_time = 360
 
     def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
         super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
@@ -43,20 +43,14 @@ class HTTP1_worker(HTTP_worker):
         if time_now - self.last_active_time > ping_interval:
             self.task_queue.put("ping")
 
-        ping_interval = 360
         while connect_control.keep_running and self.keep_running:
             time_to_ping = max(ping_interval - (time.time() - self.last_active_time), 0.2)
             time.sleep(time_to_ping)
 
             time_now = time.time()
-            if time_now - self.last_active_time < ping_interval:
-                continue
-
-            if time_now - self.last_request_time > self.idle_time:
+            if time_now - self.last_active_time > self.idle_time:
                 self.close("idle timeout")
                 return
-
-            self.task_queue.put("ping")
 
     def work_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -67,6 +61,7 @@ class HTTP1_worker(HTTP_worker):
                 self.keep_running = False
                 return
             elif task == "ping":
+                # not work now.
                 if not self.head_request():
                     self.accept_task = False
                     self.keep_running = False
@@ -224,7 +219,7 @@ class HTTP1_worker(HTTP_worker):
             self.close("request body fail")
 
     def head_request(self):
-        # for keep alive
+        # for keep alive, not work now.
 
         start_time = time.time()
         # xlog.debug("head request %s", self.ssl_sock.ip)

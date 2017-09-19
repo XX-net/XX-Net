@@ -85,6 +85,7 @@ def parse_range_string(input_lines):
 
     return ip_range_list
 
+
 def merge_range(input_ip_range_list):
     output_ip_range_list = []
     range_num = len(input_ip_range_list)
@@ -104,13 +105,14 @@ def merge_range(input_ip_range_list):
             last_begin = begin
             last_end = end
         else:
-            print "merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+            # print "merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
             if end > last_end:
                 last_end = end
 
     output_ip_range_list.append([last_begin, last_end])
 
     return output_ip_range_list
+
 
 def filter_ip_range(good_range, bad_range):
     out_good_range = []
@@ -184,6 +186,7 @@ def filter_ip_range(good_range, bad_range):
                 assert( False )
 
     return out_good_range
+
 
 def download_apic(filename):
     url = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
@@ -261,19 +264,19 @@ def generate_ip_range():
 
     ip_range_list = parse_range_string(input_good_range_lines)
     ip_range_list = merge_range(ip_range_list)
-    PRINT("Good ip range:\n")
-    print_range_list(ip_range_list)
+    # PRINT("Good ip range:\n")
+    # print_range_list(ip_range_list)
 
     if True:
         input_bad_ip_range_lines = load_bad_ip_range()
         bad_range_list = parse_range_string(input_bad_ip_range_lines)
         bad_range_list = merge_range(bad_range_list)
-        PRINT("Bad ip range:\n")
-        print_range_list(ip_range_list)
+        # PRINT("Bad ip range:\n")
+        # print_range_list(ip_range_list)
 
         ip_range_list = filter_ip_range(ip_range_list, bad_range_list)
-        PRINT("Output ip range:\n")
-        print_range_list(ip_range_list)
+        # PRINT("Output ip range:\n")
+        # print_range_list(ip_range_list)
 
     # write out
     output_file = os.path.join(config.DATA_PATH, file_name)
@@ -306,7 +309,7 @@ def test_load():
 
         num = nend - nbegin
         amount += num
-        print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
+        # print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
 
     fd.close()
     print "amount ip:", amount

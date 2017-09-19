@@ -2,7 +2,6 @@ import time
 import json
 import threading
 import struct
-import urlparse
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -66,6 +65,7 @@ class ProxySession():
             xlog.warn("x-tunnel login_session fail, session not start")
             return False
 
+        self.last_roundtrip_time = time.time()
         self.running = True
         self.upload_task_queue.start()
 
@@ -109,7 +109,7 @@ class ProxySession():
     def reset(self):
         xlog.debug("session reset")
         self.stop()
-        self.start()
+        return self.start()
 
     def status(self):
         out_string = "session_id:%s<br>\n" % self.session_id
@@ -121,7 +121,7 @@ class ProxySession():
         out_string += "last_transfer_no:%d<br>\n" % self.last_transfer_no
 
         out_string += "on_road_num:%d<br>\n" % self.on_road_num
-        out_string += "transfer_list:<br>\r\n"
+        out_string += "transfer_list: %d<br>\r\n" % len(self.transfer_list)
         for transfer_no in sorted(self.transfer_list.iterkeys()):
             transfer = self.transfer_list[transfer_no]
             if "start" in self.transfer_list[transfer_no]:
@@ -190,6 +190,10 @@ class ProxySession():
             return False
 
     def create_conn(self, sock, host, port):
+        if time.time() - self.last_roundtrip_time > 5 * 60 - 5:
+            if not self.reset():
+                return None
+
         self.mutex.acquire()
         self.last_conn_id += 1
         conn_id = self.last_conn_id
@@ -302,6 +306,7 @@ class ProxySession():
             else:
                 server_timeout = g.config.roundtrip_timeout / 2
 
+            request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, str(self.session_id),
                                            transfer_no,
                                            send_sn, server_timeout, send_data_len, send_ack_len)
@@ -321,7 +326,7 @@ class ProxySession():
                 with self.mutex:
                     self.on_road_num += 1
 
-                xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
+                # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
                 try:
                     self.transfer_list[transfer_no]["try"] = try_no
                     self.transfer_list[transfer_no]["stat"] = "request"
@@ -347,8 +352,9 @@ class ProxySession():
 
                 if status == 405:  # session_id not exist on server
                     if self.running:
-                        xlog.warn("server session_id not exist, start reset session")
-                        self.reset()
+                        if self.session_id == request_session_id:
+                            xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
+                            self.reset()
                     return
                 elif status == 200:
                     recv_len = len(content)
