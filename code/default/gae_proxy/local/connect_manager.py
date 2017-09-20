@@ -546,7 +546,7 @@ class Https_connection_manager(object):
                 if ret:
                     handshake_time, ssl_sock = ret
                     if time.time() - ssl_sock.last_use_time < self.keep_active_timeout - 1:
-                        xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                         return ssl_sock
                     else:
                         # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)

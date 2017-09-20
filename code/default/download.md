@@ -8,3 +8,5 @@ https://codeload.github.com/XX-net/XX-Net/zip/3.5.6
 https://codeload.github.com/XX-net/XX-Net/zip/3.6.0
 
 
+Android:  
+https://github.com/XX-net/xxnet-android/releases/download/3.6.0/XX-Net-3.6.0-debug.apk

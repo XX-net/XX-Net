@@ -6,6 +6,7 @@ import time
 import os
 import sys
 import struct
+import threading
 
 
 random.seed(time.time()* 1000000)
@@ -36,9 +37,12 @@ class IpPool(object):
     def __init__(self):
         self.txt_ip_fn = os.path.join(current_path, "ip_checked.txt")
         self.bin_ip_fn = os.path.join(config.DATA_PATH, "ip_checked.bin")
+        self.bin_fd = None
+        threading.Thread(target=self.init).start()
+
+    def init(self):
         if not self.check_bin():
             self.generate_bin()
-
         self.bin_fd = open(self.bin_ip_fn, "rb")
         self.bin_size = os.path.getsize(self.bin_ip_fn)
 
@@ -58,10 +62,11 @@ class IpPool(object):
         num = 0
         for line in rfd.readlines():
             ip = line
-            if not ip_utils.check_ip_valid(ip):
+            try:
+                ip_num = ip_utils.ip_string_to_num(ip)
+            except Exception as e:
                 xlog.warn("ip %s not valid in %s", ip, self.txt_ip_fn)
                 continue
-            ip_num = ip_utils.ip_string_to_num(ip)
             ip_bin = struct.pack("<I", ip_num)
             wfd.write(ip_bin)
             num += 1
@@ -71,6 +76,8 @@ class IpPool(object):
         xlog.info("finished generate binary ip pool file, num:%d", num)
 
     def random_get_ip(self):
+        while self.bin_fd is None:
+            time.sleep(1)
         position = random.randint(0, self.bin_size/4) * 4
         self.bin_fd.seek(position)
         ip_bin = self.bin_fd.read(4)
