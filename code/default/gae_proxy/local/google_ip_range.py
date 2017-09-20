@@ -78,13 +78,20 @@ class IpPool(object):
     def random_get_ip(self):
         while self.bin_fd is None:
             time.sleep(1)
-        position = random.randint(0, self.bin_size/4) * 4
-        self.bin_fd.seek(position)
-        ip_bin = self.bin_fd.read(4)
-        ip_num = struct.unpack("<I", ip_bin)[0]
-        ip = ip_utils.ip_num_to_string(ip_num)
-        return ip
-
+        for _ in range(5):
+            position = random.randint(0, self.bin_size/4) * 4
+            self.bin_fd.seek(position)
+            ip_bin = self.bin_fd.read(4)
+            if ip_bin is None:
+                xlog.warn("ip_pool.random_get_ip position:%d get None", position)
+            elif len(ip_bin) != 4:
+                xlog.warn("ip_pool.random_get_ip position:%d len:%d", position, len(ip_bin))
+            else:
+                ip_num = struct.unpack("<I", ip_bin)[0]
+                ip = ip_utils.ip_num_to_string(ip_num)
+                return ip
+        time.sleep(3)
+        raise Exception("get ip fail.")
 
 class IpRange(object):
     def __init__(self):
