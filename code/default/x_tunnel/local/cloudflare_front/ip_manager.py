@@ -68,7 +68,7 @@ class IpManager():
         self.ip_range = ip_range.ip_range
 
         self.reset()
-        # self.start_scan_all_exist_ip()
+
         if config.getint("ip_manager", "check_exist_ip_on_startup"):
             self.check_ip_thread = threading.Thread(target=self.check_ip_process)
             self.check_ip_thread.daemon = True
@@ -182,9 +182,9 @@ class IpManager():
 
         xlog.info("load google ip_list num:%d, gws num:%d", len(self.ip_dict), len(self.gws_ip_list))
         self.try_sort_gws_ip(force=True)
-        if file_path == self.default_good_ip_file:
-            xlog.info("first run, rescan all exist ip")
-            self.start_scan_all_exist_ip()
+        # if file_path == self.default_good_ip_file:
+        #    xlog.info("first run, rescan all exist ip")
+        #    self.start_scan_all_exist_ip()
 
     def save_ip_list(self, force=False):
         if not force:

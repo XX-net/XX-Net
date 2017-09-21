@@ -63,7 +63,7 @@ def main():
     # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
 
     front = Front()
-    response = front.get("GET", "center.xx-net.online", "/", {}, "")
+    response = front.get("GET", "center6.xx-net.net", "/", {}, "")
     print(response)
 
     while connect_control.keep_running:

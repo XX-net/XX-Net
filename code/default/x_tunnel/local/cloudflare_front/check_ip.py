@@ -244,7 +244,7 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, host="scan1.xx-net.online"):
+def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
     try:
         ssl_sock = connect_ssl(ip, host, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)
@@ -275,7 +275,7 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.online"):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        host = "scan1.xx-net.online"
+        host = "scan1.xx-net.net"
         xlog.info("test ip:%s", ip)
         res = test_xtunnel_ip2(ip, host)
         if not res:
