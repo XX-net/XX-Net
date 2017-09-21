@@ -1,31 +1,26 @@
 XX-Net
-=================
-* XX-Net is a free desktop application that delivers fast, reliable and secure access to the open Internet for users in censored regions. It uses google app engine (GAE) as a proxy server through the firewall.
-
-
-Wiki
 -----
-* [新手指南](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3)
+* 易用的翻墙工具  
+* 包含GAE代理和X-Tunnel  
 
-* [English Home](https://github.com/XX-net/XX-Net/wiki/English-Home-Page)
-
-* [فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page)
-
-
-Downloads
----------
-* [__Download page__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
+[__下载页面__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
 
 
-Links
-------
-* Usage :  https://github.com/XX-net/XX-Net/wiki/How-to-use
 
-* Update :  https://github.com/XX-net/XX-Net/wiki/How-to-update
+### 状态更新
+ 2017-09-21
+* 8月份开始，GAE封锁加剧，请更新到3.6.0，慢慢等待扫描ip
+* X-Tunnel新版稳定，不受GAE封锁影响
+  
+  
+  
+**有问题请先看Wiki文档:**
 
-* Issues :  https://github.com/XX-net/XX-Net/issues?q=sort:updated-desc+is:open
-
-
-Help
 -----
-* https://github.com/XX-net/XX-Net/wiki/How-to-contribute
+[中文文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3)  
+[English](https://github.com/XX-net/XX-Net/wiki/English-Home-Page)  
+ [فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page)  
+
+
+
+**提问前，请先看最近讨论主题，避免重复发问。**
