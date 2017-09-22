@@ -697,7 +697,7 @@
             //in span create link
             var newlink=link_span.appendChild(document.createElement("a"));
             
-            newlink.appendChild(document.createTextNode(buttons[i].lable));
+            newlink.appendChild(document.createTextNode(buttons[i].label));
             
             newlink.href="#"; //go nowhere
             if(buttons[i].href)
@@ -727,16 +727,16 @@
     /*
     var tip1buttons={
         [0]:{
-            lable: "github.com",
+            label: "github.com",
             href: "https://github.com",
             openInNewTab: 1,
         },
         [1]:{
-            lable: "change tip",
+            label: "change tip",
             onClick: function() { tip1.text.innerHTML="";tip1.text.appendChild(document.createTextNode("text changed")); } ,
         },
         [2]:{
-            lable: "close a tip",
+            label: "close a tip",
             
         },
     }
