@@ -581,20 +581,31 @@
     function popup_notify(text,linkText,linkHref,open_in_newtab,bcolor)
     {
         var notify_area=document.getElementById("notify_area");
-        
+        //-----------------------------------
         //create new div for notify
         var newdiv=notify_area.appendChild(document.createElement("div"));
         newdiv.className="popnotify";
-        if(bcolor != "")
+        if(bcolor)
         {
             newdiv.style.backgroundColor=bcolor;
         }
-        
+        //-------------------------------------
+        //create close notify button
+        var notify_close_btn=newdiv.appendChild(document.createElement("span"));
+        //notify_close_btn.className="";
+        notify_close_btn.appendChild(document.createTextNode("X"));
+        notify_close_btn.style="float:right; cursor: pointer;";
+        notify_close_btn.onclick=function()
+        {
+            //close this popup
+            newdiv.parentNode.removeChild(this.parentNode);
+        }
+        //-------------------------------------
         //in new div create span as notify text
         var notify_text_span=newdiv.appendChild(document.createElement("span"));
         //write the notify text in
         notify_text_span.appendChild(document.createTextNode(text));
-        
+        //--------------------------------------
         //in new div create span as link
         var notify_link_span=newdiv.appendChild(document.createElement("span"));
         //in link span create link
@@ -610,19 +621,12 @@
         {
             notify_link.target="_blank";
         }
-        //write link text in
-        notify_link.appendChild(document.createTextNode(linkText));
-        
-        //create close notify button
-        var notify_close_btn=newdiv.appendChild(document.createElement("span"));
-        //notify_close_btn.className="";
-        notify_close_btn.appendChild(document.createTextNode("X"));
-        notify_close_btn.style="float:right; cursor: pointer;";
-        notify_close_btn.onclick=function()
+        if(linkText)
         {
-            //close this popup
-            notify_area.removeChild(this.parentNode);
+            //write link text in
+            notify_link.appendChild(document.createTextNode(linkText));
         }
+        //--------------------------------------
         //return the link object , can be used as button
         return notify_link_span;
     }
@@ -630,8 +634,117 @@
     /*
     var aaa=popup_notify("This is notify example. ","click text");
     aaa.onclick=function() { alert('hello'); } 
-    popup_notify("This is notify example 2 . ", "","","", "yellow");
+    popup_notify("This is notify example 2 loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong loooong  ",
+        null,null,null,"yellow");
     popup_notify("This is notify example 3 . ","Link text","whereDoWeGo",1,"#dddddd");
     */
+</script>
+<script type="text/javascript">
+    //pop up notify with many buttons
+    function popNotify(text,buttons,setBColor,showClose=1)
+    {
+    
+        function countMember(o){
+            var t = typeof o;
+            if(t == 'string'){
+                    return o.length;
+            }else if(t == 'object'){
+                    var n = 0;
+                    for(var i in o){
+                            n++;
+                    }
+                    return n;
+            }
+            return false;
+        }
+
+        var notify_area=document.getElementById("notify_area");
+        
+        //create new div for notify
+        var newdiv=notify_area.appendChild(document.createElement("div"));
+        newdiv.className="popnotify";
+        if(setBColor)
+        {
+            newdiv.style.backgroundColor=setBColor;
+        }
+        //--------------------------------------
+        if(showClose)
+        {
+            //create close notify button
+            var notify_close_btn=newdiv.appendChild(document.createElement("span"));
+            //notify_close_btn.className="";
+            notify_close_btn.appendChild(document.createTextNode("X"));
+            notify_close_btn.style="float:right; cursor: pointer;";
+            notify_close_btn.onclick=function()
+            {
+                //close this popup
+                notify_area.removeChild(this.parentNode);
+            }
+        }
+        //-----------------------------------
+        //in new div create span as notify text
+        var notify_text_span=newdiv.appendChild(document.createElement("span"));
+        //write the notify text in
+        notify_text_span.appendChild(document.createTextNode(text));
+        //------------------------------------
+        //in new div create span to contain buttons(links)
+        var buttons_span=newdiv.appendChild(document.createElement("span"));
+        var buttonsOut=new Array();
+        for (var i=0;i<countMember(buttons);i++)
+        {
+            
+            link_span=buttons_span.appendChild(document.createElement("span"));
+            //in span create link
+            var newlink=link_span.appendChild(document.createElement("a"));
+            
+            newlink.appendChild(document.createTextNode(buttons[i].lable));
+            
+            newlink.href="#"; //go nowhere
+            if(buttons[i].href)
+                newlink.href=buttons[i].href;
+                
+            if(buttons[i].openInNewTab)
+                newlink.target="_blank";
+                
+            if(buttons[i].onClick)
+                link_span.onclick=buttons[i].onClick;
+                
+            //buttons_span.appendChild(document.createTextNode(" / ")); ; //space
+            
+            buttonsOut[i]=link_span;
+
+        }
+        //---------------------------------
+        //return the objects
+        var objs={
+            whole: newdiv ,
+            text: notify_text_span,
+            buttons: buttonsOut ,
+        }
+        return objs;
+    }
+    //Example
+    /*
+    var tip1buttons={
+        [0]:{
+            lable: "github.com",
+            href: "https://github.com",
+            openInNewTab: 1,
+        },
+        [1]:{
+            lable: "change tip",
+            onClick: function() { tip1.text.innerHTML="";tip1.text.appendChild(document.createTextNode("text changed")); } ,
+        },
+        [2]:{
+            lable: "close a tip",
+            
+        },
+    }
+    var tip1=popNotify("This is Enhanced notify example.", tip1buttons );
+    tip1.buttons[2].onclick = function(){ tip2.whole.parentNode.removeChild(tip2.whole); };
+    
+    var tip2=popNotify("This is Enhanced notify example without close button.",null,null,0);
+    */
+    
 </script>
 
