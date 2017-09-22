@@ -5,6 +5,8 @@ import atexit
 import os
 import sys
 import time
+import platform
+import shutil
 
 # reduce resource request for threading
 # for OpenWrt
@@ -43,7 +45,19 @@ create_data_path()
 from instances import xlog
 
 has_desktop = True
-if sys.platform.startswith("linux"):
+
+if "arm" in platform.machine():
+    xlog.info("This is Android or IOS.")
+    has_desktop = False
+
+    # check remove linux lib
+    shutil.rmtree(os.path.join(noarch_lib, "OpenSSL"), ignore_errors=True)
+
+    linux_lib = os.path.join(python_path, 'lib', 'linux')
+    shutil.rmtree(linux_lib, ignore_errors=True)
+    from non_tray import sys_tray
+
+elif sys.platform.startswith("linux"):
     def X_is_running():
         try:
             import pygtk
