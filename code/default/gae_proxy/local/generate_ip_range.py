@@ -85,6 +85,7 @@ def parse_range_string(input_lines):
 
     return ip_range_list
 
+
 def merge_range(input_ip_range_list):
     output_ip_range_list = []
     range_num = len(input_ip_range_list)
@@ -104,13 +105,14 @@ def merge_range(input_ip_range_list):
             last_begin = begin
             last_end = end
         else:
-            print "merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
+            # print "merge:", ip_utils.ip_num_to_string(last_begin), ip_utils.ip_num_to_string(last_end), ip_utils.ip_num_to_string(begin), ip_utils.ip_num_to_string(end)
             if end > last_end:
                 last_end = end
 
     output_ip_range_list.append([last_begin, last_end])
 
     return output_ip_range_list
+
 
 def filter_ip_range(good_range, bad_range):
     out_good_range = []
@@ -185,6 +187,7 @@ def filter_ip_range(good_range, bad_range):
 
     return out_good_range
 
+
 def download_apic(filename):
     url = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
     try:
@@ -218,6 +221,7 @@ def generate_range_from_apnic(input):
 
     return "\n".join(results)
 
+
 def load_bad_ip_range():
     file_name = "delegated-apnic-latest.txt"
     apnic_file = os.path.join(config.DATA_PATH, file_name)
@@ -229,9 +233,24 @@ def load_bad_ip_range():
 
     bad_ip_range_lines = generate_range_from_apnic(apnic_lines)
 
-    special_bad_ip_range_lines  = """
-    130.211.0.0/16          #Empty ip range, no route to it.
-    255.255.255.255/32      #for algorithm
+    special_bad_ip_range_lines = """
+    0.0.0.0/8               # localhost
+    10.0.0.0/8              # private 
+    100.64.0.0/10           # ISP share ip
+    127.0.0.0/8             # loop back network
+    130.211.0.0/16          # Empty ip range, no route to it.
+    169.254.0.0/16          # link local
+    172.16.0.0/12           # private network
+    192.0.0.0/24            # private network
+    192.0.2.0/24            # TEST-NET-1
+    192.88.99.0/24          # 6-to-4 relay
+    192.168.0.0/16          # private network
+    198.18.0.0/15           # network base test
+    198.51.100.0/24         # TEST-NET-2
+    203.0.113.0/24          # TEST-NET-3
+    224.0.0.0/4             # group broadcast address(group D)
+    240.0.0.0/4             # preserve ip    
+    255.255.255.255/32      # for algorithm
     """
     return bad_ip_range_lines + special_bad_ip_range_lines
 
@@ -245,19 +264,19 @@ def generate_ip_range():
 
     ip_range_list = parse_range_string(input_good_range_lines)
     ip_range_list = merge_range(ip_range_list)
-    PRINT("Good ip range:\n")
-    print_range_list(ip_range_list)
+    # PRINT("Good ip range:\n")
+    # print_range_list(ip_range_list)
 
-    if False:
+    if True:
         input_bad_ip_range_lines = load_bad_ip_range()
         bad_range_list = parse_range_string(input_bad_ip_range_lines)
         bad_range_list = merge_range(bad_range_list)
-        PRINT("Bad ip range:\n")
-        print_range_list(ip_range_list)
+        # PRINT("Bad ip range:\n")
+        # print_range_list(ip_range_list)
 
         ip_range_list = filter_ip_range(ip_range_list, bad_range_list)
-        PRINT("Output ip range:\n")
-        print_range_list(ip_range_list)
+        # PRINT("Output ip range:\n")
+        # print_range_list(ip_range_list)
 
     # write out
     output_file = os.path.join(config.DATA_PATH, file_name)
@@ -290,7 +309,7 @@ def test_load():
 
         num = nend - nbegin
         amount += num
-        print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
+        # print ip_utils.ip_num_to_string(nbegin), ip_utils.ip_num_to_string(nend), num
 
     fd.close()
     print "amount ip:", amount

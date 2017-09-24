@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+
 # GAE limit:
 # only support http/https request, don't support tcp/udp connect for unpaid user.
 # max timeout for every request is 60 seconds
@@ -39,9 +40,10 @@ from google.appengine.api.taskqueue.taskqueue import MAX_URL_LENGTH
 from google.appengine.runtime import apiproxy_errors
 
 URLFETCH_MAX = 2
-URLFETCH_MAXSIZE = 4*1024*1024
-URLFETCH_DEFLATE_MAXSIZE = 4*1024*1024
+URLFETCH_MAXSIZE = 4 * 1024 * 1024
+URLFETCH_DEFLATE_MAXSIZE = 4 * 1024 * 1024
 URLFETCH_TIMEOUT = 30
+
 
 def message_html(title, banner, detail=''):
     MESSAGE_TEMPLATE = '''
@@ -71,13 +73,15 @@ def message_html(title, banner, detail=''):
     <table width=100% cellpadding=0 cellspacing=0><tr><td bgcolor=#3366cc><img alt="" width=1 height=4></td></tr></table>
     </body></html>
     '''
-    return string.Template(MESSAGE_TEMPLATE).substitute(title=title, banner=banner, detail=detail)
+    return string.Template(MESSAGE_TEMPLATE).substitute(
+        title=title, banner=banner, detail=detail)
 
 
 try:
     from Crypto.Cipher.ARC4 import new as RC4Cipher
 except ImportError:
     logging.warn('Load Crypto.Cipher.ARC4 Failed, Use Pure Python Instead.')
+
     class RC4Cipher(object):
         def __init__(self, key):
             x = 0
@@ -88,6 +92,7 @@ except ImportError:
             self.__box = box
             self.__x = 0
             self.__y = 0
+
         def encrypt(self, data):
             out = []
             out_append = out.append
@@ -116,46 +121,88 @@ def format_response(status, headers, content):
     if content:
         headers.pop('content-length', None)
         headers['Content-Length'] = str(len(content))
-    data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % (status, httplib.responses.get(status, 'Unknown'), '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()), content)
+    data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % \
+            (status,
+             httplib.responses.get(status,'Unknown'),
+             '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()),
+             content)
     data = deflate(data)
     return struct.pack('!h', len(data)) + data
 
 
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET' and 'HTTP_X_URLFETCH_PS1' not in environ:
-        timestamp = long(os.environ['CURRENT_VERSION_ID'].split('.')[1])/2**28
-        ctime = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(timestamp+8*3600))
+        # xxnet 自用
+        timestamp = long(
+            os.environ['CURRENT_VERSION_ID'].split('.')[1]) / 2**28
+        ctime = time.strftime(
+            '%Y-%m-%d %H:%M:%S',
+            time.gmtime(
+                timestamp + 8 * 3600))
         start_response('200 OK', [('Content-Type', 'text/plain')])
         yield 'GoAgent Python Server %s works, deployed at %s\n' % (__version__, ctime)
         if len(__password__) > 2:
-            yield 'Password: %s%s%s' % (__password__[0], '*'*(len(__password__)-2), __password__[-1])
+            yield 'Password: %s%s%s' % (__password__[0], '*' * (len(__password__) - 2), __password__[-1])
         raise StopIteration
 
     start_response('200 OK', [('Content-Type', 'image/gif')])
 
     if environ['REQUEST_METHOD'] == 'HEAD':
         raise StopIteration
+        # 请求头则已经完成
 
     options = environ.get('HTTP_X_URLFETCH_OPTIONS', '')
+    # 不知道怎么直接获得的
+    # 但一般，此段语句无用
     if 'rc4' in options and not __password__:
+        # 如果客户端需要加密，但ｇａｅ无密码
+
+        # 但rc4 如不改源码，则恒为假
         yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'}, message_html('400 Bad Request', 'Bad Request (options) - please set __password__ in gae.py', 'please set __password__ and upload gae.py again'))
         raise StopIteration
 
     try:
         if 'HTTP_X_URLFETCH_PS1' in environ:
+            # 第一部分
             payload = inflate(base64.b64decode(environ['HTTP_X_URLFETCH_PS1']))
-            body = inflate(base64.b64decode(environ['HTTP_X_URLFETCH_PS2'])) if 'HTTP_X_URLFETCH_PS2' in environ else ''
+            body = inflate(
+                base64.b64decode(
+                    # 第二部分　即原始ｂｏｄｙ
+                    environ['HTTP_X_URLFETCH_PS2'])) if 'HTTP_X_URLFETCH_PS2' in environ else ''
         else:
+            # POST
+            # POST 获取数据的方式
             wsgi_input = environ['wsgi.input']
-            input_data = wsgi_input.read(int(environ.get('CONTENT_LENGTH', '0')))
+            input_data = wsgi_input.read(
+                int(environ.get('CONTENT_LENGTH', '0')))
             if 'rc4' in options:
                 input_data = RC4Cipher(__password__).encrypt(input_data)
-            payload_length, = struct.unpack('!h', input_data[:2])
-            payload = inflate(input_data[2:2+payload_length])
-            body = input_data[2+payload_length:]
+            payload_length, = struct.unpack('!h', input_data[:2])  # 获取长度
+            payload = inflate(input_data[2:2 + payload_length])  # 　获取负载
+            body = input_data[2 + payload_length:]  # 　获取ｂｏｄｙ
+
         raw_response_line, payload = payload.split('\r\n', 1)
         method, url = raw_response_line.split()[:2]
+    # http content:
+    # 此为ｂｏｄｙ
+    #{
+      # pack_req_head_len: 2 bytes,＃ＰＯＳＴ　时使用
+
+      # pack_req_head : deflate{
+      # 此为负载
+        # original request line,
+        # original request headers,
+        # X-URLFETCH-kwargs HEADS, {
+          # password,
+          # maxsize, defined in config AUTO RANGE MAX SIZE
+          # timeout, request timeout for GAE urlfetch.
+        #}
+      #}
+      # body
+    #}
+
         headers = {}
+        # 获取　原始头
         for line in payload.splitlines():
             key, value = line.split(':', 1)
             headers[key.title()] = value.strip()
@@ -164,8 +211,11 @@ def application(environ, start_response):
         yield format_response(500, {'Content-Type': 'text/html; charset=utf-8'}, message_html('500 Internal Server Error', 'Bad Request (payload) - Possible Wrong Password', '<pre>%s</pre>' % traceback.format_exc()))
         raise StopIteration
 
+
+    # 获取ｇａｅ用的头
     kwargs = {}
-    any(kwargs.__setitem__(x[len('x-urlfetch-'):].lower(), headers.pop(x)) for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
+    any(kwargs.__setitem__(x[len('x-urlfetch-'):].lower(), headers.pop(x))
+        for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
 
     if 'Content-Encoding' in headers and body:
         # fix bug for LinkedIn android client
@@ -175,11 +225,18 @@ def application(environ, start_response):
                 headers['Content-Length'] = str(len(body2))
                 del headers['Content-Encoding']
                 body = body2
-            except:
+            except BaseException:
                 pass
 
-    logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, 'HTTP/1.1')
+    logging.info(
+        '%s "%s %s %s" - -',
+        environ['REMOTE_ADDR'],
+        method,
+        url,
+        'HTTP/1.1')
 
+
+    # 参数使用
     if __password__ and __password__ != kwargs.get('password', ''):
         yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'}, message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''), 'GoAgent proxy.ini password is wrong!'))
         raise StopIteration
@@ -195,6 +252,7 @@ def application(environ, start_response):
         raise StopIteration
 
     if netloc.startswith(('127.0.0.', '::1', 'localhost')):
+        # 测试用
         yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'}, message_html('GoAgent %s is Running' % __version__, 'Now you can visit some websites', ''.join('<a href="https://%s/">%s</a><br/>' % (x, x) for x in ('google.com', 'mail.google.com'))))
         raise StopIteration
 
@@ -207,29 +265,48 @@ def application(environ, start_response):
     validate_certificate = bool(int(kwargs.get('validate', 0)))
     maxsize = int(kwargs.get('maxsize', 0))
     # https://www.freebsdchina.org/forum/viewtopic.php?t=54269
-    accept_encoding = headers.get('Accept-Encoding', '') or headers.get('Bccept-Encoding', '')
+    accept_encoding = headers.get(
+        'Accept-Encoding',
+        '') or headers.get(
+        'Bccept-Encoding',
+        '')
     errors = []
     allow_truncated = False
     for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
-            response = urlfetch.fetch(url, body, fetchmethod, headers, allow_truncated=allow_truncated, follow_redirects=False, deadline=timeout, validate_certificate=validate_certificate)
+            response = urlfetch.fetch(
+                url,
+                body,
+                fetchmethod,
+                headers,
+                allow_truncated=allow_truncated,
+                follow_redirects=False,
+                deadline=timeout,
+                validate_certificate=validate_certificate)
+            # 获取真正ｒｅｓｐｏｎｓｅ
             break
         except apiproxy_errors.OverQuotaError as e:
             time.sleep(5)
         except urlfetch.DeadlineExceededError as e:
             errors.append('%r, timeout=%s' % (e, timeout))
-            logging.error('DeadlineExceededError(timeout=%s, url=%r)', timeout, url)
+            logging.error(
+                'DeadlineExceededError(timeout=%s, url=%r)',
+                timeout,
+                url)
             time.sleep(1)
 
+            # 必须truncaated
             allow_truncated = True
-            m = re.search(r'=\s*(\d+)-', headers.get('Range') or headers.get('range') or '')
+            m = re.search(r'=\s*(\d+)-', headers.get('Range')
+                          or headers.get('range') or '')
             if m is None:
                 headers['Range'] = 'bytes=0-%d' % (maxsize or URLFETCH_MAXSIZE)
             else:
                 headers.pop('Range', '')
                 headers.pop('range', '')
                 start = int(m.group(1))
-                headers['Range'] = 'bytes=%s-%d' % (start, start+(maxsize or URLFETCH_MAXSIZE))
+                headers['Range'] = 'bytes=%s-%d' % (start,
+                                                    start + (maxsize or URLFETCH_MAXSIZE))
 
             timeout *= 2
         except urlfetch.DownloadError as e:
@@ -240,17 +317,23 @@ def application(environ, start_response):
         except urlfetch.ResponseTooLargeError as e:
             errors.append('%r, timeout=%s' % (e, timeout))
             response = e.response
-            logging.error('ResponseTooLargeError(timeout=%s, url=%r) response(%r)', timeout, url, response)
+            logging.error(
+                'ResponseTooLargeError(timeout=%s, url=%r) response(%r)',
+                timeout,
+                url,
+                response)
 
             allow_truncated = True
-            m = re.search(r'=\s*(\d+)-', headers.get('Range') or headers.get('range') or '')
+            m = re.search(r'=\s*(\d+)-', headers.get('Range')
+                          or headers.get('range') or '')
             if m is None:
                 headers['Range'] = 'bytes=0-%d' % (maxsize or URLFETCH_MAXSIZE)
             else:
                 headers.pop('Range', '')
                 headers.pop('range', '')
                 start = int(m.group(1))
-                headers['Range'] = 'bytes=%s-%d' % (start, start+(maxsize or URLFETCH_MAXSIZE))
+                headers['Range'] = 'bytes=%s-%d' % (start,
+                                                    start + (maxsize or URLFETCH_MAXSIZE))
             timeout *= 2
         except urlfetch.SSLCertificateError as e:
             errors.append('%r, should validate=0 ?' % e)
@@ -271,28 +354,41 @@ def application(environ, start_response):
 
     #logging.debug('url=%r response.status_code=%r response.headers=%r response.content[:1024]=%r', url, response.status_code, dict(response.headers), response.content[:1024])
 
+    #以上实现ｆｅｔｃｈ 的细节
+
+
     status_code = int(response.status_code)
     data = response.content
     response_headers = response.headers
-    response_headers['X-Head-Content-Length'] = response_headers.get('Content-Length', '')
-    #for k in response_headers:
+    response_headers['X-Head-Content-Length'] = response_headers.get(
+        'Content-Length', '')
+    # for k in response_headers:
     #    v = response_headers[k]
     #    logging.debug("Head:%s: %s", k, v)
     content_type = response_headers.get('content-type', '')
-    if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get('accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
+    # 也是分片合并之类的细节
+    if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get(
+            'accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
         logging.debug("data len:%d max:%d", len(data), maxsize)
         status_code = 206
-        response_headers['Content-Range'] = 'bytes 0-%d/%d' % (maxsize-1, len(data))
+        response_headers['Content-Range'] = 'bytes 0-%d/%d' % (
+            maxsize - 1, len(data))
         data = data[:maxsize]
-    if status_code == 200 and 'content-encoding' not in response_headers and 512 < len(data) < URLFETCH_DEFLATE_MAXSIZE and content_type.startswith(('text/', 'application/json', 'application/javascript')):
+    if status_code == 200 and 'content-encoding' not in response_headers and 512 < len(
+            data) < URLFETCH_DEFLATE_MAXSIZE and content_type.startswith(('text/', 'application/json', 'application/javascript')):
         if 'gzip' in accept_encoding:
             response_headers['Content-Encoding'] = 'gzip'
-            compressobj = zlib.compressobj(zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
+            compressobj = zlib.compressobj(
+                zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
             dataio = io.BytesIO()
             dataio.write('\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff')
             dataio.write(compressobj.compress(data))
             dataio.write(compressobj.flush())
-            dataio.write(struct.pack('<LL', zlib.crc32(data) & 0xFFFFFFFFL, len(data) & 0xFFFFFFFFL))
+            dataio.write(
+                struct.pack(
+                    '<LL',
+                    zlib.crc32(data) & 0xFFFFFFFF,
+                    len(data) & 0xFFFFFFFF))
             data = dataio.getvalue()
         elif 'deflate' in accept_encoding:
             response_headers['Content-Encoding'] = 'deflate'

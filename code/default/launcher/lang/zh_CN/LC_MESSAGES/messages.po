@@ -91,6 +91,9 @@ msgstr "立即更新"
 msgid "Version of the stable one"
 msgstr "稳定版版本"
 
+msgid "All versions download page"
+msgstr "所有版本下载页面"
+
 msgid "Module management"
 msgstr "模块管理"
 

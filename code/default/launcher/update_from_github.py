@@ -185,13 +185,15 @@ def overwrite(xxnet_version, xxnet_unzip_path):
                 dst_file = os.path.join(top_path, target_relate_path, filename)
                 if not os.path.isfile(dst_file) or hash_file_sum(src_file) != hash_file_sum(dst_file):
                     xlog.info("copy %s => %s", src_file, dst_file)
-                    if sys.platform != 'win32' and os.path.isfile(dst_file):
+                    #modify by outofmemo, files in '/sdcard' are not allowed to chmod for Android
+                    #and shutil.copy() will call shutil.copymode()
+                    if sys.platform != 'win32' and os.path.isfile("/system/bin/dalvikvm")==False and os.path.isfile("/system/bin/dalvikvm64")==False and os.path.isfile(dst_file):
                         st = os.stat(dst_file)
                         shutil.copy(src_file, dst_file)
                         if st.st_mode & stat.S_IEXEC:
                             os.chmod(dst_file, st.st_mode)
                     else:
-                        shutil.copy(src_file, dst_file)
+                        shutil.copyfile(src_file, dst_file)
 
     except Exception as e:
         xlog.warn("update over write fail:%r", e)

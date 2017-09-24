@@ -364,7 +364,7 @@ msgid "You may want to $1turn on IP scaner$2."
 msgstr "您应该考虑$1开启 IP 扫描器$2。"
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
-msgstr "请等待大约半小时，XX-Net需要扫描IP。"
+msgstr "请等待大约2小时，XX-Net需要扫描IP。"
 
 msgid ""
 "Public appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
