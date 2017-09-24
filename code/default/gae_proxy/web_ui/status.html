@@ -641,7 +641,7 @@
 </script>
 <script type="text/javascript">
     //pop up notify with many buttons
-    function popNotify(text,buttons,setBColor,showClose=1)
+    function popNotify(text,buttons,showClose=1,setBColor)
     {
     
         function countMember(o){
@@ -675,11 +675,16 @@
             //notify_close_btn.className="";
             notify_close_btn.appendChild(document.createTextNode("X"));
             notify_close_btn.style="float:right; cursor: pointer;";
+            notify_close_btn.addEventListener("click", function(){
+                newdiv.parentNode.removeChild(this.parentNode);
+            });
+            /*
             notify_close_btn.onclick=function()
             {
                 //close this popup
-                notify_area.removeChild(this.parentNode);
+                newdiv.parentNode.removeChild(this.parentNode);
             }
+            */
         }
         //-----------------------------------
         //in new div create span as notify text
@@ -721,6 +726,10 @@
             text: notify_text_span,
             buttons: buttonsOut ,
         }
+        if(showClose)
+        {
+            objs.closeBtn= notify_close_btn;
+        }
         return objs;
     }
     //Example
@@ -733,7 +742,7 @@
         },
         [1]:{
             label: "change tip",
-            onClick: function() { tip1.text.innerHTML="";tip1.text.appendChild(document.createTextNode("text changed")); } ,
+            onClick: function() { tip1.text.innerHTML="";tip1.text.appendChild(document.createTextNode("text changed")); } , //change notify text
         },
         [2]:{
             label: "close a tip",
@@ -741,9 +750,9 @@
         },
     }
     var tip1=popNotify("This is Enhanced notify example.", tip1buttons );
-    tip1.buttons[2].onclick = function(){ tip2.whole.parentNode.removeChild(tip2.whole); };
-    
-    var tip2=popNotify("This is Enhanced notify example without close button.",null,null,0);
+    tip1.buttons[2].onclick = function(){ tip2.whole.parentNode.removeChild(tip2.whole); }; //remove the other notify
+    tip1.closeBtn.onclick=function(){alert('close button clicked');};  //add action on close button
+    var tip2=popNotify("This is Enhanced notify example without close button.",null,0);
     */
     
 </script>
