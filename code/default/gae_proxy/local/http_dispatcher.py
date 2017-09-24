@@ -186,12 +186,16 @@ class HttpsDispatcher(object):
         self.last_request_time = time.time()
         q = Queue.Queue()
         task = http_common.Task(headers, body, q, url)
+        unique_id = task.unique_id
         task.set_state("start_request")
         self.request_queue.put(task)
         self.working_tasks[task.unique_id] = task
         response = q.get(True)
         task.set_state("get_response")
-        del self.working_tasks[task.unique_id]
+        try:
+            del self.working_tasks[task.unique_id]
+        except Exception as e:
+            xlog.error("http_dispatcher request unique_id %s, %s not found.", unique_id, task.unique_id)
         return response
 
     def retry_task_cb(self, task):
