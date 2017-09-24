@@ -683,7 +683,8 @@ class IpManager():
 
         self.keep_scan_all_exist_ip = True
         scan_threads = []
-        for i in range(0, 50):
+        scan_thread_num = config.CONFIG.getint("google_ip", "max_scan_ip_thread_num")
+        for i in range(0, scan_thread_num):
             th = threading.Thread(target=self.scan_exist_ip_worker, )
             th.start()
             scan_threads.append(th)
