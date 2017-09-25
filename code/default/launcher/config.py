@@ -1,29 +1,31 @@
+#!/usr/bin/env python
 
 import os
-from instances import xlog
 import yaml
-from distutils.version import LooseVersion
+from instances import xlog
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 config_path = os.path.join(data_path, 'launcher', 'config.yaml')
 
 config = {}
+
+
 def load():
     global config, config_path
     try:
-        config = yaml.load(file(config_path, 'r'))
-        #print yaml.dump(config)
-    except Exception as  exc:
-        print "Error in configuration file:", exc
+        config = yaml.load(open(config_path, 'r'))
+        # print(yaml.dump(config))
+    except Exception as exc:
+        print("Error in configuration file:", exc)
 
 
 def save():
     global config, config_path
     try:
-        yaml.dump(config, file(config_path, "w"))
+        yaml.dump(config, open(config_path, "w"))
     except Exception as e:
         xlog.warn("save config %s fail %s", config_path, e)
 
@@ -83,8 +85,8 @@ def recheck_module_path():
         # default enable PAC on startup.
         set(["modules", "launcher", "proxy"], "pac")
 
-    #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
-    #    set(["modules", "gae_proxy", "control_port"], 8084)
+    # if get(["modules", "gae_proxy", "control_port"], 0) == 0:
+    #     set(["modules", "gae_proxy", "control_port"], 8084)
 
     return need_save_config
 
@@ -95,4 +97,6 @@ def init():
 
     if recheck_module_path():
         save()
+
+
 init()

@@ -2,12 +2,10 @@ import time
 import json
 import threading
 import struct
-import urlparse
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
-from simple_http_client import HTTP_client
 import utils
 import base_container
 import encrypt
@@ -34,8 +32,18 @@ class ProxySession():
         self.ack_pool = base_container.AckPool()
         self.mutex = threading.Lock()  # lock for conn_id, sn generation, on_road_num change,
         self.download_order_queue = base_container.BlockReceivePool(process_callback=self.download_data_processor)
+
         self.running = False
-        self.start()
+        self.roundtrip_thread = {}
+        self.session_id = utils.generate_random_lowercase(8)
+        self.last_conn_id = 0
+        self.last_transfer_no = 0
+        self.conn_list = {}
+        self.transfer_list = {}
+        self.last_roundtrip_time = 0
+        self.on_road_num = 0
+        self.last_download_data_time = 0
+        self.traffic = 0
 
     def start(self):
         self.ack_pool.reset()
@@ -54,9 +62,10 @@ class ProxySession():
         self.traffic = 0
 
         if not self.login_session():
-            xlog.warn("x-tunnel session not start")
+            xlog.warn("x-tunnel login_session fail, session not start")
             return False
 
+        self.last_roundtrip_time = time.time()
         self.running = True
         self.upload_task_queue.start()
 
@@ -70,6 +79,7 @@ class ProxySession():
             self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker, args=(server_address,))
             self.roundtrip_thread[i].daemon = True
             self.roundtrip_thread[i].start()
+        return True
 
     def stop(self):
         if not self.running:
@@ -85,18 +95,21 @@ class ProxySession():
         #xlog.debug("begin join roundtrip_thread")
         for i in self.roundtrip_thread:
             # xlog.debug("begin join %d", i)
-            rthead = self.roundtrip_thread[i]
-            if rthead is threading.current_thread():
-                # xlog.debug("%d is self", i)
-                continue
-            rthead.join()
+            try:
+                rthead = self.roundtrip_thread[i]
+                if rthead is threading.current_thread():
+                    # xlog.debug("%d is self", i)
+                    continue
+                rthead.join()
+            except:
+                pass
             # xlog.debug("end join %d", i)
         #xlog.debug("end join roundtrip_thread")
 
     def reset(self):
         xlog.debug("session reset")
         self.stop()
-        self.start()
+        return self.start()
 
     def status(self):
         out_string = "session_id:%s<br>\n" % self.session_id
@@ -108,7 +121,7 @@ class ProxySession():
         out_string += "last_transfer_no:%d<br>\n" % self.last_transfer_no
 
         out_string += "on_road_num:%d<br>\n" % self.on_road_num
-        out_string += "transfer_list:<br>\r\n"
+        out_string += "transfer_list: %d<br>\r\n" % len(self.transfer_list)
         for transfer_no in sorted(self.transfer_list.iterkeys()):
             transfer = self.transfer_list[transfer_no]
             if "start" in self.transfer_list[transfer_no]:
@@ -143,10 +156,9 @@ class ProxySession():
 
             upload_post_data = encrypt_data(upload_data_head)
 
-            http_client = HTTP_client((g.server_host, g.server_port), g.proxy, g.config.use_https,
-                                      g.config.conn_life, cert=g.cert)
-            content, status, heads = http_client.request(method="POST", path="data", data=upload_post_data,
-                                                         timeout=g.config.roundtrip_timeout)
+            content, status, heads = g.http_client.request(method="POST", host=g.server_host, path="/data",
+                                                           data=upload_post_data,
+                                                           timeout=g.config.roundtrip_timeout)
 
             time_cost = time.time() - start_time
             if status != 200:
@@ -171,16 +183,16 @@ class ProxySession():
                 return False
 
             g.last_api_error = ""
-            xlog.info("login_session time:%d msg:%s", 1000 * time_cost, message)
+            xlog.info("login_session %s time:%d msg:%s", self.session_id, 1000 * time_cost, message)
             return True
         except Exception as e:
             xlog.exception("login_session e:%r", e)
             return False
 
     def create_conn(self, sock, host, port):
-        if not self.running:
-            xlog.warn("session not running, can't connect")
-            return
+        if time.time() - self.last_roundtrip_time > 5 * 60 - 5:
+            if not self.reset():
+                return None
 
         self.mutex.acquire()
         self.last_conn_id += 1
@@ -257,8 +269,6 @@ class ProxySession():
     def normal_roundtrip_worker(self, server_address):
         last_roundtrip_download_size = 0
 
-        http_client = HTTP_client(server_address, g.proxy, g.config.use_https, g.config.conn_life, cert=g.cert)
-
         while self.running:
 
             if self.on_road_num > g.config.concurent_thread_num * 0.8:
@@ -296,6 +306,7 @@ class ProxySession():
             else:
                 server_timeout = g.config.roundtrip_timeout / 2
 
+            request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, str(self.session_id),
                                            transfer_no,
                                            send_sn, server_timeout, send_data_len, send_ack_len)
@@ -320,7 +331,8 @@ class ProxySession():
                     self.transfer_list[transfer_no]["try"] = try_no
                     self.transfer_list[transfer_no]["stat"] = "request"
                     self.transfer_list[transfer_no]["start"] = time.time()
-                    content, status, response = http_client.request(method="POST", path="data", data=upload_post_data,
+                    content, status, response = g.http_client.request(method="POST", host=g.server_host,
+                                                                      path="/data", data=upload_post_data,
                                                                     timeout=g.config.roundtrip_timeout)
 
                     traffic = len(upload_post_data) + len(content) + 645
@@ -330,20 +342,24 @@ class ProxySession():
                     xlog.exception("request except:%r retry %d", e, try_no)
 
                     time.sleep(sleep_time)
-                    continue
+                    if transfer_no not in self.transfer_list:
+                        break
+                    else:
+                        continue
                 finally:
                     with self.mutex:
                         self.on_road_num -= 1
 
                 if status == 405:  # session_id not exist on server
                     if self.running:
-                        xlog.warn("server session_id not exist, start reset session")
-                        self.reset()
+                        if self.session_id == request_session_id:
+                            xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
+                            self.reset()
                     return
                 elif status == 200:
                     recv_len = len(content)
                     if recv_len < 6:
-                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d status:%r retry:%d",
+                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d len:%d status:%r retry:%d",
                                    (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, len(content),
                                    status, try_no)
                         continue
@@ -411,7 +427,11 @@ class ProxySession():
                               (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, status, try_no)
                     time.sleep(sleep_time)
 
-            del self.transfer_list[transfer_no]
+            try:
+                if transfer_no in self.transfer_list:
+                    del self.transfer_list[transfer_no]
+            except:
+                pass
         xlog.info("roundtrip port:%d thread exit", server_address[1])
 
 
@@ -436,22 +456,14 @@ def calculate_quota_left(quota_list):
     return quota_left
 
 
-def get_api_server_http_client():
-    api_server = urlparse.urlparse(g.config.api_server)
-    http_client = HTTP_client((api_server.hostname, api_server.port), g.proxy, g.config.use_https, g.config.conn_life,
-                              cert=g.cert)
-    return http_client
-
-
 def call_api(path, req_info):
     try:
         start_time = time.time()
         upload_post_data = json.dumps(req_info)
 
         upload_post_data = encrypt_data(upload_post_data)
-        http_client = get_api_server_http_client()
 
-        content, status, heads = http_client.request(method="POST", path=path,
+        content, status, heads = g.http_client.request(method="POST", host=g.config.api_server, path=path,
                                                      header={"Content-Type": "application/json"},
                                                      data=upload_post_data, timeout=g.config.roundtrip_timeout)
 
@@ -488,10 +500,10 @@ def call_api(path, req_info):
 
 def request_balance(account, password, is_register=False, update_server=True):
     if is_register:
-        login_path = "register"
+        login_path = "/register"
         xlog.info("request_balance register:%s", account)
     else:
-        login_path = "login"
+        login_path = "/login"
 
     req_info = {"account": account, "password": password}
 
@@ -513,3 +525,30 @@ def request_balance(account, password, is_register=False, update_server=True):
     xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
               g.balance, g.quota)
     return True, "success"
+
+
+def create_conn(sock, host, port):
+    while g.login_process:
+        time.sleep(1)
+
+    if not g.session.running:
+        if not (g.config.login_account and g.config.login_password):
+            xlog.debug("x-tunnel no account")
+            return None
+
+        g.login_process = True
+        try:
+            xlog.debug("session not running, try login..")
+            res, reason = request_balance(g.config.login_account, g.config.login_password)
+            if not res:
+                xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
+                return None
+
+            if not g.session.running:
+                xlog.warn("session not running, try to connect")
+                if not g.session.start():
+                    return None
+        finally:
+            g.login_process = False
+
+    return g.session.create_conn(sock, host, port)

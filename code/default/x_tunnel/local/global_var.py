@@ -1,10 +1,11 @@
 
 protocol_version = 1
 last_refresh_time = 0
+login_process = False
 cert = None
 data_path = None
 config = None
-proxy = None
+http_client = None
 session = None
 socks5_server = None
 last_api_error = ""

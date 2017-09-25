@@ -310,15 +310,16 @@ class PACServerHandler(simple_http_server.HttpServerHandler):
             xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
-
         if filename != 'proxy.pac':
             xlog.warn("pac_server GET %s fail", filename)
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
             return
 
         mimetype = 'text/plain'
-        if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(get_serving_pacfile()) > config.PAC_EXPIRED:
-            thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
+        # STOP update PAC
+        # because gfwlist format changed.
+        # if self.path.endswith('.pac?flush') or time.time() - os.path.getmtime(get_serving_pacfile()) > config.PAC_EXPIRED:
+        #    thread.start_new_thread(PacUtil.update_pacfile, (user_pacfile,))
 
         pac_filename = get_serving_pacfile()
         with open(pac_filename, 'rb') as fp:

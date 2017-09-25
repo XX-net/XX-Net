@@ -13,6 +13,7 @@ xlog = getLogger("x_tunnel")
 import simple_http_server
 import global_var as g
 import proxy_session
+from cloudflare_front import web_control as cloudflare_web
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -39,6 +40,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_info_handler()
         elif path == "/get_history":
             return self.req_get_history_handler()
+        elif path.startswith("/cloudflare_front/"):
+            path = self.path[17:]
+            controler = cloudflare_web.ControlHandler(self.client_address,
+                             self.headers,
+                             self.command, path,
+                             self.rfile, self.wfile)
+            controler.do_GET()
+
         else:
             xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -67,6 +76,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_order_handler()
         elif path == "/transfer":
             return self.req_transfer_handler()
+        elif path.startswith("/cloudflare_front/"):
+            path = path[17:]
+            controler = cloudflare_web.ControlHandler(self.client_address,
+                                                      self.headers,
+                                                      self.command, path,
+                                                      self.rfile, self.wfile)
+            controler.do_POST()
         else:
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
             return self.send_not_found()
@@ -220,7 +236,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "plan %s not support" % plan
             })
 
-        res, info = proxy_session.call_api("order", {
+        res, info = proxy_session.call_api("/order", {
             "account": g.config.login_account,
             "password": g.config.login_password,
             "product": "x_tunnel",
@@ -258,7 +274,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "amount": amount
         }
 
-        res, info = proxy_session.call_api("transfer", req_info)
+        res, info = proxy_session.call_api("/transfer", req_info)
         if not res:
             xlog.warn("transfer fail:%s", info)
             return self.response_json({
@@ -280,7 +296,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "limit": int(reqs['limit'][0])
         }
 
-        res, info = proxy_session.call_api("get_history", req_info)
+        res, info = proxy_session.call_api("/get_history", req_info)
         if not res:
             xlog.warn("get history fail:%s", info)
             return self.response_json({

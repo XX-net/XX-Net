@@ -39,6 +39,7 @@ from proxy_handler import Socks5Server
 import global_var as g
 import proxy_session
 import simple_http_server
+from cloudflare_front import front
 
 import web_control
 # don't remove, launcher web_control need it.
@@ -61,18 +62,14 @@ def load_config():
     config.set_var("encrypt_password", "encrypt_pass")
     config.set_var("encrypt_method", "aes-256-cfb")
 
-    config.set_var("api_server", "http://center.xx-net.net:8888/")
+    config.set_var("api_server", "center6.xx-net.net")
     config.set_var("server_host", "")
     config.set_var("server_port", 0)
-    config.set_var("use_https", 0)
+    config.set_var("use_https", 1)
     config.set_var("port_range", 1)
 
     config.set_var("login_account", "")
     config.set_var("login_password", "")
-
-    # can use gae_proxy "127.0.0.1", 8087
-    config.set_var("http_proxy_host", "127.0.0.1")
-    config.set_var("http_proxy_port", 8087)
 
     config.set_var("conn_life", 30)
 
@@ -86,9 +83,9 @@ def load_config():
     # range 1 - 1000
     config.set_var("send_delay", 100)
     # max 10M
-    config.set_var("block_max_size", 512 * 1024)
+    config.set_var("block_max_size", 256 * 1024)
     # range 1 - 60
-    config.set_var("roundtrip_timeout", 20)
+    config.set_var("roundtrip_timeout", 25)
 
     config.load()
 
@@ -101,12 +98,6 @@ def load_config():
     xlog.setLevel(config.log_level)
     g.config = config
 
-    if g.config.http_proxy_host and g.config.http_proxy_port:
-        xlog.info("Use proxy:%s:%d", g.config.http_proxy_host, g.config.http_proxy_port)
-        g.proxy = (g.config.http_proxy_host, g.config.http_proxy_port)
-    else:
-        g.proxy = None
-
 
 def start():
     if not g.server_host or not g.server_port:
@@ -116,20 +107,21 @@ def start():
             g.server_port = g.config.server_port
             g.balance = 99999999
         elif g.config.api_server:
-            if not (g.config.login_account and g.config.login_password):
-                xlog.debug("x-tunnel no account")
-            else:
-                res, reason = proxy_session.request_balance(g.config.login_account, g.config.login_password)
-                if not res:
-                    xlog.warn("request_balance fail when start:%s", reason)
+            pass
         else:
             xlog.debug("please check x-tunnel server in config")
 
+    g.http_client = front.Front()
+
     g.session = proxy_session.ProxySession()
+    #if g.config.login_account:
+    #    proxy_session.request_balance(g.config.login_account, g.config.login_password)
 
 
 def terminate():
     global ready
+    g.http_client.stop()
+
     if g.socks5_server:
         xlog.info("Close Socks5 server ")
         g.socks5_server.server_close()
