@@ -13,11 +13,11 @@
 
 ### 最新状态：
  2017-09-22
-* 8月份开始，GAE封锁加剧，请更新到3.6.0，慢慢等待扫描ip
+* 8月份开始，GAE封锁加剧，请更新到3.6.3，慢慢等待扫描ip
 * X-Tunnel新版稳定，不受GAE封锁影响 （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）
 
 <br>
 
 #### 提示：  
 * 有问题请先看[Wiki文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3)
-* [提问](https://github.com/XX-net/XX-Net/issues)前，请先看最近讨论主题，避免重复发问。  
+* [提问](https://github.com/XX-net/XX-Net/issues)前，请先看[最近讨论主题](https://github.com/XX-net/XX-Net/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc)，避免重复发问。  
