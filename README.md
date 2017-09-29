@@ -12,9 +12,9 @@
 
 
 ### 最新状态：
- 2017-09-22
-* 8月份开始，GAE封锁加剧，请更新到3.6.3，慢慢等待扫描ip
-* X-Tunnel新版稳定，不受GAE封锁影响 （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）
+ 2017-09-29
+* 8月份开始，GAE封锁加剧，请更新到3.6.4，慢慢等待扫描ip
+* X-Tunnel新版3.6.4 稳定流畅，不受GAE封锁影响 （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）
 
 <br>
 
