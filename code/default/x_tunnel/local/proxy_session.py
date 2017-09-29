@@ -46,40 +46,45 @@ class ProxySession():
         self.traffic = 0
 
     def start(self):
-        self.ack_pool.reset()
-        self.download_order_queue.reset()
+        try:
+            self.mutex.acquire()
 
-        self.roundtrip_thread = {}
+            self.ack_pool.reset()
+            self.download_order_queue.reset()
 
-        self.session_id = utils.generate_random_lowercase(8)
-        self.last_conn_id = 0
-        self.last_transfer_no = 0
-        self.conn_list = {}
-        self.transfer_list = {}
-        self.last_roundtrip_time = 0
-        self.on_road_num = 0
-        self.last_download_data_time = 0
-        self.traffic = 0
+            self.roundtrip_thread = {}
 
-        if not self.login_session():
-            xlog.warn("x-tunnel login_session fail, session not start")
-            return False
+            self.session_id = utils.generate_random_lowercase(8)
+            self.last_conn_id = 0
+            self.last_transfer_no = 0
+            self.conn_list = {}
+            self.transfer_list = {}
+            self.last_roundtrip_time = 0
+            self.on_road_num = 0
+            self.last_download_data_time = 0
+            self.traffic = 0
 
-        self.last_roundtrip_time = time.time()
-        self.running = True
-        self.upload_task_queue.start()
+            if not self.login_session():
+                xlog.warn("x-tunnel login_session fail, session not start")
+                return False
 
-        server_port = g.server_port
-        for i in range(0, g.config.concurent_thread_num):
-            if g.config.port_range > 1:
-                server_port += 1
-                if server_port > g.server_port + g.config.port_range:
-                    server_port = g.server_port
-            server_address = (g.server_host, server_port)
-            self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker, args=(server_address,))
-            self.roundtrip_thread[i].daemon = True
-            self.roundtrip_thread[i].start()
-        return True
+            self.last_roundtrip_time = time.time()
+            self.running = True
+            self.upload_task_queue.start()
+
+            server_port = g.server_port
+            for i in range(0, g.config.concurent_thread_num):
+                if g.config.port_range > 1:
+                    server_port += 1
+                    if server_port > g.server_port + g.config.port_range:
+                        server_port = g.server_port
+                server_address = (g.server_host, server_port)
+                self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker, args=(server_address,))
+                self.roundtrip_thread[i].daemon = True
+                self.roundtrip_thread[i].start()
+            return True
+        finally:
+            self.mutex.release()
 
     def stop(self):
         if not self.running:
@@ -156,7 +161,7 @@ class ProxySession():
 
             upload_post_data = encrypt_data(upload_data_head)
 
-            content, status, heads = g.http_client.request(method="POST", host=g.server_host, path="/data",
+            content, status, response = g.http_client.request(method="POST", host=g.server_host, path="/data",
                                                            data=upload_post_data,
                                                            timeout=g.config.roundtrip_timeout)
 
@@ -271,9 +276,10 @@ class ProxySession():
 
         while self.running:
 
-            if self.on_road_num > g.config.concurent_thread_num * 0.8:
+            if self.on_road_num > g.config.concurent_thread_num * 0.9:
                 block = True
-            elif last_roundtrip_download_size > g.config.block_max_size:
+                xlog.debug("block for too many on road")
+            elif last_roundtrip_download_size > 0:
                 block = False
             elif len(self.conn_list) > 0 and self.on_road_num < 1:
                 # keep at least one pulling thread
@@ -284,6 +290,7 @@ class ProxySession():
                 block = False
             else:
                 block = True
+                xlog.debug("block for none")
 
             if block:
                 get_timeout = 24 * 3600
@@ -326,7 +333,7 @@ class ProxySession():
                 with self.mutex:
                     self.on_road_num += 1
 
-                # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
+                xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
                 try:
                     self.transfer_list[transfer_no]["try"] = try_no
                     self.transfer_list[transfer_no]["stat"] = "request"
@@ -393,14 +400,28 @@ class ProxySession():
 
                     sn, time_cost = struct.unpack("<II", data.get(8))
 
+                    roundtrip_time = (time.time() - start_time) * 1000
                     xlog.debug(
                         "roundtrip time:%d cost:%d transfer_no:%d send_sn:%d send:%d recv_sn:%d rcv:%d status:%r",
-                        (time.time() - start_time) * 1000, time_cost, transfer_no, send_sn, send_data_len, sn,
+                        roundtrip_time, time_cost, transfer_no, send_sn, send_data_len, sn,
                         len(content), status)
+
+                    rtt = roundtrip_time - time_cost
+                    speed = (send_data_len + len(content) + 400) / rtt
+                    response.worker.update_rtt_speed(rtt, speed)
+                    if rtt > 3000:
+                        xlog.warn("rtt:%d speed:%d trace:%s", rtt, speed, response.worker.get_trace())
+                        xlog.warn("task trace:%s", response.task.get_trace())
 
                     data_len = len(data)
                     if (sn > 0 and data_len == 0) or (sn == 0 and data_len > 0):
                         xlog.warn("get sn:%d len:%d %s", sn, data_len, data)
+
+                    if send_data_len == 0 and \
+                                    data_len >= g.config.block_max_size and \
+                                    last_roundtrip_download_size >= g.config.block_max_size:
+                        if self.on_road_num < int(g.config.concurent_thread_num * 0.8):
+                            self.touch_roundtrip()
 
                     if sn:
                         self.last_download_data_time = time.time()
@@ -412,14 +433,6 @@ class ProxySession():
                         self.ack_pool.put(ack_pak)
                     else:
                         last_roundtrip_download_size = 0
-
-                    if send_data_len == 0 and data_len > g.config.block_max_size:
-                        need_more_thread_num = int(g.config.concurent_thread_num * 0.5 - self.on_road_num)
-                        if need_more_thread_num > 0:
-                            for j in range(0, need_more_thread_num):
-                                if self.on_road_num > g.config.concurent_thread_num * 0.5:
-                                    break
-                                self.touch_roundtrip()
 
                     break
                 else:
@@ -463,7 +476,7 @@ def call_api(path, req_info):
 
         upload_post_data = encrypt_data(upload_post_data)
 
-        content, status, heads = g.http_client.request(method="POST", host=g.config.api_server, path=path,
+        content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
                                                      header={"Content-Type": "application/json"},
                                                      data=upload_post_data, timeout=g.config.roundtrip_timeout)
 
@@ -473,7 +486,6 @@ def call_api(path, req_info):
             xlog.warn("api:%s fail:%s t:%d", path, reason, time_cost)
             g.last_api_error = reason
             return False, reason
-
 
         content = decrypt_data(content)
         try:
@@ -516,7 +528,9 @@ def request_balance(account, password, is_register=False, update_server=True):
     if g.quota <= 0:
         xlog.warn("no quota")
 
-    if update_server:
+    if g.config.server_host:
+        g.server_host = str(g.config.server_host)
+    elif update_server:
         g.server_host = str(info["host"])
         g.server_port = info["port"]
         xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
@@ -527,28 +541,30 @@ def request_balance(account, password, is_register=False, update_server=True):
     return True, "success"
 
 
+login_lock = threading.Lock()
+
+
 def create_conn(sock, host, port):
-    while g.login_process:
-        time.sleep(1)
 
-    if not g.session.running:
-        if not (g.config.login_account and g.config.login_password):
-            xlog.debug("x-tunnel no account")
-            return None
-
-        g.login_process = True
-        try:
-            xlog.debug("session not running, try login..")
-            res, reason = request_balance(g.config.login_account, g.config.login_password)
-            if not res:
-                xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
+    with login_lock:
+        if not g.session.running:
+            if not (g.config.login_account and g.config.login_password):
+                xlog.debug("x-tunnel no account")
                 return None
 
-            if not g.session.running:
-                xlog.warn("session not running, try to connect")
-                if not g.session.start():
+            g.login_process = True
+            try:
+                xlog.debug("session not running, try login..")
+                res, reason = request_balance(g.config.login_account, g.config.login_password)
+                if not res:
+                    xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
                     return None
-        finally:
-            g.login_process = False
+
+                if not g.session.running:
+                    xlog.warn("session not running, try to connect")
+                    if not g.session.start():
+                        return None
+            finally:
+                g.login_process = False
 
     return g.session.create_conn(sock, host, port)

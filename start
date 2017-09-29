@@ -3,7 +3,7 @@
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPTPATH"
 
-if python -V | grep -q "Python 3" ;then
+if python -V 2>&1| grep -q "Python 3" ;then
     PYTHON="python2"
 else
     PYTHON="python"
