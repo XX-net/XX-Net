@@ -3,13 +3,22 @@
 ###### [中文文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3) &nbsp; &nbsp; &nbsp;[English](https://github.com/XX-net/XX-Net/wiki/English-Home-Page) &nbsp; &nbsp; &nbsp;[فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page) 
 
 * 易用的翻墙工具  
-* 包含的GAE代理和X-Tunnel  
+* 包含的GAE_proxy和X-Tunnel：  
+
+
+| 模块        | GAE_proxy   | X-Tunnel  |  
+| ------------- |:-------------:| :-----:| 
+| 稳定性| 部分地区扫不到ip | 无干扰 |
+| 速度 | 流畅 | 下载快速，偶尔卡顿 | 
+| 安全性| Google可看到通信内容 |  完全加密 |  
+| 易用 | 需部署服务端 | 简单  |
+| 兼容性| 部分网站不支持 | 无问题 |
+| 收费  | 免费 | 付费 |  
+
 <br>
 
-
-
 ### [__下载页面__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
-
+<br>
 
 
 ### 最新状态：
