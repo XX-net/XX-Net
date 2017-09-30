@@ -29,7 +29,7 @@ class BaseResponse(object):
 
 
 class Task(object):
-    def __init__(self, method, host, path, headers, body, queue, url):
+    def __init__(self, method, host, path, headers, body, queue, url, timeout):
         self.method = method
         self.host = host
         self.path = path
@@ -37,6 +37,7 @@ class Task(object):
         self.body = body
         self.queue = queue
         self.url = url
+        self.timeout = timeout
         self.start_time = time.time()
         self.unique_id = "%s:%f" % (url, self.start_time)
         self.trace_time = []

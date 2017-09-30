@@ -21,6 +21,7 @@ class HTTP1_worker(HTTP_worker):
         self.last_request_time = self.ssl_sock.create_time
         self.task = None
         self.request_onway = False
+        self.transfered_size = 0
         self.trace_time = []
         self.trace_time.append([ssl_sock.create_time, "connect"])
         self.record_active("init")
@@ -43,6 +44,7 @@ class HTTP1_worker(HTTP_worker):
             out_list.append(" %d:%s" % (time_diff, stat))
         out_list.append(":%d" % ((time.time() - last_time) * 1000))
         out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" transfered:%d" % self.transfered_size)
         return ",".join(out_list)
 
     def get_rtt_rate(self):
@@ -101,7 +103,7 @@ class HTTP1_worker(HTTP_worker):
                 return
 
     def request_task(self, task):
-        timeout = 8
+        timeout = task.timeout
         self.request_onway = True
         start_time = time.time()
 
@@ -131,7 +133,8 @@ class HTTP1_worker(HTTP_worker):
             task.set_state("response_begin")
 
         except Exception as e:
-            xlog.exception("%s h1_request:%r inactive_time:%d", self.ip, e, time.time()-self.last_active_time)
+            xlog.exception("%s h1_request:%r inactive_time:%d task.timeout:%d",
+                           self.ip, e, time.time()-self.last_active_time, task.timeout)
             xlog.warn('%s trace:%s', self.ip, self.get_trace())
 
             ip_manager.report_connect_closed(self.ip, "down fail")
@@ -147,7 +150,8 @@ class HTTP1_worker(HTTP_worker):
         try:
             data = response.readall(timeout=time_left)
         except Exception as e:
-            xlog.exception("read fail, ip:%s, chunk:%d url:%s e:%r", self.ip, response.chunked, task.url, e)
+            xlog.exception("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
+                           self.ip, response.chunked, task.url, task.timeout, e)
             xlog.warn('%s trace:%s', self.ip, self.get_trace())
             ip_manager.report_connect_closed(self.ip, "down fail")
             self.close("read fail")
@@ -168,6 +172,8 @@ class HTTP1_worker(HTTP_worker):
         if time_cost != 0:
             speed = length / time_cost
             task.set_state("h1_finish[SP:%d]" % speed)
+
+        self.transfered_size += len(request_data) + length
         self.task = None
         self.accept_task = True
         self.idle_cb()

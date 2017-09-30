@@ -31,7 +31,7 @@ class Response(object):
     def read_line(self, timeout=60):
         start_time = time.time()
         sock = self.connection
-        # sock.setblocking(0)
+        sock.setblocking(0)
         try:
             while True:
                 n1 = self.read_buffer.find("\r\n", self.buffer_start)
@@ -53,7 +53,7 @@ class Response(object):
     def read_headers(self, timeout=60):
         start_time = time.time()
         sock = self.connection
-        # sock.setblocking(0)
+        sock.setblocking(0)
         try:
             while True:
                 n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
@@ -120,7 +120,7 @@ class Response(object):
                 self.buffer_start = 0
             return out_str
 
-        #self.connection.setblocking(0)
+        self.connection.setblocking(0)
         start_time = time.time()
         out_list = [ self.read_buffer[self.buffer_start:] ]
         out_len = len(self.read_buffer) - self.buffer_start

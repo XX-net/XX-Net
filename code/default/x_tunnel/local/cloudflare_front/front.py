@@ -22,7 +22,7 @@ class Front(object):
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
-                response = dispatcher.request(method, host, path, header, data)
+                response = dispatcher.request(method, host, path, header, data, timeout=timeout)
                 status = response.status
                 if status not in [200, 405]:
                     xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)

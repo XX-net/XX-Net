@@ -311,7 +311,10 @@ class ProxySession():
             if self.on_road_num > g.config.concurent_thread_num * 0.8:
                 server_timeout = 0
             else:
-                server_timeout = g.config.roundtrip_timeout / 2
+                if last_roundtrip_download_size >= g.config.block_max_size:
+                    server_timeout = 1
+                else:
+                    server_timeout = g.config.roundtrip_timeout / 2
 
             request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, str(self.session_id),
@@ -340,7 +343,7 @@ class ProxySession():
                     self.transfer_list[transfer_no]["start"] = time.time()
                     content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                       path="/data", data=upload_post_data,
-                                                                    timeout=g.config.roundtrip_timeout)
+                                                                    timeout=server_timeout + 4)
 
                     traffic = len(upload_post_data) + len(content) + 645
                     self.traffic += traffic
