@@ -27,12 +27,11 @@ class Front(object):
                 if status not in [200, 405]:
                     xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
                     continue
-                heads = response.headers
                 length = response.task.content_length
 
                 content = response.task.read(size=length)
                 xlog.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
-                return content, status, heads
+                return content, status, response
             except Exception as e:
                 xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
                 continue
@@ -41,3 +40,6 @@ class Front(object):
 
     def stop(self):
         connect_control.keep_running = False
+
+
+front = Front()

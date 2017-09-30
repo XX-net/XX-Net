@@ -54,7 +54,7 @@ import check_local_network
 from config import config
 import cert_util
 import openssl_wrap
-
+import simple_http_client
 
 import hyper
 
@@ -158,7 +158,7 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
 
     connect_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
-    #xlog.debug("conn: %d  handshake:%d", conncet_time, handshake_time)
+    xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
     ssl_sock._sock = sock
@@ -183,9 +183,9 @@ def check_xtunnel_http1(ssl_sock, host):
     start_time = time.time()
     request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host
     ssl_sock.send(request_data.encode())
-    response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
-    response.begin()
+    response = simple_http_client.Response(ssl_sock)
+    response.begin(timeout=5)
 
     server_type = response.getheader('Server', "")
     xlog.debug("status:%d", response.status)
@@ -198,7 +198,7 @@ def check_xtunnel_http1(ssl_sock, host):
         xlog.warn("ip:%s status:%d", ip, response.status)
         return False
 
-    content = response.read()
+    content = response.read(timeout=1)
     if "X_Tunnel OK" not in content:
         xlog.warn("app check content:%s", content)
         return False
@@ -266,7 +266,7 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
                 ssl_sock.support_xtunnel = True
                 return ssl_sock
         except Exception as e:
-            xlog.warn("check fail:%r", e)
+            xlog.exception("check fail:%r", e)
             return False
     else:
         return check_xtunnel_http2(ssl_sock, host)

@@ -93,7 +93,7 @@ class Task(object):
         # for debug trace
         time_now = time.time()
         self.trace_time.append((time_now, stat))
-        # xlog.debug("%s stat:%s", self.url, stat)
+        # xlog.debug("%s stat:%s", self.unique_id, stat)
         return time_now
 
     def get_trace(self):
@@ -103,7 +103,7 @@ class Task(object):
             time_diff = int((t - last_time) * 1000)
             last_time = t
             out_list.append("%d:%s" % (time_diff, stat))
-        out_list.append(":%d" % (time.time()-last_time))
+        out_list.append(":%d" % ((time.time()-last_time)*1000))
         return ",".join(out_list)
 
     def response_fail(self, reason=""):
@@ -122,8 +122,9 @@ class Task(object):
 class HTTP_worker(object):
     def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
         self.ssl_sock = ssl_sock
-        self.init_rtt = ssl_sock.handshake_time / 3
+        self.init_rtt = ssl_sock.handshake_time / 2
         self.rtt = self.init_rtt
+        self.speed = 1
         self.ip = ssl_sock.ip
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
@@ -131,6 +132,12 @@ class HTTP_worker(object):
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
+        self.speed_history = []
+
+    def update_rtt_speed(self, rtt, speed):
+        self.rtt = rtt
+        self.speed = speed
+        self.speed_history.append(speed)
 
     def close(self, reason):
         self.accept_task = False

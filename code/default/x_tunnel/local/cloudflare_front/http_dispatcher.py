@@ -118,9 +118,10 @@ class HttpsDispatcher(object):
 
     def get_worker(self):
         while connect_control.keep_running:
-            best_rtt = 9999
+            best_score = 99999999
             best_worker = None
             idle_num = 0
+            now = time.time()
             for worker in self.workers:
                 if not worker.accept_task:
                     continue
@@ -131,13 +132,21 @@ class HttpsDispatcher(object):
                     if len(worker.streams) == 0:
                         idle_num += 1
 
+                inactive_time = now - worker.last_active_time
                 rtt = worker.get_rtt_rate()
+                if inactive_time > 2:
+                    score = rtt
+                elif inactive_time < 0.001:
+                    score = rtt + 50000
+                else:
+                    # inactive_time < 2
+                    score = rtt + (2/inactive_time)*1000
 
-                if rtt < best_rtt:
-                    best_rtt = rtt
+                if best_score > score:
+                    best_score = score
                     best_worker = worker
 
-            if idle_num < 5:
+            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2:
                 self.triger_create_worker_cv.notify()
 
             if best_worker:
@@ -283,13 +292,16 @@ class HttpsDispatcher(object):
             if w.version == "2":
                 out_str += " streams:%d ping_on_way:%d\r\n" % (len(w.streams), w.ping_on_way)
 
-            out_str += " Speed:"
+            elif w.version == "1.1":
+                out_str += " Trace:%s" % w.get_trace()
+
+            out_str += "\r\n Speed:"
             for speed in w.speed_history:
-                out_str += "%d," % speed
+               out_str += "%d," % speed
 
             out_str += "\r\n"
 
-        out_str += "\r\n<br> working_tasks:\r\n"
+        out_str += "\r\n working_tasks:\r\n"
         for unique_id in self.working_tasks:
             task = self.working_tasks[unique_id]
             out_str += task.to_string()

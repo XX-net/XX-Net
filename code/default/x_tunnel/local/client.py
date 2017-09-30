@@ -78,19 +78,21 @@ def load_config():
 
     # performance parameters
     # range 2 - 100
-    config.set_var("concurent_thread_num", 20)
+    config.set_var("concurent_thread_num", 50)
 
     # range 1 - 1000
-    config.set_var("send_delay", 100)
+    config.set_var("send_delay", 10)
     # max 10M
     config.set_var("block_max_size", 256 * 1024)
     # range 1 - 60
-    config.set_var("roundtrip_timeout", 25)
+    config.set_var("roundtrip_timeout", 10)
+
+    config.set_var("windows_size", 32 * 1024 * 1024)
 
     config.load()
 
-    config.windows_size = config.block_max_size * config.concurent_thread_num
-    config.windows_ack = 0.2 * config.windows_size
+    config.windows_ack = 0.05 * config.windows_size
+    xlog.info("X-Tunnel window:%d", config.windows_size)
 
     if config.write_log_file:
         xlog.log_to_file(os.path.join(data_path, "client.log"))
@@ -111,11 +113,9 @@ def start():
         else:
             xlog.debug("please check x-tunnel server in config")
 
-    g.http_client = front.Front()
+    g.http_client = front.front
 
     g.session = proxy_session.ProxySession()
-    #if g.config.login_account:
-    #    proxy_session.request_balance(g.config.login_account, g.config.login_password)
 
 
 def terminate():
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        #terminate()
+        terminate()
         import sys
 
         sys.exit()
