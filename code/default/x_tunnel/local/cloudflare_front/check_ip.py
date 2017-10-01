@@ -1,12 +1,15 @@
 #!/usr/bin/env python2
 # coding:utf-8
 import binascii
-import httplib
+import random
 import os
 import socket
 import struct
 import sys
 import time
+#from ndg.httpsclient.subj_alt_name import SubjectAltName
+
+from pyasn1.codec.der import decoder as der_decoder
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -55,6 +58,7 @@ from config import config
 import cert_util
 import openssl_wrap
 import simple_http_client
+from subj_alt_name import SubjectAltName
 
 import hyper
 
@@ -69,6 +73,12 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
     openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
+ns = ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
+      'blackboysevenoaks.co.uk', 'bonnycravat.co.uk', 'cafe2f.com', 'cocoabeing.com.au', 'contactguru.me',
+      'coroler.com', 'cuonggian.net', 'dortmundspiel.review', 'dulichvietxinh.vn', 'eastindiaarms.co.uk',
+      'ebookkelistrikansepedamotor.cf', 'fidelforde.com', 'manybots.com', 'newsvietuc.net', 'nguyenphilong.com',
+      'vabis.com.vn', 'vietnews24h.net', 'vobep.com', 'whitehorsecanterbury.co.uk',
+      'yeunuocnhat.com']
 
 default_socket = socket.socket
 
@@ -91,6 +101,33 @@ def load_proxy_config():
 
 
 load_proxy_config()
+
+
+def get_subj_alt_name(peer_cert):
+    '''
+    Copied from ndg.httpsclient.ssl_peer_verification.ServerSSLCertVerification
+    Extract subjectAltName DNS name settings from certificate extensions
+    @param peer_cert: peer certificate in SSL connection.  subjectAltName
+    settings if any will be extracted from this
+    @type peer_cert: OpenSSL.crypto.X509
+    '''
+    # Search through extensions
+    dns_name = []
+    general_names = SubjectAltName()
+    for i in range(peer_cert.get_extension_count()):
+        ext = peer_cert.get_extension(i)
+        ext_name = ext.get_short_name()
+        if ext_name == "subjectAltName":
+            # PyOpenSSL returns extension data in ASN.1 encoded form
+            ext_dat = ext.get_data()
+            decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
+
+            for name in decoded_dat:
+                if isinstance(name, SubjectAltName):
+                    for entry in range(len(name)):
+                        component = name.getComponentByPosition(entry)
+                        dns_name.append(str(component.getComponent()))
+    return dns_name
 
 
 def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
@@ -159,6 +196,8 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
     connect_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
     xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
+    alt_names = get_subj_alt_name(cert)
+    xlog.debug("alt names:%s", alt_names)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
     ssl_sock._sock = sock
@@ -245,6 +284,8 @@ def check_xtunnel_http2(ssl_sock, host):
 
 
 def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
+    host = random.choice(ns)
+
     try:
         ssl_sock = connect_ssl(ip, host, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)

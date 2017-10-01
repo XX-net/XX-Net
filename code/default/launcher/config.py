@@ -17,6 +17,8 @@ def load():
     global config, config_path
     try:
         config = yaml.load(open(config_path, 'r'))
+        if config is None:
+            config = {}
         # print(yaml.dump(config))
     except Exception as exc:
         print("Error in configuration file:", exc)

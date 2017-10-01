@@ -20,10 +20,10 @@ import socket
 import struct
 import threading
 import time
+import random
 
 import socks
 from xlog import getLogger
-
 xlog = getLogger("cloudflare_front")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +54,13 @@ from ip_manager import ip_manager
 from openssl_wrap import SSLConnection
 
 NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
+
+ns = ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
+      'blackboysevenoaks.co.uk', 'bonnycravat.co.uk', 'cafe2f.com', 'cocoabeing.com.au', 'contactguru.me',
+      'coroler.com', 'cuonggian.net', 'dortmundspiel.review', 'dulichvietxinh.vn', 'eastindiaarms.co.uk',
+      'ebookkelistrikansepedamotor.cf', 'fidelforde.com', 'manybots.com', 'newsvietuc.net', 'nguyenphilong.com',
+      'vabis.com.vn', 'vietnews24h.net', 'vobep.com', 'whitehorsecanterbury.co.uk',
+      'yeunuocnhat.com']
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 import connect_control
@@ -340,7 +347,9 @@ class Https_connection_manager(object):
 
             ssl_sock = SSLConnection(self.openssl_context, sock, ip, ip_manager.ssl_closed)
             ssl_sock.set_connect_state()
-            ssl_sock.set_tlsext_host_name(self.host)
+
+            host = random.choice(ns)
+            ssl_sock.set_tlsext_host_name(host)
 
             ssl_sock.connect(ip_port)
             time_connected = time.time()
