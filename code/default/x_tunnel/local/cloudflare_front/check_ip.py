@@ -234,7 +234,7 @@ def check_xtunnel_http1(ssl_sock, host):
         return False
 
     if response.status != 200:
-        xlog.warn("ip:%s status:%d", ip, response.status)
+        xlog.warn("ip:%s status:%d", ssl_sock.ip, response.status)
         return False
 
     content = response.read(timeout=1)

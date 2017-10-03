@@ -48,6 +48,8 @@ class ProxySession():
     def start(self):
         try:
             self.mutex.acquire()
+            if self.running is True:
+                return True
 
             self.ack_pool.reset()
             self.download_order_queue.reset()
@@ -343,7 +345,7 @@ class ProxySession():
                     self.transfer_list[transfer_no]["start"] = time.time()
                     content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                       path="/data", data=upload_post_data,
-                                                                    timeout=server_timeout + 4)
+                                                                    timeout=server_timeout + g.config.network_timeout)
 
                     traffic = len(upload_post_data) + len(content) + 645
                     self.traffic += traffic

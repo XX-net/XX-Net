@@ -86,6 +86,7 @@ def load_config():
     config.set_var("block_max_size", 256 * 1024)
     # range 1 - 60
     config.set_var("roundtrip_timeout", 10)
+    config.set_var("network_timeout", 10)
 
     config.set_var("windows_size", 32 * 1024 * 1024)
 

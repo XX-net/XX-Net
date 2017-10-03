@@ -442,11 +442,12 @@ class HTTPServer():
                             continue
 
                         self.logger.warn("socket accept fail(errno: %s).", e.args[0])
-                        if e.args[0] == 10022:
-                            self.logger.info("restart socket server.")
-                            self.init_socket()
-                        break
-                    self.process_connect(sock, address)
+                        continue
+
+                    try:
+                        self.process_connect(sock, address)
+                    except Exception as e:
+                        self.logger.exception("process connect error:%r", e)
 
         else:
             while self.running:
@@ -460,6 +461,7 @@ class HTTPServer():
                             self.logger.info("restart socket server.")
                             self.init_socket()
                         break
+
                     self.process_connect(sock, address)
 
     def process_connect(self, sock, address):
