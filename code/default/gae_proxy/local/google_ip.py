@@ -63,7 +63,7 @@ class IpManager():
     def __init__(self):
         self.scan_thread_lock = threading.Lock()
         self.ip_lock = threading.Lock()
-        self.ip_range = google_ip_range.ip_range
+        self.ip_pool = None
         self.reset()
 
         self.check_ip_thread = threading.Thread(target=self.check_ip_process)
@@ -134,6 +134,16 @@ class IpManager():
         self.scan_ip_thread_num = self.max_scan_ip_thread_num
         self.max_good_ip_num = config.CONFIG.getint("google_ip", "max_good_ip_num") #3000  # stop scan ip when enough
         self.ip_connect_interval = config.CONFIG.getint("google_ip", "ip_connect_interval") #5,10
+
+        ip_source = config.CONFIG.get("google_ip", "ip_source")
+        if ip_source == "ip_pool":
+            if not self.ip_pool:
+                self.ip_pool = google_ip_range.IpPool()
+            self.get_ip_to_scan = self.ip_pool.random_get_ip
+            xlog.info("Use google ip pool.")
+        else:
+            self.get_ip_to_scan = google_ip_range.ip_range.get_ip
+            xlog.info("Use google ip range.")
 
     def load_ip(self):
         if os.path.isfile(self.good_ip_file):
@@ -341,7 +351,7 @@ class IpManager():
                     continue
 
                 handshake_time = self.ip_dict[ip]["handshake_time"]
-                xlog.debug("get ip:%s t:%d", ip, handshake_time)
+                # xlog.debug("get ip:%s t:%d", ip, handshake_time)
                 self.append_ip_history(ip, "get")
                 self.ip_dict[ip]['get_time'] = time_now
                 self.ip_dict[ip]['links'] += 1
@@ -510,7 +520,7 @@ class IpManager():
             self.ip_dict[ip]['down_fail'] += 1
             self.append_ip_history(ip, reason)
             self.ip_dict[ip]["down_fail_time"] = time_now
-            xlog.debug("ssl_closed %s", ip)
+            # xlog.debug("ssl_closed %s", ip)
         except Exception as e:
             xlog.error("ssl_closed %s err:%s", ip, e)
         finally:
@@ -524,7 +534,7 @@ class IpManager():
                 if self.ip_dict[ip]['links']:
                     self.ip_dict[ip]['links'] -= 1
                     self.append_ip_history(ip, "C[%s]"%reason)
-                    xlog.debug("ssl_closed %s", ip)
+                    # xlog.debug("ssl_closed %s", ip)
         except Exception as e:
             xlog.error("ssl_closed %s err:%s", ip, e)
         finally:
@@ -620,7 +630,7 @@ class IpManager():
 
             try:
                 time.sleep(1)
-                ip = self.ip_range.get_ip()
+                ip = self.get_ip_to_scan()
 
                 if ip in self.ip_dict:
                     continue
@@ -673,7 +683,8 @@ class IpManager():
 
         self.keep_scan_all_exist_ip = True
         scan_threads = []
-        for i in range(0, 50):
+        scan_thread_num = config.CONFIG.getint("google_ip", "max_scan_ip_thread_num")
+        for i in range(0, scan_thread_num):
             th = threading.Thread(target=self.scan_exist_ip_worker, )
             th.start()
             scan_threads.append(th)

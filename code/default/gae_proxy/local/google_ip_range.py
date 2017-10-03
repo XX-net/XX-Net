@@ -4,16 +4,94 @@
 import random
 import time
 import os
-import ip_utils
-from config import config
+import sys
+import struct
+import threading
 
-from xlog import getLogger
-xlog = getLogger("gae_proxy")
 
 random.seed(time.time()* 1000000)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
+if __name__ == "__main__":
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+
+    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
+    if sys.platform == "win32":
+        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        sys.path.append(win32_lib)
+    elif sys.platform.startswith("linux"):
+        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        sys.path.append(linux_lib)
+
+
+import ip_utils
+from config import config
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+
+
+class IpPool(object):
+    def __init__(self):
+        self.txt_ip_fn = os.path.join(current_path, "ip_checked.txt")
+        self.bin_ip_fn = os.path.join(config.DATA_PATH, "ip_checked.bin")
+        self.bin_fd = None
+        threading.Thread(target=self.init).start()
+
+    def init(self):
+        if not self.check_bin():
+            self.generate_bin()
+        self.bin_fd = open(self.bin_ip_fn, "rb")
+        self.bin_size = os.path.getsize(self.bin_ip_fn)
+
+    def check_bin(self):
+        if not os.path.isfile(self.bin_ip_fn):
+            return False
+
+        if os.path.getmtime(self.bin_ip_fn) < os.path.getmtime(self.txt_ip_fn):
+            return False
+
+        return True
+
+    def generate_bin(self):
+        xlog.info("generating binary ip pool file.")
+        rfd = open(self.txt_ip_fn, "rt")
+        wfd = open(self.bin_ip_fn, "wb")
+        num = 0
+        for line in rfd.readlines():
+            ip = line
+            try:
+                ip_num = ip_utils.ip_string_to_num(ip)
+            except Exception as e:
+                xlog.warn("ip %s not valid in %s", ip, self.txt_ip_fn)
+                continue
+            ip_bin = struct.pack("<I", ip_num)
+            wfd.write(ip_bin)
+            num += 1
+
+        rfd.close()
+        wfd.close()
+        xlog.info("finished generate binary ip pool file, num:%d", num)
+
+    def random_get_ip(self):
+        while self.bin_fd is None:
+            time.sleep(1)
+        for _ in range(5):
+            position = random.randint(0, self.bin_size/4) * 4
+            self.bin_fd.seek(position)
+            ip_bin = self.bin_fd.read(4)
+            if ip_bin is None:
+                xlog.warn("ip_pool.random_get_ip position:%d get None", position)
+            elif len(ip_bin) != 4:
+                xlog.warn("ip_pool.random_get_ip position:%d len:%d", position, len(ip_bin))
+            else:
+                ip_num = struct.unpack("<I", ip_bin)[0]
+                ip = ip_utils.ip_num_to_string(ip_num)
+                return ip
+        time.sleep(3)
+        raise Exception("get ip fail.")
 
 class IpRange(object):
     def __init__(self):
@@ -115,4 +193,12 @@ class IpRange(object):
 
             return ip_utils.ip_num_to_string(ip)
 
+
 ip_range = IpRange()
+
+
+if __name__ == '__main__':
+    pool = IpPool()
+    for _ in range(10):
+        ip = pool.random_get_ip()
+        print(ip)

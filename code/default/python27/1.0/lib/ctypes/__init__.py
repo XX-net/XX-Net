@@ -1,8 +1,3 @@
-######################################################################
-#  This file should be kept compatible with Python 2.3, see PEP 291. #
-######################################################################
-"""create and manipulate C data types in Python"""
-
 import os as _os, sys as _sys
 
 __version__ = "1.1.0"
@@ -24,10 +19,6 @@ if _os.name in ("nt", "ce"):
 
 DEFAULT_MODE = RTLD_LOCAL
 if _os.name == "posix" and _sys.platform == "darwin":
-    # On OS X 10.3, we use RTLD_GLOBAL as default mode
-    # because RTLD_LOCAL does not work at least on some
-    # libraries.  OS X 10.3 is Darwin 7, so we check for
-    # that.
 
     if int(_os.uname()[2].split('.')[0]) < 8:
         DEFAULT_MODE = RTLD_GLOBAL
@@ -37,23 +28,7 @@ from _ctypes import FUNCFLAG_CDECL as _FUNCFLAG_CDECL, \
      FUNCFLAG_USE_ERRNO as _FUNCFLAG_USE_ERRNO, \
      FUNCFLAG_USE_LASTERROR as _FUNCFLAG_USE_LASTERROR
 
-"""
-WINOLEAPI -> HRESULT
-WINOLEAPI_(type)
-
-STDMETHODCALLTYPE
-
-STDMETHOD(name)
-STDMETHOD_(type, name)
-
-STDAPICALLTYPE
-"""
-
 def create_string_buffer(init, size=None):
-    """create_string_buffer(aString) -> character array
-    create_string_buffer(anInteger) -> character array
-    create_string_buffer(aString, anInteger) -> character array
-    """
     if isinstance(init, (str, unicode)):
         if size is None:
             size = len(init)+1
@@ -68,29 +43,10 @@ def create_string_buffer(init, size=None):
     raise TypeError(init)
 
 def c_buffer(init, size=None):
-##    "deprecated, use create_string_buffer instead"
-##    import warnings
-##    warnings.warn("c_buffer is deprecated, use create_string_buffer instead",
-##                  DeprecationWarning, stacklevel=2)
     return create_string_buffer(init, size)
 
 _c_functype_cache = {}
 def CFUNCTYPE(restype, *argtypes, **kw):
-    """CFUNCTYPE(restype, *argtypes,
-                 use_errno=False, use_last_error=False) -> function prototype.
-
-    restype: the result type
-    argtypes: a sequence specifying the argument types
-
-    The function prototype can be called in different ways to create a
-    callable object:
-
-    prototype(integer address) -> foreign function
-    prototype(callable) -> create and return a C callable function from callable
-    prototype(integer index, method name[, paramflags]) -> foreign function calling a COM method
-    prototype((ordinal number, dll object)[, paramflags]) -> foreign function exported by ordinal
-    prototype((function name, dll object)[, paramflags]) -> foreign function exported by name
-    """
     flags = _FUNCFLAG_CDECL
     if kw.pop("use_errno", False):
         flags |= _FUNCFLAG_USE_ERRNO
@@ -112,12 +68,10 @@ if _os.name in ("nt", "ce"):
     from _ctypes import LoadLibrary as _dlopen
     from _ctypes import FUNCFLAG_STDCALL as _FUNCFLAG_STDCALL
     if _os.name == "ce":
-        # 'ce' doesn't have the stdcall calling convention
         _FUNCFLAG_STDCALL = _FUNCFLAG_CDECL
 
     _win_functype_cache = {}
     def WINFUNCTYPE(restype, *argtypes, **kw):
-        # docstring set later (very similar to CFUNCTYPE.__doc__)
         flags = _FUNCFLAG_STDCALL
         if kw.pop("use_errno", False):
             flags |= _FUNCFLAG_USE_ERRNO
@@ -145,11 +99,8 @@ from _ctypes import get_errno, set_errno
 from _ctypes import _SimpleCData
 
 def _check_size(typ, typecode=None):
-    # Check if sizeof(ctypes_type) against struct.calcsize.  This
-    # should protect somewhat against a misconfigured libffi.
     from struct import calcsize
     if typecode is None:
-        # Most _type_ codes are the same as used in struct
         typecode = typ._type_
     actual, required = sizeof(typ), calcsize(typecode)
     if actual != required:
@@ -182,7 +133,6 @@ class c_ulong(_SimpleCData):
 _check_size(c_ulong)
 
 if _calcsize("i") == _calcsize("l"):
-    # if int and long have the same size, make c_int an alias for c_long
     c_int = c_long
     c_uint = c_ulong
 else:
@@ -208,7 +158,6 @@ if sizeof(c_longdouble) == sizeof(c_double):
     c_longdouble = c_double
 
 if _calcsize("l") == _calcsize("q"):
-    # if long and long long have the same size, make c_longlong an alias for c_long
     c_longlong = c_long
     c_ulonglong = c_ulong
 else:
@@ -218,16 +167,11 @@ else:
 
     class c_ulonglong(_SimpleCData):
         _type_ = "Q"
-    ##    def from_param(cls, val):
-    ##        return ('d', float(val), val)
-    ##    from_param = classmethod(from_param)
     _check_size(c_ulonglong)
 
 class c_ubyte(_SimpleCData):
     _type_ = "B"
 c_ubyte.__ctype_le__ = c_ubyte.__ctype_be__ = c_ubyte
-# backward compatibility:
-##c_uchar = c_ubyte
 _check_size(c_ubyte)
 
 class c_byte(_SimpleCData):
@@ -254,7 +198,7 @@ _check_size(c_char_p, "P")
 
 class c_void_p(_SimpleCData):
     _type_ = "P"
-c_voidp = c_void_p # backwards compatibility (to a bug)
+c_voidp = c_void_p
 _check_size(c_void_p)
 
 class c_bool(_SimpleCData):
@@ -267,15 +211,9 @@ def _reset_cache():
     _c_functype_cache.clear()
     if _os.name in ("nt", "ce"):
         _win_functype_cache.clear()
-    # _SimpleCData.c_wchar_p_from_param
     POINTER(c_wchar).from_param = c_wchar_p.from_param
-    # _SimpleCData.c_char_p_from_param
     POINTER(c_char).from_param = c_char_p.from_param
     _pointer_type_cache[None] = c_void_p
-    # XXX for whatever reasons, creating the first instance of a callback
-    # function is needed for the unittests on Win64 to succeed.  This MAY
-    # be a compiler bug, since the problem occurs only when _ctypes is
-    # compiled with the MS SDK compiler.  Or an uninitialized variable?
     CFUNCTYPE(c_int)(lambda: None)
 
 try:
@@ -312,7 +250,6 @@ else:
             return buf
         raise TypeError(init)
 
-# XXX Deprecated
 def SetPointerType(pointer, cls):
     if _pointer_type_cache.get(cls, None) is not None:
         raise RuntimeError("This type already exists in the cache")
@@ -322,7 +259,6 @@ def SetPointerType(pointer, cls):
     _pointer_type_cache[cls] = pointer
     del _pointer_type_cache[id(pointer)]
 
-# XXX Deprecated
 def ARRAY(typ, len):
     return typ * len
 
@@ -330,26 +266,13 @@ def ARRAY(typ, len):
 
 
 class CDLL(object):
-    """An instance of this class represents a loaded dll/shared
-    library, exporting functions using the standard C calling
-    convention (named 'cdecl' on Windows).
-
-    The exported functions can be accessed as attributes, or by
-    indexing with the function name.  Examples:
-
-    <obj>.qsort -> callable object
-    <obj>['qsort'] -> callable object
-
-    Calling the functions releases the Python GIL during the call and
-    reacquires it afterwards.
-    """
     _func_flags_ = _FUNCFLAG_CDECL
     _func_restype_ = c_int
 
     def __init__(self, name, mode=DEFAULT_MODE, handle=None,
                  use_errno=False,
                  use_last_error=False):
-        self._name = name
+        self._name = str(name)
         flags = self._func_flags_
         if use_errno:
             flags |= _FUNCFLAG_USE_ERRNO
@@ -386,42 +309,19 @@ class CDLL(object):
         return func
 
 class PyDLL(CDLL):
-    """This class represents the Python library itself.  It allows to
-    access Python API functions.  The GIL is not released, and
-    Python exceptions are handled correctly.
-    """
     _func_flags_ = _FUNCFLAG_CDECL | _FUNCFLAG_PYTHONAPI
 
 if _os.name in ("nt", "ce"):
 
     class WinDLL(CDLL):
-        """This class represents a dll exporting functions using the
-        Windows stdcall calling convention.
-        """
         _func_flags_ = _FUNCFLAG_STDCALL
 
-    # XXX Hm, what about HRESULT as normal parameter?
-    # Mustn't it derive from c_long then?
     from _ctypes import _check_HRESULT, _SimpleCData
     class HRESULT(_SimpleCData):
         _type_ = "l"
-        # _check_retval_ is called with the function's result when it
-        # is used as restype.  It checks for the FAILED bit, and
-        # raises a WindowsError if it is set.
-        #
-        # The _check_retval_ method is implemented in C, so that the
-        # method definition itself is not included in the traceback
-        # when it raises an error - that is what we want (and Python
-        # doesn't have a way to raise an exception in the caller's
-        # frame).
         _check_retval_ = _check_HRESULT
 
     class OleDLL(CDLL):
-        """This class represents a dll exporting functions using the
-        Windows stdcall calling convention, and returning HRESULT.
-        HRESULT error values are automatically raised as WindowsError
-        exceptions.
-        """
         _func_flags_ = _FUNCFLAG_STDCALL
         _func_restype_ = HRESULT
 
@@ -480,14 +380,10 @@ elif sizeof(c_ulonglong) == sizeof(c_void_p):
     c_size_t = c_ulonglong
     c_ssize_t = c_longlong
 
-# functions
-
 from _ctypes import _memmove_addr, _memset_addr, _string_at_addr, _cast_addr
 
-## void *memmove(void *, const void *, size_t);
 memmove = CFUNCTYPE(c_void_p, c_void_p, c_void_p, c_size_t)(_memmove_addr)
 
-## void *memset(void *, int, size_t)
 memset = CFUNCTYPE(c_void_p, c_void_p, c_int, c_size_t)(_memset_addr)
 
 def PYFUNCTYPE(restype, *argtypes):
@@ -503,9 +399,6 @@ def cast(obj, typ):
 
 _string_at = PYFUNCTYPE(py_object, c_void_p, c_int)(_string_at_addr)
 def string_at(ptr, size=-1):
-    """string_at(addr[, size]) -> string
-
-    Return the string at addr."""
     return _string_at(ptr, size)
 
 try:
@@ -515,18 +408,15 @@ except ImportError:
 else:
     _wstring_at = PYFUNCTYPE(py_object, c_void_p, c_int)(_wstring_at_addr)
     def wstring_at(ptr, size=-1):
-        """wstring_at(addr[, size]) -> string
-
-        Return the string at addr."""
         return _wstring_at(ptr, size)
 
 
-if _os.name in ("nt", "ce"): # COM stuff
+if _os.name in ("nt", "ce"):
     def DllGetClassObject(rclsid, riid, ppv):
         try:
             ccom = __import__("comtypes.server.inprocserver", globals(), locals(), ['*'])
         except ImportError:
-            return -2147221231 # CLASS_E_CLASSNOTAVAILABLE
+            return -2147221231
         else:
             return ccom.DllGetClassObject(rclsid, riid, ppv)
 
@@ -534,12 +424,11 @@ if _os.name in ("nt", "ce"): # COM stuff
         try:
             ccom = __import__("comtypes.server.inprocserver", globals(), locals(), ['*'])
         except ImportError:
-            return 0 # S_OK
+            return 0
         return ccom.DllCanUnloadNow()
 
 from ctypes._endian import BigEndianStructure, LittleEndianStructure
 
-# Fill in specifically-sized types
 c_int8 = c_byte
 c_uint8 = c_ubyte
 for kind in [c_short, c_int, c_long, c_longlong]:

@@ -3,7 +3,7 @@
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPTPATH"
 
-if python -V | grep -q "Python 3" ;then
+if python -V 2>&1| grep -q "Python 3" ;then
     PYTHON="python2"
 else
     PYTHON="python"
@@ -71,7 +71,7 @@ function createDesktopStartup() {
         echo "$DESKFILE already exists"
         return
     else
-        echo "$DESKFILE does not exist,ctreat a new one"
+        echo "$DESKFILE does not exist,create a new one"
     fi
     NAME="XX-Net"
     EXEC="$SCRIPTPATH/start > /dev/null"

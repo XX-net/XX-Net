@@ -7,6 +7,8 @@
 
 <div id="noob-info" class=""></div>
 
+<div id="notify_area" class="notify_area"> </div>
+
 <div id="details" hidden>
     <h4>{{ _( "Status" ) }}</h4>
     <table id="status" class="table table-bordered table-striped">
@@ -574,4 +576,62 @@
     };
 </script>
 
+<script type="text/javascript">
+    //pop up notify on top of status web page.
+    function popup_notify(text,linkText,linkHref,open_in_newtab,bcolor)
+    {
+        var notify_area=document.getElementById("notify_area");
+        
+        //create new div for notify
+        var newdiv=notify_area.appendChild(document.createElement("div"));
+        newdiv.className="popnotify";
+        if(bcolor != "")
+        {
+            newdiv.style.backgroundColor=bcolor;
+        }
+        
+        //in new div create span as notify text
+        var notify_text_span=newdiv.appendChild(document.createElement("span"));
+        //write the notify text in
+        notify_text_span.appendChild(document.createTextNode(text));
+        
+        //in new div create span as link
+        var notify_link_span=newdiv.appendChild(document.createElement("span"));
+        //in link span create link
+        var notify_link=notify_link_span.appendChild(document.createElement("a"));
+        if(linkHref)
+        {
+            //write link address in
+            notify_link.href=linkHref;
+        }
+        else
+            notify_link.href="#"; //go nowhere
+        if(open_in_newtab)
+        {
+            notify_link.target="_blank";
+        }
+        //write link text in
+        notify_link.appendChild(document.createTextNode(linkText));
+        
+        //create close notify button
+        var notify_close_btn=newdiv.appendChild(document.createElement("span"));
+        //notify_close_btn.className="";
+        notify_close_btn.appendChild(document.createTextNode("X"));
+        notify_close_btn.style="float:right; cursor: pointer;";
+        notify_close_btn.onclick=function()
+        {
+            //close this popup
+            notify_area.removeChild(this.parentNode);
+        }
+        //return the link object , can be used as button
+        return notify_link_span;
+    }
+    //Examples .  uncomment to see .
+    /*
+    var aaa=popup_notify("This is notify example. ","click text");
+    aaa.onclick=function() { alert('hello'); } 
+    popup_notify("This is notify example 2 . ", "","","", "yellow");
+    popup_notify("This is notify example 3 . ","Link text","whereDoWeGo",1,"#dddddd");
+    */
+</script>
 

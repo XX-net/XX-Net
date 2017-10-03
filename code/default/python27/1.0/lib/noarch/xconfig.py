@@ -4,7 +4,6 @@ import json
 import os
 
 
-
 class Config(object):
     default_config = {}
     file_config = {}

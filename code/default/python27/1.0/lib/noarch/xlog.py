@@ -248,3 +248,35 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
         logger_instance = Logger(buffer_size, file_name, roll_num)
         loggerDict[name] = logger_instance
         return logger_instance
+
+
+default_log = getLogger("default")
+
+
+def debug(fmt, *args, **kwargs):
+    default_log.debug(fmt, *args, **kwargs)
+
+
+def info(fmt, *args, **kwargs):
+    default_log.info(fmt, *args, **kwargs)
+
+
+def warning(fmt, *args, **kwargs):
+    default_log.warnin(fmt, *args, **kwargs)
+
+
+def warn(fmt, *args, **kwargs):
+    default_log.warn(fmt, *args, **kwargs)
+
+
+def error(fmt, *args, **kwargs):
+    default_log.error(fmt, *args, **kwargs)
+
+
+def exception(self, fmt, *args, **kwargs):
+    self.error(fmt, *args, **kwargs)
+    self.error("Except stack:%s", traceback.format_exc(), **kwargs)
+
+
+def critical(fmt, *args, **kwargs):
+    default_log.critical(fmt, *args, **kwargs)
