@@ -180,8 +180,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 target_module = 'gae_proxy'
                 target_menu = 'status'
             else:
-                target_module = 'launcher'
-                target_menu = 'about'
+                target_module = 'x_tunnel'
+                target_menu = 'config'
 
 
         if len(module_menus) == 0:
