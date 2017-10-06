@@ -284,10 +284,10 @@ def check_xtunnel_http2(ssl_sock, host):
 
 
 def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
-    host = random.choice(ns)
+    sni = random.choice(ns)
 
     try:
-        ssl_sock = connect_ssl(ip, host, timeout=max_timeout)
+        ssl_sock = connect_ssl(ip, sni, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)
     except socket.timeout:
         xlog.warn("connect timeout")

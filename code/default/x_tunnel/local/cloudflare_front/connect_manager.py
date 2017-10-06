@@ -348,8 +348,8 @@ class Https_connection_manager(object):
             ssl_sock = SSLConnection(self.openssl_context, sock, ip, ip_manager.ssl_closed)
             ssl_sock.set_connect_state()
 
-            host = random.choice(ns)
-            ssl_sock.set_tlsext_host_name(host)
+            sni = random.choice(ns)
+            ssl_sock.set_tlsext_host_name(sni)
 
             ssl_sock.connect(ip_port)
             time_connected = time.time()
@@ -402,6 +402,7 @@ class Https_connection_manager(object):
             ssl_sock.load = 0
             ssl_sock.handshake_time = handshake_time
             ssl_sock.host = self.host
+            ssl_sock.sni = sni
 
             connect_control.report_connect_success()
             return ssl_sock

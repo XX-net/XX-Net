@@ -487,9 +487,11 @@ class Https_connection_manager(object):
                     google_ip.report_connect_fail(ip, force_remove=True)
                     raise socket.error('No intermediate CA was found.')
 
-                if OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey()) not in GoogleG23PKP:
-                    google_ip.report_connect_fail(ip, force_remove=True)
-                    raise socket.error('The intermediate CA is mismatching.')
+                if hasattr(OpenSSL.crypto, "dump_publickey"):
+                    # old OpenSSL not support this function.
+                    if OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey()) not in GoogleG23PKP:
+                        google_ip.report_connect_fail(ip, force_remove=True)
+                        raise socket.error('The intermediate CA is mismatching.')
 
                 issuer_commonname = next((v for k, v in certs[0].get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):

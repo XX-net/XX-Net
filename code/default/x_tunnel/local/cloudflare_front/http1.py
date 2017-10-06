@@ -201,7 +201,7 @@ class HTTP1_worker(HTTP_worker):
 
             status = response.status
             if status != 200:
-                xlog.warn("%s appid:%s head fail status:%d", self.ip, self.ssl_sock.appid, status)
+                xlog.warn("%s host:%s head fail status:%d", self.ip, self.ssl_sock.host, status)
                 return False
 
             content = response.readall(timeout=5)
