@@ -24,7 +24,7 @@
 ### 最新状态：
  2017-10-06
 * GAE封锁严重，请更新到3.6.7以上，若无法扫到ip，可以考虑启用ipv6或使用X-tunnel，具体请到Issues区看前面的讨论。
-* X-Tunnel  请更新到3.6.7以上，虽有干扰，但尚可使用. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+* X-Tunnel 干扰严重. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 **X-Tunnel 数据库出问题，部分用户套餐流量丢失，请给xxnet.dev@gmail.com 发邮件。**
   
 <br>
