@@ -8,7 +8,7 @@
 
 | 模块        | GAE_proxy   | X-Tunnel  |  
 | ------------- |:-------------:| :-----:| 
-| 稳定性| 容易封锁ip | 偶有干扰 |
+| 稳定性| 容易封锁ip | 目前干扰严重 |
 | 速度 | 流畅 | 下载快速，偶尔卡顿 | 
 | 安全性| Google可看到通信内容 |  完全加密 |  
 | 易用 | 需扫描ip，部署服务端，导入证书 | 简单  |
@@ -22,10 +22,11 @@
 
 
 ### 最新状态：
- 2017-10-06
-* GAE封锁严重，请更新到3.6.7以上，若无法扫到ip，可以考虑启用ipv6或使用X-tunnel，具体请到Issues区看前面的讨论。
-* X-Tunnel 干扰严重. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
-**X-Tunnel 数据库出问题，部分用户套餐流量丢失，请给xxnet.dev@gmail.com 发邮件。**
+ 2017-10-07
+* GAE封锁严重，可以考虑启用ipv6，请参考：  
+  https://github.com/XX-net/XX-Net/issues/6918
+* X-Tunnel 干扰严重，正在开发新途径. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+**X-Tunnel 用户套餐流量丢失的，请给xxnet.dev@gmail.com 发邮件。**
   
 <br>
 
