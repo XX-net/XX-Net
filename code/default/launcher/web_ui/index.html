@@ -157,7 +157,11 @@
         function startUpdateCheck() {
             var pageRequests = {};
             pageRequests['cmd'] = 'start_check';
-            pageRequests['check_update'] = $('#check-update').val();
+            check_update = $('#check-update').val();
+            if ( !check_update ) {
+                check_update = '';
+            }
+            pageRequests['check_update'] = check_update;
 
             $.ajax({
                 type: 'GET',
