@@ -269,6 +269,9 @@ def check_update():
         xlog.warn("check update fail:%r", e)
     except Exception as e:
         xlog.exception("check_update fail:%r", e)
+    finally:
+        if update_from_github.update_info == "init":
+            update_from_github.update_info = ""
 
 def check_push_update():
     global update_content, update_dict
