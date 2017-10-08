@@ -54,7 +54,9 @@
             <div class="span6">
                 <select id="check-update">
                     <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
+                    <option value="notice-stable">{{ _( "Notice stable version" ) }}</option>
                     <option value="stable">{{ _( "Stable version" ) }}</option>
+                    <option value="notice-test">{{ _( "Notice test version" ) }}</option>
                     <option value="test">{{ _( "Test version" ) }}</option>
                 </select>
             </div>
@@ -236,6 +238,11 @@
         var key   = 'check_update',
             value = $(this).val();
 
+        if ( value == 'dont-check' ) {
+            stopUpdateCheck()
+        } else {
+            startUpdateCheck()
+        }
         return setConfig(key, value);
     });
 

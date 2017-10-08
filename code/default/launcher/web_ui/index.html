@@ -63,6 +63,13 @@
                     </div> <!-- .sidebar-nav -->
                 </div> <!-- #sidebar -->
                 <div class="span9">
+                    <div id="update-notify">
+                        <span id="update-notify-close">×</span>
+                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
+                        <span id="update-next" class="update-notify-action">{{ _( "Remind me next time" ) }}</span>
+                        <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
+                        <span id="update-message"></span>
+                    </div> <!-- #update-notify -->
                     <h2 id="title"></h2>
                     <div id="tip" class="alert fade in hide">
                         <button id="tip-close" type="button" class="close">×</button>
@@ -130,6 +137,247 @@
                 }
             }
         });
+    </script>
+    <script type="text/javascript">
+        var checkUpdateTimeout = 600000;
+        var checkUpdateTimer;
+        var isShown;
+        var version;
+        var poptip;
+
+        function displayErrorMessage() {
+            tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
+        }
+
+        function clearNotify() {
+            $('#update-notify').css('display', 'none');
+            isShown = null;
+        }
+
+        function startUpdateCheck() {
+            var pageRequests = {};
+            pageRequests['cmd'] = 'start_check';
+            pageRequests['check_update'] = $('#check-update').val();
+
+            $.ajax({
+                type: 'GET',
+                url: '/update',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] == 'success' ) {
+                        getUpdateInfo();
+                        checkUpdateTimer.play();
+                    } else {
+                        tip( result['reason'], "warning");
+                    }
+                },
+                error: function() {
+                    displayErrorMessage();
+                }
+            });
+        }
+
+        function stopUpdateCheck() {
+            checkUpdateTimer.stop();
+            var pageRequests = {};
+            pageRequests['cmd'] = 'set_info';
+            pageRequests['info'] = 'dont-check';
+
+            $.ajax({
+                type: 'GET',
+                url: '/update',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] != 'success' ) {
+                        tip( result['reason'], "warning");
+                    }
+                },
+                error: function() {
+                    displayErrorMessage();
+                }
+            });
+        }
+
+        function clearUpdateInfo() {
+            clearNotify();
+            var pageRequests = {};
+            pageRequests['cmd'] = 'set_info';
+            pageRequests['info'] = '';
+
+            $.ajax({
+                type: 'GET',
+                url: '/update',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] != 'success' ) {
+                        tip( result['reason'], "warning");
+                    }
+                },
+                error: function() {
+                    displayErrorMessage();
+                }
+            });
+        }
+
+        function skipUpdateVersion() {
+            clearNotify();
+            checkUpdateTimer.stop();
+            var pageRequests = {};
+            pageRequests['cmd'] = 'set_config';
+            pageRequests['skip_version'] = version;
+
+            $.ajax({
+                type: 'GET',
+                url: '/config',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] != 'success' ) {
+                        tip( result['reason'], "warning");
+                    }
+                },
+                error: function() {
+                    displayErrorMessage();
+                }
+            });
+        }
+
+        function updateVersion() {
+            clearNotify();
+            var pageRequests = {};
+            pageRequests['cmd'] = 'update_version';
+            pageRequests['version'] = version;
+            version = null;
+
+            $.ajax({
+                type: 'GET',
+                url: '/update',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    if ( result['res'] == 'success' ) {
+                        tip( '{{ _( "Updating in progress ..." ) }}', "info");
+                    } else {
+                        tip( result['reason'], "warning");
+                    }
+                },
+                error: function() {
+                    displayErrorMessage();
+                }
+            });
+        }
+
+        function getUpdateInfo() {
+            if (isShown) {
+                return;
+            }
+
+            var pageRequests = {};
+            pageRequests['cmd'] = 'get_info';
+
+            $.ajax({
+                type: 'GET',
+                url: '/update',
+                data: pageRequests,
+                dataType: 'JSON',
+                success: function(result) {
+                    var versionType = result['type'];
+                    switch ( versionType ) {
+                    case 'init':
+                        window.setTimeout(getUpdateInfo, 1000);
+                        break;
+                    case 'dont-check':
+                        stopUpdateCheck();
+                        break;
+                    default:
+                        version = result['version'];
+                        if ( versionType && version ) {
+                            switch ( versionType ) {
+                            case 'stable':
+                                popText = '{{ _( "Stable version" ) }} ' + version + ' {{ _( "is valid." ) }}';
+                                break;
+                            case 'test':
+                                popText = '{{ _( "Test version" ) }} ' + version + ' {{ _( "is valid." ) }}';
+                            }
+                            $('#update-message').text(popText);
+                            $('#update-notify').css('display', '');
+                            isShown = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        $('#update-now').click(updateVersion);
+        $('#update-next').click(clearUpdateInfo);
+        $('#update-skip').click(skipUpdateVersion);
+        $('#update-notify-close').click(clearUpdateInfo);
+        clearNotify();
+        getUpdateInfo();
+        checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
+    </script>
+    <script type="text/javascript">
+        //pop up notify on top of status web page.
+        function popup_notify(text,linkText,linkHref,open_in_newtab,bcolor)
+        {
+            var notify_area = document.getElementById("notify-area");
+            
+            //create new div for notify
+            var newdiv = notify_area.appendChild(document.createElement("div"));
+            newdiv.className = "popnotify";
+            if(bcolor != "")
+            {
+                newdiv.style.backgroundColor=bcolor;
+            }
+            
+            //in new div create span as notify text
+            var notify_text_span = newdiv.appendChild(document.createElement("span"));
+            //write the notify text in
+            notify_text_span.appendChild(document.createTextNode(text));
+            notify_text_span.className = "popnotify-text";
+            
+            //in new div create span as link
+            var notify_link_span = newdiv.appendChild(document.createElement("span"));
+            notify_link_span.className = "popnotify-text";
+            //in link span create link
+            var notify_link = notify_link_span.appendChild(document.createElement("a"));
+            if(linkHref)
+            {
+                //write link address in
+                notify_link.href = linkHref;
+            }
+            else
+                notify_link.href = "#"; //go nowhere
+            if(open_in_newtab)
+            {
+                notify_link.target = "_blank";
+            }
+            //write link text in
+            notify_link.appendChild(document.createTextNode(linkText));
+            
+            //create close notify button
+            var notify_close_btn = newdiv.appendChild(document.createElement("span"));
+            notify_close_btn.className = "popnotify-close-btn";
+            notify_close_btn.appendChild(document.createTextNode("×"));
+            notify_close_btn.style = "float:right; cursor: pointer;";
+            notify_close_btn.onclick = function()
+            {
+                //close this popup
+                notify_area.removeChild(this.parentNode);
+            }
+            //return the link object , can be used as button
+            return notify_link_span;
+        }
+        //Examples .  uncomment to see .
+        /*
+        var aaa = popup_notify("This is notify example. ","click text");
+        aaa.onclick = function() { alert('hello'); } 
+        popup_notify("This is notify example 2 . ", "","","", "yellow");
+        popup_notify("This is notify example 3 . ","Link text","whereDoWeGo",1,"#dddddd");
+        */
     </script>
 </body>
 </html>

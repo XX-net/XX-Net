@@ -70,8 +70,14 @@ msgstr "自动升级到"
 msgid "Do not upgrade"
 msgstr "不升级"
 
+msgid "Notice stable version"
+msgstr "通知稳定版"
+
 msgid "Stable version"
 msgstr "稳定版"
+
+msgid "Notice test version"
+msgstr "通知测试版"
 
 msgid "Test version"
 msgstr "测试版"
@@ -85,8 +91,17 @@ msgstr "当前版本"
 msgid "Version of the test one"
 msgstr "测试版版本"
 
+msgid "is valid."
+msgstr "已经可用。"
+
 msgid "Update now"
 msgstr "立即更新"
+
+msgid "Remind me next time"
+msgstr "下次再提醒我"
+
+msgid "Do not remind me this version"
+msgstr "不要再提醒我更新这个版本"
 
 msgid "Version of the stable one"
 msgstr "稳定版版本"

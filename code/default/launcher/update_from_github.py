@@ -33,6 +33,17 @@ if not os.path.isdir(download_path):
 
 progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
 progress["update_status"] = "Idle"
+update_info = "init"
+
+def init_update_info(check_update):
+    global update_info
+    if check_update == "dont-check":
+        update_info = "dont-check"
+    elif config.get(["update", "check_update"]) == update_info == "dont-check":
+        update_info = "init"
+
+init_update_info(config.get(["update", "check_update"]))
+#update_info = '{"type":"stable", "version":"3.3.3"}'
 
 def get_opener(retry=0):
     if retry == 0:
@@ -259,7 +270,9 @@ def restart_xxnet(version):
 
 
 def update_version(version):
-    global update_progress
+    global update_progress, update_info
+    _update_info = update_info
+    update_info = ""
     try:
         download_overwrite_new_version(version)
 
@@ -270,6 +283,7 @@ def update_version(version):
         restart_xxnet(version)
     except Exception as e:
         xlog.warn("update version %s fail:%r", version, e)
+        update_info = _update_info
 
 
 def start_update_version(version):
