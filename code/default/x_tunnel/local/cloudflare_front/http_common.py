@@ -47,6 +47,7 @@ class Task(object):
         self.content_length = None
         self.read_buffer = ""
         self.responsed = False
+        self.finished = False
         self.retry_count = 0
 
     def to_string(self):
@@ -118,6 +119,11 @@ class Task(object):
         xlog.debug("%s %s", self.url, err_text)
         res = BaseResponse(body=err_text)
         self.queue.put(res)
+        self.finish()
+
+    def finish(self):
+        self.put_data("")
+        self.finished = True
 
 
 class HTTP_worker(object):

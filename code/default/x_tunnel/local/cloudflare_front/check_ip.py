@@ -154,7 +154,7 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
     time_connected = time.time()
     ssl_sock.do_handshake()
 
-    if False:
+    if True:
         try:
             h2 = ssl_sock.get_alpn_proto_negotiated()
             if h2 == "h2":

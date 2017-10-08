@@ -491,7 +491,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 use_ipv6 = int(self.postvars['use_ipv6'][0])
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
-                        if not check_local_network.check_ipv6():
+                        if not check_local_network.check_ipv6() and False:
                             xlog.warn("IPv6 was enabled, but check failed.")
                             return self.send_response_nc('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 

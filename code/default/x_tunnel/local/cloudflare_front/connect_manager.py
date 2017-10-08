@@ -394,7 +394,7 @@ class Https_connection_manager(object):
             # cloudflare don't have global back-bond network like google.
             # the reasonable response RTT time should be the HTTP test RTT.
 
-            xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, handshake_time, ssl_sock.h2)
+            xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s", ip, handshake_time, ssl_sock.h2, sni)
             ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin
             ssl_sock.last_use_time = time.time()

@@ -45,6 +45,7 @@ class HTTP1_worker(HTTP_worker):
         out_list.append(":%d" % ((time.time() - last_time) * 1000))
         out_list.append(" processed:%d" % self.processed_tasks)
         out_list.append(" transfered:%d" % self.transfered_size)
+        out_list.append(" sni:%s" % self.ssl_sock.sni)
         return ",".join(out_list)
 
     def get_rtt_rate(self):
@@ -166,6 +167,7 @@ class HTTP1_worker(HTTP_worker):
         task.put_data(data)
         task.responsed = True
         task.queue.put(response)
+        task.finish()
 
         self.ssl_sock.received_size += length
         time_cost = (time.time() - start_time)
@@ -235,7 +237,7 @@ class HTTP1_worker(HTTP_worker):
 
         if self.task is not None:
             if self.task.responsed:
-                self.task.put_data("")
+                self.task.finish()
             else:
                 self.retry_task_cb(self.task)
             self.task = None

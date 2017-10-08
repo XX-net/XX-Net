@@ -66,6 +66,10 @@ class RawFrame(object):
     def serialize(self):
         return self.dat
 
+    def __repr__(self):
+        out_str = "{type}".format(type=type(self).__name__)
+        return out_str
+
 
 class HTTP2_worker(HTTP_worker):
     version = "2"
@@ -200,11 +204,11 @@ class HTTP2_worker(HTTP_worker):
             try:
                 self._consume_single_frame()
             except Exception as e:
-                xlog.debug("recv fail:%r", e)
+                xlog.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
     def get_rtt_rate(self):
-        return self.rtt + len(self.streams) * 100
+        return self.rtt + len(self.streams) * 3000
 
     def close(self, reason=""):
         self.keep_running = False
@@ -275,7 +279,7 @@ class HTTP2_worker(HTTP_worker):
 
     def _close_stream_cb(self, stream_id, reason):
         # call by stream to remove from streams list
-        #xlog.debug("%s close stream:%d %s", self.ssl_sock.ip, stream_id, reason)
+        # xlog.debug("%s close stream:%d %s", self.ssl_sock.ip, stream_id, reason)
         try:
             del self.streams[stream_id]
         except KeyError:
@@ -356,7 +360,7 @@ class HTTP2_worker(HTTP_worker):
                 self.streams[frame.stream_id].receive_frame(frame)
                 self.last_active_time = time.time()
             except KeyError:
-                xlog.error("%s Unexpected stream identifier %d", self.ip, frame.stream_id)
+                xlog.exception("%s Unexpected stream identifier %d", self.ip, frame.stream_id)
         else:
             self.receive_frame(frame)
 
@@ -419,7 +423,6 @@ class HTTP2_worker(HTTP_worker):
             xlog.error("%s Received unknown frame, type %d", self.ip, frame.type)
 
     def _update_settings(self, frame):
-
         if SettingsFrame.HEADER_TABLE_SIZE in frame.settings:
             new_size = frame.settings[SettingsFrame.HEADER_TABLE_SIZE]
 
@@ -451,3 +454,10 @@ class HTTP2_worker(HTTP_worker):
 
             for stream in self.streams.values():
                 stream.max_frame_size += new_size
+
+    def get_trace(self):
+        out_list = []
+        out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" h2.stream_num:%d" % len(self.streams))
+        out_list.append(" sni:%s" % self.ssl_sock.sni)
+        return ",".join(out_list)

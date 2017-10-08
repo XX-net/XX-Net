@@ -269,7 +269,7 @@ class SSLConnection(object):
         #    cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256:!ECDHE-RSA-AES128-SHA:!AES128-SHA',)
         #ssl_context.set_cipher_list(':'.join(cipher_suites))
 
-        if False:
+        if True:
             # disable h2, bug not fixed.
             try:
                 ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
