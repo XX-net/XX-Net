@@ -200,6 +200,7 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
     xlog.debug("alt names:%s", alt_names)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
+    ssl_sock.ip = ip
     ssl_sock._sock = sock
     ssl_sock.connect_time = connect_time
     ssl_sock.handshake_time = handshake_time
@@ -252,11 +253,11 @@ def check_xtunnel_http1(ssl_sock, host):
 def check_xtunnel_http2(ssl_sock, host):
     start_time = time.time()
     try:
-        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ip, port=443)
+        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ssl_sock.ip, port=443)
         conn.request('GET', '/')
     except Exception as e:
         #xlog.exception("xtunnel %r", e)
-        xlog.debug("ip:%s http/1.1:%r", ip, e )
+        xlog.debug("ip:%s http/1.1:%r", ssl_sock.ip, e )
         return ssl_sock
 
     try:
@@ -265,10 +266,10 @@ def check_xtunnel_http2(ssl_sock, host):
         xlog.exception("http2 get response fail:%r", e)
         return ssl_sock
 
-    xlog.debug("ip:%s http/2", ip)
+    xlog.debug("ip:%s http/2", ssl_sock.ip)
 
     if response.status != 200:
-        xlog.warn("app check ip:%s status:%d", ip, response.status)
+        xlog.warn("app check ip:%s status:%d", ssl_sock.ip, response.status)
         return ssl_sock
 
     content = response.read()
