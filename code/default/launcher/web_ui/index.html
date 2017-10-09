@@ -155,6 +155,7 @@
         }
 
         function startUpdateCheck() {
+            clearNotify();
             var pageRequests = {};
             pageRequests['cmd'] = 'start_check';
             check_update = $('#check-update').val();
