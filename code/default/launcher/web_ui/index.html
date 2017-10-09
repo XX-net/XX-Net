@@ -183,6 +183,7 @@
         }
 
         function stopUpdateCheck() {
+            clearNotify();
             checkUpdateTimer.stop();
             var pageRequests = {};
             pageRequests['cmd'] = 'set_info';
