@@ -7,7 +7,6 @@ import socket
 import struct
 import sys
 import time
-#from ndg.httpsclient.subj_alt_name import SubjectAltName
 
 from pyasn1.codec.der import decoder as der_decoder
 
@@ -62,6 +61,13 @@ from subj_alt_name import SubjectAltName
 
 import hyper
 
+# http://docs.python.org/dev/library/ssl.html
+# http://blog.ivanristic.com/2009/07/examples-of-the-information-collected-from-ssl-handshakes.html
+# http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
+# openssl s_server -accept 443 -key CA.crt -cert CA.crt
+
+# ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
+
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 openssl_context = openssl_wrap.SSLConnection.context_builder(ca_certs=g_cacertfile)
 try:
@@ -73,12 +79,18 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
     openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
-ns = ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
+ns =[ ["xx-net.net", ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
       'blackboysevenoaks.co.uk', 'bonnycravat.co.uk', 'cafe2f.com', 'cocoabeing.com.au', 'contactguru.me',
       'coroler.com', 'cuonggian.net', 'dortmundspiel.review', 'dulichvietxinh.vn', 'eastindiaarms.co.uk',
       'ebookkelistrikansepedamotor.cf', 'fidelforde.com', 'manybots.com', 'newsvietuc.net', 'nguyenphilong.com',
       'vabis.com.vn', 'vietnews24h.net', 'vobep.com', 'whitehorsecanterbury.co.uk',
-      'yeunuocnhat.com']
+      'yeunuocnhat.com']],
+      ["xx-net.ml", ['amesd.org', 'bloomingbox.ma', 'bloomingbox.net', 'contabilidadegalo.com.br',
+                    'dahliajunephotography.com', 'dreampdf.gq', 'fnakbook.gq', 'fronesis.co',
+                    'globalectern.altervista.org', 'hkhummel.com', 'interfacereality.com', 'kenzabennis.com',
+                    'kenzyspell.com', 'netdamage.cf', 'nethef.cf', 'no-limits.org', 'nokiaphoto.org', 'vwa.com.br',
+                    'wearevr360.com', 'yakupa.com', 'zaiger24.ru']]
+      ]
 
 default_socket = socket.socket
 
@@ -130,8 +142,11 @@ def get_subj_alt_name(peer_cert):
     return dns_name
 
 
-def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
-    ip_port = (ip, port)
+def connect_ssl(ip, sni=None, port=443, timeout=5, top_domain=None):
+    if sni is None:
+        top_domain, subs = random.choice(ns)
+        sni = random.choice(subs)
+        xlog.debug("sni:%s", sni)
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -147,32 +162,26 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
 
     ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
     ssl_sock.set_connect_state()
-    ssl_sock.set_tlsext_host_name(host)
+    ssl_sock.set_tlsext_host_name(sni)
 
     time_begin = time.time()
+    ip_port = (ip, port)
     ssl_sock.connect(ip_port)
     time_connected = time.time()
     ssl_sock.do_handshake()
 
-    if True:
-        try:
-            h2 = ssl_sock.get_alpn_proto_negotiated()
-            if h2 == "h2":
-                ssl_sock.h2 = True
-            else:
-                ssl_sock.h2 = False
-
-            xlog.debug("%s alpn h2:%s", ip, h2)
-        except Exception as e:
-            #xlog.exception("alpn:%r", e)
-            if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-                ssl_sock.h2 = True
-                # xlog.debug("ip:%s http/2", ip)
-            else:
-                ssl_sock.h2 = False
-                # xlog.debug("ip:%s http/1.1", ip)
-    else:
-        ssl_sock.h2 = False
+    try:
+        h2 = ssl_sock.get_alpn_proto_negotiated()
+        if h2 == "h2":
+            ssl_sock.h2 = True
+        else:
+            ssl_sock.h2 = False
+    except Exception as e:
+        #xlog.exception("alpn:%r", e)
+        if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
+            ssl_sock.h2 = True
+        else:
+            ssl_sock.h2 = False
 
     time_handshaked = time.time()
 
@@ -185,25 +194,29 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
     if not cert:
         raise socket.error(' certficate is none')
 
-    if check_cert:
-        issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-        if __name__ == "__main__":
-            xlog.debug("issued by:%s", issuer_commonname)
-        if not issuer_commonname.startswith('COMODO'):
-            #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
-            raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
+    issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+    if not issuer_commonname.startswith('COMODO'):
+        #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
+        raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
 
     connect_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
-    xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
-    alt_names = get_subj_alt_name(cert)
-    xlog.debug("alt names:%s", alt_names)
+    if __name__ == "__main__":
+        xlog.debug("h2:%s", ssl_sock.h2)
+        xlog.debug("issued by:%s", issuer_commonname)
+        xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
+        alt_names = get_subj_alt_name(cert)
+        xlog.debug("alt names:%s", alt_names)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
     ssl_sock.ip = ip
     ssl_sock._sock = sock
+    ssl_sock.fd = sock.fileno()
+    ssl_sock.create_time = time_begin
     ssl_sock.connect_time = connect_time
     ssl_sock.handshake_time = handshake_time
+    ssl_sock.sni = sni
+    ssl_sock.top_domain = top_domain
 
     return ssl_sock
 
@@ -284,11 +297,9 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
-    sni = random.choice(ns)
-
+def test_xtunnel_ip2(ip, sub="scan1"):
     try:
-        ssl_sock = connect_ssl(ip, sni, timeout=max_timeout)
+        ssl_sock = connect_ssl(ip, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)
     except socket.timeout:
         xlog.warn("connect timeout")
@@ -296,6 +307,8 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
     except Exception as e:
         xlog.exception("test_xtunnel_ip %s e:%r",ip, e)
         return False
+
+    host = sub + "." + ssl_sock.top_domain
 
     ssl_sock.support_xtunnel = False
     if not ssl_sock.h2:
@@ -317,9 +330,8 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        host = "scan1.xx-net.net"
         xlog.info("test ip:%s", ip)
-        res = test_xtunnel_ip2(ip, host)
+        res = test_xtunnel_ip2(ip)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:

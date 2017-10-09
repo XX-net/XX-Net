@@ -29,7 +29,7 @@ class Front(object):
                     continue
 
                 content = response.task.read_all()
-                xlog.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
+                xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
                 return content, status, response
             except Exception as e:
                 xlog.warn("front request %s %s%s fail:%r", method, host, path, e)

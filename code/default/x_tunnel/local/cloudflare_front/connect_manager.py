@@ -13,57 +13,18 @@ We create multi-thread to try-connect cloud ip.
 """
 
 
-import binascii
 import operator
-import os
-import socket
-import struct
 import threading
 import time
-import random
-
-import socks
-from xlog import getLogger
-xlog = getLogger("cloudflare_front")
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
-
-from config import config
-
-
-def load_proxy_config():
-    if config.PROXY_ENABLE:
-        if config.PROXY_TYPE == "HTTP":
-            proxy_type = socks.HTTP
-        elif config.PROXY_TYPE == "SOCKS4":
-            proxy_type = socks.SOCKS4
-        elif config.PROXY_TYPE == "SOCKS5":
-            proxy_type = socks.SOCKS5
-        else:
-            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            config.PROXY_ENABLE = 0
-            return
-
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_proxy_config()
-
 
 from ip_manager import ip_manager
-from openssl_wrap import SSLConnection
-
-NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
-
-ns = ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
-      'blackboysevenoaks.co.uk', 'bonnycravat.co.uk', 'cafe2f.com', 'cocoabeing.com.au', 'contactguru.me',
-      'coroler.com', 'cuonggian.net', 'dortmundspiel.review', 'dulichvietxinh.vn', 'eastindiaarms.co.uk',
-      'ebookkelistrikansepedamotor.cf', 'fidelforde.com', 'manybots.com', 'newsvietuc.net', 'nguyenphilong.com',
-      'vabis.com.vn', 'vietnews24h.net', 'vobep.com', 'whitehorsecanterbury.co.uk',
-      'yeunuocnhat.com']
-
-g_cacertfile = os.path.join(current_path, "cacert.pem")
 import connect_control
+from config import config
+import check_ip
+
+import utils
+from xlog import getLogger
+xlog = getLogger("cloudflare_front")
 
 
 class Connect_pool():
@@ -206,23 +167,10 @@ class Connect_pool():
 
 class Https_connection_manager(object):
     def __init__(self, host, ssl_timeout_cb):
-        # http://docs.python.org/dev/library/ssl.html
-        # http://blog.ivanristic.com/2009/07/examples-of-the-information-collected-from-ssl-handshakes.html
-        # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
-        # openssl s_server -accept 443 -key CA.crt -cert CA.crt
-
-        # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
-        self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
-        try:
-            self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
-        except:
-            pass
-
-        if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
-            self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
-
         self.thread_num_lock = threading.Lock()
-        self.host = host
+        sub, top = utils.split_domain(host)
+        self.sub = sub
+
         self.class_name = "Https_connection_manager"
         self.connect_timeout = 4
         self.thread_num = 0
@@ -320,89 +268,21 @@ class Https_connection_manager(object):
             time.sleep(10)
             return False
 
-        sock = None
-        ssl_sock = None
         ip = ip_port[0]
-
+        port = ip_port[1]
         connect_control.start_connect_register(high_prior=True)
 
         handshake_time = 0
         time_begin = time.time()
         try:
-            if config.PROXY_ENABLE:
-                sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-            else:
-                sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
-            # set reuseaddr option to avoid 10048 socket error
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
-            # resize socket recv buffer 8K->32K to improve browser releated application performance
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 64*1024)
-            # disable negal algorithm to send http request quickly.
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-            # set a short timeout to trigger timeout retry more quickly.
+            ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout)
 
-            sock.settimeout(self.connect_timeout)
-
-            ssl_sock = SSLConnection(self.openssl_context, sock, ip, ip_manager.ssl_closed)
-            ssl_sock.set_connect_state()
-
-            sni = random.choice(ns)
-            ssl_sock.set_tlsext_host_name(sni)
-
-            ssl_sock.connect(ip_port)
-            time_connected = time.time()
-            ssl_sock.do_handshake()
-            time_handshaked = time.time()
-
-            def verify_SSL_certificate_issuer(ssl_sock):
-                cert = ssl_sock.get_peer_certificate()
-                if not cert:
-                    #ip_manager.report_bad_ip(ssl_sock.ip)
-                    #connect_control.fall_into_honeypot()
-                    raise socket.error(' certficate is none')
-
-                issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-                if not issuer_commonname.startswith('COMODO'):
-                    ip_manager.report_connect_fail(ip, force_remove=True)
-                    raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
-
-            verify_SSL_certificate_issuer(ssl_sock)
-
-            handshake_time = int((time_handshaked - time_connected) * 1000)
-
-            try:
-                h2 = ssl_sock.get_alpn_proto_negotiated()
-                if h2 == "h2":
-                    ssl_sock.h2 = True
-                    # xlog.debug("ip:%s http/2", ip)
-                else:
-                    ssl_sock.h2 = False
-
-                #xlog.deubg("alpn h2:%s", h2)
-            except:
-                if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-                    ssl_sock.h2 = True
-                    # xlog.debug("ip:%s http/2", ip)
-                else:
-                    ssl_sock.h2 = False
-                    # xlog.debug("ip:%s http/1.1", ip)
-
-            # ip_manager.update_ip(ip, handshake_time)
-            # handshake time is not the response time,
-            # cloudflare don't have global back-bond network like google.
-            # the reasonable response RTT time should be the HTTP test RTT.
-
-            xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s", ip, handshake_time, ssl_sock.h2, sni)
-            ssl_sock.fd = sock.fileno()
-            ssl_sock.create_time = time_begin
+            xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s top:%s",
+                       ip, handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)
             ssl_sock.last_use_time = time.time()
             ssl_sock.received_size = 0
             ssl_sock.load = 0
-            ssl_sock.handshake_time = handshake_time
-            ssl_sock.host = self.host
-            ssl_sock.sni = sni
+            ssl_sock.host = self.sub + "." + ssl_sock.top_domain
 
             connect_control.report_connect_success()
             return ssl_sock
@@ -416,10 +296,6 @@ class Https_connection_manager(object):
             ip_manager.report_connect_fail(ip)
             connect_control.report_connect_fail()
 
-            if ssl_sock:
-                ssl_sock.close()
-            if sock:
-                sock.close()
             return False
         finally:
             connect_control.end_connect_register(high_prior=True)
