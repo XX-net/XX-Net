@@ -266,14 +266,16 @@ div#content div#options div.row-fluid div.span4, .bold {
 }
 
 .popnotify{
-    padding: 10px;
-    margin: 40px 0;
-    color: #b94a48;
+    padding: 5px;
+    margin: 8px 0;
     background-color: #dff0d8;
     border:1px solid;
     border-color: #eed3d7;
     border-radius: 4px;
     transition: color .3s,background .3s,border .3s;
+}
+.popnotify span{
+    margin: 0px 10px 0px 0px;
 }
 
 #details, #update-options, #modules-manager{
