@@ -69,7 +69,6 @@ def download_file(url, filename):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             opener = get_opener(i)
-            #opener.addheaders += [('Range', 'bytes=0-')]
             req = opener.open(url, timeout=30)
             progress[url]["size"] = int(req.headers.get('content-length') or 0)
 
