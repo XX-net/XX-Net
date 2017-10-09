@@ -91,6 +91,16 @@ class Task(object):
         self.body_readed += len(data)
         return data
 
+    def read_all(self):
+        out_list = []
+        while True:
+            data = self.body_queue.get(block=True)
+            if not data:
+                break
+            out_list.append(data)
+
+        return "".join(out_list)
+
     def set_state(self, stat):
         # for debug trace
         time_now = time.time()

@@ -27,9 +27,8 @@ class Front(object):
                 if status not in [200, 405]:
                     xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
                     continue
-                length = response.task.content_length
 
-                content = response.task.read(size=length)
+                content = response.task.read_all()
                 xlog.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
                 return content, status, response
             except Exception as e:
