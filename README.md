@@ -25,7 +25,7 @@
  2017-10-09
 * GAE封锁严重，可以考虑启用ipv6，请参考：  
   https://github.com/XX-net/XX-Net/issues/6918
-* X-Tunnel 部分地区干扰严重，请升级到3.6.12，大部分地区性能有改善，少数地区仍然无法登录. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+* X-Tunnel 部分地区干扰严重，请升级到[3.6.12](https://github.com/XX-net/XX-Net/issues/7061). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 **X-Tunnel 用户套餐流量丢失的，请给xxnet.dev@gmail.com 发邮件。**
   接下来会继续开发x-tunnel，增加突破能力。  
   
