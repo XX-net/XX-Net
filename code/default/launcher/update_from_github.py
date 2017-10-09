@@ -41,9 +41,10 @@ def init_update_info(check_update):
         update_info = "dont-check"
     elif config.get(["update", "check_update"]) == update_info == "dont-check":
         update_info = "init"
+    elif check_update != "init":
+        update_info = ""
 
 init_update_info(config.get(["update", "check_update"]))
-#update_info = '{"type":"stable", "version":"3.3.3"}'
 
 def get_opener(retry=0):
     if retry == 0:
@@ -68,6 +69,7 @@ def download_file(url, filename):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             opener = get_opener(i)
+            #opener.addheaders += [('Range', 'bytes=0-')]
             req = opener.open(url, timeout=30)
             progress[url]["size"] = int(req.headers.get('content-length') or 0)
 
