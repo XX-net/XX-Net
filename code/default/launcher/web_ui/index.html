@@ -24,6 +24,9 @@
         <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
     <![endif]-->
 </head>
+<script type="text/javascript">
+    var documentReadyToRun = new Array();
+</script>
 <body>
     <div id="header" class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
@@ -70,6 +73,9 @@
                         <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
+                    <div id="update-progress-bar">
+                        <button class="btn btn-primary ladda-button"></button>
+                    </div><!-- #update-progress-bar -->
                     <h2 id="title"></h2>
                     <div id="tip" class="alert fade in hide">
                         <button id="tip-close" type="button" class="close">×</button>
@@ -141,17 +147,22 @@
     <script type="text/javascript">
         var checkUpdateTimeout = 600000;
         var checkUpdateTimer;
-        var isShown;
-        var version;
-        var poptip;
+        var versionToUpdate;
 
         function displayErrorMessage() {
             tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
         }
 
         function clearNotify() {
-            $('#update-notify').css('display', 'none');
-            isShown = null;
+            if ( !$('#update-notify').hasClass('hide') ) {
+                $('#update-notify').addClass('hide');
+            }
+        }
+
+        function clearProgressBar() {
+            if ( !$('#update-progress-bar').hasClass('hide') ) {
+                $('#update-progress-bar').addClass('hide');
+            }
         }
 
         function startUpdateCheck() {
@@ -233,7 +244,7 @@
             checkUpdateTimer.stop();
             var pageRequests = {};
             pageRequests['cmd'] = 'set_config';
-            pageRequests['skip_version'] = version;
+            pageRequests['skip_version'] = versionToUpdate;
 
             $.ajax({
                 type: 'GET',
@@ -255,8 +266,8 @@
             clearNotify();
             var pageRequests = {};
             pageRequests['cmd'] = 'update_version';
-            pageRequests['version'] = version;
-            version = null;
+            pageRequests['version'] = versionToUpdate;
+            versionToUpdate = null;
 
             $.ajax({
                 type: 'GET',
@@ -266,6 +277,8 @@
                 success: function(result) {
                     if ( result['res'] == 'success' ) {
                         tip( '{{ _( "Updating in progress ..." ) }}', "info");
+                        $('#update-progress-bar button').html(pageRequests['version']);
+                        window.timer.play();
                     } else {
                         tip( result['reason'], "warning");
                     }
@@ -277,7 +290,8 @@
         }
 
         function getUpdateInfo() {
-            if (isShown) {
+            if ( !$('#update-notify').hasClass('hide') ||
+                 !$('#update-progress-bar').hasClass('hide')) {
                 return;
             }
 
@@ -299,31 +313,120 @@
                         stopUpdateCheck();
                         break;
                     default:
-                        version = result['version'];
-                        if ( versionType && version ) {
+                        versionToUpdate = result['version'];
+                        if ( versionType && versionToUpdate ) {
                             switch ( versionType ) {
                             case 'stable':
-                                popText = '{{ _( "Stable version" ) }} ' + version + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "Stable version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
                                 break;
                             case 'test':
-                                popText = '{{ _( "Test version" ) }} ' + version + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "Test version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
                             }
                             $('#update-message').text(popText);
-                            $('#update-notify').css('display', '');
-                            isShown = true;
+                            if ( $('#update-notify').hasClass('hide') ) {
+                                $('#update-notify').removeClass('hide');
+                            }
                         }
                     }
                 }
             });
         }
 
+        function updateProgress(){
+            $.getJSON('update?cmd=get_progress', function (rst) {
+                Object.keys(rst).forEach(function (v) {
+                    if ( v == "update_status"){
+                        var stat = rst[v];
+
+                        if ( stat === "Idle"){
+                            window.timer.stop();
+                            return;
+                        }
+
+                        if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
+                            var current_version = $('#current-version-no').html();
+                            if ( current_version == ""){
+                                $('#current-version-no').html(" ");
+                                // avoid check next time.
+
+                                check_new_version();
+                            }
+
+                            $('.version-line').slideDown('fast');
+
+                            $('#upgrade-pull-icon').removeClass('icon-chevron-right');
+                            $('#upgrade-pull-icon').addClass('icon-chevron-down');
+                            $('#update-options').slideDown();
+                        }
+
+                        if( stat == "Finished"){
+                            tip( stat, 'info');
+                            window.loading.stop();
+                            window.timer.stop();
+                            return;
+                        }else if ( stat.indexOf('Fail') > -1){
+                            tip( stat, 'warning');
+                            window.timer.stop();
+                        }else{
+                            tip( stat, 'info');
+                        }
+                    }else if (v.indexOf('XX-Net/zip') > -1) {
+                        if (!window.updating_button){
+                            var p = v.indexOf('XX-Net/zip') + 11;
+                            var version = v.substring(p, v.length);
+                            var button;
+                            if ( version == $('#test-version-no').html() ){
+                                button = $('#update-test-version');
+                            }else if ( version == $('#stable-version-no').html() ){
+                                button = $('#update-stable-version');
+                            }else if ( version == $('#update-progress-bar button').html() ){
+                                button = $('#update-progress-bar button');
+                                if ( $('#update-progress-bar').hasClass('hide') ) {
+                                    $('#update-progress-bar').removeClass('hide');
+                                }
+                            }else{
+                                return;
+                            }
+                            window.updating_button = button;
+                        }
+
+                        if (!window.loading){
+                            window.loading = Ladda.create(window.updating_button[0]);
+                            window.loading.start();
+                        }
+                        var data = rst[v];
+                        if ( data.status === 'downloading'){
+                            var progress =  (+data.downloaded / +data.size) * 100 ;
+
+                            window.loading.setProgress(progress);
+                            window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '&#37;');
+                        }else if (data.status === "finished"){
+                            window.updating_button.html( '{{ _( "Download completed" ) }}');
+                            window.updating_button.prop('disabled', true);
+                            window.setTimeout(clearProgressBar, 5000);
+                        }
+                    }
+                });
+            });
+        }
+
+        $(document).ready(function(){
+            var rfn;
+            for ( rfn in documentReadyToRun ) {
+                documentReadyToRun[rfn]();
+            }
+            window.timer = $.timer(updateProgress, 1000, true);
+            updateProgress();
+            checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
+            getUpdateInfo();
+        });
+
         $('#update-now').click(updateVersion);
         $('#update-next').click(clearUpdateInfo);
         $('#update-skip').click(skipUpdateVersion);
         $('#update-notify-close').click(clearUpdateInfo);
         clearNotify();
-        getUpdateInfo();
-        checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
+        clearProgressBar();
     </script>
     <script type="text/javascript">
         //pop up notify on top of status web page.
