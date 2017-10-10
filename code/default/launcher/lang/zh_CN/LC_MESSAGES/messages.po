@@ -109,6 +109,12 @@ msgstr "稳定版版本"
 msgid "All versions download page"
 msgstr "所有版本下载页面"
 
+msgid "Downloading ..."
+msgstr "下载中……"
+
+msgid "Download completed"
+msgstr "下载完成"
+
 msgid "Module management"
 msgstr "模块管理"
 
