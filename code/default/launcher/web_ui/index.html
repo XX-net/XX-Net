@@ -404,6 +404,7 @@
                             window.updating_button.html( '{{ _( "Download completed" ) }}');
                             window.updating_button.prop('disabled', true);
                             window.setTimeout(clearProgressBar, 5000);
+                            window.timer.stop();
                         }
                     }
                 });
