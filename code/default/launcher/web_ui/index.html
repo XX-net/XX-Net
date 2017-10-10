@@ -153,20 +153,12 @@
             tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
         }
 
-        function clearNotify() {
-            if ( !$('#update-notify').hasClass('hide') ) {
-                $('#update-notify').addClass('hide');
-            }
-        }
-
         function clearProgressBar() {
-            if ( !$('#update-progress-bar').hasClass('hide') ) {
-                $('#update-progress-bar').addClass('hide');
-            }
+            $('#update-progress-bar').addClass('hide');
         }
 
         function startUpdateCheck() {
-            clearNotify();
+            $('#update-notify').addClass('hide');
             var pageRequests = {};
             pageRequests['cmd'] = 'start_check';
             check_update = $('#check-update').val();
@@ -195,7 +187,7 @@
         }
 
         function stopUpdateCheck() {
-            clearNotify();
+            $('#update-notify').addClass('hide');
             checkUpdateTimer.stop();
             var pageRequests = {};
             pageRequests['cmd'] = 'set_info';
@@ -218,7 +210,7 @@
         }
 
         function clearUpdateInfo() {
-            clearNotify();
+            $('#update-notify').addClass('hide');
             var pageRequests = {};
             pageRequests['cmd'] = 'set_info';
             pageRequests['info'] = '';
@@ -240,7 +232,7 @@
         }
 
         function skipUpdateVersion() {
-            clearNotify();
+            $('#update-notify').addClass('hide');
             checkUpdateTimer.stop();
             var pageRequests = {};
             pageRequests['cmd'] = 'set_config';
@@ -263,7 +255,7 @@
         }
 
         function updateVersion() {
-            clearNotify();
+            $('#update-notify').addClass('hide');
             var pageRequests = {};
             pageRequests['cmd'] = 'update_version';
             pageRequests['version'] = versionToUpdate;
@@ -323,9 +315,7 @@
                                 var popText = '{{ _( "Test version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
                             }
                             $('#update-message').text(popText);
-                            if ( $('#update-notify').hasClass('hide') ) {
-                                $('#update-notify').removeClass('hide');
-                            }
+                            $('#update-notify').removeClass('hide');
                         }
                     }
                 }
@@ -381,9 +371,7 @@
                                 button = $('#update-stable-version');
                             }else if ( version == $('#update-progress-bar button').html() ){
                                 button = $('#update-progress-bar button');
-                                if ( $('#update-progress-bar').hasClass('hide') ) {
-                                    $('#update-progress-bar').removeClass('hide');
-                                }
+                                $('#update-progress-bar').removeClass('hide');
                             }else{
                                 return;
                             }
@@ -426,8 +414,10 @@
         $('#update-next').click(clearUpdateInfo);
         $('#update-skip').click(skipUpdateVersion);
         $('#update-notify-close').click(clearUpdateInfo);
-        clearNotify();
-        clearProgressBar();
+        $('#update-notify').addClass('hide');
+        $('#update-progress-bar').addClass('hide');
+        // site.js fix
+        $('#tip-close').click(tipClose);
     </script>
     <script type="text/javascript">
         //pop up notify on top of status web page.
