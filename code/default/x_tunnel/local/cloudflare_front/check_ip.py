@@ -7,6 +7,7 @@ import socket
 import struct
 import sys
 import time
+import json
 
 from pyasn1.codec.der import decoder as der_decoder
 
@@ -14,6 +15,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
     root = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+    data_path = os.path.abspath( os.path.join(root, os.pardir, "data", "x_tunnel"))
     python_path = os.path.join(root, 'python27', '1.0')
 
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
@@ -79,19 +81,39 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
     openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
-ns =[ ["xx-net.net", ['alouc.com', 'alouc.net', 'baonhat.com', 'baouc.us', 'bellsmarden.co.uk', 'bitshares.com.ua',
-      'blackboysevenoaks.co.uk', 'bonnycravat.co.uk', 'cafe2f.com', 'cocoabeing.com.au', 'contactguru.me',
-      'coroler.com', 'cuonggian.net', 'dortmundspiel.review', 'dulichvietxinh.vn', 'eastindiaarms.co.uk',
-      'ebookkelistrikansepedamotor.cf', 'fidelforde.com', 'manybots.com', 'newsvietuc.net', 'nguyenphilong.com',
-      'vabis.com.vn', 'vietnews24h.net', 'vobep.com', 'whitehorsecanterbury.co.uk',
-      'yeunuocnhat.com']],
-      ["xx-net.ml", ['amesd.org', 'bloomingbox.ma', 'bloomingbox.net', 'contabilidadegalo.com.br',
-                    'dahliajunephotography.com', 'dreampdf.gq', 'fnakbook.gq', 'fronesis.co',
-                    'globalectern.altervista.org', 'hkhummel.com', 'interfacereality.com', 'kenzabennis.com',
-                    'kenzyspell.com', 'netdamage.cf', 'nethef.cf', 'no-limits.org', 'nokiaphoto.org', 'vwa.com.br',
-                    'wearevr360.com', 'yakupa.com', 'zaiger24.ru']]
-      ]
 
+
+def load_front_domains(file_path):
+    if not os.path.isfile(file_path):
+        raise Exception("load front domain fn:%s not exist" % file_path)
+
+    lns = []
+    with open(file_path, "r") as fd:
+        ds = json.load(fd)
+        for top in ds:
+            subs = ds[top]
+            subs = [str(s) for s in subs]
+            lns.append([str(top) , subs])
+    return lns
+
+
+ns = None
+
+
+def update_front_domains():
+    global ns
+    front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
+    default_front_domains_fn = os.path.join(current_path, "front_domains.json")
+
+    try:
+        ns = load_front_domains(front_domains_fn)
+        xlog.info("load front:%s", front_domains_fn)
+    except Exception as e:
+        ns = load_front_domains(default_front_domains_fn)
+        xlog.info("load front:%s", default_front_domains_fn)
+
+
+update_front_domains()
 default_socket = socket.socket
 
 
@@ -200,7 +222,7 @@ def connect_ssl(ip, sni=None, port=443, timeout=5, top_domain=None):
         raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
 
     connect_time = int((time_connected - time_begin) * 1000)
-    handshake_time = int((time_handshaked - time_connected) * 1000)
+    handshake_time = int((time_handshaked - time_begin) * 1000)
     if __name__ == "__main__":
         xlog.debug("h2:%s", ssl_sock.h2)
         xlog.debug("issued by:%s", issuer_commonname)

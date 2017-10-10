@@ -1,15 +1,35 @@
 import time
+import os
+import threading
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 xlog.set_buffer(500)
+import simple_http_client
+from config import config
 
 import http_dispatcher
 import connect_control
+import check_ip
 
 
 class Front(object):
     def __init__(self):
         self.dispatchs = {}
+        threading.Thread(target=self.update_front_domains).start()
+
+    def update_front_domains(self):
+        client = simple_http_client.HTTP_client("raw.githubusercontent.com", use_https=True)
+        path = "/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
+        content, status, response = client.request("GET", path)
+        if status != 200:
+            xlog.warn("update front domains fail:%d", status)
+            return
+
+        front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
+        with open(front_domains_fn, "w") as fd:
+            fd.write(content)
+
+        check_ip.update_front_domains()
 
     def __del__(self):
         connect_control.keep_running = False
