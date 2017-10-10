@@ -250,7 +250,7 @@
     }
 </script>
 <script type="text/javascript">
-    $(document).ready(function(){
+    documentReadyToRun.push(function(){
         var timer = $.timer(function() {
             if ( $("#details").is(":visible")){
                 updateDetailStatus();
