@@ -66,14 +66,14 @@
                     </div> <!-- .sidebar-nav -->
                 </div> <!-- #sidebar -->
                 <div class="span9">
-                    <div id="update-notify">
+                    <div id="update-notify" class="alert fade in hide">
                         <span id="update-notify-close">×</span>
                         <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me of this version" ) }}</span>
                         <span id="update-next" class="update-notify-action">{{ _( "Remind me next time" ) }}</span>
                         <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
-                    <div id="update-progress-bar">
+                    <div id="update-progress-bar" class="alert fade in hide">
                         <button class="btn btn-primary ladda-button"></button>
                     </div><!-- #update-progress-bar -->
                     <h2 id="title"></h2>
@@ -414,8 +414,6 @@
         $('#update-next').click(clearUpdateInfo);
         $('#update-skip').click(skipUpdateVersion);
         $('#update-notify-close').click(clearUpdateInfo);
-        $('#update-notify').addClass('hide');
-        $('#update-progress-bar').addClass('hide');
         // site.js fix
         $('#tip-close').click(tipClose);
     </script>
