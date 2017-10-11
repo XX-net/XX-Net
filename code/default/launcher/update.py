@@ -245,9 +245,8 @@ def check_update():
 
         versions = update_from_github.get_github_versions()
         current_version = update_from_github.current_version()
-        skip_version = config.get(["update", "skip_version"])
         test_version, stable_version = versions[0][1], versions[1][1]
-        if test_version != skip_version:
+        if test_version != config.get(["update", "skip_test_version"]):
             if update_rule == "notice-test":
                 if LooseVersion(current_version) < LooseVersion(test_version):
                     xlog.info("checked new test version %s", test_version)
@@ -256,7 +255,7 @@ def check_update():
                 if LooseVersion(current_version) < LooseVersion(test_version):
                     xlog.info("update to test version %s", test_version)
                     update_from_github.update_version(test_version)
-        if stable_version != skip_version:
+        if stable_version != config.get(["update", "skip_stable_version"]):
             if update_rule == "notice-stable":
                 if LooseVersion(current_version) < LooseVersion(stable_version):
                     xlog.info("checked new stable version %s", stable_version)

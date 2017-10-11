@@ -246,11 +246,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['set_config']:
             if 'skip_version' in reqs:
                 skip_version = reqs['skip_version'][0]
-                config.set(["update", "skip_version"], skip_version)
-                config.save()
-                if skip_version in update_from_github.update_info:
-                    update_from_github.update_info = ''
-                data = '{"res":"success"}'
+                skip_version_type = reqs['skip_version_type'][0]
+                if skip_version_type not in ["stable", "test"]:
+                    data = '{"res":"fail"}'
+                else:
+                    config.set(["update", "skip_%s_version" % skip_version_type], skip_version)
+                    config.save()
+                    if skip_version in update_from_github.update_info:
+                        update_from_github.update_info = ''
+                    data = '{"res":"success"}'
             elif 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
                 if check_update not in ["dont-check", "stable", "notice-stable", "test", "notice-test"]:
