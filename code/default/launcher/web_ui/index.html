@@ -148,6 +148,7 @@
         var checkUpdateTimeout = 600000;
         var checkUpdateTimer;
         var versionToUpdate;
+        var versionType;
 
         function displayErrorMessage() {
             tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
@@ -237,6 +238,7 @@
             var pageRequests = {};
             pageRequests['cmd'] = 'set_config';
             pageRequests['skip_version'] = versionToUpdate;
+            pageRequests['skip_version_type'] = versionType;
 
             $.ajax({
                 type: 'GET',
@@ -295,7 +297,7 @@
                 data: pageRequests,
                 dataType: 'JSON',
                 success: function(result) {
-                    var versionType = result['type'];
+                    versionType = result['type'];
                     switch ( versionType ) {
                     case 'init':
                         window.setTimeout(startUpdateCheck, 1000);
