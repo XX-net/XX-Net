@@ -160,7 +160,10 @@ def get_subj_alt_name(peer_cert):
                 if isinstance(name, SubjectAltName):
                     for entry in range(len(name)):
                         component = name.getComponentByPosition(entry)
-                        dns_name.append(str(component.getComponent()))
+                        n = str(component.getComponent())
+                        if n.startswith("*"):
+                            continue
+                        dns_name.append(n)
     return dns_name
 
 
@@ -169,6 +172,9 @@ def connect_ssl(ip, sni=None, port=443, timeout=5, top_domain=None):
         top_domain, subs = random.choice(ns)
         sni = random.choice(subs)
         xlog.debug("sni:%s", sni)
+
+    if top_domain is None:
+        top_domain = sni
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -319,9 +325,9 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, sub="scan1"):
+def test_xtunnel_ip2(ip, sni=None, sub="scan1"):
     try:
-        ssl_sock = connect_ssl(ip, timeout=max_timeout)
+        ssl_sock = connect_ssl(ip, sni=sni, timeout=max_timeout)
         get_ssl_cert_domain(ssl_sock)
     except socket.timeout:
         xlog.warn("connect timeout")
@@ -353,7 +359,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         xlog.info("test ip:%s", ip)
-        res = test_xtunnel_ip2(ip)
+        if len(sys.argv) > 2:
+            sni = sys.argv[2]
+        else:
+            sni = None
+        res = test_xtunnel_ip2(ip, sni=sni)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:
