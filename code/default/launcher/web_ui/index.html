@@ -334,7 +334,7 @@
 
                         if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
                             var current_version = $('#current-version-no').html();
-                            if ( current_version == "" && $('.active a').attr('href') == '/?module=launcher&menu=config'){
+                            if ( current_version == "" ){
                                 $('#current-version-no').html(" ");
                                 // avoid check next time.
 
