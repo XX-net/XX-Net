@@ -26,6 +26,7 @@
 </head>
 <script type="text/javascript">
     var documentReadyToRun = new Array();
+    var check_new_version;
 </script>
 <body>
     <div id="header" class="navbar navbar-inverse navbar-fixed-top">
@@ -73,7 +74,7 @@
                         <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
-                    <div id="update-progress-bar" class="alert fade in hide">
+                    <div id="update-progress-bar" class="fade in hide">
                         <button class="btn btn-primary ladda-button"></button>
                     </div><!-- #update-progress-bar -->
                     <h2 id="title"></h2>
@@ -269,7 +270,6 @@
                 success: function(result) {
                     if ( result['res'] == 'success' ) {
                         tip( '{{ _( "Updating in progress ..." ) }}', "info");
-                        $('#update-progress-bar button').html(pageRequests['version']);
                         window.timer.play();
                     } else {
                         tip( result['reason'], "warning");
@@ -335,7 +335,7 @@
 
                         if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
                             var current_version = $('#current-version-no').html();
-                            if ( current_version == ""){
+                            if ( current_version == "" && check_new_version){
                                 $('#current-version-no').html(" ");
                                 // avoid check next time.
 
@@ -369,14 +369,15 @@
                                 button = $('#update-test-version');
                             }else if ( version == $('#stable-version-no').html() ){
                                 button = $('#update-stable-version');
-                            }else if ( version == $('#update-progress-bar button').html() ){
+                            }else if ( check_new_version ) {
+                                return;
+                            }else{
                                 button = $('#update-progress-bar button');
                                 $('#update-progress-bar').removeClass('hide');
-                            }else{
-                                return;
                             }
                             window.updating_button = button;
                         }
+                        $('#update-notify').addClass('hide');
 
                         if (!window.loading){
                             window.loading = Ladda.create(window.updating_button[0]);
@@ -391,7 +392,9 @@
                         }else if (data.status === "finished"){
                             window.updating_button.html( '{{ _( "Download completed" ) }}');
                             window.updating_button.prop('disabled', true);
+                            window.updating_button = null;
                             window.setTimeout(clearProgressBar, 5000);
+                            window.loading.stop();
                             window.timer.stop();
                         }
                     }
@@ -407,7 +410,7 @@
             window.timer = $.timer(updateProgress, 1000, true);
             updateProgress();
             checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
-            getUpdateInfo();
+            window.setTimeout(getUpdateInfo, 1000);
         });
 
         $('#update-now').click(updateVersion);
