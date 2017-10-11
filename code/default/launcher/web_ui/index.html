@@ -26,7 +26,6 @@
 </head>
 <script type="text/javascript">
     var documentReadyToRun = new Array();
-    var check_new_version;
 </script>
 <body>
     <div id="header" class="navbar navbar-inverse navbar-fixed-top">
@@ -335,7 +334,7 @@
 
                         if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
                             var current_version = $('#current-version-no').html();
-                            if ( current_version == "" && check_new_version){
+                            if ( current_version == "" && $('.active a').attr('href') == '/?module=launcher&menu=config'){
                                 $('#current-version-no').html(" ");
                                 // avoid check next time.
 
@@ -369,7 +368,7 @@
                                 button = $('#update-test-version');
                             }else if ( version == $('#stable-version-no').html() ){
                                 button = $('#update-stable-version');
-                            }else if ( check_new_version ) {
+                            }else if ( $('.active a').attr('href') == '/?module=launcher&menu=config' ) {
                                 return;
                             }else{
                                 button = $('#update-progress-bar button');
