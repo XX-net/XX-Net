@@ -68,9 +68,9 @@
                 <div class="span9">
                     <div id="update-notify" class="alert fade in hide">
                         <span id="update-notify-close">×</span>
-                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me of this version" ) }}</span>
-                        <span id="update-next" class="update-notify-action">{{ _( "Remind me next time" ) }}</span>
                         <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
+                        <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
+                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
                     <div id="update-progress-bar" class="fade in hide">
@@ -310,10 +310,10 @@
                         if ( versionType && versionToUpdate ) {
                             switch ( versionType ) {
                             case 'stable':
-                                var popText = '{{ _( "Stable version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
                                 break;
                             case 'test':
-                                var popText = '{{ _( "Test version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
                             }
                             $('#update-message').text(popText);
                             $('#update-notify').removeClass('hide');
