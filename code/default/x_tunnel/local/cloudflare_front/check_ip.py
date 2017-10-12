@@ -167,14 +167,17 @@ def get_subj_alt_name(peer_cert):
     return dns_name
 
 
-def connect_ssl(ip, sni=None, port=443, timeout=5, top_domain=None):
-    if sni is None:
-        top_domain, subs = random.choice(ns)
-        sni = random.choice(subs)
-        xlog.debug("sni:%s", sni)
+def connect_ssl(ip, port=443, timeout=5, top_domain=None):
 
     if top_domain is None:
-        top_domain = sni
+        top_domain, subs = random.choice(ns)
+        sni = random.choice(subs)
+    else:
+        sni = top_domain
+
+    top_domain = str(top_domain)
+    sni = str(sni)
+    xlog.debug("top_domain:%s sni:%s", top_domain, sni)
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -325,9 +328,9 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, sni=None, sub="scan1"):
+def test_xtunnel_ip2(ip, sub="scan1", top_domain=None):
     try:
-        ssl_sock = connect_ssl(ip, sni=sni, timeout=max_timeout)
+        ssl_sock = connect_ssl(ip, timeout=max_timeout, top_domain=top_domain)
         get_ssl_cert_domain(ssl_sock)
     except socket.timeout:
         xlog.warn("connect timeout")
@@ -337,6 +340,7 @@ def test_xtunnel_ip2(ip, sni=None, sub="scan1"):
         return False
 
     host = sub + "." + ssl_sock.top_domain
+    xlog.info("host:%s", host)
 
     ssl_sock.support_xtunnel = False
     if not ssl_sock.h2:
@@ -356,14 +360,19 @@ def test_xtunnel_ip2(ip, sni=None, sub="scan1"):
 
 
 if __name__ == "__main__":
+    # case 1: only ip
+    # case 2: ip + domain
+    #    connect use domain, print altNames
+
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         xlog.info("test ip:%s", ip)
         if len(sys.argv) > 2:
-            sni = sys.argv[2]
+            top_domain = sys.argv[2]
         else:
-            sni = None
-        res = test_xtunnel_ip2(ip, sni=sni)
+            top_domain = None
+
+        res = test_xtunnel_ip2(ip, top_domain=top_domain)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:

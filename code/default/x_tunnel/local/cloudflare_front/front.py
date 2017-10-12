@@ -17,19 +17,36 @@ class Front(object):
         self.dispatchs = {}
         threading.Thread(target=self.update_front_domains).start()
 
-    def update_front_domains(self):
-        client = simple_http_client.HTTP_client("raw.githubusercontent.com", use_https=True)
-        path = "/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
-        content, status, response = client.request("GET", path)
-        if status != 200:
-            xlog.warn("update front domains fail:%d", status)
-            return
+    @staticmethod
+    def update_front_domains():
+        next_update_time = time.time()
+        while connect_control.keep_running:
+            if time.time() < next_update_time:
+                time.sleep(4)
+                continue
 
-        front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
-        with open(front_domains_fn, "w") as fd:
-            fd.write(content)
+            try:
+                client = simple_http_client.HTTP_client("raw.githubusercontent.com", use_https=True)
+                path = "/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
+                content, status, response = client.request("GET", path)
+                if status != 200:
+                    xlog.warn("update front domains fail:%d", status)
+                    raise Exception("status:%r", status)
 
-        check_ip.update_front_domains()
+                front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
+                if os.path.exists(front_domains_fn):
+                    with open(front_domains_fn, "r") as fd:
+                        old_content = fd.read()
+                        if content != old_content:
+                            with open(front_domains_fn, "w") as fd:
+                                fd.write(content)
+                            check_ip.update_front_domains()
+
+                next_update_time = time.time() + (4 * 3600)
+                xlog.info("updated cloudflare front domains from github.")
+            except Exception as e:
+                next_update_time = time.time() + (1800)
+                xlog.debug("updated cloudflare front domains from github fail:%r", e)
 
     def __del__(self):
         connect_control.keep_running = False
