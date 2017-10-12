@@ -257,17 +257,30 @@ def update_current_version(xxnet_version):
         fd.write(xxnet_version)
 
 
-def restart_xxnet(version):
+def restart_xxnet(version=None):
     import module_init
     module_init.stop_all()
+
     import web_control
     web_control.stop()
+    xlog.info("Close web control port.")
+
+    if version is None:
+        current_version_file = os.path.join(top_path, "code", "version.txt")
+        with open(current_version_file, "r") as fd:
+            version = fd.read()
+
+    xlog.info("restart to xx-net version:%s", version)
 
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
-
     subprocess.Popen([sys.executable, start_script])
     time.sleep(20)
-    #os._exit(0)
+    # new process will call http://127.0.0.1:8085/quit
+    # old process will exit.
+
+    # the following is confirm exit
+    xlog.info("Exit old process...")
+    os._exit(0)
 
 
 def update_version(version):
