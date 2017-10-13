@@ -34,8 +34,9 @@
                 <div class="row-fluid">
                     <div id="logo" class="span8">
                         <a href="/" title="XX-Net">
-                            <img src="/img/logo.png" alt="Logo">
+                            <img src="/img/logo.png" alt="Logo"></img>
                             XX-Net
+                            <span id="version_on_logo" class="" ></span>
                         </a>
                         <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
                     </div> <!-- #logo -->
@@ -105,6 +106,20 @@
                 $('img', this).attr('src', '/img/fixed-width.png');
                 $('.container-fluid').addClass('container');
                 $('.container-fluid').removeClass('container-fluid');
+            }
+        });
+    </script>
+    <script type="text/javascript">
+        var pageRequests = {};
+        pageRequests['cmd'] = 'get_version';
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
+                
             }
         });
     </script>
