@@ -243,6 +243,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "gae_proxy", "auto_start"], 0)
                     , config.get(["modules", "x_tunnel", "auto_start"], 0)
                     )
+        if reqs['cmd'] == ['get_version']:
+            current_version = update_from_github.current_version()
+            data = '{"current_version":"%s"}' % (current_version)
         elif reqs['cmd'] == ['set_config']:
             if 'skip_version' in reqs:
                 skip_version = reqs['skip_version'][0]
