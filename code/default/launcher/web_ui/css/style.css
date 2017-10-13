@@ -62,6 +62,11 @@ div#header div#logo img {
     max-height: 32px;
 }
 
+#version_on_logo {
+    margin: 0 5px;
+    font-size: 70%;
+}
+
 div#header a#resize-window-trigger,
 div#header a#quit-trigger {
     display: block;

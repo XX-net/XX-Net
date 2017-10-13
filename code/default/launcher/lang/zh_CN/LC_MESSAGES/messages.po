@@ -14,6 +14,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
+msgid "Version"
+msgstr "版本"
+
 msgid "Project main page"
 msgstr "项目主页"
 
