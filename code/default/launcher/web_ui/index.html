@@ -68,9 +68,9 @@
                 <div class="span9">
                     <div id="update-notify" class="alert fade in hide">
                         <span id="update-notify-close">×</span>
-                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me of this version" ) }}</span>
-                        <span id="update-next" class="update-notify-action">{{ _( "Remind me next time" ) }}</span>
                         <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
+                        <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
+                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
                     <div id="update-progress-bar" class="fade in hide">
@@ -271,7 +271,7 @@
                 success: function(result) {
                     if ( result['res'] == 'success' ) {
                         tip( '{{ _( "Updating in progress ..." ) }}', "info");
-                        window.timer.play();
+                        window.updateProgress_timer.play();
                     } else {
                         tip( result['reason'], "warning");
                     }
@@ -310,10 +310,10 @@
                         if ( versionType && versionToUpdate ) {
                             switch ( versionType ) {
                             case 'stable':
-                                var popText = '{{ _( "Stable version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
                                 break;
                             case 'test':
-                                var popText = '{{ _( "Test version" ) }} ' + versionToUpdate + ' {{ _( "is valid." ) }}';
+                                var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
                             }
                             $('#update-message').text(popText);
                             $('#update-notify').removeClass('hide');
@@ -330,7 +330,7 @@
                         var stat = rst[v];
 
                         if ( stat === "Idle"){
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                             return;
                         }
 
@@ -353,11 +353,11 @@
                         if( stat == "Finished"){
                             tip( stat, 'info');
                             window.loading.stop();
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                             return;
                         }else if ( stat.indexOf('Fail') > -1){
                             tip( stat, 'warning');
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                         }else{
                             tip( stat, 'info');
                         }
@@ -396,7 +396,7 @@
                             window.updating_button = null;
                             window.setTimeout(clearProgressBar, 5000);
                             window.loading.stop();
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                         }
                     }
                 });
@@ -408,7 +408,7 @@
             for ( rfn in documentReadyToRun ) {
                 documentReadyToRun[rfn]();
             }
-            window.timer = $.timer(updateProgress, 1000, true);
+            window.updateProgress_timer = $.timer(updateProgress, 1000, true);
             updateProgress();
             checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
             window.setTimeout(getUpdateInfo, 1000);
