@@ -112,9 +112,8 @@ class Stream(object):
         self.response_body_len = 0
 
         threading.Thread(target=self.timeout_response).start()
-        self.start_request()
 
-    def start_request(self):
+    def start(self):
         """
         Open the stream. Does this by encoding and sending the headers: no more
         calls to ``add_header`` are allowed after this method is called.

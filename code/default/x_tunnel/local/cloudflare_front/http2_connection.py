@@ -165,6 +165,8 @@ class HTTP2_worker(HTTP_worker):
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
         self.streams[stream_id] = stream
+        # xlog.debug("%s create stream %d", self.ssl_sock.ip, stream_id)
+        stream.start()
 
     def send_loop(self):
         while connect_control.keep_running and self.keep_running:

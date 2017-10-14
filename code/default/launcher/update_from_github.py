@@ -263,6 +263,8 @@ def restart_xxnet(version=None):
 
     import web_control
     web_control.stop()
+    # New process will hold the listen port
+    # We should close all listen port before create new process
     xlog.info("Close web control port.")
 
     if version is None:
@@ -275,10 +277,7 @@ def restart_xxnet(version=None):
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
     subprocess.Popen([sys.executable, start_script])
     time.sleep(20)
-    # new process will call http://127.0.0.1:8085/quit
-    # old process will exit.
 
-    # the following is confirm exit
     xlog.info("Exit old process...")
     os._exit(0)
 
