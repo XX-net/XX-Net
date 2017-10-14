@@ -73,6 +73,7 @@
                         <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
                         <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
                         <span id="update-message"></span>
+                        <span> &nbsp; <a id="update-viewchanges" target="_blank">{{ _( "View changes" ) }}</a></span>
                     </div> <!-- #update-notify -->
                     <div id="update-progress-bar" class="fade in hide">
                         <button class="btn btn-primary ladda-button"></button>
@@ -331,6 +332,7 @@
                                 var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
                             }
                             $('#update-message').text(popText);
+                            $('#update-viewchanges').attr( "href", "https://github.com/XX-net/XX-Net/releases/tag/" + versionToUpdate );
                             $('#update-notify').removeClass('hide');
                         }
                     }
