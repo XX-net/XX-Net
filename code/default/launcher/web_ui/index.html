@@ -74,7 +74,7 @@
                         <span id="update-message"></span>
                     </div> <!-- #update-notify -->
                     <div id="update-progress-bar" class="fade in hide">
-                        <button class="btn btn-primary ladda-button"></button>
+                        <span class="btn btn-primary ladda-button"></span>
                     </div><!-- #update-progress-bar -->
                     <h2 id="title"></h2>
                     <div id="tip" class="alert fade in hide">
@@ -373,7 +373,7 @@
                             }else if ( $('.active a').attr('href') == '/?module=launcher&menu=config' ) {
                                 return;
                             }else{
-                                button = $('#update-progress-bar button');
+                                button = $('#update-progress-bar span');
                                 $('#update-progress-bar').removeClass('hide');
                             }
                             window.updating_button = button;
