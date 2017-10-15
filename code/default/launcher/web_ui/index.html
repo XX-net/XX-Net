@@ -76,7 +76,7 @@
                         <span> &nbsp; <a id="update-viewchanges" target="_blank">{{ _( "View changes" ) }}</a></span>
                     </div> <!-- #update-notify -->
                     <div id="update-progress-bar" class="fade in hide">
-                        <button class="btn btn-primary ladda-button"></button>
+                        <span class="btn btn-primary ladda-button"></span>
                     </div><!-- #update-progress-bar -->
                     <h2 id="title"></h2>
                     <div id="tip" class="alert fade in hide">
@@ -287,7 +287,7 @@
                 success: function(result) {
                     if ( result['res'] == 'success' ) {
                         tip( '{{ _( "Updating in progress ..." ) }}', "info");
-                        window.timer.play();
+                        window.updateProgress_timer.play();
                     } else {
                         tip( result['reason'], "warning");
                     }
@@ -347,7 +347,7 @@
                         var stat = rst[v];
 
                         if ( stat === "Idle"){
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                             return;
                         }
 
@@ -370,11 +370,11 @@
                         if( stat == "Finished"){
                             tip( stat, 'info');
                             window.loading.stop();
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                             return;
                         }else if ( stat.indexOf('Fail') > -1){
                             tip( stat, 'warning');
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                         }else{
                             tip( stat, 'info');
                         }
@@ -390,7 +390,7 @@
                             }else if ( $('.active a').attr('href') == '/?module=launcher&menu=config' ) {
                                 return;
                             }else{
-                                button = $('#update-progress-bar button');
+                                button = $('#update-progress-bar span');
                                 $('#update-progress-bar').removeClass('hide');
                             }
                             window.updating_button = button;
@@ -413,7 +413,7 @@
                             window.updating_button = null;
                             window.setTimeout(clearProgressBar, 5000);
                             window.loading.stop();
-                            window.timer.stop();
+                            window.updateProgress_timer.stop();
                         }
                     }
                 });
@@ -425,7 +425,7 @@
             for ( rfn in documentReadyToRun ) {
                 documentReadyToRun[rfn]();
             }
-            window.timer = $.timer(updateProgress, 1000, true);
+            window.updateProgress_timer = $.timer(updateProgress, 1000, true);
             updateProgress();
             checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
             window.setTimeout(getUpdateInfo, 1000);
