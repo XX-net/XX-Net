@@ -185,7 +185,14 @@ class Response(object):
 class HTTP_client():
     def __init__(self, address, http_proxy=None, use_https=False, conn_life=30, cert="CA.crt"):
         # address can be set or tuple [host, port]
-        self.address = address
+        if isinstance(address, str):
+            if use_https:
+                self.address = (address, 443)
+            else:
+                self.address = (address, 80)
+        else:
+            self.address = address
+
         self.http_proxy = http_proxy
         self.use_https = use_https
         self.conn_life = conn_life

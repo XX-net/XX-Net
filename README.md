@@ -8,7 +8,6 @@
 
 | 模块        | GAE_proxy   | X-Tunnel  |  
 | ------------- |:-------------:| :-----:| 
-| 稳定性| 容易封锁ip | 部分地区干扰 |
 | 速度 | 流畅 | 下载快速，偶尔卡顿 | 
 | 安全性| Google可看到通信内容 |  完全加密 |  
 | 易用 | 需扫描ip，部署服务端，导入证书 | 简单  |
@@ -22,10 +21,15 @@
 
 
 ### 最新状态：
- 2017-10-09
-* GAE封锁严重，可以考虑启用ipv6，请参考：  
-  https://github.com/XX-net/XX-Net/issues/6918
-* X-Tunnel 部分地区干扰严重，请升级到[3.6.12](https://github.com/XX-net/XX-Net/issues/7061). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+ 2017-10-13
+* GAE封锁严重，需要开启ipv6，请参考：  
+  https://github.com/XX-net/XX-Net/issues/6918  
+  https://github.com/XX-net/XX-Net/issues/6991  
+  https://github.com/XX-net/XX-Net/issues/7150   
+  https://github.com/XX-net/XX-Net/issues/7164  
+  https://github.com/XX-net/XX-Net/issues/7241  
+  
+* X-Tunnel 请升级到[3.6.15]，目前基本可用。(https://github.com/XX-net/XX-Net/releases). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 **X-Tunnel 用户套餐流量丢失的，请给xxnet.dev@gmail.com 发邮件。**
   接下来会继续开发x-tunnel，增加突破能力。  
   

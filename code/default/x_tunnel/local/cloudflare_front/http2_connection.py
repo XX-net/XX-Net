@@ -165,6 +165,8 @@ class HTTP2_worker(HTTP_worker):
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
         self.streams[stream_id] = stream
+        # xlog.debug("%s create stream %d", self.ssl_sock.ip, stream_id)
+        stream.start()
 
     def send_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -359,8 +361,8 @@ class HTTP2_worker(HTTP_worker):
             try:
                 self.streams[frame.stream_id].receive_frame(frame)
                 self.last_active_time = time.time()
-            except KeyError:
-                xlog.exception("%s Unexpected stream identifier %d", self.ip, frame.stream_id)
+            except KeyError as e:
+                xlog.exception("%s Unexpected stream identifier %d, e:%r", self.ip, frame.stream_id, e)
         else:
             self.receive_frame(frame)
 

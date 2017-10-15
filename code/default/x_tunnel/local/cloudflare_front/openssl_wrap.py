@@ -270,7 +270,6 @@ class SSLConnection(object):
         #ssl_context.set_cipher_list(':'.join(cipher_suites))
 
         if True:
-            # disable h2, bug not fixed.
             try:
                 ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
                 xlog.info("OpenSSL support alpn")

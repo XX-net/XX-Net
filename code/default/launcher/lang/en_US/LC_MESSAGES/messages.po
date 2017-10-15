@@ -1,16 +1,18 @@
+
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-12-23 22:35+0800\n"
+"POT-Creation-Date: 2017-10-12 11:37+0800\n"
 "PO-Revision-Date: 2015-12-06 09:18+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en_US\n"
 "Language-Team: en_US <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 1.3\n"
+"Generated-By: Babel 2.3.4\n"
 
 msgid "Project main page"
 msgstr ""
@@ -31,9 +33,6 @@ msgid "the log page "
 msgstr ""
 
 msgid "contents"
-msgstr ""
-
-msgid "Google Groups"
 msgstr ""
 
 msgid "Thanks the following projects"
@@ -69,7 +68,13 @@ msgstr ""
 msgid "Do not upgrade"
 msgstr ""
 
+msgid "Notice stable version"
+msgstr ""
+
 msgid "Stable version"
+msgstr ""
+
+msgid "Notice test version"
 msgstr ""
 
 msgid "Test version"
@@ -90,6 +95,9 @@ msgstr ""
 msgid "Version of the stable one"
 msgstr ""
 
+msgid "All versions download page"
+msgstr ""
+
 msgid "Module management"
 msgstr ""
 
@@ -102,25 +110,28 @@ msgstr ""
 msgid "Settings saved successfully."
 msgstr ""
 
-msgid "Unkown error occured. Please refresh the page and try again"
-msgstr ""
-
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
 msgstr ""
 
 msgid "GAE Proxy"
 msgstr ""
 
-msgid "Updating in progress ..."
+msgid "X_tunnel proxy"
 msgstr ""
 
-msgid "Updating ..."
+msgid "(Remote Web Control Enabled)"
 msgstr ""
 
-msgid "Update completed"
+msgid "Adaptive width"
 msgstr ""
 
-msgid "Unkown error occurred"
+msgid "Exit the program"
+msgstr ""
+
+msgid "Remind me later"
+msgstr ""
+
+msgid "Do not remind me this version"
 msgstr ""
 
 msgid "Exited successfully"
@@ -132,6 +143,21 @@ msgstr ""
 msgid "Exitting failed. A network error occurred."
 msgstr ""
 
+msgid "Unkown error occured. Please refresh the page and try again"
+msgstr ""
+
+msgid "Updating in progress ..."
+msgstr ""
+
+msgid "is valid."
+msgstr ""
+
+msgid "Downloading ..."
+msgstr ""
+
+msgid "Download completed"
+msgstr ""
+
 msgid "System"
 msgstr ""
 
@@ -140,8 +166,6 @@ msgstr ""
 
 msgid "About"
 msgstr ""
-
-
 
 
 

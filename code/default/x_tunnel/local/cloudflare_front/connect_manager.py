@@ -272,13 +272,12 @@ class Https_connection_manager(object):
         port = ip_port[1]
         connect_control.start_connect_register(high_prior=True)
 
-        handshake_time = 0
         time_begin = time.time()
         try:
             ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout)
 
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s top:%s",
-                       ip, handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)
+                       ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)
             ssl_sock.last_use_time = time.time()
             ssl_sock.received_size = 0
             ssl_sock.load = 0
@@ -289,7 +288,7 @@ class Https_connection_manager(object):
         except Exception as e:
             time_cost = time.time() - time_begin
             if time_cost < self.connect_timeout - 1:
-                xlog.debug("connect %s fail:%s cost:%d h:%d", ip, e, time_cost * 1000, handshake_time)
+                xlog.debug("connect %s fail:%s cost:%d ", ip, e, time_cost * 1000)
             else:
                 xlog.debug("%s fail:%r", ip, e)
 

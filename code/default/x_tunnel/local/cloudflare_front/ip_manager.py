@@ -644,8 +644,8 @@ class IpManager():
                 if self.add_ip(ip, result.request_time, result.domain, "gws"):
                     #xlog.info("add  %s  CN:%s  type:%s  time:%d  gws:%d ", ip,
                     #     result.domain, result.server_type, result.handshake_time, len(self.gws_ip_list))
-                    xlog.info("scan_ip add ip:%s time:%d", ip, result.handshake_time)
-                    scan_ip_log.info("Add %s time:%d CN:%s ", ip, result.handshake_time, result.domain)
+                    xlog.info("scan_ip add ip:%s time:%d", ip, result.request_time)
+                    scan_ip_log.info("Add %s time:%d CN:%s ", ip, result.request_time, result.domain)
                     self.remove_slowest_ip()
                     self.save_ip_list()
             except Exception as e:

@@ -33,6 +33,18 @@ if not os.path.isdir(download_path):
 
 progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
 progress["update_status"] = "Idle"
+update_info = "init"
+
+def init_update_info(check_update):
+    global update_info
+    if check_update == "dont-check":
+        update_info = "dont-check"
+    elif config.get(["update", "check_update"]) == update_info == "dont-check":
+        update_info = "init"
+    elif check_update != "init":
+        update_info = ""
+
+init_update_info(config.get(["update", "check_update"]))
 
 def get_opener(retry=0):
     if retry == 0:
@@ -245,21 +257,35 @@ def update_current_version(xxnet_version):
         fd.write(xxnet_version)
 
 
-def restart_xxnet(version):
+def restart_xxnet(version=None):
     import module_init
     module_init.stop_all()
+
     import web_control
     web_control.stop()
+    # New process will hold the listen port
+    # We should close all listen port before create new process
+    xlog.info("Close web control port.")
+
+    if version is None:
+        current_version_file = os.path.join(top_path, "code", "version.txt")
+        with open(current_version_file, "r") as fd:
+            version = fd.read()
+
+    xlog.info("restart to xx-net version:%s", version)
 
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
-
     subprocess.Popen([sys.executable, start_script])
     time.sleep(20)
-    #os._exit(0)
+
+    xlog.info("Exit old process...")
+    os._exit(0)
 
 
 def update_version(version):
-    global update_progress
+    global update_progress, update_info
+    _update_info = update_info
+    update_info = ""
     try:
         download_overwrite_new_version(version)
 
@@ -270,6 +296,7 @@ def update_version(version):
         restart_xxnet(version)
     except Exception as e:
         xlog.warn("update version %s fail:%r", version, e)
+        update_info = _update_info
 
 
 def start_update_version(version):
