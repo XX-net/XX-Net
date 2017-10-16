@@ -134,13 +134,13 @@ class HttpsDispatcher(object):
 
                 inactive_time = now - worker.last_active_time
                 rtt = worker.get_rtt_rate()
-                if inactive_time > 2:
+                if inactive_time > 3:
                     score = rtt
                 elif inactive_time < 0.001:
                     score = rtt + 50000
                 else:
                     # inactive_time < 2
-                    score = rtt + (2/inactive_time)*1000
+                    score = rtt + (3/inactive_time)*1000
 
                 if best_score > score:
                     best_score = score
@@ -183,13 +183,13 @@ class HttpsDispatcher(object):
                 return
             self.close_cb(slowest_worker)
 
-    def request(self, method, host, path, headers, body, url=""):
+    def request(self, method, host, path, headers, body, url="", timeout=60):
         # xlog.debug("task start request")
         if not url:
             url = "%s %s%s" % (method, host, path)
         self.last_request_time = time.time()
         q = Queue.Queue()
-        task = http_common.Task(method, host, path, headers, body, q, url)
+        task = http_common.Task(method, host, path, headers, body, q, url, timeout)
         task.set_state("start_request")
         self.request_queue.put(task)
         self.working_tasks[task.unique_id] = task

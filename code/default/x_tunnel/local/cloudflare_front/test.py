@@ -28,42 +28,16 @@ if __name__ == '__main__':
         sys.path.append(extra_lib)
 
 
-
-
+from front import front
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 xlog.set_buffer(2000)
 
 import connect_control
-import http_dispatcher
-
-
-class Front():
-    def __init__(self):
-        self.dispatchs = {}
-
-    def request(self, method, host, path, headers, body):
-        if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
-
-        dispatcher = self.dispatchs[host]
-        return dispatcher.request(method, host, path, headers, body)
-
-    def get(self, method, host, path, headers, body):
-        response = self.request(method, host, path, headers, body)
-        length = response.task.content_length
-        content = response.task.read(size=length)
-        return content
 
 
 def main():
-
-
-    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
-    # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
-
-    front = Front()
-    response = front.get("GET", "center6.xx-net.net", "/", {}, "")
+    content, status, response = front.request("GET", "center6.xx-net.net", "/")
     print(response)
 
     while connect_control.keep_running:

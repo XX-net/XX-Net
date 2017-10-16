@@ -29,7 +29,7 @@ class BaseResponse(object):
 
 
 class Task(object):
-    def __init__(self, method, host, path, headers, body, queue, url):
+    def __init__(self, method, host, path, headers, body, queue, url, timeout):
         self.method = method
         self.host = host
         self.path = path
@@ -37,6 +37,7 @@ class Task(object):
         self.body = body
         self.queue = queue
         self.url = url
+        self.timeout = timeout
         self.start_time = time.time()
         self.unique_id = "%s:%f" % (url, self.start_time)
         self.trace_time = []
@@ -46,6 +47,7 @@ class Task(object):
         self.content_length = None
         self.read_buffer = ""
         self.responsed = False
+        self.finished = False
         self.retry_count = 0
 
     def to_string(self):
@@ -89,6 +91,16 @@ class Task(object):
         self.body_readed += len(data)
         return data
 
+    def read_all(self):
+        out_list = []
+        while True:
+            data = self.body_queue.get(block=True)
+            if not data:
+                break
+            out_list.append(data)
+
+        return "".join(out_list)
+
     def set_state(self, stat):
         # for debug trace
         time_now = time.time()
@@ -117,6 +129,11 @@ class Task(object):
         xlog.debug("%s %s", self.url, err_text)
         res = BaseResponse(body=err_text)
         self.queue.put(res)
+        self.finish()
+
+    def finish(self):
+        self.put_data("")
+        self.finished = True
 
 
 class HTTP_worker(object):

@@ -1,17 +1,21 @@
 #!/usr/bin/env python2
 # coding:utf-8
 import binascii
-import httplib
+import random
 import os
 import socket
 import struct
 import sys
 import time
+import json
+
+from pyasn1.codec.der import decoder as der_decoder
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
     root = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+    data_path = os.path.abspath( os.path.join(root, os.pardir, "data", "x_tunnel"))
     python_path = os.path.join(root, 'python27', '1.0')
 
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
@@ -55,8 +59,16 @@ from config import config
 import cert_util
 import openssl_wrap
 import simple_http_client
+from subj_alt_name import SubjectAltName
 
 import hyper
+
+# http://docs.python.org/dev/library/ssl.html
+# http://blog.ivanristic.com/2009/07/examples-of-the-information-collected-from-ssl-handshakes.html
+# http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
+# openssl s_server -accept 443 -key CA.crt -cert CA.crt
+
+# ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
 
 g_cacertfile = os.path.join(current_path, "cacert.pem")
 openssl_context = openssl_wrap.SSLConnection.context_builder(ca_certs=g_cacertfile)
@@ -70,6 +82,38 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
 
 max_timeout = 5
 
+
+def load_front_domains(file_path):
+    if not os.path.isfile(file_path):
+        raise Exception("load front domain fn:%s not exist" % file_path)
+
+    lns = []
+    with open(file_path, "r") as fd:
+        ds = json.load(fd)
+        for top in ds:
+            subs = ds[top]
+            subs = [str(s) for s in subs]
+            lns.append([str(top) , subs])
+    return lns
+
+
+ns = None
+
+
+def update_front_domains():
+    global ns
+    front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
+    default_front_domains_fn = os.path.join(current_path, "front_domains.json")
+
+    try:
+        ns = load_front_domains(front_domains_fn)
+        xlog.info("load front:%s", front_domains_fn)
+    except Exception as e:
+        ns = load_front_domains(default_front_domains_fn)
+        xlog.info("load front:%s", default_front_domains_fn)
+
+
+update_front_domains()
 default_socket = socket.socket
 
 
@@ -93,8 +137,47 @@ def load_proxy_config():
 load_proxy_config()
 
 
-def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
-    ip_port = (ip, port)
+def get_subj_alt_name(peer_cert):
+    '''
+    Copied from ndg.httpsclient.ssl_peer_verification.ServerSSLCertVerification
+    Extract subjectAltName DNS name settings from certificate extensions
+    @param peer_cert: peer certificate in SSL connection.  subjectAltName
+    settings if any will be extracted from this
+    @type peer_cert: OpenSSL.crypto.X509
+    '''
+    # Search through extensions
+    dns_name = []
+    general_names = SubjectAltName()
+    for i in range(peer_cert.get_extension_count()):
+        ext = peer_cert.get_extension(i)
+        ext_name = ext.get_short_name()
+        if ext_name == "subjectAltName":
+            # PyOpenSSL returns extension data in ASN.1 encoded form
+            ext_dat = ext.get_data()
+            decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
+
+            for name in decoded_dat:
+                if isinstance(name, SubjectAltName):
+                    for entry in range(len(name)):
+                        component = name.getComponentByPosition(entry)
+                        n = str(component.getComponent())
+                        if n.startswith("*"):
+                            continue
+                        dns_name.append(n)
+    return dns_name
+
+
+def connect_ssl(ip, port=443, timeout=5, top_domain=None):
+
+    if top_domain is None:
+        top_domain, subs = random.choice(ns)
+        sni = random.choice(subs)
+    else:
+        sni = top_domain
+
+    top_domain = str(top_domain)
+    sni = str(sni)
+    xlog.debug("top_domain:%s sni:%s", top_domain, sni)
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -110,32 +193,26 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
 
     ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
     ssl_sock.set_connect_state()
-    ssl_sock.set_tlsext_host_name(host)
+    ssl_sock.set_tlsext_host_name(sni)
 
     time_begin = time.time()
+    ip_port = (ip, port)
     ssl_sock.connect(ip_port)
     time_connected = time.time()
     ssl_sock.do_handshake()
 
-    if False:
-        try:
-            h2 = ssl_sock.get_alpn_proto_negotiated()
-            if h2 == "h2":
-                ssl_sock.h2 = True
-            else:
-                ssl_sock.h2 = False
-
-            xlog.debug("%s alpn h2:%s", ip, h2)
-        except Exception as e:
-            #xlog.exception("alpn:%r", e)
-            if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-                ssl_sock.h2 = True
-                # xlog.debug("ip:%s http/2", ip)
-            else:
-                ssl_sock.h2 = False
-                # xlog.debug("ip:%s http/1.1", ip)
-    else:
-        ssl_sock.h2 = False
+    try:
+        h2 = ssl_sock.get_alpn_proto_negotiated()
+        if h2 == "h2":
+            ssl_sock.h2 = True
+        else:
+            ssl_sock.h2 = False
+    except Exception as e:
+        #xlog.exception("alpn:%r", e)
+        if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
+            ssl_sock.h2 = True
+        else:
+            ssl_sock.h2 = False
 
     time_handshaked = time.time()
 
@@ -148,22 +225,29 @@ def connect_ssl(ip, host, port=443, timeout=5, check_cert=True):
     if not cert:
         raise socket.error(' certficate is none')
 
-    if check_cert:
-        issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-        if __name__ == "__main__":
-            xlog.debug("issued by:%s", issuer_commonname)
-        if not issuer_commonname.startswith('COMODO'):
-            #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
-            raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
+    issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+    if not issuer_commonname.startswith('COMODO'):
+        #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
+        raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
 
     connect_time = int((time_connected - time_begin) * 1000)
-    handshake_time = int((time_handshaked - time_connected) * 1000)
-    xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
+    handshake_time = int((time_handshaked - time_begin) * 1000)
+    if __name__ == "__main__":
+        xlog.debug("h2:%s", ssl_sock.h2)
+        xlog.debug("issued by:%s", issuer_commonname)
+        xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
+        alt_names = get_subj_alt_name(cert)
+        xlog.debug("alt names:%s", alt_names)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
+    ssl_sock.ip = ip
     ssl_sock._sock = sock
+    ssl_sock.fd = sock.fileno()
+    ssl_sock.create_time = time_begin
     ssl_sock.connect_time = connect_time
     ssl_sock.handshake_time = handshake_time
+    ssl_sock.sni = sni
+    ssl_sock.top_domain = top_domain
 
     return ssl_sock
 
@@ -195,7 +279,7 @@ def check_xtunnel_http1(ssl_sock, host):
         return False
 
     if response.status != 200:
-        xlog.warn("ip:%s status:%d", ip, response.status)
+        xlog.warn("ip:%s status:%d", ssl_sock.ip, response.status)
         return False
 
     content = response.read(timeout=1)
@@ -213,11 +297,11 @@ def check_xtunnel_http1(ssl_sock, host):
 def check_xtunnel_http2(ssl_sock, host):
     start_time = time.time()
     try:
-        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ip, port=443)
+        conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ssl_sock.ip, port=443)
         conn.request('GET', '/')
     except Exception as e:
         #xlog.exception("xtunnel %r", e)
-        xlog.debug("ip:%s http/1.1:%r", ip, e )
+        xlog.debug("ip:%s http/1.1:%r", ssl_sock.ip, e )
         return ssl_sock
 
     try:
@@ -226,10 +310,10 @@ def check_xtunnel_http2(ssl_sock, host):
         xlog.exception("http2 get response fail:%r", e)
         return ssl_sock
 
-    xlog.debug("ip:%s http/2", ip)
+    xlog.debug("ip:%s http/2", ssl_sock.ip)
 
     if response.status != 200:
-        xlog.warn("app check ip:%s status:%d", ip, response.status)
+        xlog.warn("app check ip:%s status:%d", ssl_sock.ip, response.status)
         return ssl_sock
 
     content = response.read()
@@ -244,9 +328,9 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
+def test_xtunnel_ip2(ip, sub="scan1", top_domain=None):
     try:
-        ssl_sock = connect_ssl(ip, host, timeout=max_timeout)
+        ssl_sock = connect_ssl(ip, timeout=max_timeout, top_domain=top_domain)
         get_ssl_cert_domain(ssl_sock)
     except socket.timeout:
         xlog.warn("connect timeout")
@@ -254,6 +338,9 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
     except Exception as e:
         xlog.exception("test_xtunnel_ip %s e:%r",ip, e)
         return False
+
+    host = sub + "." + ssl_sock.top_domain
+    xlog.info("host:%s", host)
 
     ssl_sock.support_xtunnel = False
     if not ssl_sock.h2:
@@ -273,11 +360,19 @@ def test_xtunnel_ip2(ip, host="scan1.xx-net.net"):
 
 
 if __name__ == "__main__":
+    # case 1: only ip
+    # case 2: ip + domain
+    #    connect use domain, print altNames
+
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        host = "scan1.xx-net.net"
         xlog.info("test ip:%s", ip)
-        res = test_xtunnel_ip2(ip, host)
+        if len(sys.argv) > 2:
+            top_domain = sys.argv[2]
+        else:
+            top_domain = None
+
+        res = test_xtunnel_ip2(ip, top_domain=top_domain)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:

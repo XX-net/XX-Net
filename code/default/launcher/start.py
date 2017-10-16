@@ -7,6 +7,7 @@ import sys
 import time
 import platform
 import shutil
+from datetime import datetime
 
 # reduce resource request for threading
 # for OpenWrt
@@ -41,8 +42,25 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
+
 create_data_path()
+
+
 from instances import xlog
+
+
+def uncaughtExceptionHandler(type_, value, traceback):
+    print("uncaught Exception:", type_, value, traceback)
+    with open(os.path.join(data_launcher_path, "error.log"), "a") as fd:
+        now = datetime.now()
+        time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
+        fd.write("%s type:%s value=%s traceback:%s" % (time_str, type_, value, traceback))
+    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", type_, value, traceback)
+    # sys.exit(1)#出现异常时程序是否退出
+
+
+sys.excepthook = uncaughtExceptionHandler
+
 
 has_desktop = True
 

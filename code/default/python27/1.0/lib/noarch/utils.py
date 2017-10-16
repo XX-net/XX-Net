@@ -44,3 +44,7 @@ class SimpleCondition(object):
         self.lock.wait()
         self.lock.release()
 
+
+def split_domain(host):
+    hl = host.split(".")
+    return hl[0], ".".join(hl[1:])

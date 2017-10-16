@@ -48,6 +48,8 @@ class ProxySession():
     def start(self):
         try:
             self.mutex.acquire()
+            if self.running is True:
+                return True
 
             self.ack_pool.reset()
             self.download_order_queue.reset()
@@ -290,7 +292,7 @@ class ProxySession():
                 block = False
             else:
                 block = True
-                xlog.debug("block for none")
+                # xlog.debug("block for none")
 
             if block:
                 get_timeout = 24 * 3600
@@ -311,7 +313,10 @@ class ProxySession():
             if self.on_road_num > g.config.concurent_thread_num * 0.8:
                 server_timeout = 0
             else:
-                server_timeout = g.config.roundtrip_timeout / 2
+                if last_roundtrip_download_size >= g.config.block_max_size:
+                    server_timeout = 1
+                else:
+                    server_timeout = g.config.roundtrip_timeout / 2
 
             request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIIBIH", magic, g.protocol_version, pack_type, str(self.session_id),
@@ -333,14 +338,14 @@ class ProxySession():
                 with self.mutex:
                     self.on_road_num += 1
 
-                xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
+                # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
                 try:
                     self.transfer_list[transfer_no]["try"] = try_no
                     self.transfer_list[transfer_no]["stat"] = "request"
                     self.transfer_list[transfer_no]["start"] = time.time()
                     content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                       path="/data", data=upload_post_data,
-                                                                    timeout=g.config.roundtrip_timeout)
+                                                                    timeout=server_timeout + g.config.network_timeout)
 
                     traffic = len(upload_post_data) + len(content) + 645
                     self.traffic += traffic
@@ -366,7 +371,7 @@ class ProxySession():
                 elif status == 200:
                     recv_len = len(content)
                     if recv_len < 6:
-                        xlog.error("roundtrip time:%d transfer_no:%d sn:%d send:%d len:%d status:%r retry:%d",
+                        xlog.warn("roundtrip time:%d transfer_no:%d sn:%d send:%d len:%d status:%r retry:%d",
                                    (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, len(content),
                                    status, try_no)
                         continue
