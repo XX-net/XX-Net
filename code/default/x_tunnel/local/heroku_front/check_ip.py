@@ -1,15 +1,12 @@
 #!/usr/bin/env python2
 # coding:utf-8
 import binascii
-import random
 import os
 import socket
 import struct
 import sys
 import time
-import json
 
-from pyasn1.codec.der import decoder as der_decoder
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,7 +28,7 @@ if __name__ == "__main__":
         sys.path.append(linux_lib)
 
     from xlog import getLogger
-    xlog = getLogger("cloudflare_front")
+    xlog = getLogger("heroku_front")
 
 
 else:
@@ -59,8 +56,7 @@ from config import config
 import cert_util
 import openssl_wrap
 import simple_http_client
-from subj_alt_name import SubjectAltName
-
+import sni_generater
 import hyper
 
 # http://docs.python.org/dev/library/ssl.html
@@ -82,46 +78,7 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
 
 max_timeout = 5
 
-PKP = set((
-    b'''-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAjgZgTrJaYRwWQKOqIofMN+83gP8
-eR06JSxrQSEYgur5PkrkM8wSzypD/A7yZADA4SVQgiTNtkk4DyVHkUikrQ==
------END PUBLIC KEY-----
-''', "")
-)
 
-
-def load_front_domains(file_path):
-    if not os.path.isfile(file_path):
-        raise Exception("load front domain fn:%s not exist" % file_path)
-
-    lns = []
-    with open(file_path, "r") as fd:
-        ds = json.load(fd)
-        for top in ds:
-            subs = ds[top]
-            subs = [str(s) for s in subs]
-            lns.append([str(top) , subs])
-    return lns
-
-
-ns = None
-
-
-def update_front_domains():
-    global ns
-    front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
-    default_front_domains_fn = os.path.join(current_path, "front_domains.json")
-
-    try:
-        ns = load_front_domains(front_domains_fn)
-        xlog.info("load front:%s", front_domains_fn)
-    except Exception as e:
-        ns = load_front_domains(default_front_domains_fn)
-        xlog.info("load front:%s", default_front_domains_fn)
-
-
-update_front_domains()
 default_socket = socket.socket
 
 
@@ -145,46 +102,11 @@ def load_proxy_config():
 load_proxy_config()
 
 
-def get_subj_alt_name(peer_cert):
-    '''
-    Copied from ndg.httpsclient.ssl_peer_verification.ServerSSLCertVerification
-    Extract subjectAltName DNS name settings from certificate extensions
-    @param peer_cert: peer certificate in SSL connection.  subjectAltName
-    settings if any will be extracted from this
-    @type peer_cert: OpenSSL.crypto.X509
-    '''
-    # Search through extensions
-    dns_name = []
-    general_names = SubjectAltName()
-    for i in range(peer_cert.get_extension_count()):
-        ext = peer_cert.get_extension(i)
-        ext_name = ext.get_short_name()
-        if ext_name == "subjectAltName":
-            # PyOpenSSL returns extension data in ASN.1 encoded form
-            ext_dat = ext.get_data()
-            decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
-
-            for name in decoded_dat:
-                if isinstance(name, SubjectAltName):
-                    for entry in range(len(name)):
-                        component = name.getComponentByPosition(entry)
-                        n = str(component.getComponent())
-                        if n.startswith("*"):
-                            continue
-                        dns_name.append(n)
-    return dns_name
-
-
 def connect_ssl(ip, port=443, timeout=5, top_domain=None):
+    sni = sni_generater.get()
+    if not top_domain:
+        top_domain = sni
 
-    if top_domain is None:
-        top_domain, subs = random.choice(ns)
-        sni = random.choice(subs)
-    else:
-        sni = top_domain
-
-    top_domain = str(top_domain)
-    sni = str(sni)
     xlog.debug("top_domain:%s sni:%s", top_domain, sni)
 
     if config.PROXY_ENABLE:
@@ -234,21 +156,9 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None):
         raise socket.error(' certficate is none')
 
     issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-    if not issuer_commonname.startswith('COMODO'):
+    if not issuer_commonname.startswith('DigiCert'):
         #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
         raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
-
-    certs = ssl_sock.get_peer_cert_chain()
-    if not certs:
-        raise socket.error('certficate is none')
-
-    if hasattr(OpenSSL.crypto, "dump_publickey"):
-        # old OpenSSL not support this function.
-        pubkey = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey())
-        if pubkey not in PKP:
-            # print("unknown pubkey:%s" % pubkey)
-            PKP.add(pubkey)
-            raise socket.error('The intermediate CA is mismatching:%s' % pubkey)
 
     connect_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_begin) * 1000)
@@ -256,8 +166,6 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None):
         xlog.debug("h2:%s", ssl_sock.h2)
         xlog.debug("issued by:%s", issuer_commonname)
         xlog.debug("conn: %d  handshake:%d", connect_time, handshake_time)
-        alt_names = get_subj_alt_name(cert)
-        xlog.debug("alt names:%s", alt_names)
 
     # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
     ssl_sock.ip = ip
@@ -348,7 +256,7 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, sub="scan1", top_domain=None):
+def test_xtunnel_ip2(ip, top_domain=None):
     try:
         ssl_sock = connect_ssl(ip, timeout=max_timeout, top_domain=top_domain)
         get_ssl_cert_domain(ssl_sock)
@@ -359,7 +267,8 @@ def test_xtunnel_ip2(ip, sub="scan1", top_domain=None):
         xlog.exception("test_xtunnel_ip %s e:%r",ip, e)
         return False
 
-    host = sub + "." + ssl_sock.top_domain
+    # host = sub + "." + ssl_sock.top_domain
+    host = "obscure-everglades-64338.herokuapp.com"
     xlog.info("host:%s", host)
 
     ssl_sock.support_xtunnel = False
@@ -382,7 +291,7 @@ def test_xtunnel_ip2(ip, sub="scan1", top_domain=None):
 if __name__ == "__main__":
     # case 1: only ip
     # case 2: ip + domain
-    #    connect use domain, print altNames
+    #    connect use domain
 
     if len(sys.argv) > 1:
         ip = sys.argv[1]

@@ -123,7 +123,7 @@ class HttpsDispatcher(object):
             if idle_num > 5 and acceptable_num > 20:
                 self.triger_create_worker_cv.wait()
 
-    def get_worker(self):
+    def get_worker(self, nowait=False):
         while connect_control.keep_running:
             best_rtt = 9999
             best_worker = None
@@ -138,7 +138,7 @@ class HttpsDispatcher(object):
                     if len(worker.streams) == 0:
                         idle_num += 1
 
-                rtt = worker.get_rtt_rate()
+                rtt = worker.get_score()
 
                 if rtt < best_rtt:
                     best_rtt = rtt
@@ -147,7 +147,7 @@ class HttpsDispatcher(object):
             if idle_num < 5:
                 self.triger_create_worker_cv.notify()
 
-            if best_worker:
+            if best_worker or nowait:
                 return best_worker
 
             self.wait_a_worker_cv.wait()
@@ -181,11 +181,11 @@ class HttpsDispatcher(object):
                 return
             self.close_cb(slowest_worker)
 
-    def request(self, headers, body, url):
+    def request(self, headers, body, url, timeout):
         # xlog.debug("task start request")
         self.last_request_time = time.time()
         q = Queue.Queue()
-        task = http_common.Task(headers, body, q, url)
+        task = http_common.Task(headers, body, q, url, timeout)
         unique_id = task.unique_id
         task.set_state("start_request")
         self.request_queue.put(task)

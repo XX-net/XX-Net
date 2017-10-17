@@ -34,7 +34,7 @@ import connect_manager
 from http1 import HTTP1_worker
 from http2_connection import HTTP2_worker
 
-xlog = getLogger("cloudflare_front")
+xlog = getLogger("heroku_front")
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -133,7 +133,6 @@ class HttpsDispatcher(object):
                         idle_num += 1
 
                 score = worker.get_score()
-
                 if best_score > score:
                     best_score = score
                     best_worker = worker

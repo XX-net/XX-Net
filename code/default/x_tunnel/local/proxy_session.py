@@ -254,7 +254,8 @@ class ProxySession():
                     conn_id = struct.unpack("<I", data.get(4))[0]
                     payload = data.get_buf(data_len - 4)
                     if conn_id not in self.conn_list:
-                        xlog.debug("DATA conn_id %d not in list", conn_id)
+                        #xlog.debug("DATA conn_id %d not in list", conn_id)
+                        pass
                     else:
                         # xlog.debug("down conn:%d len:%d", conn_id, len(payload))
                         self.conn_list[conn_id].put_cmd_data(payload)
@@ -262,6 +263,7 @@ class ProxySession():
                     raise Exception("process_block, unknown type:%d" % data_type)
         except Exception as e:
             xlog.exception("download_data_processor:%r", e)
+            raise e
 
     def touch_roundtrip(self):
         self.upload_task_queue.put("")
@@ -432,7 +434,12 @@ class ProxySession():
                         self.last_download_data_time = time.time()
                         last_roundtrip_download_size = data_len
                         # xlog.debug("get sn:%d len:%d", sn, data_len)
-                        self.download_order_queue.put(sn, data)
+                        # self.download_order_queue.put(sn, data)
+                        try:
+                            self.download_data_processor(data)
+                        except Exception as e:
+                            xlog.warn("data process:%r", e)
+                            continue
 
                         ack_pak = struct.pack("<Q", transfer_no)
                         self.ack_pool.put(ack_pak)
@@ -482,7 +489,7 @@ def call_api(path, req_info):
         upload_post_data = encrypt_data(upload_post_data)
 
         content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
-                                                     header={"Content-Type": "application/json"},
+                                                     headers={"Content-Type": "application/json"},
                                                      data=upload_post_data, timeout=g.config.roundtrip_timeout)
 
         time_cost = time.time() - start_time

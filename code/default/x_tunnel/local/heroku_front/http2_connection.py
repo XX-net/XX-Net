@@ -6,7 +6,7 @@ import errno
 import struct
 
 from xlog import getLogger
-xlog = getLogger("gae_proxy")
+xlog = getLogger("heroku_front")
 import connect_control
 from http_common import *
 
@@ -65,6 +65,10 @@ class RawFrame(object):
 
     def serialize(self):
         return self.dat
+
+    def __repr__(self):
+        out_str = "{type}".format(type=type(self).__name__)
+        return out_str
 
 
 class HTTP2_worker(HTTP_worker):
@@ -161,6 +165,8 @@ class HTTP2_worker(HTTP_worker):
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
         self.streams[stream_id] = stream
+        # xlog.debug("%s create stream %d", self.ssl_sock.ip, stream_id)
+        stream.start()
 
     def send_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -200,7 +206,7 @@ class HTTP2_worker(HTTP_worker):
             try:
                 self._consume_single_frame()
             except Exception as e:
-                xlog.debug("recv fail:%r", e)
+                xlog.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
     def close(self, reason=""):
@@ -272,7 +278,7 @@ class HTTP2_worker(HTTP_worker):
 
     def _close_stream_cb(self, stream_id, reason):
         # call by stream to remove from streams list
-        #xlog.debug("%s close stream:%d %s", self.ssl_sock.ip, stream_id, reason)
+        # xlog.debug("%s close stream:%d %s", self.ssl_sock.ip, stream_id, reason)
         try:
             del self.streams[stream_id]
         except KeyError:
@@ -352,8 +358,8 @@ class HTTP2_worker(HTTP_worker):
             try:
                 self.streams[frame.stream_id].receive_frame(frame)
                 self.last_active_time = time.time()
-            except KeyError:
-                xlog.error("%s Unexpected stream identifier %d", self.ip, frame.stream_id)
+            except KeyError as e:
+                xlog.exception("%s Unexpected stream identifier %d, e:%r", self.ip, frame.stream_id, e)
         else:
             self.receive_frame(frame)
 
@@ -416,7 +422,6 @@ class HTTP2_worker(HTTP_worker):
             xlog.error("%s Received unknown frame, type %d", self.ip, frame.type)
 
     def _update_settings(self, frame):
-
         if SettingsFrame.HEADER_TABLE_SIZE in frame.settings:
             new_size = frame.settings[SettingsFrame.HEADER_TABLE_SIZE]
 
@@ -453,5 +458,5 @@ class HTTP2_worker(HTTP_worker):
         out_list = []
         out_list.append(" processed:%d" % self.processed_tasks)
         out_list.append(" h2.stream_num:%d" % len(self.streams))
-        out_list.append(" appid:%s" % self.ssl_sock.appid)
+        out_list.append(" sni:%s" % self.ssl_sock.sni)
         return ",".join(out_list)

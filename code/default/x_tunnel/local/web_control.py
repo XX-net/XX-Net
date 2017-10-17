@@ -14,6 +14,7 @@ import simple_http_server
 import global_var as g
 import proxy_session
 from cloudflare_front import web_control as cloudflare_web
+from heroku_front import web_control as heroku_web
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -48,6 +49,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                              self.rfile, self.wfile)
             controler.do_GET()
 
+        elif path.startswith("/heroku_front/"):
+            path = self.path[13:]
+            controler = heroku_web.ControlHandler(self.client_address,
+                             self.headers,
+                             self.command, path,
+                             self.rfile, self.wfile)
+            controler.do_GET()
         else:
             xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 

@@ -186,12 +186,12 @@ def return_fail_message(wfile):
     return
 
 
-def request_gae_server(headers, body, url):
+def request_gae_server(headers, body, url, timeout):
     # process on http protocol
     # process status code return by http server
     # raise error, let up layer retry.
 
-    response = http_dispatch.request(headers, body, url)
+    response = http_dispatch.request(headers, body, url, timeout)
     if not response:
         raise GAE_Exception(600, "fetch gae fail")
 
@@ -290,7 +290,7 @@ def unpack_response(response):
     try:
         data = response.task.read(size=2)
         if not data:
-            raise GAE_Exception("get protocol head fail")
+            raise GAE_Exception(600, "get protocol head fail")
 
         headers_length, = struct.unpack('!h', data)
         data = response.task.read(size=headers_length)
@@ -321,18 +321,18 @@ def unpack_response(response):
         raise GAE_Exception("unpack protocol:%r", e)
 
 
-def request_gae_proxy(method, url, headers, body):
+def request_gae_proxy(method, url, headers, body, timeout=60):
     # make retry and time out
     time_request = time.time()
     request_headers, request_body = pack_request(method, url, headers, body)
     error_msg = []
 
     while True:
-        if time.time() - time_request > 60:  # time out
+        if time.time() - time_request > timeout:
             raise GAE_Exception(600, b"".join(error_msg))
 
         try:
-            response = request_gae_server(request_headers, request_body, url)
+            response = request_gae_server(request_headers, request_body, url, timeout)
 
             check_local_network.report_network_ok()
 

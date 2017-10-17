@@ -15,7 +15,7 @@ the stream by the endpoint that initiated the stream.
 """
 
 
-
+import time
 import threading
 from hyper.common.headers import HTTPHeaderMap
 from hyper.packages.hyperframe.frame import (
@@ -29,7 +29,7 @@ from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestrin
 
 from http_common import *
 from xlog import getLogger
-xlog = getLogger("gae_proxy")
+xlog = getLogger("heroku_front")
 
 
 # Define a set of states for a HTTP/2 stream.
@@ -98,6 +98,7 @@ class Stream(object):
         # request body not send blocked by send window
         # the left body will send when send window opened.
         self.request_body_left = len(self.request_body)
+        self.request_body_sended = False
 
         # data list before decode
         self.response_header_datas = []
@@ -111,9 +112,8 @@ class Stream(object):
         self.response_body_len = 0
 
         threading.Thread(target=self.timeout_response).start()
-        self.start_request()
 
-    def start_request(self):
+    def start(self):
         """
         Open the stream. Does this by encoding and sending the headers: no more
         calls to ``add_header`` are allowed after this method is called.
@@ -123,10 +123,10 @@ class Stream(object):
         # Strip any headers invalid in H2.
         #headers = h2_safe_headers(self.request_headers)
 
-        self.add_header(":method", "POST")
+        self.add_header(":method", self.task.method)
         self.add_header(":scheme", "https")
         self.add_header(":authority", self.host)
-        self.add_header(":path", "/_gh/")
+        self.add_header(":path", self.task.path)
 
         default_headers = (':method', ':scheme', ':authority', ':path')
         for name, value in self.task.headers.items():
@@ -171,7 +171,7 @@ class Stream(object):
             self.request_headers.replace(name, value)
 
     def send_left_body(self):
-        while self.remote_window_size and self.request_body_left:
+        while self.remote_window_size and not self.request_body_sended:
             send_size = min(self.remote_window_size, self.request_body_left, self.max_frame_size)
 
             f = DataFrame(self.stream_id)
@@ -192,6 +192,7 @@ class Stream(object):
 
             # If no more data is to be sent on this stream, transition our state.
             if self.request_body_left == 0:
+                self.request_body_sended = True
                 self._close_local()
 
     def receive_frame(self, frame):
@@ -199,7 +200,7 @@ class Stream(object):
         Handle a frame received on this stream.
         called by connection.
         """
-
+        # xlog.debug("stream %d recved frame %r", self.stream_id, frame)
         if frame.type == WindowUpdateFrame.type:
             self.remote_window_size += frame.window_increment
             self.send_left_body()
@@ -213,7 +214,8 @@ class Stream(object):
             self.response_header_datas.append(frame.data)
         elif frame.type == DataFrame.type:
             # Append the data to the buffer.
-            self.task.put_data(frame.data)
+            if not self.task.finished:
+                self.task.put_data(frame.data)
 
             if 'END_STREAM' not in frame.flags:
                 # Increase the window size. Only do this if the data frame contains
@@ -257,26 +259,32 @@ class Stream(object):
 
         if 'END_HEADERS' in frame.flags:
             # Begin by decoding the header block. If this fails, we need to
-            # tear down the entire connection. TODO: actually do that.
+            # tear down the entire connection.
             headers = self._decoder.decode(b''.join(self.response_header_datas))
 
             self._handle_header_block(headers)
             # We've handled the headers, zero them out.
             self.response_header_datas = None
 
-            self.task.content_length = int(self.response_headers["Content-Length"][0])
-            self.task.set_state("h2_get_head")
             self.get_head_time = time.time()
-            self.send_response()
+
+            length = self.response_headers.get("Content-Length", None)
+            if isinstance(length, list):
+                length = int(length[0])
+            if not self.task.finished:
+                self.task.content_length = length
+                self.task.set_state("h2_get_head")
+                self.send_response()
 
         if 'END_STREAM' in frame.flags:
             #xlog.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
             time_now = time.time()
             time_cost = time_now - self.get_head_time
-            if time_cost > 0:
+            if time_cost > 0 and \
+                    isinstance(self.task.content_length, int) and \
+                    not self.task.finished:
                 speed = self.task.content_length / time_cost
                 self.task.set_state("h2_finish[SP:%d]" % speed)
-                self.connection.report_speed(speed, self.task.content_length)
 
             self._close_remote()
 
@@ -284,7 +292,7 @@ class Stream(object):
 
     def send_response(self):
         if self.task.responsed:
-            xlog.error("http2_stream send_response but responsed.%s", self.task.url)
+            xlog.warn("http2_stream send_response but responsed.%s", self.task.url)
             self.close("h2 stream send_response but sended.")
             return
 

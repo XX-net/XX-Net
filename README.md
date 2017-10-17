@@ -21,17 +21,17 @@
 
 
 ### 最新状态：
- 2017-10-13
-* GAE封锁严重，需要开启ipv6，请参考：  
+ 2017-10-17
+* GAE封锁严重，可以通过开启ipv6解决，请参考：  
   https://github.com/XX-net/XX-Net/issues/6918  
   https://github.com/XX-net/XX-Net/issues/6991  
   https://github.com/XX-net/XX-Net/issues/7150   
   https://github.com/XX-net/XX-Net/issues/7164  
   https://github.com/XX-net/XX-Net/issues/7241  
   
-* X-Tunnel 请升级到[3.6.15]，目前基本可用。(https://github.com/XX-net/XX-Net/releases). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+* X-Tunnel 请升级到[3.7.0]，目前基本可用。(https://github.com/XX-net/XX-Net/releases). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 **X-Tunnel 用户套餐流量丢失的，请给xxnet.dev@gmail.com 发邮件。**
-  接下来会继续开发x-tunnel，增加突破能力。  
+  接下来会继续完善x-tunnel，减少卡顿。  
   
 <br>
 

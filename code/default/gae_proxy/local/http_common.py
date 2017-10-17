@@ -29,11 +29,12 @@ class BaseResponse(object):
 
 
 class Task(object):
-    def __init__(self, headers, body, queue, url):
+    def __init__(self, headers, body, queue, url, timeout):
         self.headers = headers
         self.body = body
         self.queue = queue
         self.url = url
+        self.timeout = timeout
         self.start_time = time.time()
         self.unique_id = "%s:%f" % (url, self.start_time)
         self.trace_time = []
@@ -43,6 +44,7 @@ class Task(object):
         self.content_length = None
         self.read_buffer = ""
         self.responsed = False
+        self.finished = False
         self.retry_count = 0
 
     def to_string(self):
@@ -86,6 +88,21 @@ class Task(object):
         self.body_readed += len(data)
         return data
 
+    def read_all(self):
+        out_list = [self.read_buffer]
+        while True:
+            data = self.body_queue.get(block=True)
+            if not data:
+                break
+            out_list.append(data)
+
+        self.read_buffer = ""
+
+        body = "".join(out_list)
+        self.body_readed += len(body)
+        return body
+
+
     def set_state(self, stat):
         # for debug trace
         time_now = time.time()
@@ -115,10 +132,16 @@ class Task(object):
         res = BaseResponse(body=err_text)
         self.queue.put(res)
 
+    def finish(self):
+        self.put_data("")
+        self.finished = True
+
 
 class HTTP_worker(object):
     def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
         self.ssl_sock = ssl_sock
+        self.last_active_time = self.ssl_sock.create_time
+        self.last_request_time = self.ssl_sock.create_time
         self.init_rtt = ssl_sock.handshake_time / 3
         self.rtt = self.init_rtt
         self.ip = ssl_sock.ip
@@ -144,3 +167,26 @@ class HTTP_worker(object):
         self.ssl_sock.close()
         xlog.debug("%s worker close:%s", self.ip, reason)
         self.close_cb(self)
+
+    def update_rtt_speed(self, rtt, speed):
+        self.rtt = rtt
+        self.speed_history.append(speed)
+
+    def get_score(self):
+        now = time.time()
+        inactive_time = now - self.last_active_time
+
+        if self.version == "1.1":
+            rtt = self.rtt + 100
+        else:
+            rtt = self.rtt + len(self.streams) * 100
+
+        if inactive_time > 1:
+            score = rtt
+        elif inactive_time < 0.001:
+            score = rtt + 1000
+        else:
+            # inactive_time < 2
+            score = rtt + (1/inactive_time)*100
+
+        return score

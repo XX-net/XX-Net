@@ -209,9 +209,6 @@ class HTTP2_worker(HTTP_worker):
                 xlog.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
-    def get_rtt_rate(self):
-        return self.rtt + len(self.streams) * 3000
-
     def close(self, reason=""):
         self.keep_running = False
         self.accept_task = False

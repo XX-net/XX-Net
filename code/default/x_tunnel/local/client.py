@@ -39,7 +39,7 @@ from proxy_handler import Socks5Server
 import global_var as g
 import proxy_session
 import simple_http_server
-from cloudflare_front import front
+import front_dispatcher
 
 import web_control
 # don't remove, launcher web_control need it.
@@ -114,7 +114,7 @@ def start():
         else:
             xlog.debug("please check x-tunnel server in config")
 
-    g.http_client = front.front
+    g.http_client = front_dispatcher
 
     g.session = proxy_session.ProxySession()
 

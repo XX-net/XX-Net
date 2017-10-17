@@ -3,7 +3,7 @@ import collections
 import Queue
 
 from xlog import getLogger
-xlog = getLogger("cloudflare_front")
+xlog = getLogger("heroku_front")
 
 
 class GAE_Exception(Exception):
@@ -92,7 +92,7 @@ class Task(object):
         return data
 
     def read_all(self):
-        out_list = []
+        out_list = [self.read_buffer]
         while True:
             data = self.body_queue.get(block=True)
             if not data:
@@ -182,4 +182,4 @@ class HTTP_worker(object):
             # inactive_time < 2
             score = rtt + (3/inactive_time)*1000
 
-        return score
+        return score * 5

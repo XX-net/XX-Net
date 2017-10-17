@@ -17,6 +17,45 @@ class Front(object):
         self.dispatchs = {}
         threading.Thread(target=self.update_front_domains).start()
 
+        self.last_success_time = time.time()
+        self.last_fail_time = 0
+        self.continue_fail_num = 0
+        self.processed_reqs = 0
+
+    def get_score(self, host):
+        if host not in self.dispatchs:
+            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+
+        dispatcher = self.dispatchs[host]
+        worker = dispatcher.get_worker(nowait=True)
+        if not worker:
+            return None
+
+        return worker.get_score()
+
+    def ok(self):
+        if self.processed_reqs > 10:
+            self.processed_reqs = 0
+            return False
+
+        now = time.time()
+        if self.continue_fail_num == 0 and now - self.last_success_time < 30:
+            return True
+
+        if now - self.last_fail_time < 30 and \
+            now - self.last_success_time > 30 and \
+                self.continue_fail_num > 10:
+            return False
+
+        for host in self.dispatchs:
+            dispatcher = self.dispatchs[host]
+            if len(dispatcher.workers):
+                return True
+            if len(dispatcher.https_manager.new_conn_pool.pool):
+                return True
+
+        return False
+
     @staticmethod
     def update_front_domains():
         next_update_time = time.time()
@@ -51,7 +90,8 @@ class Front(object):
     def __del__(self):
         connect_control.keep_running = False
 
-    def request(self, method, host, path="/", header={}, data="", timeout=120):
+    def request(self, method, host, path="/", headers={}, data="", timeout=120):
+        self.processed_reqs += 1
         if host not in self.dispatchs:
             self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
 
@@ -59,19 +99,24 @@ class Front(object):
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
-                response = dispatcher.request(method, host, path, header, data, timeout=timeout)
+                response = dispatcher.request(method, host, path, headers, data, timeout=timeout)
                 status = response.status
                 if status not in [200, 405]:
-                    xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
+                    xlog.warn("front request %s %s%s fail, status:%d trace:%s",
+                              method, host, path, status, response.task.get_trace())
                     continue
 
                 content = response.task.read_all()
                 xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
+                self.last_success_time = time.time()
+                self.continue_fail_num = 0
                 return content, status, response
             except Exception as e:
                 xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
                 continue
 
+        self.last_fail_time = time.time()
+        self.continue_fail_num += 1
         return "", 500, {}
 
     def stop(self):
