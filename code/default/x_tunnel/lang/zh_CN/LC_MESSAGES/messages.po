@@ -158,7 +158,7 @@ msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"
 
 msgid "Unknown error occurred."
-msgstr "发生了位置错误。"
+msgstr "发生了未知错误。"
 
 msgid "Failed to log out."
 msgstr "注销失败。"

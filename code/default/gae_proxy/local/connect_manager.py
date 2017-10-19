@@ -23,7 +23,6 @@ import socket
 import struct
 import threading
 import operator
-import httplib
 
 
 import socks
@@ -92,10 +91,10 @@ class Connect_pool():
         self.not_empty.acquire()
         try:
             if not block:
-                if not self.qsize(only_h1=only_h1):
+                if self.qsize(only_h1=only_h1) == 0:
                     return None
             elif timeout is None:
-                while not self.qsize(only_h1=only_h1):
+                while self.qsize(only_h1=only_h1) == 0:
                     self.not_empty.wait()
             elif timeout < 0:
                 raise ValueError("'timeout' must be a positive number")
@@ -201,6 +200,39 @@ class Connect_pool():
 
         return out_str
 
+GoogleG23PKP = set((
+# https://pki.google.com/GIAG2.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnCoEd1zYUJE6BqOC4NhQ
+SLyJP/EZcBqIRn7gj8Xxic4h7lr+YQ23MkSJoHQLU09VpM6CYpXu61lfxuEFgBLE
+XpQ/vFtIOPRT9yTm+5HpFcTP9FMN9Er8n1Tefb6ga2+HwNBQHygwA0DaCHNRbH//
+OjynNwaOvUsRBOt9JN7m+fwxcfuU1WDzLkqvQtLL6sRqGrLMU90VS4sfyBlhH82d
+qD5jK4Q1aWWEyBnFRiL4U5W+44BKEMYq7LqXIBHHOZkQBKDwYXqVJYxOUnXitu0I
+yhT8ziJqs07PRgOXlwN+wLHee69FM8+6PnG33vQlJcINNYmdnfsOEXmJHjfFr45y
+aQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr2/GIAG3.crt
+# https://pki.goog/gsr2/GTSGIAG3.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylJL6h7/ziRrqNpyGGjV
+Vl0OSFotNQl2Ws+kyByxqf5TifutNP+IW5+75+gAAdw1c3UDrbOxuaR9KyZ5zhVA
+Cu9RuJ8yjHxwhlJLFv5qJ2vmNnpiUNjfmonMCSnrTykUiIALjzgegGoYfB29lzt4
+fUVJNk9BzaLgdlc8aDF5ZMlu11EeZsOiZCx5wOdlw1aEU1pDbcuaAiDS7xpp0bCd
+c6LgKmBlUDHP+7MvvxGIQC61SRAPCm7cl/q/LJ8FOQtYVK8GlujFjgEWvKgaTUHF
+k5GiHqGL8v7BiCRJo0dLxRMB3adXEmliK+v+IO9p+zql8H4p7u2WFvexH6DkkCXg
+MwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr4/GIAG3ECC.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG4ANKJrwlpAPXThRcA3Z4XbkwQvW
+hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
+-----END PUBLIC KEY-----
+'''))
 
 class Https_connection_manager(object):
     thread_num_lock = threading.Lock()
@@ -221,6 +253,7 @@ class Https_connection_manager(object):
         if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
             self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
+        self.class_name = "Https_connection_manager"
         self.timeout = 4
         self.max_timeout = 60
         self.thread_num = 0
@@ -250,6 +283,7 @@ class Https_connection_manager(object):
         self.connection_pool_max_num = config.CONFIG.getint("connect_manager", "https_connection_pool_max")
         self.connection_pool_min_num = config.CONFIG.getint("connect_manager", "https_connection_pool_min")
         self.keep_alive = config.CONFIG.getint("connect_manager", "https_keep_alive")
+        self.keep_active_timeout = config.CONFIG.getint("connect_manager", "keep_active_timeout")
         self.https_new_connect_num = config.CONFIG.getint("connect_manager", "https_new_connect_num")
 
         self.new_conn_pool = Connect_pool()
@@ -377,7 +411,6 @@ class Https_connection_manager(object):
                     time.sleep(60)
                     break
 
-                #xlog.debug("create ssl conn %s", ip_str)
                 ssl_sock = self._create_ssl_connection( (ip_str, 443) )
                 if not ssl_sock:
                     continue
@@ -407,7 +440,6 @@ class Https_connection_manager(object):
 
         connect_control.start_connect_register(high_prior=True)
 
-        connect_time = 0
         handshake_time = 0
         time_begin = time.time()
         try:
@@ -436,13 +468,32 @@ class Https_connection_manager(object):
             time_handshaked = time.time()
 
             def verify_SSL_certificate_issuer(ssl_sock):
-                cert = ssl_sock.get_peer_certificate()
-                if not cert:
+                #cert = ssl_sock.get_peer_certificate()
+                #if not cert:
+                #    #google_ip.report_bad_ip(ssl_sock.ip)
+                #    #connect_control.fall_into_honeypot()
+                #    raise socket.error(' certficate is none')
+
+                #issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+                #if not issuer_commonname.startswith('Google'):
+                #    google_ip.report_connect_fail(ip, force_remove=True)
+                #    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+                certs = ssl_sock.get_peer_cert_chain()
+                if not certs:
                     #google_ip.report_bad_ip(ssl_sock.ip)
                     #connect_control.fall_into_honeypot()
                     raise socket.error(' certficate is none')
+                if len(certs) < 3:
+                    google_ip.report_connect_fail(ip, force_remove=True)
+                    raise socket.error('No intermediate CA was found.')
 
-                issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+                if hasattr(OpenSSL.crypto, "dump_publickey"):
+                    # old OpenSSL not support this function.
+                    if OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey()) not in GoogleG23PKP:
+                        google_ip.report_connect_fail(ip, force_remove=True)
+                        raise socket.error('The intermediate CA is mismatching.')
+
+                issuer_commonname = next((v for k, v in certs[0].get_issuer().get_components() if k == 'CN'), '')
                 if not issuer_commonname.startswith('Google'):
                     google_ip.report_connect_fail(ip, force_remove=True)
                     raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
@@ -541,13 +592,23 @@ class Https_connection_manager(object):
         if ssl_sock:
             return ssl_sock
         else:
-            ret = self.new_conn_pool.get(True, self.max_timeout, only_h1=only_h1)
-            if ret:
-                handshake_time, ssl_sock = ret
-                return ssl_sock
-            else:
-                xlog.debug("create ssl timeout fail.")
-                return None
+            start_time = time.time()
+            while True:
+                ret = self.new_conn_pool.get(True, 1, only_h1=only_h1)
+                if ret:
+                    handshake_time, ssl_sock = ret
+                    if time.time() - ssl_sock.last_use_time < self.keep_active_timeout - 1:
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                        return ssl_sock
+                    else:
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
+                        google_ip.report_connect_closed(ssl_sock.ip, "get_timeout")
+                        ssl_sock.close()
+                        continue
+                else:
+                    if time.time() - start_time > self.max_timeout:
+                        xlog.debug("create ssl timeout fail.")
+                        return None
 
     def get_new_ssl(self, only_h1=True):
         self.create_more_connection()
@@ -558,5 +619,4 @@ class Https_connection_manager(object):
         else:
             xlog.debug("get_new_ssl timeout fail.")
             return None
-
 https_manager = Https_connection_manager()

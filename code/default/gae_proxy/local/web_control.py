@@ -232,6 +232,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_test_ip_handler()
         elif path == "/check_ip":
             return self.req_check_ip_handler()
+        elif path == "/debug":
+            return self.req_debug_handler()
         elif path == "/quit":
             connect_control.keep_running = False
             data = "Quit"
@@ -365,8 +367,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def xxnet_version():
         version_file = os.path.join(root_path, "version.txt")
         try:
-            fd = open(version_file, "r")
-            version = fd.read()
+            with open(version_file, "r") as fd:
+                version = fd.read()
             return version
         except Exception as e:
             xlog.exception("xxnet_version fail")
@@ -489,7 +491,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 use_ipv6 = int(self.postvars['use_ipv6'][0])
                 if user_config.user_special.use_ipv6 != use_ipv6:
                     if use_ipv6:
-                        if not check_local_network.check_ipv6():
+                        if not check_local_network.check_ipv6() and False:
                             xlog.warn("IPv6 was enabled, but check failed.")
                             return self.send_response_nc('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
 
@@ -789,3 +791,15 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 self.send_response_nc('text/plain', '{"res":"success"}')
         else:
             return self.send_not_exist()
+
+    def req_debug_handler(self):
+        data = ""
+        for obj in [https_manager, http_dispatch]:
+            data += "%s\r\n" % obj.__class__
+            for attr in dir(obj):
+                if attr.startswith("__"):
+                    continue
+                data += "    %s = %s\r\n" % (attr, getattr(obj, attr))
+
+        mimetype = 'text/plain'
+        self.send_response_nc(mimetype, data)

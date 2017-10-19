@@ -27,13 +27,7 @@ class Config(object):
         if not os.path.isdir(self.DATA_PATH):
             self.DATA_PATH = current_path
 
-        # load ../../../data/gae_proxy/config.ini, set by web_ui
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
         self.CONFIG.read(self.CONFIG_FILENAME)
-        if os.path.isfile(self.CONFIG_USER_FILENAME):
-            with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
-                content = fp.read()
-                self.CONFIG.readfp(io.BytesIO(content))
 
         # load ../../../data/gae_proxy/manual.ini, set by manual
         self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
@@ -46,6 +40,16 @@ class Config(object):
                 except Exception as e:
                     xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
 
+        # load ../../../data/gae_proxy/config.ini, set by web_ui
+        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
+        if os.path.isfile(self.CONFIG_USER_FILENAME):
+            with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
+                content = fp.read()
+                try:
+                    self.CONFIG.readfp(io.BytesIO(content))
+                except Exception as e:
+                    xlog.exception("data/gae_proxy/config.ini load error:%s", e)
+
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
 
@@ -55,6 +59,15 @@ class Config(object):
         else:
             self.GAE_APPIDS = []
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
+        self.GAE_VALIDATE = self.CONFIG.getint('gae', 'validate')
+
+        self.PROXY_HOSTS_ONLY = []
+        for x in self.CONFIG.get('switch_rule', 'proxy_hosts_only').split("|"):
+            x = x.strip()
+            if len(x):
+                self.PROXY_HOSTS_ONLY.append(x)
+        if len(self.PROXY_HOSTS_ONLY):
+            xlog.info("Only these hosts will proxy: %s", self.PROXY_HOSTS_ONLY)
 
         fwd_endswith = []
         fwd_hosts = []
@@ -127,10 +140,9 @@ class Config(object):
 
         self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
         self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
-        self.max_worker_num = config.CONFIG.getint("connect_manager", "max_worker_num")
 
         self.log_file = config.CONFIG.getint("system", "log_file")
-
+        self.do_profile = config.CONFIG.getint("system", "do_profile")
 
         # change to True when finished import CA cert to browser
         # launcher will wait import ready then open browser to show status, check update etc

@@ -1,14 +1,12 @@
-""" Locale support.
+"""Locale support module.
 
-    The module provides low-level access to the C lib's locale APIs
-    and adds high level number formatting APIs as well as a locale
-    aliasing engine to complement these.
+The module provides low-level access to the C lib's locale APIs and adds high
+level number formatting APIs as well as a locale aliasing engine to complement
+these.
 
-    The aliasing engine includes support for many commonly used locale
-    names and maps them to values suitable for passing to the C lib's
-    setlocale() function. It also includes default encodings for all
-    supported locale names.
-
+The aliasing engine includes support for many commonly used locale names and
+maps them to values suitable for passing to the C lib's setlocale() function. It
+also includes default encodings for all supported locale names.
 """
 
 import sys
@@ -17,6 +15,10 @@ import encodings.aliases
 import re
 import operator
 import functools
+
+# keep a copy of the builtin str type, because 'str' name is overridden
+# in globals by a function below
+_str = str
 
 try:
     _unicode = unicode
@@ -299,7 +301,7 @@ def currency(val, symbol=True, grouping=False, international=False):
     return s.replace('<', '').replace('>', '')
 
 def str(val):
-    """Convert float to integer, taking the locale into account."""
+    """Convert float to string, taking the locale into account."""
     return format("%.12g", val)
 
 def atof(string, func=float):
@@ -573,7 +575,7 @@ def setlocale(category, locale=None):
         category may be given as one of the LC_* values.
 
     """
-    if locale and type(locale) is not type(""):
+    if locale and not isinstance(locale, (_str, _unicode)):
         # convert to string
         locale = normalize(_build_localename(locale))
     return _setlocale(category, locale)
@@ -1833,7 +1835,7 @@ windows_locale = {
     0x1809: "en_IE", # English - Ireland
     0x1c09: "en_ZA", # English - South Africa
     0x2009: "en_JA", # English - Jamaica
-    0x2409: "en_CB", # English - Carribbean
+    0x2409: "en_CB", # English - Caribbean
     0x2809: "en_BZ", # English - Belize
     0x2c09: "en_TT", # English - Trinidad
     0x3009: "en_ZW", # English - Zimbabwe

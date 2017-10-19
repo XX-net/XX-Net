@@ -17,6 +17,11 @@ import uuid
 
 import update_from_github
 
+try:
+    reduce         # Python 2 
+except NameError:  # Python 3
+    from functools import reduce
+
 #opener = urllib2.build_opener()
 #update_url = "http://127.0.0.1:8080/update.json"
 update_url = "https://xxnet-update.appspot.com/update.json"
@@ -229,29 +234,43 @@ def general_gtk_callback(widget=None, data=None):
 
 def check_update():
     try:
-        update_rule = config.get(["update", "check_update"], "stable")
-        if update_rule == "dont-check":
+        if update_from_github.update_info == "dont-check":
             return
 
         check_push_update()
 
-        if update_rule != "stable" and update_rule != "test":
+        update_rule = config.get(["update", "check_update"], "notice-stable")
+        if update_rule not in ("stable", "notice-stable", "test", "notice-test"):
             return
 
         versions = update_from_github.get_github_versions()
         current_version = update_from_github.current_version()
-        if update_rule == "test":
-            if LooseVersion(current_version) < LooseVersion(versions[0][1]):
-                xlog.info("update to test version %s", versions[0][1])
-                update_from_github.update_version(versions[0][1])
-        elif update_rule == "stable":
-            if LooseVersion(current_version) < LooseVersion(versions[1][1]):
-                xlog.info("update to stable version %s", versions[1][1])
-                update_from_github.update_version(versions[1][1])
+        test_version, stable_version = versions[0][1], versions[1][1]
+        if test_version != config.get(["update", "skip_test_version"]):
+            if update_rule == "notice-test":
+                if LooseVersion(current_version) < LooseVersion(test_version):
+                    xlog.info("checked new test version %s", test_version)
+                    update_from_github.update_info = '{"type":"test", "version":"%s"}' % test_version
+            elif update_rule == "test":
+                if LooseVersion(current_version) < LooseVersion(test_version):
+                    xlog.info("update to test version %s", test_version)
+                    update_from_github.update_version(test_version)
+        if stable_version != config.get(["update", "skip_stable_version"]):
+            if update_rule == "notice-stable":
+                if LooseVersion(current_version) < LooseVersion(stable_version):
+                    xlog.info("checked new stable version %s", stable_version)
+                    update_from_github.update_info = '{"type":"stable", "version":"%s"}' % stable_version
+            elif update_rule == "stable":
+                if LooseVersion(current_version) < LooseVersion(stable_version):
+                    xlog.info("update to stable version %s", stable_version)
+                    update_from_github.update_version(stable_version)
     except IOError as e:
         xlog.warn("check update fail:%r", e)
     except Exception as e:
         xlog.exception("check_update fail:%r", e)
+    finally:
+        if update_from_github.update_info == "init":
+            update_from_github.update_info = ""
 
 def check_push_update():
     global update_content, update_dict

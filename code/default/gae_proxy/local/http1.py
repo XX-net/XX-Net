@@ -8,35 +8,52 @@ xlog = getLogger("gae_proxy")
 import connect_control
 from google_ip import google_ip
 from http_common import *
-from config import config
 
 
 class HTTP1_worker(HTTP_worker):
     version = "1.1"
     idle_time = 10 * 60
 
-    def __init__(self, ssl_sock, close_cb, retry_task_cb):
-        super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb)
+    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
+        super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
 
-        self.last_active_time = self.ssl_sock.create_time
-        self.last_request_time = self.ssl_sock.create_time
+        self.task = None
+        self.transfered_size = 0
+        self.trace_time = []
+        self.trace_time.append([ssl_sock.create_time, "connect"])
+        self.record_active("init")
 
         self.task_queue = Queue.Queue()
         threading.Thread(target=self.work_loop).start()
         threading.Thread(target=self.keep_alive_thread).start()
 
-    def get_rtt_rate(self):
-        return self.rtt + 100
+    def record_active(self, active=""):
+        self.trace_time.append([time.time(), active])
+        # xlog.debug("%s stat:%s", self.ip, active)
+
+    def get_trace(self):
+        out_list = []
+        last_time = self.trace_time[0][0]
+        for t, stat in self.trace_time:
+            time_diff = int((t - last_time) * 1000)
+            last_time = t
+            out_list.append(" %d:%s" % (time_diff, stat))
+        out_list.append(":%d" % ((time.time() - last_time) * 1000))
+        out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" transfered:%d" % self.transfered_size)
+        out_list.append(" appid:%s" % self.ssl_sock.appid)
+        return ",".join(out_list)
 
     def request(self, task):
         self.accept_task = False
+        self.task = task
         self.task_queue.put(task)
 
     def keep_alive_thread(self):
-        ping_interval = 55
+        ping_interval = 55.0
 
         while connect_control.keep_running and self.keep_running:
-            time_to_ping = max(ping_interval - (time.time() - self.last_active_time), 0)
+            time_to_ping = max(ping_interval - (time.time() - self.last_active_time), 0.2)
             time.sleep(time_to_ping)
 
             time_now = time.time()
@@ -47,29 +64,35 @@ class HTTP1_worker(HTTP_worker):
                 self.close("idle timeout")
                 return
 
-            self.last_active_time = time_now
             self.task_queue.put("ping")
 
     def work_loop(self):
         while connect_control.keep_running and self.keep_running:
             task = self.task_queue.get(True)
             if not task:
-                # None task to exit
+                # None task means exit
+                self.accept_task = False
+                self.keep_running = False
                 return
             elif task == "ping":
-                self.last_active_time = time.time()
                 if not self.head_request():
                     # now many gvs don't support gae
+                    self.accept_task = False
+                    self.keep_running = False
+                    if self.task is not None:
+                        self.retry_task_cb(self.task)
+                        self.task = None
+
                     google_ip.recheck_ip(self.ssl_sock.ip)
                     self.close("keep alive")
                     return
                 else:
+                    self.last_active_time = time.time()
                     continue
 
             # xlog.debug("http1 get task")
             time_now = time.time()
             self.last_request_time = time_now
-            self.last_active_time = time_now
             self.request_task(task)
 
     def request_task(self, task):
@@ -99,12 +122,15 @@ class HTTP1_worker(HTTP_worker):
             xlog.warn("%s h1_request:%r", self.ip, e)
             google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
             self.retry_task_cb(task)
+            self.task = None
             self.close("request fail")
             return
 
         task.set_state("h1_get_head")
         body_length = int(response.getheader("Content-Length", "0"))
         task.content_length = body_length
+
+        task.responsed = True
         response.headers = response.msg.dict
         response.worker = self
         response.task = task
@@ -129,8 +155,12 @@ class HTTP1_worker(HTTP_worker):
                         speed = body_length / time_cost
                         task.set_state("h1_finish[SP:%d]" % speed)
                         self.report_speed(speed, body_length)
+                        self.transfered_size += body_length
+                    self.task = None
                     self.accept_task = True
+                    self.idle_cb()
                     self.processed_tasks += 1
+                    self.last_active_time = time.time()
                     return
 
                 to_read = max(end - start, 65535)
@@ -167,31 +197,41 @@ class HTTP1_worker(HTTP_worker):
             data = request_data.encode()
             ret = self.ssl_sock.send(data)
             if ret != len(data):
-                xlog.warn("head send len:%r %d", ret, len(data))
+                xlog.warn("h1 head send len:%r %d %s", ret, len(data), self.ip)
+                return False
             response = httplib.HTTPResponse(self.ssl_sock, buffering=True)
             self.ssl_sock.settimeout(100)
             response.begin()
 
             status = response.status
             if status != 200:
-                xlog.debug("appid:%s head fail status:%d", self.ssl_sock.appid, status)
+                xlog.debug("%s appid:%s head fail status:%d", self.ip, self.ssl_sock.appid, status)
                 return False
 
             self.rtt = (time.time() - start_time) * 1000
             return True
         except httplib.BadStatusLine as e:
             time_now = time.time()
-            inactive_time = time_now - self.ssl_sock.last_use_time
+            inactive_time = time_now - self.last_active_time
             head_timeout = time_now - start_time
             xlog.debug("%s keep alive fail, inactive_time:%d head_timeout:%d",
                        self.ssl_sock.ip, inactive_time, head_timeout)
         except Exception as e:
-            xlog.warn("%s head appid:%s request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
+            xlog.debug("h1 %s appid:%s HEAD keep alive request fail:%r", self.ssl_sock.ip, self.ssl_sock.appid, e)
 
     def close(self, reason=""):
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
+        self.accept_task = False
+        self.keep_running = False
+
+        if self.task is not None:
+            if self.task.responsed:
+                self.task.put_data("")
+            else:
+                self.retry_task_cb(self.task)
+            self.task = None
 
         super(HTTP1_worker, self).close(reason)
         self.task_queue.put(None)

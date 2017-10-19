@@ -54,7 +54,9 @@
             <div class="span6">
                 <select id="check-update">
                     <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
+                    <option value="notice-stable">{{ _( "Notice stable version" ) }}</option>
                     <option value="stable">{{ _( "Stable version" ) }}</option>
+                    <option value="notice-test">{{ _( "Notice test version" ) }}</option>
                     <option value="test">{{ _( "Test version" ) }}</option>
                 </select>
             </div>
@@ -88,6 +90,7 @@
                 <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
+        <label> <a href="https://github.com/XX-net/XX-Net/releases" target="_blank">{{ _( "All versions download page" ) }}</a> </label>
         <hr>
     </div> <!-- #advanced-options -->
     <div class="row-fluid">
@@ -235,6 +238,11 @@
         var key   = 'check_update',
             value = $(this).val();
 
+        if ( value == 'dont-check' ) {
+            stopUpdateCheck()
+        } else {
+            startUpdateCheck()
+        }
         return setConfig(key, value);
     });
 
@@ -298,11 +306,6 @@
                 displayErrorMessage();
             }
         });
-    }
-</script>
-<script type="text/javascript">
-    function displayErrorMessage() {
-        tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
     }
 </script>
 <script type="text/javascript">
@@ -424,122 +427,18 @@
 <script type="text/javascript">
 
     $('.update-button').click(function(){
-        var pageRequests = {};
-        pageRequests['cmd'] = 'update_version';
-
         var id = $(this).attr('id');
         if(id == 'update-test-version'){
-            pageRequests['version'] = $('#test-version-no').html();
+            versionToUpdate = $('#test-version-no').html();
             //window.updating_button = $('#update-test-version');
         }else if(id == 'update-stable-version'){
-            pageRequests['version'] = $('#stable-version-no').html();
+            versionToUpdate = $('#stable-version-no').html();
             //window.updating_button = $('#update-stable-version');
         }
 
         window.loading = Ladda.create(this);
         window.loading.start();
 
-        $.ajax({
-            type: 'GET',
-            url: '/update',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip( '{{ _( "Updating in progress ..." ) }}', "info");
-                    window.timer.play()
-                } else {
-                    tip( result['reason'], "warning");
-                }
-            },
-            error: function() {
-                displayErrorMessage();
-            }
-        });
-    });
-
-    function updateProgress(){
-        $.getJSON('update?cmd=get_progress', function (rst) {
-            Object.keys(rst).forEach(function (v) {
-                if ( v == "update_status"){
-                    var stat = rst[v];
-
-                    if ( stat === "Idle"){
-                        window.timer.stop();
-                        return;
-                    }
-
-                    if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
-                        var current_version = $('#current-version-no').html();
-                        if ( current_version == ""){
-                            $('#current-version-no').html(" ");
-                            // avoid check next time.
-
-                            check_new_version();
-                        }
-
-                        $('.version-line').slideDown('fast');
-
-                        $('#upgrade-pull-icon').removeClass('icon-chevron-right');
-                        $('#upgrade-pull-icon').addClass('icon-chevron-down');
-                        $('#update-options').slideDown();
-                    }
-
-                    if( stat == "Finished"){
-                        tip( stat, 'info');
-                        window.loading.stop();
-                        window.timer.stop();
-                        return;
-                    }else if ( stat.indexOf('Fail') > -1){
-                        tip( stat, 'warning');
-                        window.timer.stop();
-                    }else{
-                        tip( stat, 'info');
-                    }
-                }else if (v.indexOf('XX-Net/zip') > -1) {
-                    if (!window.updating_button){
-                        var p = v.indexOf('XX-Net/zip') + 11;
-                        var version = v.substring(p, v.length);
-                        var button;
-                        if ( version == $('#test-version-no').html() ){
-                            button = $('#update-test-version');
-                        }else if ( version == $('#stable-version-no').html() ){
-                            button = $('#update-stable-version');
-                        }else{
-                            return;
-                        }
-                        window.updating_button = button;
-                    }
-
-                    if (!window.loading){
-                        window.loading = Ladda.create(window.updating_button[0]);
-                        window.loading.start();
-                    }
-                    var data = rst[v];
-                    if ( data.status === 'downloading'){
-                        var progress =  (+data.downloaded / +data.size) * 100 ;
-
-                        window.loading.setProgress(progress);
-                        window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '%');
-                    }else if (data.status === "finished"){
-                        window.updating_button.html( '{{ _( "Download completed" ) }}');
-                        window.updating_button.prop('disabled', true);
-                    }
-                }
-            });
-        });
-    }
-
-    $(document).ready(function(){
-        window.timer = $.timer(function() {
-            updateProgress();
-        });
-
-        window.timer.set({
-            time: 1000,
-            autostart: true
-        });
-
-        updateProgress();
+        updateVersion();
     });
 </script>

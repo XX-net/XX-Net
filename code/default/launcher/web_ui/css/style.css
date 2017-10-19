@@ -62,6 +62,11 @@ div#header div#logo img {
     max-height: 32px;
 }
 
+#version_on_logo {
+    margin: 0 5px;
+    font-size: 70%;
+}
+
 div#header a#resize-window-trigger,
 div#header a#quit-trigger {
     display: block;
@@ -263,6 +268,35 @@ div#content div#options div.row-fluid div.span4, .bold {
     color: #146C98;
     background-color: #d9edf7;
     border-color: #bce8f1;
+}
+
+#update-notify, .popnotify {
+    padding: 6px;
+    margin: 10px 0;
+    background-color: #dff0d8;
+    border:1px solid;
+    border-color: #cfe0c8;
+    border-radius: 4px;
+    transition: color .3s,background .3s,border .3s;
+    
+}
+#update-message{
+    font-size: 120%;
+    color: #507050;
+}
+.update-notify-action {
+    float: right;
+    color: #0072E3;
+    cursor: pointer;
+    margin: 0 6px;
+}
+
+#update-notify-close {
+    float: right;
+    cursor: pointer;
+    margin-left: 7px;
+    color: #b94a48;
+    
 }
 
 #details, #update-options, #modules-manager{

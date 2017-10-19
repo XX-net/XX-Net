@@ -132,7 +132,7 @@ def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
     If ``ensure_ascii`` is true (the default), all non-ASCII characters in the
     output are escaped with ``\uXXXX`` sequences, and the result is a ``str``
     instance consisting of ASCII characters only.  If ``ensure_ascii`` is
-    ``False``, some chunks written to ``fp`` may be ``unicode`` instances.
+    false, some chunks written to ``fp`` may be ``unicode`` instances.
     This usually happens because the input contains unicode strings or the
     ``encoding`` parameter is used. Unless ``fp.write()`` explicitly
     understands ``unicode`` (as in ``codecs.getwriter``) this is likely to
@@ -163,7 +163,7 @@ def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
     ``default(obj)`` is a function that should return a serializable version
     of obj or raise TypeError. The default simply raises TypeError.
 
-    If *sort_keys* is ``True`` (default: ``False``), then the output of
+    If *sort_keys* is true (default: ``False``), then the output of
     dictionaries will be sorted by key.
 
     To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the
@@ -195,9 +195,10 @@ def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
         encoding='utf-8', default=None, sort_keys=False, **kw):
     """Serialize ``obj`` to a JSON formatted ``str``.
 
-    If ``skipkeys`` is false then ``dict`` keys that are not basic types
+    If ``skipkeys`` is true then ``dict`` keys that are not basic types
     (``str``, ``unicode``, ``int``, ``long``, ``float``, ``bool``, ``None``)
     will be skipped instead of raising a ``TypeError``.
+
 
     If ``ensure_ascii`` is false, all non-ASCII characters are not escaped, and
     the return value may be a ``unicode`` instance. See ``dump`` for details.
@@ -227,7 +228,7 @@ def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
     ``default(obj)`` is a function that should return a serializable version
     of obj or raise TypeError. The default simply raises TypeError.
 
-    If *sort_keys* is ``True`` (default: ``False``), then the output of
+    If *sort_keys* is true (default: ``False``), then the output of
     dictionaries will be sorted by key.
 
     To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the
@@ -324,7 +325,7 @@ def loads(s, encoding=None, cls=None, object_hook=None, parse_float=None,
     for JSON integers (e.g. float).
 
     ``parse_constant``, if specified, will be called with one of the
-    following strings: -Infinity, Infinity, NaN, null, true, false.
+    following strings: -Infinity, Infinity, NaN.
     This can be used to raise an exception if invalid JSON numbers
     are encountered.
 

@@ -142,7 +142,7 @@ class Calendar(object):
 
     def iterweekdays(self):
         """
-        Return a iterator for one week of weekday numbers starting with the
+        Return an iterator for one week of weekday numbers starting with the
         configured first one.
         """
         for i in range(self.firstweekday, self.firstweekday + 7):
@@ -174,22 +174,23 @@ class Calendar(object):
         Like itermonthdates(), but will yield (day number, weekday number)
         tuples. For days outside the specified month the day number is 0.
         """
-        for date in self.itermonthdates(year, month):
-            if date.month != month:
-                yield (0, date.weekday())
-            else:
-                yield (date.day, date.weekday())
+        for i, d in enumerate(self.itermonthdays(year, month), self.firstweekday):
+            yield d, i % 7
 
     def itermonthdays(self, year, month):
         """
         Like itermonthdates(), but will yield day numbers. For days outside
         the specified month the day number is 0.
         """
-        for date in self.itermonthdates(year, month):
-            if date.month != month:
-                yield 0
-            else:
-                yield date.day
+        day1, ndays = monthrange(year, month)
+        days_before = (day1 - self.firstweekday) % 7
+        for _ in range(days_before):
+            yield 0
+        for d in range(1, ndays + 1):
+            yield d
+        days_after = (self.firstweekday - day1 - ndays) % 7
+        for _ in range(days_after):
+            yield 0
 
     def monthdatescalendar(self, year, month):
         """

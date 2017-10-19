@@ -52,6 +52,7 @@ def get_cmd_out(cmd):
     lines = out.readlines()
     return lines
 
+
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
@@ -62,9 +63,11 @@ class _GeneralName(univ.Choice):
         ),
     )
 
+
 class _GeneralNames(univ.SequenceOf):
     componentType = _GeneralName()
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
+
 
 class SSLCert:
     def __init__(self, cert):
@@ -149,6 +152,7 @@ class SSLCert:
                     altnames.append(i[0].asOctets())
         return altnames
 
+
 class CertUtil(object):
     """CertUtil module, based on mitmproxy"""
 
@@ -158,6 +162,10 @@ class CertUtil(object):
     ca_certdir = os.path.join(data_path, 'certs')
     ca_digest = 'sha256'
     ca_lock = threading.Lock()
+    ca_validity_years = 10
+    ca_validity = 24 * 60 * 60 * 365 * ca_validity_years
+    cert_validity_years = 2
+    cert_validity = 24 * 60 * 60 * 365 * cert_validity_years
 
     @staticmethod
     def create_ca():
@@ -177,7 +185,7 @@ class CertUtil(object):
         ca.set_version(2)
         ca.set_serial_number(0)
         ca.gmtime_adj_notBefore(0)
-        ca.gmtime_adj_notAfter(24 * 60 * 60 * 3652)
+        ca.gmtime_adj_notAfter(CertUtil.ca_validity)
         ca.set_issuer(req.get_subject())
         ca.set_subject(req.get_subject())
         ca.set_pubkey(req.get_pubkey())
@@ -239,7 +247,7 @@ class CertUtil(object):
         except OpenSSL.SSL.Error:
             cert.set_serial_number(int(time.time()*1000))
         cert.gmtime_adj_notBefore(-600) #avoid crt time error warning
-        cert.gmtime_adj_notAfter(60 * 60 * 24 * 365)
+        cert.gmtime_adj_notAfter(CertUtil.cert_validity)
         cert.set_issuer(ca.get_subject())
         cert.set_subject(req.get_subject())
         cert.set_pubkey(req.get_pubkey())
@@ -247,7 +255,7 @@ class CertUtil(object):
             sans = ['*'+commonname] + [s for s in sans if s != '*'+commonname]
         else:
             sans = [commonname] + [s for s in sans if s != commonname]
-        #cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
+        cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
         cert.sign(key, CertUtil.ca_digest)
 
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
@@ -257,23 +265,43 @@ class CertUtil(object):
         return certfile
 
     @staticmethod
-    def get_cert(commonname, sans=(), full_name=False):
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
-        if os.path.exists(certfile):
-            return certfile
-
+    def _get_cert_cn(commonname, full_name=False):
+        yield commonname
         # some site need full name cert
         # like https://about.twitter.com in Google Chrome
         if commonname.count('.') >= 2 and [len(x) for x in reversed(commonname.split('.'))] > [2, 4] and not full_name:
-            commonname = '.'+commonname.partition('.')[-1]
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
-        if os.path.exists(certfile):
+            yield '.' + commonname.partition('.')[-1]
+
+    @staticmethod
+    def _get_old_cert(commonname, full_name=False):
+        for CN in CertUtil._get_cert_cn(commonname, full_name):
+            certfile = os.path.join(CertUtil.ca_certdir, CN + '.crt')
+            if os.path.exists(certfile):
+                if OpenSSL:
+                    with open(certfile, 'rb') as fp:
+                        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read())
+                    if datetime.datetime.strptime(cert.get_notAfter(), '%Y%m%d%H%M%SZ') <= datetime.datetime.utcnow():
+                        try:
+                            os.remove(certfile)
+                        except OSError as e:
+                            xlog.warning('CertUtil._get_old_cert failed: unable to remove outdated cert, %r', e)
+                        else:
+                            continue
+                        # well, have to use the old one
+                return certfile
+
+    @staticmethod
+    def get_cert(commonname, sans=(), full_name=False):
+        certfile = CertUtil._get_old_cert(commonname, full_name)
+        if certfile:
             return certfile
-        elif OpenSSL is None:
+
+        if OpenSSL is None:
             return CertUtil.ca_keyfile
         else:
             with CertUtil.ca_lock:
-                if os.path.exists(certfile):
+                certfile = CertUtil._get_old_cert(commonname, full_name)
+                if certfile:
                     return certfile
                 return CertUtil._get_cert(commonname, sans)
 

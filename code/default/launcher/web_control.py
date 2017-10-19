@@ -25,6 +25,7 @@ from instances import xlog
 import module_init
 import config
 import autorun
+import update
 import update_from_github
 import simple_http_server
 from simple_i18n import SimpleI18N
@@ -57,7 +58,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(new_module_menus.iteritems(),
+                              key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
@@ -178,6 +180,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
                 target_module = 'gae_proxy'
                 target_menu = 'status'
+            elif config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
+                target_module = 'x_tunnel'
+                target_menu = 'config'
             else:
                 target_module = 'launcher'
                 target_menu = 'about'
@@ -224,11 +229,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            check_update = config.get(["update", "check_update"], 1)
-            if check_update == 0:
-                check_update = "dont-check"
-            elif check_update == 1:
-                check_update = "stable"
+            check_update = config.get(["update", "check_update"], "notice-stable")
 
             data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
              "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d}' %\
@@ -242,14 +243,30 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "gae_proxy", "auto_start"], 0)
                     , config.get(["modules", "x_tunnel", "auto_start"], 0)
                     )
+        if reqs['cmd'] == ['get_version']:
+            current_version = update_from_github.current_version()
+            data = '{"current_version":"%s"}' % (current_version)
         elif reqs['cmd'] == ['set_config']:
-            if 'check_update' in reqs:
+            if 'skip_version' in reqs:
+                skip_version = reqs['skip_version'][0]
+                skip_version_type = reqs['skip_version_type'][0]
+                if skip_version_type not in ["stable", "test"]:
+                    data = '{"res":"fail"}'
+                else:
+                    config.set(["update", "skip_%s_version" % skip_version_type], skip_version)
+                    config.save()
+                    if skip_version in update_from_github.update_info:
+                        update_from_github.update_info = ''
+                    data = '{"res":"success"}'
+            elif 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
-                if check_update not in ["dont-check", "stable", "test"]:
+                if check_update not in ["dont-check", "stable", "notice-stable", "test", "notice-test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
-                    config.set(["update", "check_update"], check_update)
-                    config.save()
+                    if config.get(["update", "check_update"]) != check_update:
+                        update_from_github.init_update_info(check_update)
+                        config.set(["update", "check_update"], check_update)
+                        config.save()
 
                     data = '{"res":"success"}'
 
@@ -364,7 +381,18 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
-        if reqs['cmd'] == ['get_progress']:
+        if reqs['cmd'] == ['get_info']:
+            data = update_from_github.update_info
+            if data == '' or data[0] != '{':
+                data = '{"type":"%s"}' % data
+        elif reqs['cmd'] == ['set_info']:
+            update_from_github.update_info = reqs['info'][0]
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['start_check']:
+            update_from_github.init_update_info(reqs['check_update'][0])
+            update.check_update()
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['get_progress']:
             data = json.dumps(update_from_github.progress)
         elif reqs['cmd'] == ['get_new_version']:
             current_version = update_from_github.current_version()

@@ -135,7 +135,7 @@ def main():
 
     xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
     # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
-    do_profile = False
+    do_profile = config.do_profile
     if do_profile:
         import cProfile, pstats
         pr = cProfile.Profile()
