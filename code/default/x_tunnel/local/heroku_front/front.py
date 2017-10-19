@@ -37,7 +37,7 @@ class Front(object):
         if not worker:
             return None
 
-        return worker.get_score()
+        return worker.get_score() * 10
 
     def ok(self):
         now = time.time()
