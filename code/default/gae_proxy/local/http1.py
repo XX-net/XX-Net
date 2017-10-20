@@ -121,8 +121,7 @@ class HTTP1_worker(HTTP_worker):
         except Exception as e:
             xlog.warn("%s h1_request:%r", self.ip, e)
             google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
-            self.retry_task_cb(task)
-            self.task = None
+            self.task = task
             self.close("request fail")
             return
 
@@ -156,6 +155,7 @@ class HTTP1_worker(HTTP_worker):
                         task.set_state("h1_finish[SP:%d]" % speed)
                         self.report_speed(speed, body_length)
                         self.transfered_size += body_length
+                    task.finish()
                     self.task = None
                     self.accept_task = True
                     self.idle_cb()
@@ -182,7 +182,7 @@ class HTTP1_worker(HTTP_worker):
         except Exception as e:
             xlog.warn("%s h1_request:%r", self.ip, e)
 
-        task.put_data("")
+        task.finish()
         google_ip.report_connect_closed(self.ssl_sock.ip, "down fail")
         self.close("request body fail")
 
@@ -228,7 +228,7 @@ class HTTP1_worker(HTTP_worker):
 
         if self.task is not None:
             if self.task.responsed:
-                self.task.put_data("")
+                self.task.finish()
             else:
                 self.retry_task_cb(self.task)
             self.task = None

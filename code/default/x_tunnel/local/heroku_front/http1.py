@@ -28,6 +28,7 @@ class HTTP1_worker(HTTP_worker):
         # self.task_queue.put("ping")
 
         threading.Thread(target=self.work_loop).start()
+        threading.Thread(target=self.keep_alive_thread).start()
 
     def record_active(self, active=""):
         self.trace_time.append([time.time(), active])
@@ -52,7 +53,14 @@ class HTTP1_worker(HTTP_worker):
         self.task_queue.put(task)
 
     def keep_alive_thread(self):
-        self.task_queue.put("ping")
+        while time.time() - self.ssl_sock.create_time < 10:
+            if not connect_control.keep_running or not self.keep_running:
+                self.close("exit ")
+                return
+            time.sleep(1)
+
+        if self.processed_tasks == 0:
+            self.task_queue.put("ping")
 
         ping_interval = 300
         while connect_control.keep_running and self.keep_running:
@@ -106,7 +114,7 @@ class HTTP1_worker(HTTP_worker):
         self.record_active("request")
         task.set_state("h1_req")
 
-        task.headers['Host'] = self.task.host
+        task.headers['Host'] = task.host
         task.headers["Content-Length"] = len(task.body)
         request_data = '%s %s HTTP/1.1\r\n' % (task.method, task.path)
         request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in task.headers.items())
@@ -134,8 +142,7 @@ class HTTP1_worker(HTTP_worker):
             xlog.warn('%s trace:%s', self.ip, self.get_trace())
 
             ip_manager.report_connect_closed(self.ip, "down fail")
-            self.retry_task_cb(task)
-            self.task = None
+            self.task = task
             self.close("request fail")
             return
 
@@ -180,10 +187,11 @@ class HTTP1_worker(HTTP_worker):
 
     def head_request(self):
         # for keep alive, not work now.
+        self.accept_task = False
         self.request_onway = True
         self.record_active("head")
         start_time = time.time()
-        xlog.debug("head request %s", self.ip)
+        # xlog.debug("head request %s", self.ip)
         request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % self.ssl_sock.host
 
         try:
@@ -194,7 +202,7 @@ class HTTP1_worker(HTTP_worker):
                 xlog.warn('%s trace:%s', self.ip, self.get_trace())
                 return False
             response = simple_http_client.Response(self.ssl_sock)
-            response.begin(timeout=5)
+            response.begin(timeout=30)
 
             status = response.status
             if status != 200:
@@ -205,6 +213,7 @@ class HTTP1_worker(HTTP_worker):
             self.record_active("head end")
             self.rtt = (time.time() - start_time) * 1000
             ip_manager.update_ip(self.ip, self.rtt)
+            self.accept_task = True
             return True
         except httplib.BadStatusLine as e:
             time_now = time.time()
@@ -222,6 +231,7 @@ class HTTP1_worker(HTTP_worker):
             self.close("head fail")
         finally:
             self.request_onway = False
+
 
     def close(self, reason=""):
         # Notify loop to exit

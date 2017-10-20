@@ -32,7 +32,7 @@ def get_front(host, timeout):
     return None
 
 
-def request(method, host, path, headers={}, data="", timeout=10):
+def request(method, host, path="/", headers={}, data="", timeout=100):
     front = get_front(host, timeout)
     if not front:
         return "", 602, {}
@@ -43,3 +43,4 @@ def request(method, host, path, headers={}, data="", timeout=10):
 def stop():
     for front in all_fronts:
         front.stop()
+

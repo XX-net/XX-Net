@@ -45,18 +45,22 @@ def get_score(host):
     return worker.get_score()
 
 
-def request(method, host, schema="https", path="/", headers={}, data="", timeout=10):
+def request(method, host, schema="https", path="/", headers={}, data="", timeout=60):
     global last_success_time, last_fail_time, continue_fail_num, gae_proxy
     if not gae_proxy:
         return "", 602, {}
 
-    url = schema + "://" + host + path
+    timeout = 30
+    # use http to avoid cert fail
+    url = "http://" + host + path
     if data:
         headers["Content-Length"] = str(len(data))
 
+    # xlog.debug("gae_proxy %s %s", method, url)
     try:
         response = gae_proxy.gae_handler.request_gae_proxy(method, url, headers, data, timeout=timeout)
     except Exception as e:
+        continue_fail_num += 1
         last_fail_time = time.time()
         return "", 602, {}
 

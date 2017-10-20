@@ -162,7 +162,7 @@ class HttpsDispatcher(object):
 
                 idle_num += 1
 
-                rtt = worker.get_rtt_rate()
+                rtt = worker.get_score()
 
                 if rtt > slowest_rtt:
                     slowest_rtt = rtt
@@ -176,6 +176,8 @@ class HttpsDispatcher(object):
             self.close_cb(slowest_worker)
 
     def request(self, method, host, path, headers, body, url="", timeout=60):
+        connect_control.touch_active()
+
         # xlog.debug("task start request")
         if not url:
             url = "%s %s%s" % (method, host, path)
@@ -239,6 +241,7 @@ class HttpsDispatcher(object):
                 task.response_fail("get worker fail.")
                 continue
 
+            task.worker = worker
             task.set_state("get_worker:%s" % worker.ip)
             try:
                 worker.request(task)
@@ -273,7 +276,7 @@ class HttpsDispatcher(object):
     def to_string(self):
         worker_rate = {}
         for w in self.workers:
-            worker_rate[w] = w.get_rtt_rate()
+            worker_rate[w] = w.get_score()
 
         w_r = sorted(worker_rate.items(), key=operator.itemgetter(1))
 

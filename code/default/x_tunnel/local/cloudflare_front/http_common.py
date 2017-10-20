@@ -49,6 +49,7 @@ class Task(object):
         self.responsed = False
         self.finished = False
         self.retry_count = 0
+        self.worker = None
 
     def to_string(self):
         out_str = " Task:%s\r\n" % self.url
@@ -116,6 +117,10 @@ class Task(object):
             last_time = t
             out_list.append("%d:%s" % (time_diff, stat))
         out_list.append(":%d" % ((time.time()-last_time)*1000))
+        if self.worker:
+            out_list.append(" worker:")
+            out_list.append(self.worker.get_trace())
+
         return ",".join(out_list)
 
     def response_fail(self, reason=""):
@@ -128,6 +133,7 @@ class Task(object):
         err_text = "response_fail:%s" % reason
         xlog.debug("%s %s", self.url, err_text)
         res = BaseResponse(body=err_text)
+        res.task = self
         self.queue.put(res)
         self.finish()
 
@@ -174,12 +180,12 @@ class HTTP_worker(object):
         else:
             rtt = self.rtt + len(self.streams) * 3000
 
-        if inactive_time > 3:
+        if inactive_time > 5:
             score = rtt
         elif inactive_time < 0.001:
             score = rtt + 50000
         else:
             # inactive_time < 2
-            score = rtt + (3/inactive_time)*1000
+            score = rtt + (5/inactive_time)*1000
 
         return score

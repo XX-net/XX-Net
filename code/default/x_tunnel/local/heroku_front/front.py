@@ -1,6 +1,7 @@
 import time
 import struct
 import zlib
+import random
 
 from xlog import getLogger
 xlog = getLogger("heroku_front")
@@ -21,62 +22,41 @@ def deflate(data):
 
 class Front(object):
     def __init__(self):
-        self.validate = 1
-        self.connect_timeout = 10
-        self.dispatchs = {}
+        self.hosts = ["xxnet10.herokuapp.com"]
+        self.host = str(random.choice(self.hosts))
+
+        self.dispatcher = http_dispatcher.HttpsDispatcher(self.host)
         self.last_success_time = time.time()
         self.last_fail_time = 0
         self.continue_fail_num = 0
 
     def get_score(self, host):
-        if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+        now = time.time()
+        if now - self.last_fail_time < 5*60 and \
+                self.continue_fail_num > 10:
+            return None
 
-        dispatcher = self.dispatchs[host]
+        dispatcher = self.dispatcher
         worker = dispatcher.get_worker(nowait=True)
         if not worker:
             return None
 
-        return worker.get_score() * 10
+        return worker.get_score() * 5
 
-    def ok(self):
-        now = time.time()
-        if self.continue_fail_num == 0 and now - self.last_success_time < 30:
-            return True
+    def _request(self, method, host, path="/", header={}, data="", timeout=30):
+        timeout = 40
 
-        if now - self.last_fail_time < 30 and \
-            now - self.last_success_time > 30 and \
-                self.continue_fail_num > 10:
-            return False
-
-        for host in self.dispatchs:
-            dispatcher = self.dispatchs[host]
-            if len(dispatcher.workers):
-                return True
-            if len(dispatcher.https_manager.new_conn_pool.pool):
-                return True
-
-        return False
-
-    def __del__(self):
-        connect_control.keep_running = False
-
-    def _request(self, method, host, path="/", header={}, data="", timeout=120):
-        if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
-
-        dispatcher = self.dispatchs[host]
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
-                response = dispatcher.request(method, host, path, header, data, timeout=timeout)
+                response = self.dispatcher.request(method, host, path, header, data, timeout=timeout)
                 status = response.status
                 if status not in [200, 405]:
                     xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
                     continue
 
                 content = response.task.read_all()
-                xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
+                # xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
                 return content, status, response
             except Exception as e:
                 xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
@@ -84,10 +64,17 @@ class Front(object):
 
         return "", 500, {}
 
-    def stop(self):
-        connect_control.keep_running = False
+    def request(self, method, host, schema="http", path="/", headers={}, data="", timeout=40):
+        # change top domain to xx-net.net
+        # this domain bypass the cloudflare front for ipv4
+        p = host.find(".")
+        host_sub = host[:p]
+        host = host_sub + ".xx-net.net"
 
-    def request(self, method, host, schema="https", path="/", headers={}, data="", timeout=10):
+        schema = "http"
+        # force schema to http, avoid cert fail on heroku curl.
+        # and all x-server provide ipv4 access
+
         url = schema + "://" + host + path
         payloads = ['%s %s HTTP/1.1\r\n' % (method, url)]
         for k in headers:
@@ -100,13 +87,15 @@ class Front(object):
                          struct.pack('!I', len(data)), data))
         request_headers = {'Content-Length': len(data), 'Content-Type': 'application/octet-stream'}
 
+        heroku_host = str(random.choice(self.hosts))
         content, status, response = self._request(
-            "POST", "xxnet10.herokuapp.com", "/2/index.php",
+            "POST", heroku_host, "/2/",
             request_headers, request_body, timeout)
 
         #xlog.info('%s "PHP %s %s %s" %s %s', handler.address_string(), handler.command, url, handler.protocol_version, response.status, response.getheader('Content-Length', '-'))
         # xlog.debug("status:%d", status)
         if status == 200:
+            xlog.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
             self.last_success_time = time.time()
             self.continue_fail_num = 0
         else:
@@ -121,6 +110,9 @@ class Front(object):
         res.worker = response.worker
         res.task = response.task
         return res.body, res.status, res
+
+    def stop(self):
+        connect_control.keep_running = False
 
 
 front = Front()

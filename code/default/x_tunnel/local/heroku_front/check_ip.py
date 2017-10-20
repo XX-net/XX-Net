@@ -102,7 +102,7 @@ def load_proxy_config():
 load_proxy_config()
 
 
-def connect_ssl(ip, port=443, timeout=5, top_domain=None):
+def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
     sni = sni_generater.get()
     if not top_domain:
         top_domain = sni
@@ -121,7 +121,7 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
+    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, on_close=on_close)
     ssl_sock.set_connect_state()
     ssl_sock.set_tlsext_host_name(sni)
 
@@ -192,37 +192,44 @@ def get_ssl_cert_domain(ssl_sock):
 
 
 def check_xtunnel_http1(ssl_sock, host):
+    xlog.warn("ip:%s use http/1.1", ssl_sock.ip)
     start_time = time.time()
-    request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host
-    ssl_sock.send(request_data.encode())
 
-    response = simple_http_client.Response(ssl_sock)
-    response.begin(timeout=5)
+    try:
+        request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host
+        ssl_sock.send(request_data.encode())
 
-    server_type = response.getheader('Server', "")
-    xlog.debug("status:%d", response.status)
-    xlog.debug("Server type:%s", server_type)
-    if response.status == 403:
-        xlog.warn("check status:%d", response.status)
-        return False
+        response = simple_http_client.Response(ssl_sock)
+        response.begin(timeout=5)
 
-    if response.status != 200:
-        xlog.warn("ip:%s status:%d", ssl_sock.ip, response.status)
-        return False
+        server_type = response.getheader('Server', "")
+        xlog.debug("status:%d", response.status)
+        xlog.debug("Server type:%s", server_type)
+        if response.status == 403:
+            xlog.warn("check status:%d", response.status)
+            return ssl_sock
 
-    content = response.read(timeout=1)
-    if "X_Tunnel OK" not in content:
-        xlog.warn("app check content:%s", content)
-        return False
+        if response.status != 200:
+            xlog.warn("ip:%s status:%d", ssl_sock.ip, response.status)
+            return False
+
+        content = response.read(timeout=1)
+        if "X_Tunnel OK" not in content:
+            xlog.warn("app check content:%s", content)
+            return ssl_sock
+    except Exception as e:
+        xlog.debug("check ip %s http1 e:%r", ssl_sock.ip, e)
+        return ssl_sock
 
     time_cost = (time.time() - start_time) * 1000
     ssl_sock.request_time = time_cost
     xlog.info("check_xtunnel ok, time:%d", time_cost)
-
-    return True
+    ssl_sock.support_xtunnel = True
+    return ssl_sock
 
 
 def check_xtunnel_http2(ssl_sock, host):
+    xlog.warn("ip:%s use http/2", ssl_sock.ip)
     start_time = time.time()
     try:
         conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ssl_sock.ip, port=443)
@@ -256,7 +263,7 @@ def check_xtunnel_http2(ssl_sock, host):
     return ssl_sock
 
 
-def test_xtunnel_ip2(ip, top_domain=None):
+def test_xtunnel_ip2(ip, top_domain=None, wait_time=0):
     try:
         ssl_sock = connect_ssl(ip, timeout=max_timeout, top_domain=top_domain)
         get_ssl_cert_domain(ssl_sock)
@@ -267,23 +274,15 @@ def test_xtunnel_ip2(ip, top_domain=None):
         xlog.exception("test_xtunnel_ip %s e:%r",ip, e)
         return False
 
-    # host = sub + "." + ssl_sock.top_domain
-    host = "obscure-everglades-64338.herokuapp.com"
+    ssl_sock.support_xtunnel = False
+
+    host = "xxnet10.herokuapp.com"
     xlog.info("host:%s", host)
 
-    ssl_sock.support_xtunnel = False
-    if not ssl_sock.h2:
-        xlog.warn("ip:%s not support http/2", ip)
+    time.sleep(wait_time)
 
-        try:
-            if not check_xtunnel_http1(ssl_sock, host):
-                return ssl_sock
-            else:
-                ssl_sock.support_xtunnel = True
-                return ssl_sock
-        except Exception as e:
-            xlog.exception("check fail:%r", e)
-            return False
+    if not ssl_sock.h2:
+        return check_xtunnel_http1(ssl_sock, host)
     else:
         return check_xtunnel_http2(ssl_sock, host)
 
@@ -295,18 +294,25 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        xlog.info("test ip:%s", ip)
-        if len(sys.argv) > 2:
-            top_domain = sys.argv[2]
-        else:
-            top_domain = None
-
-        res = test_xtunnel_ip2(ip, top_domain=top_domain)
-        if not res:
-            print("connect fail")
-        elif res.support_xtunnel:
-            print("success, domain:%s handshake:%d" % (res.domain, res.handshake_time))
-        else:
-            print("not support")
     else:
-        xlog.info("check_ip <ip>")
+        ip = "50.17.207.130"
+        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+    xlog.info("test ip:%s", ip)
+
+    if len(sys.argv) > 2:
+        top_domain = sys.argv[2]
+    else:
+        top_domain = None
+
+    if len(sys.argv) > 3:
+        wait_time = int(sys.argv[3])
+    else:
+        wait_time = 0
+
+    res = test_xtunnel_ip2(ip, top_domain=top_domain, wait_time=wait_time)
+    if not res:
+        print("connect fail")
+    elif res.support_xtunnel:
+        print("success, domain:%s handshake:%d" % (res.domain, res.handshake_time))
+    else:
+        print("not support")

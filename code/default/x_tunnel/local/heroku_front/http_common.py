@@ -174,12 +174,12 @@ class HTTP_worker(object):
         else:
             rtt = self.rtt + len(self.streams) * 3000
 
-        if inactive_time > 3:
+        if inactive_time > 10:
             score = rtt
         elif inactive_time < 0.001:
             score = rtt + 50000
         else:
             # inactive_time < 2
-            score = rtt + (3/inactive_time)*1000
+            score = rtt + (10/inactive_time)*1000
 
-        return score * 5
+        return score

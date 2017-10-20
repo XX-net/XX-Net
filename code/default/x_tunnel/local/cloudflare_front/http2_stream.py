@@ -337,6 +337,10 @@ class Stream(object):
             # Received too many headers blocks.
             raise ProtocolError("Too many header blocks.")
 
+        status = int(self.response_headers[b':status'][0])
+        if status != 200:
+            xlog.warn("status:%d", status)
+
         return
 
     @property

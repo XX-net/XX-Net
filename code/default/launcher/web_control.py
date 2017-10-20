@@ -21,7 +21,8 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 import yaml
 import json
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import module_init
 import config
 import autorun

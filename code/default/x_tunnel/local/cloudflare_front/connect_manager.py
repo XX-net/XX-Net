@@ -274,7 +274,7 @@ class Https_connection_manager(object):
 
         time_begin = time.time()
         try:
-            ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout)
+            ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout, on_close=ip_manager.ssl_closed)
 
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s top:%s",
                        ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)

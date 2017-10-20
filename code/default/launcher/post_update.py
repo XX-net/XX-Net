@@ -8,7 +8,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import config
 
 def older_or_equal(version, reference_version):

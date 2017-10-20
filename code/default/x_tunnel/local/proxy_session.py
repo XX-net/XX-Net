@@ -10,6 +10,7 @@ import utils
 import base_container
 import encrypt
 import global_var as g
+from heroku_front.front import front as heroku_front
 
 
 def encrypt_data(data):
@@ -197,7 +198,13 @@ class ProxySession():
             return False
 
     def create_conn(self, sock, host, port):
-        if time.time() - self.last_roundtrip_time > 5 * 60 - 5:
+
+        if not self.running:
+            xlog.debug("session not running, try to connect")
+            if not self.start():
+                return None
+
+        elif time.time() - self.last_roundtrip_time > 5 * 60 - 5:
             if not self.reset():
                 return None
 
@@ -464,19 +471,23 @@ def calculate_quota_left(quota_list):
     time_now = int(time.time())
     quota_left = 0
 
-    if "current" in quota_list:
-        c_q_end_time = quota_list["current"]["end_time"]
-        if c_q_end_time > time_now:
-            quota_left += quota_list["current"]["quota"]
+    try:
+        if "current" in quota_list:
+            c_q_end_time = quota_list["current"]["end_time"]
+            if c_q_end_time > time_now:
+                quota_left += quota_list["current"]["quota"]
 
-    if "backup" in quota_list:
-        for qt in quota_list["backup"]:
-            b_q_quota = qt["quota"]
-            b_q_end_time = qt["end_time"]
-            if b_q_end_time < time_now:
-                continue
+        if "backup" in quota_list:
+            for qt in quota_list["backup"]:
+                b_q_quota = qt["quota"]
+                b_q_end_time = qt["end_time"]
+                if b_q_end_time < time_now:
+                    continue
 
-            quota_left += b_q_quota
+                quota_left += b_q_quota
+
+    except Exception as e:
+        xlog.exception("calculate_quota_left %s %r", quota_list, e)
 
     return quota_left
 
@@ -531,32 +542,39 @@ def request_balance(account, password, is_register=False, update_server=True):
 
     req_info = {"account": account, "password": password}
 
-    res, info = call_api(login_path, req_info)
-    if not res:
-        return False, info
+    try:
+        res, info = call_api(login_path, req_info)
+        if not res:
+            return False, info
 
-    g.quota_list = info["quota_list"]
-    g.quota = calculate_quota_left(g.quota_list)
-    if g.quota <= 0:
-        xlog.warn("no quota")
+        g.quota_list = info["quota_list"]
+        g.quota = calculate_quota_left(g.quota_list)
+        if g.quota <= 0:
+            xlog.warn("no quota")
 
-    if g.config.server_host:
-        g.server_host = str(g.config.server_host)
-    elif update_server:
-        g.server_host = str(info["host"])
-        g.server_port = info["port"]
-        xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
+        if g.config.server_host:
+            g.server_host = str(g.config.server_host)
+        elif update_server:
+            g.server_host = str(info["host"])
+            g.server_port = info["port"]
+            heroku_front.hosts = info["heroku"]
+            xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
 
-    g.balance = info["balance"]
-    xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
-              g.balance, g.quota)
-    return True, "success"
+        g.balance = info["balance"]
+        xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
+                  g.balance, g.quota)
+        return True, "success"
+    except Exception as e:
+        xlog.exception("request_balance e:%r", e)
+        return False, e
 
 
 login_lock = threading.Lock()
+last_login_center_time = 0
 
 
 def create_conn(sock, host, port):
+    global last_login_center_time
 
     with login_lock:
         if not g.session.running:
@@ -564,19 +582,15 @@ def create_conn(sock, host, port):
                 xlog.debug("x-tunnel no account")
                 return None
 
-            g.login_process = True
-            try:
+            if time.time() - last_login_center_time > 60:
+                g.login_process = True
                 xlog.debug("session not running, try login..")
                 res, reason = request_balance(g.config.login_account, g.config.login_password)
+                g.login_process = False
                 if not res:
                     xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
                     return None
 
-                if not g.session.running:
-                    xlog.warn("session not running, try to connect")
-                    if not g.session.start():
-                        return None
-            finally:
-                g.login_process = False
+                last_login_center_time = time.time()
 
     return g.session.create_conn(sock, host, port)

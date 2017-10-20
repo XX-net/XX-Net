@@ -167,8 +167,8 @@ class Connect_pool():
 
 class Https_connection_manager(object):
     def __init__(self, host, ssl_timeout_cb):
-        self.thread_num_lock = threading.Lock()
         self.host = host
+        self.thread_num_lock = threading.Lock()
 
         self.class_name = "Https_connection_manager"
         self.connect_timeout = 4
@@ -273,7 +273,7 @@ class Https_connection_manager(object):
 
         time_begin = time.time()
         try:
-            ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout)
+            ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout, on_close=ip_manager.ssl_closed)
 
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s",
                        ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni)
@@ -308,7 +308,7 @@ class Https_connection_manager(object):
             ret = self.new_conn_pool.get(True, 1)
             if ret:
                 handshake_time, ssl_sock = ret
-                if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout:
+                if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout + 1:
                     # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
                     ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
                     ssl_sock.close()

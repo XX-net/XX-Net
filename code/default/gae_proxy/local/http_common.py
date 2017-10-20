@@ -123,7 +123,7 @@ class Task(object):
     def response_fail(self, reason=""):
         if self.responsed:
             xlog.error("http_common responsed_fail but responed.%s", self.url)
-            self.put_data("")
+            self.finish()
             return
 
         self.responsed = True
@@ -131,6 +131,7 @@ class Task(object):
         xlog.debug("%s %s", self.url, err_text)
         res = BaseResponse(body=err_text)
         self.queue.put(res)
+        self.finish()
 
     def finish(self):
         self.put_data("")

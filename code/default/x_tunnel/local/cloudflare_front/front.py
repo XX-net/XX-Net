@@ -23,6 +23,11 @@ class Front(object):
         self.processed_reqs = 0
 
     def get_score(self, host):
+        now = time.time()
+        if now - self.last_fail_time < 5*60 and \
+                self.continue_fail_num > 10:
+            return None
+
         if host not in self.dispatchs:
             self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
 
@@ -32,29 +37,6 @@ class Front(object):
             return None
 
         return worker.get_score()
-
-    def ok(self):
-        if self.processed_reqs > 10:
-            self.processed_reqs = 0
-            return False
-
-        now = time.time()
-        if self.continue_fail_num == 0 and now - self.last_success_time < 30:
-            return True
-
-        if now - self.last_fail_time < 30 and \
-            now - self.last_success_time > 30 and \
-                self.continue_fail_num > 10:
-            return False
-
-        for host in self.dispatchs:
-            dispatcher = self.dispatchs[host]
-            if len(dispatcher.workers):
-                return True
-            if len(dispatcher.https_manager.new_conn_pool.pool):
-                return True
-
-        return False
 
     @staticmethod
     def update_front_domains():
@@ -76,19 +58,16 @@ class Front(object):
                 if os.path.exists(front_domains_fn):
                     with open(front_domains_fn, "r") as fd:
                         old_content = fd.read()
-                        if content != old_content:
-                            with open(front_domains_fn, "w") as fd:
-                                fd.write(content)
-                            check_ip.update_front_domains()
+                    if content != old_content:
+                        with open(front_domains_fn, "w") as fdw:
+                            fdw.write(content)
+                        check_ip.update_front_domains()
 
                 next_update_time = time.time() + (4 * 3600)
                 xlog.info("updated cloudflare front domains from github.")
             except Exception as e:
                 next_update_time = time.time() + (1800)
                 xlog.debug("updated cloudflare front domains from github fail:%r", e)
-
-    def __del__(self):
-        connect_control.keep_running = False
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         self.processed_reqs += 1
@@ -101,12 +80,14 @@ class Front(object):
             try:
                 response = dispatcher.request(method, host, path, headers, data, timeout=timeout)
                 status = response.status
-                if status not in [200, 405]:
+                content = response.task.read_all()
+                if status not in [200]:
                     xlog.warn("front request %s %s%s fail, status:%d trace:%s",
                               method, host, path, status, response.task.get_trace())
+                    self.last_fail_time = time.time()
+                    self.continue_fail_num += 1
                     continue
 
-                content = response.task.read_all()
                 xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
                 self.last_success_time = time.time()
                 self.continue_fail_num = 0

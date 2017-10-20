@@ -46,7 +46,9 @@ def create_data_path():
 create_data_path()
 
 
-from instances import xlog
+from xlog import getLogger
+log_file = os.path.join(data_launcher_path, "launcher.log")
+xlog = getLogger("launcher", file_name=log_file)
 
 
 def uncaughtExceptionHandler(type_, value, traceback):
@@ -56,7 +58,7 @@ def uncaughtExceptionHandler(type_, value, traceback):
         time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
         fd.write("%s type:%s value=%s traceback:%s" % (time_str, type_, value, traceback))
     xlog.error("uncaught Exception, type=%s value=%s traceback:%s", type_, value, traceback)
-    # sys.exit(1)#出现异常时程序是否退出
+    # sys.exit(1)
 
 
 sys.excepthook = uncaughtExceptionHandler

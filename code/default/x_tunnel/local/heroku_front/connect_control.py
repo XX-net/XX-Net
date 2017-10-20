@@ -39,6 +39,7 @@ low_prior_connecting_num = 0
 last_connect_time = 0
 https_max_connect_thread = config.getint("connect_manager", "https_max_connect_thread")
 
+
 def start_connect_register(high_prior=False):
     global high_prior_connecting_num, low_prior_connecting_num, last_connect_time
     if not connect_interval:

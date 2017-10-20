@@ -36,14 +36,21 @@ xlog.set_buffer(2000)
 import connect_control
 
 
-def main():
-    content, status, response = front.request("GET", "http://github.com")
-    print(response)
+def get():
+    start_time = time.time()
+    content, status, response = front.request("GET", "v11.xx-net.com")
+    time_cost = time.time() - start_time
+    xlog.info("GET cost:%f", time_cost)
+    xlog.info("status:%d content:%s", status, content)
 
+
+def main():
     while connect_control.keep_running:
-        time.sleep(1)
+        get()
+        time.sleep(0)
 
     xlog.info("Exiting heroku_front module...")
+    front.stop()
 
 
 if __name__ == '__main__':

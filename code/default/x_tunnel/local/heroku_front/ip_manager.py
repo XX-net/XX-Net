@@ -332,15 +332,15 @@ class IpManager():
                     continue
 
                 if time_now - self.ip_dict[ip]['success_time'] > 300: # 5 min
-                    fail_connect_interval = 1800 # 30 min
+                    fail_connect_interval = 3 * 60
                 else:
-                    fail_connect_interval = 120 # 2 min
+                    fail_connect_interval = 10
                 fail_time = self.ip_dict[ip]["fail_time"]
                 if time_now - fail_time < fail_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
 
-                down_fail_connect_interval = 600
+                down_fail_connect_interval = 60
                 down_fail_time = self.ip_dict[ip]["down_fail_time"]
                 if time_now - down_fail_time < down_fail_connect_interval:
                     self.gws_ip_pointer += 1
@@ -469,7 +469,8 @@ class IpManager():
                 xlog.info("remove ip:%s left amount:%d gws_num:%d", ip, len(self.ip_dict), len(self.gws_ip_list))
                 return
 
-            self.ip_dict[ip]['links'] -= 1
+            if self.ip_dict[ip]['links'] > 0:
+                self.ip_dict[ip]['links'] -= 1
 
             # ignore if system network is disconnected.
             if not check_local_network.is_ok():
@@ -491,7 +492,7 @@ class IpManager():
             self.append_ip_history(ip, "fail")
             self.ip_dict[ip]["fail_time"] = time_now
 
-            self.to_check_ip_queue.put((ip, time_now + 10))
+            # self.to_check_ip_queue.put((ip, time_now + 10))
             xlog.debug("report_connect_fail:%s", ip)
 
         except Exception as e:

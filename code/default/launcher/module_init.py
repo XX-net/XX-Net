@@ -1,10 +1,11 @@
 import subprocess
 import threading
-from instances import xlog
 import os
 import sys
 import config
 
+from xlog import getLogger
+xlog = getLogger("launcher")
 import web_control
 import time
 proc_handler = {}

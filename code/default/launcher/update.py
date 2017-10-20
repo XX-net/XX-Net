@@ -9,12 +9,12 @@ import threading
 import zipfile
 import sys
 import platform
+import uuid
 from distutils.version import LooseVersion
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import config
-import uuid
-
 import update_from_github
 
 try:
