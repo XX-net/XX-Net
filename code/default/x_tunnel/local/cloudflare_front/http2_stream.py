@@ -112,6 +112,7 @@ class Stream(object):
         self.response_body_len = 0
 
         threading.Thread(target=self.timeout_response).start()
+        self.start()
 
     def start(self):
         """
@@ -128,6 +129,7 @@ class Stream(object):
         self.add_header(":authority", self.host)
         self.add_header(":path", self.task.path)
 
+        self.add_header("Host", self.host)
         default_headers = (':method', ':scheme', ':authority', ':path')
         for name, value in self.task.headers.items():
             is_default = to_native_string(name) in default_headers
@@ -338,8 +340,9 @@ class Stream(object):
             raise ProtocolError("Too many header blocks.")
 
         status = int(self.response_headers[b':status'][0])
-        if status != 200:
-            xlog.warn("status:%d", status)
+        if status in [400, 403]:
+            # xlog.warn("status:%d host:%s", status, self.host)
+            self.connection.close("get 40x")
 
         return
 

@@ -315,7 +315,7 @@ class Https_connection_manager(object):
                     ssl_sock.close()
                     continue
                 else:
-                    xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                    # xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
                     return ssl_sock
             else:
                 if time.time() - start_time > max_timeout:

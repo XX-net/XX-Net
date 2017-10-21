@@ -16,10 +16,13 @@ except:
     xlog.info("launcher not running")
     proc_handler = None
 
+name = "gae_front"
 gae_proxy = None
 last_success_time = time.time()
 last_fail_time = 0
 continue_fail_num = 0
+success_num = 0
+fail_num = 0
 
 
 def init():
@@ -34,7 +37,7 @@ def init():
     gae_proxy = proc_handler["gae_proxy"]["imp"].local
 
 
-def get_score(host):
+def get_score(host=""):
     if not gae_proxy:
         return None
 
@@ -45,8 +48,15 @@ def get_score(host):
     return worker.get_score()
 
 
+def worker_num():
+    if not gae_proxy:
+        return 0
+
+    return len(gae_proxy.http_dispatcher.http_dispatch.workers)
+
+
 def request(method, host, schema="https", path="/", headers={}, data="", timeout=60):
-    global last_success_time, last_fail_time, continue_fail_num, gae_proxy
+    global last_success_time, last_fail_time, continue_fail_num, gae_proxy, success_num, fail_num
     if not gae_proxy:
         return "", 602, {}
 
@@ -60,12 +70,14 @@ def request(method, host, schema="https", path="/", headers={}, data="", timeout
     try:
         response = gae_proxy.gae_handler.request_gae_proxy(method, url, headers, data, timeout=timeout)
     except Exception as e:
+        fail_num += 1
         continue_fail_num += 1
         last_fail_time = time.time()
         return "", 602, {}
 
     last_success_time = time.time()
     continue_fail_num = 0
+    success_num += 1
     return response.task.read_all(), response.app_status, response
 
 

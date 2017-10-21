@@ -21,6 +21,8 @@ def deflate(data):
 
 
 class Front(object):
+    name = "heroku_front"
+
     def __init__(self):
         self.hosts = ["xxnet10.herokuapp.com"]
         self.host = str(random.choice(self.hosts))
@@ -29,8 +31,10 @@ class Front(object):
         self.last_success_time = time.time()
         self.last_fail_time = 0
         self.continue_fail_num = 0
+        self.success_num = 0
+        self.fail_num = 0
 
-    def get_score(self, host):
+    def get_score(self, host=None):
         now = time.time()
         if now - self.last_fail_time < 5*60 and \
                 self.continue_fail_num > 10:
@@ -42,6 +46,9 @@ class Front(object):
             return None
 
         return worker.get_score() * 5
+
+    def worker_num(self):
+        return len(self.dispatcher.workers)
 
     def _request(self, method, host, path="/", header={}, data="", timeout=30):
         timeout = 40
@@ -89,8 +96,8 @@ class Front(object):
 
         heroku_host = str(random.choice(self.hosts))
         content, status, response = self._request(
-            "POST", heroku_host, "/2/",
-            request_headers, request_body, timeout)
+                                            "POST", heroku_host, "/2/",
+                                            request_headers, request_body, timeout)
 
         #xlog.info('%s "PHP %s %s %s" %s %s', handler.address_string(), handler.command, url, handler.protocol_version, response.status, response.getheader('Content-Length', '-'))
         # xlog.debug("status:%d", status)
@@ -98,9 +105,11 @@ class Front(object):
             xlog.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
             self.last_success_time = time.time()
             self.continue_fail_num = 0
+            self.success_num += 1
         else:
             self.last_fail_time = time.time()
             self.continue_fail_num += 1
+            self.fail_num += 1
 
         try:
             res = simple_http_client.TxtResponse(content)

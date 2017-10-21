@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import threading
 
 if __name__ == '__main__':
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -38,13 +39,17 @@ import connect_control
 
 def get():
     start_time = time.time()
-    content, status, response = front.request("GET", "v11.xx-net.com")
+    content, status, response = front.request("GET", "scan1.xx-net.com", path="/wait?time=5")
     time_cost = time.time() - start_time
     xlog.info("GET cost:%f", time_cost)
     xlog.info("status:%d content:%s", status, content)
 
 
-def main():
+def pall():
+    for _ in range(50):
+        threading.Thread(target=get).start()
+
+def loop():
     while connect_control.keep_running:
         get()
         time.sleep(0)
@@ -57,7 +62,7 @@ if __name__ == '__main__':
     import traceback
 
     try:
-        main()
+        pall()
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:

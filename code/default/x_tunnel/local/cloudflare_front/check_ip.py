@@ -52,7 +52,7 @@ else:
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
-
+import ip_utils
 import socks
 import check_local_network
 from config import config
@@ -332,11 +332,12 @@ def check_xtunnel_http2(ssl_sock, host):
 
     xlog.debug("ip:%s http/2", ssl_sock.ip)
 
+    content = response.read()
     if response.status != 200:
         xlog.warn("app check ip:%s status:%d", ssl_sock.ip, response.status)
+        xlog.debug("content:%s", content)
         return ssl_sock
 
-    content = response.read()
     if "X_Tunnel OK" not in content:
         xlog.warn("app check content:%s", content)
         return ssl_sock
@@ -385,14 +386,27 @@ if __name__ == "__main__":
     #    connect use domain, print altNames
 
     if len(sys.argv) > 1:
+        sub = "scan1"
         ip = sys.argv[1]
-        xlog.info("test ip:%s", ip)
-        if len(sys.argv) > 2:
-            top_domain = sys.argv[2]
+        if not ip_utils.check_ip_valid(ip):
+            ip = "104.17.47.100"
+            top_domain = sys.argv[1]
         else:
-            top_domain = None
+            if len(sys.argv) > 2:
+                top_domain = sys.argv[2]
+            else:
+                top_domain = None
 
-        res = test_xtunnel_ip2(ip, top_domain=top_domain)
+        if top_domain:
+            tdl  = top_domain.split(".")
+            if len(tdl) == 3:
+                sub = tdl[0]
+                top_domain = ".".join(tdl[1:])
+                xlog.info("sub:%s top_domain:%s", sub, top_domain)
+
+        xlog.info("test ip:%s", ip)
+
+        res = test_xtunnel_ip2(ip, sub=sub, top_domain=top_domain)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:

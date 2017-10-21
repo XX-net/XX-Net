@@ -13,6 +13,8 @@ import check_ip
 
 
 class Front(object):
+    name = "cloudflare_front"
+
     def __init__(self):
         self.dispatchs = {}
         threading.Thread(target=self.update_front_domains).start()
@@ -21,12 +23,18 @@ class Front(object):
         self.last_fail_time = 0
         self.continue_fail_num = 0
         self.processed_reqs = 0
+        self.success_num = 0
+        self.fail_num = 0
+        self.last_host = "center.xx-net.net"
 
-    def get_score(self, host):
+    def get_score(self, host=None):
         now = time.time()
         if now - self.last_fail_time < 5*60 and \
                 self.continue_fail_num > 10:
             return None
+
+        if host is None:
+            host = self.last_host
 
         if host not in self.dispatchs:
             self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
@@ -37,6 +45,14 @@ class Front(object):
             return None
 
         return worker.get_score()
+
+    def worker_num(self):
+        host = self.last_host
+        if host not in self.dispatchs:
+            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+
+        dispatcher = self.dispatchs[host]
+        return len(dispatcher.workers)
 
     @staticmethod
     def update_front_domains():
@@ -73,6 +89,7 @@ class Front(object):
         self.processed_reqs += 1
         if host not in self.dispatchs:
             self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+        self.last_host = host
 
         dispatcher = self.dispatchs[host]
         start_time = time.time()
@@ -86,18 +103,21 @@ class Front(object):
                               method, host, path, status, response.task.get_trace())
                     self.last_fail_time = time.time()
                     self.continue_fail_num += 1
+                    self.fail_num += 1
                     continue
 
                 xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
                 self.last_success_time = time.time()
                 self.continue_fail_num = 0
+                self.success_num += 1
                 return content, status, response
             except Exception as e:
+                self.last_fail_time = time.time()
+                self.continue_fail_num += 1
+                self.fail_num += 1
                 xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
                 continue
 
-        self.last_fail_time = time.time()
-        self.continue_fail_num += 1
         return "", 500, {}
 
     def stop(self):
