@@ -138,7 +138,7 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2:
+            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2 or best_score > 1000:
                 self.triger_create_worker_cv.notify()
 
             if best_worker or nowait:
