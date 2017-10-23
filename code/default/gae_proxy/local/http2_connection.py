@@ -90,6 +90,7 @@ class HTTP2_worker(HTTP_worker):
         # decrease when recv ping ack
         # if this in not 0, don't accept request.
         self.ping_on_way = 0
+        self.accept_task = False
 
         # request_lock
         self.request_lock = threading.Lock()
@@ -390,6 +391,8 @@ class HTTP2_worker(HTTP_worker):
 
                 # this may trigger send DataFrame blocked by remote window
                 self._update_settings(frame)
+            else:
+                self.accept_task = True
 
         elif frame.type == GoAwayFrame.type:
             # If we get GoAway with error code zero, we are doing a graceful

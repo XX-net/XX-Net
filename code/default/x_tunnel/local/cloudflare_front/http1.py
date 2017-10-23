@@ -17,6 +17,8 @@ class HTTP1_worker(HTTP_worker):
     def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
         super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
 
+        self.last_active_time = self.ssl_sock.create_time
+        self.last_request_time = self.ssl_sock.create_time
         self.task = None
         self.request_onway = False
         self.transfered_size = 0
@@ -45,6 +47,9 @@ class HTTP1_worker(HTTP_worker):
         out_list.append(" transfered:%d" % self.transfered_size)
         out_list.append(" sni:%s" % self.ssl_sock.sni)
         return ",".join(out_list)
+
+    def get_rtt_rate(self):
+        return self.rtt + 100
 
     def request(self, task):
         self.accept_task = False

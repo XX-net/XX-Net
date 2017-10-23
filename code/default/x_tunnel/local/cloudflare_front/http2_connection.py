@@ -94,6 +94,7 @@ class HTTP2_worker(HTTP_worker):
         # decrease when recv ping ack
         # if this in not 0, don't accept request.
         self.ping_on_way = 0
+        self.accept_task = False
 
         # request_lock
         self.request_lock = threading.Lock()
@@ -165,8 +166,6 @@ class HTTP2_worker(HTTP_worker):
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
         self.streams[stream_id] = stream
-        # xlog.debug("%s create stream %d", self.ssl_sock.ip, stream_id)
-        # stream.start()
 
     def send_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -208,6 +207,9 @@ class HTTP2_worker(HTTP_worker):
             except Exception as e:
                 xlog.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
+
+    def get_rtt_rate(self):
+        return self.rtt + len(self.streams) * 3000
 
     def close(self, reason=""):
         self.keep_running = False
@@ -361,8 +363,8 @@ class HTTP2_worker(HTTP_worker):
                 self.last_active_time = time.time()
             except KeyError as e:
                 if frame.type != WindowUpdateFrame.type:
-                    xlog.exception("%s Unexpected stream identifier %d frame.type:%d, e:%r",
-                                   self.ip, frame.type, frame.stream_id, e)
+                    xlog.exception("%s Unexpected stream identifier %d, frame.type:%s e:%r",
+                                   self.ip, frame.stream_id, frame, e)
         else:
             self.receive_frame(frame)
 
@@ -399,6 +401,8 @@ class HTTP2_worker(HTTP_worker):
 
                 # this may trigger send DataFrame blocked by remote window
                 self._update_settings(frame)
+            else:
+                self.accept_task = True
 
         elif frame.type == GoAwayFrame.type:
             # If we get GoAway with error code zero, we are doing a graceful
@@ -461,6 +465,5 @@ class HTTP2_worker(HTTP_worker):
         out_list = []
         out_list.append(" processed:%d" % self.processed_tasks)
         out_list.append(" h2.stream_num:%d" % len(self.streams))
-        out_list.append(" host:%s" % self.ssl_sock.top_domain)
         out_list.append(" sni:%s" % self.ssl_sock.sni)
         return ",".join(out_list)

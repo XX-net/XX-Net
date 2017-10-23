@@ -206,7 +206,7 @@ class Https_connection_manager(object):
 
             for ssl_sock in to_keep_live_list:
                 inactive_time = time.time() - ssl_sock.last_use_time
-                if inactive_time > self.ssl_first_use_timeout or not self.ssl_timeout_cb:
+                if inactive_time > self.ssl_first_use_timeout + 3 or not self.ssl_timeout_cb:
                     ip_manager.report_connect_closed(ssl_sock.ip, "alive_timeout")
                     ssl_sock.close()
                 else:
@@ -277,7 +277,7 @@ class Https_connection_manager(object):
 
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s",
                        ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni)
-            ssl_sock.last_use_time = time.time()
+            ssl_sock.last_use_time = ssl_sock.create_time
             ssl_sock.received_size = 0
             ssl_sock.load = 0
             ssl_sock.host = self.host
@@ -308,7 +308,7 @@ class Https_connection_manager(object):
             ret = self.new_conn_pool.get(True, 1)
             if ret:
                 handshake_time, ssl_sock = ret
-                if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout + 1:
+                if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout + 3:
                     # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
                     ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
                     ssl_sock.close()

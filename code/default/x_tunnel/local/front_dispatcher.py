@@ -39,11 +39,6 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
     if not front:
         return "", 602, {}
 
-    #headers["Content-Length"] = str(len(data))
-    #if "Content-Type" not in headers:
-    #    headers["Content-Type"] = "application/x-binary"
-    #headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36"
-    #headers["Accept"] = "*/*"
     return front.request(method, host=host, path=path, headers=headers, data=data, timeout=timeout)
 
 

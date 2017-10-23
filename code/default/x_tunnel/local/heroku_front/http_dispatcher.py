@@ -149,7 +149,7 @@ class HttpsDispatcher(object):
         # close slowest worker,
         # give change for better worker
         while True:
-            slowest_rtt = 9999
+            slowest_score = 9999
             slowest_worker = None
             idle_num = 0
             for worker in self.workers:
@@ -159,15 +159,15 @@ class HttpsDispatcher(object):
                 if worker.version == "2" and len(worker.streams) > 0:
                     continue
 
-                idle_num += 1
+                score = worker.get_score()
+                if score < 1000:
+                    idle_num += 1
 
-                rtt = worker.get_score()
-
-                if rtt > slowest_rtt:
-                    slowest_rtt = rtt
+                if score > slowest_score:
+                    slowest_score = score
                     slowest_worker = worker
 
-            if idle_num < 30 or idle_num < int(len(self.workers) * 0.3):
+            if idle_num < 10 or idle_num < int(len(self.workers) * 0.3) or len(self.workers) < 50:
                 return
 
             if slowest_worker is None:

@@ -46,8 +46,9 @@ def get():
 
 
 def pall():
-    for _ in range(50):
-        threading.Thread(target=get).start()
+    for _ in range(10):
+        threading.Thread(target=loop).start()
+
 
 def loop():
     while connect_control.keep_running:

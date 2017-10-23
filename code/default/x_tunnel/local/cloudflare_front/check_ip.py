@@ -52,7 +52,7 @@ else:
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
-import ip_utils
+
 import socks
 import check_local_network
 from config import config
@@ -81,14 +81,6 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
     openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
 
 max_timeout = 5
-
-PKP = set((
-    b'''-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAjgZgTrJaYRwWQKOqIofMN+83gP8
-eR06JSxrQSEYgur5PkrkM8wSzypD/A7yZADA4SVQgiTNtkk4DyVHkUikrQ==
------END PUBLIC KEY-----
-''', "")
-)
 
 
 def load_front_domains(file_path):
@@ -238,18 +230,6 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
         #  and issuer_commonname not in ['DigiCert ECC Extended Validation Server CA']
         raise socket.error(' certficate is issued by %r, not COMODO' % ( issuer_commonname))
 
-    certs = ssl_sock.get_peer_cert_chain()
-    if not certs:
-        raise socket.error('certficate is none')
-
-    if hasattr(OpenSSL.crypto, "dump_publickey"):
-        # old OpenSSL not support this function.
-        pubkey = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey())
-        if pubkey not in PKP:
-            # print("unknown pubkey:%s" % pubkey)
-            PKP.add(pubkey)
-            raise socket.error('The intermediate CA is mismatching:%s' % pubkey)
-
     connect_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_begin) * 1000)
     if __name__ == "__main__":
@@ -332,12 +312,11 @@ def check_xtunnel_http2(ssl_sock, host):
 
     xlog.debug("ip:%s http/2", ssl_sock.ip)
 
-    content = response.read()
     if response.status != 200:
         xlog.warn("app check ip:%s status:%d", ssl_sock.ip, response.status)
-        xlog.debug("content:%s", content)
         return ssl_sock
 
+    content = response.read()
     if "X_Tunnel OK" not in content:
         xlog.warn("app check content:%s", content)
         return ssl_sock
@@ -386,27 +365,14 @@ if __name__ == "__main__":
     #    connect use domain, print altNames
 
     if len(sys.argv) > 1:
-        sub = "scan1"
         ip = sys.argv[1]
-        if not ip_utils.check_ip_valid(ip):
-            ip = "104.17.47.100"
-            top_domain = sys.argv[1]
-        else:
-            if len(sys.argv) > 2:
-                top_domain = sys.argv[2]
-            else:
-                top_domain = None
-
-        if top_domain:
-            tdl  = top_domain.split(".")
-            if len(tdl) == 3:
-                sub = tdl[0]
-                top_domain = ".".join(tdl[1:])
-                xlog.info("sub:%s top_domain:%s", sub, top_domain)
-
         xlog.info("test ip:%s", ip)
+        if len(sys.argv) > 2:
+            top_domain = sys.argv[2]
+        else:
+            top_domain = None
 
-        res = test_xtunnel_ip2(ip, sub=sub, top_domain=top_domain)
+        res = test_xtunnel_ip2(ip, top_domain=top_domain)
         if not res:
             print("connect fail")
         elif res.support_xtunnel:

@@ -332,15 +332,15 @@ class IpManager():
                     continue
 
                 if time_now - self.ip_dict[ip]['success_time'] > 300: # 5 min
-                    fail_connect_interval = 5 * 60
+                    fail_connect_interval = 1800 # 30 min
                 else:
-                    fail_connect_interval = 60
+                    fail_connect_interval = 120 # 2 min
                 fail_time = self.ip_dict[ip]["fail_time"]
                 if time_now - fail_time < fail_connect_interval:
                     self.gws_ip_pointer += 1
                     continue
 
-                down_fail_connect_interval = 60 * 3
+                down_fail_connect_interval = 600
                 down_fail_time = self.ip_dict[ip]["down_fail_time"]
                 if time_now - down_fail_time < down_fail_connect_interval:
                     self.gws_ip_pointer += 1

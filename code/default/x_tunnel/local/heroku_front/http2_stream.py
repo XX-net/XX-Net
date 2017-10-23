@@ -298,6 +298,9 @@ class Stream(object):
 
         self.task.responsed = True
         status = int(self.response_headers[b':status'][0])
+        if status in [400, 403]:
+            self.connection.rtt = 2000
+
         strip_headers(self.response_headers)
         response = BaseResponse(status=status, headers=self.response_headers)
         response.ssl_sock = self.connection.ssl_sock

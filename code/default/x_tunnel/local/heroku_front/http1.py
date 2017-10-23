@@ -12,7 +12,6 @@ import simple_http_client
 
 class HTTP1_worker(HTTP_worker):
     version = "1.1"
-    idle_time = 360
 
     def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
         super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
@@ -25,7 +24,6 @@ class HTTP1_worker(HTTP_worker):
         self.record_active("init")
 
         self.task_queue = Queue.Queue()
-        # self.task_queue.put("ping")
 
         threading.Thread(target=self.work_loop).start()
         threading.Thread(target=self.keep_alive_thread).start()
@@ -62,13 +60,12 @@ class HTTP1_worker(HTTP_worker):
         if self.processed_tasks == 0:
             self.task_queue.put("ping")
 
-        ping_interval = 300
+        ping_interval = 50
         while connect_control.keep_running and self.keep_running:
             time_to_ping = max(ping_interval - (time.time() - self.last_active_time), 0.2)
             time.sleep(time_to_ping)
 
-            time_now = time.time()
-            if not self.request_onway and time_now - self.last_active_time > self.idle_time:
+            if not self.request_onway and time.time() - self.last_active_time > ping_interval:
                 self.close("idle timeout")
                 return
 
@@ -182,7 +179,6 @@ class HTTP1_worker(HTTP_worker):
         self.accept_task = True
         self.idle_cb()
         self.processed_tasks += 1
-        self.last_active_time = time.time()
         self.record_active("Res")
 
     def head_request(self):
@@ -210,8 +206,11 @@ class HTTP1_worker(HTTP_worker):
                 return False
 
             content = response.readall(timeout=5)
+
+            time_now = time.time()
             self.record_active("head end")
-            self.rtt = (time.time() - start_time) * 1000
+            self.rtt = (time_now - start_time) * 1000
+            self.last_active_time = start_time
             ip_manager.update_ip(self.ip, self.rtt)
             self.accept_task = True
             return True

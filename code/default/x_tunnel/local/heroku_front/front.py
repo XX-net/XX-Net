@@ -24,7 +24,7 @@ class Front(object):
     name = "heroku_front"
 
     def __init__(self):
-        self.hosts = ["xxnet10.herokuapp.com"]
+        self.hosts = ["xxnet3.herokuapp.com"]
         self.host = str(random.choice(self.hosts))
 
         self.dispatcher = http_dispatcher.HttpsDispatcher(self.host)
@@ -66,7 +66,7 @@ class Front(object):
                 # xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
                 return content, status, response
             except Exception as e:
-                xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
+                xlog.exception("front request %s %s%s fail:%r", method, host, path, e)
                 continue
 
         return "", 500, {}

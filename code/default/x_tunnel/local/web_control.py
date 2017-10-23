@@ -323,8 +323,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         res = {}
         for front in all_fronts:
             name = front.name
+            score = front.get_score()
+            if score is None:
+                score = "False"
             res[name] = {
-                "score": front.get_score(),
+                "score": score,
                 "success_num": front.success_num,
                 "fail_num": front.fail_num,
                 "worker_num": front.worker_num()
