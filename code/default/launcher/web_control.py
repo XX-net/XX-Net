@@ -220,7 +220,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (current_version, current_version, menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = (index_content.decode('utf-8') % (current_version, current_version, current_version, menu_content, right_content.decode('utf-8') )).encode('utf-8')
         self.send_response('text/html', data)
 
     def req_config_handler(self):

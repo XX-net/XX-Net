@@ -50,16 +50,7 @@
 
 
 <script type="text/javascript">
-    var pageRequests = {};
-    pageRequests['cmd'] = 'get_version';
-    $.ajax({
-        type: 'GET',
-        url: '/config',
-        data: pageRequests,
-        dataType: 'JSON',
-        success: function(result) {
-            document.getElementById("about_current_version").appendChild(document.createTextNode(result['current_version']));
-            
-        }
-    });
+
+    document.getElementById("about_current_version").appendChild(document.createTextNode(
+        document.getElementById("version_on_logo").innerHTML ));
 </script>
