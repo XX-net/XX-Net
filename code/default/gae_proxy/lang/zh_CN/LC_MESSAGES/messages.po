@@ -29,8 +29,8 @@ msgstr "导出 IP"
 msgid "Check IP"
 msgstr "检查所有IP"
 
-msgid "Advanced"
-msgstr "高级"
+msgid "IP Scanner"
+msgstr "IP 扫描器"
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低, 部分功能将无法使用。"

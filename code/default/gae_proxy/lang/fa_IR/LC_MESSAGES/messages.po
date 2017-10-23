@@ -29,8 +29,8 @@ msgstr "صادرات IP"
 msgid "Check IP"
 msgstr "بررسی IP"
 
-msgid "Advanced"
-msgstr "پیشرفته"
+msgid "IP Scanner"
+
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "مرورگر شما قدیمی است. قابلیت جزئی در دسترس نخواهد بود."
