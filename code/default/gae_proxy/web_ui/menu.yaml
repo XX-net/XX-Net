@@ -14,8 +14,8 @@ sub_menus: {
     url: deploy
   },
   4:{
-    title: {{ _("Advanced") }},
-    url: advanced
+    title: {{ _("IP Scanner") }},
+    url: ipscanner
   },
   5:{
     title: {{ _("Log") }},
