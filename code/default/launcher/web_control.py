@@ -138,7 +138,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
-        xlog.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
             if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
@@ -153,22 +152,24 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             else:
                 mimetype = 'text/plain'
             self.send_file(file_path, mimetype)
-        elif url_path == '/config':
-            self.req_config_handler()
-        elif url_path == '/update':
-            self.req_update_handler()
-        elif url_path == '/init_module':
-            self.req_init_module_handler()
-        elif url_path == '/quit':
-            self.send_response('text/html', '{"status":"success"}')
-            module_init.stop_all()
-            os._exit(0)
-        elif url_path == '/restart':
-            self.send_response('text/html', '{"status":"success"}')
-            update_from_github.restart_xxnet()
         else:
-            self.send_not_found()
-            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            xlog.debug('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
+            if url_path == '/config':
+                self.req_config_handler()
+            elif url_path == '/update':
+                self.req_update_handler()
+            elif url_path == '/init_module':
+                self.req_init_module_handler()
+            elif url_path == '/quit':
+                self.send_response('text/html', '{"status":"success"}')
+                module_init.stop_all()
+                os._exit(0)
+            elif url_path == '/restart':
+                self.send_response('text/html', '{"status":"success"}')
+                update_from_github.restart_xxnet()
+            else:
+                self.send_not_found()
+                xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
         req = urlparse.urlparse(self.path).query
