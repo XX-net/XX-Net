@@ -270,6 +270,7 @@ class SSLConnection(object):
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
         ssl_context.set_cipher_list(':'.join(cipher_suites))
 
+        # return ssl_context
         try:
             ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
             xlog.info("OpenSSL support alpn")

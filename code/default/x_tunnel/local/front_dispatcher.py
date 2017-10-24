@@ -7,7 +7,6 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 all_fronts = [gae_front, cloudflare_front, heroku_front]
-# all_fronts = [cloudflare_front]
 
 running_front_list = list(all_fronts)
 current_front = running_front_list.pop(0)

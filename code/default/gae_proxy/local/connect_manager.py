@@ -523,7 +523,7 @@ class Https_connection_manager(object):
             xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, handshake_time, ssl_sock.h2)
             ssl_sock.fd = sock.fileno()
             ssl_sock.create_time = time_begin
-            ssl_sock.last_use_time = time.time()
+            ssl_sock.last_use_time = time_begin
             ssl_sock.received_size = 0
             ssl_sock.load = 0
             ssl_sock.handshake_time = handshake_time

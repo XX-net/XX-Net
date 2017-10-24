@@ -295,7 +295,7 @@ def unpack_response(response):
         headers_length, = struct.unpack('!h', data)
         data = response.task.read(size=headers_length)
         if not data:
-            raise GAE_Exception(
+            raise GAE_Exception(600,
                 "get protocol head fail, len:%d" % headers_length)
 
         raw_response_line, headers_data = inflate(data).split('\r\n', 1)
@@ -318,7 +318,7 @@ def unpack_response(response):
     except Exception as e:
         response.worker.close("unpack protocol error")
         google_ip.recheck_ip(response.ssl_sock.ip)
-        raise GAE_Exception("unpack protocol:%r", e)
+        raise GAE_Exception(600, "unpack protocol:%r" % e)
 
 
 def request_gae_proxy(method, url, headers, body, timeout=60):

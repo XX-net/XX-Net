@@ -130,7 +130,7 @@ class Response(object):
 
         self.version = words[0]
         self.status = int(words[1])
-        self.info = " ".join(words[2:])
+        self.reason = " ".join(words[2:])
 
         self.headers = {}
         timeout -= time.time() - start_time
@@ -177,6 +177,9 @@ class Response(object):
         self.buffer_start = 0
 
         while time.time() - start_time < timeout:
+            if not read_len and out_len > 0:
+                break
+
             if read_len and out_len >= read_len:
                 break
 
@@ -202,8 +205,8 @@ class Response(object):
         return dat[:-2]
 
     def read(self, read_len=None, timeout=60):
-        if not read_len and self.content_length is not None:
-            read_len = int(self.content_length)
+        #if not read_len and self.content_length is not None:
+        #    read_len = int(self.content_length)
 
         if not self.chunked:
             return self._read_plain(read_len, timeout)

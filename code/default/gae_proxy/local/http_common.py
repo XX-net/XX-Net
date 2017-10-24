@@ -102,7 +102,6 @@ class Task(object):
         self.body_readed += len(body)
         return body
 
-
     def set_state(self, stat):
         # for debug trace
         time_now = time.time()

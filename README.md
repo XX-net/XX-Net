@@ -21,15 +21,19 @@
 
 
 ### 最新状态：
- 2017-10-23
-* GAE逐渐恢复，ipv4搜不到ip，可以通过开启ipv6解决，请参考：  
+ 2017-10-24
+* GAE逐渐恢复，ipv4搜不到ip，可以通过开启ipv6解决，请参考：    
+  Wiki:  
+  [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)
+
+  相关讨论帖子：  
   https://github.com/XX-net/XX-Net/issues/6918  
   https://github.com/XX-net/XX-Net/issues/6991  
   https://github.com/XX-net/XX-Net/issues/7150   
   https://github.com/XX-net/XX-Net/issues/7164  
   https://github.com/XX-net/XX-Net/issues/7241  
   
-* X-Tunnel 请使用 [3.7.4](https://github.com/XX-net/XX-Net/releases). （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
+* X-Tunnel 请升级到 3.7.4，目前稳定可用. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 **X-Tunnel 用户套餐流量丢失的，请给xxnet.dev@gmail.com 发邮件。**
   
   
