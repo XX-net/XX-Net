@@ -1,10 +1,12 @@
 ## 常见问题：  
 * 扫描不到GAE的ip  
-   请尝试启用IPv6，参考 
-   [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)  
-   或者试试X-Tunnel 模块， [使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B).  
+   请尝试启用IPv6，参考  
+   https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6    
    
-* X-Tunnel 浏览丢失  
+   或者试试X-Tunnel 模块  
+   https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B  
+   
+* X-Tunnel 流量丢失  
   先确认采用最新的版本，能够正常登录x-tunnel。
   请给xxnet.dev@gmail.com 发邮件
   
