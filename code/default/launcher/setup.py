@@ -9,7 +9,9 @@ import sys
 import time
 import urllib2
 import zipfile
-from instances import xlog
+
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))

@@ -20,7 +20,8 @@ import module_init
 import update
 import config
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 from systray import SysTrayIcon, win32_adapter
 
 import locale

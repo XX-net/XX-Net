@@ -167,7 +167,7 @@ def get_subj_alt_name(peer_cert):
     return dns_name
 
 
-def connect_ssl(ip, port=443, timeout=5, top_domain=None):
+def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
 
     if top_domain is None:
         top_domain, subs = random.choice(ns)
@@ -191,7 +191,7 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
+    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, on_close=on_close)
     ssl_sock.set_connect_state()
     ssl_sock.set_tlsext_host_name(sni)
 

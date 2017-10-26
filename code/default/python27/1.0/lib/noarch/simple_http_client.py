@@ -20,6 +20,54 @@ class Connection():
         self.sock.close()
 
 
+class TxtResponse(object):
+    def __init__(self, buffer):
+        self.read_buffer = buffer
+        self.buffer_start = 0
+        self.parse()
+
+    def read_line(self):
+        n1 = self.read_buffer.find("\r\n", self.buffer_start)
+        if n1 == -1:
+            raise Exception("read_line fail")
+
+        line = self.read_buffer[self.buffer_start:n1]
+        self.buffer_start = n1 + 2
+        return line
+
+    def read_headers(self):
+        n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
+        if n1 == -1:
+            raise Exception("read_headers fail")
+        block = self.read_buffer[self.buffer_start:n1]
+        self.buffer_start = n1 + 4
+        return block
+
+    def parse(self):
+        requestline = self.read_line()
+        words = requestline.split()
+        if len(words) < 2:
+            raise Exception("status line:%s" % requestline)
+
+        self.version = words[0]
+        self.status = int(words[1])
+        self.info = " ".join(words[2:])
+
+        self.headers = {}
+        header_block = self.read_headers()
+        lines = header_block.split("\r\n")
+        for line in lines:
+            p = line.find(":")
+            key = line[0:p]
+            value = line[p+2:]
+            key = str(key.lower())
+            self.headers[key] = value
+
+        self.body = self.read_buffer[self.buffer_start:]
+        self.read_buffer = ""
+        self.buffer_start = 0
+
+
 class Response(object):
     def __init__(self, ssl_sock):
         self.connection = ssl_sock
@@ -82,7 +130,7 @@ class Response(object):
 
         self.version = words[0]
         self.status = int(words[1])
-        self.info = " ".join(words[2:])
+        self.reason = " ".join(words[2:])
 
         self.headers = {}
         timeout -= time.time() - start_time
@@ -129,6 +177,9 @@ class Response(object):
         self.buffer_start = 0
 
         while time.time() - start_time < timeout:
+            if not read_len and out_len > 0:
+                break
+
             if read_len and out_len >= read_len:
                 break
 
@@ -154,8 +205,8 @@ class Response(object):
         return dat[:-2]
 
     def read(self, read_len=None, timeout=60):
-        if not read_len and self.content_length is not None:
-            read_len = int(self.content_length)
+        #if not read_len and self.content_length is not None:
+        #    read_len = int(self.content_length)
 
         if not self.chunked:
             return self._read_plain(read_len, timeout)

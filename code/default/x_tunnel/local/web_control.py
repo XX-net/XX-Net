@@ -14,6 +14,8 @@ import simple_http_server
 import global_var as g
 import proxy_session
 from cloudflare_front import web_control as cloudflare_web
+from heroku_front import web_control as heroku_web
+from front_dispatcher import all_fronts
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -40,6 +42,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_info_handler()
         elif path == "/get_history":
             return self.req_get_history_handler()
+        elif path == "/status":
+            return self.req_status()
         elif path.startswith("/cloudflare_front/"):
             path = self.path[17:]
             controler = cloudflare_web.ControlHandler(self.client_address,
@@ -48,6 +52,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                              self.rfile, self.wfile)
             controler.do_GET()
 
+        elif path.startswith("/heroku_front/"):
+            path = self.path[13:]
+            controler = heroku_web.ControlHandler(self.client_address,
+                             self.headers,
+                             self.command, path,
+                             self.rfile, self.wfile)
+            controler.do_GET()
         else:
             xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -306,4 +317,23 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json({
             "res": "success",
             "history": info["history"]
+        })
+
+    def req_status(self):
+        res = {}
+        for front in all_fronts:
+            name = front.name
+            score = front.get_score()
+            if score is None:
+                score = "False"
+            res[name] = {
+                "score": score,
+                "success_num": front.success_num,
+                "fail_num": front.fail_num,
+                "worker_num": front.worker_num()
+            }
+
+        self.response_json({
+            "res": "success",
+            "status": res
         })

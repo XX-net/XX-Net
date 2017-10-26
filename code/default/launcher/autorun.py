@@ -4,7 +4,9 @@ from __future__ import with_statement
 
 import os
 import sys
-from instances import xlog
+
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))

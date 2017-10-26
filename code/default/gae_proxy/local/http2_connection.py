@@ -90,6 +90,7 @@ class HTTP2_worker(HTTP_worker):
         # decrease when recv ping ack
         # if this in not 0, don't accept request.
         self.ping_on_way = 0
+        self.accept_task = False
 
         # request_lock
         self.request_lock = threading.Lock()
@@ -202,9 +203,6 @@ class HTTP2_worker(HTTP_worker):
             except Exception as e:
                 xlog.debug("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
-
-    def get_rtt_rate(self):
-        return self.rtt + len(self.streams) * 100
 
     def close(self, reason=""):
         self.keep_running = False
@@ -393,6 +391,8 @@ class HTTP2_worker(HTTP_worker):
 
                 # this may trigger send DataFrame blocked by remote window
                 self._update_settings(frame)
+            else:
+                self.accept_task = True
 
         elif frame.type == GoAwayFrame.type:
             # If we get GoAway with error code zero, we are doing a graceful
@@ -451,3 +451,10 @@ class HTTP2_worker(HTTP_worker):
 
             for stream in self.streams.values():
                 stream.max_frame_size += new_size
+
+    def get_trace(self):
+        out_list = []
+        out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" h2.stream_num:%d" % len(self.streams))
+        out_list.append(" appid:%s" % self.ssl_sock.appid)
+        return ",".join(out_list)

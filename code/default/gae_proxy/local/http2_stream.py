@@ -16,7 +16,7 @@ the stream by the endpoint that initiated the stream.
 
 
 
-
+import threading
 from hyper.common.headers import HTTPHeaderMap
 from hyper.packages.hyperframe.frame import (
     FRAME_MAX_LEN, FRAMES, HeadersFrame, DataFrame, PushPromiseFrame,
@@ -110,6 +110,7 @@ class Stream(object):
         self.response_body = []
         self.response_body_len = 0
 
+        threading.Thread(target=self.timeout_response).start()
         self.start_request()
 
     def start_request(self):
@@ -153,11 +154,13 @@ class Stream(object):
         header_frame.flags.add('END_HEADERS')
 
         # Send the header frame.
+        self.task.set_state("send headert")
         self._send_cb(header_frame)
 
         # Transition the stream state appropriately.
         self.state = STATE_OPEN
 
+        self.task.set_state("send body")
         self.send_left_body()
 
     def add_header(self, name, value, replace=False):
@@ -204,6 +207,7 @@ class Stream(object):
             self.send_left_body()
         elif frame.type == HeadersFrame.type:
             # Begin the header block for the response headers.
+            self.task.set_state("get headers")
             self.response_header_datas = [frame.data]
         elif frame.type == PushPromiseFrame.type:
             xlog.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
@@ -212,7 +216,12 @@ class Stream(object):
             self.response_header_datas.append(frame.data)
         elif frame.type == DataFrame.type:
             # Append the data to the buffer.
-            self.task.put_data(frame.data)
+
+            if not self.task.finished:
+                if self.task.body_len == 0:
+                    self.task.set_state("get body")
+
+                self.task.put_data(frame.data)
 
             if 'END_STREAM' not in frame.flags:
                 # Increase the window size. Only do this if the data frame contains
@@ -263,10 +272,11 @@ class Stream(object):
             # We've handled the headers, zero them out.
             self.response_header_datas = None
 
-            self.task.content_length = int(self.response_headers["Content-Length"][0])
-            self.task.set_state("h2_get_head")
-            self.get_head_time = time.time()
-            self.send_response()
+            if not self.task.responsed:
+                self.task.content_length = int(self.response_headers["Content-Length"][0])
+                self.task.set_state("h2_get_head")
+                self.get_head_time = time.time()
+                self.send_response()
 
         if 'END_STREAM' in frame.flags:
             #xlog.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
@@ -302,8 +312,8 @@ class Stream(object):
         if not self.task.responsed:
             self.connection.retry_task_cb(self.task)
         else:
-            self.task.put_data("")
-            # empty block means fail or closed.
+            self.task.set_state("h2 finish")
+            self.task.finish()
 
     def _handle_header_block(self, headers):
         """
@@ -353,3 +363,21 @@ class Stream(object):
             STATE_HALF_CLOSED_REMOTE if self.state == STATE_OPEN
             else STATE_CLOSED
         )
+
+    def timeout_response(self):
+        while time.time() - self.task.start_time < self.task.timeout:
+            time.sleep(1)
+            if self.task.finished:
+                return
+
+        self.task.set_state("h2 timeout")
+
+        xlog.warn("h2 %s %s timeout, trace:%s",
+                  self.connection.ssl_sock.ip,
+                  self.task.unique_id,
+                  self.task.get_trace())
+
+        if self.task.responsed:
+            self.task.finish()
+        else:
+            self.task.response_fail("h2 timeout")

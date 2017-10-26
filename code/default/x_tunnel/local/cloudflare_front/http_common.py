@@ -128,6 +128,8 @@ class Task(object):
         err_text = "response_fail:%s" % reason
         xlog.debug("%s %s", self.url, err_text)
         res = BaseResponse(body=err_text)
+        res.task = self
+        res.worker = self.worker
         self.queue.put(res)
         self.finish()
 
@@ -150,6 +152,7 @@ class HTTP_worker(object):
         self.keep_running = True
         self.processed_tasks = 0
         self.speed_history = []
+        self.last_active_time = ssl_sock.create_time
 
     def update_rtt_speed(self, rtt, speed):
         self.rtt = rtt
@@ -162,3 +165,22 @@ class HTTP_worker(object):
         self.ssl_sock.close()
         xlog.debug("%s worker close:%s", self.ip, reason)
         self.close_cb(self)
+
+    def get_score(self):
+        now = time.time()
+        inactive_time = now - self.last_active_time
+
+        if self.version == "1.1":
+            rtt = self.rtt + 100
+        else:
+            rtt = self.rtt + len(self.streams) * 3000
+
+        if inactive_time > 5:
+            score = rtt
+        elif inactive_time < 0.001:
+            score = rtt + 50000
+        else:
+            # inactive_time < 2
+            score = rtt + (5/inactive_time)*1000
+
+        return score

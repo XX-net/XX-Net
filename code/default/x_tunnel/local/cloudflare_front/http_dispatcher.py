@@ -116,7 +116,7 @@ class HttpsDispatcher(object):
             if idle_num > 1 and acceptable_num > 1:
                 self.triger_create_worker_cv.wait()
 
-    def get_worker(self):
+    def get_worker(self, nowait=False):
         while connect_control.keep_running:
             best_score = 99999999
             best_worker = None
@@ -132,15 +132,7 @@ class HttpsDispatcher(object):
                     if len(worker.streams) == 0:
                         idle_num += 1
 
-                inactive_time = now - worker.last_active_time
-                rtt = worker.get_rtt_rate()
-                if inactive_time > 3:
-                    score = rtt
-                elif inactive_time < 0.001:
-                    score = rtt + 50000
-                else:
-                    # inactive_time < 2
-                    score = rtt + (3/inactive_time)*1000
+                score = worker.get_score()
 
                 if best_score > score:
                     best_score = score
@@ -149,7 +141,7 @@ class HttpsDispatcher(object):
             if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2:
                 self.triger_create_worker_cv.notify()
 
-            if best_worker:
+            if best_worker or nowait:
                 return best_worker
 
             self.wait_a_worker_cv.wait()
@@ -158,7 +150,7 @@ class HttpsDispatcher(object):
         # close slowest worker,
         # give change for better worker
         while True:
-            slowest_rtt = 9999
+            slowest_score = 9999
             slowest_worker = None
             idle_num = 0
             for worker in self.workers:
@@ -168,15 +160,15 @@ class HttpsDispatcher(object):
                 if worker.version == "2" and len(worker.streams) > 0:
                     continue
 
-                idle_num += 1
+                score = worker.get_score()
+                if score < 1000:
+                    idle_num += 1
 
-                rtt = worker.get_rtt_rate()
-
-                if rtt > slowest_rtt:
-                    slowest_rtt = rtt
+                if score > slowest_score:
+                    slowest_score = score
                     slowest_worker = worker
 
-            if idle_num < 30 or idle_num < int(len(self.workers) * 0.3):
+            if idle_num < 10 or idle_num < int(len(self.workers) * 0.3) or len(self.workers) < 50:
                 return
 
             if slowest_worker is None:
@@ -192,10 +184,10 @@ class HttpsDispatcher(object):
         task = http_common.Task(method, host, path, headers, body, q, url, timeout)
         task.set_state("start_request")
         self.request_queue.put(task)
-        self.working_tasks[task.unique_id] = task
+        # self.working_tasks[task.unique_id] = task
         response = q.get(True)
         task.set_state("get_response")
-        del self.working_tasks[task.unique_id]
+        # del self.working_tasks[task.unique_id]
         return response
 
     def retry_task_cb(self, task):
@@ -248,6 +240,7 @@ class HttpsDispatcher(object):
                 continue
 
             task.set_state("get_worker:%s" % worker.ip)
+            task.worker = worker
             try:
                 worker.request(task)
             except Exception as e:

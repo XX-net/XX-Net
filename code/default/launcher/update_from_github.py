@@ -19,7 +19,8 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import config
 import update
 

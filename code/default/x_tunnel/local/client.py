@@ -39,7 +39,7 @@ from proxy_handler import Socks5Server
 import global_var as g
 import proxy_session
 import simple_http_server
-from cloudflare_front import front
+import front_dispatcher
 
 import web_control
 # don't remove, launcher web_control need it.
@@ -62,7 +62,7 @@ def load_config():
     config.set_var("encrypt_password", "encrypt_pass")
     config.set_var("encrypt_method", "aes-256-cfb")
 
-    config.set_var("api_server", "center6.xx-net.net")
+    config.set_var("api_server", "center.xx-net.net")
     config.set_var("server_host", "")
     config.set_var("server_port", 0)
     config.set_var("use_https", 1)
@@ -114,7 +114,7 @@ def start():
         else:
             xlog.debug("please check x-tunnel server in config")
 
-    g.http_client = front.front
+    g.http_client = front_dispatcher
 
     g.session = proxy_session.ProxySession()
 
