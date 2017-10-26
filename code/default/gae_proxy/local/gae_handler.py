@@ -331,6 +331,9 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
         if time.time() - time_request > timeout:
             raise GAE_Exception(600, b"".join(error_msg))
 
+        if not retry and err_msg:
+            raise GAE_Exception(600, b"".join(error_msg))
+
         try:
             response = request_gae_server(request_headers, request_body, url, timeout)
 
@@ -362,9 +365,6 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
             err_msg = 'gae_handler.handler %r %s , retry...' % (e, url)
             error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
-
-        if not retry:
-            raise GAE_Exception(600, b"".join(error_msg))
 
 
 def handler(method, url, headers, body, wfile):

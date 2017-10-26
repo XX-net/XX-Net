@@ -38,6 +38,11 @@ def init():
 
 
 def get_score(host=""):
+    now = time.time()
+    if now - last_fail_time < 5*60 and \
+            continue_fail_num > 10:
+        return None
+
     if not gae_proxy:
         return None
 
