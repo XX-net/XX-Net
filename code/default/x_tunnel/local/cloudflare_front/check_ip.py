@@ -57,6 +57,7 @@ import socks
 import check_local_network
 from config import config
 import cert_util
+import ip_utils
 import openssl_wrap
 import simple_http_client
 from subj_alt_name import SubjectAltName
@@ -366,18 +367,28 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         ip = sys.argv[1]
-        xlog.info("test ip:%s", ip)
-        if len(sys.argv) > 2:
-            top_domain = sys.argv[2]
-        else:
-            top_domain = None
-
-        res = test_xtunnel_ip2(ip, top_domain=top_domain)
-        if not res:
-            print("connect fail")
-        elif res.support_xtunnel:
-            print("success, domain:%s handshake:%d" % (res.domain, res.handshake_time))
-        else:
-            print("not support")
+        if not ip_utils.check_ip_valid(ip):
+            ip = "104.28.100.89"
+            top_domain = sys.argv[1]
+            xlog.info("test domain:%s", top_domain)
     else:
-        xlog.info("check_ip <ip>")
+        ip = "104.28.100.89"
+        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+
+    xlog.info("test ip:%s", ip)
+
+    if len(sys.argv) > 2:
+        top_domain = sys.argv[2]
+        xlog.info("test top domain:%s", top_domain)
+    else:
+        top_domain = None
+
+
+    res = test_xtunnel_ip2(ip, top_domain=top_domain)
+    if not res:
+        print("connect fail")
+    elif res.support_xtunnel:
+        print("success, domain:%s handshake:%d" % (res.domain, res.handshake_time))
+    else:
+        print("not support")
+

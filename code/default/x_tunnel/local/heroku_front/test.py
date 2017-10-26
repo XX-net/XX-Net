@@ -63,7 +63,7 @@ if __name__ == '__main__':
     import traceback
 
     try:
-        pall()
+        get()
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:

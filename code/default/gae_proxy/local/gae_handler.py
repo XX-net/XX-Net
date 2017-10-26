@@ -321,7 +321,7 @@ def unpack_response(response):
         raise GAE_Exception(600, "unpack protocol:%r" % e)
 
 
-def request_gae_proxy(method, url, headers, body, timeout=60):
+def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
     # make retry and time out
     time_request = time.time()
     request_headers, request_body = pack_request(method, url, headers, body)
@@ -362,6 +362,9 @@ def request_gae_proxy(method, url, headers, body, timeout=60):
             err_msg = 'gae_handler.handler %r %s , retry...' % (e, url)
             error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
+
+        if not retry:
+            raise GAE_Exception(600, b"".join(error_msg))
 
 
 def handler(method, url, headers, body, wfile):

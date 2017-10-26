@@ -68,7 +68,9 @@ def request(method, host, schema="https", path="/", headers={}, data="", timeout
 
     # xlog.debug("gae_proxy %s %s", method, url)
     try:
-        response = gae_proxy.gae_handler.request_gae_proxy(method, url, headers, data, timeout=timeout)
+        response = gae_proxy.gae_handler.request_gae_proxy(method, url, headers, data, timeout=timeout, retry=False)
+        if response.app_status != 200:
+            raise Exception("GAE request fail")
     except Exception as e:
         fail_num += 1
         continue_fail_num += 1

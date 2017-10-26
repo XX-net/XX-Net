@@ -24,7 +24,7 @@ class Front(object):
     name = "heroku_front"
 
     def __init__(self):
-        self.hosts = ["xxnet3.herokuapp.com"]
+        self.hosts = ["xxnet2.herokuapp.com", "xxnet3.herokuapp.com", "xxnet4.herokuapp.com", "xxnet5.herokuapp.com"]
         self.host = str(random.choice(self.hosts))
 
         self.dispatcher = http_dispatcher.HttpsDispatcher(self.host)
@@ -38,6 +38,9 @@ class Front(object):
         now = time.time()
         if now - self.last_fail_time < 5*60 and \
                 self.continue_fail_num > 10:
+            return None
+
+        if len(self.hosts) == 0:
             return None
 
         dispatcher = self.dispatcher
@@ -58,7 +61,7 @@ class Front(object):
             try:
                 response = self.dispatcher.request(method, host, path, header, data, timeout=timeout)
                 status = response.status
-                if status not in [200, 405]:
+                if status not in [200, 404]:
                     xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
                     continue
 
@@ -107,6 +110,10 @@ class Front(object):
             self.continue_fail_num = 0
             self.success_num += 1
         else:
+            if status == 404:
+                xlog.warn("heroku:%s fail", heroku_host)
+                self.hosts.remove(heroku_host)
+
             self.last_fail_time = time.time()
             self.continue_fail_num += 1
             self.fail_num += 1

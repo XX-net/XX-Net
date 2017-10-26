@@ -163,7 +163,7 @@ class HTTP1_worker(HTTP_worker):
                     return
 
                 data = response.read()
-                task.set_state("read body:%d" % len(data))
+                # task.set_state("read body:%d" % len(data))
                 if not data:
                     if time.time() - last_read_time > 20:
                         xlog.warn("%s read timeout t:%d expect:%d left:%d ",

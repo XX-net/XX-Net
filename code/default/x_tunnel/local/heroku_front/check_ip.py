@@ -214,7 +214,7 @@ def check_xtunnel_http1(ssl_sock, host):
             return False
 
         content = response.read(timeout=1)
-        if "X_Tunnel OK" not in content:
+        if content != "OK":
             xlog.warn("app check content:%s", content)
             return ssl_sock
     except Exception as e:
@@ -252,7 +252,7 @@ def check_xtunnel_http2(ssl_sock, host):
         return ssl_sock
 
     content = response.read()
-    if "X_Tunnel OK" not in content:
+    if content != "OK":
         xlog.warn("app check content:%s", content)
         return ssl_sock
 
@@ -276,7 +276,7 @@ def test_xtunnel_ip2(ip, top_domain=None, wait_time=0):
 
     ssl_sock.support_xtunnel = False
 
-    host = "xxnet10.herokuapp.com"
+    host = "xxnet3.herokuapp.com"
     xlog.info("host:%s", host)
 
     time.sleep(wait_time)
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
     else:
-        ip = "50.17.207.130"
+        ip = "50.19.244.243"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     xlog.info("test ip:%s", ip)
 

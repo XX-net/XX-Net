@@ -148,7 +148,7 @@ class ProxySession():
         return out_string
 
     def login_session(self):
-        if len(g.server_host) == 0 or g.server_port == 0:
+        if len(g.server_host) == 0:
             return False
 
         try:
