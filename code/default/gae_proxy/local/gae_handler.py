@@ -331,7 +331,7 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
         if time.time() - time_request > timeout:
             raise GAE_Exception(600, b"".join(error_msg))
 
-        if not retry and err_msg:
+        if not retry and error_msg:
             raise GAE_Exception(600, b"".join(error_msg))
 
         try:
