@@ -151,51 +151,61 @@ class ProxySession():
         if len(g.server_host) == 0:
             return False
 
-        try:
-            start_time = time.time()
+        start_time = time.time()
+        while time.time() - start_time < 30:
+            try:
+                start_time = time.time()
 
-            magic = "P"
-            pack_type = 1
-            upload_data_head = struct.pack("<cBB8sIHII", magic, g.protocol_version, pack_type, str(self.session_id),
-                                           g.config.block_max_size, g.config.send_delay, g.config.windows_size,
-                                           g.config.windows_ack)
-            upload_data_head += struct.pack("<H", len(g.config.login_account)) + str(g.config.login_account)
-            upload_data_head += struct.pack("<H", len(g.config.login_password)) + str(g.config.login_password)
+                magic = "P"
+                pack_type = 1
+                upload_data_head = struct.pack("<cBB8sIHII", magic, g.protocol_version, pack_type, str(self.session_id),
+                                               g.config.block_max_size, g.config.send_delay, g.config.windows_size,
+                                               g.config.windows_ack)
+                upload_data_head += struct.pack("<H", len(g.config.login_account)) + str(g.config.login_account)
+                upload_data_head += struct.pack("<H", len(g.config.login_password)) + str(g.config.login_password)
 
-            upload_post_data = encrypt_data(upload_data_head)
+                upload_post_data = encrypt_data(upload_data_head)
 
-            content, status, response = g.http_client.request(method="POST", host=g.server_host, path="/data",
-                                                           data=upload_post_data,
-                                                           timeout=g.config.roundtrip_timeout)
+                content, status, response = g.http_client.request(method="POST", host=g.server_host, path="/data",
+                                                               data=upload_post_data,
+                                                               timeout=g.config.roundtrip_timeout)
 
-            time_cost = time.time() - start_time
-            if status != 200:
-                g.last_api_error = "session server login fail:%r" % status
-                xlog.warn("login session fail, status:%r", status)
-                return False
+                time_cost = time.time() - start_time
 
-            if len(content) < 6:
-                xlog.error("login data len:%d fail", len(content))
-                return False
+                if status == 521:
+                    xlog.warn("login session server is down, try get new server.")
+                    request_balance(update_server=True)
+                    continue
 
-            info = decrypt_data(content)
-            magic, protocol_version, pack_type, res, message_len = struct.unpack("<cBBBH", info[:6])
-            message = info[6:]
-            if magic != "P" or protocol_version != 1 or pack_type != 1:
-                xlog.error("login_session time:%d head error:%s", 1000 * time_cost, utils.str2hex(info[:6]))
-                return False
+                if status != 200:
+                    g.last_api_error = "session server login fail:%r" % status
+                    xlog.warn("login session fail, status:%r", status)
+                    return False
 
-            if res != 0:
-                g.last_api_error = "session server login fail, code:%d msg:%s" % (res, message)
-                xlog.warn("login_session time:%d fail, res:%d msg:%s", 1000 * time_cost, res, message)
-                return False
+                if len(content) < 6:
+                    xlog.error("login data len:%d fail", len(content))
+                    return False
 
-            g.last_api_error = ""
-            xlog.info("login_session %s time:%d msg:%s", self.session_id, 1000 * time_cost, message)
-            return True
-        except Exception as e:
-            xlog.exception("login_session e:%r", e)
-            return False
+                info = decrypt_data(content)
+                magic, protocol_version, pack_type, res, message_len = struct.unpack("<cBBBH", info[:6])
+                message = info[6:]
+                if magic != "P" or protocol_version != 1 or pack_type != 1:
+                    xlog.error("login_session time:%d head error:%s", 1000 * time_cost, utils.str2hex(info[:6]))
+                    return False
+
+                if res != 0:
+                    g.last_api_error = "session server login fail, code:%d msg:%s" % (res, message)
+                    xlog.warn("login_session time:%d fail, res:%d msg:%s", 1000 * time_cost, res, message)
+                    return False
+
+                g.last_api_error = ""
+                xlog.info("login_session %s time:%d msg:%s", self.session_id, 1000 * time_cost, message)
+                return True
+            except Exception as e:
+                xlog.exception("login_session e:%r", e)
+                time.sleep(1)
+                
+        return False
 
     def create_conn(self, sock, host, port):
 
@@ -371,6 +381,12 @@ class ProxySession():
                     with self.mutex:
                         self.on_road_num -= 1
 
+                if status == 521:
+                    xlog.warn("X-tunnel server is down, try get new server.")
+                    request_balance(update_server=True)
+                    self.reset()
+                    return
+
                 if status == 405:  # session_id not exist on server
                     if self.running:
                         if self.session_id == request_session_id:
@@ -533,12 +549,20 @@ def call_api(path, req_info):
         return False, "except:%r" % e
 
 
-def request_balance(account, password, is_register=False, update_server=True):
+def request_balance(account=None, password=None, is_register=False, update_server=True):
     if is_register:
         login_path = "/register"
         xlog.info("request_balance register:%s", account)
     else:
         login_path = "/login"
+
+    if account is None:
+        if not (g.config.login_account and g.config.login_password):
+            xlog.debug("request_balance no account")
+            return False, "no default account"
+
+        account = g.config.login_account
+        password = g.config.login_password
 
     req_info = {"account": account, "password": password}
 

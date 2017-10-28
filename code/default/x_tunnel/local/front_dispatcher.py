@@ -34,11 +34,23 @@ def get_front(host, timeout):
 
 
 def request(method, host, path="/", headers={}, data="", timeout=100):
-    front = get_front(host, timeout)
-    if not front:
-        return "", 602, {}
+    start_time = time.time()
 
-    return front.request(method, host=host, path=path, headers=headers, data=data, timeout=timeout)
+    content, status, response = "", 603, {}
+    while time.time() - start_time < timeout:
+        front = get_front(host, timeout)
+        if not front:
+            return "", 602, {}
+
+        content, status, response = front.request(
+            method, host=host, path=path, headers=headers, data=data, timeout=timeout)
+
+        if status not in [200, 521]:
+            continue
+
+        return content, status, response
+
+    return content, status, response
 
 
 def stop():

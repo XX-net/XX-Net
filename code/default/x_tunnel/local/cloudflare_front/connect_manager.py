@@ -321,4 +321,3 @@ class Https_connection_manager(object):
                 if time.time() - start_time > max_timeout:
                     xlog.debug("create ssl timeout fail.")
                     return None
-

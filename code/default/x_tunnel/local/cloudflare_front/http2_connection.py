@@ -139,7 +139,6 @@ class HTTP2_worker(HTTP_worker):
 
     # export api
     def request(self, task):
-
         if not self.keep_running:
             # race condition
             self.retry_task_cb(task)
@@ -166,6 +165,7 @@ class HTTP2_worker(HTTP_worker):
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
         self.streams[stream_id] = stream
+        self.last_active_time = time.time()
 
     def send_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -228,6 +228,7 @@ class HTTP2_worker(HTTP_worker):
                 self.retry_task_cb(stream.task)
         self.streams = {}
         super(HTTP2_worker, self).close(reason)
+
 
     def send_ping(self):
         # Use less for GAE server.

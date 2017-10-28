@@ -305,6 +305,8 @@ class Stream(object):
         response.worker = self.connection
         response.task = self.task
         self.task.queue.put(response)
+        if status in [400, 403]:
+            self.connection.close("status %d" % status)
 
     def close(self, reason=""):
         self._close_cb(self.stream_id, reason)
@@ -370,9 +372,9 @@ class Stream(object):
             if self._remote_closed:
                 return
 
-        xlog.warn("h2 %s %s timeout %s",
+        xlog.warn("h2 timeout %s task_trace:%s worker_trace:%s",
                   self.connection.ssl_sock.ip,
-                  self.task.unique_id,
+                  self.task.get_trace(),
                   self.connection.get_trace())
         if self.task.responsed:
             self.task.finish()

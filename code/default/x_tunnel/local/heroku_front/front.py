@@ -56,23 +56,19 @@ class Front(object):
     def _request(self, method, host, path="/", header={}, data="", timeout=30):
         timeout = 40
 
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            try:
-                response = self.dispatcher.request(method, host, path, header, data, timeout=timeout)
-                status = response.status
-                if status not in [200, 404]:
-                    xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
-                    continue
+        try:
+            response = self.dispatcher.request(method, host, path, header, data, timeout=timeout)
+            status = response.status
+            if status != 200:
+                xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
 
-                content = response.task.read_all()
-                # xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
-                return content, status, response
-            except Exception as e:
-                xlog.exception("front request %s %s%s fail:%r", method, host, path, e)
-                continue
+            content = response.task.read_all()
+            # xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
+            return content, status, response
+        except Exception as e:
+            xlog.exception("front request %s %s%s fail:%r", method, host, path, e)
 
-        return "", 500, {}
+            return "", 500, {}
 
     def request(self, method, host, schema="http", path="/", headers={}, data="", timeout=40):
         # change top domain to xx-net.net
