@@ -348,6 +348,7 @@ def check_push_update():
 def create_desktop_shortcut():
     import sys
     if sys.platform.startswith("linux"):
+        #env DESKTOP_SESSION can be used
         pass
     elif sys.platform == "win32":
         # import ctypes
@@ -377,8 +378,9 @@ def check_new_machine():
         if sys.platform == "win32" and platform.release() == "XP":
             notify_install_tcpz_for_winXp()
 
-        xlog.info("generate desktop shortcut")
-        create_desktop_shortcut()
+        if os.getenv("XXNET_NO_MESS_SYSTEM", "0") != "0":
+            xlog.info("generate desktop shortcut")
+            create_desktop_shortcut()
 
 
 

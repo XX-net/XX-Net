@@ -314,6 +314,7 @@ class CertUtil(object):
 
     @staticmethod
     def import_windows_ca(common_name, certfile):
+        xlog.debug("Begin to import Windows CA")
         import ctypes
         with open(certfile, 'rb') as fp:
             certdata = fp.read()
@@ -360,6 +361,7 @@ class CertUtil(object):
 
     @staticmethod
     def remove_windows_ca(name):
+        xlog.debug("Removing windows CA")
         import ctypes
         import ctypes.wintypes
         class CERT_CONTEXT(ctypes.Structure):
@@ -397,29 +399,34 @@ class CertUtil(object):
         for filename in os.listdir(firefox_path):
             if filename.endswith(".default") and os.path.isdir(os.path.join(firefox_path, filename)):
                 config_path = os.path.join(firefox_path, filename)
+                #xlog.debug("Got Firefox path: %s", config_path)
                 return config_path
 
     @staticmethod
     def import_linux_firefox_ca(common_name, ca_file):
+        xlog.debug("Begin importing CA to Firefox")
         firefox_config_path = CertUtil.get_linux_firefox_path()
         if not firefox_config_path:
+            #xlog.debug("Not found Firefox path")
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
             xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
+        xlog.info("Removing old cert to Firefox in %s", firefox_config_path)
         cmd_line = 'certutil -L -d %s |grep "GoAgent" &&certutil -d %s -D -n "%s" ' % (firefox_config_path, firefox_config_path, common_name)
         os.system(cmd_line) # remove old cert first
 
+        xlog.info("Add new cert to Firefox in %s", firefox_config_path)
         cmd_line = 'certutil -d %s -A -t "C,," -n "%s" -i "%s"' % (firefox_config_path, common_name, ca_file)
         os.system(cmd_line) # install new cert
         return True
 
     @staticmethod
-    def import_debian_ca(common_name, ca_file):
+    def import_linux_ca(common_name, ca_file):
 
-        def get_debian_ca_sha1(nss_path):
+        def get_linux_ca_sha1(nss_path):
             commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
 
             cmd = ['certutil', '-L','-d', 'sql:%s' % nss_path, '-n', commonname]
@@ -450,10 +457,10 @@ class CertUtil(object):
             xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
-        sha1 = get_debian_ca_sha1(nss_path)
+        sha1 = get_linux_ca_sha1(nss_path)
         ca_hash = CertUtil.ca_thumbprint.replace(':', '')
         if sha1 == ca_hash:
-            xlog.info("system cert exist")
+            xlog.info("Database $HOME/.pki/nssdb cert exist")
             return
 
 
@@ -461,10 +468,12 @@ class CertUtil(object):
         # certutil -L -d sql:$HOME/.pki/nssdb
 
         # remove old cert first
+        xlog.info("Removing old cert in database $HOME/.pki/nssdb")
         cmd_line = 'certutil -L -d sql:$HOME/.pki/nssdb |grep "GoAgent" && certutil -d sql:$HOME/.pki/nssdb -D -n "%s" ' % ( common_name)
         os.system(cmd_line)
 
         # install new cert
+        xlog.info("Add cert to database $HOME/.pki/nssdb")
         cmd_line = 'certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "%s" -i "%s"' % (common_name, ca_file)
         os.system(cmd_line)
         return True
@@ -538,32 +547,33 @@ class CertUtil(object):
 
     @staticmethod
     def import_ca(certfile):
+        xlog.debug("Importing CA")
         commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
         if sys.platform.startswith('win'):
+            CertUtil.remove_windows_ca('%s CA' % CertUtil.ca_vendor)
             CertUtil.import_windows_ca(commonname, certfile)
         elif sys.platform == 'darwin':
             CertUtil.import_mac_ca(commonname, certfile)
         elif sys.platform.startswith('linux'):
-            CertUtil.import_debian_ca(commonname, certfile)
+            CertUtil.import_linux_ca(commonname, certfile)
             CertUtil.import_linux_firefox_ca(commonname, certfile)
             #CertUtil.import_ubuntu_system_ca(commonname, certfile) # we don't need install CA to system root, special user is enough
 
 
     @staticmethod
     def init_ca():
+        xlog.debug("Initializing CA")
+
         #Check Certs Dir
         if not os.path.exists(CertUtil.ca_certdir):
             os.makedirs(CertUtil.ca_certdir)
 
         # Confirmed GoAgent CA exist
         if not os.path.exists(CertUtil.ca_keyfile):
-            xlog.info("no CA file exist")
+            xlog.info("no XX-Net GAE CA file exist")
 
-            xlog.info("clean old site certs")
+            xlog.info("clean old site certs in XX-Net cert dir")
             any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
-
-            if os.name == 'nt':
-                CertUtil.remove_windows_ca('%s CA' % CertUtil.ca_vendor)
 
             CertUtil.generate_ca_file()
 
@@ -581,13 +591,13 @@ class CertUtil(object):
             if serial_number != CertUtil.get_cert_serial_number(commonname):
                 any(os.remove(x) for x in certfiles)
 
-        CertUtil.import_ca(CertUtil.ca_keyfile)
+        if os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0" :
+            CertUtil.import_ca(CertUtil.ca_keyfile)
 
         # change the status,
         # web_control /cert_import_status will return True, else return False
         # launcher will wait ready to open browser and check update
         config.cert_import_ready = True
-
 
 
 

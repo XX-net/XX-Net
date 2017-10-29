@@ -99,9 +99,12 @@ function createDesktopStartup() {
     fi
 }
 
-DIS=`cat /etc/issue 2> /dev/null`
-if [[ $DIS == *Ubuntu* ]]; then
-    createDesktopStartup
+
+if [ ! $XXNET_NO_MESS_SYSTEM ] || [ $XXNET_NO_MESS_SYSTEM == '0' ] ; then
+    DIS=`cat /etc/issue 2> /dev/null`
+    if [[ $DIS == *Ubuntu* ]]; then
+        createDesktopStartup
+    fi
 fi
 
 # Start Application

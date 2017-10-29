@@ -91,6 +91,12 @@ def recheck_module_path():
     # if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #     set(["modules", "gae_proxy", "control_port"], 8084)
 
+    if get(["no_mess_system"], 0) == 1 or os.getenv("XXNET_NO_MESS_SYSTEM","0") != "0" :
+        xlog.debug("no_mess_system")
+        os.environ["XXNET_NO_MESS_SYSTEM"] = "1"
+        set(["no_mess_system"], 1)
+        need_save_config = True
+
     return need_save_config
 
 
