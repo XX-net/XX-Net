@@ -67,6 +67,7 @@ def set(path, val):
 
 def recheck_module_path():
     global config
+    global need_save_config
 
     xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
 
