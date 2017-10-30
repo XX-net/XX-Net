@@ -1,0 +1,28 @@
+XX-Net Status:
+
+sys-platform: AMD64, Windows-7-6.1.7601-SP1
+os-system: Windows
+os-version: 6.1.7601
+os-release: 7
+os-detail: Version:6-1; Build:7601; Platform:2; CSD:Service Pack 1; ServicePack:1-0; Suite:256; ProductType:0
+architecture: 32bit,WindowsPE
+browser: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
+xxnet-version: 3.6.15
+python-version: 2.7.13
+openssl-version: 16.0.0 TLSv1_2 h2:alpn
+
+ipv6-status: 1
+gws-ip-num: total:12347 good:12347
+network-status: OK
+connected-link: new:0 used:0
+worker: h1:0 h2:0
+scan-ip-thread-num: 0
+ip-quality: 300
+is-idle: 0
+block-stat: OK
+proxy_state: OK
+ca_state: OK
+Appid_Working: true
+Appids_Out_Of_Quota: false
+Appids_Not_Exist: false
+Using_Public_Appid: true
