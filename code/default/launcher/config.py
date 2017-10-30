@@ -12,7 +12,7 @@ data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'
 config_path = os.path.join(data_path, 'launcher', 'config.yaml')
 
 config = {}
-
+need_save_config = False
 
 def load():
     global config, config_path
@@ -27,8 +27,10 @@ def load():
 
 def save():
     global config, config_path
+    global need_save_config
     try:
         yaml.dump(config, open(config_path, "w"))
+        need_save_config = False
     except Exception as e:
         xlog.warn("save config %s fail %s", config_path, e)
 
@@ -58,12 +60,14 @@ def _set(m, k_list, v):
 
 def set(path, val):
     global config
+    global need_save_config
     _set(config, path, val)
+    need_save_config = True
 
 
 def recheck_module_path():
     global config
-    need_save_config = False
+    global need_save_config
 
     xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
 
@@ -90,6 +94,11 @@ def recheck_module_path():
 
     # if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #     set(["modules", "gae_proxy", "control_port"], 8084)
+
+    if get(["no_mess_system"], 0) == 1 or os.getenv("XXNET_NO_MESS_SYSTEM","0") != "0" :
+        xlog.debug("no_mess_system")
+        os.environ["XXNET_NO_MESS_SYSTEM"] = "1"
+        set(["no_mess_system"], 1)
 
     return need_save_config
 

@@ -347,8 +347,17 @@ def check_push_update():
 
 def create_desktop_shortcut():
     import sys
+    import subprocess
+
+    work_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(work_path)
+
     if sys.platform.startswith("linux"):
-        pass
+        if os.getenv("DESKTOP_SESSION","unknown") != "unknown" :  # make sure this is desktop linux
+            xxnet_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+            cmd='env XXNETPATH="' + xxnet_path + '" "' + work_path + '/create_shortcut_linux.sh"'
+            os.system(cmd)
+
     elif sys.platform == "win32":
         # import ctypes
         # msg = u"是否在桌面创建图标？"
@@ -357,10 +366,7 @@ def create_desktop_shortcut():
         # Yes:1 No:2
         #if res == 2:
         #    return
-        work_path = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(work_path)
 
-        import subprocess
         subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
 
 def notify_install_tcpz_for_winXp():
@@ -368,7 +374,6 @@ def notify_install_tcpz_for_winXp():
     ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
 
 def check_new_machine():
-
     current_path = os.path.dirname(os.path.abspath(__file__))
     if current_path != config.get(["update", "last_path"], ""):
         config.set(["update", "last_path"], current_path)
@@ -377,8 +382,9 @@ def check_new_machine():
         if sys.platform == "win32" and platform.release() == "XP":
             notify_install_tcpz_for_winXp()
 
-        xlog.info("generate desktop shortcut")
-        create_desktop_shortcut()
+        if os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0":
+            xlog.info("generate desktop shortcut")
+            create_desktop_shortcut()
 
 
 
