@@ -562,7 +562,7 @@ class CertUtil(object):
 
     @staticmethod
     def init_ca():
-        xlog.debug("Initializing CA")
+        #xlog.debug("Initializing CA")
 
         #Check Certs Dir
         if not os.path.exists(CertUtil.ca_certdir):
@@ -570,7 +570,7 @@ class CertUtil(object):
 
         # Confirmed GoAgent CA exist
         if not os.path.exists(CertUtil.ca_keyfile):
-            xlog.info("no XX-Net GAE CA file exist")
+            xlog.info("no GAE CA file exist in XX-Net data dir")
 
             xlog.info("clean old site certs in XX-Net cert dir")
             any(os.remove(x) for x in glob.glob(CertUtil.ca_certdir+'/*.crt')+glob.glob(CertUtil.ca_certdir+'/.*.crt'))
