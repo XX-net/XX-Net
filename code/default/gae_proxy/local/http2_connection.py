@@ -70,8 +70,8 @@ class RawFrame(object):
 class HTTP2_worker(HTTP_worker):
     version = "2"
 
-    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
-        super(HTTP2_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
+    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+        super(HTTP2_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.max_concurrent = 20
         self.network_buffer_size = 128 * 1024

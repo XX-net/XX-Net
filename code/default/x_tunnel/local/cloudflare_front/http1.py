@@ -14,8 +14,8 @@ class HTTP1_worker(HTTP_worker):
     version = "1.1"
     idle_time = 360
 
-    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
-        super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb)
+    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+        super(HTTP1_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.last_active_time = self.ssl_sock.create_time
         self.last_request_time = self.ssl_sock.create_time
