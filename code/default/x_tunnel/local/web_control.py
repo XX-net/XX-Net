@@ -322,7 +322,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def req_status(self):
         def convert(num, units=('B', 'KB', 'MB', 'GB')):
             for unit in units:
-                if num > 1023:
+                if num >= 1024:
                     num /= 1024.0
                 else:
                     break
