@@ -51,7 +51,7 @@ def init():
     threading.Thread(target=debug_data_clearup_thread).start()
 
 def log_debug_data(rtt, sent, received):
-    global recent_sent, recent_received
+    global recent_sent, recent_received, total_sent, total_received
     now = time.time()
 
     rtts.append((rtt, now))

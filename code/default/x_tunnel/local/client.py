@@ -145,10 +145,6 @@ def main():
     start()
 
     g.socks5_server = simple_http_server.HTTPServer((g.config.socks_host, g.config.socks_port), Socks5Server)
-    socks_thread = threading.Thread(target=g.socks5_server.serve_forever)
-    socks_thread.setDaemon(True)
-    socks_thread.start()
-
     xlog.info("Socks5 server listen:%s:%d.", g.config.socks_host, g.config.socks_port)
 
     ready = True

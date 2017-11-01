@@ -52,7 +52,7 @@ import check_local_network
 from config import config
 import cert_util
 import openssl_wrap
-
+import sni_generater
 
 import hyper
 
@@ -69,6 +69,54 @@ if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
 max_timeout = 5
 
 default_socket = socket.socket
+
+GoogleG23PKP = set((
+# https://pki.google.com/GIAG2.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnCoEd1zYUJE6BqOC4NhQ
+SLyJP/EZcBqIRn7gj8Xxic4h7lr+YQ23MkSJoHQLU09VpM6CYpXu61lfxuEFgBLE
+XpQ/vFtIOPRT9yTm+5HpFcTP9FMN9Er8n1Tefb6ga2+HwNBQHygwA0DaCHNRbH//
+OjynNwaOvUsRBOt9JN7m+fwxcfuU1WDzLkqvQtLL6sRqGrLMU90VS4sfyBlhH82d
+qD5jK4Q1aWWEyBnFRiL4U5W+44BKEMYq7LqXIBHHOZkQBKDwYXqVJYxOUnXitu0I
+yhT8ziJqs07PRgOXlwN+wLHee69FM8+6PnG33vQlJcINNYmdnfsOEXmJHjfFr45y
+aQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr2/GIAG3.crt
+# https://pki.goog/gsr2/GTSGIAG3.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylJL6h7/ziRrqNpyGGjV
+Vl0OSFotNQl2Ws+kyByxqf5TifutNP+IW5+75+gAAdw1c3UDrbOxuaR9KyZ5zhVA
+Cu9RuJ8yjHxwhlJLFv5qJ2vmNnpiUNjfmonMCSnrTykUiIALjzgegGoYfB29lzt4
+fUVJNk9BzaLgdlc8aDF5ZMlu11EeZsOiZCx5wOdlw1aEU1pDbcuaAiDS7xpp0bCd
+c6LgKmBlUDHP+7MvvxGIQC61SRAPCm7cl/q/LJ8FOQtYVK8GlujFjgEWvKgaTUHF
+k5GiHqGL8v7BiCRJo0dLxRMB3adXEmliK+v+IO9p+zql8H4p7u2WFvexH6DkkCXg
+MwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr4/GIAG3ECC.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG4ANKJrwlpAPXThRcA3Z4XbkwQvW
+hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
+-----END PUBLIC KEY-----
+'''))
+
+
+class Cert_Exception(Exception):
+    def __init__(self, message):
+        xlog.debug("Cert_Exception %r", message)
+        self.message = "%s" % (message)
+
+    def __str__(self):
+        # for %s
+        return repr(self.message)
+
+    def __repr__(self):
+        # for %r
+        return repr(self.message)
 
 
 def load_proxy_config():
@@ -89,8 +137,10 @@ def load_proxy_config():
 load_proxy_config()
 
 
-def connect_ssl(ip, port=443, timeout=5, check_cert=True):
+def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
     ip_port = (ip, port)
+
+    sni = sni_generater.get()
 
     if config.PROXY_ENABLE:
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -104,8 +154,9 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip)
+    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, close_cb)
     ssl_sock.set_connect_state()
+    ssl_sock.set_tlsext_host_name(sni)
 
     time_begin = time.time()
     ssl_sock.connect(ip_port)
@@ -135,16 +186,39 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True):
     check_local_network.last_check_time = time_handshaked
     check_local_network.continue_fail_count = 0
 
-    cert = ssl_sock.get_peer_certificate()
-    if not cert:
-        raise socket.error(' certficate is none')
+    def verify_SSL_certificate_issuer(ssl_sock):
+        # cert = ssl_sock.get_peer_certificate()
+        # if not cert:
+        #    #google_ip.report_bad_ip(ssl_sock.ip)
+        #    #connect_control.fall_into_honeypot()
+        #    raise socket.error(' certficate is none')
+
+        # issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
+        # if not issuer_commonname.startswith('Google'):
+        #    google_ip.report_connect_fail(ip, force_remove=True)
+        #    raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+        certs = ssl_sock.get_peer_cert_chain()
+        if not certs:
+            # google_ip.report_bad_ip(ssl_sock.ip)
+            # connect_control.fall_into_honeypot()
+            raise socket.error(' certficate is none')
+        if len(certs) < 3:
+            # google_ip.report_connect_fail(ip, force_remove=True)
+            raise Cert_Exception('No intermediate CA was found.')
+
+        if hasattr(OpenSSL.crypto, "dump_publickey"):
+            # old OpenSSL not support this function.
+            if OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, certs[1].get_pubkey()) not in GoogleG23PKP:
+                # google_ip.report_connect_fail(ip, force_remove=True)
+                raise Cert_Exception('The intermediate CA is mismatching.')
+
+        issuer_commonname = next((v for k, v in certs[0].get_issuer().get_components() if k == 'CN'), '')
+        if not issuer_commonname.startswith('Google'):
+            # google_ip.report_connect_fail(ip, force_remove=True)
+            raise Cert_Exception(' certficate is issued by %r, not Google' % (issuer_commonname))
 
     if check_cert:
-        issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
-        if __name__ == "__main__":
-            xlog.debug("issued by:%s", issuer_commonname)
-        if not issuer_commonname.startswith('Google'):
-            raise socket.error(' certficate is issued by %r, not Google' % ( issuer_commonname))
+        verify_SSL_certificate_issuer(ssl_sock)
 
     connct_time = int((time_connected - time_begin) * 1000)
     handshake_time = int((time_handshaked - time_connected) * 1000)
@@ -154,6 +228,14 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True):
     ssl_sock._sock = sock
     ssl_sock.connct_time = connct_time
     ssl_sock.handshake_time = handshake_time
+
+    ssl_sock.fd = sock.fileno()
+    ssl_sock.create_time = time_begin
+    ssl_sock.last_use_time = time_begin
+    ssl_sock.received_size = 0
+    ssl_sock.load = 0
+    ssl_sock.sni = sni
+    ssl_sock.host = ""
 
     return ssl_sock
 
