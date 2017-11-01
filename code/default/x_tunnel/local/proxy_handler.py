@@ -24,6 +24,7 @@ def netloc_to_host_port(netloc, default_port=80):
 class Socks5Server():
     read_buffer = ""
     buffer_start = 0
+    handle_num = 0
 
     def __init__(self, sock, client, args):
         self.connection = sock
@@ -33,6 +34,7 @@ class Socks5Server():
         self.args = args
 
     def handle(self):
+        self.__class__.handle_num += 1
         try:
             # xlog.debug('Connected from %r', self.client_address)
 

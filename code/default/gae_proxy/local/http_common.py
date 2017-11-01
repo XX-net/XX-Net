@@ -138,7 +138,7 @@ class Task(object):
 
 
 class HTTP_worker(object):
-    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb):
+    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
         self.ssl_sock = ssl_sock
         self.last_active_time = self.ssl_sock.create_time
         self.last_request_time = self.ssl_sock.create_time
@@ -148,6 +148,7 @@ class HTTP_worker(object):
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
+        self.log_debug_data = log_debug_data
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
@@ -168,8 +169,10 @@ class HTTP_worker(object):
         xlog.debug("%s worker close:%s", self.ip, reason)
         self.close_cb(self)
 
-    def update_rtt_speed(self, rtt, speed):
+    def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
+        self.log_debug_data(rtt, sent, received)
+        self.speed = speed
         self.speed_history.append(speed)
 
     def get_score(self):

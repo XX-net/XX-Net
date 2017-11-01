@@ -1,6 +1,7 @@
 import time
 import os
 import threading
+import collections
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 xlog.set_buffer(500)
@@ -24,6 +25,17 @@ class Front(object):
         self.success_num = 0
         self.fail_num = 0
         self.last_host = "center.xx-net.net"
+
+        self.rtts = collections.deque([(0, time.time())])
+        self.rtts_lock = threading.Lock()
+        self.traffics = collections.deque()
+        self.traffics_lock = threading.Lock()
+        self.recent_sent = 0
+        self.recent_received = 0
+        self.total_sent = 0
+        self.total_received = 0
+
+        threading.Thread(target=self.debug_data_clearup_thread).start()
 
     @staticmethod
     def update_front_domains():
@@ -56,10 +68,53 @@ class Front(object):
                 next_update_time = time.time() + (1800)
                 xlog.debug("updated cloudflare front domains from github fail:%r", e)
 
+    def log_debug_data(self, rtt, sent, received):
+        now = time.time()
+
+        self.rtts.append((rtt, now))
+
+        with self.traffics_lock:
+            self.traffics.append((sent, received, now))
+            self.recent_sent += sent
+            self.recent_received += received
+            self.total_sent += sent
+            self.total_received += received
+
+    def get_rtt(self):
+        now = time.time()
+
+        while len(self.rtts) > 1:
+            with self.rtts_lock:
+                rtt, log_time = rtt_log = max(self.rtts)
+
+                if now - log_time > 5:
+                    self.rtts.remove(rtt_log)
+                    continue
+
+            return rtt
+
+        return self.rtts[0][0]
+
+    def debug_data_clearup_thread(self):
+        while True:
+            now = time.time()
+
+            with self.rtts_lock:
+                if len(self.rtts) > 1 and now - self.rtts[0][-1] > 5:
+                    self.rtts.popleft()
+
+            with self.traffics_lock:
+                if self.traffics and now - self.traffics[0][-1] > 60:
+                    sent, received, _ = self.traffics.popleft()
+                    self.recent_sent -= sent
+                    self.recent_received -= received
+
+            time.sleep(0.01)
+
     def worker_num(self):
         host = self.last_host
         if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host, self.log_debug_data)
 
         dispatcher = self.dispatchs[host]
         return len(dispatcher.workers)
@@ -74,7 +129,7 @@ class Front(object):
             host = self.last_host
 
         if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host, self.log_debug_data)
 
         dispatcher = self.dispatchs[host]
         worker = dispatcher.get_worker(nowait=True)
@@ -85,7 +140,7 @@ class Front(object):
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host, self.log_debug_data)
 
         self.last_host = host
 

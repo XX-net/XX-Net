@@ -8,6 +8,38 @@
 <div id="noob-info" class="hide"></div>
 
 <div id="details">
+    <h4>{{ _( "Global" ) }}</h4>
+    <table id="global" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th width="25%">{{ _( "Property" ) }}</th>
+                <th>{{ _( "Value" ) }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ _( "Server listen address" ) }}</td>
+                <td class="socks_addr"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Handle num" ) }}</td>
+                <td class="handle_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Response time" ) }}</td>
+                <td class="rtt"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Speed" ) }}</td>
+                <td class="speed"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
+            </tr>
+        </tbody>
+    </table>
+
     <h4>{{ _( "GAE front" ) }}</h4>
     <table id="gae_front" class="table table-bordered table-striped">
         <thead>
@@ -32,6 +64,10 @@
             <tr>
                 <td>{{ _( "Worker num" ) }}</td>
                 <td class="worker_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
             </tr>
         </tbody>
     </table>
@@ -61,6 +97,10 @@
                 <td>{{ _( "Worker num" ) }}</td>
                 <td class="worker_num"></td>
             </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
+            </tr>
         </tbody>
     </table>
 
@@ -89,6 +129,10 @@
                 <td>{{ _( "Worker num" ) }}</td>
                 <td class="worker_num"></td>
             </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
+            </tr>
         </tbody>
     </table>
 </div> <!-- #details -->
@@ -115,8 +159,8 @@
 
 </script>
 <script type="text/javascript">
-    function updateProperty(front, key, value) {
-        var item = $('#'+front).find('.'+key);
+    function updateProperty(table, key, value) {
+        var item = $('#'+table).find('.'+key);
 
         var previousContent = item.html();
         if (String(previousContent) != String(value)) {

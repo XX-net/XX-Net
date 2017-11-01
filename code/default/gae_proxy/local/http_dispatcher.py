@@ -75,10 +75,10 @@ class HttpsDispatcher(object):
         ssl_sock.host = ssl_sock.appid + ".appspot.com"
 
         if ssl_sock.h2:
-            worker = HTTP2_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = HTTP2_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h2_num += 1
         else:
-            worker = HTTP1_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = HTTP1_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h1_num += 1
 
         self.workers.append(worker)
@@ -87,6 +87,9 @@ class HttpsDispatcher(object):
 
         if check_free_worke:
             self.check_free_worker()
+
+    def log_debug_data(self, rtt, sent, received):
+        pass
 
     def _on_worker_idle_cb(self):
         self.wait_a_worker_cv.notify()

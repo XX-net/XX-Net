@@ -2,6 +2,8 @@ import time
 import struct
 import zlib
 import random
+import threading
+import collections
 
 from xlog import getLogger
 xlog = getLogger("heroku_front")
@@ -27,12 +29,66 @@ class Front(object):
         self.hosts = ["xxnet2.herokuapp.com", "xxnet3.herokuapp.com", "xxnet4.herokuapp.com", "xxnet5.herokuapp.com"]
         self.host = str(random.choice(self.hosts))
 
-        self.dispatcher = http_dispatcher.HttpsDispatcher(self.host)
+        self.dispatcher = http_dispatcher.HttpsDispatcher(self.host, self.log_debug_data)
         self.last_success_time = time.time()
         self.last_fail_time = 0
         self.continue_fail_num = 0
         self.success_num = 0
         self.fail_num = 0
+
+        self.rtts = collections.deque([(0, time.time())])
+        self.rtts_lock = threading.Lock()
+        self.traffics = collections.deque()
+        self.traffics_lock = threading.Lock()
+        self.recent_sent = 0
+        self.recent_received = 0
+        self.total_sent = 0
+        self.total_received = 0
+
+        threading.Thread(target=self.debug_data_clearup_thread).start()
+
+    def log_debug_data(self, rtt, sent, received):
+        now = time.time()
+
+        self.rtts.append((rtt, now))
+
+        with self.traffics_lock:
+            self.traffics.append((sent, received, now))
+            self.recent_sent += sent
+            self.recent_received += received
+            self.total_sent += sent
+            self.total_received += received
+
+    def get_rtt(self):
+        now = time.time()
+
+        while len(self.rtts) > 1:
+            with self.rtts_lock:
+                rtt, log_time = rtt_log = max(self.rtts)
+
+                if now - log_time > 5:
+                    self.rtts.remove(rtt_log)
+                    continue
+
+            return rtt
+
+        return self.rtts[0][0]
+
+    def debug_data_clearup_thread(self):
+        while True:
+            now = time.time()
+
+            with self.rtts_lock:
+                if len(self.rtts) > 1 and now - self.rtts[0][-1] > 5:
+                    self.rtts.popleft()
+
+            with self.traffics_lock:
+                if self.traffics and now - self.traffics[0][-1] > 60:
+                    sent, received, _ = self.traffics.popleft()
+                    self.recent_sent -= sent
+                    self.recent_received -= received
+
+            time.sleep(0.01)
 
     def get_score(self, host=None):
         now = time.time()

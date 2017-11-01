@@ -320,20 +320,50 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         })
 
     def req_status(self):
+        def convert(num, units=('B', 'KB', 'MB', 'GB')):
+            for unit in units:
+                if num >= 1024:
+                    num /= 1024.0
+                else:
+                    break
+            return '{:.1f} {}'.format(num, unit)
+
         res = {}
+        rtts = []
+        recent_sent = 0
+        recent_received = 0
+        total_sent = 0
+        total_received = 0
         for front in all_fronts:
             name = front.name
             score = front.get_score()
             if score is None:
                 score = "False"
+            else:
+                score = int(score)
+            rtts.append(front.get_rtt())
+            recent_sent += front.recent_sent
+            recent_received += front.recent_received
+            total_sent += front.total_sent
+            total_received += front.total_received
             res[name] = {
                 "score": score,
                 "success_num": front.success_num,
                 "fail_num": front.fail_num,
-                "worker_num": front.worker_num()
+                "worker_num": front.worker_num(),
+                "total_traffics": "Up: %s / Down: %s" % (convert(front.total_sent), convert(front.total_received))
             }
+
+        res["global"] = {
+            "socks_addr": "SOCKS5://%s:%d" % (g.config.socks_host, g.config.socks_port),
+            "handle_num": g.socks5_server.handler.handle_num,
+            "rtt": int(max(rtts)) or 9999,
+            "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent / 5.0), convert(recent_received / 5.0)),
+            "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
+        }
 
         self.response_json({
             "res": "success",
             "status": res
+
         })

@@ -44,8 +44,9 @@ g_cacertfile = os.path.join(current_path, "cacert.pem")
 class HttpsDispatcher(object):
     idle_time = 20 * 60
 
-    def __init__(self, host):
+    def __init__(self, host, log_debug_data):
         self.host = host
+        self.log_debug_data = log_debug_data
         self.request_queue = Queue.Queue()
         self.workers = []
         self.working_tasks = {}
@@ -68,10 +69,10 @@ class HttpsDispatcher(object):
             raise Exception("on_ssl_created_cb ssl_sock None")
 
         if ssl_sock.h2:
-            worker = HTTP2_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = HTTP2_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h2_num += 1
         else:
-            worker = HTTP1_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = HTTP1_worker(ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h1_num += 1
 
         self.workers.append(worker)

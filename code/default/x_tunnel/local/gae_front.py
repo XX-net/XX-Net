@@ -1,6 +1,8 @@
 import os
 import sys
 import time
+import threading
+import collections
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -23,6 +25,14 @@ last_fail_time = 0
 continue_fail_num = 0
 success_num = 0
 fail_num = 0
+rtts = collections.deque([(0, time.time())])
+rtts_lock = threading.Lock()
+traffics = collections.deque()
+traffics_lock = threading.Lock()
+recent_sent = 0
+recent_received = 0
+total_sent = 0
+total_received = 0
 
 
 def init():
@@ -35,7 +45,55 @@ def init():
         return False
 
     gae_proxy = proc_handler["gae_proxy"]["imp"].local
+    gae_proxy.http_dispatcher.http_dispatch.log_debug_data = log_debug_data
+    gae_proxy.http_dispatcher.http_dispatch.close_all_worker()
 
+    threading.Thread(target=debug_data_clearup_thread).start()
+
+def log_debug_data(rtt, sent, received):
+    global recent_sent, recent_received
+    now = time.time()
+
+    rtts.append((rtt, now))
+
+    with traffics_lock:
+        traffics.append((sent, received, now))
+        recent_sent += sent
+        recent_received += received
+        total_sent += sent
+        total_received += received
+
+def get_rtt():
+    now = time.time()
+
+    while len(rtts) > 1:
+        with rtts_lock:
+            rtt, log_time = rtt_log = max(rtts)
+
+            if now - log_time > 5:
+                rtts.remove(rtt_log)
+                continue
+
+        return rtt
+
+    return rtts[0][0]
+
+def debug_data_clearup_thread():
+    global recent_sent, recent_received
+    while True:
+        now = time.time()
+
+        with rtts_lock:
+            if len(rtts) > 1 and now - rtts[0][-1] > 5:
+                rtts.popleft()
+
+        with traffics_lock:
+            if traffics and now - traffics[0][-1] > 60:
+                sent, received, _ = traffics.popleft()
+                recent_sent -= sent
+                recent_received -= received
+
+        time.sleep(0.01)
 
 def get_score(host=""):
     now = time.time()
