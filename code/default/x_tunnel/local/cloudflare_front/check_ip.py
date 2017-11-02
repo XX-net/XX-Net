@@ -365,6 +365,7 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain, print altNames
 
+    top_domain = None
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         if not ip_utils.check_ip_valid(ip):
@@ -380,9 +381,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
         xlog.info("test top domain:%s", top_domain)
-    else:
-        top_domain = None
-
 
     res = test_xtunnel_ip2(ip, top_domain=top_domain)
     if not res:
