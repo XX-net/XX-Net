@@ -136,8 +136,14 @@ def load_proxy_config():
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 load_proxy_config()
 
+import threading
+network_fail_lock = threading.Lock()
 
 def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
+    if check_local_network.network_stat != "OK":
+        with network_fail_lock:
+           time.sleep(0.1)
+
     ip_port = (ip, port)
 
     sni = sni_generater.get()

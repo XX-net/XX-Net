@@ -168,7 +168,13 @@ def get_subj_alt_name(peer_cert):
     return dns_name
 
 
+import threading
+network_fail_lock = threading.Lock()
+
 def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
+    if check_local_network.network_stat != "OK":
+        with network_fail_lock:
+           time.sleep(0.1)
 
     if top_domain is None:
         top_domain, subs = random.choice(ns)
