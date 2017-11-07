@@ -65,7 +65,8 @@ class User_special(object):
         self.host_appengine_mode = "gae"
         self.auto_adjust_scan_ip_thread_num = 1
         self.scan_ip_thread_num = 0
-        self.use_ipv6 = 0
+        self.use_ipv6 = "auto"
+
 
 class User_config(object):
     user_special = User_special()
@@ -117,7 +118,9 @@ class User_config(object):
                 pass
 
             try:
-                self.user_special.use_ipv6 = config.CONFIG.getint('google_ip', 'use_ipv6')
+                self.user_special.use_ipv6 = config.CONFIG.get('google_ip', 'use_ipv6')
+                if self.user_special.use_ipv6 not in ["auto", "force_ipv4", "force_ipv6"]:
+                    self.user_special.use_ipv6 = "auto"
             except:
                 pass
 
@@ -162,12 +165,12 @@ class User_config(object):
             if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num'):
                 f.write("max_scan_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
 
-            if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
-                f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
+            if self.user_special.use_ipv6 != self.DEFAULT_CONFIG.get('google_ip', 'use_ipv6'):
+                f.write("use_ipv6 = %s\n\n" % self.user_special.use_ipv6)
 
             f.close()
-        except:
-            xlog.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
+        except Exception as e:
+            xlog.warn("launcher.config save user config fail:%s %r", CONFIG_USER_FILENAME, e)
 
 
 user_config = User_config()
@@ -407,10 +410,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             user_agent = ""
 
-        good_ip_num = google_ip.good_ip_num
-        if good_ip_num > len(google_ip.gws_ip_list):
-            good_ip_num = len(google_ip.gws_ip_list)
-
         res_arr = {
                    "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
                    "os_system": platform.system(),
@@ -426,16 +425,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                    "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "pac_url": config.pac_url,
-                   "use_ipv6": config.CONFIG.getint("google_ip", "use_ipv6"),
+                   "use_ipv6": config.USE_IPV6,
 
                    "gae_appid": "|".join(config.GAE_APPIDS),
                    "working_appid": "|".join(appid_manager.working_appid_list),
                    "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
                    "not_exist_appids": "|".join(appid_manager.not_exist_appids),
 
-                   "network_state": check_local_network.network_stat,
+                   "ipv4_state": check_local_network.IPv4.get_stat(),
+                   "ipv6_state": check_local_network.IPv6.get_stat(),
                    "ip_num": len(google_ip.gws_ip_list),
-                   "good_ip_num": good_ip_num,
+                   "good_ipv4_num": google_ip.good_ipv4_num,
+                   "good_ipv6_num": google_ip.good_ipv6_num,
                    "connected_link_new": len(https_manager.new_conn_pool.pool),
                    "connected_link_used": len(https_manager.gae_conn_pool.pool),
                    "worker_h1": http_dispatch.h1_num,
@@ -488,15 +489,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
                 user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
 
-                use_ipv6 = int(self.postvars['use_ipv6'][0])
-                if user_config.user_special.use_ipv6 != use_ipv6:
-                    if use_ipv6:
-                        if not check_local_network.check_ipv6() and False:
-                            xlog.warn("IPv6 was enabled, but check failed.")
-                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
-
-                    user_config.user_special.use_ipv6 = use_ipv6
-
                 user_config.save()
 
                 config.load()
@@ -518,7 +510,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
         self.send_response_nc('text/html', data)
-
 
     def req_deploy_handler(self):
         global deploy_proc
@@ -709,6 +700,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             #update auto_adjust_scan_ip and scan_ip_thread_num
             should_auto_adjust_scan_ip = int(self.postvars['auto_adjust_scan_ip_thread_num'][0])
             thread_num_for_scan_ip = int(self.postvars['scan_ip_thread_num'][0])
+
+            use_ipv6 = self.postvars['use_ipv6'][0]
+            if user_config.user_special.use_ipv6 != use_ipv6:
+                xlog.debug("use_ipv6 change to %s", use_ipv6)
+                user_config.user_special.use_ipv6 = use_ipv6
 
             #update user config settings
             user_config.user_special.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip

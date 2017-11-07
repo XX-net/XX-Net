@@ -27,6 +27,7 @@ from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
 
+import check_local_network
 from http_common import *
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -305,6 +306,7 @@ class Stream(object):
         response.worker = self.connection
         response.task = self.task
         self.task.queue.put(response)
+        check_local_network.report_ok(self.connection.ssl_sock.ip)
 
     def close(self, reason=""):
         self._close_cb(self.stream_id, reason)

@@ -77,7 +77,6 @@ from appids_manager import appid_manager
 
 from config import config
 from google_ip import google_ip
-import check_local_network
 from http_dispatcher import http_dispatch
 from http_common import *
 
@@ -195,12 +194,12 @@ def request_gae_server(headers, body, url, timeout):
     if not response:
         raise GAE_Exception(600, "fetch gae fail")
 
-    if response.status >= 600:
+    if response.status >= 500:
         raise GAE_Exception(
             response.status, "fetch gae fail:%d" % response.status)
 
-    server_type = response.headers.get("server", "")
-    content_type = response.headers.get("content-type", "")
+    server_type = response.getheader("server", "")
+    # content_type = response.getheaders("content-type", "")
     if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
             response.status == 403 or response.status == 405:
 
@@ -336,8 +335,6 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
 
         try:
             response = request_gae_server(request_headers, request_body, url, timeout)
-
-            check_local_network.report_network_ok()
 
             response = unpack_response(response)
 

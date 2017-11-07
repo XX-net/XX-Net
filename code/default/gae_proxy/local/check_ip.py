@@ -181,10 +181,7 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
             # xlog.debug("ip:%s http/1.1", ip)
     time_handshaked = time.time()
 
-    # report network ok
-    check_local_network.network_stat = "OK"
-    check_local_network.last_check_time = time_handshaked
-    check_local_network.continue_fail_count = 0
+    check_local_network.report_ok(ip)
 
     def verify_SSL_certificate_issuer(ssl_sock):
         # cert = ssl_sock.get_peer_certificate()

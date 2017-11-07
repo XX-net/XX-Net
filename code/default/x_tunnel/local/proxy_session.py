@@ -381,6 +381,8 @@ class ProxySession():
                     with self.mutex:
                         self.on_road_num -= 1
 
+                g.stat["roundtrip_num"] += 1
+
                 if status == 521:
                     xlog.warn("X-tunnel server is down, try get new server.")
                     request_balance(update_server=True)
@@ -442,6 +444,7 @@ class ProxySession():
                     if rtt > 8000:
                         xlog.warn("rtt:%d speed:%d trace:%s", rtt, speed, response.worker.get_trace())
                         xlog.warn("task trace:%s", response.task.get_trace())
+                        g.stat["slow_roundtrip"] += 1
 
                     data_len = len(data)
                     if (sn > 0 and data_len == 0) or (sn == 0 and data_len > 0):
@@ -471,6 +474,7 @@ class ProxySession():
 
                     break
                 else:
+                    g.stat["timeout_roundtrip"] += 1
                     xlog.warn("roundtrip time:%d transfer_no:%d send_sn:%d send:%d status:%r retry:%d",
                               (time.time() - start_time) * 1000, transfer_no, send_sn, send_data_len, status, try_no)
                     time.sleep(sleep_time)

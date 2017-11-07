@@ -133,7 +133,7 @@ class Config(object):
         self.PROXY_USER = self.CONFIG.get('proxy', 'user')
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
-        self.USE_IPV6 = self.CONFIG.getint('google_ip', 'use_ipv6')
+        self.USE_IPV6 = self.CONFIG.get('google_ip', 'use_ipv6')
         self.max_links_per_ip = self.CONFIG.getint('google_ip', 'max_links_per_ip')
         self.record_ip_history = self.CONFIG.getint('google_ip', 'record_ip_history')
         self.ip_connect_interval = self.CONFIG.getint('google_ip', 'ip_connect_interval')

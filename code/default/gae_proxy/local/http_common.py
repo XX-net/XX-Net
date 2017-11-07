@@ -27,6 +27,9 @@ class BaseResponse(object):
         self.reason = reason
         self.headers = headers
 
+    def getheader(self, key, default=""):
+        return default
+
 
 class Task(object):
     def __init__(self, headers, body, queue, url, timeout):

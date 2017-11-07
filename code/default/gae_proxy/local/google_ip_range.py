@@ -93,11 +93,37 @@ class IpPool(object):
         time.sleep(3)
         raise Exception("get ip fail.")
 
+
 class IpRange(object):
     def __init__(self):
         self.default_range_file = os.path.join(current_path, "ip_range.txt")
         self.user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
-        self.load_ip_range()
+
+        ip_source = config.CONFIG.get("google_ip", "ip_source")
+        if ip_source == "ip_pool":
+            self.ip_pool = IpPool()
+            self.get_ipv4 = self.ip_pool.random_get_ip
+            xlog.info("Use google ip pool.")
+        else:
+            self.load_ip_range()
+
+        self.ipv6_list = []
+        self.load_ipv6()
+
+    def load_ipv6(self):
+        with open(os.path.join(current_path, "good_ipv6.txt"), "r") as fd:
+            for line in fd.readlines():
+                if not line:
+                    continue
+                try:
+                    lp = line.split()
+                    ip = lp[0]
+                    if not ip:
+                        continue
+
+                    self.ipv6_list.append(ip)
+                except:
+                    continue
 
     def load_range_content(self, default=False):
         if not default and os.path.isfile(self.user_range_file):
@@ -162,17 +188,25 @@ class IpRange(object):
         for id in self.ip_range_map:
             print "[",id,"]:", self.ip_range_map[id]
 
-    def get_real_random_ip(self):
-        while True:
-            ip_int = random.randint(0, 4294967294)
-            add_last_byte = ip_int % 255
-            if add_last_byte == 0 or add_last_byte == 255:
-                continue
+    def get_ip(self, use_ipv6=None):
+        if use_ipv6 is None:
+            use_ipv6 = config.USE_IPV6
 
-            return ip_int
+        if use_ipv6 == "force_ipv4":
+            return self.get_ipv4()
+        elif use_ipv6 == "force_ipv6":
+            return self.get_ipv6()
+        else:
+            if use_ipv6 != "auto":
+                xlog.warn("IpRange get_ip but use_ip is %s", use_ipv6)
 
-    def get_ip(self):
-        #return self.get_real_random_ip()
+            ran = random.randint(0, 100)
+            if ran < 10:
+                return self.get_ipv6()
+            else:
+                return self.get_ipv4()
+
+    def get_ipv4(self):
         while True:
             index = random.randint(0, len(self.ip_range_list) - 1)
             ip_range = self.ip_range_list[index]
@@ -193,12 +227,13 @@ class IpRange(object):
 
             return ip_utils.ip_num_to_string(ip)
 
+    def get_ipv6(self):
+        return random.choice(self.ipv6_list)
+
 
 ip_range = IpRange()
 
 
 if __name__ == '__main__':
-    pool = IpPool()
-    for _ in range(10):
-        ip = pool.random_get_ip()
-        print(ip)
+    ip = ip_range.get_ip()
+    print (ip)

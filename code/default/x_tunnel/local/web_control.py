@@ -358,6 +358,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "socks_addr": "SOCKS5://%s:%d" % (g.config.socks_host, g.config.socks_port),
             "handle_num": g.socks5_server.handler.handle_num,
             "rtt": int(max(rtts)) or 9999,
+            "roundtrip_num": g.stat["roundtrip_num"],
+            "slow_roundtrip": g.stat["slow_roundtrip"],
+            "timeout_roundtrip": g.stat["timeout_roundtrip"],
             "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent / 5.0), convert(recent_received / 5.0)),
             "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
         }

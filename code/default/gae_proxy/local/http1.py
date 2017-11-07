@@ -7,6 +7,7 @@ xlog = getLogger("gae_proxy")
 import connect_control
 from google_ip import google_ip
 from http_common import *
+import check_local_network
 
 
 class HTTP1_worker(HTTP_worker):
@@ -160,6 +161,7 @@ class HTTP1_worker(HTTP_worker):
                     self.idle_cb()
                     self.processed_tasks += 1
                     self.last_active_time = time.time()
+                    check_local_network.report_ok(self.ssl_sock.ip)
                     return
 
                 data = response.read()
