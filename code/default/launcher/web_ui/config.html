@@ -39,6 +39,12 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
+        <div class="span4">{{ _( "Run as Green Software" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/%E4%BB%A5%E7%BB%BF%E8%89%B2%E8%BD%AF%E4%BB%B6%E8%BF%90%E8%A1%8C" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
+        <div class="span8">
+            <input id="no-mess-system" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
         <div class="span4">
             <label for="update-options" class="pull-down-control">
                 <i class="icon icon-chevron-right" id="upgrade-pull-icon"></i> {{ _( "Upgrade Management" ) }}
@@ -168,6 +174,12 @@
 
                     $( "#show-systray").prop('checked', true);
                 }
+                if ( result['no_mess_system'] != 0 ) {
+                    $( "#no-mess-system").parent().removeClass('switch-off');
+                    $( "#no-mess-system").parent().addClass('switch-on');
+
+                    $( "#no-mess-system").prop('checked', true);
+                }
                 if ( result['gae_proxy_enable'] != 0 ) {
                     $( "#gae_proxy-enable").parent().removeClass('switch-off');
                     $( "#gae_proxy-enable").parent().addClass('switch-on');
@@ -229,6 +241,14 @@
     $('#show-systray').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'show_systray',
+            value     = isChecked ? 1 : 0;
+
+        return setConfig(key, value);
+    });
+
+    $('#no-mess-system').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'no_mess_system',
             value     = isChecked ? 1 : 0;
 
         return setConfig(key, value);

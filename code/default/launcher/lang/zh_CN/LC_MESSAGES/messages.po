@@ -62,6 +62,9 @@ msgstr "帮助"
 msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "显示托盘图标(需要重启XX-Net)"
 
+msgid "Run as Green Software"
+msgstr "以绿色软件运行"
+
 msgid "Upgrade Management"
 msgstr "升级管理"
 

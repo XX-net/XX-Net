@@ -234,7 +234,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             check_update = config.get(["update", "check_update"], "notice-stable")
 
             data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
-             "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d}' %\
+             "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d, \
+             "no_mess_system": %d }' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
@@ -244,6 +245,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0)
                     , config.get(["modules", "x_tunnel", "auto_start"], 0)
+                    , config.get(["no_mess_system"], 0)
                     )
         if reqs['cmd'] == ['get_version']:
             current_version = update_from_github.current_version()
@@ -318,6 +320,16 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
                     config.set(["modules", "launcher", "show_systray"], show_systray)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
+            elif 'no_mess_system' in reqs:
+                no_mess_system = int(reqs['no_mess_system'][0])
+                if no_mess_system != 0 and no_mess_system != 1:
+                    data = '{"res":"fail, show_systray:%s"}' % no_mess_system
+                else:
+                    config.set(["no_mess_system"], no_mess_system)
                     config.save()
 
                     data = '{"res":"success"}'
