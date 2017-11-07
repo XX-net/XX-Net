@@ -29,12 +29,12 @@ function createDesktopStartup() {
     CATEGORIES="Development"
     echo "[Desktop Entry]" > "$DESKFILE"
     #echo "Version=$VERSION" >> "$DESKFILE"
-    echo "Name=$NAME" >> "$DESKFILE"
-    echo "Exec=$EXEC" >> "$DESKFILE"
-    echo "Terminal=$TERMINAL" >> "$DESKFILE"
-    echo "Icon=$ICON" >> "$DESKFILE"
-    echo "Type=$TYPE" >> "$DESKFILE"
-    echo "Categories=$CATEGORIES" >> "$DESKFILE"
+    echo Name=$NAME >> "$DESKFILE"
+    echo 'Exec="$EXEC"' >> "$DESKFILE"
+    echo Terminal=$TERMINAL >> "$DESKFILE"
+    echo 'Icon="$ICON"' >> "$DESKFILE"
+    echo Type=$TYPE >> "$DESKFILE"
+    echo Categories=$CATEGORIES >> "$DESKFILE"
 
     chmod 744 $DESKFILE
 
