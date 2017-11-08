@@ -134,6 +134,10 @@ class Config(object):
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
 
         self.USE_IPV6 = self.CONFIG.get('google_ip', 'use_ipv6')
+        if self.USE_IPV6 not in ["auto", "force_ipv4", "force_ipv6"]:
+            xlog.debug("config use_ipv6 %s upgrade to auto", self.USE_IPV6)
+            self.USE_IPV6 = "auto"
+
         self.max_links_per_ip = self.CONFIG.getint('google_ip', 'max_links_per_ip')
         self.record_ip_history = self.CONFIG.getint('google_ip', 'record_ip_history')
         self.ip_connect_interval = self.CONFIG.getint('google_ip', 'ip_connect_interval')

@@ -467,7 +467,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             elif reqs['cmd'] == ['set_config']:
                 appids = self.postvars['appid'][0]
                 if appids != user_config.user_special.appid:
-                    if appids and google_ip.good_ip_num:
+                    if appids and (google_ip.good_ipv4_num + google_ip.good_ipv6_num):
                         fail_appid_list = test_appid.test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
@@ -710,6 +710,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             user_config.user_special.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
             user_config.user_special.scan_ip_thread_num = thread_num_for_scan_ip
             user_config.save()
+            config.load()
 
             #update google_ip settings
             google_ip.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
@@ -768,7 +769,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         if reqs['cmd'] == ['get_process']:
             all_ip_num = len(google_ip.ip_dict)
             left_num = google_ip.scan_exist_ip_queue.qsize()
-            good_num = google_ip.good_ip_num
+            good_num = (google_ip.good_ipv4_num + google_ip.good_ipv6_num)
             data = json.dumps(dict(all_ip_num=all_ip_num, left_num=left_num, good_num=good_num))
             self.send_response_nc('text/plain', data)
         elif reqs['cmd'] == ['start']:
