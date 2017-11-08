@@ -76,6 +76,7 @@ PRINTABLE_PROXY_TYPES = {SOCKS4: "SOCKS4", SOCKS5: "SOCKS5", HTTP: "HTTP"}
 
 _orgsocket = _orig_socket = socket.socket
 
+
 class ProxyError(IOError):
     """
     socket_err contains original socket.error exception.
@@ -89,6 +90,11 @@ class ProxyError(IOError):
 
     def __str__(self):
         return self.msg
+
+    def __repr__(self):
+        # for %r
+        return repr(self.msg)
+
 
 class GeneralProxyError(ProxyError): pass
 class ProxyConnectionError(ProxyError): pass
@@ -117,6 +123,7 @@ DEFAULT_PORTS = { SOCKS4: 1080,
                   HTTP: 8080
                 }
 
+
 def set_default_proxy(proxy_type=None, addr=None, port=None, rdns=True, username=None, password=None):
     """
     set_default_proxy(proxy_type, addr[, port[, rdns[, username, password]]])
@@ -124,6 +131,17 @@ def set_default_proxy(proxy_type=None, addr=None, port=None, rdns=True, username
     Sets a default proxy which all further socksocket objects will use,
     unless explicitly changed. All parameters are as for socket.set_proxy().
     """
+    if isinstance(proxy_type, basestring):
+        proxy_type = proxy_type.lower()
+        if "http" in proxy_type:
+            proxy_type = PROXY_TYPE_HTTP
+        elif "socks5" in proxy_type:
+            proxy_type = PROXY_TYPE_SOCKS5
+        elif "socks4" in proxy_type:
+            proxy_type = PROXY_TYPE_SOCKS4
+        else:
+            raise ProxyError("unknown proxy type:%s" % proxy_type)
+
     socksocket.default_proxy = (proxy_type, addr, port, rdns,
                                 username.encode() if username else None,
                                 password.encode() if password else None)
@@ -263,6 +281,17 @@ class socksocket(_BaseSocket):
         password -    Password to authenticate with to the server.
                        Only relevant when username is also provided.
         """
+        if isinstance(proxy_type, basestring):
+            proxy_type = proxy_type.lower()
+            if "http" in proxy_type:
+                proxy_type = PROXY_TYPE_HTTP
+            elif "socks5" in proxy_type:
+                proxy_type = PROXY_TYPE_SOCKS5
+            elif "socks4" in proxy_type:
+                proxy_type = PROXY_TYPE_SOCKS4
+            else:
+                raise ProxyError("unknown proxy type:%s" % proxy_type)
+
         self.proxy = (proxy_type, addr, port, rdns,
                       username.encode() if username else None,
                       password.encode() if password else None)
@@ -634,9 +663,16 @@ class socksocket(_BaseSocket):
         Uses the same API as socket's connect().
         To select the proxy server, use set_proxy().
 
-        dest_pair - 2-tuple of (IP/hostname, port).
+        dest_pair
         """
-        dest_addr, dest_port = dest_pair
+        if len(dest_pair) == 2:
+            # IPv4
+            dest_addr, dest_port = dest_pair
+        elif len(dest_pair) == 4:
+            # IPv6
+            dest_addr, dest_port, st_zero, st_stream  = dest_pair
+        else:
+            raise GeneralProxyError("Invalid destination-connection (host, port) pair")
 
         if self.type == socket.SOCK_DGRAM:
             if not self._proxyconn:
@@ -654,10 +690,7 @@ class socksocket(_BaseSocket):
         proxy_type, proxy_addr, proxy_port, rdns, username, password = self.proxy
 
         # Do a minimal input check first
-        if (not isinstance(dest_pair, (list, tuple))
-                or len(dest_pair) != 2
-                or not dest_addr
-                or not isinstance(dest_port, int)):
+        if not dest_addr or not isinstance(dest_port, int):
             raise GeneralProxyError("Invalid destination-connection (host, port) pair")
 
 

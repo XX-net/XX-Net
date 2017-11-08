@@ -13,8 +13,6 @@ from http_common import *
 
 from hyper.common.bufsocket import BufferedSocket
 
-from hyper.common.bufsocket import BufferedSocket
-
 from hyper.packages.hyperframe.frame import (
     FRAMES, DataFrame, HeadersFrame, PushPromiseFrame, RstStreamFrame,
     SettingsFrame, Frame, WindowUpdateFrame, GoAwayFrame, PingFrame,
@@ -61,28 +59,38 @@ class FlowControlManager(BaseFlowControlManager):
         return self.initial_window_size - self.window_size
 
 
+class RawFrame(object):
+    def __init__(self, dat):
+        self.dat = dat
+
+    def serialize(self):
+        return self.dat
+
+
 class HTTP2_worker(HTTP_worker):
     version = "2"
 
-    def __init__(self, ssl_sock, close_cb, retry_task_cb):
-        super(HTTP2_worker, self).__init__(ssl_sock, close_cb, retry_task_cb)
+    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+        super(HTTP2_worker, self).__init__(ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.max_concurrent = 20
         self.network_buffer_size = 128 * 1024
 
         # Google http/2 time out is 4 mins.
-        ssl_sock.settimeout(240)
+        self.ssl_sock.settimeout(240)
         self._sock = BufferedSocket(ssl_sock, self.network_buffer_size)
 
         self.next_stream_id = 1
         self.streams = {}
         self.last_ping_time = time.time()
+        self.last_active_time = self.ssl_sock.create_time
 
         # count ping not ACK
         # increase when send ping
         # decrease when recv ping ack
         # if this in not 0, don't accept request.
         self.ping_on_way = 0
+        self.accept_task = False
 
         # request_lock
         self.request_lock = threading.Lock()
@@ -125,8 +133,14 @@ class HTTP2_worker(HTTP_worker):
         threading.Thread(target=self.send_loop).start()
         threading.Thread(target=self.recv_loop).start()
 
+    # export api
     def request(self, task):
-        # this is the export api
+
+        if not self.keep_running:
+            # race condition
+            self.retry_task_cb(task)
+            return
+
         if len(self.streams) > self.max_concurrent:
             self.accept_task = False
 
@@ -141,6 +155,7 @@ class HTTP2_worker(HTTP_worker):
             # http/2 client use odd stream_id
             self.next_stream_id += 2
 
+        self.ssl_sock.settimeout(100)
         stream = Stream(self, self.ip, stream_id, self.ssl_sock.host, task,
                     self._send_cb, self._close_stream_cb, self.encoder, self.decoder,
                     FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
@@ -152,7 +167,7 @@ class HTTP2_worker(HTTP_worker):
         while connect_control.keep_running and self.keep_running:
             frame = self.send_queue.get(True)
             if not frame:
-                # None frame to exist
+                # None frame means exist
                 break
 
             # xlog.debug("%s Send:%s", self.ip, str(frame))
@@ -162,8 +177,11 @@ class HTTP2_worker(HTTP_worker):
                 # don't flush for small package
                 # reduce send api call
 
+                if self.send_queue._qsize():
+                    continue
+
                 # wait for payload frame
-                time.sleep(0.001)
+                time.sleep(0.01)
                 # combine header and payload in one tcp package.
                 if not self.send_queue._qsize():
                     self._sock.flush()
@@ -171,9 +189,12 @@ class HTTP2_worker(HTTP_worker):
                 if e.errno not in (errno.EPIPE, errno.ECONNRESET):
                     xlog.warn("%s http2 send fail:%r", self.ip, e)
                 else:
-                    xlog.exceptiong("send error:%r", e)
+                    xlog.exception("send error:%r", e)
 
-                self.close("send fail:%r", e)
+                self.close("send fail:%r" % e)
+            except Exception as e:
+                xlog.debug("http2 %s send error:%r", self.ip, e)
+                self.close("send fail:%r" % e)
 
     def recv_loop(self):
         while connect_control.keep_running and self.keep_running:
@@ -183,27 +204,26 @@ class HTTP2_worker(HTTP_worker):
                 xlog.debug("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
-    def get_rtt_rate(self):
-        return self.rtt + len(self.streams) * 100
-
     def close(self, reason=""):
         self.keep_running = False
+        self.accept_task = False
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
         self.send_queue.put(None)
 
         for stream in self.streams.values():
-            if stream.get_head_time:
-                # after get header,
+            if stream.task.responsed:
                 # response have send to client
                 # can't retry
                 stream.close(reason=reason)
             else:
                 self.retry_task_cb(stream.task)
+        self.streams = {}
         super(HTTP2_worker, self).close(reason)
 
     def send_ping(self):
+        # Use less for GAE server.
         p = PingFrame(0)
         p.opaque_data = struct.pack("!d", time.time())
         self.send_queue.put(p)
@@ -211,7 +231,8 @@ class HTTP2_worker(HTTP_worker):
         self.ping_on_way += 1
 
     def _send_preamble(self):
-        self._sock.send(b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n')
+        self.send_queue.put(RawFrame(b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'))
+
         f = SettingsFrame(0)
         f.settings[SettingsFrame.ENABLE_PUSH] = 0
         f.settings[SettingsFrame.INITIAL_WINDOW_SIZE] = self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]
@@ -260,6 +281,10 @@ class HTTP2_worker(HTTP_worker):
 
         if self.keep_running and len(self.streams) < self.max_concurrent and self.remote_window_size > 10000:
             self.accept_task = True
+            self.idle_cb()
+
+        if len(self.streams) == 0:
+            self.ssl_sock.settimeout(240)
 
         self.processed_tasks += 1
 
@@ -267,7 +292,7 @@ class HTTP2_worker(HTTP_worker):
         try:
             header = self._sock.recv(9)
         except Exception as e:
-            xlog.warn("%s _consume_single_frame:%r", self.ip, e)
+            xlog.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip, e, time.time()-self.last_active_time)
             self.close("disconnect:%r" % e)
             return
 
@@ -275,8 +300,8 @@ class HTTP2_worker(HTTP_worker):
         frame, length = Frame.parse_frame_header(header)
 
         if length > FRAME_MAX_LEN:
-            xlog.error("Frame size exceeded on stream %d (received: %d, max: %d)",
-                frame.stream_id, length, FRAME_MAX_LEN)
+            xlog.error("%s Frame size exceeded on stream %d (received: %d, max: %d)",
+                self.ip, frame.stream_id, length, FRAME_MAX_LEN)
             # self._send_rst_frame(frame.stream_id, 6) # 6 = FRAME_SIZE_ERROR
 
         data = self._recv_payload(length)
@@ -327,6 +352,7 @@ class HTTP2_worker(HTTP_worker):
         if frame.stream_id != 0:
             try:
                 self.streams[frame.stream_id].receive_frame(frame)
+                self.last_active_time = time.time()
             except KeyError:
                 xlog.error("%s Unexpected stream identifier %d", self.ip, frame.stream_id)
         else:
@@ -354,6 +380,7 @@ class HTTP2_worker(HTTP_worker):
                 p.flags.add('ACK')
                 p.opaque_data = frame.opaque_data
                 self._send_cb(p)
+            self.last_active_time = time.time()
 
         elif frame.type == SettingsFrame.type:
             if 'ACK' not in frame.flags:
@@ -364,6 +391,8 @@ class HTTP2_worker(HTTP_worker):
 
                 # this may trigger send DataFrame blocked by remote window
                 self._update_settings(frame)
+            else:
+                self.accept_task = True
 
         elif frame.type == GoAwayFrame.type:
             # If we get GoAway with error code zero, we are doing a graceful
@@ -372,10 +401,11 @@ class HTTP2_worker(HTTP_worker):
             # If an error occured, try to read the error description from
             # code registry otherwise use the frame's additional data.
             error_string = frame._extra_info()
+            time_cost = time.time() - self.last_active_time
             if frame.additional_data != "session_timed_out":
-                xlog.warn("goaway:%s", error_string)
+                xlog.warn("goaway:%s, t:%d", error_string, time_cost)
 
-            self.close("GoAway:%s" % error_string)
+            self.close("GoAway:%s inactive time:%d" % (error_string, time_cost))
 
         elif frame.type == BlockedFrame.type:
             xlog.warn("%s get BlockedFrame", self.ip)
@@ -421,3 +451,10 @@ class HTTP2_worker(HTTP_worker):
 
             for stream in self.streams.values():
                 stream.max_frame_size += new_size
+
+    def get_trace(self):
+        out_list = []
+        out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" h2.stream_num:%d" % len(self.streams))
+        out_list.append(" appid:%s" % self.ssl_sock.appid)
+        return ",".join(out_list)

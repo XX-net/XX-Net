@@ -6,7 +6,8 @@ import os
 import sys
 import webbrowser
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 import pygtk
 import config

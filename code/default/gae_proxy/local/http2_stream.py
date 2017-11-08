@@ -16,7 +16,7 @@ the stream by the endpoint that initiated the stream.
 
 
 
-
+import threading
 from hyper.common.headers import HTTPHeaderMap
 from hyper.packages.hyperframe.frame import (
     FRAME_MAX_LEN, FRAMES, HeadersFrame, DataFrame, PushPromiseFrame,
@@ -27,6 +27,8 @@ from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
 
+import simple_http_client
+import check_local_network
 from http_common import *
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -110,6 +112,7 @@ class Stream(object):
         self.response_body = []
         self.response_body_len = 0
 
+        threading.Thread(target=self.timeout_response).start()
         self.start_request()
 
     def start_request(self):
@@ -153,11 +156,13 @@ class Stream(object):
         header_frame.flags.add('END_HEADERS')
 
         # Send the header frame.
+        self.task.set_state("send headert")
         self._send_cb(header_frame)
 
         # Transition the stream state appropriately.
         self.state = STATE_OPEN
 
+        self.task.set_state("send body")
         self.send_left_body()
 
     def add_header(self, name, value, replace=False):
@@ -204,6 +209,7 @@ class Stream(object):
             self.send_left_body()
         elif frame.type == HeadersFrame.type:
             # Begin the header block for the response headers.
+            self.task.set_state("get headers")
             self.response_header_datas = [frame.data]
         elif frame.type == PushPromiseFrame.type:
             xlog.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
@@ -212,7 +218,12 @@ class Stream(object):
             self.response_header_datas.append(frame.data)
         elif frame.type == DataFrame.type:
             # Append the data to the buffer.
-            self.task.put_data(frame.data)
+
+            if not self.task.finished:
+                if self.task.body_len == 0:
+                    self.task.set_state("get body")
+
+                self.task.put_data(frame.data)
 
             if 'END_STREAM' not in frame.flags:
                 # Increase the window size. Only do this if the data frame contains
@@ -238,8 +249,12 @@ class Stream(object):
                 w.window_increment = increment
                 self._send_cb(w)
         elif frame.type == RstStreamFrame.type:
-            xlog.warn("%s Stream %d forcefully closed.", self.ip, self.stream_id)
-            self.close("RESET")
+            # Rest Frame send from server is not define in RFC
+            # but GAE server will not work on this connection anymore
+            inactive_time = time.time() - self.connection.last_active_time
+            xlog.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
+                       self.ip, self.stream_id, inactive_time, frame.error_code)
+            self.connection.close("RESET")
         elif frame.type in FRAMES:
             # This frame isn't valid at this point.
             #raise ValueError("Unexpected frame %s." % frame)
@@ -252,24 +267,25 @@ class Stream(object):
 
         if 'END_HEADERS' in frame.flags:
             # Begin by decoding the header block. If this fails, we need to
-            # tear down the entire connection. TODO: actually do that.
+            # tear down the entire connection.
             headers = self._decoder.decode(b''.join(self.response_header_datas))
 
             self._handle_header_block(headers)
             # We've handled the headers, zero them out.
             self.response_header_datas = None
 
-            self.task.content_length = int(self.response_headers["Content-Length"][0])
-            time_now = self.task.set_state("h2_get_head")
-            self.get_head_time = time_now
-            self.send_response()
+            if not self.task.responsed:
+                self.task.content_length = int(self.response_headers["Content-Length"][0])
+                self.task.set_state("h2_get_head")
+                self.get_head_time = time.time()
+                self.send_response()
 
         if 'END_STREAM' in frame.flags:
             #xlog.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
             time_now = time.time()
-            time_cose = time_now - self.get_head_time
-            if time_cose:
-                speed = self.task.content_length / time_cose
+            time_cost = time_now - self.get_head_time
+            if time_cost > 0:
+                speed = self.task.content_length / time_cost
                 self.task.set_state("h2_finish[SP:%d]" % speed)
                 self.connection.report_speed(speed, self.task.content_length)
 
@@ -278,19 +294,29 @@ class Stream(object):
             self.close("end stream")
 
     def send_response(self):
+        if self.task.responsed:
+            xlog.error("http2_stream send_response but responsed.%s", self.task.url)
+            self.close("h2 stream send_response but sended.")
+            return
+
+        self.task.responsed = True
         status = int(self.response_headers[b':status'][0])
         strip_headers(self.response_headers)
-        response = BaseResponse(status=status, headers=self.response_headers)
+        response = simple_http_client.BaseResponse(status=status, headers=self.response_headers)
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task
         self.task.queue.put(response)
+        check_local_network.report_ok(self.connection.ssl_sock.ip)
 
     def close(self, reason=""):
-        self.task.put_data("")
-        # empty block means fail or closed.
-
         self._close_cb(self.stream_id, reason)
+
+        if not self.task.responsed:
+            self.connection.retry_task_cb(self.task)
+        else:
+            self.task.set_state("h2 finish")
+            self.task.finish()
 
     def _handle_header_block(self, headers):
         """
@@ -340,3 +366,21 @@ class Stream(object):
             STATE_HALF_CLOSED_REMOTE if self.state == STATE_OPEN
             else STATE_CLOSED
         )
+
+    def timeout_response(self):
+        while time.time() - self.task.start_time < self.task.timeout:
+            time.sleep(1)
+            if self.task.finished:
+                return
+
+        self.task.set_state("h2 timeout")
+
+        xlog.warn("h2 %s %s timeout, trace:%s",
+                  self.connection.ssl_sock.ip,
+                  self.task.unique_id,
+                  self.task.get_trace())
+
+        if self.task.responsed:
+            self.task.finish()
+        else:
+            self.task.response_fail("h2 timeout")

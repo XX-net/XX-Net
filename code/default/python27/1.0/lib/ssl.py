@@ -51,6 +51,7 @@ The following constants identify various SSL protocol variants:
 PROTOCOL_SSLv2
 PROTOCOL_SSLv3
 PROTOCOL_SSLv23
+PROTOCOL_TLS
 PROTOCOL_TLSv1
 PROTOCOL_TLSv1_1
 PROTOCOL_TLSv1_2
@@ -126,7 +127,10 @@ from _ssl import HAS_SNI, HAS_ECDH, HAS_NPN, HAS_ALPN
 
 from _ssl import _OPENSSL_API_VERSION
 
-_PROTOCOL_NAMES = {value: name for name, value in globals().items() if name.startswith('PROTOCOL_')}
+_PROTOCOL_NAMES = {value: name for name, value in globals().items()
+                   if name.startswith('PROTOCOL_')
+                       and name != 'PROTOCOL_SSLv23'}
+PROTOCOL_SSLv23 = PROTOCOL_TLS
 
 try:
     _SSLv2_IF_EXISTS = PROTOCOL_SSLv2
@@ -141,11 +145,13 @@ from socket import socket, AF_INET, SOCK_STREAM, create_connection
 from socket import SOL_SOCKET, SO_TYPE
 import base64        # for DER-to-PEM translation
 import errno
+import warnings
 
 if _ssl.HAS_TLS_UNIQUE:
     CHANNEL_BINDING_TYPES = ['tls-unique']
 else:
     CHANNEL_BINDING_TYPES = []
+
 
 # Disable weak or insecure ciphers by default
 # (OpenSSL's default setting is 'DEFAULT:!aNULL:!eNULL')
@@ -153,30 +159,35 @@ else:
 # This list has been explicitly chosen to:
 #   * Prefer cipher suites that offer perfect forward secrecy (DHE/ECDHE)
 #   * Prefer ECDHE over DHE for better performance
-#   * Prefer any AES-GCM over any AES-CBC for better performance and security
+#   * Prefer AEAD over CBC for better performance and security
+#   * Prefer AES-GCM over ChaCha20 because most platforms have AES-NI
+#     (ChaCha20 needs OpenSSL 1.1.0 or patched 1.0.2)
+#   * Prefer any AES-GCM and ChaCha20 over any AES-CBC for better
+#     performance and security
 #   * Then Use HIGH cipher suites as a fallback
-#   * Then Use 3DES as fallback which is secure but slow
-#   * Disable NULL authentication, NULL encryption, and MD5 MACs for security
-#     reasons
+#   * Disable NULL authentication, NULL encryption, 3DES and MD5 MACs
+#     for security reasons
 _DEFAULT_CIPHERS = (
-    'ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+HIGH:'
-    'DH+HIGH:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+HIGH:RSA+3DES:!aNULL:'
-    '!eNULL:!MD5'
-)
+    'ECDH+AESGCM:ECDH+CHACHA20:DH+AESGCM:DH+CHACHA20:ECDH+AES256:DH+AES256:'
+    'ECDH+AES128:DH+AES:ECDH+HIGH:DH+HIGH:RSA+AESGCM:RSA+AES:RSA+HIGH:'
+    '!aNULL:!eNULL:!MD5:!3DES'
+    )
 
 # Restricted and more secure ciphers for the server side
 # This list has been explicitly chosen to:
 #   * Prefer cipher suites that offer perfect forward secrecy (DHE/ECDHE)
 #   * Prefer ECDHE over DHE for better performance
-#   * Prefer any AES-GCM over any AES-CBC for better performance and security
+#   * Prefer AEAD over CBC for better performance and security
+#   * Prefer AES-GCM over ChaCha20 because most platforms have AES-NI
+#   * Prefer any AES-GCM and ChaCha20 over any AES-CBC for better
+#     performance and security
 #   * Then Use HIGH cipher suites as a fallback
-#   * Then Use 3DES as fallback which is secure but slow
-#   * Disable NULL authentication, NULL encryption, MD5 MACs, DSS, and RC4 for
-#     security reasons
+#   * Disable NULL authentication, NULL encryption, MD5 MACs, DSS, RC4, and
+#     3DES for security reasons
 _RESTRICTED_SERVER_CIPHERS = (
-    'ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+HIGH:'
-    'DH+HIGH:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+HIGH:RSA+3DES:!aNULL:'
-    '!eNULL:!MD5:!DSS:!RC4'
+    'ECDH+AESGCM:ECDH+CHACHA20:DH+AESGCM:DH+CHACHA20:ECDH+AES256:DH+AES256:'
+    'ECDH+AES128:DH+AES:ECDH+HIGH:DH+HIGH:RSA+AESGCM:RSA+AES:RSA+HIGH:'
+    '!aNULL:!eNULL:!MD5:!DSS:!RC4:!3DES'
 )
 
 
@@ -375,12 +386,16 @@ class SSLContext(_SSLContext):
 
     def _load_windows_store_certs(self, storename, purpose):
         certs = bytearray()
-        for cert, encoding, trust in enum_certificates(storename):
-            # CA certs are never PKCS#7 encoded
-            if encoding == "x509_asn":
-                if trust is True or purpose.oid in trust:
-                    certs.extend(cert)
-        self.load_verify_locations(cadata=certs)
+        try:
+            for cert, encoding, trust in enum_certificates(storename):
+                # CA certs are never PKCS#7 encoded
+                if encoding == "x509_asn":
+                    if trust is True or purpose.oid in trust:
+                        certs.extend(cert)
+        except OSError:
+            warnings.warn("unable to enumerate Windows certificate store")
+        if certs:
+            self.load_verify_locations(cadata=certs)
         return certs
 
     def load_default_certs(self, purpose=Purpose.SERVER_AUTH):
@@ -403,7 +418,7 @@ def create_default_context(purpose=Purpose.SERVER_AUTH, cafile=None,
     if not isinstance(purpose, _ASN1Object):
         raise TypeError(purpose)
 
-    context = SSLContext(PROTOCOL_SSLv23)
+    context = SSLContext(PROTOCOL_TLS)
 
     # SSLv2 considered harmful.
     context.options |= OP_NO_SSLv2
@@ -440,7 +455,7 @@ def create_default_context(purpose=Purpose.SERVER_AUTH, cafile=None,
         context.load_default_certs(purpose)
     return context
 
-def _create_unverified_context(protocol=PROTOCOL_SSLv23, cert_reqs=None,
+def _create_unverified_context(protocol=PROTOCOL_TLS, cert_reqs=None,
                            check_hostname=False, purpose=Purpose.SERVER_AUTH,
                            certfile=None, keyfile=None,
                            cafile=None, capath=None, cadata=None):
@@ -481,12 +496,29 @@ def _create_unverified_context(protocol=PROTOCOL_SSLv23, cert_reqs=None,
 
     return context
 
-# Used by http.client if no context is explicitly passed.
-_create_default_https_context = create_default_context
-
-
 # Backwards compatibility alias, even though it's not a public name.
 _create_stdlib_context = _create_unverified_context
+
+# PEP 493: Verify HTTPS by default, but allow envvar to override that
+_https_verify_envvar = 'PYTHONHTTPSVERIFY'
+
+def _get_https_context_factory():
+    if not sys.flags.ignore_environment:
+        config_setting = os.environ.get(_https_verify_envvar)
+        if config_setting == '0':
+            return _create_unverified_context
+    return create_default_context
+
+_create_default_https_context = _get_https_context_factory()
+
+# PEP 493: "private" API to configure HTTPS defaults without monkeypatching
+def _https_verify_certificates(enable=True):
+    """Verify server HTTPS certificates by default?"""
+    global _create_default_https_context
+    if enable:
+        _create_default_https_context = create_default_context
+    else:
+        _create_default_https_context = _create_unverified_context
 
 
 class SSLSocket(socket):
@@ -496,7 +528,7 @@ class SSLSocket(socket):
 
     def __init__(self, sock=None, keyfile=None, certfile=None,
                  server_side=False, cert_reqs=CERT_NONE,
-                 ssl_version=PROTOCOL_SSLv23, ca_certs=None,
+                 ssl_version=PROTOCOL_TLS, ca_certs=None,
                  do_handshake_on_connect=True,
                  family=AF_INET, type=SOCK_STREAM, proto=0, fileno=None,
                  suppress_ragged_eofs=True, npn_protocols=None, ciphers=None,
@@ -607,7 +639,7 @@ class SSLSocket(socket):
             # EAGAIN.
             self.getpeername()
 
-    def read(self, len=0, buffer=None):
+    def read(self, len=1024, buffer=None):
         """Read up to LEN bytes and return them.
         Return zero-length string on EOF."""
 
@@ -618,7 +650,7 @@ class SSLSocket(socket):
             if buffer is not None:
                 v = self._sslobj.read(len, buffer)
             else:
-                v = self._sslobj.read(len or 1024)
+                v = self._sslobj.read(len)
             return v
         except SSLError as x:
             if x.args[0] == SSL_ERROR_EOF and self.suppress_ragged_eofs:
@@ -898,7 +930,7 @@ class SSLSocket(socket):
 
 def wrap_socket(sock, keyfile=None, certfile=None,
                 server_side=False, cert_reqs=CERT_NONE,
-                ssl_version=PROTOCOL_SSLv23, ca_certs=None,
+                ssl_version=PROTOCOL_TLS, ca_certs=None,
                 do_handshake_on_connect=True,
                 suppress_ragged_eofs=True,
                 ciphers=None):
@@ -967,7 +999,7 @@ def PEM_cert_to_DER_cert(pem_cert_string):
     d = pem_cert_string.strip()[len(PEM_HEADER):-len(PEM_FOOTER)]
     return base64.decodestring(d.encode('ASCII', 'strict'))
 
-def get_server_certificate(addr, ssl_version=PROTOCOL_SSLv23, ca_certs=None):
+def get_server_certificate(addr, ssl_version=PROTOCOL_TLS, ca_certs=None):
     """Retrieve the certificate from the server at the specified address,
     and return it as a PEM-encoded string.
     If 'ca_certs' is specified, validate the server cert against it.

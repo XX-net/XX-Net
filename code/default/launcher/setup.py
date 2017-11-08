@@ -1,32 +1,36 @@
 #!/usr/bin/env python
 
+import config
 import os
+import re
+import shutil
+import subprocess
 import sys
+import time
+import urllib2
+import zipfile
+
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-import urllib2
-import time
-import subprocess
-from instances import xlog
-import re
-import zipfile
-import config
-import shutil
 
 opener = urllib2.build_opener()
 
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-download_path = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
+download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir,
+                                             'data', 'downloads'))
 
 xxnet_unzip_path = ""
 
 
 def get_XXNet():
     global xxnet_unzip_path
+
     def download_file(url, file):
         try:
             xlog.info("download %s to %s", url, file)
@@ -35,7 +39,8 @@ def get_XXNet():
             with open(file, 'wb') as fp:
                 while True:
                     chunk = req.read(CHUNK)
-                    if not chunk: break
+                    if not chunk:
+                        break
                     fp.write(chunk)
             return True
         except:
@@ -67,7 +72,6 @@ def get_XXNet():
     xxnet_unzip_path = os.path.join(download_path, "XX-Net-%s" % xxnet_version)
     xxnet_zip_file = os.path.join(download_path, "XX-Net-%s.zip" % xxnet_version)
 
-
     if not download_file(xxnet_url, xxnet_zip_file):
         raise "download xxnet zip fail:" % download_path
 
@@ -76,27 +80,28 @@ def get_XXNet():
         dz.close()
 
 
-
 def get_new_new_config():
     global xxnet_unzip_path
     import yaml
-    data_path = os.path.abspath( os.path.join(xxnet_unzip_path, 'data', 'launcher', 'config.yaml'))
+    data_path = os.path.abspath(os.path.join(xxnet_unzip_path, 'data',
+                                             'launcher', 'config.yaml'))
     try:
-        new_config = yaml.load(file(data_path, 'r'))
+        new_config = yaml.load(open(data_path, 'r'))
         return new_config
-    except yaml.YAMLError, exc:
-        print "Error in configuration file:", exc
+    except yaml.YAMLError as exc:
+        print("Error in configuration file:", exc)
+
 
 def process_data_files():
-    #TODO: fix bug
-    #new_config = get_new_new_config()
-    #config.load()
-    #config.config["modules"]["gae_proxy"]["current_version"] = new_config["modules"]["gae_proxy"]["current_version"]
-    #config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
+    # TODO: fix bug
+    # new_config = get_new_new_config()
+    # config.load()
+    # config.config["modules"]["gae_proxy"]["current_version"] = new_config["modules"]["gae_proxy"]["current_version"]
+    # config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
     config.save()
 
-def install_xxnet_files():
 
+def install_xxnet_files():
     def sha1_file(filename):
         import hashlib
 
@@ -114,8 +119,8 @@ def install_xxnet_files():
         pass
 
     for root, subdirs, files in os.walk(xxnet_unzip_path):
-        #print "root:", root
-        relate_path = root[len(xxnet_unzip_path)+1:]
+        # print("root:", root)
+        relate_path = root[len(xxnet_unzip_path) + 1:]
         for subdir in subdirs:
 
             target_path = os.path.join(root_path, relate_path, subdir)
@@ -140,6 +145,7 @@ def update_environment():
     process_data_files()
     install_xxnet_files()
 
+
 def wait_xxnet_exit():
 
     def http_request(url, method="GET"):
@@ -149,22 +155,23 @@ def wait_xxnet_exit():
             req = opener.open(url)
             return req
         except Exception as e:
-            #logging.exception("web_control http_request:%s fail:%s", url, e)
+            # logging.exception("web_control http_request:%s fail:%s", url, e)
             return False
 
     for i in range(20):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
-        if http_request(req_url) == False:
+        if http_request(req_url) is False:
             return True
         time.sleep(1)
     return False
 
-def run_new_start_script():
 
+def run_new_start_script():
     current_path = os.path.dirname(os.path.abspath(__file__))
-    start_sript = os.path.abspath( os.path.join(current_path, "start.py"))
+    start_sript = os.path.abspath(os.path.join(current_path, "start.py"))
     subprocess.Popen([sys.executable, start_sript], shell=False)
+
 
 def main():
     wait_xxnet_exit()
@@ -173,6 +180,7 @@ def main():
     time.sleep(2)
     xlog.info("setup start run new launcher")
     run_new_start_script()
+
 
 if __name__ == "__main__":
     main()

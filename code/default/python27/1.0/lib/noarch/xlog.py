@@ -21,7 +21,8 @@ NOTSET = 0
 
 
 class Logger():
-    def __init__(self, buffer_size=0, file_name=None, roll_num=1):
+    def __init__(self, name, buffer_size=0, file_name=None, roll_num=1):
+        self.name = name
         self.file_max_size = 1024 * 1024
         self.buffer_lock = threading.Lock()
         self.buffer = {} # id => line
@@ -109,7 +110,8 @@ class Logger():
         try:
             self.set_console_color(console_color)
             try:
-                sys.stderr.write(string)
+                console_string = '%s [%s][%s] %s\n' % (time_str, self.name, level, fmt % args)
+                sys.stderr.write(console_string)
             except:
                 pass
             self.set_console_color(self.reset_color)
@@ -235,7 +237,13 @@ loggerDict = {}
 
 
 def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
-    global loggerDict
+    global loggerDict, default_log
+    if name is None:
+        for n in loggerDict:
+            name = n
+            break
+    if name is None:
+        name = "default"
 
     if not isinstance(name, basestring):
         raise TypeError('A logger name must be string or Unicode')
@@ -245,6 +253,39 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
     if name in loggerDict:
         return loggerDict[name]
     else:
-        logger_instance = Logger(buffer_size, file_name, roll_num)
+        logger_instance = Logger(name, buffer_size, file_name, roll_num)
         loggerDict[name] = logger_instance
+        default_log = logger_instance
         return logger_instance
+
+
+default_log = getLogger()
+
+
+def debug(fmt, *args, **kwargs):
+    default_log.debug(fmt, *args, **kwargs)
+
+
+def info(fmt, *args, **kwargs):
+    default_log.info(fmt, *args, **kwargs)
+
+
+def warning(fmt, *args, **kwargs):
+    default_log.warnin(fmt, *args, **kwargs)
+
+
+def warn(fmt, *args, **kwargs):
+    default_log.warn(fmt, *args, **kwargs)
+
+
+def error(fmt, *args, **kwargs):
+    default_log.error(fmt, *args, **kwargs)
+
+
+def exception(self, fmt, *args, **kwargs):
+    self.error(fmt, *args, **kwargs)
+    self.error("Except stack:%s", traceback.format_exc(), **kwargs)
+
+
+def critical(fmt, *args, **kwargs):
+    default_log.critical(fmt, *args, **kwargs)

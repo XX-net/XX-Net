@@ -21,9 +21,11 @@ import module_init
 import subprocess
 import webbrowser
 
+from xlog import getLogger
+xlog = getLogger("launcher")
+
 import AppKit
 import SystemConfiguration
-from instances import xlog
 from PyObjCTools import AppHelper
 
 class MacTrayObject(AppKit.NSObject):

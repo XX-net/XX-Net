@@ -8,7 +8,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import config
 
 def older_or_equal(version, reference_version):
@@ -39,7 +40,7 @@ def run(last_run_version):
                 if sys.platform != 'win32' and filename == 'start':
                     st = os.stat(filepath)
                     os.chmod(filepath, st.st_mode | stat.S_IEXEC)
-                if filename in ['start.sh', 'start.command', 'start.lnk', 'LICENSE.txt', 'download.md', 'version.txt', 'xxnet', 'xxnet.bat', 'xxnet.vbs', 'xx_net.sh']:
+                if filename in ['start.sh', 'start.command', 'start.lnk', 'LICENSE.txt', 'download.md', 'version.txt', 'xxnet', 'xxnet.bat', 'xxnet.vbs']:
                     os.remove(filepath)
             else:
                 if filename in ['goagent', 'python27', 'gae_proxy', 'php_proxy', 'x_tunnel', 'python3', 'Python3', 'lib', 'SwitchySharp']:

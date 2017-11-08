@@ -20,7 +20,7 @@ set -e
 PACKAGE_NAME=xx_net
 PACKAGE_DESC="xx_net proxy server"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH}
-if python -V | grep -q "Python 3" ;then
+if python -V 2>&1| grep -q "Python 3" ;then
     PYTHON="/usr/bin/python2"
 else
     PYTHON="python"
@@ -29,8 +29,10 @@ fi
 if [ -L $0 ];then
        PACKAGE_PATH="$(dirname $(readlink -n $0))/"                                         
 else
-       PACKAGE_PATH="./"                                         
+    PACKAGE_PATH=`dirname $0`
 fi
+cd $PACKAGE_PATH
+PACKAGE_PATH="`pwd `/"
 PACKAGE_VER_FILE="${PACKAGE_PATH}code/version.txt"
 PACKAGE_VER="default"
 if [ -f "${PACKAGE_VER_FILE}" ];then

@@ -61,7 +61,7 @@
                     <div class="span8">
                         <p>
                             <span id="credit">N/a</span>
-                            <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a>
+                            <!-- <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a> -->
                             <a id="transfer-credit-trigger" href="javascript:void(0);">[{{ _("Transfer") }}]</a>
                         </p>
                     </div> <!-- .span8 -->
@@ -282,13 +282,13 @@
 </script>
 <script type="text/javascript">
     $(function() {
-        window.timer  = $.timer(function() {
+        window.refresh_timer = $.timer(function() {
             getUserInfo(0);
         });
 
-        window.timer.set({
-            time: 10000,
-            autostart: false
+        window.refresh_timer.set({
+            time: 1000,
+            autostart: true
         });
 
         getUserInfo(0);
@@ -327,18 +327,20 @@
             success: function(result) {
                 if( result['res'] == 'logout' ){
                     tipClose();
+                    window.refresh_timer.stop();
                     return;
-                }else if( result['res'] != 'success' ){
+                }
+
+                if( result['res'] != 'success' ){
                     if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
-                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
                         $('#login-form').addClass('hide');
                         $('#account-information').removeClass('hide');
                         $('#login-account').html(result['login_account']);
                         $('.login-account').val(result['login_account']);
-                        return;
+                        window.refresh_timer.set({ time : 10000});
                     }else{
                         tip('Get Fail:' + result['reason'], 'warning', false);
-                        return;
                     }
                 } else {
                     tipClose();
@@ -348,7 +350,7 @@
                 //getBillingHistory();
                 // not imp yet
 
-                window.timer.play();
+                window.refresh_timer.play();
 
                 $('.nav-tabs > li').removeClass('hide');
                 $('#login-form').addClass('hide');
@@ -524,7 +526,7 @@
             url: '/module/x_tunnel/control/logout',
             dataType: 'JSON',
             success: function(result) {
-                window.timer.stop();
+                window.refresh_timer.stop();
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');

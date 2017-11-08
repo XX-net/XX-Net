@@ -21,10 +21,12 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 import yaml
 import json
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import module_init
 import config
 import autorun
+import update
 import update_from_github
 import simple_http_server
 from simple_i18n import SimpleI18N
@@ -57,7 +59,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(new_module_menus.iteritems(),
+                              key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
@@ -135,7 +138,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             file_path = os.path.join(current_path, 'web_ui' + url_path)
 
-        xlog.debug ('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
         if os.path.isfile(file_path):
             if file_path.endswith('.js'):
                 mimetype = 'application/javascript'
@@ -150,22 +152,24 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             else:
                 mimetype = 'text/plain'
             self.send_file(file_path, mimetype)
-        elif url_path == '/config':
-            self.req_config_handler()
-        elif url_path == '/update':
-            self.req_update_handler()
-        elif url_path == '/init_module':
-            self.req_init_module_handler()
-        elif url_path == '/quit':
-            self.send_response('text/html', '{"status":"success"}')
-            module_init.stop_all()
-            os._exit(0)
-        elif url_path == '/restart':
-            self.send_response('text/html', '{"status":"success"}')
-            update_from_github.restart_xxnet()
         else:
-            self.send_not_found()
-            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+            xlog.debug('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
+            if url_path == '/config':
+                self.req_config_handler()
+            elif url_path == '/update':
+                self.req_update_handler()
+            elif url_path == '/init_module':
+                self.req_init_module_handler()
+            elif url_path == '/quit':
+                self.send_response('text/html', '{"status":"success"}')
+                module_init.stop_all()
+                os._exit(0)
+            elif url_path == '/restart':
+                self.send_response('text/html', '{"status":"success"}')
+                update_from_github.restart_xxnet()
+            else:
+                self.send_not_found()
+                xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -178,6 +182,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
                 target_module = 'gae_proxy'
                 target_menu = 'status'
+            elif config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
+                target_module = 'x_tunnel'
+                target_menu = 'config'
             else:
                 target_module = 'launcher'
                 target_menu = 'about'
@@ -224,14 +231,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            check_update = config.get(["update", "check_update"], 1)
-            if check_update == 0:
-                check_update = "dont-check"
-            elif check_update == 1:
-                check_update = "stable"
+            check_update = config.get(["update", "check_update"], "notice-stable")
 
             data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
-             "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d}' %\
+             "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d, \
+             "no_mess_system": %d }' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
@@ -241,15 +245,32 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0)
                     , config.get(["modules", "x_tunnel", "auto_start"], 0)
+                    , config.get(["no_mess_system"], 0)
                     )
+        if reqs['cmd'] == ['get_version']:
+            current_version = update_from_github.current_version()
+            data = '{"current_version":"%s"}' % (current_version)
         elif reqs['cmd'] == ['set_config']:
-            if 'check_update' in reqs:
+            if 'skip_version' in reqs:
+                skip_version = reqs['skip_version'][0]
+                skip_version_type = reqs['skip_version_type'][0]
+                if skip_version_type not in ["stable", "test"]:
+                    data = '{"res":"fail"}'
+                else:
+                    config.set(["update", "skip_%s_version" % skip_version_type], skip_version)
+                    config.save()
+                    if skip_version in update_from_github.update_info:
+                        update_from_github.update_info = ''
+                    data = '{"res":"success"}'
+            elif 'check_update' in reqs:
                 check_update = reqs['check_update'][0]
-                if check_update not in ["dont-check", "stable", "test"]:
+                if check_update not in ["dont-check", "stable", "notice-stable", "test", "notice-test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
-                    config.set(["update", "check_update"], check_update)
-                    config.save()
+                    if config.get(["update", "check_update"]) != check_update:
+                        update_from_github.init_update_info(check_update)
+                        config.set(["update", "check_update"], check_update)
+                        config.save()
 
                     data = '{"res":"success"}'
 
@@ -299,6 +320,16 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
                     config.set(["modules", "launcher", "show_systray"], show_systray)
+                    config.save()
+
+                    data = '{"res":"success"}'
+
+            elif 'no_mess_system' in reqs:
+                no_mess_system = int(reqs['no_mess_system'][0])
+                if no_mess_system != 0 and no_mess_system != 1:
+                    data = '{"res":"fail, show_systray:%s"}' % no_mess_system
+                else:
+                    config.set(["no_mess_system"], no_mess_system)
                     config.save()
 
                     data = '{"res":"success"}'
@@ -364,7 +395,18 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
 
-        if reqs['cmd'] == ['get_progress']:
+        if reqs['cmd'] == ['get_info']:
+            data = update_from_github.update_info
+            if data == '' or data[0] != '{':
+                data = '{"type":"%s"}' % data
+        elif reqs['cmd'] == ['set_info']:
+            update_from_github.update_info = reqs['info'][0]
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['start_check']:
+            update_from_github.init_update_info(reqs['check_update'][0])
+            update.check_update()
+            data = '{"res":"success"}'
+        elif reqs['cmd'] == ['get_progress']:
             data = json.dumps(update_from_github.progress)
         elif reqs['cmd'] == ['get_new_version']:
             current_version = update_from_github.current_version()

@@ -30,6 +30,7 @@ ssl_version = ''
 openssl_version = OpenSSL.version.__version__
 support_alpn_npn = "no"
 
+
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
 
@@ -40,11 +41,14 @@ class SSLConnection(object):
         self._connection = OpenSSL.SSL.Connection(context, sock)
         self._makefile_refs = 0
         self.on_close = on_close
+        self.timeout = self._sock.gettimeout() or 0.1
+        self.running = True
+        self.socket_closed = False
 
     def __del__(self):
-        if self._sock:
+        if not self.socket_closed:
             socket.socket.close(self._sock)
-            self._sock = None
+            self.socket_closed = True
             if self.on_close:
                 self.on_close(self.ip)
 
@@ -53,46 +57,53 @@ class SSLConnection(object):
             return getattr(self._connection, attr)
 
     def __iowait(self, io_func, *args, **kwargs):
-        timeout = self._sock.gettimeout() or 0.1
         fd = self._sock.fileno()
         time_start = time.time()
-        while self._connection:
+        while self.running:
+            time_now = time.time()
+            wait_timeout = max(0.1, self.timeout - (time_now - time_start))
+            wait_timeout = min(wait_timeout, 10)
+            # in case socket was blocked by FW
+            # recv is called before send request, which timeout is 240
+            # then send request is called and timeout change to 100
+
             try:
                 return io_func(*args, **kwargs)
             except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
                 sys.exc_clear()
-                _, _, errors = select.select([fd], [], [fd], timeout)
+                _, _, errors = select.select([fd], [], [fd], wait_timeout)
                 if errors:
                     raise
-                time_now = time.time()
-                if time_now - time_start > timeout:
+                if time_now - time_start > self.timeout:
                     break
             except OpenSSL.SSL.WantWriteError:
                 sys.exc_clear()
-                _, _, errors = select.select([], [fd], [fd], timeout)
+                _, _, errors = select.select([], [fd], [fd], wait_timeout)
                 if errors:
                     raise
                 time_now = time.time()
-                if time_now - time_start > timeout:
+                if time_now - time_start > self.timeout:
                     break
             except OpenSSL.SSL.SysCallError as e:
                 if e[0] == 10035 and 'WSAEWOULDBLOCK' in e[1]:
                     sys.exc_clear()
                     if io_func == self._connection.send:
-                        _, _, errors = select.select([], [fd], [fd], timeout)
+                        _, _, errors = select.select([], [fd], [fd], wait_timeout)
                     else:
-                        _, _, errors = select.select([fd], [], [fd], timeout)
+                        _, _, errors = select.select([fd], [], [fd], wait_timeout)
 
                     if errors:
                         raise
                     time_now = time.time()
-                    if time_now - time_start > timeout:
+                    if time_now - time_start > self.timeout:
                         break
                 else:
                     raise e
             except Exception as e:
                 #xlog.exception("e:%r", e)
                 raise e
+
+        return 0
 
     def accept(self):
         sock, addr = self._sock.accept()
@@ -151,7 +162,7 @@ class SSLConnection(object):
                 pass
             return ret
 
-        while True:
+        while self.running:
             try:
                 ret = self.__iowait(self._connection.recv_into, buf)
                 if not ret:
@@ -181,14 +192,22 @@ class SSLConnection(object):
 
     def close(self):
         if self._makefile_refs < 1:
-            self._connection = None
-            if self._sock:
+            self.running = False
+            if not self.socket_closed:
                 socket.socket.close(self._sock)
-                self._sock = None
+                self.socket_closed = True
                 if self.on_close:
                     self.on_close(self.ip)
         else:
             self._makefile_refs -= 1
+
+    def settimeout(self, t):
+        if not self.running:
+            return
+
+        if self.timeout != t:
+            self._sock.settimeout(t)
+            self.timeout = t
 
     def makefile(self, mode='r', bufsize=-1):
         self._makefile_refs += 1
@@ -251,6 +270,7 @@ class SSLConnection(object):
             ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
         ssl_context.set_cipher_list(':'.join(cipher_suites))
 
+        # return ssl_context
         try:
             ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
             xlog.info("OpenSSL support alpn")

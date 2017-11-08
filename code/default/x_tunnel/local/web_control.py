@@ -13,6 +13,9 @@ xlog = getLogger("x_tunnel")
 import simple_http_server
 import global_var as g
 import proxy_session
+from cloudflare_front import web_control as cloudflare_web
+from heroku_front import web_control as heroku_web
+from front_dispatcher import all_fronts
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -39,6 +42,23 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_info_handler()
         elif path == "/get_history":
             return self.req_get_history_handler()
+        elif path == "/status":
+            return self.req_status()
+        elif path.startswith("/cloudflare_front/"):
+            path = self.path[17:]
+            controler = cloudflare_web.ControlHandler(self.client_address,
+                             self.headers,
+                             self.command, path,
+                             self.rfile, self.wfile)
+            controler.do_GET()
+
+        elif path.startswith("/heroku_front/"):
+            path = self.path[13:]
+            controler = heroku_web.ControlHandler(self.client_address,
+                             self.headers,
+                             self.command, path,
+                             self.rfile, self.wfile)
+            controler.do_GET()
         else:
             xlog.warn('Control Req %s %s %s ', self.address_string(), self.command, self.path)
 
@@ -67,6 +87,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_order_handler()
         elif path == "/transfer":
             return self.req_transfer_handler()
+        elif path.startswith("/cloudflare_front/"):
+            path = path[17:]
+            controler = cloudflare_web.ControlHandler(self.client_address,
+                                                      self.headers,
+                                                      self.command, path,
+                                                      self.rfile, self.wfile)
+            controler.do_POST()
         else:
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
             return self.send_not_found()
@@ -220,7 +247,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "plan %s not support" % plan
             })
 
-        res, info = proxy_session.call_api("order", {
+        res, info = proxy_session.call_api("/order", {
             "account": g.config.login_account,
             "password": g.config.login_password,
             "product": "x_tunnel",
@@ -258,7 +285,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "amount": amount
         }
 
-        res, info = proxy_session.call_api("transfer", req_info)
+        res, info = proxy_session.call_api("/transfer", req_info)
         if not res:
             xlog.warn("transfer fail:%s", info)
             return self.response_json({
@@ -280,7 +307,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "limit": int(reqs['limit'][0])
         }
 
-        res, info = proxy_session.call_api("get_history", req_info)
+        res, info = proxy_session.call_api("/get_history", req_info)
         if not res:
             xlog.warn("get history fail:%s", info)
             return self.response_json({
@@ -290,4 +317,56 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json({
             "res": "success",
             "history": info["history"]
+        })
+
+    def req_status(self):
+        def convert(num, units=('B', 'KB', 'MB', 'GB')):
+            for unit in units:
+                if num >= 1024:
+                    num /= 1024.0
+                else:
+                    break
+            return '{:.1f} {}'.format(num, unit)
+
+        res = {}
+        rtts = []
+        recent_sent = 0
+        recent_received = 0
+        total_sent = 0
+        total_received = 0
+        for front in all_fronts:
+            name = front.name
+            score = front.get_score()
+            if score is None:
+                score = "False"
+            else:
+                score = int(score)
+            rtts.append(front.get_rtt())
+            recent_sent += front.recent_sent
+            recent_received += front.recent_received
+            total_sent += front.total_sent
+            total_received += front.total_received
+            res[name] = {
+                "score": score,
+                "success_num": front.success_num,
+                "fail_num": front.fail_num,
+                "worker_num": front.worker_num(),
+                "total_traffics": "Up: %s / Down: %s" % (convert(front.total_sent), convert(front.total_received))
+            }
+
+        res["global"] = {
+            "socks_addr": "SOCKS5://%s:%d" % (g.config.socks_host, g.config.socks_port),
+            "handle_num": g.socks5_server.handler.handle_num,
+            "rtt": int(max(rtts)) or 9999,
+            "roundtrip_num": g.stat["roundtrip_num"],
+            "slow_roundtrip": g.stat["slow_roundtrip"],
+            "timeout_roundtrip": g.stat["timeout_roundtrip"],
+            "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent / 5.0), convert(recent_received / 5.0)),
+            "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
+        }
+
+        self.response_json({
+            "res": "success",
+            "status": res
+
         })

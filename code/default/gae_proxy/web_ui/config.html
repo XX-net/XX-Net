@@ -26,14 +26,6 @@
     <div id="advanced-options" style="display: none;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="use-ipv6">{{ _( "Enable IPv6(If it's available)" ) }}</label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="use-ipv6" type="checkbox" data-toggle="switch" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div class="row-fluid">
-            <div class="span4">
                 <label for="enable-proxy">{{ _( "LAN proxy(Generally not needed)" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
@@ -175,11 +167,7 @@
                 $('#proxy-port').val(result['proxy_port']);
                 $('#proxy-username').val(result['proxy_user']);
                 $('#proxy-password').val(result['proxy_passwd']);
-                if ( result['use_ipv6'] == 1 ) {
-                    $('#use-ipv6').parent().removeClass('switch-off');
-                    $('#use-ipv6').parent().addClass('switch-on');
-                    $('#use-ipv6').prop('checked', true);
-                }
+
             },
             error: function(){
                 tip('{{ _( "Failed reading the settings." ) }}', 'error');
@@ -191,7 +179,6 @@
     function onSubmit() {
         var gaeAppId          = $('#gae-appid').val(),
             hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct',
-            useIpv6           = $('#use-ipv6').is(':checked') ? 1 : 0,
             enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
             proxyType         = $('#proxy-type').val(),
             proxyHost         = $('#proxy-host').val(),
@@ -203,17 +190,16 @@
 
         tip('{{ _( "Wait for checking setting..." ) }}', 'info');
 
-        return setConfig(gaeAppId, hostAppEngine, useIpv6,
-                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
+        return setConfig(gaeAppId, hostAppEngine,
+                                    enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(gaeAppId, hostAppEngine, useIpv6,
+    function setConfig(gaeAppId, hostAppEngine,
                             enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
         var config = {
             'appid': gaeAppId,
             'host_appengine_mode': hostAppEngine,
-            'use_ipv6': useIpv6,
             'proxy_enable': enableProxy,
             'proxy_type': proxyType,
             'proxy_host': proxyHost,
@@ -233,8 +219,6 @@
                 } else {
                     if (result['reason'].indexOf("appid fail") > -1){
                         tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before using." ) }}', 'error');
-                    }else if(result['reason'].indexOf("IPv6 fail") > -1){
-                        tip('{{ _( "Enable IPv6 failed. Be sure your network support IPv6." ) }}', 'error');
                     }else{
                         tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
                     }

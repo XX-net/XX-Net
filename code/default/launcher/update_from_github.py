@@ -19,7 +19,8 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
-from instances import xlog
+from xlog import getLogger
+xlog = getLogger("launcher")
 import config
 import update
 
@@ -33,6 +34,18 @@ if not os.path.isdir(download_path):
 
 progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
 progress["update_status"] = "Idle"
+update_info = "init"
+
+def init_update_info(check_update):
+    global update_info
+    if check_update == "dont-check":
+        update_info = "dont-check"
+    elif config.get(["update", "check_update"]) == update_info == "dont-check":
+        update_info = "init"
+    elif check_update != "init":
+        update_info = ""
+
+init_update_info(config.get(["update", "check_update"]))
 
 def get_opener(retry=0):
     if retry == 0:
@@ -185,13 +198,15 @@ def overwrite(xxnet_version, xxnet_unzip_path):
                 dst_file = os.path.join(top_path, target_relate_path, filename)
                 if not os.path.isfile(dst_file) or hash_file_sum(src_file) != hash_file_sum(dst_file):
                     xlog.info("copy %s => %s", src_file, dst_file)
-                    if sys.platform != 'win32' and os.path.isfile(dst_file):
+                    #modify by outofmemo, files in '/sdcard' are not allowed to chmod for Android
+                    #and shutil.copy() will call shutil.copymode()
+                    if sys.platform != 'win32' and os.path.isfile("/system/bin/dalvikvm")==False and os.path.isfile("/system/bin/dalvikvm64")==False and os.path.isfile(dst_file):
                         st = os.stat(dst_file)
                         shutil.copy(src_file, dst_file)
                         if st.st_mode & stat.S_IEXEC:
                             os.chmod(dst_file, st.st_mode)
                     else:
-                        shutil.copy(src_file, dst_file)
+                        shutil.copyfile(src_file, dst_file)
 
     except Exception as e:
         xlog.warn("update over write fail:%r", e)
@@ -243,21 +258,35 @@ def update_current_version(xxnet_version):
         fd.write(xxnet_version)
 
 
-def restart_xxnet(version):
+def restart_xxnet(version=None):
     import module_init
     module_init.stop_all()
+
     import web_control
     web_control.stop()
+    # New process will hold the listen port
+    # We should close all listen port before create new process
+    xlog.info("Close web control port.")
+
+    if version is None:
+        current_version_file = os.path.join(top_path, "code", "version.txt")
+        with open(current_version_file, "r") as fd:
+            version = fd.read()
+
+    xlog.info("restart to xx-net version:%s", version)
 
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
-
     subprocess.Popen([sys.executable, start_script])
     time.sleep(20)
-    #os._exit(0)
+
+    xlog.info("Exit old process...")
+    os._exit(0)
 
 
 def update_version(version):
-    global update_progress
+    global update_progress, update_info
+    _update_info = update_info
+    update_info = ""
     try:
         download_overwrite_new_version(version)
 
@@ -268,6 +297,7 @@ def update_version(version):
         restart_xxnet(version)
     except Exception as e:
         xlog.warn("update version %s fail:%r", version, e)
+        update_info = _update_info
 
 
 def start_update_version(version):
