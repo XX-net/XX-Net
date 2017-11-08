@@ -22,8 +22,32 @@ class Connection():
         self.sock.close()
 
 
-class TxtResponse(object):
+class BaseResponse(object):
+    def __init__(self, status=601, reason="", headers={}, body=""):
+        self.status = status
+        self.reason = reason
+        self.headers = {}
+        for key in headers:
+            if isinstance(key, tuple):
+                key, value = key
+            else:
+                value = headers[key]
+            key = str(key.title())
+            self.headers[key] = value
+
+        self.text = body
+
+    def getheader(self, key, default_value=""):
+        key = key.title()
+        if key in self.headers:
+            return self.headers[key]
+        else:
+            return default_value
+
+
+class TxtResponse(BaseResponse):
     def __init__(self, buffer):
+        BaseResponse.__init__(self)
         self.read_buffer = buffer
         self.buffer_start = 0
         self.parse()
@@ -62,7 +86,7 @@ class TxtResponse(object):
             p = line.find(":")
             key = line[0:p]
             value = line[p+2:]
-            key = str(key.lower())
+            key = str(key.title())
             self.headers[key] = value
 
         self.body = self.read_buffer[self.buffer_start:]
@@ -70,14 +94,14 @@ class TxtResponse(object):
         self.buffer_start = 0
 
 
-class Response(object):
+class Response(BaseResponse):
     def __init__(self, ssl_sock):
+        BaseResponse.__init__(self)
         self.connection = ssl_sock
         ssl_sock.settimeout(1)
         self.read_buffer = ""
         self.buffer_start = 0
         self.chunked = False
-        self.text = ""
 
     def read_line(self, timeout=60):
         start_time = time.time()
@@ -172,13 +196,6 @@ class Response(object):
 
         if "gzip" in self.getheader("Transfer-Encoding", ""):
             print("not work")
-
-    def getheader(self, key, default_value=""):
-        key = key.title()
-        if key in self.headers:
-            return self.headers[key]
-        else:
-            return default_value
 
     def _read_plain(self, read_len, timeout):
         if read_len is not None and len(self.read_buffer) - self.buffer_start > read_len:

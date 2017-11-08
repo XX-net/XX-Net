@@ -27,6 +27,7 @@ from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
 
+import simple_http_client
 import check_local_network
 from http_common import *
 from xlog import getLogger
@@ -266,7 +267,7 @@ class Stream(object):
 
         if 'END_HEADERS' in frame.flags:
             # Begin by decoding the header block. If this fails, we need to
-            # tear down the entire connection. TODO: actually do that.
+            # tear down the entire connection.
             headers = self._decoder.decode(b''.join(self.response_header_datas))
 
             self._handle_header_block(headers)
@@ -301,7 +302,7 @@ class Stream(object):
         self.task.responsed = True
         status = int(self.response_headers[b':status'][0])
         strip_headers(self.response_headers)
-        response = BaseResponse(status=status, headers=self.response_headers)
+        response = simple_http_client.BaseResponse(status=status, headers=self.response_headers)
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task

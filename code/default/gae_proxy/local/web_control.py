@@ -10,7 +10,6 @@ import os
 import re
 import subprocess
 import cgi
-import urllib2
 import sys
 import datetime
 import locale
@@ -44,6 +43,7 @@ os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+data_path = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy'))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
@@ -82,7 +82,7 @@ class User_config(object):
 
 
         self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.join(data_path, 'config.ini')
 
         try:
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
@@ -135,7 +135,7 @@ class User_config(object):
             xlog.warn("User_config.load except:%s", e)
 
     def save(self):
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
+        CONFIG_USER_FILENAME = os.path.join(data_path, 'config.ini')
         try:
             f = open(CONFIG_USER_FILENAME, 'w')
             if self.user_special.appid != "":
@@ -181,16 +181,13 @@ def get_openssl_version():
                            openssl_wrap.ssl_version,
                            openssl_wrap.support_alpn_npn)
 
-def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
-    try:
-        req = opener.open(url)
-    except Exception as e:
-        xlog.exception("web_control http_request:%s fail:%s", url, e)
-    return
 
 deploy_proc = None
+ipv6_tunnel_proc = None
+
+
+def ipv6_tunnel_status():
+    return "Developing"
 
 
 class ControlHandler(simple_http_server.HttpServerHandler):
@@ -237,6 +234,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_check_ip_handler()
         elif path == "/debug":
             return self.req_debug_handler()
+        elif path.startswith("/ipv6_tunnel"):
+            return self.req_ipv6_tunnel_handler()
         elif path == "/quit":
             connect_control.keep_running = False
             data = "Quit"
@@ -434,6 +433,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                    "ipv4_state": check_local_network.IPv4.get_stat(),
                    "ipv6_state": check_local_network.IPv6.get_stat(),
+                   "ipv6_tunnel": ipv6_tunnel_status(),
                    "ip_num": len(google_ip.gws_ip_list),
                    "good_ipv4_num": google_ip.good_ipv4_num,
                    "good_ipv6_num": google_ip.good_ipv6_num,
@@ -800,3 +800,57 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
+
+    def req_ipv6_tunnel_handler(self):
+        global ipv6_tunnel_proc
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        log_path = os.path.join(data_path, "ipv6_tunnel.log")
+        time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
+
+        if reqs['cmd'] in [['enable'], ['disable']]:
+
+            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
+                xlog.warn("ipv6_tunnel_proc is running, request denied.")
+                data = '{"res":"ipv6_tunnel_proc is running", "time":"%s"}' % time_now
+
+            else:
+                cmd = reqs['cmd'][0]
+                try:
+                    if os.path.isfile(log_path):
+                        os.remove(log_path)
+
+                    script_path = os.path.abspath(os.path.join(current_path, os.pardir, "ipv6_tunnel", 'switch.py'))
+
+                    args = [sys.executable, script_path, cmd]
+
+                    ipv6_tunnel_proc = subprocess.Popen(args)
+                    xlog.info("ipv6_tunnel switch %s", cmd)
+                    data = '{"res":"success", "time":"%s"}' % time_now
+                except Exception as e:
+                    data = '{"res":"%s", "time":"%s"}' % (e, time_now)
+
+        elif reqs['cmd'] == ['stop']:
+            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
+                ipv6_tunnel_proc.kill()
+                data = '{"res":"ipv6_tunnel is killed", "time":"%s"}' % time_now
+            else:
+                data = '{"res":"ipv6_tunnel is not running", "time":"%s"}' % time_now
+
+        elif reqs['cmd'] == ['get_log']:
+            if ipv6_tunnel_proc and os.path.isfile(log_path):
+                with open(log_path, "r") as f:
+                    content = f.read()
+            else:
+                content = ""
+
+            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
+                status = 'running'
+            else:
+                status = ipv6_tunnel_status()
+
+            data = json.dumps({'status': status, 'log': content, 'time': time_now})
+
+        self.send_response_nc('text/html', data)

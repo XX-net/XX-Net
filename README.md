@@ -25,7 +25,7 @@
  2017-11-8
 * X-Tunnel 稳定. （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 
-* GAE:  请升级到 3.7.11， 扫不到ip，请开启ipv6，请参考：
+* GAE:  请升级到 3.7.12， 扫不到ip，请开启ipv6，请参考：
   [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)
 
   

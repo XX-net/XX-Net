@@ -207,7 +207,7 @@ def request_gae_server(headers, body, url, timeout):
         # but can't use as GAE server
         # so we need remove it immediately
 
-        xlog.warn("IP:%s not support GAE, server:%s status:%d", response.ssl_sock.ip, server_type,
+        xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
                   response.status)
         google_ip.recheck_ip(response.ssl_sock.ip)
         response.worker.close("ip not support GAE")

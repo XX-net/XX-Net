@@ -1,7 +1,7 @@
 import time
-import collections
 import Queue
 
+import simple_http_client
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -19,16 +19,6 @@ class GAE_Exception(Exception):
     def __repr__(self):
         # for %r
         return repr(self.message)
-
-
-class BaseResponse(object):
-    def __init__(self, status=601, reason="", headers={}, body=""):
-        self.status = status
-        self.reason = reason
-        self.headers = headers
-
-    def getheader(self, key, default=""):
-        return default
 
 
 class Task(object):
@@ -131,7 +121,7 @@ class Task(object):
         self.responsed = True
         err_text = "response_fail:%s" % reason
         xlog.debug("%s %s", self.url, err_text)
-        res = BaseResponse(body=err_text)
+        res = simple_http_client.BaseResponse(body=err_text)
         self.queue.put(res)
         self.finish()
 
