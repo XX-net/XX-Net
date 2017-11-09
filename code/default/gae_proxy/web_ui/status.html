@@ -18,10 +18,6 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ _( "IPv6 Tunnel" ) }}</td>
-                <td id="ipv6-tunnel"></td>
-            </tr>
-            <tr>
                 <td>{{ _( "IPv4 Status" ) }}</td>
                 <td id="ipv4-status"></td>
             </tr>
@@ -232,7 +228,7 @@
                     'python-version: ' + result['python_version'],
                     'openssl-version: ' + result['openssl_version'],
 
-                    'ipv6-tunnel: ' + result['ipv6_tunnel'],
+                    //'ipv6-tunnel: ' + result['ipv6_tunnel'],
                     'use-ipv6: ' + result['use_ipv6'],
                     'gws-ip-num: ' + 'total:' + result['ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
                     'ipv4-status: ' + result['ipv4_state'],
@@ -331,7 +327,7 @@
 
                     'td#ipv4-status': result['ipv4_state'],
                     'td#ipv6-status': result['ipv6_state'],
-                    'td#ipv6-tunnel': result['ipv6_tunnel'],
+                    // 'td#ipv6-tunnel': result['ipv6_tunnel'],
                     'td#ipv4-num': result['good_ipv4_num'],
                     'td#ipv6-num': result['good_ipv6_num'],
                     'td#is-idle': result['is_idle'],

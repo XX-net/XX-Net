@@ -427,7 +427,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                    "ipv4_state": check_local_network.IPv4.get_stat(),
                    "ipv6_state": check_local_network.IPv6.get_stat(),
-                   "ipv6_tunnel": ipv6_tunnel.state(),
+                   # "ipv6_tunnel": ipv6_tunnel.state(),
                    "ip_num": len(google_ip.gws_ip_list),
                    "good_ipv4_num": google_ip.good_ipv4_num,
                    "good_ipv6_num": google_ip.good_ipv6_num,
