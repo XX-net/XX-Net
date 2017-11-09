@@ -1,5 +1,5 @@
 
-<h4>{{ _( "Status" ) }} (Under Developing)</h4>
+<h4>{{ _( "Status" ) }}</h4>
 <table id="status" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -23,9 +23,11 @@
     </div> <!-- .row-fluid -->
 
     <div class="row-fluid">
-        <div id="logs" class="tab-pane">
-            <div id="log" class="span12"></div>
-        </div> <!-- #log -->
+        <div class="span12">
+            <div id="logs" class="tab-pane">
+                <div id="log" class="span12"></div>
+            </div> <!-- #log -->
+        </div>
     </div>
 <script type="text/javascript">
     function updateStatus(selector, content) {
@@ -48,13 +50,6 @@
         }
         $('#switch_ipv6_tunnel').html('{{ _( "Disable" ) }}');
     }
-    function SwitchButtonStop(){
-        if ($('#switch_ipv6_tunnel').hasClass("btn-primary")){
-            $('#switch_ipv6_tunnel').removeClass('btn-primary');
-            $('#switch_ipv6_tunnel').addClass('btn-inverse');
-        }
-        $('#switch_ipv6_tunnel').html('{{ _( "Stop" ) }}');
-    }
 </script>
 
 <script type="text/javascript">
@@ -64,44 +59,28 @@
             cmd = "enable";
         } else if ( $('#switch_ipv6_tunnel').html() == '{{ _( "Disable" ) }}' ){
             cmd = "disable";
-        } else if ( $('#switch_ipv6_tunnel').html() == '{{ _( "Stop" ) }}' ){
-            cmd = "stop";
+        } else {
+            return;
         }
 
-        if ( cmd == "enable" || cmd == "disable") {
-            $.ajax({
-                type: 'GET',
-                url: '/module/gae_proxy/control/ipv6_tunnel?cmd=' + cmd,
-                dataType: 'JSON',
-                success: function(result) {
-                    window.timer.play();
+        window.timer.play();
+        $('.alert').html('{{ _("Current status: ") }}{{ _("Running ...") }}');
 
-                    SwitchButtonStop();
-                    $('.alert').html('{{ _("Current status: ") }}{{ _("deploying ...") }}');
-
-                    if ( !tipHasClose() ) {
-                        tipClose();
-                    }
-                },
-                error: function(result) {
-                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+        $.ajax({
+            type: 'GET',
+            url: '/module/gae_proxy/control/ipv6_tunnel?cmd=' + cmd,
+            dataType: 'JSON',
+            success: function(result) {
+                window.timer.stop();
+                $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
+                if ( !tipHasClose() ) {
+                    tipClose();
                 }
-            });
-        }else{
-            $.ajax({
-                type: 'GET',
-                url: '/module/gae_proxy/control/ipv6_tunnel?cmd=stop',
-                dataType: 'JSON',
-                success: function(result) {
-                    if ( !tipHasClose() ) {
-                        tipClose();
-                    }
-                },
-                error: function(result) {
-                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
-                }
-            });
-        }
+            },
+            error: function(result) {
+                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+            }
+        });
     });
 </script>
 
@@ -121,15 +100,11 @@
                 updateLog(result['log']);
 
                 if ( result['status'] == 'enable' ) {
-                    window.timer.stop();
                     SwitchButtonDisable();
-                    $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
-                }else if ( result['status'] == 'disable' ) {
-                    window.timer.stop();
-                    SwitchButtonEnable();
-                    $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
-                }
 
+                }else if ( result['status'] == 'disable' ) {
+                    SwitchButtonEnable();
+                }
 
                 if(window.isAutoScrollLog == true){
                     $('#log').scrollTop($('#log')[0].scrollHeight);
@@ -148,9 +123,25 @@
 
         window.timer.set({
             time: 1000,
-            autostart: true
+            autostart: false
         });
 
         updateProcess();
     });
+</script>
+
+<script type="text/javascript">
+    $(function() {
+        resizeLogWindow();
+    });
+
+    $(window).resize(function() {
+        resizeLogWindow();
+    });
+    function resizeLogWindow() {
+        var windowHeight    = $(window).height(),
+            preservedHeight = 170;
+
+        $('#log').css('height', windowHeight - preservedHeight);
+    }
 </script>

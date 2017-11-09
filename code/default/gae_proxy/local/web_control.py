@@ -15,11 +15,13 @@ import datetime
 import locale
 import time
 import hashlib
+import ConfigParser
 
+
+import yaml
+import simple_http_server
 
 from xlog import getLogger
-
-
 xlog = getLogger("gae_proxy")
 from config import config
 from appids_manager import appid_manager
@@ -27,27 +29,24 @@ from google_ip import google_ip
 from google_ip_range import ip_range
 from connect_manager import https_manager
 from scan_ip_log import scan_ip_log
-import ConfigParser
 import connect_control
 import ip_utils
 import check_local_network
 import check_ip
 import cert_util
-import simple_http_server
 import test_appid
 from http_dispatcher import http_dispatch
 import openssl_wrap
+import ipv6_tunnel
 
 
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
+
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 data_path = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy'))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
-
-
-import yaml
 
 
 class User_special(object):
@@ -183,11 +182,6 @@ def get_openssl_version():
 
 
 deploy_proc = None
-ipv6_tunnel_proc = None
-
-
-def ipv6_tunnel_status():
-    return "Developing"
 
 
 class ControlHandler(simple_http_server.HttpServerHandler):
@@ -433,7 +427,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                    "ipv4_state": check_local_network.IPv4.get_stat(),
                    "ipv6_state": check_local_network.IPv6.get_stat(),
-                   "ipv6_tunnel": ipv6_tunnel_status(),
+                   "ipv6_tunnel": ipv6_tunnel.state(),
                    "ip_num": len(google_ip.gws_ip_list),
                    "good_ipv4_num": google_ip.good_ipv4_num,
                    "good_ipv6_num": google_ip.good_ipv6_num,
@@ -802,7 +796,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_ipv6_tunnel_handler(self):
-        global ipv6_tunnel_proc
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
@@ -811,46 +804,34 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
 
         if reqs['cmd'] in [['enable'], ['disable']]:
+            cmd = reqs['cmd'][0]
+            xlog.info("ipv6_tunnel switch %s", cmd)
 
-            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
-                xlog.warn("ipv6_tunnel_proc is running, request denied.")
-                data = '{"res":"ipv6_tunnel_proc is running", "time":"%s"}' % time_now
-
-            else:
-                cmd = reqs['cmd'][0]
+            if os.path.isfile(log_path):
                 try:
-                    if os.path.isfile(log_path):
-                        os.remove(log_path)
-
-                    script_path = os.path.abspath(os.path.join(current_path, os.pardir, "ipv6_tunnel", 'switch.py'))
-
-                    args = [sys.executable, script_path, cmd]
-
-                    ipv6_tunnel_proc = subprocess.Popen(args)
-                    xlog.info("ipv6_tunnel switch %s", cmd)
-                    data = '{"res":"success", "time":"%s"}' % time_now
+                    os.remove(log_path)
                 except Exception as e:
-                    data = '{"res":"%s", "time":"%s"}' % (e, time_now)
+                    xlog.warn("remove %s fail:%r", log_path, e)
 
-        elif reqs['cmd'] == ['stop']:
-            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
-                ipv6_tunnel_proc.kill()
-                data = '{"res":"ipv6_tunnel is killed", "time":"%s"}' % time_now
+            if cmd == "enable":
+                ipv6_tunnel.enable()
+            elif cmd == "disable":
+                ipv6_tunnel.disable()
             else:
-                data = '{"res":"ipv6_tunnel is not running", "time":"%s"}' % time_now
+                xlog.warn("unknown cmd:%s", cmd)
+
+            data = '{"res":"success", "time":"%s"}' % time_now
 
         elif reqs['cmd'] == ['get_log']:
-            if ipv6_tunnel_proc and os.path.isfile(log_path):
+            if os.path.isfile(log_path):
                 with open(log_path, "r") as f:
                     content = f.read()
             else:
                 content = ""
 
-            if ipv6_tunnel_proc and ipv6_tunnel_proc.poll() == None:
-                status = 'running'
-            else:
-                status = ipv6_tunnel_status()
+            status = ipv6_tunnel.state()
 
-            data = json.dumps({'status': status, 'log': content, 'time': time_now})
+            data = json.dumps({'status': status, 'log': content.decode("GBK"), 'time': time_now})
 
         self.send_response_nc('text/html', data)
+

@@ -15,51 +15,16 @@ we also keep host connect for direct connect.
 every ssl connect can't change host after request.
 """
 
-
-import os
-import binascii
 import time
-import socket
-import struct
 import threading
 import operator
 
 
-import socks
-
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
-
 from config import config
-
-
-def load_proxy_config():
-    if config.PROXY_ENABLE:
-        if config.PROXY_TYPE == "HTTP":
-            proxy_type = socks.HTTP
-        elif config.PROXY_TYPE == "SOCKS4":
-            proxy_type = socks.SOCKS4
-        elif config.PROXY_TYPE == "SOCKS5":
-            proxy_type = socks.SOCKS5
-        else:
-            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            config.PROXY_ENABLE = 0
-            return
-
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_proxy_config()
-
-
 from google_ip import google_ip
-from openssl_wrap import SSLConnection
-
-NetWorkIOError = (socket.error, SSLError, OpenSSL.SSL.Error, OSError)
-
-g_cacertfile = os.path.join(current_path, "cacert.pem")
 import connect_control
 import check_ip
 
@@ -161,7 +126,7 @@ class Connect_pool():
         try:
             pool = tuple(self.pool)
             for sock in pool:
-                inactive_time = time.time() -sock.last_use_time
+                inactive_time = time.time() - sock.last_use_time
                 # xlog.debug("inactive_time:%d", inactive_time * 1000)
                 if inactive_time >= maxtime:
                     return_list.append(sock)
@@ -194,32 +159,18 @@ class Connect_pool():
             i = 0
             for item in pool:
                 sock,t = item
-                out_str += "%d \t %s handshake:%d not_active_time:%d h2:%d\r\n" % (i, sock.ip, t, time.time() -sock.last_use_time, sock.h2)
+                out_str += "%d \t %s handshake:%d not_active_time:%d h2:%d\r\n" % (i, sock.ip, t, time.time() - sock.last_use_time, sock.h2)
                 i += 1
         finally:
             self.pool_lock.release()
 
         return out_str
 
+
 class Https_connection_manager(object):
     thread_num_lock = threading.Lock()
 
     def __init__(self):
-        # http://docs.python.org/dev/library/ssl.html
-        # http://blog.ivanristic.com/2009/07/examples-of-the-information-collected-from-ssl-handshakes.html
-        # http://src.chromium.org/svn/trunk/src/net/third_party/nss/ssl/sslenum.c
-        # openssl s_server -accept 443 -key CA.crt -cert CA.crt
-
-        # ref: http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
-        self.openssl_context = SSLConnection.context_builder(ca_certs=g_cacertfile)
-        try:
-            self.openssl_context.set_session_id(binascii.b2a_hex(os.urandom(10)))
-        except:
-            pass
-
-        if hasattr(OpenSSL.SSL, 'SESS_CACHE_BOTH'):
-            self.openssl_context.set_session_cache_mode(OpenSSL.SSL.SESS_CACHE_BOTH)
-
         self.class_name = "Https_connection_manager"
         self.timeout = 4
         self.max_timeout = 60
@@ -328,7 +279,7 @@ class Https_connection_manager(object):
             ip_str = google_ip.get_gws_ip()
             if not ip_str:
                 time.sleep(60)
-                # xlog.warning("no enough ip")
+                xlog.warning("no enough ip")
                 return
 
             #xlog.debug("create ssl conn %s", ip_str)
@@ -411,8 +362,6 @@ class Https_connection_manager(object):
             ssl_sock = check_ip.connect_ssl(ip, port=443, timeout=self.timeout, check_cert=True,
                                             close_cb=google_ip.ssl_closed)
 
-
-
             google_ip.update_ip(ip, ssl_sock.handshake_time)
             xlog.debug("create_ssl update ip:%s time:%d h2:%d", ip, ssl_sock.handshake_time, ssl_sock.h2)
 
@@ -427,7 +376,7 @@ class Https_connection_manager(object):
             if sock:
                 sock.close()
         except Exception as e:
-            xlog.debug("%s fail:%r", ip, e)
+            xlog.debug("connect %s fail:%r", ip, e)
 
             google_ip.report_connect_fail(ip)
             connect_control.report_connect_fail()
@@ -437,7 +386,6 @@ class Https_connection_manager(object):
             if sock:
                 sock.close()
         finally:
-
             connect_control.end_connect_register(high_prior=True)
 
     def get_ssl_connection(self, host=''):
@@ -510,4 +458,6 @@ class Https_connection_manager(object):
         else:
             xlog.debug("get_new_ssl timeout fail.")
             return None
+
+
 https_manager = Https_connection_manager()

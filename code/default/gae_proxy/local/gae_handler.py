@@ -194,7 +194,7 @@ def request_gae_server(headers, body, url, timeout):
     if not response:
         raise GAE_Exception(600, "fetch gae fail")
 
-    if response.status >= 500:
+    if response.status >= 600:
         raise GAE_Exception(
             response.status, "fetch gae fail:%d" % response.status)
 

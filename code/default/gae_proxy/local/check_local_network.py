@@ -31,9 +31,6 @@ xlog = getLogger("gae_proxy")
 max_timeout = 5
 
 
-#####################################
-
-
 class CheckNetwork(object):
     def __init__(self, type="IPv4"):
         self.type = type
@@ -52,7 +49,6 @@ class CheckNetwork(object):
                 (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
 
         self.http_client = simple_http_client.Client(self.proxy, timeout=30)
-
 
     def report_ok(self):
         self.network_stat = "OK"
@@ -79,7 +75,6 @@ class CheckNetwork(object):
 
     def _test_host(self, url):
         try:
-
             header = {
                 "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
                 "accept": "application/json, text/javascript, */*; q=0.01",
@@ -135,7 +130,7 @@ class CheckNetwork(object):
                 if time_now - self.last_check_time < 10:
                     return
 
-                self.last_check_time = time_now
+        self.last_check_time = time_now
         threading.Thread(target=self._simple_check_worker).start()
 
 
@@ -168,9 +163,9 @@ def report_fail(ip):
 
 def is_ok(ip):
     if "." in ip:
-        IPv4.is_ok()
+        return IPv4.is_ok()
     else:
-        IPv6.is_ok()
+        return IPv6.is_ok()
 
 
 if __name__ == "__main__":
