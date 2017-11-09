@@ -2,7 +2,6 @@
 import sys
 import os
 
-import httplib
 import time
 import threading
 
@@ -86,6 +85,9 @@ class CheckNetwork(object):
             if response:
                 return True
         except Exception as e:
+            if __name__ == "__main__":
+                xlog.exception("test %s e:%r", url, e)
+
             pass
 
         return False

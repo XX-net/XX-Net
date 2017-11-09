@@ -61,6 +61,7 @@ if sys.platform == "win32":
     win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
     sys.path.append(win32_lib)
 
+from base64 import b64encode
 import socket
 import struct
 from errno import EOPNOTSUPP, EINVAL, EAGAIN
@@ -615,8 +616,19 @@ class socksocket(_BaseSocket):
         # If we need to resolve locally, we do this now
         addr = dest_addr if rdns else socket.gethostbyname(dest_addr)
 
-        self.sendall(b"CONNECT " + addr.encode('idna') + b":" + str(dest_port).encode() +
-                     b" HTTP/1.1\r\n" + b"Host: " + dest_addr.encode('idna') + b"\r\n\r\n")
+        http_headers = [
+            (b"CONNECT " + addr.encode("idna") + b":"
+             + str(dest_port).encode() + b" HTTP/1.1"),
+            b"Host: " + dest_addr.encode("idna")
+        ]
+
+        if username and password:
+            http_headers.append(b"Proxy-Authorization: basic "
+                                + b64encode(username + b":" + password))
+
+        http_headers.append(b"\r\n")
+
+        self.sendall(b"\r\n".join(http_headers))
 
         # We just need the first line to check if the connection was successful
         fobj = self.makefile()

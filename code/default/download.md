@@ -1,11 +1,11 @@
 
 ## 下载(Download)：
 稳定版(Stable)：  
-https://codeload.github.com/XX-net/XX-Net/zip/3.7.9
+https://codeload.github.com/XX-net/XX-Net/zip/3.7.14
 
 
 测试版(Test)：  
-https://codeload.github.com/XX-net/XX-Net/zip/3.7.14
+https://codeload.github.com/XX-net/XX-Net/zip/3.7.15
 
 
 Android:  

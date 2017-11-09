@@ -111,6 +111,7 @@ def state():
 
     last_get_state_time = time.time()
     r = run("netsh interface Teredo show state")
+    xlog.debug("netsh state: %s", r)
     last_state = get_line_value(r, 6)
     if last_state == "offline":
         last_state = "disable"

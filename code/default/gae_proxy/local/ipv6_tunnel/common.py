@@ -1,6 +1,6 @@
 import os
 import shlex
-from subprocess import check_output
+import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -35,8 +35,18 @@ def best_server():
 
 
 def run(cmd):
-    cmd = cmd.split()
-    out = check_output(cmd)
+    cmd = shlex.split(cmd)
+
+    try:
+        # hide console in MS windows
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+
+        out = subprocess.check_output(cmd, startupinfo=startupinfo)
+    except Exception as e:
+        out = "Exception:%r" % e
+
     return out
 
 
@@ -53,12 +63,7 @@ def run_cmds(cmds):
             continue
 
         log.write("\n>: %s\n------------------------------------" % cmd)
-        cmd = shlex.split(cmd)
-
-        try:
-            out = check_output(cmd)
-        except Exception as e:
-            out = "Exception:%r" % e
+        out = run(cmd)
         log.write(out)
         outs.append(out)
     return "\r\n".join(outs)

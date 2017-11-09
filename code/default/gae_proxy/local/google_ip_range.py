@@ -201,7 +201,7 @@ class IpRange(object):
                 xlog.warn("IpRange get_ip but use_ip is %s", use_ipv6)
 
             ran = random.randint(0, 100)
-            if ran < 10:
+            if ran < 20:
                 return self.get_ipv6()
             else:
                 return self.get_ipv4()
