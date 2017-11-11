@@ -40,12 +40,15 @@ class CheckNetwork(object):
         self.last_check_time = 0
         self.continue_fail_count = 0
 
-        if config.PROXY_USER:
-            self.proxy = "%s://%s:%s@%s:%d" % \
-                (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST, config.PROXY_PORT)
+        if config.PROXY_ENABLE:
+            if config.PROXY_USER:
+                self.proxy = "%s://%s:%s@%s:%d" % \
+                    (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST, config.PROXY_PORT)
+            else:
+                self.proxy = "%s://%s:%d" % \
+                    (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
         else:
-            self.proxy = "%s://%s:%d" % \
-                (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+            self.proxy = None
 
         self.http_client = simple_http_client.Client(self.proxy, timeout=30)
 
@@ -64,7 +67,7 @@ class CheckNetwork(object):
             # network_stat = "unknown"
             xlog.debug("report_connect_fail %s continue_fail_count:%d",
                        self.type, self.continue_fail_count)
-            self._triger_check_network(True)
+            self.triger_check_network(True)
 
     def get_stat(self):
         return self.network_stat
@@ -118,7 +121,7 @@ class CheckNetwork(object):
         self._checking_num -= 1
         self._checking_lock.release()
 
-    def _triger_check_network(self, fail=False, force=False):
+    def triger_check_network(self, fail=False, force=False):
         time_now = time.time()
         if not force:
             if self._checking_num > 0:
@@ -143,11 +146,12 @@ IPv4.urls = [
             "https://code.jquery.com",
             "https://cdn.bootcss.com",
             "https://cdnjs.cloudflare.com"]
-IPv4._triger_check_network()
+IPv4.triger_check_network()
 
 IPv6 = CheckNetwork("IPv6")
 IPv6.urls = ["http://[2001:470:1:18::125]", "http://[2001:41d0:8:e8ad::1]", "http://[2001:260:401:372::5f]"]
-IPv6._triger_check_network()
+IPv6.triger_check_network()
+
 
 def report_ok(ip):
     if "." in ip:

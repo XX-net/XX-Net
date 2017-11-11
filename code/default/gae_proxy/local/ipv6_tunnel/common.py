@@ -43,7 +43,12 @@ def run(cmd):
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        out = subprocess.check_output(cmd, startupinfo=startupinfo)
+        #out = subprocess.check_output(cmd, startupinfo=startupinfo)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, startupinfo=startupinfo)
+        out, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            return out + "\n retcode:%s\n unused_err:%s\n" % (retcode, unused_err)
     except Exception as e:
         out = "Exception:%r" % e
 
