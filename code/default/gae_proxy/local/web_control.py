@@ -572,7 +572,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             ip_list = self.postvars['ipList'][0]
             addresses = ip_list.split('|')
             for ip in addresses:
-                if not ip_utils.check_ip_valid(ip):
+                if not ip_utils.check_ip_valid(ip) and not ip_utils.check_ip_valid6(ip):
                     continue
                 if google_ip.add_ip(ip, 100, "google.com", "gws"):
                     count += 1
