@@ -495,15 +495,15 @@ def confirm_xxnet_exit():
     is_xxnet_exit = False
     xlog.debug("start confirm_xxnet_exit")
 
-    for i in range(30):
-        # gae_proxy(default port:8087)
-        if http_request("http://127.0.0.1:8087/quit") == False:
-            xlog.debug("good, xxnet:8087 cleared!")
-            is_xxnet_exit = True
-            break
-        else:
-            xlog.debug("<%d>: try to terminate xxnet:8087" % i)
-        time.sleep(1)
+    #for i in range(30):
+    #    # gae_proxy(default port:8087)
+    #    if http_request("http://127.0.0.1:8087/quit") == False:
+    #        xlog.debug("good, xxnet:8087 cleared!")
+    #        is_xxnet_exit = True
+    #        break
+    #    else:
+    #        xlog.debug("<%d>: try to terminate xxnet:8087" % i)
+    #    time.sleep(1)
 
 
     for i in range(30):
