@@ -27,6 +27,7 @@ exit
 @echo off
 
 net start "ip helper"
+sc config iphlpsvc start= auto
 netsh int ipv6 reset
 
 netsh int teredo set state default
