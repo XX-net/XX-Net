@@ -1,3 +1,29 @@
+:: XX-Net
+:: Enable IPV6
+:: https://github.com/XX-net/XX-Net-dev/issues/53
+
+:: https://www.zhihu.com/question/34541107/answer/137174053
+@echo off
+echo Get Admin
+::ver|findstr "[6,10]\.[0-9]\.[0-9][0-9]*" > nul && (goto Main)
+::ver|findstr "[3-5]\.[0-9]\.[0-9][0-9]*" > nul && (goto isBelowNT6)
+
+:: :isBelowNT6
+
+:Main
+@echo off
+cd /d "%~dp0"
+cacls.exe "%SystemDrive%\System Volume Information" >nul 2>nul
+if %errorlevel%==0 goto Admin
+if exist "%temp%\getadmin.vbs" del /f /q "%temp%\getadmin.vbs"
+echo Set RequestUAC = CreateObject^("Shell.Application"^)>"%temp%\getadmin.vbs"
+echo RequestUAC.ShellExecute "%~s0","","","runas",1 >>"%temp%\getadmin.vbs"
+echo WScript.Quit >>"%temp%\getadmin.vbs"
+"%temp%\getadmin.vbs" /f
+if exist "%temp%\getadmin.vbs" del /f /q "%temp%\getadmin.vbs"
+exit
+
+:Admin
 @echo off
 
 net start "ip helper"
@@ -27,12 +53,19 @@ netsh int ipv6 set prefix 2002::/16 30 1
 netsh int ipv6 set prefix 2001::/32 5 1
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
-ipconfig /all
 ipconfig /flushdns
+
+set time=%date:~0,4%-%date:~5,2%-%date:~8,2%_%time:~0,2%%time:~3,2%%time:~6,2%
+@call :output>..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt 
+exit
+
+:output
+@echo off
+ipconfig /all
 netsh int ipv6 show teredo
 netsh int ipv6 show route
 netsh int ipv6 show int
 netsh int ipv6 show prefix
 netsh int ipv6 show address
 route print
-cmd
+notepad ..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt
