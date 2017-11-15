@@ -283,7 +283,7 @@ def test_xtunnel_ip2(ip, top_domain=None, wait_time=0):
 
     ssl_sock.support_xtunnel = False
 
-    host = "xxnet3.herokuapp.com"
+    host = "xxnet4.herokuapp.com"
     xlog.info("host:%s", host)
 
     time.sleep(wait_time)
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
     else:
-        ip = "50.19.244.243"
+        ip = "107.21.125.200"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     xlog.info("test ip:%s", ip)
 

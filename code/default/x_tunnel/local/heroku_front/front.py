@@ -104,7 +104,7 @@ class Front(object):
         if not worker:
             return None
 
-        return worker.get_score()
+        return worker.get_score() * 5
 
     def worker_num(self):
         return len(self.dispatcher.workers)

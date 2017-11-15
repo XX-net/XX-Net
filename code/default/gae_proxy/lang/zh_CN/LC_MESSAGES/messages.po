@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-30 14:57+0800\n"
+"POT-Creation-Date: 2017-11-15 08:26+0800\n"
 "PO-Revision-Date: 2015-12-16 15:55+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -12,7 +12,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
+"Generated-By: Babel 2.3.4\n"
 
 msgid "Scan Settings"
 msgstr "设置"
@@ -28,6 +28,9 @@ msgstr "导出 IP"
 
 msgid "Check IP"
 msgstr "检查所有IP"
+
+msgid "IPv6 Tunnel"
+msgstr "IPv6 隧道"
 
 msgid "Advanced"
 msgstr "高级"
@@ -80,9 +83,6 @@ msgstr "注意：appid部署之前无法使用。"
 msgid "Advanced options"
 msgstr "高级选项"
 
-msgid "Enable IPv6(If it's available)"
-msgstr "使用IPv6"
-
 msgid "LAN proxy(Generally not needed)"
 msgstr "局域网代理(一般无需配置)"
 
@@ -130,9 +130,6 @@ msgstr "无效的Appid:"
 
 msgid ", deploy appid before using."
 msgstr "，使用前请先部署。"
-
-msgid "Enable IPv6 failed. Be sure your network support IPv6."
-msgstr "启用IPv6失败，请确认你的网络支持IPv6。"
 
 msgid "Failed saving settings"
 msgstr "保存设置失败"
@@ -221,6 +218,15 @@ msgstr "导出IP地址失败"
 msgid "IP list"
 msgstr "IP列表"
 
+msgid "Enable"
+msgstr "启用"
+
+msgid "Disable"
+msgstr "禁用"
+
+msgid "Running ..."
+msgstr "正在执行"
+
 msgid "GAEProxy Log"
 msgstr "GAEProxy日志"
 
@@ -242,6 +248,18 @@ msgstr "自动调整扫描线程数"
 msgid "Max scan thread count"
 msgstr "最大扫描线程数"
 
+msgid "Enable IPv6(If it's available)"
+msgstr "使用IPv6"
+
+msgid "AUTO"
+msgstr "自动"
+
+msgid "Force IPv4"
+msgstr "只使用IPv4"
+
+msgid "Force IPv6"
+msgstr "只使用IPv6"
+
 msgid "IP range list"
 msgstr "IP段列表"
 
@@ -256,12 +274,6 @@ msgstr "读取设置失败"
 
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
-
-msgid "Local Network Status"
-msgstr "本地网络状态"
-
-msgid "IP Number"
-msgstr "IP数量"
 
 msgid "Is Idle"
 msgstr "空闲"
@@ -302,6 +314,9 @@ msgstr "监听代理"
 msgid "PAC URL"
 msgstr "PAC自动代理地址"
 
+msgid "USE IPv6"
+msgstr "使用IPv6"
+
 msgid "Working AppIDs"
 msgstr "当前工作AppID"
 
@@ -340,12 +355,6 @@ msgid ""
 "running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
 msgstr "-----------%0A问题描述：%0A请在此描述你遇到的问题，必要时贴出相关的日志信息。%0A%0A-----------%0A诊断信息：%0A"
 
-msgid "Disabled"
-msgstr "禁用"
-
-msgid "Enabled"
-msgstr "启用"
-
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
@@ -362,6 +371,14 @@ msgstr "网络无法连接，请检查网络和防火墙设置。"
 
 msgid "You may want to $1turn on IP scaner$2."
 msgstr "您应该考虑$1开启 IP 扫描器$2。"
+
+msgid ""
+"You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
+"on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>"
+msgstr ""
+"你可以试试 <a href=\"https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6\">开启IPv6隧道</a> 或者"
+"<a href=\"https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B\">使用 X-Tunnel</a>"
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
 msgstr "等待扫描IP，建议开启IPv6。"
@@ -385,7 +402,7 @@ msgid "No working appid. Please check. "
 msgstr "没有可用APPID，请检查。"
 
 msgid "System is Idle. "
-msgstr ""
+msgstr "系统空闲"
 
 msgid "Connection not established yet. "
 msgstr "尚未建立连接"
@@ -424,12 +441,6 @@ msgstr "你正使用公共AppID"
 msgid "new:"
 msgstr "新:"
 
-msgid " h1:"
-msgstr ""
-
-msgid " h2:"
-msgstr ""
-
 msgid "Auto proxy enabled at "
 msgstr "智能代理已启用："
 
@@ -438,6 +449,7 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
+
 
 
 

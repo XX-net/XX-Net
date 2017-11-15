@@ -37,7 +37,7 @@ import connect_control
 
 
 def main():
-    content, status, response = front.request("GET", "center6.xx-net.net", "/")
+    content, status, response = front.request("GET", "center.xx-net.net", "/")
     print(response)
 
     while connect_control.keep_running:

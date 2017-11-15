@@ -99,6 +99,7 @@ class IpRange(object):
         self.default_range_file = os.path.join(current_path, "ip_range.txt")
         self.user_range_file = os.path.join(config.DATA_PATH, "ip_range.txt")
 
+        self.ipv6_scan_ratio = config.CONFIG.getint("google_ip", "ipv6_scan_ratio")
         ip_source = config.CONFIG.get("google_ip", "ip_source")
         if ip_source == "ip_pool":
             self.ip_pool = IpPool()
@@ -201,7 +202,7 @@ class IpRange(object):
                 xlog.warn("IpRange get_ip but use_ip is %s", use_ipv6)
 
             ran = random.randint(0, 100)
-            if ran < 20:
+            if ran < self.ipv6_scan_ratio:
                 return self.get_ipv6()
             else:
                 return self.get_ipv4()

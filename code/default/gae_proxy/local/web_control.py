@@ -427,7 +427,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                    "ipv4_state": check_local_network.IPv4.get_stat(),
                    "ipv6_state": check_local_network.IPv6.get_stat(),
-                   "ipv6_tunnel": ipv6_tunnel.state(),
+                   # "ipv6_tunnel": ipv6_tunnel.state(),
                    "ip_num": len(google_ip.gws_ip_list),
                    "good_ipv4_num": google_ip.good_ipv4_num,
                    "good_ipv6_num": google_ip.good_ipv6_num,
@@ -570,12 +570,15 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         if reqs['cmd'] == ['importip']:
             count = 0
             ip_list = self.postvars['ipList'][0]
-            addresses = ip_list.split('|')
-            for ip in addresses:
-                if not ip_utils.check_ip_valid(ip) and not ip_utils.check_ip_valid6(ip):
-                    continue
-                if google_ip.add_ip(ip, 100, "google.com", "gws"):
-                    count += 1
+            lines = ip_list.split("\n")
+            for line in lines:
+                addresses = line.split('|')
+                for ip in addresses:
+                    ip = ip.strip()
+                    if not ip_utils.check_ip_valid(ip) and not ip_utils.check_ip_valid6(ip):
+                        continue
+                    if google_ip.add_ip(ip, 100, "google.com", "gws"):
+                        count += 1
             data = '{"res":"%s"}' % count
             google_ip.save_ip_list(force=True)
 

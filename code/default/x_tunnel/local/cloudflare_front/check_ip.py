@@ -9,7 +9,6 @@ import sys
 import time
 import json
 
-from pyasn1.codec.der import decoder as der_decoder
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,6 +52,7 @@ else:
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
+from pyasn1.codec.der import decoder as der_decoder
 import socks
 import check_local_network
 from config import config

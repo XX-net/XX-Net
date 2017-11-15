@@ -55,12 +55,6 @@ Modifications made by Anorov (https://github.com/Anorov)
 __version__ = "1.5.1"
 
 import os, sys
-current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
-if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
-    sys.path.append(win32_lib)
-
 from base64 import b64encode
 import socket
 import struct
@@ -68,6 +62,19 @@ from errno import EOPNOTSUPP, EINVAL, EAGAIN
 from io import BytesIO, SEEK_CUR
 from collections import Callable
 import encodings.idna
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+if sys.platform == "win32":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
+    import win_inet_pton
+    inet_pton = win_inet_pton.inet_pton
+    inet_ntop = win_inet_pton.inet_ntop
+else:
+    inet_pton = socket.inet_pton
+    inet_ntop = socket.inet_ntop
+
 
 PROXY_TYPE_SOCKS4 = SOCKS4 = 1
 PROXY_TYPE_SOCKS5 = SOCKS5 = 2
@@ -513,10 +520,10 @@ class socksocket(_BaseSocket):
         proxy_type, _, _, rdns, username, password = self.proxy
 
         if ":" in host:
-            addr_bytes = socket.inet_pton(socket.AF_INET6, host)
+            addr_bytes = inet_pton(socket.AF_INET6, host)
             file.write(b"\x04" + addr_bytes)
         elif check_ip_valid(host):
-            addr_bytes = socket.inet_pton(socket.AF_INET, host)
+            addr_bytes = socket.inet_aton(host)
             file.write(b"\x01" + addr_bytes)
         else:
             if rdns:
@@ -540,7 +547,7 @@ class socksocket(_BaseSocket):
             length = self._readall(file, 1)
             addr = self._readall(file, ord(length))
         elif atyp == b"\x04":
-            addr = socket.inet_ntop(socket.AF_INET6, self._readall(file, 16))
+            addr = inet_ntop(socket.AF_INET6, self._readall(file, 16))
         else:
             raise GeneralProxyError("SOCKS5 proxy server sent invalid data")
 

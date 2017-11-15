@@ -8,6 +8,7 @@ import time
 import hashlib
 
 from xlog import getLogger
+import threading
 xlog = getLogger("x_tunnel")
 
 import simple_http_server
@@ -140,6 +141,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         force = False
         if 'force' in reqs:
+            xlog.debug("req_info in force")
             force = 1
 
         time_now = time.time()
@@ -201,7 +203,19 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "Password needs at least 6 charactors."
             })
 
-        password_hash = str(hashlib.sha256(password).hexdigest())
+        if password == "_HiddenPassword":
+            if username == g.config.login_account and len(g.config.login_password):
+                password_hash = g.config.login_password
+            else:
+
+                res_arr = {
+                    "res": "fail",
+                    "reason": "account not exist"
+                }
+                return self.response_json(res_arr)
+        else:
+            password_hash = str(hashlib.sha256(password).hexdigest())
+
         res, reason = proxy_session.request_balance(username, password_hash, is_register, update_server=True)
         if res:
             g.config.login_account  = username
@@ -255,6 +269,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         })
         if not res:
             xlog.warn("order fail:%s", info)
+            threading.Thread(target=proxy_session.update_quota_loop).start()
             return self.response_json({"res": "fail", "reason": info})
 
         self.response_json({"res": "success"})

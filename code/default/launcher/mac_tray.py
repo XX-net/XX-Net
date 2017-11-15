@@ -78,7 +78,7 @@ class MacTrayObject(AppKit.NSObject):
         self.menu.addItem_(menuitem)
         self.globalGaeProxyMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global X-Tunne;', 'enableGlobalXTunnel:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global X-Tunnel', 'enableGlobalXTunnel:', '')
         if proxyState == 'xtunnel':
             menuitem.setState_(AppKit.NSOnState)
         self.menu.addItem_(menuitem)

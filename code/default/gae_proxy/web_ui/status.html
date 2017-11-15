@@ -18,10 +18,6 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ _( "IPv6 Tunnel" ) }}</td>
-                <td id="ipv6-tunnel"></td>
-            </tr>
-            <tr>
                 <td>{{ _( "IPv4 Status" ) }}</td>
                 <td id="ipv4-status"></td>
             </tr>
@@ -232,7 +228,6 @@
                     'python-version: ' + result['python_version'],
                     'openssl-version: ' + result['openssl_version'],
 
-                    'ipv6-tunnel: ' + result['ipv6_tunnel'],
                     'use-ipv6: ' + result['use_ipv6'],
                     'gws-ip-num: ' + 'total:' + result['ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
                     'ipv4-status: ' + result['ipv4_state'],
@@ -331,7 +326,6 @@
 
                     'td#ipv4-status': result['ipv4_state'],
                     'td#ipv6-status': result['ipv6_state'],
-                    'td#ipv6-tunnel': result['ipv6_tunnel'],
                     'td#ipv4-num': result['good_ipv4_num'],
                     'td#ipv6-num': result['good_ipv6_num'],
                     'td#is-idle': result['is_idle'],
@@ -394,7 +388,11 @@
                     if ( result['scan_ip_thread_num'] < 1 ){
                         return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">').replace('$2', '</a>'), 'none');
                     }else{
-                        return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}', 'none');
+                        if (result['ipv6_state'] == "Fail"){
+                            return updateProperty('#noob-info', '{{ _( "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>" ) }}', 'none');
+                        }else{
+                            return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}', 'none');
+                        }
                     }
                 }
 
@@ -431,7 +429,7 @@
                 }
 
                 if ( is_public_appid(result['gae_appid']) ){
-                    if ( result['out_of_quota_appids'] != "" ){
+                    if ( result['out_of_quota_appids'].length > 20 ){
                         return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'hard');
                     }
                 }

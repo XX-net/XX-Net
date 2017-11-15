@@ -553,7 +553,11 @@ def call_api(path, req_info):
         return False, "except:%r" % e
 
 
+center_login_process = False
+
+
 def request_balance(account=None, password=None, is_register=False, update_server=True):
+    global center_login_process
     if is_register:
         login_path = "/register"
         xlog.info("request_balance register:%s", account)
@@ -571,6 +575,7 @@ def request_balance(account=None, password=None, is_register=False, update_serve
     req_info = {"account": account, "password": password}
 
     try:
+        center_login_process = True
         res, info = call_api(login_path, req_info)
         if not res:
             return False, info
@@ -595,6 +600,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
     except Exception as e:
         xlog.exception("request_balance e:%r", e)
         return False, e
+    finally:
+        center_login_process = False
 
 
 login_lock = threading.Lock()
@@ -622,3 +629,26 @@ def create_conn(sock, host, port):
                 last_login_center_time = time.time()
 
     return g.session.create_conn(sock, host, port)
+
+
+def update_quota_loop():
+    xlog.debug("update_quota_loop start.")
+
+    start_time = time.time()
+    last_quota = g.quota
+    while time.time() - start_time < 10 * 60:
+        if not g.config.login_account:
+            xlog.info("update_quota_loop but logout.")
+            return
+
+        request_balance(
+            g.config.login_account, g.config.login_password,
+            is_register=False, update_server=False)
+
+        if g.quota - last_quota > 1024 * 1024 * 1024:
+            xlog.info("update_quota_loop quota updated")
+            return
+
+        time.sleep(60)
+
+    xlog.warn("update_quota_loop timeout fail.")
