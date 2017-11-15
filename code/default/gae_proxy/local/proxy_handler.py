@@ -106,7 +106,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         out_list.append("HTTP/1.1 %d\r\n" % response.status)
         for key in response.headers:
             key = key.title()
-            out_list.append("%s: %s\r\n" % (key, value))
+            out_list.append("%s: %s\r\n" % (key, response.headers[key]))
         out_list.append("\r\n")
         out_list.append(response.text)
 
