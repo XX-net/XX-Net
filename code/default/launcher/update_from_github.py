@@ -215,7 +215,7 @@ def overwrite(xxnet_version, xxnet_unzip_path):
     xlog.info("update file finished.")
 
 
-def download_overwrite_new_version(xxnet_version):
+def download_overwrite_new_version(xxnet_version,checkhash=1):
     global update_progress
 
     xxnet_url = 'https://codeload.github.com/XX-net/XX-Net/zip/%s' % xxnet_version
@@ -227,10 +227,14 @@ def download_overwrite_new_version(xxnet_version):
         progress["update_status"] = "Download Fail."
         raise Exception("download xxnet zip fail:%s" % xxnet_zip_file)
 
-    hash_sum = get_hash_sum(xxnet_version)
-    if len(hash_sum) and hash_file_sum(xxnet_zip_file) != hash_sum:
-        progress["update_status"] = "Download Checksum Fail."
-        raise Exception("download xxnet zip checksum fail:%s" % xxnet_zip_file)
+    if checkhash:
+        hash_sum = get_hash_sum(xxnet_version)
+        if len(hash_sum) and hash_file_sum(xxnet_zip_file) != hash_sum:
+            progress["update_status"] = "Download Checksum Fail."
+            xlog.warn("downloaded xxnet zip checksum fail:%s" % xxnet_zip_file)
+            raise Exception("downloaded xxnet zip checksum fail:%s" % xxnet_zip_file)
+    else:
+        xlog.debug("skip checking downloaded file hash")
 
     xlog.info("update download %s finished.", download_path)
 
@@ -283,12 +287,12 @@ def restart_xxnet(version=None):
     os._exit(0)
 
 
-def update_version(version):
+def update_version(version,checkhash=1):
     global update_progress, update_info
     _update_info = update_info
     update_info = ""
     try:
-        download_overwrite_new_version(version)
+        download_overwrite_new_version(version,checkhash)
 
         update_current_version(version)
 
@@ -300,12 +304,12 @@ def update_version(version):
         update_info = _update_info
 
 
-def start_update_version(version):
+def start_update_version(version, checkhash=1):
     if progress["update_status"] != "Idle" and "Fail" not in progress["update_status"]:
         return progress["update_status"]
 
     progress["update_status"] = "Start update"
-    th = threading.Thread(target=update_version, args=(version,))
+    th = threading.Thread(target=update_version, args=(version,checkhash))
     th.start()
     return True
 
