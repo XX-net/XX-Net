@@ -359,9 +359,15 @@ class ProxySession():
 
                 # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d", transfer_no, send_data_len, send_ack_len)
                 try:
-                    self.transfer_list[transfer_no]["try"] = try_no
-                    self.transfer_list[transfer_no]["stat"] = "request"
-                    self.transfer_list[transfer_no]["start"] = time.time()
+                    try:
+                        if transfer_no not in self.transfer_list:
+                            self.transfer_list[transfer_no] = {}
+                        self.transfer_list[transfer_no]["try"] = try_no
+                        self.transfer_list[transfer_no]["stat"] = "request"
+                        self.transfer_list[transfer_no]["start"] = time.time()
+                    except:
+                        pass
+                        
                     content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                       path="/data", data=upload_post_data,
                                                                     timeout=server_timeout + g.config.network_timeout)
