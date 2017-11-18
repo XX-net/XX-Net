@@ -171,10 +171,15 @@ class HTTP_worker(object):
         now = time.time()
         inactive_time = now - self.last_active_time
 
+        rtt = self.rtt
+        if inactive_time > 30:
+            if rtt > 1000:
+                rtt = 1000
+
         if self.version == "1.1":
-            rtt = self.rtt + 100
+            rtt += 100
         else:
-            rtt = self.rtt + len(self.streams) * 3000
+            rtt += len(self.streams) * 100
 
         if inactive_time > 10:
             score = rtt

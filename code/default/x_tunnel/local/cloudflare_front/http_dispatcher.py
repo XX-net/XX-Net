@@ -273,6 +273,7 @@ class HttpsDispatcher(object):
         self.h2_num = 0
 
     def to_string(self):
+        now = time.time()
         worker_rate = {}
         for w in self.workers:
             worker_rate[w] = w.get_rtt_rate()
@@ -281,8 +282,8 @@ class HttpsDispatcher(object):
 
         out_str = 'thread num:%d\r\n' % threading.activeCount()
         for w, r in w_r:
-            out_str += "%s rtt:%d a:%d live:%d processed:%d" % \
-                       (w.ip, w.rtt, w.accept_task, (time.time()-w.ssl_sock.create_time), w.processed_tasks)
+            out_str += "%s rtt:%d a:%d live:%d inactive:%d processed:%d" % \
+                       (w.ip, w.rtt, w.accept_task, (now-w.ssl_sock.create_time), (now-w.last_active_time), w.processed_tasks)
             if w.version == "2":
                 out_str += " streams:%d ping_on_way:%d\r\n" % (len(w.streams), w.ping_on_way)
 

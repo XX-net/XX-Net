@@ -152,7 +152,7 @@ msgid "Please wait..."
 msgstr "请稍侯..."
 
 msgid "Connect to server fail:"
-msgstr "连接到服务器失败："
+msgstr "登录到服务器失败："
 
 msgid "Email seems invalid."
 msgstr "电子邮件地址似乎是无效的。"

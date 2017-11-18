@@ -1,6 +1,5 @@
 import os
 import sys
-import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -80,15 +79,27 @@ def load_config():
     # range 2 - 100
     config.set_var("concurent_thread_num", 50)
 
-    # range 1 - 1000
-    config.set_var("send_delay", 10)
+    # min roundtrip on road if connectoin exist
+    config.set_var("min_on_road", 5)
+
+    # range 1 - 1000, ms
+    config.set_var("send_delay", 100)
+
+    # range 1 - 20000, ms
+    config.set_var("resend_timeout", 5000)
+
+    # range 1 - resend_timeout, ms
+    config.set_var("ack_delay", 300)
+
     # max 10M
-    config.set_var("block_max_size", 256 * 1024)
-    # range 1 - 60
-    config.set_var("roundtrip_timeout", 10)
+    config.set_var("max_payload", 128 * 1024)
+
+    # range 1 - 30
+    config.set_var("roundtrip_timeout", 28)
+
     config.set_var("network_timeout", 10)
 
-    config.set_var("windows_size", 32 * 1024 * 1024)
+    config.set_var("windows_size", 16 * 1024 * 1024)
 
     config.load()
 

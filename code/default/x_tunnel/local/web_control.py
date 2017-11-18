@@ -376,6 +376,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "roundtrip_num": g.stat["roundtrip_num"],
             "slow_roundtrip": g.stat["slow_roundtrip"],
             "timeout_roundtrip": g.stat["timeout_roundtrip"],
+            "resend": g.stat["resend"],
             "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent / 5.0), convert(recent_received / 5.0)),
             "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
         }

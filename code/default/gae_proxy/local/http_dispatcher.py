@@ -147,7 +147,7 @@ class HttpsDispatcher(object):
                     best_rtt = rtt
                     best_worker = worker
 
-            if idle_num < 5:
+            if idle_num < 5 or best_rtt > 1000:
                 self.triger_create_worker_cv.notify()
 
             if best_worker or nowait:
