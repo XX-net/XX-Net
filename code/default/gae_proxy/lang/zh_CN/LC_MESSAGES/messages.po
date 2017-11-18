@@ -248,6 +248,9 @@ msgstr "自动调整扫描线程数"
 msgid "Max scan thread count"
 msgstr "最大扫描线程数"
 
+msgid "Scan IP thread is larger than the max number"
+msgstr "扫描线程数超过最大值"
+
 msgid "Enable IPv6(If it's available)"
 msgstr "使用IPv6"
 
