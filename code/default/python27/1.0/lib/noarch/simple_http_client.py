@@ -10,7 +10,6 @@ import errno
 import logging
 import utils
 import ssl
-import socks
 
 
 class Connection():
@@ -341,6 +340,8 @@ class Client(object):
         sock = None
         start_time = time.time()
         try:
+            import socks
+
             sock = socks.socksocket(socket.AF_INET)
             sock.set_proxy(proxy_type=self.proxy["type"],
                            addr=self.proxy["host"],

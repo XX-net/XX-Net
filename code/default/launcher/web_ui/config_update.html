@@ -48,14 +48,9 @@
     </div> <!-- #advanced-options -->
 
 
-<script type="text/javascript">
-    $(function() {
-        getConfig();
-    });
-</script>
 
 <script type="text/javascript">
-    function getConfig() {
+    function updateGetConfig() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -73,7 +68,12 @@
             }
         });
     }
+
+    $(function() {
+        updateGetConfig();
+    });
 </script>
+
 <script type="text/javascript">
     function versionCompare(v1, v2, options) {
         var lexicographical = options && options.lexicographical,
