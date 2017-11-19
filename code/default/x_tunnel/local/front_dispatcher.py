@@ -36,6 +36,7 @@ def get_front(host, timeout):
 
 
 def request(method, host, path="/", headers={}, data="", timeout=100):
+    # xlog.debug("front request %s timeout:%d", path, timeout)
     start_time = time.time()
 
     content, status, response = "", 603, {}

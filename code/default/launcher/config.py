@@ -14,6 +14,7 @@ config_path = os.path.join(data_path, 'launcher', 'config.yaml')
 config = {}
 need_save_config = False
 
+
 def load():
     global config, config_path
     try:

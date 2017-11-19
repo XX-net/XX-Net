@@ -46,21 +46,36 @@ class Front(object):
                 continue
 
             try:
-                client = simple_http_client.HTTP_client("raw.githubusercontent.com", use_https=True)
-                path = "/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
-                content, status, response = client.request("GET", path)
-                if status != 200:
-                    xlog.warn("update front domains fail:%d", status)
-                    raise Exception("status:%r", status)
+                timeout = 30
+                if config.get("proxy", "enable", 0):
+                    client = simple_http_client.Client(proxy={
+                        "type": config.get("proxy", "type", ""),
+                        "host": config.get("proxy", "host", ""),
+                        "port": int(config.get("proxy", "port", "0")),
+                        "user": config.get("proxy", "user", ""),
+                        "pass": config.get("proxy", "passwd", ""),
+                    }, timeout=timeout)
+                else:
+                    client = simple_http_client.Client(timeout=timeout)
 
+                url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
+                response = client.request("GET", url)
+                if response.status != 200:
+                    xlog.warn("update front domains fail:%d", response.status)
+                    raise Exception("status:%r", response.status)
+
+                need_update = True
                 front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
                 if os.path.exists(front_domains_fn):
                     with open(front_domains_fn, "r") as fd:
                         old_content = fd.read()
-                        if content != old_content:
-                            with open(front_domains_fn, "w") as fd:
-                                fd.write(content)
-                            check_ip.update_front_domains()
+                        if response.text == old_content:
+                            need_update = False
+
+                if need_update:
+                    with open(front_domains_fn, "w") as fd:
+                        fd.write(response.text)
+                    check_ip.update_front_domains()
 
                 next_update_time = time.time() + (4 * 3600)
                 xlog.info("updated cloudflare front domains from github.")

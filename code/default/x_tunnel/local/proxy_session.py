@@ -554,6 +554,8 @@ class ProxySession():
                         xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
                         self.reset()
                         return
+                    else:
+                        continue
                 else:
                     xlog.error("unknown error code:%d, message:%s", error_code, message)
                     time.sleep(sleep_time)
@@ -629,9 +631,15 @@ def call_api(path, req_info):
 
         upload_post_data = encrypt_data(upload_post_data)
 
-        content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
+        while time.time() - start_time < 30:
+            content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
                                                      headers={"Content-Type": "application/json"},
-                                                     data=upload_post_data, timeout=g.config.network_timeout)
+                                                     data=upload_post_data, timeout=10)
+            if status >= 400:
+                time.sleep(1)
+                continue
+            else:
+                break
 
         time_cost = time.time() - start_time
         if status != 200:
@@ -769,3 +777,18 @@ def update_quota_loop():
         time.sleep(60)
 
     xlog.warn("update_quota_loop timeout fail.")
+
+
+def login_process():
+    if g.session.running:
+        update_server = False
+    else:
+        update_server = True
+
+    res, reason = request_balance(
+        g.config.login_account, g.config.login_password,
+        is_register=False, update_server=update_server)
+
+    if res:
+        if g.quota and not g.session.running:
+            g.session.start()

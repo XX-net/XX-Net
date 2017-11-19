@@ -139,10 +139,13 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2:
+            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2 or best_score>1000:
                 self.triger_create_worker_cv.notify()
 
-            if best_worker or nowait:
+            if nowait:
+                return best_worker
+
+            if best_worker and (now - best_worker.last_active_time) > 1:
                 return best_worker
 
             self.wait_a_worker_cv.wait()
@@ -240,7 +243,9 @@ class HttpsDispatcher(object):
                 task.response_fail("get worker fail.")
                 continue
 
-            task.set_state("get_worker:%s" % worker.ip)
+            get_worker_time = time.time()
+            get_cost = get_worker_time - get_time
+            task.set_state("get_worker(%d):%s" % (get_cost, worker.ip))
             task.worker = worker
             try:
                 worker.request(task)

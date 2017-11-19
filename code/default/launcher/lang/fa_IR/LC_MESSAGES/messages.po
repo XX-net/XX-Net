@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-10-12 11:37+0800\n"
+"POT-Creation-Date: 2017-11-19 10:30+0800\n"
 "PO-Revision-Date: 2015-12-06 09:18+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -13,6 +13,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
+
+msgid "Version"
+msgstr ""
 
 msgid "Project main page"
 msgstr "صفحه اصلی پروژه"
@@ -41,6 +44,21 @@ msgstr "تشکر از پروژه های زیر"
 msgid "About XX-Net"
 msgstr "درباره XX-Net"
 
+msgid "General Settings"
+msgstr ""
+
+msgid "System Update"
+msgstr ""
+
+msgid "Proxy Setting"
+msgstr ""
+
+msgid "System configuration options"
+msgstr "گزینه های پیکربندی سیستم"
+
+msgid "Settings saved successfully."
+msgstr "تنظیمات با موفقیت ذخیره شده است."
+
 msgid "Language"
 msgstr "زبان"
 
@@ -59,8 +77,56 @@ msgstr "کمک"
 msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "نمایش سینی سیستم (شروع مجدد _XX-Net_ مورد نیاز)"
 
-msgid "Upgrade Management"
-msgstr "مدیریت ارتقا"
+msgid "Run as Green Software"
+msgstr ""
+
+msgid "Module management"
+msgstr "ماژول مدیریت"
+
+msgid "Enable"
+msgstr "فعال کردن"
+
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عرض٪ s ثانیه تازه کردن."
+
+msgid "GAE Proxy"
+msgstr "GAE پروکسی"
+
+msgid "X_tunnel proxy"
+msgstr ""
+
+msgid "LAN proxy(Generally not needed)"
+msgstr ""
+
+msgid "Proxy type"
+msgstr ""
+
+msgid "Proxy IP address or domain name"
+msgstr ""
+
+msgid "Port"
+msgstr ""
+
+msgid "User name"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Failed reading the settings."
+msgstr ""
+
+msgid "Wait for checking setting..."
+msgstr ""
+
+msgid "Settings saved successfully"
+msgstr ""
+
+msgid "Failed saving settings"
+msgstr ""
 
 msgid "Auto-Upgrade to"
 msgstr "خودکار ارتقا به"
@@ -98,27 +164,6 @@ msgstr "نسخه از یکی از با ثبات"
 msgid "All versions download page"
 msgstr ""
 
-msgid "Module management"
-msgstr "ماژول مدیریت"
-
-msgid "Enable"
-msgstr "فعال کردن"
-
-msgid "System configuration options"
-msgstr "گزینه های پیکربندی سیستم"
-
-msgid "Settings saved successfully."
-msgstr "تنظیمات با موفقیت ذخیره شده است."
-
-msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عرض٪ s ثانیه تازه کردن."
-
-msgid "GAE Proxy"
-msgstr "GAE پروکسی"
-
-msgid "X_tunnel proxy"
-msgstr ""
-
 msgid "(Remote Web Control Enabled)"
 msgstr ""
 
@@ -132,6 +177,9 @@ msgid "Remind me later"
 msgstr ""
 
 msgid "Do not remind me this version"
+msgstr ""
+
+msgid "View changes"
 msgstr ""
 
 msgid "Exited successfully"
@@ -149,7 +197,7 @@ msgstr "خطای ناشناخته رخ داد. لطفا صفحه را تازه �
 msgid "Updating in progress ..."
 msgstr "به روز رسانی در حال انجام ..."
 
-msgid "is valid."
+msgid "New "
 msgstr ""
 
 msgid "Downloading ..."
@@ -166,8 +214,6 @@ msgstr "پیکربندی"
 
 msgid "About"
 msgstr "در باره"
-
-
 
 
 

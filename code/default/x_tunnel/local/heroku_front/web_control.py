@@ -37,7 +37,7 @@ from ip_manager import ip_manager
 os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, os.pardir))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
@@ -66,16 +66,16 @@ class User_config(object):
 
     def __init__(self):
         self.load()
+        self.CONFIG_USER_FILENAME = os.path.abspath(os.path.join(top_path, 'data', 'x_tunnel', 'heroku_config.ini'))
 
     def load(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
 
         self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
-        DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
+        DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'default_config.ini'))
 
 
         self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
 
         try:
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
@@ -84,36 +84,10 @@ class User_config(object):
             else:
                 return
 
-            if os.path.isfile(CONFIG_USER_FILENAME):
-                self.USER_CONFIG.read(CONFIG_USER_FILENAME)
+            if os.path.isfile(self.CONFIG_USER_FILENAME):
+                self.USER_CONFIG.read(self.CONFIG_USER_FILENAME)
             else:
                 return
-
-            try:
-                self.user_special.appid = self.USER_CONFIG.get('gae', 'appid')
-                self.user_special.password = self.USER_CONFIG.get('gae', 'password')
-            except:
-                pass
-
-            try:
-                self.user_special.host_appengine_mode = self.USER_CONFIG.get('hosts', 'appengine.google.com')
-            except:
-                pass
-
-            try:
-                self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-            except:
-                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-
-            try:
-                self.user_special.auto_adjust_scan_ip_thread_num = config.CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num')
-            except:
-                pass
-
-            try:
-                self.user_special.use_ipv6 = config.CONFIG.getint('google_ip', 'use_ipv6')
-            except:
-                pass
 
             self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
             self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
@@ -126,13 +100,8 @@ class User_config(object):
             xlog.warn("User_config.load except:%s", e)
 
     def save(self):
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
         try:
-            f = open(CONFIG_USER_FILENAME, 'w')
-            if self.user_special.appid != "":
-                f.write("[gae]\n")
-                f.write("appid = %s\n" % self.user_special.appid)
-                f.write("password = %s\n\n" % self.user_special.password)
+            f = open(self.CONFIG_USER_FILENAME, 'w')
 
             f.write("[proxy]\n")
             f.write("enable = %s\n" % self.user_special.proxy_enable)
@@ -141,27 +110,11 @@ class User_config(object):
             f.write("port = %s\n" % self.user_special.proxy_port)
             f.write("user = %s\n" % self.user_special.proxy_user)
             f.write("passwd = %s\n\n" % self.user_special.proxy_passwd)
-
-            """
-            if self.user_special.host_appengine_mode != "gae":
-                f.write("[hosts]\n")
-                f.write("appengine.google.com = %s\n" % self.user_special.host_appengine_mode)
-                f.write("www.google.com = %s\n\n" % self.user_special.host_appengine_mode)
-            """
-
-            f.write("[google_ip]\n")
-
-            if int(self.user_special.auto_adjust_scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num'):
-                f.write("auto_adjust_scan_ip_thread_num = %d\n\n" % int(self.user_special.auto_adjust_scan_ip_thread_num))
-            if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num'):
-                f.write("max_scan_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
-
-            if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
-                f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
-
             f.close()
+
+            xlog.info("save config to %s", self.CONFIG_USER_FILENAME)
         except:
-            xlog.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
+            xlog.exception("launcher.config save user config fail:%s", self.CONFIG_USER_FILENAME)
 
 
 user_config = User_config()
@@ -277,16 +230,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         cmd = "get_last"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        if cmd == "set_buffer_size" :
-            if not reqs["buffer_size"]:
-                data = '{"res":"fail", "reason":"size not set"}'
-                mimetype = 'text/plain'
-                self.send_response_nc(mimetype, data)
-                return
 
-            buffer_size = reqs["buffer_size"][0]
-            xlog.set_buffer_size(buffer_size)
-        elif cmd == "get_last":
+        if cmd == "get_last":
             max_line = int(reqs["max_line"][0])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":

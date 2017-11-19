@@ -28,12 +28,52 @@ import config
 import autorun
 import update
 import update_from_github
+import simple_http_client
 import simple_http_server
 from simple_i18n import SimpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 i18n_translator = SimpleI18N(config.get(['language'], None))
+
+
+def test_proxy(type, host, port, user, passwd):
+    if not host:
+        return False
+
+    client = simple_http_client.Client(proxy={
+        "type": type,
+        "host": host,
+        "port": int(port),
+        "user": user if len(user) else None,
+        "pass": passwd if len(passwd) else None
+    }, timeout=5)
+
+    urls = [
+        "https://www.microsoft.com",
+        "https://www.apple.com",
+        "https://code.jquery.com",
+        "https://cdn.bootcss.com",
+        "https://cdnjs.cloudflare.com"]
+
+    for url in urls:
+
+        header = {
+            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+            "accept": "application/json, text/javascript, */*; q=0.01",
+            "accept-encoding": "gzip, deflate, sdch",
+            "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+            "connection": "keep-alive"
+        }
+        try:
+            response = client.request("HEAD", url, header, "")
+            if response:
+                return True
+        except:
+            pass
+
+    return False
+
 
 module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
@@ -158,6 +198,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.req_config_handler()
             elif url_path == '/update':
                 self.req_update_handler()
+            elif url_path == '/config_proxy':
+                self.req_config_proxy_handler()
             elif url_path == '/init_module':
                 self.req_init_module_handler()
             elif url_path == '/quit':
@@ -416,6 +458,52 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
             update_from_github.start_update_version(version)
+            data = '{"res":"success"}'
+        self.send_response('text/html', data)
+
+    def req_config_proxy_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        if reqs['cmd'] == ['get_config']:
+            data = {
+                "enable": config.get(["proxy", "enable"], 0),
+                "type": config.get(["proxy", "type"], "HTTP"),
+                "host": config.get(["proxy", "host"], ""),
+                "port": config.get(["proxy", "port"], 8080),
+                "user": config.get(["proxy", "user"], ""),
+                "passwd": config.get(["proxy", "passwd"], ""),
+            }
+            data = json.dumps(data)
+        elif reqs['cmd'] == ['set_config']:
+            enable = reqs['enable'][0]
+            type = reqs['type'][0]
+            host = reqs['host'][0]
+            port = reqs['port'][0]
+            user = reqs['user'][0]
+            passwd = reqs['passwd'][0]
+
+            if int(enable) and not test_proxy(type, host, port, user, passwd):
+                return self.send_response('text/html', '{"res":"fail", "reason": "test proxy fail"}')
+
+            config.set(["proxy", "enable"], enable)
+            config.set(["proxy", "type"], type)
+            config.set(["proxy", "host"], host)
+            config.set(["proxy", "port"], port)
+            config.set(["proxy", "user"], user)
+            config.set(["proxy", "passwd"], passwd)
+            config.save()
+
+            module_init.call_each_module("set_proxy", {
+                "enable": enable,
+                "type": type,
+                "host": host,
+                "port": port,
+                "user": user,
+                "passwd": passwd
+            })
+
             data = '{"res":"success"}'
         self.send_response('text/html', data)
 

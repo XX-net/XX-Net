@@ -164,7 +164,10 @@ class Front(object):
         else:
             if status == 404:
                 xlog.warn("heroku:%s fail", heroku_host)
-                self.hosts.remove(heroku_host)
+                try:
+                    self.hosts.remove(heroku_host)
+                except:
+                    pass
 
             self.last_fail_time = time.time()
             self.continue_fail_num += 1

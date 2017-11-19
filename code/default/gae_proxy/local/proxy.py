@@ -86,7 +86,7 @@ from config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-xlog.set_buffer(2000)
+xlog.set_buffer(1000)
 if config.log_file:
     log_file = os.path.join(data_gae_proxy_path, "local.log")
     xlog.set_file(log_file)

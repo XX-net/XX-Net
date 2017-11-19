@@ -19,67 +19,6 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">
-            <label for="advanced-options"><i class="icon icon-chevron-right"></i> {{ _( "Advanced options" ) }}</label>
-        </div> <!-- .span4 -->
-    </div> <!-- .row-fluid -->
-    <div id="advanced-options" style="display: none;">
-        <div class="row-fluid">
-            <div class="span4">
-                <label for="enable-proxy">{{ _( "LAN proxy(Generally not needed)" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
-            </div> <!-- .span4 -->
-            <div class="span8">
-                <input id="enable-proxy" type="checkbox" data-toggle="switch" />
-            </div> <!-- .span8 -->
-        </div> <!-- .row-fluid -->
-        <div id="proxy-options" style="display: none;">
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="proxy-type">{{ _( "Proxy type" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <select id="proxy-type">
-                        <option value="HTTP">HTTP</option>
-                        <option value="SOCKS4">SOCKS 4</option>
-                        <option value="SOCKS5">SOCKS 5</option>
-                    </select>
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="proxy-host">{{ _( "Proxy IP address or domain name" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <input id="proxy-host" type="text" placeholder="Example: 127.0.0.1" />
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="proxy-port">{{ _( "Port" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <input id="proxy-port" type="text" placeholder="Example: 808" />
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="proxy-username">{{ _( "User name" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <input id="proxy-username" type="text" />
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-            <div class="row-fluid">
-                <div class="span4">
-                    <label for="proxy-password">{{ _( "Password" ) }}</label>
-                </div> <!-- .span4 -->
-                <div class="span8">
-                    <input id="proxy-password" type="password" />
-                </div> <!-- .span8 -->
-            </div> <!-- .row-fluid -->
-        </div> <!-- #proxy-options -->
-    </div> <!-- #advanced-options -->
-    <div class="row-fluid">
         <div class="span12">
             <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
         </div> <!-- .span12 -->
@@ -94,37 +33,6 @@
 <!-- JavaScript -->
 <script type="text/javascript">
     title('{{ _( "Configure GAEProxy" ) }}');
-</script>
-<script type="text/javascript">
-    $(function() {
-        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
-    });
-</script>
-<script type="text/javascript">
-    $('label[for=advanced-options]').click(function() {
-        var isAdvancedOptionsShown = $('#advanced-options').is(':visible');
-
-        if ( !isAdvancedOptionsShown ) {
-            $('i.icon', this).removeClass('icon-chevron-right');
-            $('i.icon', this).addClass('icon-chevron-down');
-            $('#advanced-options').slideDown();
-        } else {
-            $('i.icon', this).removeClass('icon-chevron-down');
-            $('i.icon', this).addClass('icon-chevron-right');
-            $('#advanced-options').slideUp();
-        }
-    });
-</script>
-<script type="text/javascript">
-    $('#enable-proxy').change(function() {
-        var isChecked = $(this).is(':checked');
-
-        if ( isChecked ) {
-            $('#proxy-options').slideDown();
-        } else {
-            $('#proxy-options').slideUp();
-        }
-    });
 </script>
 <script type="text/javascript">
     $('#gae-appid-field').click(function(){
@@ -154,20 +62,6 @@
                     $('#deploy-via-gae').parent().addClass('switch-on');
                     $('#deploy-via-gae').prop('checked', true);
                 }
-
-                if ( typeof(result['proxy_enable']) != 'undefined' && result['proxy_enable'] != 0 ) {
-                    $('#enable-proxy').parent().removeClass('switch-off');
-                    $('#enable-proxy').parent().addClass('switch-on');
-
-                    $('#enable-proxy').prop('checked', true);
-                    $('#proxy-options').slideDown();
-                }
-                $('#proxy-type').val(result['proxy_type']);
-                $('#proxy-host').val(result['proxy_host']);
-                $('#proxy-port').val(result['proxy_port']);
-                $('#proxy-username').val(result['proxy_user']);
-                $('#proxy-password').val(result['proxy_passwd']);
-
             },
             error: function(){
                 tip('{{ _( "Failed reading the settings." ) }}', 'error');
@@ -178,34 +72,18 @@
 <script type="text/javascript">
     function onSubmit() {
         var gaeAppId          = $('#gae-appid').val(),
-            hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct',
-            enableProxy       = $('#enable-proxy').is(':checked') ? 1 : 0,
-            proxyType         = $('#proxy-type').val(),
-            proxyHost         = $('#proxy-host').val(),
-            proxyPort         = $('#proxy-port').val(),
-            proxyUsername     = $('#proxy-username').val(),
-            proxyPassword     = $('#proxy-password').val();
-
-        proxyPort = parseInt(proxyPort, 10);
+            hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct';
 
         tip('{{ _( "Wait for checking setting..." ) }}', 'info');
 
-        return setConfig(gaeAppId, hostAppEngine,
-                                    enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword);
+        return setConfig(gaeAppId, hostAppEngine);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(gaeAppId, hostAppEngine,
-                            enableProxy, proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword) {
+    function setConfig(gaeAppId, hostAppEngine) {
         var config = {
             'appid': gaeAppId,
-            'host_appengine_mode': hostAppEngine,
-            'proxy_enable': enableProxy,
-            'proxy_type': proxyType,
-            'proxy_host': proxyHost,
-            'proxy_port': proxyPort,
-            'proxy_user': proxyUsername,
-            'proxy_passwd': proxyPassword
+            'host_appengine_mode': hostAppEngine
         };
 
         $.ajax({

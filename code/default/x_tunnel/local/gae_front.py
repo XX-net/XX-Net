@@ -123,7 +123,6 @@ def request(method, host, schema="https", path="/", headers={}, data="", timeout
     if not gae_proxy:
         return "", 602, {}
 
-    timeout = 30
     # use http to avoid cert fail
     url = "http://" + host + path
     if data:

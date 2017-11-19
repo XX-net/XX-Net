@@ -30,8 +30,7 @@ create_data_path()
 
 from xlog import getLogger
 
-log_file = os.path.join(data_xtunnel_path, "client.log")
-xlog = getLogger("x_tunnel", buffer_size=500, file_name=log_file)
+xlog = getLogger("x_tunnel")
 
 import xconfig
 from proxy_handler import Socks5Server
@@ -95,7 +94,7 @@ def load_config():
     config.set_var("max_payload", 128 * 1024)
 
     # range 1 - 30
-    config.set_var("roundtrip_timeout", 28)
+    config.set_var("roundtrip_timeout", 15)
 
     config.set_var("network_timeout", 10)
 
@@ -110,6 +109,7 @@ def load_config():
         xlog.log_to_file(os.path.join(data_path, "client.log"))
 
     xlog.setLevel(config.log_level)
+    xlog.set_buffer(500)
     g.config = config
 
 

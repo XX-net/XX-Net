@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-10-12 11:37+0800\n"
+"POT-Creation-Date: 2017-11-19 10:30+0800\n"
 "PO-Revision-Date: 2015-12-16 20:43+0800\n"
 "Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
 "Language: zh_Hans_CN\n"
@@ -44,6 +44,21 @@ msgstr "感谢以下项目"
 msgid "About XX-Net"
 msgstr "关于XX-Net"
 
+msgid "General Settings"
+msgstr "通用设置"
+
+msgid "System Update"
+msgstr "系统升级"
+
+msgid "Proxy Setting"
+msgstr "代理设置"
+
+msgid "System configuration options"
+msgstr "系统配置选项"
+
+msgid "Settings saved successfully."
+msgstr "设置已成功保存"
+
 msgid "Language"
 msgstr "语言"
 
@@ -65,8 +80,53 @@ msgstr "显示托盘图标(需要重启XX-Net)"
 msgid "Run as Green Software"
 msgstr "以绿色软件运行"
 
-msgid "Upgrade Management"
-msgstr "升级管理"
+msgid "Module management"
+msgstr "模块管理"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
+
+msgid "GAE Proxy"
+msgstr "GAE代理"
+
+msgid "X_tunnel proxy"
+msgstr "X_tunnel 代理"
+
+msgid "LAN proxy(Generally not needed)"
+msgstr "局域网代理（一般不需要设置）"
+
+msgid "Proxy type"
+msgstr "代理类型"
+
+msgid "Proxy IP address or domain name"
+msgstr "代理IP地址或域名"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "User name"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Failed reading the settings."
+msgstr "读取设置失败"
+
+msgid "Wait for checking setting..."
+msgstr "等待检查设置"
+
+msgid "Settings saved successfully"
+msgstr "成功保存设置"
+
+msgid "Failed saving settings"
+msgstr "保存设置失败"
 
 msgid "Auto-Upgrade to"
 msgstr "自动升级到"
@@ -104,27 +164,6 @@ msgstr "稳定版"
 msgid "All versions download page"
 msgstr "所有版本下载页面"
 
-msgid "Module management"
-msgstr "模块管理"
-
-msgid "Enable"
-msgstr "启用"
-
-msgid "System configuration options"
-msgstr "系统配置选项"
-
-msgid "Settings saved successfully."
-msgstr "设置已成功保存"
-
-msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
-
-msgid "GAE Proxy"
-msgstr "GAE代理"
-
-msgid "X_tunnel proxy"
-msgstr "X_tunnel 代理"
-
 msgid "(Remote Web Control Enabled)"
 msgstr "(已允许远程连接)"
 
@@ -139,6 +178,9 @@ msgstr "下次再提醒我"
 
 msgid "Do not remind me this version"
 msgstr "忽略这个版本"
+
+msgid "View changes"
+msgstr "显示变动"
 
 msgid "Exited successfully"
 msgstr "退出成功。"
@@ -158,9 +200,6 @@ msgstr "更新进行中..."
 msgid "New "
 msgstr "新"
 
-msgid "View changes"
-msgstr "显示变动"
-
 msgid "Downloading ..."
 msgstr "下载中……"
 
@@ -175,10 +214,5 @@ msgstr "配置"
 
 msgid "About"
 msgstr "关于"
-
-
-
-
-
 
 

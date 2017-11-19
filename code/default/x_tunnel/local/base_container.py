@@ -130,53 +130,61 @@ class AckPool():
 
 class WaitQueue():
     def __init__(self):
+        self.lock = threading.Lock()
         self.waiters = []
         # (end_time, Lock())
 
         self.running = True
 
     def stop(self):
-        # xlog.info("Block_send_pool stop")
-        self.running = False
-        for end_time, lock in self.waiters:
-            lock.release()
-        self.waiters = []
-        # xlog.info("Block_send_pool stop finished")
+        with self.lock:
+            # xlog.info("Block_send_pool stop")
+            self.running = False
+            for end_time, lock in self.waiters:
+                lock.release()
+            self.waiters = []
+            # xlog.info("Block_send_pool stop finished")
 
     def notify(self):
-        # xlog.debug("notify")
-        if len(self.waiters) == 0:
-            # xlog.debug("notify none.")
-            return
-        try:
-            end_time, lock = self.waiters.pop(0)
-            lock.release()
-        except:
-            pass
+        with self.lock:
+            # xlog.debug("notify")
+            if len(self.waiters) == 0:
+                # xlog.debug("notify none.")
+                return
+            try:
+                end_time, lock = self.waiters.pop(0)
+                lock.release()
+            except:
+                pass
 
     def wait(self, end_time):
-        lock = threading.Lock()
-        lock.acquire()
+        with self.lock:
+            lock = threading.Lock()
+            lock.acquire()
 
-        if len(self.waiters) == 0:
-            self.waiters.append((end_time, lock))
-        else:
-            is_max = True
-            for i in range(0, len(self.waiters)):
-                iend_time, ilock = self.waiters[i]
-                if iend_time > end_time:
-                    is_max = False
-                    break
-
-            if is_max:
+            if len(self.waiters) == 0:
                 self.waiters.append((end_time, lock))
             else:
-                self.waiters.insert(i, (end_time, lock))
+                is_max = True
+                for i in range(0, len(self.waiters)):
+                    try:
+                        iend_time, ilock = self.waiters[i]
+                        if iend_time > end_time:
+                            is_max = False
+                            break
+                    except Exception as e:
+                        xlog.warn("get %d from size:%d fail.", i, len(self.waiters))
+                        continue
+
+                if is_max:
+                    self.waiters.append((end_time, lock))
+                else:
+                    self.waiters.insert(i, (end_time, lock))
 
         lock.acquire()
 
     def status(self):
-        out_string = "waiters:<br>\n"
+        out_string = "waiters[%d]:<br>\n" % len(self.waiters)
         for i in range(0, len(self.waiters)):
             end_time, lock = self.waiters[i]
             out_string += "%d<br>\r\n" % ((end_time - time.time()))

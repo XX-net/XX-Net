@@ -10,10 +10,10 @@
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
                 <div class="span3">
-                    <label for="scan-ip-thread-num">{{ _("Max scan thread count") }}</label>
+                    <label for="scan-ip-thread-num">{{ _("Max scan thread count") }}(0-200)</label>
                 </div> <!-- .span3 -->
                 <div class="span6">
-                    <input id="scan-ip-thread-num" type="text" />
+                     <input id="scan-ip-thread-num" type="number" step="1" min="0" max="200" />
                 </div> <!-- .span6 -->
             </div> <!-- .row-fluid -->
 
