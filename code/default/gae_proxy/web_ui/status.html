@@ -429,7 +429,7 @@
                 }
 
                 if ( is_public_appid(result['gae_appid']) ){
-                    if ( result['out_of_quota_appids'].length > 20 ){
+                    if ( result['out_of_quota_appids'].length > 200 ){
                         return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'hard');
                     }
                 }

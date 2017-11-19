@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-10-12 11:37+0800\n"
+"POT-Creation-Date: 2017-11-19 10:30+0800\n"
 "PO-Revision-Date: 2015-12-06 09:18+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
@@ -13,6 +13,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
+
+msgid "Version"
+msgstr ""
 
 msgid "Project main page"
 msgstr ""
@@ -41,6 +44,21 @@ msgstr ""
 msgid "About XX-Net"
 msgstr ""
 
+msgid "General Settings"
+msgstr ""
+
+msgid "System Update"
+msgstr ""
+
+msgid "Proxy Setting"
+msgstr ""
+
+msgid "System configuration options"
+msgstr ""
+
+msgid "Settings saved successfully."
+msgstr ""
+
 msgid "Language"
 msgstr ""
 
@@ -59,7 +77,55 @@ msgstr ""
 msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr ""
 
-msgid "Upgrade Management"
+msgid "Run as Green Software"
+msgstr ""
+
+msgid "Module management"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr ""
+
+msgid "GAE Proxy"
+msgstr ""
+
+msgid "X_tunnel proxy"
+msgstr ""
+
+msgid "LAN proxy(Generally not needed)"
+msgstr ""
+
+msgid "Proxy type"
+msgstr ""
+
+msgid "Proxy IP address or domain name"
+msgstr ""
+
+msgid "Port"
+msgstr ""
+
+msgid "User name"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Failed reading the settings."
+msgstr ""
+
+msgid "Wait for checking setting..."
+msgstr ""
+
+msgid "Settings saved successfully"
+msgstr ""
+
+msgid "Failed saving settings"
 msgstr ""
 
 msgid "Auto-Upgrade to"
@@ -98,27 +164,6 @@ msgstr ""
 msgid "All versions download page"
 msgstr ""
 
-msgid "Module management"
-msgstr ""
-
-msgid "Enable"
-msgstr ""
-
-msgid "System configuration options"
-msgstr ""
-
-msgid "Settings saved successfully."
-msgstr ""
-
-msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr ""
-
-msgid "GAE Proxy"
-msgstr ""
-
-msgid "X_tunnel proxy"
-msgstr ""
-
 msgid "(Remote Web Control Enabled)"
 msgstr ""
 
@@ -132,6 +177,9 @@ msgid "Remind me later"
 msgstr ""
 
 msgid "Do not remind me this version"
+msgstr ""
+
+msgid "View changes"
 msgstr ""
 
 msgid "Exited successfully"
@@ -149,7 +197,7 @@ msgstr ""
 msgid "Updating in progress ..."
 msgstr ""
 
-msgid "is valid."
+msgid "New "
 msgstr ""
 
 msgid "Downloading ..."
@@ -166,8 +214,6 @@ msgstr ""
 
 msgid "About"
 msgstr ""
-
-
 
 
 

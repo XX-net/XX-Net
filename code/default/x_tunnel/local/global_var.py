@@ -1,5 +1,5 @@
 
-protocol_version = 1
+protocol_version = 2
 last_refresh_time = 0
 login_process = False
 cert = None
@@ -20,5 +20,6 @@ balance = 0
 stat = {
     "roundtrip_num": 0,
     "slow_roundtrip": 0,
-    "timeout_roundtrip": 0
+    "timeout_roundtrip": 0,
+    "resend": 0
 }

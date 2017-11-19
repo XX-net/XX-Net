@@ -1,7 +1,6 @@
 
 import os
 import sys
-import urllib2
 import time
 import subprocess
 import threading
@@ -9,7 +8,6 @@ import re
 import zipfile
 import shutil
 import stat
-import ssl
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
@@ -19,6 +17,7 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
+import simple_http_client
 from xlog import getLogger
 xlog = getLogger("launcher")
 import config
@@ -47,12 +46,29 @@ def init_update_info(check_update):
 
 init_update_info(config.get(["update", "check_update"]))
 
-def get_opener(retry=0):
+
+def request(url, retry=0, timeout=30):
     if retry == 0:
-        opener = urllib2.build_opener()
-        return opener
+        if config.get(["proxy", "enable"], 0):
+            client = simple_http_client.Client(proxy={
+                "type": config.get(["proxy", "type"], ""),
+                "host": config.get(["proxy", "host"], ""),
+                "port": int(config.get(["proxy", "port"], 0)),
+                "user": config.get(["proxy", "user"], ""),
+                "pass": config.get(["proxy", "passwd"], ""),
+            }, timeout=timeout)
+        else:
+            client = simple_http_client.Client(timeout=timeout)
     else:
-        return update.get_opener()
+        cert = os.path.join(data_root, "gae_proxy", "CA.crt")
+        client = simple_http_client.Client(proxy={
+            "type": "http",
+            "host": "127.0.0.1",
+            "port": 8087
+        }, timeout=timeout, cert=cert)
+
+    res = client.request("GET", url, read_payload=False)
+    return res
 
 
 def download_file(url, filename):
@@ -69,20 +85,24 @@ def download_file(url, filename):
     for i in range(0, 2):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
-            opener = get_opener(i)
-            req = opener.open(url, timeout=30)
-            progress[url]["size"] = int(req.headers.get('content-length') or 0)
+            req = request(url, i, timeout=120)
+            file_size = progress[url]["size"] = int(req.getheader('Content-Length', 0))
 
-            chunk_len = 65536
+            left = file_size
             downloaded = 0
             with open(filename, 'wb') as fp:
                 while True:
+                    chunk_len = min(65536, left)
+                    if not chunk_len:
+                        break
+
                     chunk = req.read(chunk_len)
                     if not chunk:
                         break
                     fp.write(chunk)
                     downloaded += len(chunk)
                     progress[url]["downloaded"] = downloaded
+                    left -= len(chunk)
 
             if downloaded != progress[url]["size"]:
                 xlog.warn("download size:%d, need size:%d, download fail.", downloaded, progress[url]["size"])
@@ -90,9 +110,6 @@ def download_file(url, filename):
             else:
                 progress[url]["status"] = "finished"
                 return True
-        except (urllib2.URLError, ssl.SSLError) as e:
-            xlog.warn("download %s to %s URL fail:%r", url, filename, e)
-            continue
         except Exception as e:
             xlog.exception("download %s to %s fail:%r", url, filename, e)
             continue

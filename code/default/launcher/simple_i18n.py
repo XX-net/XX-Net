@@ -48,7 +48,7 @@ class SimpleI18N():
             return 'zh_CN'
         elif 'en' in lang_code:
             return 'en_US'
-        elif 'en' in lang_code:
+        elif 'fa' in lang_code:
             return 'fa_IR'
         else:
             return 'Unknown'

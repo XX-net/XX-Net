@@ -109,16 +109,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             cmd = "get_last"
 
-        if cmd == "set_buffer_size":
-            if not reqs["buffer_size"]:
-                data = '{"res":"fail", "reason":"size not set"}'
-                mimetype = 'text/plain'
-                self.send_response(mimetype, data)
-                return
-
-            buffer_size = reqs["buffer_size"][0]
-            xlog.set_buffer_size(buffer_size)
-        elif cmd == "get_last":
+        if cmd == "get_last":
             max_line = int(reqs["max_line"][0])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
@@ -136,6 +127,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "res": "logout"
             })
 
+        if proxy_session.center_login_process:
+            return self.response_json({
+                "res": "login_process"
+            })
+
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
@@ -149,17 +145,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 (g.last_api_error.startswith("status:") and (time_now - g.last_refresh_time > 30)):
             xlog.debug("x_tunnel force update info")
             g.last_refresh_time = time_now
-            if g.session.running:
-                update_server = False
-            else:
-                update_server = True
-            res, reason = proxy_session.request_balance(
-                g.config.login_account, g.config.login_password,
-                is_register=False, update_server=update_server)
 
-            if res:
-                if g.quota and not g.session.running:
-                    g.session.start()
+            threading.Thread(target=proxy_session.login_process).start()
+
+            return self.response_json({
+                "res": "login_process"
+            })
 
         if len(g.last_api_error) and g.last_api_error != 'balance not enough':
             res_arr = {
@@ -376,6 +367,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "roundtrip_num": g.stat["roundtrip_num"],
             "slow_roundtrip": g.stat["slow_roundtrip"],
             "timeout_roundtrip": g.stat["timeout_roundtrip"],
+            "resend": g.stat["resend"],
             "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent / 5.0), convert(recent_received / 5.0)),
             "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
         }

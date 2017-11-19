@@ -168,6 +168,7 @@ class User_config(object):
                 f.write("use_ipv6 = %s\n\n" % self.user_special.use_ipv6)
 
             f.close()
+            xlog.info("save config to %s", CONFIG_USER_FILENAME)
         except Exception as e:
             xlog.warn("launcher.config save user config fail:%s %r", CONFIG_USER_FILENAME, e)
 
@@ -328,16 +329,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         cmd = "get_last"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        if cmd == "set_buffer_size" :
-            if not reqs["buffer_size"]:
-                data = '{"res":"fail", "reason":"size not set"}'
-                mimetype = 'text/plain'
-                self.send_response_nc(mimetype, data)
-                return
 
-            buffer_size = reqs["buffer_size"][0]
-            xlog.set_buffer_size(buffer_size)
-        elif cmd == "get_last":
+        if cmd == "get_last":
             max_line = int(reqs["max_line"][0])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
@@ -470,19 +463,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     appid_updated = True
                     user_config.user_special.appid = appids
 
-                user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
-                user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
-                user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
-                user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
-                try:
-                    user_config.user_special.proxy_port = int(user_config.user_special.proxy_port)
-                except:
-                    user_config.user_special.proxy_port = 0
-
-                user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
-                user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
-                user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
-
                 user_config.save()
 
                 config.load()
@@ -493,7 +473,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     http_dispatch.close_all_worker()
 
                 google_ip.reset()
-                check_ip.load_proxy_config()
 
                 data = '{"res":"success"}'
                 self.send_response_nc('text/html', data)

@@ -287,7 +287,7 @@
         });
 
         window.refresh_timer.set({
-            time: 2000,
+            time: 1000,
             autostart: true
         });
 
@@ -349,6 +349,11 @@
                     $('button[type=submit]', '#login-form').removeAttr('disabled');
 
                     window.refresh_timer.stop();
+                    return;
+                }
+
+                if( result['res'] == 'login_process' ){
+                    tip('{{ _("Login ......") }}', 'info', false);
                     return;
                 }
 

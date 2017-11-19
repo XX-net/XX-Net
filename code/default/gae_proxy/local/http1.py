@@ -98,6 +98,7 @@ class HTTP1_worker(HTTP_worker):
             self.request_task(task)
 
     def request_task(self, task):
+        start_time = time.time()
         task.set_state("h1_req")
 
         self.ssl_sock.last_use_time = time.time()
@@ -120,7 +121,8 @@ class HTTP1_worker(HTTP_worker):
             response.begin(timeout=task.timeout)
 
         except Exception as e:
-            xlog.warn("%s h1_request:%r", self.ip, e)
+            xlog.warn("%s h1_request:%s %r time_cost:%d inactive:%d", self.ip, task.url, e,
+                      (time.time()-start_time)*1000, (time.time() - self.last_active_time)*1000)
             google_ip.report_connect_closed(self.ssl_sock.ip, "request_fail")
             self.task = task
             self.close("request fail")
@@ -181,7 +183,7 @@ class HTTP1_worker(HTTP_worker):
                 task.put_data(data)
 
         except Exception as e:
-            xlog.warn("%s h1_request:%r", self.ip, e)
+            xlog.warn("%s h1 get data:%r", self.ip, e)
 
         task.finish()
         google_ip.report_connect_closed(self.ssl_sock.ip, "down fail")

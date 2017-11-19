@@ -36,8 +36,16 @@ class Logger():
             self.set_file(file_name)
 
     def set_buffer(self, buffer_size):
-        self.buffer_size = buffer_size
-        
+        with self.buffer_lock:
+            self.buffer_size = buffer_size
+            buffer_len = len(self.buffer)
+            if buffer_len > self.buffer_size:
+                for i in range(self.last_no - buffer_len, self.last_no - self.buffer_size):
+                    try:
+                        del self.buffer[i]
+                    except:
+                        pass
+
     def setLevel(self, level):
         if level == "DEBUG":
             self.min_level = DEBUG
@@ -180,18 +188,6 @@ class Logger():
         self.log('CRITICAL', self.err_color, 'D7DF01', fmt, *args, **kwargs)
     
     #=================================================================
-    def set_buffer_size(self, set_size):
-        self.buffer_lock.acquire()
-        self.buffer_size = set_size
-        buffer_len = len(buffer)
-        if buffer_len > self.buffer_size:
-            for i in range(self.last_no - buffer_len, self.last_no - self.buffer_size):
-                try:
-                    del self.buffer[i]
-                except:
-                    pass
-        self.buffer_lock.release()
-    
     def get_last_lines(self, max_lines):
         self.buffer_lock.acquire()
         buffer_len = len(self.buffer)

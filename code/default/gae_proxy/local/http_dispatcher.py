@@ -147,7 +147,7 @@ class HttpsDispatcher(object):
                     best_rtt = rtt
                     best_worker = worker
 
-            if idle_num < 5:
+            if idle_num < 5 or best_rtt > 1000:
                 self.triger_create_worker_cv.notify()
 
             if best_worker or nowait:
@@ -185,7 +185,7 @@ class HttpsDispatcher(object):
             self.close_cb(slowest_worker)
 
     def request(self, headers, body, url, timeout):
-        # xlog.debug("task start request")
+        # xlog.debug("task start request:%s timeout:%d", url, timeout)
         self.last_request_time = time.time()
         q = Queue.Queue()
         task = http_common.Task(headers, body, q, url, timeout)
