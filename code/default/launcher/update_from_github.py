@@ -64,7 +64,9 @@ def request(url, retry=0, timeout=30):
         client = simple_http_client.Client(proxy={
             "type": "http",
             "host": "127.0.0.1",
-            "port": 8087
+            "port": 8087,
+            "user": None,
+            "pass": None
         }, timeout=timeout, cert=cert)
 
     res = client.request("GET", url, read_payload=False)

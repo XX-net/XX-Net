@@ -241,6 +241,7 @@ def request_gae_server(headers, body, url, timeout):
 
 
 def pack_request(method, url, headers, body):
+    headers = dict(headers)
     if isinstance(body, basestring) and body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
             # 可以压缩

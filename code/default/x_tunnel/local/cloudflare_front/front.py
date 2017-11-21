@@ -160,7 +160,7 @@ class Front(object):
         self.last_host = host
 
         dispatcher = self.dispatchs[host]
-        response = dispatcher.request(method, host, path, headers, data, timeout=timeout)
+        response = dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
         status = response.status
         if status not in [200, 405]:
             # xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)

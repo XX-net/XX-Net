@@ -114,6 +114,7 @@ def load_config():
 
 
 def start():
+    g.running = True
     if not g.server_host or not g.server_port:
         if g.config.server_host and g.config.server_port:
             xlog.info("Session Server:%s:%d", g.config.server_host, g.config.server_port)
@@ -132,6 +133,7 @@ def start():
 
 def terminate():
     global ready
+    g.running = False
     g.http_client.stop()
 
     if g.socks5_server:

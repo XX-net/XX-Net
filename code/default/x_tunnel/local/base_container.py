@@ -137,25 +137,24 @@ class WaitQueue():
         self.running = True
 
     def stop(self):
-        with self.lock:
-            # xlog.info("Block_send_pool stop")
-            self.running = False
-            for end_time, lock in self.waiters:
-                lock.release()
-            self.waiters = []
-            # xlog.info("Block_send_pool stop finished")
+        self.running = False
+        xlog.info("WaitQueue stop")
+        for end_time, lock in self.waiters:
+            lock.release()
+        self.waiters = []
+        xlog.info("WaitQueue stop finished")
 
     def notify(self):
-        with self.lock:
-            # xlog.debug("notify")
-            if len(self.waiters) == 0:
-                # xlog.debug("notify none.")
-                return
-            try:
-                end_time, lock = self.waiters.pop(0)
-                lock.release()
-            except:
-                pass
+        # xlog.debug("notify")
+        if len(self.waiters) == 0:
+            # xlog.debug("notify none.")
+            return
+
+        try:
+            end_time, lock = self.waiters.pop(0)
+            lock.release()
+        except:
+            pass
 
     def wait(self, end_time):
         with self.lock:

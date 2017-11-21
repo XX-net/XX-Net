@@ -80,7 +80,6 @@ class User_config(object):
         try:
             if os.path.isfile(DEFAULT_CONFIG_FILENAME):
                 self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
-                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
             else:
                 return
 

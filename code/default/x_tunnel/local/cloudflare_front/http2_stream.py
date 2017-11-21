@@ -111,8 +111,7 @@ class Stream(object):
         self.response_body = []
         self.response_body_len = 0
 
-        threading.Thread(target=self.timeout_response).start()
-        self.start_request()
+        threading.Thread(target=self.start_request).start()
 
     def start_request(self):
         """
@@ -155,12 +154,17 @@ class Stream(object):
         header_frame.flags.add('END_HEADERS')
 
         # Send the header frame.
+        self.task.set_state("start send header")
         self._send_cb(header_frame)
 
         # Transition the stream state appropriately.
         self.state = STATE_OPEN
 
+        self.task.set_state("start send left body")
         self.send_left_body()
+        self.task.set_state("end send left body")
+
+        self.timeout_response()
 
     def add_header(self, name, value, replace=False):
         """
@@ -367,7 +371,8 @@ class Stream(object):
         )
 
     def timeout_response(self):
-        while time.time() - self.task.start_time < self.task.timeout:
+        start_time = time.time()
+        while time.time() - start_time < self.task.timeout:
             time.sleep(1)
             if self._remote_closed:
                 return
@@ -376,6 +381,8 @@ class Stream(object):
                   self.connection.ssl_sock.ip,
                   self.task.get_trace(),
                   self.connection.get_trace())
+        self.task.set_state("timeout")
+
         if self.task.responsed:
             self.task.finish()
         else:

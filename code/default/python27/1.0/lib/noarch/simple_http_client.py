@@ -339,33 +339,27 @@ class Client(object):
         connect_timeout = 5
         sock = None
         start_time = time.time()
-        try:
-            import socks
 
-            sock = socks.socksocket(socket.AF_INET)
-            sock.set_proxy(proxy_type=self.proxy["type"],
-                           addr=self.proxy["host"],
-                           port=self.proxy["port"], rdns=True,
-                           username=self.proxy["user"],
-                           password=self.proxy["pass"])
+        import socks
 
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-            sock.settimeout(connect_timeout)
+        sock = socks.socksocket(socket.AF_INET)
+        sock.set_proxy(proxy_type=self.proxy["type"],
+                       addr=self.proxy["host"],
+                       port=self.proxy["port"], rdns=True,
+                       username=self.proxy["user"],
+                       password=self.proxy["pass"])
 
-            sock.connect((host, port))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
+        sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
+        sock.settimeout(connect_timeout)
 
-            # conn_time = time.time() - start_time
-            # xlog.debug("proxy:%s tcp conn:%s time:%d", proxy["host"], host, conn_time * 1000)
+        sock.connect((host, port))
 
-            return sock
-        except Exception as e:
-            conn_time = int((time.time() - start_time) * 1000)
-            logging.exception("proxy:conn fail:%r", e)
-            if sock:
-                sock.close()
-            raise e
+        # conn_time = time.time() - start_time
+        # xlog.debug("proxy:%s tcp conn:%s time:%d", proxy["host"], host, conn_time * 1000)
+
+        return sock
 
     def request(self, method, url, headers={}, body="", read_payload=True):
         start_time = time.time()

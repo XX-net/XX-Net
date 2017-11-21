@@ -109,6 +109,7 @@ class ProxySession():
 
         self.send_buffer.reset()
         self.receive_process.reset()
+        self.wait_queue.stop()
 
         #xlog.debug("begin join roundtrip_thread")
         for i in self.roundtrip_thread:
@@ -480,11 +481,12 @@ class ProxySession():
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
 
-            xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-                       transfer_no, send_data_len, send_ack_len, server_timeout)
+            #xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+            #           transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                   path="/data", data=upload_post_data,
+                                                                  headers={"Content-Length": str(len(upload_post_data))},
                                                                 timeout=server_timeout + g.config.network_timeout)
 
                 traffic = len(upload_post_data) + len(content) + 645
@@ -761,7 +763,7 @@ def update_quota_loop():
 
     start_time = time.time()
     last_quota = g.quota
-    while time.time() - start_time < 10 * 60:
+    while g.running and  time.time() - start_time < 10 * 60:
         if not g.config.login_account:
             xlog.info("update_quota_loop but logout.")
             return

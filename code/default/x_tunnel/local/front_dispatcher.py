@@ -4,7 +4,7 @@ from cloudflare_front.front import front as cloudflare_front
 from heroku_front.front import front as heroku_front
 all_fronts = [gae_front, cloudflare_front, heroku_front]
 
-import direct_front
+# import direct_front
 # all_fronts = [direct_front]
 
 from xlog import getLogger
@@ -46,7 +46,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
             return "", 602, {}
 
         content, status, response = front.request(
-            method, host=host, path=path, headers=headers, data=data, timeout=timeout)
+            method, host=host, path=path, headers=dict(headers), data=data, timeout=timeout)
 
         if status not in [200, 521]:
             continue

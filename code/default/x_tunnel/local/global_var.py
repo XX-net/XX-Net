@@ -1,4 +1,4 @@
-
+running = True
 protocol_version = 2
 last_refresh_time = 0
 login_process = False
