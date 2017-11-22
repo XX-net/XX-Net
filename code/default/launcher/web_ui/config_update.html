@@ -43,11 +43,62 @@
                 <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
-        <label> <a href="https://github.com/XX-net/XX-Net/releases" target="_blank">{{ _( "All versions download page" ) }}</a> </label>
+
         <hr>
     </div> <!-- #advanced-options -->
 
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="manual-update" class="pull-down-control">
+                <i class="icon icon-chevron-right" "></i> {{ _( "Manually Manage" ) }} ({{ _( "Advanced" ) }})
+            </label>
+        </div> <!-- .span4 -->
+    </div>
 
+    <div id="manual-update" style="display: none;">
+        <br/>
+        <div class="row-fluid">
+            <a href="https://github.com/XX-net/XX-Net/releases" target="_blank">{{ _( "All versions download page" ) }}</a>
+        </div>
+        <br/>
+        <div class="row-fluid">
+            <div class="span2">
+                <label>{{ _( "Input version" ) }} :</label>
+            </div>
+            <div class="span2">
+                <input id="manual-version" style="width: 8em"/>
+            </div>
+        </div>
+        <br/>
+        <div class="row-fluid">
+            <div class="span2">
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Upgrade to" ) }} ({{ _( "no hash check" ) }})</button>
+            </div>
+        </div>
+        <br/>
+        <div class="row-fluid">
+            <div class="span2">
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Set as local version" ) }}</button>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    $('.pull-down-control').click(function() {
+        var isShown = $('i.icon', this).hasClass('icon-chevron-down');
+        var id = $(this).attr('for');
+
+        if ( !isShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#'+id).slideDown();
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#'+id).slideUp();
+        }
+    });
+</script>
 
 <script type="text/javascript">
     function updateGetConfig() {
@@ -198,4 +249,37 @@
 
         updateVersion();
     });
+</script>
+
+<script type="text/javascript">
+    $('#manual-upgrade-to').click(function(){
+
+        versionToUpdate = $('#manual-version').val();
+
+        window.loading = Ladda.create(this);
+        window.loading.start();
+
+        updateVersion(0); //without hash check
+    });
+
+    $('#set-as-local-version').click(function(){
+
+        var v = $('#manual-version').val();
+
+        pageRequests['cmd'] = 'set_localversion';
+        pageRequests['version'] = v;
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                tip('{{ _( "Settings saved successfully." ) }}', 'success');
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    });
+
 </script>
