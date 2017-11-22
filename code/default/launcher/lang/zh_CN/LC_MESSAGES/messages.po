@@ -164,6 +164,24 @@ msgstr "稳定版"
 msgid "All versions download page"
 msgstr "所有版本下载页面"
 
+msgid "Advanced"
+msgstr "高级"
+
+msgid "Manually Manage"
+msgstr "手动管理"
+
+msgid "Upgrade to"
+msgstr "升级到"
+
+msgid "no hash check"
+msgstr "不校验"
+
+msgid "Set as local version"
+msgstr "设置本地版本"
+
+msgid "Input version"
+msgstr "输入版本"
+
 msgid "(Remote Web Control Enabled)"
 msgstr "(已允许远程连接)"
 
