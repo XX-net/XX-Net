@@ -272,11 +272,17 @@
             });
         }
 
-        function updateVersion() {
+        function updateVersion(checkhash=1) {
             $('#update-notify').addClass('hide');
             var pageRequests = {};
             pageRequests['cmd'] = 'update_version';
             pageRequests['version'] = versionToUpdate;
+
+            if (!checkhash)
+            {
+                pageRequests['checkhash'] = 0;
+            }
+
             versionToUpdate = null;
 
             $.ajax({
