@@ -4,4 +4,4 @@
 https://codeload.github.com/XX-net/XX-Net/zip/3.8.2 313c1ac5beeb2c737cb9261341aa129e0b19a87684699d5d2a5574e86db26f67
 
 稳定版(Stable)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.7.16 7f78d669a583df89777276bcd5fa984a72569aac0b4a4105f76a44323ed70809
+https://codeload.github.com/XX-net/XX-Net/zip/3.8.2 313c1ac5beeb2c737cb9261341aa129e0b19a87684699d5d2a5574e86db26f67
