@@ -457,7 +457,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
-            update_from_github.start_update_version(version)
+
+            checkhash = 1
+            if 'checkhash' in reqs and reqs['checkhash'][0] == '0':
+                checkhash = 0
+
+            update_from_github.start_update_version(version, checkhash)
             data = '{"res":"success"}'
         self.send_response('text/html', data)
 
