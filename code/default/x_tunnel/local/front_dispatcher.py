@@ -1,8 +1,8 @@
 import time
 import gae_front
 from cloudflare_front.front import front as cloudflare_front
-from heroku_front.front import front as heroku_front
-all_fronts = [gae_front, cloudflare_front, heroku_front]
+#from heroku_front.front import front as heroku_front
+all_fronts = [gae_front, cloudflare_front]
 
 # import direct_front
 # all_fronts = [direct_front]

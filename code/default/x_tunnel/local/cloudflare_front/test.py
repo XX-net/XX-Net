@@ -37,14 +37,12 @@ import connect_control
 
 
 def main():
-    content, status, response = front.request("GET", "center.xx-net.net", "/")
-    print(response)
+    content, status, response = front.request("GET", "center.xx-net.net", "/", timeout=10)
+    print("status:%d" % status)
+    print("content:%s" % content)
 
     while connect_control.keep_running:
         time.sleep(1)
-
-    xlog.info("Exiting gae_proxy module...")
-    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
 
 
 if __name__ == '__main__':

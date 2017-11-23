@@ -65,8 +65,8 @@ class User_config(object):
     user_special = User_special()
 
     def __init__(self):
-        self.load()
         self.CONFIG_USER_FILENAME = os.path.abspath(os.path.join(top_path, 'data', 'x_tunnel', 'heroku_config.ini'))
+        self.load()
 
     def load(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')

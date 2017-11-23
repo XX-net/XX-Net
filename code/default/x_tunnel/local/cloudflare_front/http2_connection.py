@@ -231,7 +231,6 @@ class HTTP2_worker(HTTP_worker):
 
 
     def send_ping(self):
-        # Use less for GAE server.
         p = PingFrame(0)
         p.opaque_data = struct.pack("!d", time.time())
         self.send_queue.put(p)

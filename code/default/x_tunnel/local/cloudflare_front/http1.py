@@ -111,7 +111,7 @@ class HTTP1_worker(HTTP_worker):
         self.record_active("request")
         task.set_state("h1_req")
 
-        task.headers['Host'] = self.task.host
+        task.headers['Host'] = self.ssl_sock.host
         task.headers["Content-Length"] = len(task.body)
         request_data = '%s %s HTTP/1.1\r\n' % (task.method, task.path)
         request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in task.headers.items())
@@ -211,15 +211,6 @@ class HTTP1_worker(HTTP_worker):
             self.rtt = (time.time() - start_time) * 1000
             ip_manager.update_ip(self.ip, self.rtt)
             return True
-        except httplib.BadStatusLine as e:
-            time_now = time.time()
-            inactive_time = time_now - self.last_active_time
-            head_timeout = time_now - start_time
-            xlog.warn("%s keep alive fail, inactive_time:%d head_timeout:%d",
-                       self.ssl_sock.ip, inactive_time, head_timeout)
-            xlog.warn('%s trace:%s', self.ip, self.get_trace())
-            ip_manager.report_connect_closed(self.ip, "down fail")
-            self.close("head fail")
         except Exception as e:
             xlog.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip, e)
             xlog.warn('%s trace:%s', self.ip, self.get_trace())

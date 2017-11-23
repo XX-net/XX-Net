@@ -207,7 +207,7 @@ class HttpsDispatcher(object):
             task.response_fail("retry time exceed 10")
             return
 
-        if time.time() - task.start_time > 240:
+        if time.time() - task.start_time > task.timeout:
             task.response_fail("retry timeout:%d" % (time.time() - task.start_time))
             return
 

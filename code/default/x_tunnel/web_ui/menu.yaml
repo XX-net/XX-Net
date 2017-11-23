@@ -16,9 +16,5 @@ sub_menus: {
   4:{
     title: {{ _("Cloudflare Front Log") }},
     url: cloudflare_front_logging
-  },
-  5:{
-    title: {{ _("Heroku Front Log") }},
-    url: heroku_front_logging
   }
 }

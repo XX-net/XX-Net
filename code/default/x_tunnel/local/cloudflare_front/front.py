@@ -47,7 +47,7 @@ class Front(object):
 
             try:
                 timeout = 30
-                if config.get("proxy", "enable", 0):
+                if config.getint("proxy", "enable", 0):
                     client = simple_http_client.Client(proxy={
                         "type": config.get("proxy", "type", ""),
                         "host": config.get("proxy", "host", ""),

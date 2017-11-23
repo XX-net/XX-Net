@@ -41,6 +41,11 @@ def test_proxy(type, host, port, user, passwd):
     if not host:
         return False
 
+    if host == "127.0.0.1":
+        if port in [8087, 1080]:
+            xlog.warn("set LAN Proxy to %s:%d fail.", host, port)
+            return False
+
     client = simple_http_client.Client(proxy={
         "type": type,
         "host": host,

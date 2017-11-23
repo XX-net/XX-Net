@@ -2,6 +2,7 @@ import time
 import socket
 import struct
 import urlparse
+import threading
 
 import utils
 from xlog import getLogger
@@ -57,14 +58,28 @@ class Socks5Server():
         except Exception as e:
             xlog.exception("any err:%r", e)
 
-    def read_line(self):
+    def read_null_end_line(self):
         sock = self.connection
         sock.setblocking(0)
         try:
             while True:
                 n1 = self.read_buffer.find("\x00", self.buffer_start)
-                if n1 == -1:
-                    n1 = self.read_buffer.find("\r", self.buffer_start)
+                if n1 > -1:
+                    line = self.read_buffer[self.buffer_start:n1]
+                    self.buffer_start = n1 + 1
+                    return line
+                time.sleep(0.001)
+                data = sock.recv(256)
+                self.read_buffer += data
+        finally:
+            sock.setblocking(1)
+
+    def read_crlf_line(self):
+        sock = self.connection
+        sock.setblocking(0)
+        try:
+            while True:
+                n1 = self.read_buffer.find("\r", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
@@ -130,12 +145,12 @@ class Socks5Server():
             ip = socket.inet_ntoa(addr_pack)
             domain_mode = False
 
-        user_id = self.read_line()
+        user_id = self.read_null_end_line()
         if len(user_id):
             xlog.debug("Socks4 user_id:%s", user_id)
 
         if domain_mode:
-            addr = self.read_line()
+            addr = self.read_null_end_line()
         else:
             addr = ip
 
@@ -217,7 +232,7 @@ class Socks5Server():
         g.session.conn_list[conn_id].start(block=True)
 
     def https_handler(self):
-        line = self.read_line()
+        line = self.read_crlf_line()
         line = line.decode('iso-8859-1')
         words = line.split()
         if len(words) == 3:
@@ -253,7 +268,7 @@ class Socks5Server():
         g.session.conn_list[conn_id].start(block=True)
 
     def http_handler(self, first_char):
-        req_line = self.read_line()
+        req_line = self.read_crlf_line()
         words = req_line.split()
         if len(words) == 3:
             method, url, http_version = words
@@ -261,7 +276,7 @@ class Socks5Server():
             method, url = words
             http_version = "HTTP/1.1"
         else:
-            xlog.warn("https req line fail:%s", req_line)
+            xlog.warn("http req line fail:%s", req_line)
             return
 
         method = first_char + method
@@ -306,3 +321,18 @@ class Socks5Server():
         g.session.conn_list[conn_id].transfer_received_data(left_buf)
 
         g.session.conn_list[conn_id].start(block=True)
+
+
+def redirect_process(sock, host, port, client_address=""):
+    conn_id = proxy_session.create_conn(sock, host, port)
+    if not conn_id:
+        xlog.warn("redirect create conn fail")
+        sock.close()
+        return
+
+    xlog.info("redirect connect to %s:%d conn_id:%d", client_address, host, port, conn_id)
+    g.session.conn_list[conn_id].start(block=True)
+
+
+def redirect_handler(sock, host, port, client_address=""):
+    threading.Thread(target=redirect_process, args=(sock, host, port, client_address)).start()

@@ -22,7 +22,7 @@ import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-
+from config import config
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 
@@ -269,7 +269,7 @@ class SSLConnection(object):
         #    cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256:!ECDHE-RSA-AES128-SHA:!AES128-SHA',)
         #ssl_context.set_cipher_list(':'.join(cipher_suites))
 
-        if True:
+        if config.getint("connect_manager", "use_http2", 1):
             try:
                 ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
                 xlog.info("OpenSSL support alpn")

@@ -26,6 +26,7 @@ from hyper.http20.exceptions import ProtocolError, StreamResetError
 from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
+import simple_http_client
 
 from http_common import *
 from xlog import getLogger
@@ -247,7 +248,6 @@ class Stream(object):
                 self._send_cb(w)
         elif frame.type == RstStreamFrame.type:
             # Rest Frame send from server is not define in RFC
-            # but GAE server will not work on this connection anymore
             inactive_time = time.time() - self.connection.last_active_time
             xlog.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
                        self.ip, self.stream_id, inactive_time, frame.error_code)
@@ -304,7 +304,7 @@ class Stream(object):
         self.task.responsed = True
         status = int(self.response_headers[b':status'][0])
         strip_headers(self.response_headers)
-        response = BaseResponse(status=status, headers=self.response_headers)
+        response = simple_http_client.BaseResponse(status=status, headers=self.response_headers)
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task

@@ -1,11 +1,11 @@
 
 import cloudflare_front.apis as cloudflare_apis
-import heroku_front.apis as heroku_apis
+#import heroku_front.apis as heroku_apis
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
-apis = [cloudflare_apis, heroku_apis]
+apis = [cloudflare_apis]
 
 
 def set_proxy(args):

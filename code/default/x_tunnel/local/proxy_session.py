@@ -10,7 +10,6 @@ import utils
 import base_container
 import encrypt
 import global_var as g
-from heroku_front.front import front as heroku_front
 
 
 def encrypt_data(data):
@@ -716,7 +715,6 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         elif update_server:
             g.server_host = str(info["host"])
             g.server_port = info["port"]
-            heroku_front.hosts = info["heroku"]
             xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
 
         g.balance = info["balance"]
