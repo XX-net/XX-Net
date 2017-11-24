@@ -121,7 +121,7 @@ class Response(BaseResponse):
                     data = sock.recv(8192)
                 except socket.error as e:
                     # logging.exception("e:%r", e)
-                    if e.errno in [2, 11]:
+                    if e.errno in [2, 11, 10035]:
                         time.sleep(0.1)
                         continue
                     else:
@@ -153,7 +153,7 @@ class Response(BaseResponse):
                     data = sock.recv(8192)
                 except socket.error as e:
                     # logging.exception("e:%r", e)
-                    if e.errno in [2, 11]:
+                    if e.errno in [2, 11, 10035]:
                         time.sleep(0.1)
                         continue
                     else:
@@ -229,7 +229,7 @@ class Response(BaseResponse):
                 data = self.connection.recv(to_read)
             except socket.error as e:
                 # logging.exception("e:%r", e)
-                if e.errno in [2, 11]:
+                if e.errno in [2, 11, 10035]:
                     time.sleep(0.1)
                     continue
                 else:
@@ -363,7 +363,6 @@ class Client(object):
 
     def request(self, method, url, headers={}, body="", read_payload=True):
         start_time = time.time()
-        end_time = start_time + self.timeout
 
         upl = urlparse.urlsplit(url)
         headers["Content-Length"] = str(len(body))
@@ -394,77 +393,64 @@ class Client(object):
             else:
                 sock = ssl.wrap_socket(sock)
 
-        try:
-            request_data = '%s %s HTTP/1.1\r\n' % (method, path)
+        request_data = '%s %s HTTP/1.1\r\n' % (method, path)
 
-            request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
-            request_data += '\r\n'
+        request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
+        request_data += '\r\n'
 
-            if len(request_data) + len(body) < 1300:
-                body = request_data.encode() + body
-            else:
-                sock.send(request_data.encode())
+        if len(request_data) + len(body) < 1300:
+            body = request_data.encode() + body
+        else:
+            sock.send(request_data.encode())
 
-            payload_len = len(body)
-            start = 0
-            while start < payload_len:
-                send_size = min(payload_len - start, 65535)
-                sended = sock.send(body[start:start + send_size])
-                start += sended
+        payload_len = len(body)
+        start = 0
+        while start < payload_len:
+            send_size = min(payload_len - start, 65535)
+            sended = sock.send(body[start:start + send_size])
+            start += sended
 
-            sock.settimeout(self.timeout)
-            response = Response(sock)
+        sock.settimeout(self.timeout)
+        response = Response(sock)
 
-            try:
-                response.begin(timeout=self.timeout)
-            except Exception as e:
-                logging.warn("response.begin:%r", e)
-                return None
+        response.begin(timeout=self.timeout)
 
-            if response.status != 200:
-                logging.warn("status:%r", response.status)
-                return response
+        if response.status != 200:
+            #logging.warn("status:%r", response.status)
+            return response
 
-            if not read_payload:
-                return response
+        if not read_payload:
+            return response
 
-            if 'Transfer-Encoding' in response.headers:
-                data_buffer = []
-                while True:
-                    try:
-                        data = response.read(8192)
-                    except httplib.IncompleteRead, e:
-                        data = e.partial
-                    except Exception as e:
-                        logging.warn("Transfer-Encoding e:%r ", e)
-                        return False
+        if 'Transfer-Encoding' in response.headers:
+            data_buffer = []
+            while True:
+                try:
+                    data = response.read(8192, timeout=self.timeout)
+                except httplib.IncompleteRead, e:
+                    data = e.partial
+                except Exception as e:
+                    raise e
 
-                    if not data:
-                        break
-                    else:
-                        data_buffer.append(data)
+                if not data:
+                    break
+                else:
+                    data_buffer.append(data)
 
-                response.text = "".join(data_buffer)
-                return response
-            else:
-                content_length = int(response.getheader('Content-Length', 0))
-                if content_length:
-                    response.text = response.read(content_length)
+            response.text = "".join(data_buffer)
+            return response
+        else:
+            content_length = int(response.getheader('Content-Length', 0))
+            if content_length:
+                response.text = response.read(content_length, timeout=self.timeout)
 
-                return response
-        except IOError, e:
-            if e.errno == errno.EPIPE:
-                pass
-        except Exception as e:
-            logging.warn("request e:%r", e)
-
-        return False
+            return response
 
 
-def request(method="GET", url=None, headers={}, body="", proxy=None, timeout=60):
+def request(method="GET", url=None, headers={}, body="", proxy=None, timeout=60, read_payload=True):
     if not url:
         raise Exception("no url")
 
     client = Client(proxy, timeout=timeout)
-    return client.request(method, url, headers, body)
+    return client.request(method, url, headers, body, read_payload)
 

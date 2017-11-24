@@ -79,10 +79,10 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
-                n1 = self.read_buffer.find("\r", self.buffer_start)
+                n1 = self.read_buffer.find("\r\n", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 1
+                    self.buffer_start = n1 + 2
                     return line
                 time.sleep(0.001)
                 data = sock.recv(256)
@@ -98,7 +98,7 @@ class Socks5Server():
                 n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
                 if n1 > -1:
                     block = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 1
+                    self.buffer_start = n1 + 4
                     return block
                 time.sleep(0.001)
                 data = sock.recv(256)
@@ -180,7 +180,7 @@ class Socks5Server():
             data = self.read_bytes(4)
         except Exception as e:
             xlog.debug("socks5 auth num:%d, list:%s", auth_mode_num, utils.str2hex(data))
-            xlog.exception("socks5 protocol error:%r", e)
+            xlog.warn("socks5 protocol error:%r", e)
             return
 
         socks_version = ord(data[0])
@@ -252,6 +252,8 @@ class Socks5Server():
         host = host.encode()
         port = int(port)
 
+        header_block = self.read_headers()
+
         sock = self.connection
         conn_id = proxy_session.create_conn(sock, host, port)
         if not conn_id:
@@ -264,6 +266,9 @@ class Socks5Server():
             sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
         except:
             xlog.warn("https %r connect to %s:%d conn_id:%d closed.", self.client_address, host, port, conn_id)
+
+        if (len(self.read_buffer) - self.buffer_start) > 0:
+            g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
 
         g.session.conn_list[conn_id].start(block=True)
 

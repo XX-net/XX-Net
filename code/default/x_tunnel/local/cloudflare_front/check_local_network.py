@@ -22,10 +22,8 @@ if __name__ == "__main__":
         linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
         sys.path.append(linux_lib)
 
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
 
-import socks
+import simple_http_client
 from config import config
 
 from xlog import getLogger
@@ -34,25 +32,17 @@ xlog = getLogger("cloudflare_front")
 
 max_timeout = 5
 
-default_socket = socket.socket
 
+if config.PROXY_ENABLE:
+    if config.PROXY_USER:
+        proxy = "%s://%s:%s@%s:%d" % \
+                     (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST, config.PROXY_PORT)
+    else:
+        proxy = "%s://%s:%d" % \
+                     (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+else:
+    proxy = None
 
-def load_proxy_config():
-    global default_socket
-    if config.PROXY_ENABLE:
-
-        if config.PROXY_TYPE == "HTTP":
-            proxy_type = socks.HTTP
-        elif config.PROXY_TYPE == "SOCKS4":
-            proxy_type = socks.SOCKS4
-        elif config.PROXY_TYPE == "SOCKS5":
-            proxy_type = socks.SOCKS5
-        else:
-            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            raise
-
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_proxy_config()
 
 #####################################
 #  Checking network ok
@@ -89,38 +79,45 @@ def is_ok():
     return network_stat == "OK"
 
 
-def _check_one_host(host):
+def _check_one_host(url):
     try:
-        conn = httplib.HTTPSConnection(host, 443, timeout=30)
         header = {
             "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
             "accept": "application/json, text/javascript, */*; q=0.01",
             "accept-encoding": "gzip, deflate, sdch",
             "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
             "connection": "keep-alive"
-            }
-        conn.request("HEAD", "/", headers=header)
-        response = conn.getresponse()
-        if response.status:
+        }
+        response = simple_http_client.request("HEAD", url, header, "", proxy=proxy, read_payload=False)
+        if response:
             return True
     except Exception as e:
-        return False
+        if __name__ == "__main__":
+            xlog.exception("test %s e:%r", url, e)
+
+    return False
+
 
 
 def _simple_check_worker():
     global _checking_lock, _checking_num, network_stat, last_check_time
     time_now = time.time()
-    if config.PROXY_ENABLE:
-        socket.socket = socks.socksocket
-        xlog.debug("patch socks")
 
     _checking_lock.acquire()
     _checking_num += 1
     _checking_lock.release()
 
     network_ok = False
-    for host in ["www.microsoft.com", "www.apple.com", "code.jquery.com", "cdn.bootcss.com", "cdnjs.cloudflare.com"]:
-        if _check_one_host(host):
+
+    urls = [
+        "https://www.microsoft.com",
+        "https://www.apple.com",
+        "https://code.jquery.com",
+        "https://cdn.bootcss.com",
+        "https://cdnjs.cloudflare.com"]
+
+    for url in urls:
+        if _check_one_host(url):
             network_ok = True
             break
 
@@ -137,9 +134,6 @@ def _simple_check_worker():
     _checking_num -= 1
     _checking_lock.release()
 
-    if config.PROXY_ENABLE:
-        socket.socket = default_socket
-        xlog.debug("restore socket")
 
 
 def triger_check_network(fail=False, force=False):

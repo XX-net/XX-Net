@@ -88,23 +88,48 @@ def download_file(url, filename):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             req = request(url, i, timeout=120)
-            file_size = progress[url]["size"] = int(req.getheader('Content-Length', 0))
+            start_time = time.time()
+            timeout = 300
 
-            left = file_size
-            downloaded = 0
-            with open(filename, 'wb') as fp:
-                while True:
-                    chunk_len = min(65536, left)
-                    if not chunk_len:
-                        break
+            if req.chunked:
+                # don't known the file size, set to large for show the progress
+                progress[url]["size"] = 20 * 1024 * 1024
 
-                    chunk = req.read(chunk_len)
-                    if not chunk:
-                        break
-                    fp.write(chunk)
-                    downloaded += len(chunk)
-                    progress[url]["downloaded"] = downloaded
-                    left -= len(chunk)
+                downloaded = 0
+                with open(filename, 'wb') as fp:
+                    while True:
+                        time_left = timeout - (time.time() - start_time)
+                        if time_left < 0:
+                            raise Exception("time out")
+
+                        dat = req.read(timeout=time_left)
+                        if not dat:
+                            break
+
+                        fp.write(dat)
+                        downloaded += len(dat)
+                        progress[url]["downloaded"] = downloaded
+
+                progress[url]["status"] = "finished"
+                return True
+            else:
+                file_size = progress[url]["size"] = int(req.getheader('Content-Length', 0))
+
+                left = file_size
+                downloaded = 0
+                with open(filename, 'wb') as fp:
+                    while True:
+                        chunk_len = min(65536, left)
+                        if not chunk_len:
+                            break
+
+                        chunk = req.read(chunk_len)
+                        if not chunk:
+                            break
+                        fp.write(chunk)
+                        downloaded += len(chunk)
+                        progress[url]["downloaded"] = downloaded
+                        left -= len(chunk)
 
             if downloaded != progress[url]["size"]:
                 xlog.warn("download size:%d, need size:%d, download fail.", downloaded, progress[url]["size"])
@@ -275,10 +300,16 @@ def download_overwrite_new_version(xxnet_version,checkhash=1):
     shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
 
 
-def update_current_version(xxnet_version):
+def update_current_version(version):
+    start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
+    if not os.path.isfile(start_script):
+        xlog.warn("set version %s not exist", version)
+        return False
+
     current_version_file = os.path.join(top_path, "code", "version.txt")
     with open(current_version_file, "w") as fd:
-        fd.write(xxnet_version)
+        fd.write(version)
+    return True
 
 
 def restart_xxnet(version=None):

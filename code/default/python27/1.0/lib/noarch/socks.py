@@ -706,7 +706,7 @@ class socksocket(_BaseSocket):
                 self.proxy_peername = (dest_addr, dest_port)
             return
 
-        proxy_type, proxy_addr, proxy_port, rdns, username, password = self.proxy
+        proxy_type, proxy_host, proxy_port, rdns, username, password = self.proxy
 
         # Do a minimal input check first
         if not dest_addr or not isinstance(dest_port, int):
@@ -718,17 +718,19 @@ class socksocket(_BaseSocket):
             _BaseSocket.connect(self, (dest_addr, dest_port))
             return
 
-        proxy_addr = self._proxy_addr()
+        proxy_port = proxy_port or DEFAULT_PORTS.get(proxy_type)
+        if not proxy_port:
+            raise GeneralProxyError("Invalid proxy port")
 
         try:
             # Initial connection to proxy server
-            _BaseSocket.connect(self, proxy_addr)
+            proxy_ip = socket.gethostbyname(proxy_host)
+            _BaseSocket.connect(self, (proxy_ip, proxy_port))
 
         except socket.error as error:
             # Error while connecting to proxy
             self.close()
-            proxy_addr, proxy_port = proxy_addr
-            proxy_server = "{0}:{1}".format(proxy_addr, proxy_port)
+            proxy_server = "{0}:{1}".format(proxy_host, proxy_port)
             printable_type = PRINTABLE_PROXY_TYPES[proxy_type]
 
             msg = "Error connecting to {0} proxy {1}".format(printable_type,
@@ -749,16 +751,6 @@ class socksocket(_BaseSocket):
                 # Protocol error while negotiating with proxy
                 self.close()
                 raise
-
-    def _proxy_addr(self):
-        """
-        Return proxy address to connect to as tuple object
-        """
-        proxy_type, proxy_addr, proxy_port, rdns, username, password = self.proxy
-        proxy_port = proxy_port or DEFAULT_PORTS.get(proxy_type)
-        if not proxy_port:
-            raise GeneralProxyError("Invalid proxy type")
-        return proxy_addr, proxy_port
 
 
 import re

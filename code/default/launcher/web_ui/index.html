@@ -272,7 +272,7 @@
             });
         }
 
-        function updateVersion(checkhash=1) {
+        function updateBase(checkhash){
             $('#update-notify').addClass('hide');
             var pageRequests = {};
             pageRequests['cmd'] = 'update_version';
@@ -302,6 +302,13 @@
                     displayErrorMessage();
                 }
             });
+        }
+
+        function updateVersion() {
+            updateBase(1);
+        }
+        function updateVersionWithoutHashCheck(){
+            updateBase(0);
         }
 
         function getUpdateInfo() {

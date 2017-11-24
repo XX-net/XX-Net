@@ -172,6 +172,8 @@ class WaitQueue():
                             is_max = False
                             break
                     except Exception as e:
+                        if i >= len(self.waiters):
+                            break
                         xlog.warn("get %d from size:%d fail.", i, len(self.waiters))
                         continue
 

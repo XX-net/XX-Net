@@ -414,7 +414,7 @@ class ProxySession():
         while len(data):
             sn, plen = struct.unpack("<II", data.get(8))
             pdata = data.get_buf(plen)
-            xlog.debug("upload sn:%d len:%d", sn, plen)
+            # xlog.debug("upload sn:%d len:%d", sn, plen)
 
             self.receive_process.put(sn, pdata)
             self.last_upload_time = time.time()

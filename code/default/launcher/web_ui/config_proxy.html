@@ -109,10 +109,20 @@
 
 <script type="text/javascript">
     function onSubmit() {
+        var enable = $('#enable-proxy').is(':checked') ? 1 : 0;
+        var host = $('#proxy-host').val();
+        if (enable){
+            if ( host == "127.0.0.1" || host == "localhost"){
+                tip('{{ _( "Do you really need LAN proxy? <a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">Help</a>." ) }}', 'error');
+                return;
+            }
+        }
+
+
         var config = {
-            'enable': $('#enable-proxy').is(':checked') ? 1 : 0,
+            'enable': enable,
             'type': $('#proxy-type').val(),
-            'host': $('#proxy-host').val(),
+            'host': host,
             'port': $('#proxy-port').val(),
             'user': $('#proxy-username').val(),
             'passwd': $('#proxy-password').val()
@@ -129,7 +139,7 @@
                 if ( result['res'] == 'success' ) {
                     tip('{{ _( "Settings saved successfully" ) }}', 'success');
                 } else {
-                    tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
+                    tip('{{ _( "Failed saving settings" ) }}' + ":  " + result['reason'], 'error');
                 }
             },
             error: function(){

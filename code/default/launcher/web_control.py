@@ -472,9 +472,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['set_localversion']:
             version = reqs['version'][0]
 
-            update_from_github.update_current_version(version)
+            if update_from_github.update_current_version(version):
+                data = '{"res":"success"}'
+            else:
+                data = '{"res":"false", "reason": "version not exist"}'
 
-            data = '{"res":"success"}'
         self.send_response('text/html', data)
 
     def req_config_proxy_handler(self):

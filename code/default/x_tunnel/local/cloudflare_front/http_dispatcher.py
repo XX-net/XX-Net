@@ -194,7 +194,7 @@ class HttpsDispatcher(object):
         # del self.working_tasks[task.unique_id]
         return response
 
-    def retry_task_cb(self, task):
+    def retry_task_cb(self, task, reason=""):
         if task.responsed:
             xlog.warn("retry but responsed. %s", task.url)
             st = traceback.extract_stack()
@@ -211,7 +211,7 @@ class HttpsDispatcher(object):
             task.response_fail("retry timeout:%d" % (time.time() - task.start_time))
             return
 
-        task.set_state("retry")
+        task.set_state("retry(%s)" % reason)
         task.retry_count += 1
         self.request_queue.put(task)
 

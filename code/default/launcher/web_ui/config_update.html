@@ -50,7 +50,7 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="manual-update" class="pull-down-control">
-                <i class="icon icon-chevron-right" "></i> {{ _( "Manually Manage" ) }} ({{ _( "Advanced" ) }})
+                <i class="icon icon-chevron-right"></i> {{ _( "Manually Manage" ) }} ({{ _( "Advanced" ) }})
             </label>
         </div> <!-- .span4 -->
     </div>
@@ -259,7 +259,7 @@
         window.loading = Ladda.create(this);
         window.loading.start();
 
-        updateVersion(0); //without hash check
+        updateVersionWithoutHashCheck();
     });
 
     $('#set-as-local-version').click(function(){
@@ -274,7 +274,11 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
-                tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                }else{
+                    tip('{{ _( "Settings save fail:" ) }}' + result['reason'], 'warning');
+                }
             },
             error: function() {
                 displayErrorMessage();

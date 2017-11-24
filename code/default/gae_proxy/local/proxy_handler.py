@@ -327,10 +327,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             if not self.parse_request():
                 xlog.warn("parse request fail:%s", self.raw_requestline)
                 return
-        except NetWorkIOError as e:
-            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
-                raise
+        except Exception as e:
+            xlog.warn('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+            return
+
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
 

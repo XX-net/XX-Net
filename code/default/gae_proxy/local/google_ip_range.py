@@ -128,14 +128,18 @@ class IpRange(object):
 
     def load_range_content(self, default=False):
         if not default and os.path.isfile(self.user_range_file):
-            self.range_file = self.user_range_file
-        else:
-            self.range_file = self.default_range_file
+            fd = open(self.user_range_file, "r")
+            if fd:
+                content = fd.read()
+                fd.close()
+                if len(content) > 10:
+                    xlog.info("load ip range file:%s", self.user_range_file)
+                    return content
 
-        xlog.info("load ip range file:%s", self.range_file)
-        fd = open(self.range_file, "r")
+        xlog.info("load ip range file:%s", self.default_range_file)
+        fd = open(self.default_range_file, "r")
         if not fd:
-            xlog.error("load ip range %s fail", self.range_file)
+            xlog.error("load ip range %s fail", self.default_range_file)
             return
 
         content = fd.read()

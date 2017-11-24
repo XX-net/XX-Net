@@ -316,7 +316,7 @@ class Stream(object):
         self._close_cb(self.stream_id, reason)
 
         if not self.task.responsed:
-            self.connection.retry_task_cb(self.task)
+            self.connection.retry_task_cb(self.task, reason)
         else:
             self.task.put_data("")
             # empty block means fail or closed.
