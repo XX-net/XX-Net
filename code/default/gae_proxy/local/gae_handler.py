@@ -366,7 +366,7 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
 
 
 def handler(method, url, headers, body, wfile):
-    if not url.startswith("http"):
+    if not url.startswith("http") and not url.startswith("HTTP"):
         xlog.error("gae:%s", url)
         return
 
