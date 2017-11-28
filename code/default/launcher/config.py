@@ -13,6 +13,7 @@ config_path = os.path.join(data_path, 'launcher', 'config.yaml')
 
 config = {}
 need_save_config = False
+modules = ["gae_proxy", "launcher", "x_tunnel", "smart_router"]
 
 
 def load():
@@ -72,7 +73,6 @@ def recheck_module_path():
 
     xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
 
-    modules = ["gae_proxy", "launcher", "x_tunnel"]
     for module in modules:
         if module not in ["launcher"]:
             if not os.path.isdir(os.path.join(root_path, module)):

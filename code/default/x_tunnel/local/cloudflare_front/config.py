@@ -60,6 +60,8 @@ class Config(object):
             self.PROXY_PORT = int(self.PROXY_PORT)
         self.PROXY_USER = self.CONFIG.get('proxy', 'user')
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
+        if self.PROXY_ENABLE:
+            xlog.info("use LAN proxy: %s://%s:%s", self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
 
         self.log_file = config.CONFIG.getint("system", "log_file")
         self.do_profile = config.CONFIG.getint("system", "do_profile")

@@ -97,7 +97,7 @@ class Win_tray():
             menu_options += [
                         (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
                         (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                        (u"重启 GAEProxy", None, self.on_restart_gae_proxy, 0),
+                        (u"重启各模块", None, self.on_restart_each_module, 0),
                         (u'退出', None, SysTrayIcon.QUIT, False)]
         else:
             menu_options = [(u"Config", None, self.on_show, 0)]
@@ -110,7 +110,7 @@ class Win_tray():
             menu_options += [
                 (u"Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
                 (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
-                (u"Reset GAEProxy", None, self.on_restart_gae_proxy, 0),
+                (u"Reset Each module", None, self.on_restart_each_module, 0),
                 (u'Quit', None, SysTrayIcon.QUIT, False)]
 
         return tuple(menu_options)
@@ -118,7 +118,7 @@ class Win_tray():
     def on_show(self, widget=None, data=None):
         self.show_control_web()
 
-    def on_restart_gae_proxy(self, widget=None, data=None):
+    def on_restart_each_module(self, widget=None, data=None):
         module_init.stop_all()
         module_init.start_all_auto()
 

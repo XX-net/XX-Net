@@ -39,9 +39,10 @@ import errno
 import socket
 import ssl
 import urlparse
-import re
-
+import io
+import threading
 import OpenSSL
+import struct
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
@@ -453,3 +454,74 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     pass
                 finally:
                     self.__realconnection = None
+
+
+def is_clienthello(data):
+    if len(data) < 20:
+        return False
+    if data.startswith('\x16\x03'):
+        # TLSv12/TLSv11/TLSv1/SSLv3
+        length, = struct.unpack('>h', data[3:5])
+        return len(data) == 5 + length
+    elif data[0] == '\x80' and data[2:4] == '\x01\x03':
+        # SSLv23
+        return len(data) == 2 + ord(data[1])
+    else:
+        return False
+
+
+def extract_sni_name(packet):
+    if not packet.startswith('\x16\x03'):
+        return
+
+    stream = io.BytesIO(packet)
+    stream.read(0x2b)
+    session_id_length = ord(stream.read(1))
+    stream.read(session_id_length)
+    cipher_suites_length, = struct.unpack('>h', stream.read(2))
+    stream.read(cipher_suites_length+2)
+    extensions_length, = struct.unpack('>h', stream.read(2))
+    # extensions = {}
+    while True:
+        data = stream.read(2)
+        if not data:
+            break
+        etype, = struct.unpack('>h', data)
+        elen, = struct.unpack('>h', stream.read(2))
+        edata = stream.read(elen)
+        if etype == 0:
+            server_name = edata[5:]
+            return server_name
+
+
+def redirect_handler(sock, host, port, client_address):
+    leadbyte = sock.recv(1, socket.MSG_PEEK)
+    if leadbyte in ('\x80', '\x16'):
+        server_name = ''
+        if leadbyte == '\x16':
+            for _ in xrange(2):
+                leaddata = sock.recv(1024, socket.MSG_PEEK)
+                if is_clienthello(leaddata):
+                    try:
+                        server_name = extract_sni_name(leaddata)
+                    finally:
+                        break
+        try:
+            certfile = CertUtil.get_cert(server_name or 'www.google.com')
+            ssl_sock = ssl.wrap_socket(sock, keyfile=certfile,
+                                       certfile=certfile, server_side=True)
+        except StandardError as e:
+            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
+                xlog.exception('redirect_handler wrap_socket from:%s to:%s:%d sni:%s failed:%r',
+                               client_address, host, port, server_name, e)
+            return
+    elif leadbyte in ["G", "P", "D", "O", "H", "T"]:
+        ssl_sock = sock
+    else:
+        xlog.warn("redirect_handler lead byte:%s", leadbyte)
+        return
+
+    handler = GAEProxyHandler(ssl_sock, client_address, None, logger=xlog)
+    xlog.debug('redirect_handler from:%s to:%s:%d', client_address, host, port)
+    client_thread = threading.Thread(target=handler.handle)
+    client_thread.start()

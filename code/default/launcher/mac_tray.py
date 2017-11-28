@@ -91,7 +91,7 @@ class MacTrayObject(AppKit.NSObject):
         self.disableGaeProxyMenuItem = menuitem
 
         # Reset Menu Item
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reset Each Module', 'restartEachModule:', '')
         self.menu.addItem_(menuitem)
         # Default event
         menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
@@ -174,9 +174,9 @@ class MacTrayObject(AppKit.NSObject):
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
-    def resetGoagent_(self, _):
-        module_init.stop("gae_proxy")
-        module_init.start("gae_proxy")
+    def restartEachModule_(self, _):
+        module_init.stop_all()
+        module_init.start_all_auto()
 
     def enableAutoProxy_(self, _):
         try:

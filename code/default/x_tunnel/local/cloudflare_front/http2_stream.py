@@ -309,7 +309,7 @@ class Stream(object):
         response.worker = self.connection
         response.task = self.task
         self.task.queue.put(response)
-        if status in [400, 403]:
+        if status in [400, 403, 405]:
             self.connection.close("status %d" % status)
 
     def close(self, reason=""):

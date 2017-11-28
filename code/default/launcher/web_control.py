@@ -74,7 +74,8 @@ def test_proxy(type, host, port, user, passwd):
             response = client.request("HEAD", url, header, "")
             if response:
                 return True
-        except:
+        except Exception as e:
+            xlog.exception("test_proxy %s fail:%r", url, e)
             pass
 
     return False
@@ -282,7 +283,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
             data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
              "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d, \
-             "no_mess_system": %d }' %\
+             "smart_router_enable": %d, "no_mess_system": %d }' %\
                    (check_update
                     , config.get(["language"], i18n_translator.lang)
                     , config.get(["modules", "launcher", "popup_webui"], 1)
@@ -292,6 +293,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     , config.get(["modules", "gae_proxy", "show_detail"], 0)
                     , config.get(["modules", "gae_proxy", "auto_start"], 0)
                     , config.get(["modules", "x_tunnel", "auto_start"], 0)
+                    , config.get(["modules", "smart_router", "auto_start"], 0)
                     , config.get(["no_mess_system"], 0)
                     )
         if reqs['cmd'] == ['get_version']:
@@ -430,6 +432,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.start("x_tunnel")
                     else:
                         module_init.stop("x_tunnel")
+                    self.load_module_menus()
+                    data = '{"res":"success"}'
+            elif 'smart_router_enable' in reqs :
+                smart_router_enable = int(reqs['smart_router_enable'][0])
+                if smart_router_enable != 0 and smart_router_enable != 1:
+                    data = '{"res":"fail, smart_router_enable:%s"}' % smart_router_enable
+                else:
+                    config.set(["modules", "smart_router", "auto_start"], smart_router_enable)
+                    config.save()
+                    if smart_router_enable:
+                        module_init.start("smart_router")
+                    else:
+                        module_init.stop("smart_router")
                     self.load_module_menus()
                     data = '{"res":"success"}'
             else:

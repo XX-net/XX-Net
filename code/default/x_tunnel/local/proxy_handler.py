@@ -68,8 +68,17 @@ class Socks5Server():
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
                     return line
-                time.sleep(0.001)
-                data = sock.recv(256)
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -84,8 +93,17 @@ class Socks5Server():
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 2
                     return line
-                time.sleep(0.001)
-                data = sock.recv(256)
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -95,13 +113,26 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
+                if self.read_buffer[self.buffer_start:] == "\r\n":
+                    self.buffer_start += 2
+                    return ""
+
                 n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
                 if n1 > -1:
                     block = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 4
                     return block
-                time.sleep(0.001)
-                data = sock.recv(256)
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -116,7 +147,17 @@ class Socks5Server():
                     break
 
                 need = size - left
-                data = sock.recv(need)
+
+                try:
+                    data = sock.recv(need)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 if len(data):
                     self.read_buffer += data
                 else:
@@ -328,16 +369,16 @@ class Socks5Server():
         g.session.conn_list[conn_id].start(block=True)
 
 
-def redirect_process(sock, host, port, client_address=""):
+def redirect_process(sock, host, port, client_address):
     conn_id = proxy_session.create_conn(sock, host, port)
     if not conn_id:
         xlog.warn("redirect create conn fail")
         sock.close()
         return
 
-    xlog.info("redirect connect to %s:%d conn_id:%d", client_address, host, port, conn_id)
+    xlog.info("redirect connect from:%s to %s:%d conn_id:%d", client_address, host, port, conn_id)
     g.session.conn_list[conn_id].start(block=True)
 
 
-def redirect_handler(sock, host, port, client_address=""):
+def redirect_handler(sock, host, port, client_address):
     threading.Thread(target=redirect_process, args=(sock, host, port, client_address)).start()

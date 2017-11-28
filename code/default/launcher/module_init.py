@@ -101,8 +101,8 @@ def call_each_module(api_name, args):
 
 
 def start_all_auto():
-    for module in config.config["modules"]:
-        if module == "launcher":
+    for module in config.modules:
+        if module in ["launcher"]:
             continue
         if not os.path.isdir(os.path.join(root_path, module)):
             continue

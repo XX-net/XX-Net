@@ -28,6 +28,30 @@
 
 
 <script type="text/javascript">
+    function restartingService(serviceNameSlug) {
+        var serviceName     = '',
+            restatingTime   = 5,
+            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
+
+        if ( serviceNameSlug == 'gae_proxy_enable' ) {
+            serviceName     = '{{ _( "GAE Proxy" ) }}';
+        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
+            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
+        } else if ( serviceNameSlug == 'smart_router_enable' ) {
+            serviceName     = '{{ _( "Smart Router" ) }}';
+        } else {
+            serviceName     = 'Unknown';
+        }
+
+        tip(messageTemplate.format(serviceName, restatingTime), 'warning');
+
+        setTimeout(function () {
+            location.reload();
+        }, restatingTime * 1000);
+    }
+</script>
+
+<script type="text/javascript">
     function setConfig(key, value) {
         var pageRequests = {};
 

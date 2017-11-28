@@ -132,6 +132,8 @@ class Config(object):
             self.PROXY_PORT = int(self.PROXY_PORT)
         self.PROXY_USER = self.CONFIG.get('proxy', 'user')
         self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
+        if self.PROXY_ENABLE:
+            xlog.info("use LAN proxy: %s://%s:%s", self.PROXY_TYPE, self.PROXY_HOST, self.PROXY_PORT)
 
         self.USE_IPV6 = self.CONFIG.get('google_ip', 'use_ipv6')
         if self.USE_IPV6 not in ["auto", "force_ipv4", "force_ipv6"]:

@@ -5,10 +5,10 @@ import os
 
 
 class Config(object):
-    default_config = {}
-    file_config = {}
-
     def __init__(self, config_path):
+
+        self.default_config = {}
+        self.file_config = {}
         self.config_path = config_path
 
     def load(self):

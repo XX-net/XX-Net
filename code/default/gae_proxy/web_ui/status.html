@@ -93,6 +93,10 @@
                 <td>{{ _( "USE IPv6" ) }}</td>
                 <td id="use-ipv6"></td>
             </tr>
+            <tr>
+                <td>{{ _( "LAN proxy" ) }}</td>
+                <td id="lan-proxy"></td>
+            </tr>
         </tbody>
     </table>
 
@@ -228,6 +232,7 @@
                     'python-version: ' + result['python_version'],
                     'openssl-version: ' + result['openssl_version'],
 
+                    'lan-proxy: ' + result['lan_proxy'],
                     'use-ipv6: ' + result['use_ipv6'],
                     'gws-ip-num: ' + 'total:' + result['ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
                     'ipv4-status: ' + result['ipv4_state'],
@@ -317,6 +322,7 @@
                     'td#python-version': result['python_version'],
                     'td#openssl-version': result['openssl_version'],
 
+                    'td#lan-proxy': result['lan_proxy'],
                     'td#proxy-listen': result['proxy_listen'],
                     'td#pac-url': result['pac_url'],
                     'td#use-ipv6': result['use_ipv6'],

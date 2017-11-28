@@ -396,6 +396,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             user_agent = ""
 
+        if config.PROXY_ENABLE:
+            lan_proxy = "%s://%s:%s" % (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+        else:
+            lan_proxy = "Disable"
+
         res_arr = {
                    "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
                    "os_system": platform.system(),
@@ -412,6 +417,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
                    "pac_url": config.pac_url,
                    "use_ipv6": config.USE_IPV6,
+                   "lan_proxy": lan_proxy,
 
                    "gae_appid": "|".join(config.GAE_APPIDS),
                    "working_appid": "|".join(appid_manager.working_appid_list),

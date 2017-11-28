@@ -68,6 +68,12 @@
                 <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
+        <div class="row-fluid" >
+            <div class="span4">{{ _( "Enable" ) }} Smart Router</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="smart-router-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
         <hr>
     </div> <!-- #advanced-options -->
 </div> <!-- #options -->
@@ -149,6 +155,12 @@
                     $( "#x-tunnel-enable").parent().addClass('switch-on');
 
                     $( "#x-tunnel-enable").prop('checked', true);
+                }
+                if ( result['smart_router_enable'] != 0 ) {
+                    $( "#smart-router-enable").parent().removeClass('switch-off');
+                    $( "#smart-router-enable").parent().addClass('switch-on');
+
+                    $( "#smart-router-enable").prop('checked', true);
                 }
                 $( "#language").val(result['language']);
             },
@@ -233,26 +245,13 @@
 
         setConfig(key, value);
     });
+
+    $('#smart-router-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'smart_router_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
 </script>
 
-<script type="text/javascript">
-    function restartingService(serviceNameSlug) {
-        var serviceName     = '',
-            restatingTime   = 5,
-            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
-
-        if ( serviceNameSlug == 'gae_proxy_enable' ) {
-            serviceName     = '{{ _( "GAE Proxy" ) }}';
-        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
-            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
-        } else {
-            serviceName     = 'Unknown';
-        }
-
-        tip(messageTemplate.format(serviceName, restatingTime), 'warning');
-
-        setTimeout(function () {
-            location.reload();
-        }, restatingTime * 1000);
-    }
-</script>
