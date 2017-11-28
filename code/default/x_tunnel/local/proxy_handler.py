@@ -329,7 +329,7 @@ class Socks5Server():
         # if method not in ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH"]:
         #    xlog.warn("https req method not known:%s", method)
 
-        if url.startswith("http://"):
+        if url.startswith("http://") or url.startswith("HTTP://"):
             o = urlparse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
