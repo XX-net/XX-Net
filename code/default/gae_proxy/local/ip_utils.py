@@ -20,7 +20,7 @@ def ip_num_to_string(ip):
 
 g_ip_check = re.compile(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
 
-def check_ip_valid(ip):
+def check_ip_valid4(ip):
     """检查ipv4地址的合法性"""
     ret = g_ip_check.match(ip)
     if ret is not None:
@@ -71,6 +71,12 @@ def check_ip_valid6(ip):
         return 1
     else:
         return 0
+
+def check_ip_valid(ip):
+    if ':' in ip:
+        return check_ip_valid6(ip)
+    else:
+        return check_ip_valid4(ip)
 
 def split_ip(strline):
     """从每组地址中分离出起始IP以及结束IP"""
