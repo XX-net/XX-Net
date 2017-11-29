@@ -74,9 +74,9 @@ def check_ip_valid6(ip):
 
 def check_ip_valid(ip):
     if ':' in ip:
-        return check_ip_valid4(ip)
-    else:
         return check_ip_valid6(ip)
+    else:
+        return check_ip_valid4(ip)
 
 def split_ip(strline):
     """从每组地址中分离出起始IP以及结束IP"""
