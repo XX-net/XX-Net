@@ -140,7 +140,7 @@ import threading
 network_fail_lock = threading.Lock()
 
 def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
-    if check_local_network.is_ok(ip):
+    if not check_local_network.is_ok(ip):
         with network_fail_lock:
            time.sleep(0.1)
 

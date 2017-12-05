@@ -560,7 +560,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 addresses = line.split('|')
                 for ip in addresses:
                     ip = ip.strip()
-                    if not ip_utils.check_ip_valid(ip) and not ip_utils.check_ip_valid6(ip):
+                    if not ip_utils.check_ip_valid(ip):
                         continue
                     if google_ip.add_ip(ip, 100, "google.com", "gws"):
                         count += 1
