@@ -162,7 +162,11 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
 
     ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, close_cb)
     ssl_sock.set_connect_state()
-    ssl_sock.set_tlsext_host_name(sni)
+    if hasattr(ssl_sock, 'set_tlsext_host_name'):
+        try:
+            ssl_sock.set_tlsext_host_name(sni)
+        except:
+            pass
 
     time_begin = time.time()
     ssl_sock.connect(ip_port)
