@@ -140,7 +140,7 @@ class DnsServer(object):
                 if "." in ip and type == 1:
                     reply.add_answer(RR(domain, ttl=60, rdata=A(ip)))
                 elif ":" in ip and type == 28:
-                    reply.add_answer(RR(domain, ttl=60, rdata=AAAA(ip)))
+                    reply.add_answer(RR(domain, rtype=type, ttl=60, rdata=AAAA(ip)))
             res_data = reply.pack()
 
             self.serverSock.sendto(res_data, addr)

@@ -322,8 +322,37 @@ def unpack_response(response):
 
 
 def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
+    headers = dict(headers)
     # make retry and time out
     time_request = time.time()
+
+    # GAE urlfetch will not decode br if Accept-Encoding include gzip
+    accept_encoding = headers.get("Accept-Encoding", "")
+    if "br" in accept_encoding:
+        accept_br_encoding = True
+        xlog.debug("accept_br_encoding for %s", url)
+    else:
+        accept_br_encoding = False
+
+    host = headers.get("Host", "")
+    if not host:
+        parsed_url = urlparse.urlparse(url)
+        host = parsed_url.hostname
+
+    accept_codes = accept_encoding.replace(" ", "").split(",")
+    if not accept_br_encoding:
+        if "gzip" in accept_encoding and host in config.br_sites:
+            accept_codes.remove("gzip")
+
+    if "br" not in accept_codes:
+        accept_codes.append("br")
+
+    accept_code_str = ",".join(accept_codes)
+    if accept_code_str:
+        headers["Accept-Encoding"] = accept_code_str
+    else:
+        del headers["Accept-Encoding"]
+
     request_headers, request_body = pack_request(method, url, headers, body)
     error_msg = []
 
@@ -339,11 +368,26 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
 
             response = unpack_response(response)
 
+            # xlog.debug("accept:%s content-encoding:%s url:%s", accept_encoding,
+            #           response.headers.get("Content-Encoding", ""), url)
+            if not accept_br_encoding:
+                # if gzip in Accept-Encoding, br will not decode in urlfetch
+                # else, urlfetch in GAE will auto decode br, but return br in Content-Encoding
+                if response.headers.get("Content-Encoding", "") == "br":
+                    # GAE urlfetch always return br in content-encoding even have decoded it.
+                    del response.headers["Content-Encoding"]
+                    # xlog.debug("remove br from Content-Encoding, %s", url)
+                    if host not in config.br_sites:
+                        br_sites = list(config.br_sites)
+                        br_sites.append(host)
+                        config.br_sites = tuple(br_sites)
+                        xlog.warn("Add %s to br_sites", host)
+
             if response.app_msg:
                 xlog.warn("server app return fail, status:%d",
                           response.app_status)
                 # if len(response.app_msg) < 2048:
-                #xlog.warn('app_msg:%s', cgi.escape(response.app_msg))
+                # xlog.warn('app_msg:%s', cgi.escape(response.app_msg))
 
                 if response.app_status == 510:
                     # reach 80% of traffic today
@@ -359,6 +403,8 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
             err_msg = "gae_exception:%r %s" % (e, url)
             error_msg.append(err_msg)
             xlog.warn("gae_exception:%r %s", e, url)
+            if e.message == '605:status:500':
+                raise e
         except Exception as e:
             err_msg = 'gae_handler.handler %r %s , retry...' % (e, url)
             error_msg.append(err_msg)
@@ -507,7 +553,7 @@ def handler(method, url, headers, body, wfile):
         except Exception as e_b:
             if e_b[0] in (errno.ECONNABORTED, errno.EPIPE,
                           errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                xlog.info('gae_handler send to browser return %r %r', e_b, url)
+                xlog.info('gae_handler send to browser return %r %r, len:%d, sended:%d', e_b, url, body_length, body_sended)
             else:
                 xlog.info('gae_handler send to browser return %r %r', e_b, url)
             return
@@ -710,7 +756,7 @@ class RangeFetch2(object):
 
             if response.status >= 300:
                 #xlog.error('RangeFetch %r return %s :%s', self.url, response.status, cgi.escape(response.body))
-                response.worker.close("range status:%s", response.status)
+                response.worker.close("range status:%s" % response.status)
                 continue
 
             content_range = response.headers.get('Content-Range', "")

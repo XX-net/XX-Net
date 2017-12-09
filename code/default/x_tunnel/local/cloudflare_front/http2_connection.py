@@ -465,5 +465,5 @@ class HTTP2_worker(HTTP_worker):
         out_list = []
         out_list.append(" processed:%d" % self.processed_tasks)
         out_list.append(" h2.stream_num:%d" % len(self.streams))
-        out_list.append(" sni:%s" % self.ssl_sock.sni)
+        out_list.append(" sni:%s, domain:%s" % (self.ssl_sock.sni, self.ssl_sock.top_domain))
         return ",".join(out_list)

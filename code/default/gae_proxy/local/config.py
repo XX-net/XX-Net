@@ -96,6 +96,11 @@ class Config(object):
         self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
         self.HOSTS_GAE = tuple(gae_hosts)
 
+        br_sites = []
+        for k, v in self.CONFIG.items('br_sites'):
+            br_sites.append(k)
+        self.br_sites = tuple(br_sites)
+
         # hack here:
         # 2.x.x version save host mode to direct in data/gae_proxy/config.ini
         # now(2016.5.5) many google ip don't support direct mode.

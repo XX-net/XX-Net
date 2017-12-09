@@ -635,7 +635,7 @@ def call_api(path, req_info):
         while time.time() - start_time < 30:
             content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
                                                      headers={"Content-Type": "application/json"},
-                                                     data=upload_post_data, timeout=10)
+                                                     data=upload_post_data, timeout=5)
             if status >= 400:
                 time.sleep(1)
                 continue

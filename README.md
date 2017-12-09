@@ -22,7 +22,7 @@
 
 
 ### 最新状态：
- 2017-11-28
+ 2017-12-09
 * X-Tunnel 请升级到3.8.5 （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
 
 * GAE:  扫不到ip，请开启ipv6，请参考：

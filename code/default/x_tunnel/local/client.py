@@ -43,6 +43,17 @@ import web_control
 # don't remove, launcher web_control need it.
 
 
+def xxnet_version():
+    version_file = os.path.join(root_path, "version.txt")
+    try:
+        with open(version_file, "r") as fd:
+            version = fd.read()
+        return version
+    except Exception as e:
+        xlog.exception("xxnet_version fail")
+    return "get_version_fail"
+
+
 def load_config():
     if len(sys.argv) > 2 and sys.argv[1] == "-f":
         config_path = sys.argv[2]
@@ -152,8 +163,9 @@ def terminate():
 def main():
     global ready
     load_config()
-    g.cert = os.path.abspath(os.path.join(data_path, "CA.crt"))
     g.data_path = data_path
+
+    xlog.info("xxnet_version:%s", xxnet_version())
 
     start()
 

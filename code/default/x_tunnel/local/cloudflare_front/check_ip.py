@@ -171,6 +171,7 @@ def get_subj_alt_name(peer_cert):
 import threading
 network_fail_lock = threading.Lock()
 
+
 def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
     if check_local_network.network_stat != "OK":
         with network_fail_lock:
@@ -198,15 +199,19 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
     sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
     sock.settimeout(timeout)
 
-    ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, on_close=on_close)
-    ssl_sock.set_connect_state()
-    ssl_sock.set_tlsext_host_name(sni)
+    try:
+        ssl_sock = openssl_wrap.SSLConnection(openssl_context, sock, ip, on_close=on_close)
+        ssl_sock.set_connect_state()
+        ssl_sock.set_tlsext_host_name(sni)
 
-    time_begin = time.time()
-    ip_port = (ip, port)
-    ssl_sock.connect(ip_port)
-    time_connected = time.time()
-    ssl_sock.do_handshake()
+        time_begin = time.time()
+        ip_port = (ip, port)
+        ssl_sock.connect(ip_port)
+        time_connected = time.time()
+        ssl_sock.do_handshake()
+    except Exception as e:
+        xlog.warn("connect:%s sni:%s fail:%r", ip, sni, e)
+        raise e
 
     try:
         h2 = ssl_sock.get_alpn_proto_negotiated()
@@ -230,7 +235,7 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
 
     cert = ssl_sock.get_peer_certificate()
     if not cert:
-        raise socket.error(' certficate is none')
+        raise socket.error('certficate is none, sni:%s', sni)
 
     issuer_commonname = next((v for k, v in cert.get_issuer().get_components() if k == 'CN'), '')
     if not issuer_commonname.startswith('COMODO'):

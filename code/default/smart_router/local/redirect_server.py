@@ -45,3 +45,4 @@ class RedirectHandler(object):
 
     def stop(self):
         self.running = False
+        self.sock.close()

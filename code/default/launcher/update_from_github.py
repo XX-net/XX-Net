@@ -49,7 +49,7 @@ init_update_info(config.get(["update", "check_update"]))
 
 def request(url, retry=0, timeout=30):
     if retry == 0:
-        if config.get(["proxy", "enable"], 0):
+        if int(config.get(["proxy", "enable"], 0)):
             client = simple_http_client.Client(proxy={
                 "type": config.get(["proxy", "type"], ""),
                 "host": config.get(["proxy", "host"], ""),
@@ -88,6 +88,9 @@ def download_file(url, filename):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             req = request(url, i, timeout=120)
+            if not req:
+                continue
+
             start_time = time.time()
             timeout = 300
 
