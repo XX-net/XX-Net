@@ -179,24 +179,22 @@ class CertUtil(object):
     def create_ca():
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-        req = OpenSSL.crypto.X509Req()
-        subj = req.get_subject()
+        ca = OpenSSL.crypto.X509()
+        ca.set_version(2)
+        ca.set_serial_number(0)
+        subj = ca.get_subject()
         subj.countryName = 'CN'
         subj.stateOrProvinceName = 'Internet'
         subj.localityName = 'Cernet'
         subj.organizationName = CertUtil.ca_vendor
-        subj.organizationalUnitName = '%s Root' % CertUtil.ca_vendor
+        # Log generated time.
+        subj.organizationalUnitName = '%s Root - %d' % (CertUtil.ca_vendor, int(time.time()))
         subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be GoAgent
-        req.set_pubkey(key)
-        req.sign(key, CertUtil.ca_digest)
-        ca = OpenSSL.crypto.X509()
-        ca.set_version(2)
-        ca.set_serial_number(0)
-        ca.gmtime_adj_notBefore(0)
-        ca.gmtime_adj_notAfter(CertUtil.ca_validity)
-        ca.set_issuer(req.get_subject())
-        ca.set_subject(req.get_subject())
-        ca.set_pubkey(req.get_pubkey())
+        ca.gmtime_adj_notBefore(- 3600 * 24)
+        ca.gmtime_adj_notAfter(CertUtil.ca_validity - 3600 * 24)
+        ca.set_issuer(subj)
+        ca.set_subject(subj)
+        ca.set_pubkey(key)
         ca.add_extensions([
             OpenSSL.crypto.X509Extension(
                 'basicConstraints', False, 'CA:TRUE', subject=ca, issuer=ca)
@@ -249,7 +247,12 @@ class CertUtil(object):
         cert.gmtime_adj_notBefore(-600) #avoid crt time error warning
         cert.gmtime_adj_notAfter(CertUtil.cert_validity)
         cert.set_issuer(CertUtil.ca_subject)
-        cert.set_pubkey(CertUtil.cert_publickey)
+        if CertUtil.cert_publickey:
+            pkey = CertUtil.cert_publickey
+        else:
+            pkey = OpenSSL.crypto.PKey()
+            pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
+        cert.set_pubkey(pkey)
 
         sans = set(sans) if sans else set()
         sans.add(commonname)
@@ -262,6 +265,8 @@ class CertUtil(object):
         certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
         with open(certfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
+            if CertUtil.cert_publickey is None:
+                fp.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey))
         return certfile
 
     @staticmethod
@@ -554,13 +559,18 @@ class CertUtil(object):
 
     @staticmethod
     def verify_certificate(ca, cert):
-        store = OpenSSL.crypto.X509Store()
-        store.add_cert(ca)
-        try:
-            OpenSSL.crypto.X509StoreContext(store, cert).verify_certificate()
-        except:
-            return False
-        return True
+        if hasattr(OpenSSL.crypto, "X509StoreContext"):
+            store = OpenSSL.crypto.X509Store()
+            store.add_cert(ca)
+            try:
+                OpenSSL.crypto.X509StoreContext(store, cert).verify_certificate()
+            except:
+                return False
+            else:
+                return True
+        else:
+            # A fake verify, just check generated time.
+            return ca.get_subject().OU == cert.get_issuer().OU
 
 
     @staticmethod
@@ -575,8 +585,12 @@ class CertUtil(object):
         if not os.path.exists(CertUtil.ca_keyfile):
             if os.path.exists(CertUtil.ca_certfile):
                 # update old unsafe CA file
-                xlog.info("update GAE CA file storage format")
-                os.rename(CertUtil.ca_certfile, CertUtil.ca_keyfile)
+                xlog.info("update CA file storage format")
+                if hasattr(OpenSSL.crypto, "X509StoreContext"):
+                    os.rename(CertUtil.ca_certfile, CertUtil.ca_keyfile)
+                else:
+                    xlog.warning("users may need to re-import CA file")
+                    CertUtil.generate_ca_file()
             else:
                 xlog.info("no GAE CA file exist in XX-Net data dir")
 
@@ -601,12 +615,14 @@ class CertUtil(object):
                 fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
 
         # Check cert keyfile exists
-        if os.path.exists(CertUtil.cert_keyfile):
-            with open(CertUtil.cert_keyfile, 'rb') as fp:
-                CertUtil.cert_publickey = OpenSSL.crypto.load_publickey(OpenSSL.crypto.FILETYPE_PEM, fp.read())
+        if hasattr(OpenSSL.crypto, "load_publickey"):
+            if os.path.exists(CertUtil.cert_keyfile):
+                with open(CertUtil.cert_keyfile, 'rb') as fp:
+                    CertUtil.cert_publickey = OpenSSL.crypto.load_publickey(OpenSSL.crypto.FILETYPE_PEM, fp.read())
+            else:
+                CertUtil.generate_cert_keyfile()
         else:
-            CertUtil.generate_cert_keyfile()
-        cert_publickey_str = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, CertUtil.cert_publickey)
+            CertUtil.cert_keyfile = None
 
         # Check exist site cert buffer with CA
         certfiles = glob.glob(os.path.join(CertUtil.ca_certdir, '*.crt')) + glob.glob(os.path.join(CertUtil.ca_certdir, '.*.crt'))
@@ -614,7 +630,17 @@ class CertUtil(object):
             filename = random.choice(certfiles)
             with open(filename, 'rb') as fp:
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read())
-            if not CertUtil.verify_certificate(ca, cert) or cert_publickey_str != OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, cert.get_pubkey()):
+            remove_certs = False
+            if not CertUtil.verify_certificate(ca, cert):
+                remove_certs = True
+            if not remove_certs and CertUtil.cert_publickey:
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                try:
+                    context.load_cert_chain(cert, CertUtil.cert_keyfile)
+                except ssl.SSLError:
+                    remove_certs = True
+            if remove_certs:
+                xlog.info("clean old site certs in XX-Net cert dir")
                 any(os.remove(x) for x in certfiles)
 
         if os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0" :

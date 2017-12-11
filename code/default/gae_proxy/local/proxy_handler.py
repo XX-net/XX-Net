@@ -378,7 +378,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
-            ssl_sock = ssl.wrap_socket(self.connection, keyfile=certfile, certfile=certfile, server_side=True)
+            ssl_sock = ssl.wrap_socket(self.connection, keyfile=CertUtil.cert_keyfile, certfile=certfile, server_side=True)
         except ssl.SSLError as e:
             xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
             certfile = CertUtil.get_cert(host, full_name=True)
@@ -508,7 +508,7 @@ def redirect_handler(sock, host, port, client_address):
                         break
         try:
             certfile = CertUtil.get_cert(server_name or 'www.google.com')
-            ssl_sock = ssl.wrap_socket(sock, keyfile=certfile,
+            ssl_sock = ssl.wrap_socket(sock, keyfile=CertUtil.cert_keyfile,
                                        certfile=certfile, server_side=True)
         except StandardError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
