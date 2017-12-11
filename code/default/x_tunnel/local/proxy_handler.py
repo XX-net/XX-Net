@@ -368,17 +368,3 @@ class Socks5Server():
 
         g.session.conn_list[conn_id].start(block=True)
 
-
-def redirect_process(sock, host, port, client_address):
-    conn_id = proxy_session.create_conn(sock, host, port)
-    if not conn_id:
-        xlog.warn("redirect create conn fail")
-        sock.close()
-        return
-
-    xlog.info("redirect connect from:%s to %s:%d conn_id:%d", client_address, host, port, conn_id)
-    g.session.conn_list[conn_id].start(block=True)
-
-
-def redirect_handler(sock, host, port, client_address):
-    threading.Thread(target=redirect_process, args=(sock, host, port, client_address)).start()

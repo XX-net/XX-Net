@@ -422,7 +422,7 @@ class Conn(object):
             if ':' in host:
                 # IPV6
                 ip = host
-            elif utils.check_ip_valid(host):
+            elif utils.check_ip_valid4(host):
                 # IPV4
                 ip = host
             else:

@@ -1,10 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import re
 import os
 import threading
 
 g_ip_check = re.compile(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
 
-def check_ip_valid(ip):
+
+def check_ip_valid4(ip):
+    """检查ipv4地址的合法性"""
     ret = g_ip_check.match(ip)
     if ret is not None:
         "each item range: [0,255]"
@@ -14,6 +19,58 @@ def check_ip_valid(ip):
         return 1
     else:
         return 0
+
+
+def check_ip_valid6(ip):
+    """Copied from http://stackoverflow.com/a/319293/2755602"""
+    """Validates IPv6 addresses.
+    """
+    pattern = re.compile(r"""
+        ^
+        \s*                         # Leading whitespace
+        (?!.*::.*::)                # Only a single whildcard allowed
+        (?:(?!:)|:(?=:))            # Colon iff it would be part of a wildcard
+        (?:                         # Repeat 6 times:
+            [0-9a-f]{0,4}           #   A group of at most four hexadecimal digits
+            (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
+        ){6}                        #
+        (?:                         # Either
+            [0-9a-f]{0,4}           #   Another group
+            (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
+            [0-9a-f]{0,4}           #   Last group
+            (?: (?<=::)             #   Colon iff preceeded by exacly one colon
+             |  (?<!:)              #
+             |  (?<=:) (?<!::) :    #
+             )                      # OR
+         |                          #   A v4 address with NO leading zeros
+            (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
+            (?: \.
+                (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
+            ){3}
+        )
+        \s*                         # Trailing whitespace
+        $
+    """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
+    return pattern.match(ip) is not None
+
+
+def check_ip_valid(ip):
+    if ':' in ip:
+        return check_ip_valid6(ip)
+    else:
+        return check_ip_valid4(ip)
+
+
+domain_allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
+
+
+def check_domain_valid(hostname):
+    if len(hostname) > 255:
+        return False
+    if hostname.endswith("."):
+        hostname = hostname[:-1]
+
+    return all(domain_allowed.match(x) for x in hostname.split("."))
 
 
 def str2hex(data):

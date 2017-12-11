@@ -12,7 +12,6 @@ import hashlib
 import threading
 import subprocess
 
-from ip_utils import check_ip_valid
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -39,6 +38,7 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 import OpenSSL
+from utils import check_ip_valid
 
 import ssl, datetime
 from pyasn1.type import univ, constraint, char, namedtype, tag
