@@ -634,10 +634,11 @@ class CertUtil(object):
             if not CertUtil.verify_certificate(ca, cert):
                 remove_certs = True
             if not remove_certs and CertUtil.cert_publickey:
-                context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                context = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
                 try:
-                    context.load_cert_chain(cert, CertUtil.cert_keyfile)
-                except ssl.SSLError:
+                    context.use_certificate(cert)
+                    context.use_privatekey_file(CertUtil.cert_keyfile)
+                except OpenSSL.SSL.Error:
                     remove_certs = True
             if remove_certs:
                 xlog.info("clean old site certs in XX-Net cert dir")
