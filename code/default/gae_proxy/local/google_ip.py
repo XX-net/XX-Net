@@ -466,6 +466,7 @@ class IpManager():
             # ignore if system network is disconnected.
             if not check_local_network.is_ok(ip):
                 xlog.debug("report_connect_fail network fail")
+                time.sleep(3)
                 return
 
             check_local_network.report_fail(ip)
