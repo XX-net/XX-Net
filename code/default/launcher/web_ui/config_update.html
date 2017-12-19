@@ -62,24 +62,34 @@
         </div>
         <br/>
         <div class="row-fluid">
-            <div class="span2">
-                <label>{{ _( "Input version" ) }} :</label>
-            </div>
-            <div class="span2">
-                <input id="manual-version" style="width: 8em"/>
-            </div>
+            <table>
+                <tr>
+                    <td >
+                        <label>{{ _( "Target version" ) }} :</label>
+                    </td>
+                    <td>
+                        <input id="manual-version" style="width: 8em"/>
+                    </td>
+                    <td>
+                        <select id="local-versions-selector"> <option>{{ _( "Local" ) }}</option> </select>
+                    </td>
+                    <td>
+                        <select id="released-versions-selector"><option>{{ _( "Released" ) }}</option> </select>
+                    </td>
+                </tr>
+            </table>
         </div>
         <br/>
         <div class="row-fluid">
-            <div class="span2">
-                <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Upgrade to" ) }} ({{ _( "no hash check" ) }})</button>
-            </div>
-        </div>
-        <br/>
-        <div class="row-fluid">
-            <div class="span2">
-                <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Set as local version" ) }}</button>
-            </div>
+            <table>
+                <tr>
+                    <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Upgrade to" ) }} ({{ _( "no hash check" ) }})</button>
+  
+                    <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Set as local version" ) }}</button>
+                    
+                    <button class="btn btn-warning ladda-button" data-style="slide-up" id="delete-local-version">{{ _( "Delete local version" ) }}</button>
+                </tr>
+            </table>
         </div>
     </div>
 
@@ -265,7 +275,8 @@
     $('#set-as-local-version').click(function(){
 
         var v = $('#manual-version').val();
-
+        
+        var pageRequests={};
         pageRequests['cmd'] = 'set_localversion';
         pageRequests['version'] = v;
         $.ajax({
@@ -285,5 +296,100 @@
             }
         });
     });
+    
+    $('#delete-local-version').click(function(){
 
+        var v = $('#manual-version').val();
+        
+        var pageRequests={};
+        pageRequests['cmd'] = 'del_localversion';
+        pageRequests['version'] = v;
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _( "Deleted successfully" ) }}', 'success');
+                }else{
+                    tip('{{ _( "Deleting local version fail" ) }}', 'warning');
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    });
+
+    function show_localversions()
+    {
+        var pageRequests = {};
+        pageRequests['cmd'] = 'get_localversions';
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'json',
+            success: function(result) {
+                
+                $("#local-versions-selector").html("");
+                
+                var lv = result;
+                for(var i = 0 ; i < lv.length; ++i)
+                {
+                    var v = lv[i]['v'];
+                    var new_option = document.getElementById("local-versions-selector").appendChild(document.createElement("option"));
+                    new_option.value=v;
+                    $(new_option).text(v);
+                }
+            },
+            error: function() {
+                tip( 'Getting local versions failed.');
+            }
+        });
+    }
+    
+    function show_releasedversions()
+    {
+        $.ajax({
+            type: 'GET',
+            url: 'https://api.github.com/repos/XX-net/XX-Net/releases',
+            dataType: 'json',
+            success: function(result) {
+                
+                $("#released-versions-selector").html("");
+                
+                var vs = result;
+                for(var i = 0 ; i < 30 && vs[i]; ++i)
+                {
+                    var v = vs[i]['tag_name'];
+                    var new_option = document.getElementById("released-versions-selector").appendChild(document.createElement("option"));
+                    new_option.value=v;
+                    $(new_option).text(v);
+                }
+            },
+            error: function() {
+                tip( 'Getting released versions failed.');
+            }
+        });
+        show_releasedversions = function(){};
+    }
+    
+    $(function(){
+        $("#local-versions-selector").focus(function(){
+            show_localversions();
+        });
+        $("#local-versions-selector").change(function(){
+            $("#manual-version").val($("#local-versions-selector").val());
+        });
+        
+        $("#released-versions-selector").focus(function(){
+            show_releasedversions();
+        });
+        $("#released-versions-selector").change(function(){
+            $("#manual-version").val($("#released-versions-selector").val());
+        });
+        
+    });
 </script>
