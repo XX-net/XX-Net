@@ -302,6 +302,23 @@ def download_overwrite_new_version(xxnet_version,checkhash=1):
     os.remove(xxnet_zip_file)
     shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
 
+def get_local_versions():
+    code_path = os.path.join(root_path, os.pardir)
+    files_in_code_path = os.listdir(code_path)
+    local_versions = []
+    for name in files_in_code_path:
+        start_script = os.path.join(code_path, name, "launcher", "start.py")
+        if os.path.isfile(start_script):
+            local_versions.append(name)
+    return local_versions
+
+def del_version(version):
+    try:
+        shutil.rmtree( os.path.join(top_path, "code", version) )
+        return True
+    except Exception as e:
+        xlog.warn("deleting fail: %s", e)
+        return False
 
 def update_current_version(version):
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")

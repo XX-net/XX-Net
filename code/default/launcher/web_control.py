@@ -491,7 +491,22 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 data = '{"res":"success"}'
             else:
                 data = '{"res":"false", "reason": "version not exist"}'
-
+        elif reqs['cmd'] == ['get_localversions']:
+            local_versions = update_from_github.get_local_versions()
+            
+            s = ""
+            for v in local_versions:
+                if not s == "":
+                    s += ","
+                s += ' { "v":"%s" } ' % (v)
+            data = '[  %s  ]' %(s)
+        elif reqs['cmd'] == ['del_localversion']:
+            if update_from_github.del_version( reqs['version'][0] ):
+                data = '{"res":"success"}'
+            else:
+                data = '{"res":"fail"}'
+            
+            
         self.send_response('text/html', data)
 
     def req_config_proxy_handler(self):
