@@ -50,11 +50,26 @@ msgstr "属性"
 msgid "Value"
 msgstr "值"
 
+msgid "IPv4 Status"
+msgstr "IPv4 状态"
+
+msgid "IPv6 Status"
+msgstr "IPv6 状态"
+
+msgid "IPv4 Number"
+msgstr "IPv4 IP数"
+
+msgid "IPv6 Number"
+msgstr "IPv6 IP数"
+
+msgid "LAN proxy"
+msgstr "局域网代理"
+
 msgid "All IP Number"
 msgstr "总IP数"
 
 msgid "Left Number"
-msgstr "剩余数"
+msgstr "剩余IP数"
 
 msgid "Good IP Number"
 msgstr "有效IP数"
@@ -69,16 +84,16 @@ msgid "Stop"
 msgstr "停止"
 
 msgid "Public appids used by default"
-msgstr "默认使用公共appid，保存多个AppID请用|分割"
+msgstr "默认使用公共AppID，保存多个AppID请用|分割"
 
 msgid "The public appids are disabled to access videos or download files."
 msgstr "公共AppID不能看视频、下载文件。"
 
 msgid "How to apply"
-msgstr "怎么申请"
+msgstr "如何申请"
 
 msgid "Attention: inaccessable before appids are deployed."
-msgstr "注意：appid部署之前无法使用。"
+msgstr "注意：AppID部署之前无法使用。"
 
 msgid "Advanced options"
 msgstr "高级选项"
@@ -117,7 +132,7 @@ msgid "Configure GAEProxy"
 msgstr "配置GAEProxy"
 
 msgid "Failed reading the settings."
-msgstr "读取设置失败"
+msgstr "设置读取失败"
 
 msgid "Wait for checking setting..."
 msgstr "请等待后台检查设置有效性…"
@@ -126,7 +141,7 @@ msgid "Settings saved successfully"
 msgstr "设置保存成功"
 
 msgid "AppID invalid:"
-msgstr "无效的Appid:"
+msgstr "无效的AppId:"
 
 msgid ", deploy appid before using."
 msgstr "，使用前请先部署。"
@@ -153,7 +168,7 @@ msgid "Delimit multiple appids with |"
 msgstr "批量部署多个AppID, 请用|分割；部署时不要占用8080端口"
 
 msgid "Show Debug Log"
-msgstr ""
+msgstr "显示日志"
 
 msgid "Start to deploy"
 msgstr "开始部署"
@@ -321,13 +336,13 @@ msgid "USE IPv6"
 msgstr "使用IPv6"
 
 msgid "Working AppIDs"
-msgstr "当前工作AppID"
+msgstr "工作AppID"
 
 msgid "Out-of-quota AppIDs"
 msgstr "超额AppID"
 
 msgid "Nonexistent AppIDs"
-msgstr "不存在的 AppIDs"
+msgstr "不存在的AppID"
 
 msgid "System Version"
 msgstr "系统版本"
@@ -439,7 +454,7 @@ msgid "No response from process. It might have already exited."
 msgstr "GAEProxy进程无响应, 可能已退出。"
 
 msgid "You are using the public Appid."
-msgstr "你正使用公共AppID"
+msgstr "你正使用公共APPID"
 
 msgid "new:"
 msgstr "新:"
@@ -452,9 +467,3 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
-
-
-
-
-
-
