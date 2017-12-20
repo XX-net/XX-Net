@@ -84,7 +84,7 @@ default_socket = socket.socket
 
 def load_proxy_config():
     global default_socket
-    if config.PROXY_ENABLE:
+    if int(config.PROXY_ENABLE):
 
         if config.PROXY_TYPE == "HTTP":
             proxy_type = socks.HTTP
@@ -116,7 +116,7 @@ def connect_ssl(ip, port=443, timeout=5, top_domain=None, on_close=None):
 
     xlog.debug("top_domain:%s sni:%s", top_domain, sni)
 
-    if config.PROXY_ENABLE:
+    if int(config.PROXY_ENABLE):
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
     else:
         sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)

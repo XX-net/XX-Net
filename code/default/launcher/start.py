@@ -77,6 +77,7 @@ if "arm" in platform.machine():
     shutil.rmtree(linux_lib, ignore_errors=True)
     from non_tray import sys_tray
 
+    platform_lib = ""
 elif sys.platform.startswith("linux"):
     def X_is_running():
         try:
@@ -195,9 +196,16 @@ def main():
         config.set(["modules", "launcher", "last_run_version"], current_version)
         config.save()
 
-    module_init.start_all_auto()
+    allow_remote = 0
+    if len(sys.argv) > 1:
+        for s in sys.argv[1:]:
+            xlog.info("command args:%s", s)
+            if s == "-allow_remote":
+                allow_remote = 1
+                module_init.xargs["allow_remote"] = 1
 
-    web_control.start()
+    module_init.start_all_auto()
+    web_control.start(allow_remote)
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)

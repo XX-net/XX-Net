@@ -409,7 +409,7 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            xlog.warn('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
         xlog.info("Removing old cert to Firefox in %s", firefox_config_path)
@@ -452,7 +452,7 @@ class CertUtil(object):
             return False
 
         if not any(os.path.isfile('%s/certutil' % x) for x in os.environ['PATH'].split(os.pathsep)):
-            xlog.warning('please install *libnss3-tools* package to import GoAgent root ca')
+            xlog.info('please install *libnss3-tools* package to import GoAgent root ca')
             return False
 
         sha1 = get_linux_ca_sha1(nss_path)

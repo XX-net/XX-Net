@@ -160,7 +160,7 @@ def terminate():
     ready = False
 
 
-def main():
+def main(args):
     global ready
     load_config()
     g.data_path = data_path
@@ -169,7 +169,13 @@ def main():
 
     start()
 
-    g.socks5_server = simple_http_server.HTTPServer((g.config.socks_host, g.config.socks_port), Socks5Server)
+    allow_remote = args.get("allow_remote", 0)
+    if allow_remote:
+        listen_ip = "0.0.0.0"
+    else:
+        listen_ip = g.config.socks_host
+
+    g.socks5_server = simple_http_server.HTTPServer((listen_ip, g.config.socks_port), Socks5Server, logger=xlog)
     xlog.info("Socks5 server listen:%s:%d.", g.config.socks_host, g.config.socks_port)
 
     ready = True
@@ -178,7 +184,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        main({})
     except KeyboardInterrupt:
         terminate()
         import sys

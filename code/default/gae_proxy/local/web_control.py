@@ -66,6 +66,8 @@ class User_special(object):
         self.scan_ip_thread_num = 0
         self.use_ipv6 = "auto"
 
+        self.LISTEN_IP = "127.0.0.1"
+
 
 class User_config(object):
     user_special = User_special()
@@ -78,7 +80,6 @@ class User_config(object):
 
         self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
         DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
-
 
         self.USER_CONFIG = ConfigParser.ConfigParser()
         CONFIG_USER_FILENAME = os.path.join(data_path, 'config.ini')
@@ -130,6 +131,11 @@ class User_config(object):
             self.user_special.proxy_user = self.USER_CONFIG.get('proxy', 'user')
             self.user_special.proxy_passwd = self.USER_CONFIG.get('proxy', 'passwd')
 
+            try:
+                self.LISTEN_IP = self.USER_CONFIG.get('listen', 'ip')
+            except:
+                pass
+
         except Exception as e:
             xlog.warn("User_config.load except:%s", e)
 
@@ -166,6 +172,10 @@ class User_config(object):
 
             if self.user_special.use_ipv6 != self.DEFAULT_CONFIG.get('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %s\n\n" % self.user_special.use_ipv6)
+
+            if self.LISTEN_IP != "127.0.0.1":
+                f.write("\n\n[listen]\n")
+                f.write("ip = %s\n\n" % self.LISTEN_IP)
 
             f.close()
             xlog.info("save config to %s", CONFIG_USER_FILENAME)
@@ -337,7 +347,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             last_no = int(reqs["last_no"][0])
             data = xlog.get_new_lines(last_no)
         else:
-            xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+            xlog.error('WebUI log from:%s unknown cmd:%s path:%s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
@@ -415,7 +425,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "openssl_version": get_openssl_version(),
 
                    "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
-                   "pac_url": config.pac_url,
                    "use_ipv6": config.USE_IPV6,
                    "lan_proxy": lan_proxy,
 

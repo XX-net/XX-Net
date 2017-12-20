@@ -126,13 +126,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
                 if module not in module_init.proc_handler:
                     xlog.warn("request %s no module in path", self.path)
-                    self.send_not_found()
-                    return
+                    return self.send_not_found()
 
                 path = '/' + '/'.join(url_path_list[4:])
                 controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
-                controler.do_POST()
-                return
+                return controler.do_POST()
+
+        self.send_not_found()
+        xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_GET(self):
         refer = self.headers.getheader('Referer')
@@ -212,6 +213,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.send_response('text/html', '{"status":"success"}')
                 module_init.stop_all()
                 os._exit(0)
+            elif url_path == "/debug":
+                self.req_debug_handler()
             elif url_path == '/restart':
                 self.send_response('text/html', '{"status":"success"}')
                 update_from_github.restart_xxnet()
@@ -227,12 +230,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
-                target_module = 'gae_proxy'
-                target_menu = 'status'
-            elif config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
+            if config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
                 target_module = 'x_tunnel'
                 target_menu = 'config'
+            elif config.get(['modules', 'smart_switch', 'auto_start'], 0) == 1:
+                target_module = 'smart_switch'
+                target_menu = 'config'
+            elif config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
+                target_module = 'gae_proxy'
+                target_menu = 'status'
             else:
                 target_module = 'launcher'
                 target_menu = 'about'
@@ -281,21 +287,26 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             config.load()
             check_update = config.get(["update", "check_update"], "notice-stable")
 
-            data = '{ "check_update": "%s", "language": "%s", "popup_webui": %d, "allow_remote_connect": %d, \
-             "show_systray": %d, "auto_start": %d, "show_detail": %d, "gae_proxy_enable": %d, "x_tunnel_enable": %d, \
-             "smart_router_enable": %d, "no_mess_system": %d }' %\
-                   (check_update
-                    , config.get(["language"], i18n_translator.lang)
-                    , config.get(["modules", "launcher", "popup_webui"], 1)
-                    , config.get(["modules", "launcher", "allow_remote_connect"], 0)
-                    , config.get(["modules", "launcher", "show_systray"], 1)
-                    , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "gae_proxy", "show_detail"], 0)
-                    , config.get(["modules", "gae_proxy", "auto_start"], 0)
-                    , config.get(["modules", "x_tunnel", "auto_start"], 0)
-                    , config.get(["modules", "smart_router", "auto_start"], 0)
-                    , config.get(["no_mess_system"], 0)
-                    )
+            if module_init.xargs.get("allow_remote", 0):
+                allow_remote_connect = 1
+            else:
+                allow_remote_connect = config.get(["modules", "launcher", "allow_remote_connect"], 0)
+
+            dat = {
+                "check_update": check_update,
+                "language": config.get(["language"], i18n_translator.lang),
+                "popup_webui": config.get(["modules", "launcher", "popup_webui"], 1),
+                "allow_remote_connect": allow_remote_connect,
+                "allow_remote_switch": config.get(["modules", "launcher", "allow_remote_connect"], 0),
+                "show_systray": config.get(["modules", "launcher", "show_systray"], 1),
+                "auto_start": config.get(["modules", "launcher", "auto_start"], 0),
+                "show_detail": config.get(["modules", "gae_proxy", "show_detail"], 0),
+                "gae_proxy_enable": config.get(["modules", "gae_proxy", "show_detail"], 0),
+                "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
+                "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
+                "no_mess_system": config.get(["no_mess_system"], 0)
+            }
+            data = json.dumps(dat)
         if reqs['cmd'] == ['get_version']:
             current_version = update_from_github.current_version()
             data = '{"current_version":"%s"}' % (current_version)
@@ -347,20 +358,36 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
 
-            elif 'allow_remote_connect' in reqs:
-                allow_remote_connect = int(reqs['allow_remote_connect'][0])
-                if allow_remote_connect != 0 and allow_remote_connect != 1:
-                    data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_connect
+            elif 'allow_remote_switch' in reqs:
+                allow_remote_switch = int(reqs['allow_remote_switch'][0])
+                if allow_remote_switch != 0 and allow_remote_switch != 1:
+                    data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_switch
                 else:
-                    config.set(["modules", "launcher", "allow_remote_connect"], allow_remote_connect)
+                    config.set(["modules", "launcher", "allow_remote_connect"], allow_remote_switch)
                     config.save()
+
+                    try:
+                        del module_init.xargs["allow_remote"]
+                    except:
+                        pass
+
+                    if allow_remote_switch:
+                        module_init.call_each_module("set_bind_ip", {
+                            "ip": "0.0.0.0"
+                        })
+                    else:
+                        module_init.call_each_module("set_bind_ip", {
+                            "ip": "127.0.0.1"
+                        })
 
                     data = '{"res":"success"}'
 
                     xlog.debug("restart web control.")
                     stop()
+                    module_init.stop_all()
                     time.sleep(1)
                     start()
+                    module_init.start_all_auto()
                     xlog.debug("launcher web control restarted.")
 
             elif 'show_systray' in reqs:
@@ -510,10 +537,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             }
             data = json.dumps(data)
         elif reqs['cmd'] == ['set_config']:
-            enable = reqs['enable'][0]
+            enable = int(reqs['enable'][0])
             type = reqs['type'][0]
             host = reqs['host'][0]
-            port = reqs['port'][0]
+            port = int(reqs['port'][0])
             user = reqs['user'][0]
             passwd = reqs['passwd'][0]
 
@@ -564,39 +591,43 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         self.send_response("text/html", data)
 
-process = 0
-server = 0
-def start():
-    global process, server
+    def req_debug_handler(self):
+        try:
+            # import pympler
+            from mem_top import mem_top
+            dat = mem_top(limit=50, width=150, sep='\n')
+            self.send_response("text/plain", dat)
+        except:
+            self.send_response("text/html", "no pympler")
+
+
+server = None
+def start(allow_remote=0):
+    global server
     # should use config.yaml to bind ip
-    allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
+    if not allow_remote:
+        allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
     host_port = config.get(["modules", "launcher", "control_port"], 8085)
 
     if allow_remote:
         host_addr = "0.0.0.0"
+        xlog.info("allow remote access WebUI")
     else:
         host_addr = "127.0.0.1"
 
     xlog.info("begin to start web control")
 
-    server = simple_http_server.HTTPServer((host_addr, host_port), Http_Handler)
-    process = threading.Thread(target=server.serve_forever)
-    process.setDaemon(True)
-    process.start()
+    server = simple_http_server.HTTPServer((host_addr, host_port), Http_Handler, logger=xlog)
+    server.start()
 
     xlog.info("launcher web control started.")
 
-def stop():
-    global process, server
-    if process == 0:
-        return
 
+def stop():
+    global server
     xlog.info("begin to exit web control")
     server.shutdown()
-    server.server_close()
-    process.join()
     xlog.info("launcher web control exited.")
-    process = 0
 
 
 def http_request(url, method="GET"):

@@ -124,7 +124,7 @@ class Front(object):
                     self.recent_sent -= sent
                     self.recent_received -= received
 
-            time.sleep(0.01)
+            time.sleep(1)
 
     def worker_num(self):
         host = self.last_host

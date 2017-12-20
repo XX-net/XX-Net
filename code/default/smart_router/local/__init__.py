@@ -5,6 +5,7 @@ import apis
 
 from xlog import getLogger
 xlog = getLogger("smart_router")
+xlog.set_buffer(500)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, "launcher"))
@@ -13,6 +14,10 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
 if launcher_path not in sys.path:
     sys.path.append(launcher_path)
+
+
+import xconfig
+import simple_http_server
 
 try:
     from module_init import proc_handler
@@ -23,29 +28,16 @@ except:
 
 from . import global_var as g
 import dns_server
-import redirect_server
-import xconfig
+import host_records
+import user_rules
+import proxy_handler
+import web_control
+import connect_manager
+import pac_server
+import pipe_socks
+import gfwlist
 
-
-dns_srv = None
-redirect_srv = None
 ready = False
-
-
-def remote_query_dns(domain, type):
-    content, status, response = g.x_tunnel.front_dispatcher.request(
-        "GET", "dns.xx-net.net", path="/query?domain=%s" % (domain), timeout=5)
-
-    if status != 200:
-        xlog.warn("remote_query_dns fail status:%d", status)
-        return []
-
-    try:
-        rs = json.loads(content)
-        return rs["ip"]
-    except Exception as e:
-        xlog.warn("remote_query_dns json:%s parse fail:%s", content, e)
-        return []
 
 
 def load_config():
@@ -55,34 +47,42 @@ def load_config():
 
     config_path = os.path.join(data_path, 'config.json')
     config = xconfig.Config(config_path)
+
+    config.set_var("PROXY_ENABLE", 0)
+    config.set_var("PROXY_TYPE", "HTTP")
+    config.set_var("PROXY_HOST", "")
+    config.set_var("PROXY_PORT", 0)
+    config.set_var("PROXY_USER", "")
+    config.set_var("PROXY_PASSWD", "")
+
+    config.set_var("dns_bind_ip", "127.0.0.1")
     config.set_var("dns_port", 53)
-    config.set_var("redirect_port", 8083)
-    config.set_var("bind_ip", "127.0.0.1")
-    config.set_var("cache_size", 200)
-    config.set_var("ttl", 24*3600)
-    config.set_var("redirect_to", "x_tunnel")
+
+    config.set_var("proxy_bind_ip", "127.0.0.1")
+    config.set_var("proxy_port", 8086)
+
+    config.set_var("dns_cache_size", 200)
+    config.set_var("ip_cache_size", 1000)
+    config.set_var("dns_ttl", 24*3600)
+    config.set_var("direct_split_SNI", 1)
+
+    config.set_var("country_code", "CN")
+    config.set_var("auto_direct", True)
+    config.set_var("auto_gae", True)
+
     config.load()
+    if config.PROXY_ENABLE:
+        xlog.info("use LAN proxy:%s://%s:%d/", config.PROXY_TYPE,
+                  config.PROXY_HOST, config.PROXY_PORT)
 
     g.config = config
 
 
-def redirect_handler(sock, host, port, client_address):
-    if g.config.redirect_to == "x_tunnel":
-        return g.x_tunnel.proxy_handler.redirect_handler(sock, host, port, client_address)
-    elif g.config.redirect_to == "gae_proxy":
-        return g.gae_proxy.proxy_handler.redirect_handler(sock, host, port, client_address)
-    else:
-        xlog.error("redirect_to:%s not exist", g.config.redirect_to)
-        return
-
-
-def run():
-    global proc_handler, ready, dns_srv, g, redirect_srv
+def run(args):
+    global proc_handler, ready, g
 
     if not proc_handler:
         return False
-
-    load_config()
 
     if "gae_proxy" in proc_handler:
         g.gae_proxy = proc_handler["gae_proxy"]["imp"].local
@@ -94,18 +94,51 @@ def run():
     else:
         xlog.debug("x_tunnel not running")
 
-    redirect_srv = redirect_server.RedirectHandler(bind_ip=g.config.bind_ip, port=g.config.redirect_port,
-                                                   handler=redirect_handler)
-    redirect_srv.start()
+    load_config()
+    g.gfwlist = gfwlist.GfwList()
 
-    dns_srv = dns_server.DnsServer(bind_ip=g.config.bind_ip, port=g.config.dns_port, query_cb=remote_query_dns,
-                                   cache_size=g.config.cache_size, ttl=g.config.ttl)
+    g.domain_cache = host_records.DomainRecords(os.path.join(data_path, "domain_records.txt"),
+                                                capacity=g.config.dns_cache_size, ttl=g.config.dns_ttl)
+    g.ip_cache = host_records.IpRecord(os.path.join(data_path, "ip_records.txt"),
+                                       capacity=g.config.ip_cache_size)
+
+    g.user_rules = user_rules.Config()
+
+    connect_manager.load_proxy_config()
+    g.connect_manager = connect_manager.ConnectManager()
+    g.pipe_socks = pipe_socks.PipeSocks()
+    g.pipe_socks.run()
+
+    allow_remote = args.get("allow_remote", 0)
+    if allow_remote:
+        listen_ip = "0.0.0.0"
+    else:
+        listen_ip = g.config.proxy_bind_ip
+    g.proxy_server = simple_http_server.HTTPServer((listen_ip, g.config.proxy_port),
+                                                   proxy_handler.ProxyServer, logger=xlog)
+    g.proxy_server.start()
+    xlog.info("Proxy server listen:%s:%d.", g.config.proxy_bind_ip, g.config.proxy_port)
+
+    allow_remote = args.get("allow_remote", 0)
+    if allow_remote:
+        listen_ip = "0.0.0.0"
+    else:
+        listen_ip = g.config.dns_bind_ip
+    g.dns_srv = dns_server.DnsServer(bind_ip=listen_ip, port=g.config.dns_port,
+                                   ttl=g.config.dns_ttl)
     ready = True
-    dns_srv.server_forever()
+    g.dns_srv.server_forever()
 
 
 def terminate():
     global ready
-    dns_srv.stop()
-    redirect_srv.stop()
+
+    g.domain_cache.save()
+    g.ip_cache.save()
+
+    g.connect_manager.stop()
+    g.pipe_socks.stop()
+
+    g.dns_srv.stop()
+    g.proxy_server.shutdown()
     ready = False

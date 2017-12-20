@@ -105,3 +105,64 @@ class SimpleCondition(object):
 def split_domain(host):
     hl = host.split(".")
     return hl[0], ".".join(hl[1:])
+
+
+def ip_string_to_num(s):
+    """Convert dotted IPv4 address to integer."""
+    return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
+
+
+def ip_num_to_string(ip):
+    """Convert 32-bit integer to dotted IPv4 address."""
+    return ".".join(map(lambda n: str(ip >> n & 0xFF), [24, 16, 8, 0]))
+
+
+private_ipv4_range = [
+    ("10.0.0.0", "10.255.255.255"),
+    ("127.0.0.0", "127.255.255.255"),
+    ("169.254.0.0", "169.254.255.255"),
+    ("172.16.0.0", "172.31.255.255"),
+    ("192.168.0.0", "192.168.255.255")
+]
+
+private_ipv6_range = [
+    ("::1", "::1"),
+    ("fc00::", "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
+]
+
+
+private_ipv4_range_bin = []
+for b, e in private_ipv4_range:
+    bb = ip_string_to_num(b)
+    ee = ip_string_to_num(e)
+    private_ipv4_range_bin.append((bb, ee))
+
+
+def is_private_ip(ip):
+    try:
+        if "." in ip:
+            ip_bin = ip_string_to_num(ip)
+            for b, e in private_ipv4_range_bin:
+                if b <= ip_bin <= e:
+                    return True
+            return False
+        else:
+            if ip == "::1":
+                return True
+
+            fi = ip.find(":")
+            if fi != 4:
+                return False
+
+            be = ip[0:2]
+            if be in ["fc", "fd"]:
+                return True
+            else:
+                return False
+    except Exception as e:
+        print("is_private_ip(%s), except:%r", ip, e)
+        return False
+
+
+if __name__ == '__main__':
+    print(is_private_ip("fa00::1"))

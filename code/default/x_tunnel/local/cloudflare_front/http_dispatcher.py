@@ -37,10 +37,6 @@ from http2_connection import HTTP2_worker
 xlog = getLogger("cloudflare_front")
 
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-g_cacertfile = os.path.join(current_path, "cacert.pem")
-
-
 class HttpsDispatcher(object):
     idle_time = 20 * 60
 

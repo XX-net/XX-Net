@@ -86,10 +86,6 @@
                 <td id="proxy-listen"></td>
             </tr>
             <tr>
-                <td>{{ _( "PAC URL" ) }}</td>
-                <td id="pac-url"></td>
-            </tr>
-            <tr>
                 <td>{{ _( "USE IPv6" ) }}</td>
                 <td id="use-ipv6"></td>
             </tr>
@@ -273,7 +269,7 @@
         });
 
         timer.set({
-            time: 1000,
+            time: 3000,
             autostart: true
         });
 
@@ -324,7 +320,6 @@
 
                     'td#lan-proxy': result['lan_proxy'],
                     'td#proxy-listen': result['proxy_listen'],
-                    'td#pac-url': result['pac_url'],
                     'td#use-ipv6': result['use_ipv6'],
                     'td#working-appid': appid_string(result['gae_appid']),
                     'td#out-of-quota-appids': result['out_of_quota_appids'],

@@ -91,7 +91,7 @@ def recheck_module_path():
 
     if get(["modules", "launcher", "proxy"], 0) == 0:
         # default enable PAC on startup.
-        set(["modules", "launcher", "proxy"], "pac")
+        set(["modules", "launcher", "proxy"], "smart_router")
 
     # if get(["modules", "gae_proxy", "control_port"], 0) == 0:
     #     set(["modules", "gae_proxy", "control_port"], 8084)

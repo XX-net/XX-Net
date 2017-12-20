@@ -141,7 +141,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
     def is_local(self, hosts):
         if 0 == len(self.local_names):
             self.local_names.append('localhost')
-            self.local_names.append(socket.gethostname().lower());
+            self.local_names.append(socket.gethostname().lower())
             try:
                 self.local_names.append(socket.gethostbyname_ex(socket.gethostname())[-1])
             except socket.gaierror:
@@ -313,24 +313,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.rfile = self.connection.makefile('rb', self.bufsize)
         self.wfile = self.connection.makefile('wb', 0)
 
-        try:
-            self.raw_requestline = self.rfile.readline(65537)
-            if len(self.raw_requestline) > 65536:
-                self.requestline = ''
-                self.request_version = ''
-                self.command = ''
-                self.send_error(414)
-                xlog.warn("read request line len:%d", len(self.raw_requestline))
-                return
-            if not self.raw_requestline:
-                # xlog.warn("read request line empty")
-                return
-            if not self.parse_request():
-                xlog.warn("parse request fail:%s", self.raw_requestline)
-                return
-        except Exception as e:
-            xlog.warn('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
-            return
+        self.parse_request()
 
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
@@ -395,22 +378,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.rfile = self.connection.makefile('rb', self.bufsize)
         self.wfile = self.connection.makefile('wb', 0)
 
-        try:
-            self.raw_requestline = self.rfile.readline(65537)
-            if len(self.raw_requestline) > 65536:
-                self.requestline = ''
-                self.request_version = ''
-                self.command = ''
-                self.send_error(414)
-                return
-            if not self.raw_requestline:
-                self.close_connection = 1
-                return
-            if not self.parse_request():
-                return
-        except NetWorkIOError as e:
-            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET, errno.EPIPE):
-                raise
+        self.parse_request()
+
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
 
@@ -454,3 +423,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     pass
                 finally:
                     self.__realconnection = None
+
+
+def wrap_ssl(sock, host, port, client_address):
+    certfile = CertUtil.get_cert(host or 'www.google.com')
+    ssl_sock = ssl.wrap_socket(sock, keyfile=CertUtil.cert_keyfile,
+                               certfile=certfile, server_side=True)
+    return ssl_sock
+

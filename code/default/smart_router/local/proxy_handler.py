@@ -4,41 +4,45 @@ import struct
 import urlparse
 import select
 
-import utils
-from xlog import getLogger
-xlog = getLogger("x_tunnel")
-
+import pac_server
 import global_var as g
-import proxy_session
+import utils
+from smart_route import handle_ip_proxy, handle_domain_proxy, netloc_to_host_port
+from xlog import getLogger
+xlog = getLogger("smart_router")
+
+SO_ORIGINAL_DST = 80
 
 
-def netloc_to_host_port(netloc, default_port=80):
-    if ":" in netloc:
-        host, _, port = netloc.rpartition(':')
-        port = int(port)
-    else:
-        host = netloc
-        port = default_port
-    return host, port
-
-
-class Socks5Server():
+class ProxyServer():
     handle_num = 0
 
     def __init__(self, sock, client, args):
-        self.connection = sock
-        self.rfile = socket._fileobject(self.connection, "rb", -1)
-        self.wfile = socket._fileobject(self.connection, "wb", 0)
+        self.conn = sock
+        self.rfile = socket._fileobject(self.conn, "rb", -1)
+        self.wfile = socket._fileobject(self.conn, "wb", 0)
         self.client_address = client
+
         self.read_buffer = ""
         self.buffer_start = 0
-        self.args = args
 
     def handle(self):
         self.__class__.handle_num += 1
+
         try:
-            r, w, e = select.select([self.connection], [], [])
-            socks_version = self.read_bytes(1)
+            dst = self.conn.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)
+            dst_port, srv_ip = struct.unpack("!2xH4s8x", dst)
+            ip_str = socket.inet_ntoa(srv_ip)
+            if dst_port != g.config.proxy_port and not utils.is_private_ip(ip_str):
+                xlog.debug("Redirect to:%s:%d from:%s", ip_str, dst_port, self.client_address)
+                return handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
+        except:
+            pass
+
+        sockets = [self.conn]
+        try:
+            r, w, e = select.select(sockets, [], [])
+            socks_version = self.conn.recv(1, socket.MSG_PEEK)
             if not socks_version:
                 return
 
@@ -49,20 +53,18 @@ class Socks5Server():
             elif socks_version == "C":
                 self.https_handler()
             elif socks_version in ["G", "P", "D", "O", "H", "T"]:
-                self.http_handler(socks_version)
-                return
+                self.http_handler()
             else:
-                xlog.warn("socks version:%s not supported",  utils.str2hex(socks_version))
+                xlog.warn("socks version:%s[%s] not supported", socks_version, utils.str2hex(socks_version))
                 return
 
         except socket.error as e:
-            xlog.debug('socks handler read error %r', e)
-            return
+            xlog.warn('socks handler read error:%r', e)
         except Exception as e:
             xlog.exception("any err:%r", e)
 
     def read_null_end_line(self):
-        sock = self.connection
+        sock = self.conn
         sock.setblocking(0)
         try:
             while True:
@@ -87,7 +89,7 @@ class Socks5Server():
             sock.setblocking(1)
 
     def read_crlf_line(self):
-        sock = self.connection
+        sock = self.conn
         sock.setblocking(0)
         try:
             while True:
@@ -112,7 +114,7 @@ class Socks5Server():
             sock.setblocking(1)
 
     def read_headers(self):
-        sock = self.connection
+        sock = self.conn
         sock.setblocking(0)
         try:
             while True:
@@ -141,7 +143,7 @@ class Socks5Server():
             sock.setblocking(1)
 
     def read_bytes(self, size):
-        sock = self.connection
+        sock = self.conn
         sock.setblocking(1)
         try:
             while True:
@@ -174,7 +176,8 @@ class Socks5Server():
 
     def socks4_handler(self):
         # Socks4 or Socks4a
-        sock = self.connection
+        sock = self.conn
+        socks_version = ord(self.read_bytes(1))
         cmd = ord(self.read_bytes(1))
         if cmd != 1:
             xlog.warn("Socks4 cmd:%d not supported", cmd)
@@ -198,24 +201,15 @@ class Socks5Server():
         else:
             addr = ip
 
-        conn_id = proxy_session.create_conn(sock, addr, port)
-        if not conn_id:
-            xlog.warn("Socks4 connect fail, no conn_id")
-            reply = b"\x00\x5b\x00" + addr_pack + struct.pack(">H", port)
-            sock.send(reply)
-            return
-
-        xlog.info("Socks4:%r to %s:%d, conn_id:%d", self.client_address, addr, port, conn_id)
         reply = b"\x00\x5a" + addr_pack + struct.pack(">H", port)
         sock.send(reply)
 
-        if len(self.read_buffer) - self.buffer_start:
-            g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
-
-        g.session.conn_list[conn_id].start(block=True)
+        # xlog.debug("Socks4:%r to %s:%d", self.client_address, addr, port)
+        handle_ip_proxy(sock, addr, port, self.client_address)
 
     def socks5_handler(self):
-        sock = self.connection
+        sock = self.conn
+        socks_version = ord(self.read_bytes(1))
         auth_mode_num = ord(self.read_bytes(1))
         data = self.read_bytes(auth_mode_num)
 
@@ -259,21 +253,14 @@ class Socks5Server():
 
         port = struct.unpack('>H', self.rfile.read(2))[0]
 
-        conn_id = proxy_session.create_conn(sock, addr, port)
-        if not conn_id:
-            xlog.warn("create conn fail")
-            reply = b"\x05\x01\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
-            sock.send(reply)
-            return
-
-        xlog.info("socks5 %r connect to %s:%d conn_id:%d", self.client_address, addr, port, conn_id)
+        # xlog.debug("socks5 %r connect to %s:%d", self.client_address, addr, port)
         reply = b"\x05\x00\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
         sock.send(reply)
 
-        if len(self.read_buffer) - self.buffer_start:
-            g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
-
-        g.session.conn_list[conn_id].start(block=True)
+        if addrtype in [1, 4]:
+            handle_ip_proxy(sock, addr, port, self.client_address)
+        else:
+            handle_domain_proxy(sock, addr, port, self.client_address)
 
     def https_handler(self):
         line = self.read_crlf_line()
@@ -288,7 +275,7 @@ class Socks5Server():
             xlog.warn("https req line fail:%s", line)
             return
 
-        if command != "ONNECT":
+        if command != "CONNECT":
             xlog.warn("https req line fail:%s", line)
             return
 
@@ -297,27 +284,22 @@ class Socks5Server():
         port = int(port)
 
         header_block = self.read_headers()
+        sock = self.conn
 
-        sock = self.connection
-        conn_id = proxy_session.create_conn(sock, host, port)
-        if not conn_id:
-            xlog.warn("create conn fail")
-            sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
+        # xlog.debug("https %r connect to %s:%d", self.client_address, host, port)
+        sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
+
+        handle_domain_proxy(sock, host, port, self.client_address)
+
+    def http_handler(self):
+        req_data = self.conn.recv(65537, socket.MSG_PEEK)
+        if "\r\n" not in req_data:
+            xlog.warn("http req:%s", req_data)
             return
 
-        xlog.info("https %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
-        try:
-            sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
-        except:
-            xlog.warn("https %r connect to %s:%d conn_id:%d closed.", self.client_address, host, port, conn_id)
+        rp = req_data.split("\r\n")
+        req_line = rp[0]
 
-        if (len(self.read_buffer) - self.buffer_start) > 0:
-            g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
-
-        g.session.conn_list[conn_id].start(block=True)
-
-    def http_handler(self, first_char):
-        req_line = self.read_crlf_line()
         words = req_line.split()
         if len(words) == 3:
             method, url, http_version = words
@@ -328,11 +310,7 @@ class Socks5Server():
             xlog.warn("http req line fail:%s", req_line)
             return
 
-        method = first_char + method
-        # if method not in ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH"]:
-        #    xlog.warn("https req method not known:%s", method)
-
-        if url.startswith("http://") or url.startswith("HTTP://"):
+        if url.lower().startswith("http://"):
             o = urlparse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
@@ -342,32 +320,17 @@ class Socks5Server():
             else:
                 path = "/"
         else:
-            header_block = self.read_headers()
-            lines = header_block.split("\r\n")
-            path = url
-            host = None
-            for line in lines:
-                key, _, value = line.rpartition(":")
-                if key.lower == "host":
-                    host, port = netloc_to_host_port(value)
-                    break
-            if host is None:
-                xlog.warn("http proxy host can't parsed. %s %s", req_line, header_block)
-                self.connection.send(b'HTTP/1.1 500 Fail\r\n\r\n')
-                return
+            # not proxy request, should be PAC
+            xlog.debug("PAC %s %s from:%s", method, url, self.client_address)
+            handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
+            return handler.handle()
 
-        sock = self.connection
-        conn_id = proxy_session.create_conn(sock, host, port)
-        if not conn_id:
-            xlog.warn("create conn fail")
-            sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
+        # xlog.debug("http %r connect to %s:%d", self.client_address, host, port)
+
+        l = self.conn.recv(len(req_line))
+        if len(l) != len(req_line):
+            xlog.error("req:%s l:%d", req_line, len(l))
             return
 
-        xlog.info("http %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
-
         new_req_line = "%s %s %s" % (method, path, http_version)
-        left_buf = new_req_line + self.read_buffer[(len(req_line) + 1):]
-        g.session.conn_list[conn_id].transfer_received_data(left_buf)
-
-        g.session.conn_list[conn_id].start(block=True)
-
+        handle_domain_proxy(self.conn, host, port, self.client_address, new_req_line)

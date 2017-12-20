@@ -28,9 +28,9 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">{{ _( "Enable Remote Web Control" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
+        <div class="span4">{{ _( "Allow Remote" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
-            <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
+            <input id="allow-remote-switch" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
@@ -125,11 +125,11 @@
 
                     $( "#popup-webui").prop('checked', true);
                 }
-                if ( result['allow_remote_connect'] != 0 ) {
-                    $( "#allow-remote-connect").parent().removeClass('switch-off');
-                    $( "#allow-remote-connect").parent().addClass('switch-on');
+                if ( result['allow_remote_switch'] != 0 ) {
+                    $( "#allow-remote-switch").parent().removeClass('switch-off');
+                    $( "#allow-remote-switch").parent().addClass('switch-on');
 
-                    $( "#allow-remote-connect").prop('checked', true);
+                    $( "#allow-remote-switch").prop('checked', true);
                 }
                 if ( result['show_systray'] != 0 ) {
                     $( "#show-systray").parent().removeClass('switch-off');
@@ -222,9 +222,9 @@
         return setConfig(key, value);
     });
 
-    $('#allow-remote-connect').change(function() {
+    $('#allow-remote-switch').change(function() {
         var isChecked = $(this).is(':checked'),
-            key       = 'allow_remote_connect',
+            key       = 'allow_remote_switch',
             value     = isChecked ? 1 : 0;
 
         return setConfig(key, value);

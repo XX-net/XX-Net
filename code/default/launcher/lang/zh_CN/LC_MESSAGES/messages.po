@@ -68,8 +68,8 @@ msgstr "开机自动启动"
 msgid "Popup Status Page on Startup"
 msgstr "启动时弹出状态页"
 
-msgid "Enable Remote Web Control"
-msgstr "允许远程连接Web控制端"
+msgid "Allow Remote"
+msgstr "允许远程连接"
 
 msgid "Help"
 msgstr "帮助"

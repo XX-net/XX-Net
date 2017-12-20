@@ -64,7 +64,6 @@ import time
 import traceback
 import platform
 import threading
-import urllib2
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
@@ -92,24 +91,15 @@ if config.log_file:
     xlog.set_file(log_file)
 
 from cert_util import CertUtil
-import pac_server
 import simple_http_server
 import proxy_handler
 import connect_control
 import env_info
 import connect_manager
-from gae_handler import spawn_later
 
 
 # launcher/module_init will check this value for start/stop finished
 ready = False
-
-def pre_start():
-
-    if config.PAC_ENABLE:
-        pac_ip = config.PAC_IP
-        url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
-        spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
 
 
 def log_info():
@@ -120,13 +110,10 @@ def log_info():
     if config.PROXY_ENABLE:
         xlog.info('%s Proxy    : %s:%s', config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
     xlog.info('GAE APPID          : %s', '|'.join(config.GAE_APPIDS))
-    if config.PAC_ENABLE:
-        xlog.info('Pac Server         : http://%s:%d/%s', config.PAC_IP, config.PAC_PORT, config.PAC_FILE)
-        #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
     xlog.info('------------------------------------------------------')
 
 
-def main():
+def main(args):
     global ready
 
     connect_control.keep_running = True
@@ -147,21 +134,20 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     #xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
-    pre_start()
     log_info()
 
     CertUtil.init_ca()
 
-    proxy_daemon = simple_http_server.HTTPServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
+    allow_remote = args.get("allow_remote", 0)
+    if allow_remote:
+        listen_ip = "0.0.0.0"
+    else:
+        listen_ip = config.LISTEN_IP
+
+    proxy_daemon = simple_http_server.HTTPServer((listen_ip, config.LISTEN_PORT), proxy_handler.GAEProxyHandler, logger=xlog)
     proxy_thread = threading.Thread(target=proxy_daemon.serve_forever)
     proxy_thread.setDaemon(True)
     proxy_thread.start()
-
-    if config.PAC_ENABLE:
-        pac_daemon = simple_http_server.HTTPServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
-        pac_thread = threading.Thread(target=pac_daemon.serve_forever)
-        pac_thread.setDaemon(True)
-        pac_thread.start()
 
     ready = True  # checked by launcher.module_init
 
@@ -172,10 +158,6 @@ def main():
     proxy_daemon.shutdown()
     proxy_daemon.server_close()
     proxy_thread.join()
-    if config.PAC_ENABLE:
-        pac_daemon.shutdown()
-        pac_daemon.server_close()
-        pac_thread.join()
     ready = False  # checked by launcher.module_init
     xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
 
@@ -193,7 +175,7 @@ def terminate():
 
 if __name__ == '__main__':
     try:
-        main()
+        main({})
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
