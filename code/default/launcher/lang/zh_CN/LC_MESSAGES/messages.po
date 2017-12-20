@@ -177,10 +177,19 @@ msgid "no hash check"
 msgstr "不校验"
 
 msgid "Set as local version"
-msgstr "设置本地版本"
+msgstr "设置为本地版本"
 
-msgid "Input version"
-msgstr "输入版本"
+msgid "Delete local version"
+msgstr "删除本地版本"
+
+msgid "Target version"
+msgstr "目标版本"
+
+msgid "Local"
+msgstr "本地"
+
+msgid "Released"
+msgstr "已发布"
 
 msgid "(Remote Web Control Enabled)"
 msgstr "(已允许远程连接)"
@@ -223,6 +232,9 @@ msgstr "下载中……"
 
 msgid "Download completed"
 msgstr "下载完成"
+
+msgid "Deleted successfully"
+msgstr "删除成功"
 
 msgid "System"
 msgstr "系统"

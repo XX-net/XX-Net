@@ -71,7 +71,7 @@ def recheck_module_path():
     global config
     global need_save_config
 
-    xxnet_port = get(["modules", "gae_proxy", "LISTEN_PORT"], 8087)
+
 
     for module in modules:
         if module not in ["launcher"]:
@@ -82,8 +82,7 @@ def recheck_module_path():
             if get(["modules", module, "auto_start"], -1) == -1:
                 set(["modules", module, "auto_start"], 1)
 
-    if get(["modules", "launcher", "xxnet_port"], 0) == 0:
-        set(["modules", "launcher", "xxnet_port"], xxnet_port)
+
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         set(["modules", "launcher", "control_port"], 8085)
