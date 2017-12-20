@@ -52,6 +52,11 @@ class HttpServerHandler():
         self.args = args
         self.logger = logger
 
+        self.setup()
+
+    def setup(self):
+        pass
+
     def __del__(self):
         try:
             socket.socket.close(self.connection)

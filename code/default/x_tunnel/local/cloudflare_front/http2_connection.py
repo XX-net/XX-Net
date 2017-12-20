@@ -87,7 +87,7 @@ class HTTP2_worker(HTTP_worker):
         self.next_stream_id = 1
         self.streams = {}
         self.last_ping_time = time.time()
-        self.last_active_time = self.ssl_sock.create_time
+        self.last_active_time = self.ssl_sock.create_time - 1
 
         # count ping not ACK
         # increase when send ping

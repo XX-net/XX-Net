@@ -301,7 +301,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "show_systray": config.get(["modules", "launcher", "show_systray"], 1),
                 "auto_start": config.get(["modules", "launcher", "auto_start"], 0),
                 "show_detail": config.get(["modules", "gae_proxy", "show_detail"], 0),
-                "gae_proxy_enable": config.get(["modules", "gae_proxy", "show_detail"], 0),
+                "gae_proxy_enable": config.get(["modules", "gae_proxy", "auto_start"], 0),
                 "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
                 "no_mess_system": config.get(["no_mess_system"], 0)
