@@ -62,34 +62,33 @@
         </div>
         <br/>
         <div class="row-fluid">
-            <table>
-                <tr>
-                    <td >
-                        <label>{{ _( "Target version" ) }} :</label>
-                    </td>
-                    <td>
-                        <input id="manual-version" style="width: 8em"/>
-                    </td>
-                    <td>
-                        <select id="local-versions-selector"> <option>{{ _( "Local" ) }}</option> </select>
-                    </td>
-                    <td>
-                        <select id="released-versions-selector"><option>{{ _( "Released" ) }}</option> </select>
-                    </td>
-                </tr>
-            </table>
+            <div class="span2">
+                <label>{{ _( "Released version" ) }} :</label>
+            </div>
+            <div class="span4">
+                <select id="released-versions-selector"><option>{{ _( "Released" ) }}</option> </select>
+            </div>
+
+            <div class="span3">
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Upgrade to" ) }} ({{ _( "no hash check" ) }})</button>
+            </div>
         </div>
-        <br/>
+
+        <br>
         <div class="row-fluid">
-            <table>
-                <tr>
-                    <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Upgrade to" ) }} ({{ _( "no hash check" ) }})</button>
-  
-                    <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Set as local version" ) }}</button>
-                    
-                    <button class="btn btn-warning ladda-button" data-style="slide-up" id="delete-local-version">{{ _( "Delete local version" ) }}</button>
-                </tr>
-            </table>
+            <div class="span2">
+                <label>{{ _( "Local version" ) }} :</label>
+            </div>
+            <div class="span2">
+                <select id="local-versions-selector"> <option>{{ _( "Local" ) }}</option> </select>
+            </div>
+
+            <div class="span3">
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Change to this version" ) }}</button>
+            </div>
+            <div class="span3">
+                <button class="btn btn-warning ladda-button" data-style="slide-up" id="delete-local-version">{{ _( "Delete" ) }}</button>
+            </div>
         </div>
     </div>
 
@@ -264,7 +263,7 @@
 <script type="text/javascript">
     $('#manual-upgrade-to').click(function(){
 
-        versionToUpdate = $('#manual-version').val();
+        versionToUpdate = $("#released-versions-selector").val();
 
         window.loading = Ladda.create(this);
         window.loading.start();
@@ -274,7 +273,7 @@
 
     $('#set-as-local-version').click(function(){
 
-        var v = $('#manual-version').val();
+        var v = $("#local-versions-selector").val();
         
         var pageRequests={};
         pageRequests['cmd'] = 'set_localversion';
@@ -299,7 +298,7 @@
     
     $('#delete-local-version').click(function(){
 
-        var v = $('#manual-version').val();
+        var v = $("#local-versions-selector").val();
         
         var pageRequests={};
         pageRequests['cmd'] = 'del_localversion';
@@ -380,16 +379,9 @@
         $("#local-versions-selector").focus(function(){
             show_localversions();
         });
-        $("#local-versions-selector").change(function(){
-            $("#manual-version").val($("#local-versions-selector").val());
-        });
         
         $("#released-versions-selector").focus(function(){
             show_releasedversions();
         });
-        $("#released-versions-selector").change(function(){
-            $("#manual-version").val($("#released-versions-selector").val());
-        });
-        
     });
 </script>
