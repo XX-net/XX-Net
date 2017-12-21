@@ -12,6 +12,7 @@ import stat
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+code_path = os.path.join(root_path, os.pardir)
 data_root = os.path.join(top_path, 'data')
 python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
@@ -304,13 +305,29 @@ def download_overwrite_new_version(xxnet_version,checkhash=1):
 
 
 def get_local_versions():
-    code_path = os.path.join(root_path, os.pardir)
+    
+    def get_folder_version(folder):
+        f = os.path.join(code_path, folder, "version.txt")
+        try:
+            with open(f) as fd:
+                content = fd.read()
+                p = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
+                m = p.match(content)
+                if m:
+                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
+                    return version
+        except:
+            return False
+
+    
     files_in_code_path = os.listdir(code_path)
     local_versions = []
     for name in files_in_code_path:
-        start_script = os.path.join(code_path, name, "launcher", "start.py")
-        if os.path.isfile(start_script):
-            local_versions.append(name)
+        if os.path.isdir(os.path.join(code_path, name)) :
+            v = get_folder_version(name)
+            if v :
+                local_versions.append([v, name] )
+    local_versions.sort(key= lambda s: map(int, s[0].split('.')) , reverse=True)
     return local_versions
 
 

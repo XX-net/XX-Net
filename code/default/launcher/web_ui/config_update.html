@@ -338,9 +338,15 @@
                 for(var i = 0 ; i < lv.length; ++i)
                 {
                     var v = lv[i]['v'];
+                    var f = lv[i]['folder'];
                     var new_option = document.getElementById("local-versions-selector").appendChild(document.createElement("option"));
-                    new_option.value=v;
-                    $(new_option).text(v);
+                    new_option.value=f;
+                    t = v;
+                    if (f != v)
+                    {
+                        t += '("' + f + '")'
+                    }
+                    $(new_option).text(t);
                 }
             },
             error: function() {
