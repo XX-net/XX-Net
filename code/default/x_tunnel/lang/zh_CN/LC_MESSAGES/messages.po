@@ -5,7 +5,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
 "POT-Creation-Date: 2017-11-19 10:29+0800\n"
 "PO-Revision-Date: 2016-02-19 19:30+0800\n"
-"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
+"Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -14,8 +14,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
-msgid "Cloudflare front Log"
-msgstr ""
+msgid "Configure X-Tunnel"
+msgstr "配置 X-Tunnel"
 
 msgid "Info"
 msgstr "信息"
@@ -146,7 +146,7 @@ msgid "Bandwidth to transfer"
 msgstr "转账流量"
 
 msgid "Login ......"
-msgstr "正在登录，请稍侯。。。。。。"
+msgstr "正在登录，请稍侯......"
 
 msgid "Please wait..."
 msgstr "请稍侯..."
@@ -233,64 +233,64 @@ msgid "Value"
 msgstr "值"
 
 msgid "Server listen address"
-msgstr "服务监听地址"
+msgstr "监听地址"
 
 msgid "Handle num"
-msgstr "请求处理数量"
+msgstr "请求数"
 
 msgid "Response time"
 msgstr "响应时间"
 
 msgid "Roundtrip num"
-msgstr ""
+msgstr "往返数"
 
-msgid "Slow roundtrip"
-msgstr ""
+# msgid "Slow roundtrip"
+# msgstr "较慢往返"
 
 msgid "Resend"
-msgstr ""
+msgstr "重发"
 
-msgid "Timeout roundtrip"
-msgstr ""
+# msgid "Timeout roundtrip"
+# msgstr "超时往返"
 
 msgid "Speed"
-msgstr "速度"
+msgstr "当前速度"
 
 msgid "Total use"
-msgstr ""
+msgstr "使用总量"
 
 msgid "GAE front"
-msgstr ""
+msgstr "GAE 前端"
 
-msgid "Score"
-msgstr ""
+# msgid "Score"
+# msgstr "分数"
 
 msgid "Success num"
-msgstr ""
+msgstr "成功数"
 
 msgid "Fail num"
-msgstr ""
+msgstr "失败数"
 
 msgid "Worker num"
-msgstr ""
+msgstr "工作数"
 
 msgid "Cloudflare front"
-msgstr ""
+msgstr "Cloudflare 前端"
 
 msgid "Heroku front"
-msgstr ""
+msgstr "Heroku 前端"
 
 msgid "X-Tunnel Status Info"
-msgstr ""
+msgstr "X-Tunnel 状态信息"
 
 msgid ""
 "The status page is empty. Highly likely that X-Tunnel failed getting "
 "started. Please follow "
-msgstr ""
+msgstr "状态页为空，很可能是X-Tunnel启动失败，请按照 "
 
 msgid "guide "
 msgstr "导航"
 
 msgid "to troubleshoot."
-msgstr "到问题解决"
+msgstr "去解决"
 

@@ -5,7 +5,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2017-11-19 10:30+0800\n"
 "PO-Revision-Date: 2015-12-16 20:43+0800\n"
-"Last-Translator: XX-Net <xxnet.dev@gmail.com>\n"
+"Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -42,7 +42,7 @@ msgid "Thanks the following projects"
 msgstr "感谢以下项目"
 
 msgid "About XX-Net"
-msgstr "关于XX-Net"
+msgstr "关于 XX-Net"
 
 msgid "General Settings"
 msgstr "通用设置"
@@ -87,13 +87,13 @@ msgid "Enable"
 msgstr "启用"
 
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr "正在配置服务[%s], 页面将在%s秒内刷新。"
+msgstr "正在配置服务[%s], 页面将在%s秒后刷新。"
 
-msgid "GAE Proxy"
-msgstr "GAE代理"
+# msgid "GAE Proxy"
+# msgstr "GAE 代理"
 
-msgid "X_tunnel proxy"
-msgstr "X_tunnel 代理"
+# msgid "X-Tunnel Proxy"
+# msgstr "X-Tunnel 代理"
 
 msgid "LAN proxy(Generally not needed)"
 msgstr "局域网代理（一般不需要设置）"
@@ -120,10 +120,10 @@ msgid "Failed reading the settings."
 msgstr "读取设置失败"
 
 msgid "Wait for checking setting..."
-msgstr "等待检查设置"
+msgstr "等待设置检查"
 
 msgid "Settings saved successfully"
-msgstr "成功保存设置"
+msgstr "保存设置成功"
 
 msgid "Failed saving settings"
 msgstr "保存设置失败"
@@ -162,7 +162,7 @@ msgid "Version of the stable one"
 msgstr "稳定版"
 
 msgid "All versions download page"
-msgstr "所有版本下载页面"
+msgstr "所有版本下载页"
 
 msgid "Advanced"
 msgstr "高级"
@@ -204,7 +204,7 @@ msgid "Remind me later"
 msgstr "下次再提醒我"
 
 msgid "Do not remind me this version"
-msgstr "忽略这个版本"
+msgstr "忽略此版本"
 
 msgid "View changes"
 msgstr "显示变动"
@@ -216,10 +216,10 @@ msgid "Exitting failed"
 msgstr "退出失败。"
 
 msgid "Exitting failed. A network error occurred."
-msgstr "退出失败，网络错误。"
+msgstr "退出失败，遇到网络错误。"
 
 msgid "Unkown error occured. Please refresh the page and try again"
-msgstr "发生未知错误, 请刷新页面重试。"
+msgstr "发生未知错误，请刷新页面重试。"
 
 msgid "Updating in progress ..."
 msgstr "更新进行中..."
@@ -228,7 +228,7 @@ msgid "New "
 msgstr "新"
 
 msgid "Downloading ..."
-msgstr "下载中……"
+msgstr "下载中..."
 
 msgid "Download completed"
 msgstr "下载完成"
