@@ -525,7 +525,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             for v in local_versions:
                 if not s == "":
                     s += ","
-                s += ' { "v":"%s" } ' % (v)
+                s += ' { "v":"%s" , "folder":"%s" } ' % (v[0],v[1])
             data = '[  %s  ]' %(s)
         elif reqs['cmd'] == ['del_localversion']:
             if update_from_github.del_version( reqs['version'][0] ):
