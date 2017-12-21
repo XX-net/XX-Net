@@ -25,12 +25,12 @@ echo "XX-Net version:$VERSION"
 
 # launch xx-net service by ignore hungup signal
 function launchWithNoHungup() {
-    nohup ${PYTHON} code/${VERSION}/launcher/start.py >/dev/null 2>&1 &
+    nohup ${PYTHON} code/${VERSION}/launcher/start.py $@>/dev/null 2>&1 &
 }
 
 # launch xx-net service by hungup signal
 function launchWithHungup() {
-    ${PYTHON} code/${VERSION}/launcher/start.py
+    ${PYTHON} code/${VERSION}/launcher/start.py $@
 }
 
 # get operating system name
@@ -69,7 +69,7 @@ fi
 # Start Application
 if [ $os_name = 'Darwin' ] && ! [ "$1" = '-hungup' ]; then
     PYTHON="/usr/bin/python2.7"
-    launchWithNoHungup
+    launchWithNoHungup $@
 else
-    launchWithHungup
+    launchWithHungup $@
 fi

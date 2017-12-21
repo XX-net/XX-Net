@@ -87,7 +87,7 @@ class HTTP2_worker(HTTP_worker):
         self.next_stream_id = 1
         self.streams = {}
         self.last_ping_time = time.time()
-        self.last_active_time = self.ssl_sock.create_time
+        self.last_active_time = self.ssl_sock.create_time - 1
 
         # count ping not ACK
         # increase when send ping
@@ -390,7 +390,7 @@ class HTTP2_worker(HTTP_worker):
                 p.flags.add('ACK')
                 p.opaque_data = frame.opaque_data
                 self._send_cb(p)
-            self.last_active_time = time.time()
+            # self.last_active_time = time.time()
 
         elif frame.type == SettingsFrame.type:
             if 'ACK' not in frame.flags:

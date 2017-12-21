@@ -2,7 +2,7 @@ import time
 import socket
 import struct
 import urlparse
-import threading
+import select
 
 import utils
 from xlog import getLogger
@@ -23,8 +23,6 @@ def netloc_to_host_port(netloc, default_port=80):
 
 
 class Socks5Server():
-    read_buffer = ""
-    buffer_start = 0
     handle_num = 0
 
     def __init__(self, sock, client, args):
@@ -32,14 +30,18 @@ class Socks5Server():
         self.rfile = socket._fileobject(self.connection, "rb", -1)
         self.wfile = socket._fileobject(self.connection, "wb", 0)
         self.client_address = client
+        self.read_buffer = ""
+        self.buffer_start = 0
         self.args = args
 
     def handle(self):
         self.__class__.handle_num += 1
         try:
-            # xlog.debug('Connected from %r', self.client_address)
-
+            r, w, e = select.select([self.connection], [], [])
             socks_version = self.read_bytes(1)
+            if not socks_version:
+                return
+
             if socks_version == "\x04":
                 self.socks4_handler()
             elif socks_version == "\x05":
@@ -54,7 +56,8 @@ class Socks5Server():
                 return
 
         except socket.error as e:
-            xlog.warn('socks handler read error %r', e)
+            xlog.debug('socks handler read error %r', e)
+            return
         except Exception as e:
             xlog.exception("any err:%r", e)
 
@@ -368,17 +371,3 @@ class Socks5Server():
 
         g.session.conn_list[conn_id].start(block=True)
 
-
-def redirect_process(sock, host, port, client_address):
-    conn_id = proxy_session.create_conn(sock, host, port)
-    if not conn_id:
-        xlog.warn("redirect create conn fail")
-        sock.close()
-        return
-
-    xlog.info("redirect connect from:%s to %s:%d conn_id:%d", client_address, host, port, conn_id)
-    g.session.conn_list[conn_id].start(block=True)
-
-
-def redirect_handler(sock, host, port, client_address):
-    threading.Thread(target=redirect_process, args=(sock, host, port, client_address)).start()

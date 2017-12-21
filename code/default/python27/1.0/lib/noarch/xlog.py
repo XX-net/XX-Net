@@ -96,7 +96,7 @@ class Logger():
         else:
             self.file_size = 0
 
-        self.log_fd = open(file_name, "w")
+        self.log_fd = open(file_name, "a+")
 
     def roll_log(self):
         for i in range(self.roll_num, 1, -1):

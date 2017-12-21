@@ -330,7 +330,7 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
     accept_encoding = headers.get("Accept-Encoding", "")
     if "br" in accept_encoding:
         accept_br_encoding = True
-        xlog.debug("accept_br_encoding for %s", url)
+        # xlog.debug("accept_br_encoding for %s", url)
     else:
         accept_br_encoding = False
 
@@ -341,8 +341,9 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
 
     accept_codes = accept_encoding.replace(" ", "").split(",")
     if not accept_br_encoding:
-        if "gzip" in accept_encoding and host in config.br_sites:
-            accept_codes.remove("gzip")
+        if "gzip" in accept_encoding:
+            if host in config.br_sites or host.endswith(config.br_endswith):
+                accept_codes.remove("gzip")
 
     if "br" not in accept_codes:
         accept_codes.append("br")

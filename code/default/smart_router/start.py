@@ -14,12 +14,12 @@ sys.path.append(current_path)
 import local as client
 
 
-def main():
+def main(args):
     try:
-        client.run()
+        client.run(args)
     except KeyboardInterrupt:
         sys.exit()
 
 
 if __name__ == "__main__":
-    main()
+    main({})

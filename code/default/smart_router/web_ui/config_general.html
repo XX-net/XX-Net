@@ -1,0 +1,129 @@
+<div id="options">
+
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="country">{{ _( "Country" ) }}</label>
+        </div>
+        <div class="span4">
+            <select id="country">
+                <!-- <option value="de_DE">Deutsch</option> -->
+                <option value="CN">{{ _("China" ) }}</option>
+                <!-- <option value="es_VE">Español</option> -->
+                <option value="XX">{{ _("Other" ) }}</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="pac-policy">{{ _( "PAC Policy" ) }}</label>
+        </div>
+        <div class="span4">
+            <select id="pac-policy">
+                <!-- <option value="de_DE">Deutsch</option> -->
+                <option value="black_GAE">{{ _("Black->GAE" ) }}</option>
+                <option value="black_X-Tunnel">{{ _("Black->X-Tunnel" ) }}</option>
+                <option value="smart-router">{{ _("All Smart-Router" ) }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Auto-Try Direct" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="auto-direct" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Auto-Try GAE" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="auto-gae" type="checkbox" data-toggle="switch" />
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+</div>
+
+
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+
+
+<script type="text/javascript">
+    function getSmartRouterConfig() {
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/smart_router/control/config',
+            success: function(result) {
+                if ( result['auto_direct'] != 0 ) {
+                    $( "#auto-direct").parent().removeClass('switch-off');
+                    $( "#auto-direct").parent().addClass('switch-on');
+
+                    $( "#auto-direct").prop('checked', true);
+                }
+
+                if ( result['auto_gae'] != 0 ) {
+                    $( "#auto-gae").parent().removeClass('switch-off');
+                    $( "#auto-gae").parent().addClass('switch-on');
+
+                    $( "#auto-gae").prop('checked', true);
+                }
+                $( "#country").val(result['country']);
+                $( "#pac-policy").val(result['pac_policy']);
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+
+<script type="text/javascript">
+
+    getSmartRouterConfig();
+
+
+    function setSmartRouterConfig(key, value) {
+        var pageRequests = {"cmd": "set"};
+        debugger;
+        pageRequests[key]   = value;
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/smart_router/control/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                } else {
+                    displayErrorMessage();
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    $('#country').change(function() {
+        return setSmartRouterConfig("country", $('#country').val());
+    });
+
+    $('#pac-policy').change(function() {
+        return setSmartRouterConfig("pac_policy", $('#pac-policy').val());
+    });
+
+
+    $('#auto-direct').change(function() {
+        return setSmartRouterConfig("auto_direct", $(this).is(':checked')? 1:0);
+    });
+
+    $('#auto-gae').change(function() {
+        return setSmartRouterConfig("auto_gae", $(this).is(':checked')? 1:0);
+    });
+</script>

@@ -422,7 +422,7 @@ class Conn(object):
             if ':' in host:
                 # IPV6
                 ip = host
-            elif utils.check_ip_valid(host):
+            elif utils.check_ip_valid4(host):
                 # IPV4
                 ip = host
             else:
@@ -503,7 +503,7 @@ class Conn(object):
                     self.recv_notice.release()
 
             elif cmd_id == 2:  # Closed
-                self.xlog.info("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
+                self.xlog.debug("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
                 if self.is_client:
                     self.transfer_peer_close("finish")
                 self.stop("peer close")

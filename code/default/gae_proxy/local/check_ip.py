@@ -121,7 +121,7 @@ class Cert_Exception(Exception):
 
 def load_proxy_config():
     global default_socket
-    if config.PROXY_ENABLE:
+    if int(config.PROXY_ENABLE):
 
         if config.PROXY_TYPE == "HTTP":
             proxy_type = socks.HTTP
@@ -139,6 +139,7 @@ load_proxy_config()
 import threading
 network_fail_lock = threading.Lock()
 
+
 def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
     if not check_local_network.is_ok(ip):
         with network_fail_lock:
@@ -148,7 +149,7 @@ def connect_ssl(ip, port=443, timeout=5, check_cert=True, close_cb=None):
 
     sni = sni_generater.get()
 
-    if config.PROXY_ENABLE:
+    if int(config.PROXY_ENABLE):
         sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
     else:
         sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)

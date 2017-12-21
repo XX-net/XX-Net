@@ -97,9 +97,14 @@ class Config(object):
         self.HOSTS_GAE = tuple(gae_hosts)
 
         br_sites = []
+        br_endswith = []
         for k, v in self.CONFIG.items('br_sites'):
-            br_sites.append(k)
+            if k.startswith("."):
+                br_endswith.append(k)
+            else:
+                br_sites.append(k)
         self.br_sites = tuple(br_sites)
+        self.br_endswith = tuple(br_endswith)
 
         # hack here:
         # 2.x.x version save host mode to direct in data/gae_proxy/config.ini
@@ -117,15 +122,6 @@ class Config(object):
 
         self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
         self.AUTORANGE_THREADS = self.CONFIG.getint('autorange', 'threads')
-
-        self.PAC_ENABLE = self.CONFIG.getint('pac', 'enable')
-        self.PAC_IP = self.CONFIG.get('pac', 'ip')
-        self.PAC_PORT = self.CONFIG.getint('pac', 'port')
-        self.PAC_FILE = self.CONFIG.get('pac', 'file').lstrip('/')
-        self.PAC_GFWLIST = self.CONFIG.get('pac', 'gfwlist')
-        self.PAC_ADBLOCK = self.CONFIG.get('pac', 'adblock') if self.CONFIG.has_option('pac', 'adblock') else ''
-        self.PAC_EXPIRED = self.CONFIG.getint('pac', 'expired')
-        self.pac_url = 'http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
 
         self.PROXY_ENABLE = self.CONFIG.getint('proxy', 'enable')
         self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')

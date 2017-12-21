@@ -18,6 +18,23 @@ import xlog
 logging = xlog.getLogger("simple_http_server")
 
 
+class GetReqTimeout(Exception):
+    pass
+
+
+class ParseReqFail(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        # for %s
+        return repr(self.message)
+
+    def __repr__(self):
+        # for %r
+        return repr(self.message)
+
+
 class HttpServerHandler():
     WebSocket_MAGIC_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
     default_request_version = "HTTP/1.1"
@@ -27,6 +44,7 @@ class HttpServerHandler():
 
     def __init__(self, sock, client, args, logger=logging):
         self.connection = sock
+        sock.setblocking(1)
         sock.settimeout(300)
         self.rfile = socket._fileobject(self.connection, "rb", self.rbufsize, close=True)
         self.wfile = socket._fileobject(self.connection, "wb", self.wbufsize, close=True)
@@ -64,6 +82,14 @@ class HttpServerHandler():
         return '%s:%s' % self.client_address[:2]
 
     def parse_request(self):
+        self.raw_requestline = ""
+        self.raw_requestline = self.rfile.readline(65537)
+        if not self.raw_requestline:
+            raise GetReqTimeout()
+
+        if len(self.raw_requestline) > 65536:
+            raise ParseReqFail("Recv command line too large")
+
         self.command = None  # set in case of error on the first line
         self.request_version = version = self.default_request_version
 
@@ -74,8 +100,8 @@ class HttpServerHandler():
         if len(words) == 3:
             command, path, version = words
             if version[:5] != 'HTTP/':
-                self.send_error(400, "Bad request version (%r)" % version)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
+
             try:
                 base_version_number = version.split('/', 1)[1]
                 version_number = base_version_number.split(".")
@@ -86,29 +112,23 @@ class HttpServerHandler():
                 #      turn is lower than HTTP/12.3;
                 #   - Leading zeros MUST be ignored by recipients.
                 if len(version_number) != 2:
-                    raise ValueError
+                    raise ParseReqFail("Req command format fail:%s" % requestline)
                 version_number = int(version_number[0]), int(version_number[1])
             except (ValueError, IndexError):
-                self.send_error(400, "Bad request version (%r)" % version)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
             if version_number >= (1, 1):
                 self.close_connection = 0
             if version_number >= (2, 0):
-                self.send_error(505,
-                          "Invalid HTTP Version (%s)" % base_version_number)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
         elif len(words) == 2:
             command, path = words
             self.close_connection = 1
             if command != 'GET':
-                self.send_error(400,
-                                "Bad HTTP/0.9 request type (%r)" % command)
-                return False
+                raise ParseReqFail("Req command format HTTP/0.9 line:%s" % requestline)
         elif not words:
-            return False
+            raise ParseReqFail("Req command format fail:%s" % requestline)
         else:
-            self.send_error(400, "Bad request syntax (%r)" % requestline)
-            return False
+            raise ParseReqFail("Req command format fail:%s" % requestline)
         self.command, self.path, self.request_version = command, path, version
 
         # Examine the headers and look for a Connection directive
@@ -126,20 +146,8 @@ class HttpServerHandler():
 
     def handle_one_request(self):
         try:
-            try:
-                self.raw_requestline = self.rfile.readline(65537)
-            except Exception as e:
-                #self.logger.warn("simple server handle except %r", e)
-                return
-
-            if len(self.raw_requestline) > 65536:
-                #self.logger.warn("recv command line too large")
-                return
-            if not self.raw_requestline:
-                #self.logger.warn("closed")
-                return
-
             self.parse_request()
+
             self.close_connection = 0
 
             if self.upgrade == "websocket":
@@ -176,6 +184,8 @@ class HttpServerHandler():
                 pass
         #except OpenSSL.SSL.SysCallError as e:
         #    self.logger.warn("socket error:%r", e)
+            self.close_connection = 1
+        except GetReqTimeout:
             self.close_connection = 1
         except Exception as e:
             self.logger.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
@@ -459,10 +469,12 @@ class HTTPServer():
                         self.logger.warn("socket accept fail(errno: %s).", e.args[0])
                         if e.args[0] == 10022:
                             self.logger.info("restart socket server.")
+                            self.close_all_socket()
                             self.init_socket()
                         break
 
                     self.process_connect(sock, address)
+        self.server_close()
 
     def process_connect(self, sock, address):
         #self.logger.debug("connect from %s:%d", address[0], address[1])
@@ -472,6 +484,8 @@ class HTTPServer():
 
     def shutdown(self):
         self.running = False
+        while self.sockets:
+            time.sleep(1)
 
     def server_close(self):
         for sock in self.sockets:

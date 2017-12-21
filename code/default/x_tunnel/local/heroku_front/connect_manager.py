@@ -302,7 +302,7 @@ class Https_connection_manager(object):
 
         start_time = time.time()
         while True:
-            if self.new_conn_pool.qsize() < self.connection_pool_min:
+            if not self.new_conn_pool.qsize():
                 self.create_more_connection()
 
             ret = self.new_conn_pool.get(True, 1)

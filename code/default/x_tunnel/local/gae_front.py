@@ -93,7 +93,7 @@ def debug_data_clearup_thread():
                 recent_sent -= sent
                 recent_received -= received
 
-        time.sleep(0.01)
+        time.sleep(1)
 
 def get_score(host=""):
     now = time.time()

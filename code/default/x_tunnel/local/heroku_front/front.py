@@ -26,7 +26,7 @@ class Front(object):
     name = "heroku_front"
 
     def __init__(self):
-        self.hosts = []
+        self.hosts = ["xxnet4.herokuapp.com"]
         self.host = str(random.choice(self.hosts))
 
         self.dispatcher = http_dispatcher.HttpsDispatcher(self.host, self.log_debug_data)

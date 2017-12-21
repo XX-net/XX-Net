@@ -1,8 +1,9 @@
 import time
 import gae_front
 from cloudflare_front.front import front as cloudflare_front
-#from heroku_front.front import front as heroku_front
+from heroku_front.front import front as heroku_front
 all_fronts = [gae_front, cloudflare_front]
+dns_fronts = [gae_front, cloudflare_front, heroku_front]
 
 # import direct_front
 # all_fronts = [direct_front]
@@ -16,10 +17,15 @@ current_front = running_front_list.pop(0)
 
 def get_front(host, timeout):
     start_time = time.time()
+    if host in ["dns.xx-net.net"]:
+        fronts = dns_fronts
+    else:
+        fronts = all_fronts
+
     while time.time() - start_time < timeout:
         best_front = None
         best_score = 9999999
-        for front in all_fronts:
+        for front in fronts:
             score = front.get_score(host)
             if not score:
                 continue
@@ -59,4 +65,3 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
 def stop():
     for front in all_fronts:
         front.stop()
-

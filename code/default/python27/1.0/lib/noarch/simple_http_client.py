@@ -303,7 +303,7 @@ class Client(object):
 
         if ':' in host:
             info = [(socket.AF_INET6, socket.SOCK_STREAM, 0, "", (host, port, 0, 0))]
-        elif utils.check_ip_valid(host):
+        elif utils.check_ip_valid4(host):
             info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (host, port))]
         else:
             try:
