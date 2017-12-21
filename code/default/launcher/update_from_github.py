@@ -8,6 +8,7 @@ import re
 import zipfile
 import shutil
 import stat
+import glob
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
@@ -412,3 +413,81 @@ def start_update_version(version, checkhash=1):
     th.start()
     return True
 
+            
+def delete_to_save_disk():
+    def rm_paths(path_list):
+        del_fullpaths = []
+        for ps in path_list:
+            pt = os.path.join(top_path, ps)
+            pt = glob.glob(pt)
+            del_fullpaths += pt
+        if del_fullpaths:
+            xlog.info("DELETE: %s", ' , '.join(del_fullpaths))
+            
+            for pt in del_fullpaths:
+                try:
+                    if os.path.isfile(pt):
+                        os.remove(pt) 
+                    elif os.path.isdir(pt):
+                        shutil.rmtree(pt)
+                except:
+                    pass
+    
+    
+    keep_old_num = config.get(["modules", "launcher", "keep_old_ver_num"], 6)  # default keep several old versions
+    if keep_old_num < 99 and keep_old_num >=0 :  # 99 means don't delete any old version
+        del_paths = []
+        local_vs = get_local_versions()
+        for i in range(len(local_vs)):
+            if local_vs[i][0] == current_version():
+                for u in range( i+keep_old_num+1 ,  len(local_vs)) :
+                    del_paths.append( "code/" + local_vs[u][1] + "/" )
+                break
+        if del_paths :
+            rm_paths(del_paths)
+    
+    
+    
+    del_paths = []
+    if config.get(["savedisk", "clear_cache"], 0) :
+        del_paths += [
+            "data/*/*.*.log",
+            "data/*/*.log.*",
+            "data/downloads/XX-Net-*.zip"
+        ]
+    
+    if config.get(["savedisk", "del_win"], 0) :
+        del_paths += [
+            "code/*/python27/1.0/WinSxS/", 
+            "code/*/python27/1.0/*.dll", 
+            "code/*/python27/1.0/*.exe", 
+            "code/*/python27/1.0/Microsoft.VC90.CRT.manifest", 
+            "code/*/python27/1.0/lib/win32/"
+        ]
+    if config.get(["savedisk", "del_mac"], 0) :
+        del_paths += [ 
+            "code/*/python27/1.0/lib/darwin/" 
+        ]
+    if config.get(["savedisk", "del_linux"], 0) :
+        del_paths += [ 
+            "code/*/python27/1.0/lib/linux/" 
+        ]
+    if config.get(["savedisk", "del_gae"], 0) :
+        del_paths += [ 
+            "code/*/gae_proxy/" 
+        ]
+    if config.get(["savedisk", "del_gae_server"], 0) :
+        del_paths += [ 
+            "code/*/gae_proxy/server/" 
+        ]
+    if config.get(["savedisk", "del_xtunnel"], 0) :
+        del_paths += [ 
+            "code/*/x_tunnel/" 
+        ]
+    if config.get(["savedisk", "del_smartroute"], 0) :
+        del_paths += [ 
+            "code/*/smart_router/" 
+        ]
+        
+    if del_paths:
+        rm_paths(del_paths)

@@ -304,7 +304,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "gae_proxy_enable": config.get(["modules", "gae_proxy", "auto_start"], 0),
                 "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
-                "no_mess_system": config.get(["no_mess_system"], 0)
+                "no_mess_system": config.get(["no_mess_system"], 0),
+                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1) # -1 means not set yet
             }
             data = json.dumps(dat)
         if reqs['cmd'] == ['get_version']:
@@ -409,7 +410,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-
+            elif 'keep_old_ver_num' in reqs:
+                keep_old_ver_num = int(reqs['keep_old_ver_num'][0])
+                if keep_old_ver_num < 0 or keep_old_ver_num > 99:
+                    data = '{"res":"fail, keep_old_ver_num:%s not in range 0 to 99"}' % keep_old_ver_num
+                else:
+                    config.set(["modules", "launcher", "keep_old_ver_num"], keep_old_ver_num)
+                    config.save()
+                    
+                    data = '{"res":"success"}'
             elif 'auto_start' in reqs:
                 auto_start = int(reqs['auto_start'][0])
                 if auto_start != 0 and auto_start != 1:
