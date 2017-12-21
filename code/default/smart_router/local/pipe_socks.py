@@ -135,7 +135,7 @@ class PipeSocks(object):
                 continue
 
             try:
-                r, w, e = select.select(self.read_set, self.write_set, self.error_set, 1)
+                r, w, e = select.select(self.read_set, self.write_set, self.error_set, 0.1)
                 for s1 in list(r):
                     if s1 not in self.read_set:
                         continue

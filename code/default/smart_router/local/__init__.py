@@ -66,6 +66,7 @@ def load_config():
     config.set_var("dns_ttl", 24*3600)
     config.set_var("direct_split_SNI", 1)
 
+    config.set_var("pac_policy", "black_GAE")
     config.set_var("country_code", "CN")
     config.set_var("auto_direct", True)
     config.set_var("auto_gae", True)

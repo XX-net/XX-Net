@@ -12,6 +12,7 @@ import threading
 xlog = getLogger("smart_router")
 
 import simple_http_server
+import pac_server
 import global_var as g
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -114,12 +115,19 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         if cmd == "get":
             data = {
+                "pac_policy": g.config.pac_policy,
                 "country": g.config.country_code,
                 "auto_direct":g.config.auto_direct,
                 "auto_gae": g.config.auto_gae
             }
             return self.response_json(data)
         elif cmd == "set":
+            if "pac_policy" in reqs:
+                pac_policy = reqs["pac_policy"][0]
+                if pac_policy not in pac_server.allow_policy:
+                    return self.response_json({"res": "fail", "reason": "policy not allow"})
+
+                g.config.pac_policy = pac_policy
             if "country" in reqs:
                 g.config.country_code = reqs["country"][0]
             if "auto_direct" in reqs:

@@ -88,7 +88,7 @@ class DnsServer(object):
             if ip == "127.0.0.1":
                 continue
             out_list.append(ip)
-            xlog.info("use DNS server:%s", ip)
+            xlog.debug("use local DNS server:%s", ip)
 
         return out_list
 

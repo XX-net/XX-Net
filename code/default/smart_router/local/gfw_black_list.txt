@@ -513,7 +513,7 @@ blog.cnyes.com
 blog.daum.net
 blog.de
 blog.exblog.co.jp
-blog.excite.co.j
+blog.excite.co.jp
 blog.expofutures.com
 blog.fizzik.com
 blog.foolsmountain.com
@@ -522,7 +522,6 @@ blog.goo.ne.jp
 blog.google
 blog.inoreader.com
 blog.istef.info
-blog.j
 blog.jackjia.com
 blog.jp
 blog.kangye.org

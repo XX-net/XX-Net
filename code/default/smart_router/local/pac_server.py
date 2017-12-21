@@ -23,7 +23,8 @@ user_pacfile = os.path.join(data_path, "proxy.pac")
 
 gae_ca_file = os.path.join(top_path, 'data', "gae_proxy", "CA.crt")
 
-gae_proxy_listen = "PROXY_LISTEN"
+
+allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router"]
 
 
 def get_serving_pacfile():
@@ -31,10 +32,31 @@ def get_serving_pacfile():
         serving_pacfile = default_pacfile
     else:
         serving_pacfile = user_pacfile
-    return serving_pacfile
+
+    with open(serving_pacfile, 'rb') as fp:
+        content = fp.read()
+
+    return content
 
 
 class PacHandler(simple_http_server.HttpServerHandler):
+    PROXY_LISTEN = "PROXY_LISTEN"
+
+    def policy_smart_router(self, host):
+        content = """function FindProxyForURL(url, host) { return 'PROXY PROXY_LISTEN';}"""
+
+        proxy = host + ":" + str(g.config.proxy_port)
+        content = content.replace(self.PROXY_LISTEN, proxy)
+        return content
+
+    def policy_black_port(self, host, port):
+        content = get_serving_pacfile()
+
+        proxy = host + ":" + str(port)
+        content = content.replace(self.PROXY_LISTEN, proxy)
+
+        content = content.replace("BLACK_LIST", g.gfwlist.get_pac_string())
+        return content
 
     def do_GET(self):
         path = urlparse.urlparse(self.path).path # '/proxy.pac'
@@ -43,13 +65,14 @@ class PacHandler(simple_http_server.HttpServerHandler):
             xlog.warn("pac_server GET %s fail", self.path)
             return self.send_not_found()
 
-        pac_filename = get_serving_pacfile()
-        with open(pac_filename, 'rb') as fp:
-            data = fp.read()
-
         host = self.headers.getheader('Host')
         host, _, port = host.rpartition(":")
-        gae_proxy_proxy = host + ":" + str(g.config.proxy_port)
-        data = data.replace(gae_proxy_listen, gae_proxy_proxy)
-        data = data.replace("BLACK_LIST", g.gfwlist.get_pac_string())
-        self.send_response('text/plain', data)
+
+        if g.config.pac_policy == "black_GAE":
+            content = self.policy_black_port(host, "8087")
+        elif g.config.pac_policy == "black_X-Tunnel":
+            content = self.policy_black_port(host, "1080")
+        else:
+            content = self.policy_smart_router(host)
+
+        self.send_response('text/plain', content)

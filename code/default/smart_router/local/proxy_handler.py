@@ -6,6 +6,7 @@ import select
 
 import pac_server
 import global_var as g
+from socket_wrap import SocketWrap
 import utils
 from smart_route import handle_ip_proxy, handle_domain_proxy, netloc_to_host_port
 from xlog import getLogger
@@ -293,10 +294,6 @@ class ProxyServer():
 
     def http_handler(self):
         req_data = self.conn.recv(65537, socket.MSG_PEEK)
-        if "\r\n" not in req_data:
-            xlog.warn("http req:%s", req_data)
-            return
-
         rp = req_data.split("\r\n")
         req_line = rp[0]
 
@@ -314,10 +311,12 @@ class ProxyServer():
             o = urlparse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
-            p = url[7:].find("/")
-            if p >= 0:
-                path = url[7+p:]
+            url_prex_len = url[7:].find("/")
+            if url_prex_len >= 0:
+                url_prex_len += 7
+                path = url[url_prex_len:]
             else:
+                url_prex_len = len(url)
                 path = "/"
         else:
             # not proxy request, should be PAC
@@ -325,12 +324,11 @@ class ProxyServer():
             handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
             return handler.handle()
 
-        # xlog.debug("http %r connect to %s:%d", self.client_address, host, port)
+        req_d = self.conn.recv(len(req_line))
+        req_d = req_d.replace(url, path)
 
-        l = self.conn.recv(len(req_line))
-        if len(l) != len(req_line):
-            xlog.error("req:%s l:%d", req_line, len(l))
-            return
+        sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
+        sock.replace_pattern = [url[:url_prex_len], ""]
 
-        new_req_line = "%s %s %s" % (method, path, http_version)
-        handle_domain_proxy(self.conn, host, port, self.client_address, new_req_line)
+        xlog.debug("http %r connect to %s:%d %s %s", self.client_address, host, port, method, path)
+        handle_domain_proxy(sock, host, port, self.client_address, req_d)

@@ -136,7 +136,7 @@ class Front(object):
 
     def get_score(self, host=None):
         now = time.time()
-        if now - self.last_fail_time < 5*60 and \
+        if now - self.last_fail_time < 60 and \
                 self.continue_fail_num > 10:
             return None
 
