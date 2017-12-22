@@ -214,6 +214,8 @@ def main():
 
     update.start()
 
+    update_from_github.delete_to_save_disk()
+    
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
     else:

@@ -45,6 +45,21 @@
         </div> <!-- .row-fluid -->
 
         <hr>
+        
+        <div class="row-fluid">
+            <div class="span3">
+                <label>{{ _( "Keep old versions count" ) }}
+                <br/>(0~99, 99 = {{ _( "keep all" ) }})</label>
+            </div>
+            <div class="span3">
+                <input id="keep_old_ver_num" type="number" min=0 max=99 value="abc"/>
+            </div>
+            <div class="span3">
+                <button id="save_keep_old_ver_num" class="btn btn-primary" >{{ _( "Save" ) }}</button>
+            </div>
+        </div>
+        
+        <hr/>
     </div> <!-- #advanced-options -->
 
     <div class="row-fluid">
@@ -260,6 +275,57 @@
     });
 </script>
 
+<script type="text/javascript">
+    $(function() {
+        var pageRequests = {};
+        pageRequests['cmd'] = 'get_config';
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['keep_old_ver_num'] >=0 && result['keep_old_ver_num'] <=99 )
+                {
+                    $("#keep_old_ver_num").val( result['keep_old_ver_num'] );
+                }else{
+                    //$("#keep_old_ver_num").val(-1);
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+                
+            }
+        });
+    });
+    
+    $("#save_keep_old_ver_num").click(function () {
+        keep_old_ver_num = $("#keep_old_ver_num").val();
+        
+        if ( ! (keep_old_ver_num >=0 && keep_old_ver_num <=99 ) ) return;
+        
+        var pageRequests = {};
+        pageRequests['cmd'] = 'set_config';
+        pageRequests['keep_old_ver_num'] = keep_old_ver_num;
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+                
+            }
+        });
+    });
+</script>
 <script type="text/javascript">
     $('#manual-upgrade-to').click(function(){
 
