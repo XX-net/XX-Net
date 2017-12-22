@@ -4,7 +4,7 @@
             <div class="span3">
                 <label for="check-update">{{ _( "Auto-Upgrade to" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">({{ _( "Help" ) }})</a></label>
             </div>
-            <div class="span6">
+            <div class="span3">
                 <select id="check-update">
                     <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
                     <option value="notice-stable">{{ _( "Notice stable version" ) }}</option>
@@ -77,10 +77,10 @@
         </div>
         <br/>
         <div class="row-fluid">
-            <div class="span2">
+            <div class="span3">
                 <label>{{ _( "Released version" ) }} :</label>
             </div>
-            <div class="span4">
+            <div class="span3">
                 <select id="released-versions-selector"><option>{{ _( "Released" ) }}</option> </select>
             </div>
 
@@ -91,10 +91,10 @@
 
         <br>
         <div class="row-fluid">
-            <div class="span2">
+            <div class="span3">
                 <label>{{ _( "Local version" ) }} :</label>
             </div>
-            <div class="span2">
+            <div class="span3">
                 <select id="local-versions-selector"> <option>{{ _( "Local" ) }}</option> </select>
             </div>
 
@@ -376,9 +376,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('{{ _( "Deleted successfully" ) }}', 'success');
+                    tip('{{ _( "Deleted successfully." ) }}', 'success');
                 }else{
-                    tip('{{ _( "Deleting local version fail" ) }}', 'warning');
+                    tip('{{ _( "Deleting local version fail." ) }}', 'warning');
                 }
             },
             error: function() {
