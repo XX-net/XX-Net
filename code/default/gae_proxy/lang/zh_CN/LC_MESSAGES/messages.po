@@ -35,11 +35,14 @@ msgstr "IPv6 隧道"
 msgid "Advanced"
 msgstr "高级"
 
+msgid "GAEProxy Advanced Configuration"
+msgstr "GAEProxy 高级配置"
+
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低, 部分功能将无法使用。"
 
 msgid "The latest Chrome browser is recommended."
-msgstr "我们建议您使用最新版本的Chrome浏览器。"
+msgstr "建议您使用最新版本的Chrome浏览器。"
 
 msgid "Status"
 msgstr "状态"
@@ -69,13 +72,13 @@ msgid "All IP Number"
 msgstr "总IP数"
 
 msgid "Left Number"
-msgstr "剩余IP数"
+msgstr "待测IP数"
 
 msgid "Good IP Number"
 msgstr "有效IP数"
 
 msgid "Run"
-msgstr "运行"
+msgstr "开始"
 
 msgid "No response from GAEProxy process. It might have already exited."
 msgstr "GAEProxy进程无响应, 可能已退出。"
@@ -83,20 +86,20 @@ msgstr "GAEProxy进程无响应, 可能已退出。"
 msgid "Stop"
 msgstr "停止"
 
-msgid "Public appids used by default"
+msgid "Public AppIDs used by default"
 msgstr "默认使用公共AppID，保存多个AppID请用|分割"
 
-msgid "The public appids are disabled to access videos or download files."
+msgid "The public AppIDs are disabled to access videos or download files."
 msgstr "公共AppID不能看视频、下载文件。"
 
 msgid "How to apply"
 msgstr "如何申请"
 
-msgid "Attention: inaccessable before appids are deployed."
+msgid "Attention: inaccessable before AppIDs are deployed."
 msgstr "注意：AppID部署之前无法使用。"
 
-msgid "Advanced options"
-msgstr "高级选项"
+# msgid "Advanced options"
+# msgstr "高级选项"
 
 msgid "LAN proxy(Generally not needed)"
 msgstr "局域网代理(一般无需配置)"
@@ -123,31 +126,31 @@ msgid "Save"
 msgstr "保存"
 
 msgid "Advanced tricks:"
-msgstr "高级技巧"
+msgstr "高级技巧："
 
 msgid "By the configuration file"
 msgstr "通过文件配置"
 
-msgid "Configure GAEProxy"
-msgstr "配置 GAEProxy"
+msgid "GAEProxy Configuration"
+msgstr "GAEProxy 配置"
 
 msgid "Failed reading the settings."
-msgstr "设置读取失败"
+msgstr "读取设置失败。"
 
 msgid "Wait for checking setting..."
-msgstr "请等待后台检查设置有效性…"
+msgstr "请等待检查设置有效性..."
 
-msgid "Settings saved successfully"
-msgstr "设置保存成功"
+msgid "Settings saved successfully."
+msgstr "设置保存成功。"
 
 msgid "AppID invalid:"
-msgstr "无效的AppId:"
+msgstr "无效的AppId："
 
 msgid ", deploy appid before using."
 msgstr "，使用前请先部署。"
 
-msgid "Failed saving settings"
-msgstr "保存设置失败"
+msgid "Failed saving settings."
+msgstr "保存设置失败。"
 
 msgid "Deploy XX-Net onto GAE"
 msgstr "部署 XX-Net 至 GAE"
@@ -164,8 +167,8 @@ msgstr "授权"
 msgid "Log"
 msgstr "日志"
 
-msgid "Delimit multiple appids with |"
-msgstr "批量部署多个AppID, 请用|分割；部署时不要占用8080端口"
+msgid "Delimit multiple AppIDs with |"
+msgstr "批量部署多个AppID请用|分割；部署时不要占用8080端口"
 
 msgid "Show Debug Log"
 msgstr "显示日志"
@@ -210,7 +213,7 @@ msgid "Your AppID is either empty or invalid."
 msgstr "您的AppID为空或无效。"
 
 msgid "Export format"
-msgstr "导入或导出格式"
+msgstr "导出格式"
 
 msgid " format"
 msgstr "格式"
@@ -225,10 +228,10 @@ msgid "Succeeded exporting "
 msgstr "成功导出"
 
 msgid " IP addresses."
-msgstr "个IP地址"
+msgstr "个IP地址。"
 
 msgid "Failed exporting the IP addresses."
-msgstr "导出IP地址失败"
+msgstr "导出IP地址失败。"
 
 msgid "IP list"
 msgstr "IP列表"
@@ -240,7 +243,7 @@ msgid "Disable"
 msgstr "禁用"
 
 msgid "Running ..."
-msgstr "正在执行"
+msgstr "正在执行..."
 
 msgid "GAEProxy Log"
 msgstr "GAEProxy 日志"
@@ -254,7 +257,7 @@ msgstr "部署服务端"
 msgid "Refresh"
 msgstr "刷新"
 
-msgid "Failed reading the log"
+msgid "Failed reading the log."
 msgstr "读取日志失败。"
 
 msgid "Auto-adjust scan thread count"
@@ -286,9 +289,6 @@ msgstr "支持格式"
 
 msgid "Submit"
 msgstr "提交"
-
-msgid "Failed reading the settings"
-msgstr "读取设置失败"
 
 msgid "Unkown error occurred"
 msgstr "发生未知错误"
@@ -354,10 +354,10 @@ msgid "Check Github issues"
 msgstr "查看Github上的问题讨论区"
 
 msgid " or "
-msgstr " 或者"
+msgstr " 或者 "
 
-msgid " Discussions"
-msgstr "讨论组"
+msgid "Google Group Discussions"
+msgstr "Google Group 讨论组"
 
 msgid "Show Details"
 msgstr "显示详细信息"
@@ -376,7 +376,7 @@ msgstr "-----------%0A问题描述：%0A请在此描述你遇到的问题，必�
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
-msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按"
+msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按 "
 
 msgid "guide "
 msgstr "指引"
@@ -388,7 +388,7 @@ msgid "Your local network failed. Please check your network and firewall. "
 msgstr "网络无法连接，请检查网络和防火墙设置。"
 
 msgid "You may want to $1turn on IP scaner$2."
-msgstr "您应该考虑$1开启 IP 扫描器$2。"
+msgstr "您应该考虑$1开启 IP扫描器$2。"
 
 msgid ""
 "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
@@ -406,24 +406,24 @@ msgid ""
 "Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own "
 "APPID</a>"
 msgstr ""
-"公共APPID配额已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-"
-"Google-appid\" target=\"_blank\">部署私有APPID</a>。"
+"公共AppID配额已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-"
+"Google-appid\" target=\"_blank\">部署私有AppID</a>。"
 
 msgid ""
 "Your appid out of quota, Please <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/Register-Google-appid\" target=\"_blank\">deploy more APPID</a>"
 msgstr ""
-"您的APPID流量已经用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-"
-"Google-appid\" target=\"_blank\">部署更多APPID</a>。"
+"您的AppID流量已经用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/Register-"
+"Google-appid\" target=\"_blank\">部署更多AppID</a>。"
 
 msgid "No working appid. Please check. "
-msgstr "没有可用APPID，请检查。"
+msgstr "没有可用AppID，请检查。"
 
 msgid "System is Idle. "
-msgstr "系统空闲"
+msgstr "系统空闲。"
 
 msgid "Connection not established yet. "
-msgstr "尚未建立连接"
+msgstr "尚未建立连接。"
 
 msgid "Please check your browser proxy setting."
 msgstr "请检查浏览器代理设置。"
@@ -432,14 +432,14 @@ msgid "Detecting..."
 msgstr "正在自检..."
 
 msgid "Please import certificates to your browser."
-msgstr "请导入浏览器CA证书"
+msgstr "请导入浏览器CA证书。"
 
 msgid ""
 "You are using public APPID. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" "
 "target=\"_blank\">deploy your own APPID</a>"
 msgstr ""
-"您正在使用公共APPID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-"
+"您正在使用公共AppID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/Register-Google-appid\" target=\"_blank\">部署私有APPID</a>。"
 
 msgid ", Everything is OK. Welcome to the FREE Internet. "
@@ -448,13 +448,13 @@ msgstr "，一切正常，你可以访问真正的互联网了。"
 msgid ""
 "The status page is empty. Highly likely that XX-Net failed getting "
 "started. Please follow "
-msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按"
+msgstr "状态页显示空白, 很可能GAEProxy启动失败, 请按 "
 
 msgid "No response from process. It might have already exited."
 msgstr "GAEProxy进程无响应, 可能已退出。"
 
 msgid "You are using the public Appid."
-msgstr "你正使用公共APPID"
+msgstr "你正使用公共AppID。"
 
 msgid "new:"
 msgstr "新:"
@@ -467,3 +467,5 @@ msgstr "全局代理已启用："
 
 msgid "Proxy disabled"
 msgstr "全局代理已禁用"
+
+

@@ -4,16 +4,16 @@
             <label for="gae-appid">GAE AppID </label>
         </div> <!-- .span4 -->
         <div id="gae-appid-field" class="span8">
-            <input id="gae-appid" type="text" placeholder='{{ _( "Public appids used by default" ) }}' />
+            <input id="gae-appid" type="text" placeholder='{{ _( "Public AppIDs used by default" ) }}' />
             <div id="public-appid-tip" class="hide">
                 <p>
-                    <span color="red">{{ _( "The public appids are disabled to access videos or download files." ) }}</span>
+                    <span color="red">{{ _( "The public AppIDs are disabled to access videos or download files." ) }}</span>
                     <a href="https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">({{ _( "How to apply" ) }})</a>
                 </p>
             </div>
             <div id="gae-appid-tip" class="hide">
                 <p>
-                    <span >{{ _( "Attention: inaccessable before appids are deployed." ) }}</span>
+                    <span >{{ _( "Attention: inaccessable before AppIDs are deployed." ) }}</span>
                 </p>
             </div>
         </div> <!-- .span8 -->
@@ -27,12 +27,12 @@
 
         <div class="row-fluid">
             <div class="span12">
-                {{ _( "Advanced tricks:" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
+                {{ _( "Advanced tricks:" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
             </div> <!-- .span4 -->
         </div> <!-- .row-fluid -->
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('{{ _( "Configure GAEProxy" ) }}');
+    title('{{ _( "GAEProxy Configuration" ) }}');
 </script>
 <script type="text/javascript">
     $('#gae-appid-field').click(function(){
@@ -93,18 +93,18 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('{{ _( "Settings saved successfully" ) }}', 'success');
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
                 } else {
                     if (result['reason'].indexOf("appid fail") > -1){
                         tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy appid before using." ) }}', 'error');
                     }else{
-                        tip('{{ _( "Failed saving settings" ) }}' + ": " + result['reason'], 'error');
+                        tip('{{ _( "Failed saving settings." ) }}' + ": " + result['reason'], 'error');
                     }
                     
                 }
             },
             error: function(){
-                tip('{{ _( "Failed saving settings" ) }}' + ".", 'error');
+                tip('{{ _( "Failed saving settings." ) }}' + ".", 'error');
             }
         });
     }

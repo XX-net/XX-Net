@@ -5,7 +5,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
 "POT-Creation-Date: 2017-12-20 13:32+0800\n"
 "PO-Revision-Date: 2016-02-19 19:30+0800\n"
-"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
+"Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -23,8 +23,8 @@ msgstr "规则"
 msgid "Cache"
 msgstr "缓存"
 
-msgid "System configuration options"
-msgstr "系统配置选项"
+msgid "Smart Router Configuration"
+msgstr "Smart Router 配置"
 
 msgid "Clean Cache"
 msgstr "清空缓存"
@@ -36,22 +36,34 @@ msgid "IP Cache"
 msgstr "IP缓存"
 
 msgid "Clean Cache successfully."
-msgstr "成功清空缓存"
+msgstr "成功清空缓存。"
 
 msgid "Country"
 msgstr "国家"
 
 msgid "China"
-msgstr ""
+msgstr "中国"
 
 msgid "Other"
 msgstr "其他"
+
+msgid "PAC Policy"
+msgstr "PAC 策略"
 
 msgid "Auto-Try Direct"
 msgstr "自动尝试直连"
 
 msgid "Auto-Try GAE"
 msgstr "自动尝试GAE代理"
+
+msgid "Black->GAE"
+msgstr "黑名单->GAE"
+
+msgid "Black->X-Tunnel"
+msgstr "黑名单->X-Tunnel"
+
+msgid "All Smart-Router"
+msgstr "全部->Smart-Router"
 
 msgid "Settings saved successfully."
 msgstr "设置保存成功。"
@@ -75,10 +87,10 @@ msgid "Submit"
 msgstr "提交"
 
 msgid "Smart Router Log"
-msgstr "智能路由日志"
+msgstr "Smart Router 日志"
 
-msgid "Smart Router"
-msgstr "智能路由"
+# msgid "Smart Router"
+# msgstr "智能路由"
 
 msgid "Configuration"
 msgstr "配置"
