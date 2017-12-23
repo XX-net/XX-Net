@@ -53,7 +53,7 @@ msgstr "升级"
 msgid "Proxy Setting"
 msgstr "代理"
 
-msgid "System configuration options"
+msgid "System Configuration"
 msgstr "系统配置"
 
 msgid "Settings saved successfully."

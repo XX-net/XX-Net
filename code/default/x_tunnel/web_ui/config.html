@@ -278,7 +278,7 @@
 
 <!-- Java Script -->
 <script type="text/javascript">
-    title('{{ _( "Configure X-Tunnel" ) }}');
+    title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -771,7 +771,7 @@
         getHistory();
 
         $('#get-history-button').attr('disabled', 'disabled');
-        $('#get-history-button').html('Please wait...');
+        $('#get-history-button').html('{{ _("Please wait...") }}');
     });
 </script>
 <script type="text/javascript">
@@ -789,7 +789,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if( result['res'] != 'success' ){
-                    tip('Get Fail:' + result['reason'], 'warning', false);
+                    tip('{{ _("Get Fail:") }}' + result['reason'], 'warning', false);
                 } else {
                     tipClose();
                 }
