@@ -27,7 +27,7 @@ msgid "Export IP"
 msgstr "导出 IP"
 
 msgid "Check IP"
-msgstr "检查所有IP"
+msgstr "检查IP"
 
 msgid "IPv6 Tunnel"
 msgstr "IPv6 隧道"

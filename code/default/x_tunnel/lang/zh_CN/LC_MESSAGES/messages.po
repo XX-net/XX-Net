@@ -14,8 +14,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
-msgid "Configure X-Tunnel"
-msgstr "配置 X-Tunnel"
+msgid "X-Tunnel Configuration"
+msgstr "X-Tunnel 配置"
 
 msgid "Info"
 msgstr "信息"
@@ -108,9 +108,7 @@ msgid "Action"
 msgstr "操作"
 
 msgid "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel"
-msgstr ""
-"https://github.com/XX-net/XX-"
-"Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
+msgstr "https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
 
 msgid "You haven't enough credit. Please charge first."
 msgstr "您的余额不足，请先充值。"
@@ -146,7 +144,7 @@ msgid "Bandwidth to transfer"
 msgstr "转账流量"
 
 msgid "Login ......"
-msgstr "正在登录，请稍侯......"
+msgstr "正在登录，请稍侯..."
 
 msgid "Please wait..."
 msgstr "请稍侯..."
@@ -199,11 +197,20 @@ msgstr "订购失败："
 msgid "Order successfully complete."
 msgstr "订购成功完成。"
 
-msgid "Heroku Front Log"
-msgstr "Heroku 前端日志"
+msgid "Get Fail:"
+msgstr "获取失败："
 
-msgid "X-Tunnel Log"
-msgstr "X-Tunnel 日志"
+# msgid "Cloudflare"
+# msgstr ""
+
+# msgid "Heroku"
+# msgstr ""
+
+msgid "Front"
+msgstr "前端"
+
+msgid "X-Tunnel"
+msgstr "X-Tunnel"
 
 msgid "Config"
 msgstr "配置"
@@ -213,9 +220,6 @@ msgstr "状态"
 
 msgid "Log"
 msgstr "日志"
-
-msgid "Cloudflare Front Log"
-msgstr "Cloudflare 前端日志"
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低，部分功能无法工作。"
@@ -274,23 +278,14 @@ msgstr "失败数"
 msgid "Worker num"
 msgstr "工作数"
 
-msgid "Cloudflare front"
-msgstr "Cloudflare 前端"
-
-msgid "Heroku front"
-msgstr "Heroku 前端"
-
 msgid "X-Tunnel Status Info"
 msgstr "X-Tunnel 状态信息"
 
-msgid ""
-"The status page is empty. Highly likely that X-Tunnel failed getting "
-"started. Please follow "
+msgid "The status page is empty. Highly likely that X-Tunnel failed getting started. Please follow "
 msgstr "状态页为空，很可能是X-Tunnel启动失败，请按照 "
 
 msgid "guide "
-msgstr "导航"
+msgstr "指导"
 
 msgid "to troubleshoot."
 msgstr "去解决"
-

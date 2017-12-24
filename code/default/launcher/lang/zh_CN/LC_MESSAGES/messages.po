@@ -45,19 +45,22 @@ msgid "About XX-Net"
 msgstr "关于 XX-Net"
 
 msgid "General Settings"
-msgstr "通用设置"
+msgstr "通用"
 
 msgid "System Update"
-msgstr "系统升级"
+msgstr "升级"
 
 msgid "Proxy Setting"
-msgstr "代理设置"
+msgstr "代理"
 
-msgid "System configuration options"
-msgstr "系统配置选项"
+msgid "System Configuration"
+msgstr "系统配置"
 
 msgid "Settings saved successfully."
-msgstr "设置已成功保存"
+msgstr "保存设置成功。"
+
+msgid "Settings save fail:"
+msgstr "保存设置失败："
 
 msgid "Language"
 msgstr "语言"
@@ -78,7 +81,7 @@ msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "显示托盘图标(需要重启XX-Net)"
 
 msgid "Run as Green Software"
-msgstr "以绿色软件运行"
+msgstr "以绿色方式运行"
 
 msgid "Module management"
 msgstr "模块管理"
@@ -117,16 +120,16 @@ msgid "Save"
 msgstr "保存"
 
 msgid "Failed reading the settings."
-msgstr "读取设置失败"
+msgstr "读取设置失败。"
 
 msgid "Wait for checking setting..."
-msgstr "等待设置检查"
+msgstr "等待设置检查..."
 
-msgid "Settings saved successfully"
-msgstr "保存设置成功"
+msgid "Settings saved successfully."
+msgstr "保存设置成功。"
 
-msgid "Failed saving settings"
-msgstr "保存设置失败"
+msgid "Failed saving settings."
+msgstr "保存设置失败。"
 
 msgid "Auto-Upgrade to"
 msgstr "自动升级到"
@@ -158,28 +161,28 @@ msgstr "测试版"
 msgid "Version of the stable one"
 msgstr "稳定版"
 
-msgstr "Keep old versions count"
-msgstr "保留旧版本数"
+msgid "Keep old versions count"
+msgstr "保留的旧版本数"
 
-msgstr "keep all"
+msgid "keep all"
 msgstr "保留全部"
 
 msgid "Update now"
 msgstr "立即更新"
 
 msgid "All versions download page"
-msgstr "全版本下载页"
+msgstr "全部已发布版本"
 
-msgstr "Released version"
+msgid "Released version"
 msgstr "发布版本"
 
-msgstr "Local version"
+msgid "Local version"
 msgstr "本地版本"
 
-msgstr "Change to this version"
+msgid "Change to this version"
 msgstr "切至此版本"
 
-msgstr "Delete"
+msgid "Delete"
 msgstr "删除此版本"
 
 msgid "Advanced"
@@ -251,8 +254,17 @@ msgstr "下载中..."
 msgid "Download completed"
 msgstr "下载完成。"
 
-msgid "Deleted successfully"
+msgid "Deleted successfully."
 msgstr "删除成功。"
+
+msgid "Deleting local version fail."
+msgstr "删除本地版本失败。"
+
+msgid "Getting local versions failed."
+msgstr "获取本地版本失败。"
+
+msgid "Getting released versions failed."
+msgstr "获取发布版本失败。"
 
 msgid "System"
 msgstr "系统"
