@@ -152,7 +152,7 @@ msgstr "转账流量"
 msgid "X-Tunnel Configuration"
 msgstr "X-Tunnel 配置"
 
-msgid "Login ..."
+msgid "Logining ..."
 msgstr "正在登录..."
 
 msgid "Please wait ..."
