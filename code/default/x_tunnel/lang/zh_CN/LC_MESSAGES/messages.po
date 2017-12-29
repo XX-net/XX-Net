@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
-"POT-Creation-Date: 2017-11-19 10:29+0800\n"
-"PO-Revision-Date: 2016-02-19 19:30+0800\n"
+"POT-Creation-Date: 2017-12-24 12:00+0800\n"
+"PO-Revision-Date: 2017-12-29 12:00+0800\n"
 "Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
@@ -14,8 +14,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
-msgid "X-Tunnel Configuration"
-msgstr "X-Tunnel 配置"
+msgid "Cloudflare"
+msgstr ""
+
+msgid "Heroku"
+msgstr ""
+
+msgid "Front"
+msgstr "前端"
 
 msgid "Info"
 msgstr "信息"
@@ -39,13 +45,13 @@ msgid "Password"
 msgstr "密码"
 
 msgid "Haven't an account?"
-msgstr "没有账户?"
+msgstr "没有账户？"
 
 msgid "Register"
 msgstr "注册"
 
 msgid "Already have an account?"
-msgstr "已有账户?"
+msgstr "已有账户？"
 
 msgid "Summary"
 msgstr "概况"
@@ -143,10 +149,13 @@ msgstr "流量转账"
 msgid "Bandwidth to transfer"
 msgstr "转账流量"
 
-msgid "Login ......"
-msgstr "正在登录，请稍侯..."
+msgid "X-Tunnel Configuration"
+msgstr "X-Tunnel 配置"
 
-msgid "Please wait..."
+msgid "Login ..."
+msgstr "正在登录..."
+
+msgid "Please wait ..."
 msgstr "请稍侯..."
 
 msgid "Connect to server fail:"
@@ -168,19 +177,19 @@ msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"
 
 msgid "Unknown error occurred."
-msgstr "发生了未知错误。"
+msgstr "发生未知错误。"
 
 msgid "Failed to log out."
 msgstr "注销失败。"
 
-msgid "Please refresh page"
-msgstr "请刷新页面"
+msgid "Please refresh page."
+msgstr "请刷新页面。"
 
 msgid "Transfer username seems not a valid Email address."
 msgstr "转账用户名似乎不是有效的电子邮件地址。"
 
 msgid "Error occurred: "
-msgstr "发生了错误："
+msgstr "发生错误："
 
 msgid "Max Available Bandwidth: "
 msgstr "最大可用流量："
@@ -200,19 +209,10 @@ msgstr "订购成功完成。"
 msgid "Get Fail:"
 msgstr "获取失败："
 
-# msgid "Cloudflare"
-# msgstr ""
-
-# msgid "Heroku"
-# msgstr ""
-
-msgid "Front"
-msgstr "前端"
-
 msgid "X-Tunnel"
-msgstr "X-Tunnel"
+msgstr ""
 
-msgid "Config"
+msgid "Configuration"
 msgstr "配置"
 
 msgid "Status"
@@ -225,7 +225,7 @@ msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低，部分功能无法工作。"
 
 msgid "The latest Chrome browser is recommended."
-msgstr "建议使用新版的Chrome浏览器"
+msgstr "建议使用新版的Chrome浏览器。"
 
 msgid "Global"
 msgstr "全局"
@@ -248,14 +248,14 @@ msgstr "响应时间"
 msgid "Roundtrip num"
 msgstr "往返数"
 
-# msgid "Slow roundtrip"
-# msgstr "较慢往返"
+msgid "Slow roundtrip"
+msgstr "较慢"
 
 msgid "Resend"
-msgstr "重发"
+msgstr "重传"
 
-# msgid "Timeout roundtrip"
-# msgstr "超时往返"
+msgid "Timeout roundtrip"
+msgstr "超时"
 
 msgid "Speed"
 msgstr "当前速度"
@@ -263,8 +263,8 @@ msgstr "当前速度"
 msgid "Total use"
 msgstr "使用总量"
 
-msgid "GAE front"
-msgstr "GAE 前端"
+msgid "GAE"
+msgstr "GAE"
 
 # msgid "Score"
 # msgstr "分数"
@@ -281,11 +281,15 @@ msgstr "工作数"
 msgid "X-Tunnel Status Info"
 msgstr "X-Tunnel 状态信息"
 
-msgid "The status page is empty. Highly likely that X-Tunnel failed getting started. Please follow "
-msgstr "状态页为空，很可能是X-Tunnel启动失败，请按照 "
+msgid "The status page is empty. Highly likely that "
+msgstr "状态页显示空白, 很可能 "
 
-msgid "guide "
+msgid " failed getting started. Please follow "
+msgstr " 启动失败, 请按 "
+
+msgid "guide"
 msgstr "指导"
 
-msgid "to troubleshoot."
-msgstr "去解决"
+msgid " to troubleshoot."
+msgstr "去解决。"
+

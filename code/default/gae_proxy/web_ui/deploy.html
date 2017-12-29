@@ -118,13 +118,13 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }} <br>{{ _("Please go to ") }}<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed.") }} <br>{{ _("Please go to ") }}<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
 
                         updateLog(result['log']);
                         changeButtonStatus('start');
                     } else {
                         window.timer.stop();
-                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result['status']);
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result['status']);
                         updateLog(result['log']);
                     }
                 } else { // window.status == 'init' || window.status == 'finished' || undefined
@@ -140,12 +140,12 @@
                     } else if ( result['status'] == 'finished' ) {
                         window.timer.stop();
                         window.status = 'finished';
-                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed. ") }}');
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed.") }}');
 
                         updateLog(result['log']);
                     } else {
                         window.timer.stop();
-                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result['status']);
+                        $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result['status']);
                         updateLog(result['log']);
                     }
                 }
@@ -210,7 +210,7 @@
                 $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment cancelled.") }}');
             },
             error: function(result){
-                $('.alert').html('{{ _("Current status: ") }} {{ _("An exception occurred. ") }}<br>{{ _("The exception info: ") }}' + result);
+                $('.alert').html('{{ _("Current status: ") }} {{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result);
             }
         });
     }

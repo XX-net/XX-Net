@@ -68,7 +68,7 @@
                 $('#use-ipv6').val(result['use_ipv6']);
             },
             error: function(){
-                tip('{{ _("Failed reading the settings") }}', 'error');
+                tip('{{ _("Failed reading the settings.") }}', 'error');
             }
         });
     });
@@ -92,7 +92,7 @@
         var scanIpThreadNum = $('#scan-ip-thread-num').val();
         if (scanIpThreadNum > window.MAX_SCAN_THREAD)
         {
-            tip('{{ _("Scan IP thread is larger than the max number") }}', 'error');
+            tip('{{ _("Scan IP thread is larger than the max number.") }}', 'error');
             return;
         }
 
@@ -110,9 +110,9 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('{{ _("Settings saved successfully") }}', 'success');
+                    tip('{{ _("Settings saved successfully.") }}', 'success');
                 } else {
-                    tip('{{ _("Unkown error occurred") }}', 'error');
+                    tip('{{ _("Unkown error occurred.") }}', 'error');
                 }
             }
         });
