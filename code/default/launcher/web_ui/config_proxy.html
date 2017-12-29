@@ -128,7 +128,7 @@
             'passwd': $('#proxy-password').val()
         };
 
-        tip('{{ _( "Wait for checking setting..." ) }}', 'info');
+        tip('{{ _( "Checking settings ..." ) }}', 'info');
 
         $.ajax({
             type: 'GET',
@@ -137,13 +137,13 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('{{ _( "Settings saved successfully" ) }}', 'success');
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
                 } else {
-                    tip('{{ _( "Failed saving settings" ) }}' + ":  " + result['reason'], 'error');
+                    tip('{{ _( "Failed saving settings." ) }}' + ":  " + result['reason'], 'error');
                 }
             },
             error: function(){
-                tip('{{ _( "Failed saving settings" ) }}' + ".", 'error');
+                tip('{{ _( "Failed saving settings." ) }}' + ".", 'error');
             }
         });
     }

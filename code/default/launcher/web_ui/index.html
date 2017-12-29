@@ -132,9 +132,9 @@
                 dataType: 'JSON',
                 success: function(result) {
                     if ( result['status'] == 'success' ) {
-                        tip('{{ _( "Exited successfully" ) }}', 'success');
+                        tip('{{ _( "Exited successfully." ) }}', 'success');
                     } else {
-                        tip('{{ _( "Exitting failed" ) }}', 'error');
+                        tip('{{ _( "Exitting failed." ) }}', 'error');
                     }
                 },
                 error: function() {
@@ -421,7 +421,7 @@
                             window.loading.setProgress(progress);
                             window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '&#37;');
                         }else if (data.status === "finished"){
-                            window.updating_button.html( '{{ _( "Download completed" ) }}');
+                            window.updating_button.html( '{{ _( "Download completed." ) }}');
                             window.updating_button.prop('disabled', true);
                             window.updating_button = null;
                             window.setTimeout(clearProgressBar, 5000);

@@ -74,7 +74,7 @@
         var gaeAppId          = $('#gae-appid').val(),
             hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct';
 
-        tip('{{ _( "Wait for checking setting..." ) }}', 'info');
+        tip('{{ _( "Checking settings ..." ) }}', 'info');
 
         return setConfig(gaeAppId, hostAppEngine);
     }
