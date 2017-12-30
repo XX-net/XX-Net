@@ -95,8 +95,11 @@ msgstr "模块管理"
 msgid "Enable"
 msgstr "启用"
 
-msgid "LAN proxy(Generally not needed)"
-msgstr "局域网代理（一般无需设置）"
+msgid "LAN proxy"
+msgstr "局域网代理（前置代理）"
+
+msgid "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this."
+msgstr "一般无需设置，只有那些需要通过内部代理访问外网的用户才需要设置。"
 
 msgid "Proxy type"
 msgstr "代理类型"
@@ -105,7 +108,7 @@ msgid "Proxy IP address or domain name"
 msgstr "代理服务器"
 
 msgid "Port"
-msgstr "端口"
+msgstr "代理端口"
 
 msgid "User name"
 msgstr "用户名"
@@ -183,7 +186,7 @@ msgid "Local version"
 msgstr "本地版本"
 
 msgid "Released"
-msgstr "已发布"
+msgstr "已发布的"
 
 msgid "Upgrade to"
 msgstr "升级到"
@@ -192,7 +195,7 @@ msgid "no hash check"
 msgstr "不校验"
 
 msgid "Local"
-msgstr "本地"
+msgstr "本地的"
 
 msgid "Change to this version"
 msgstr "切至此版本"
@@ -219,7 +222,7 @@ msgid "Exit the program"
 msgstr "退出程序"
 
 msgid "Remind me later"
-msgstr "下次再提醒我"
+msgstr "以后再提醒我"
 
 msgid "Do not remind me this version"
 msgstr "忽略此版本"
