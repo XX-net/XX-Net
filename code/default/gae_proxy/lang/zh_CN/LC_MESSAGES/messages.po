@@ -27,7 +27,7 @@ msgid "Export IP"
 msgstr "导出 IP"
 
 msgid "Check IP"
-msgstr "检查IP"
+msgstr "检查 IP"
 
 msgid "IPv6 Tunnel"
 msgstr "IPv6 隧道"
@@ -186,7 +186,7 @@ msgid "IP|IP|IP (GoGo Tester/GoAgent format)"
 msgstr "IP|IP|IP (GoGo Tester/GoAgent 格式)"
 
 msgid "New line delimiter"
-msgstr "新行分隔符"
+msgstr "以换行分隔"
 
 msgid "IP address list"
 msgstr "IP地址列表"
@@ -278,8 +278,8 @@ msgstr "IPv4 IP数"
 msgid "IPv6 Number"
 msgstr "IPv6 IP数"
 
-msgid "Is Idle"
-msgstr "空闲"
+msgid "System Status"
+msgstr "系统状态"
 
 msgid "IP Quality"
 msgstr "IP延迟"
@@ -311,8 +311,8 @@ msgstr "XX-Net版本"
 msgid "System Proxy Status"
 msgstr "系统代理状态"
 
-msgid "Listening Proxy"
-msgstr "监听代理"
+msgid "Listening At"
+msgstr "代理监听"
 
 # msgid "PAC URL"
 # msgstr "PAC自动代理地址"
@@ -323,13 +323,13 @@ msgstr "使用IPv6"
 msgid "LAN proxy"
 msgstr "局域网代理"
 
-msgid "Working AppIDs"
+msgid "working AppIDs"
 msgstr "工作AppID"
 
-msgid "Out-of-quota AppIDs"
+msgid "out-of-quota AppIDs"
 msgstr "超额AppID"
 
-msgid "Nonexistent AppIDs"
+msgid "not-exist AppIDs"
 msgstr "不存在的AppID"
 
 msgid "System Version"
@@ -338,11 +338,14 @@ msgstr "系统版本"
 msgid "Diagnostic Info"
 msgstr "诊断信息"
 
-msgid "Check Github issues"
-msgstr "查看GitHub上的问题讨论区"
+msgid "Check"
+msgstr "查看"
 
-msgid " or "
-msgstr " 或 "
+msgid "GitHub issues"
+msgstr "GitHub问题讨论区"
+
+msgid "or"
+msgstr "或"
 
 msgid "Google Group Discussions"
 msgstr "Google Group 讨论组"
@@ -417,7 +420,7 @@ msgid "Please import certificates to your browser."
 msgstr "请导入浏览器CA证书。"
 
 msgid ""
-"You are using public AppID. You are recommended to <a "
+"You are using public AppIDs. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" "
 "target=\"_blank\">deploy your own AppID</a>."
 msgstr "您正在使用公共AppID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署私有AppID</a>。"
@@ -425,7 +428,7 @@ msgstr "您正在使用公共AppID，因为资源有限，使用上存在限制�
 msgid ", Everything is OK. Welcome to the FREE Internet."
 msgstr "，一切正常，你可以访问真正的互联网了。"
 
-msgid "You are using the public AppID."
+msgid "You are using public AppIDs."
 msgstr "你正使用公共AppID。"
 
 msgid "new:"

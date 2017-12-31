@@ -47,8 +47,8 @@ msgstr "关于 XX-Net"
 msgid "General Settings"
 msgstr "通用"
 
-msgid "System Update"
-msgstr "升级"
+msgid "System Version"
+msgstr "版本"
 
 msgid "Proxy Setting"
 msgstr "代理"
@@ -78,7 +78,7 @@ msgid "Popup Status Page on Startup"
 msgstr "启动时弹出状态页"
 
 msgid "Allow Remote"
-msgstr "允许远程连接"
+msgstr "允许远程访问控制页"
 
 msgid "Help"
 msgstr "帮助"
@@ -189,10 +189,10 @@ msgid "Local version"
 msgstr "本地版本"
 
 msgid "Released"
-msgstr "已发布的"
+msgstr "发布的"
 
-msgid "Upgrade to"
-msgstr "升级到"
+msgid "Download & Change to"
+msgstr "下载并切至"
 
 msgid "no hash check"
 msgstr "不校验"
@@ -216,7 +216,7 @@ msgid "Deleting local version fail."
 msgstr "删除本地版本失败。"
 
 msgid "(Remote Web Control Enabled)"
-msgstr "(已允许远程连接)"
+msgstr "(已允许远程访问)"
 
 msgid "Adaptive width"
 msgstr "自适应宽度"
