@@ -372,6 +372,8 @@
                 window.refresh_timer.play();
 
                 $('.nav-tabs > li').removeClass('hide');
+
+                $('#register-form').addClass('hide');
                 $('#login-form').addClass('hide');
                 $('#account-information').removeClass('hide');
 
@@ -529,6 +531,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
+                    // register success, hide '#register-form' and login.
+                    // $('#register-form').addClass('hide');
+                    tip('{{ _("Registered successfully, ") }}{{ _("Logining ...") }}', 'info', false);
+
                     return doLoginAction(username, password);
                 } else {
                     if ( result['reason'] == 'user exist' ) {

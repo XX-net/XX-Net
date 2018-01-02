@@ -173,6 +173,9 @@ msgstr "连接到服务器失败，请检查前端日志。"
 msgid "Incorrect Email or password."
 msgstr "用户名或密码不正确。"
 
+msgid "Registered successfully, "
+msgstr "注册成功，"
+
 msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"
 
