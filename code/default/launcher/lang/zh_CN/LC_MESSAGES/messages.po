@@ -80,6 +80,9 @@ msgstr "启动时弹出状态页"
 msgid "Allow Remote"
 msgstr "允许远程访问控制页"
 
+msgid "Restarting all remote, wait to refresh."
+msgstr "正在重启所有远程程序，请等待刷新。"
+
 msgid "Help"
 msgstr "帮助"
 
