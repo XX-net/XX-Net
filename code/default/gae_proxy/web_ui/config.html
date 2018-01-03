@@ -1,9 +1,9 @@
 <form id="gae_proxy-config" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span2">
             <label for="gae-appid">GAE AppID </label>
-        </div> <!-- .span4 -->
-        <div id="gae-appid-field" class="span8">
+        </div> <!-- .span2 -->
+        <div id="gae-appid-field" class="span10">
             <input id="gae-appid" type="text" placeholder='{{ _( "Public AppIDs used by default" ) }}' />
             <div id="public-appid-tip" class="hide">
                 <p>
@@ -16,7 +16,7 @@
                     <span >{{ _( "Attention: inaccessable before AppIDs are deployed." ) }}</span>
                 </p>
             </div>
-        </div> <!-- .span8 -->
+        </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span12">
@@ -74,7 +74,7 @@
         var gaeAppId          = $('#gae-appid').val(),
             hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct';
 
-        tip('{{ _( "Wait for checking setting..." ) }}', 'info');
+        tip('{{ _( "Checking settings ..." ) }}', 'info');
 
         return setConfig(gaeAppId, hostAppEngine);
     }

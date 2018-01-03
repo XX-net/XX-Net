@@ -56,7 +56,7 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "GAE front" ) }}</h4>
+    <h4>{{ _( "GAE" ) }} {{ _( "Front" ) }}</h4>
     <table id="gae_front" class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -88,7 +88,7 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "Cloudflare front" ) }}</h4>
+    <h4>{{ _( "Cloudflare" ) }} {{ _( "Front" ) }}</h4>
     <table id="cloudflare_front" class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -176,7 +176,7 @@
                 }
 
                 if ( formValue == '' ) {
-                    tip('{{ _("The status page is empty. Highly likely that X-Tunnel failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("X-Tunnel")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
         });

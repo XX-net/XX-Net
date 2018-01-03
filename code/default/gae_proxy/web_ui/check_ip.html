@@ -67,7 +67,7 @@
                 }
             },
             error: function(result) {
-                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+                tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
             }
         });
     }
@@ -104,7 +104,7 @@
                     }
                 },
                 error: function(result) {
-                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+                    tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
                 }
             });
         }else{
@@ -118,7 +118,7 @@
                     }
                 },
                 error: function(result) {
-                    tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+                    tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
                 }
             });
         }

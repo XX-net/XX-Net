@@ -278,7 +278,7 @@
 
 <!-- Java Script -->
 <script type="text/javascript">
-    title('{{ _( "Configure X-Tunnel" ) }}');
+    title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -302,8 +302,8 @@
           // console.log("Normal navigation");
         }
 
-        tip('{{ _("Login ......") }}', 'info', false);
-        $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
+        tip('{{ _("Logining ...") }}', 'info', false);
+        $('button[type=submit]', '#login-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#login-form').attr('disabled', 'disabled');
         getUserInfo(force_update);
     });
@@ -353,7 +353,7 @@
                 }
 
                 if( result['res'] == 'login_process' ){
-                    tip('{{ _("Login ......") }}', 'info', false);
+                    tip('{{ _("Logining ...") }}', 'info', false);
                     return;
                 }
 
@@ -456,8 +456,8 @@
             return;
         }
 
-        tip('{{ _("Login ......") }}', 'info', false);
-        $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
+        tip('{{ _("Logining ...") }}', 'info', false);
+        $('button[type=submit]', '#login-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#login-form').attr('disabled', 'disabled');
         return doLoginAction(username, password);
     }
@@ -509,7 +509,7 @@
             return;
         }
 
-        $('button[type=submit]', '#register-form').html('{{ _("Please wait...") }}');
+        $('button[type=submit]', '#register-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#register-form').attr('disabled', 'disabled');
         return doRegisterAction(username, password);
     }
@@ -574,7 +574,7 @@
 <script type="text/javascript">
     $('.btn-primary', '#charge-modal').click(function() {
         $(this).attr('disabled', 'disabled');
-        $(this).html('{{ _("Please refresh page") }}');
+        $(this).html('{{ _("Please refresh page.") }}');
 
         $('#charge-modal').submit();
     });
@@ -597,7 +597,7 @@
         }
 
         $('.btn-primary', '#transfer-credit-modal').attr('disabled', 'disabled');
-        $('.btn-primary', '#transfer-credit-modal').html('{{ _("Please wait...") }}');
+        $('.btn-primary', '#transfer-credit-modal').html('{{ _("Please wait ...") }}');
         return doTransferCreditAction(transferAccount, transferAmount);
     });
 </script>
@@ -652,7 +652,7 @@
         }
 
         $('.btn-primary', '#transfer-bandwidth-modal').attr('disabled', 'disabled');
-        $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Please wait...") }}');
+        $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Please wait ...") }}');
         return doTransferBandwidthAction(transferAccount, transferAmount, expireTime);
     });
 </script>
@@ -771,7 +771,7 @@
         getHistory();
 
         $('#get-history-button').attr('disabled', 'disabled');
-        $('#get-history-button').html('Please wait...');
+        $('#get-history-button').html('{{ _("Please wait ...") }}');
     });
 </script>
 <script type="text/javascript">
@@ -789,7 +789,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if( result['res'] != 'success' ){
-                    tip('Get Fail:' + result['reason'], 'warning', false);
+                    tip('{{ _("Get Fail:") }}' + result['reason'], 'warning', false);
                 } else {
                     tipClose();
                 }
