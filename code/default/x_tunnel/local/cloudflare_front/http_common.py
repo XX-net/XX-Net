@@ -164,14 +164,14 @@ class HTTP_worker(object):
         if self.version == "1.1":
             rtt += 100
         else:
-            rtt += len(self.streams) * 100
+            rtt += len(self.streams) * 1
 
         if inactive_time > 5:
             score = rtt
         elif inactive_time < 0.01:
-            score = rtt + 50000
+            score = rtt + 500
         else:
             # inactive_time < 2
-            score = rtt + (5/inactive_time)*1000
+            score = rtt + (5/inactive_time)*100
 
         return score

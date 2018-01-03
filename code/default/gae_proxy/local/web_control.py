@@ -38,6 +38,7 @@ import test_appid
 from http_dispatcher import http_dispatch
 import openssl_wrap
 import ipv6_tunnel
+import sni_generater
 
 
 os.environ['HTTPS_PROXY'] = ''
@@ -67,6 +68,7 @@ class User_special(object):
         self.use_ipv6 = "auto"
 
         self.LISTEN_IP = "127.0.0.1"
+        self.fake_host = sni_generater.get()
 
 
 class User_config(object):
@@ -132,9 +134,15 @@ class User_config(object):
             self.user_special.proxy_passwd = self.USER_CONFIG.get('proxy', 'passwd')
 
             try:
-                self.LISTEN_IP = self.USER_CONFIG.get('listen', 'ip')
+                self.user_special.LISTEN_IP = self.USER_CONFIG.get('listen', 'ip')
             except:
                 pass
+
+            try:
+                self.user_special.fake_host = self.USER_CONFIG.get('system', 'fake_host')
+            except:
+                self.user_special.fake_host = sni_generater.get()
+                self.save()
 
         except Exception as e:
             xlog.warn("User_config.load except:%s", e)
@@ -173,17 +181,24 @@ class User_config(object):
             if self.user_special.use_ipv6 != self.DEFAULT_CONFIG.get('google_ip', 'use_ipv6'):
                 f.write("use_ipv6 = %s\n\n" % self.user_special.use_ipv6)
 
-            if self.LISTEN_IP != "127.0.0.1":
+            if self.user_special.LISTEN_IP != "127.0.0.1":
                 f.write("\n\n[listen]\n")
-                f.write("ip = %s\n\n" % self.LISTEN_IP)
+                f.write("ip = %s\n\n" % self.user_special.LISTEN_IP)
+
+            f.write("\n\n[system]\n")
+            f.write("fake_host = %s\n\n" % self.user_special.fake_host)
 
             f.close()
             xlog.info("save config to %s", CONFIG_USER_FILENAME)
         except Exception as e:
-            xlog.warn("launcher.config save user config fail:%s %r", CONFIG_USER_FILENAME, e)
+            xlog.exception("launcher.config save user config fail:%s %r", CONFIG_USER_FILENAME, e)
 
 
 user_config = User_config()
+
+
+def get_fake_host():
+    return user_config.user_special.fake_host
 
 
 def get_openssl_version():
@@ -452,6 +467,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                    "low_prior_connecting_num": connect_control.low_prior_connecting_num,
                    "high_prior_lock": len(connect_control.high_prior_lock),
                    "low_prior_lock": len(connect_control.low_prior_lock),
+
+                    "fake_host": get_fake_host()
                    }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response_nc('text/html', data)

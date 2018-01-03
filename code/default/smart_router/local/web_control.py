@@ -145,8 +145,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             cmd = "get"
 
         if cmd == "get":
-            g.domain_cache.save()
-            g.ip_cache.save()
+            g.domain_cache.save(True)
+            g.ip_cache.save(True)
             data = {
                 "domain_cache_list": g.domain_cache.get_content(),
                 "ip_cache_list": g.ip_cache.get_content(),

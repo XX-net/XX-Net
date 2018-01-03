@@ -617,12 +617,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def req_debug_handler(self):
         try:
-            # import pympler
             from mem_top import mem_top
             dat = mem_top(limit=50, width=150, sep='\n')
             self.send_response("text/plain", dat)
         except:
-            self.send_response("text/html", "no pympler")
+            self.send_response("text/html", "no mem_top")
 
 
 server = None

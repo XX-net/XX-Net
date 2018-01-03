@@ -227,6 +227,12 @@
             key       = 'allow_remote_switch',
             value     = isChecked ? 1 : 0;
 
+        tip('{{ _( "Restarting all remote, wait to refresh." ) }}', 'info');
+
+        setTimeout(function () {
+            location.reload();
+        }, 8 * 1000);
+
         return setConfig(key, value);
     });
 

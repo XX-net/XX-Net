@@ -260,6 +260,9 @@
     }
 </script>
 <script type="text/javascript">
+
+    window.fake_host = "";
+
     documentReadyToRun.push(function(){
         var timer = $.timer(function() {
             if ( $("#details").is(":visible")){
@@ -269,7 +272,7 @@
         });
 
         timer.set({
-            time: 3000,
+            time: 1000,
             autostart: true
         });
 
@@ -282,6 +285,7 @@
         OneKeyReport();
         $('#report-issue-modal').modal();
     });
+
 </script>
 <script type="text/javascript">
     function updateProperty(selector, content, attrclass) {
@@ -336,8 +340,14 @@
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
                     'td#ip-quality': result['ip_quality'],
                     'td#block-stat': result['block_stat']
-
                 }
+
+                if (window.fake_host == "") {
+                    window.fake_host = result["fake_host"];
+                    test_http_proxy_setting()
+                    test_https_proxy_setting()
+                }
+
                 for (var item in updates) {
                     updateProperty(item, updates[item]);
                 }
@@ -480,12 +490,16 @@
             return "OK";
         }
 
+        if (window.fake_host == ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'http://www.twitter.com/xxnet',
+            url: 'http://' + window.fake_host + '/xxnet',
             success: function(result) {
                 if ( result == "OK" ){
                     window.http_proxy_setting = "OK";
@@ -509,12 +523,16 @@
             return "OK";
         }
 
+        if (window.fake_host == ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'https://www.twitter.com/xxnet',
+            url: 'https://' + window.fake_host + '/xxnet',
             success: function(result) {
                 if ( result == "OK" ){
                     window.https_proxy_setting = "OK";

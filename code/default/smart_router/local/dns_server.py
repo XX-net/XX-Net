@@ -9,6 +9,8 @@ import socket
 import time
 import re
 import select
+import collections
+import random
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -19,6 +21,7 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
+import simple_queue
 import utils
 from dnslib import DNSRecord, DNSHeader, A, AAAA, RR, DNSQuestion, QTYPE
 
@@ -46,23 +49,10 @@ def remote_query_dns(domain, type):
         return []
 
 
-class DnsServer(object):
-    def __init__(self, bind_ip="127.0.0.1", port=53, ttl=24*3600):
-        self.bind_ip = bind_ip
-        self.port = port
-        self.ttl = ttl
-        self.th = None
-        self.local_dns = self.get_dns_server()
-
-        self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            self.serverSock.bind((bind_ip, self.port))
-            xlog.info("start DNS server at %s:%d", self.bind_ip, self.port)
-            self.running = True
-            self.sockets = [self.serverSock]
-        except Exception as e:
-            self.running = False
-            xlog.warn("bind DNS %s:%d fail", bind_ip, port)
+class DnsServerList(object):
+    def __init__(self):
+        self.server_list = self.get_dns_server()
+        self.i = 0
 
     def get_dns_server(self):
         iplist = []
@@ -78,6 +68,8 @@ class DnsServer(object):
             with open('/etc/resolv.conf', 'rb') as fp:
                 iplist = re.findall(r'(?m)^nameserver\s+(\S+)', fp.read())
 
+        self.local_server_list = list(iplist)
+
         if g.config.country_code == "CN":
             iplist += ['114.114.114.114', "180.76.76.76", "198.15.67.245", "202.46.32.19", "64.214.116.84"]
         else:
@@ -92,6 +84,172 @@ class DnsServer(object):
 
         return out_list
 
+    def get(self):
+        return self.server_list[self.i]
+
+    def next_server(self):
+        self.i += 1
+        if self.i >= len(self.server_list):
+            self.i = self.i % len(self.server_list)
+
+        xlog.debug("next dns server:%s", self.get())
+
+    def get_local_server(self):
+        return random.choice(self.local_server_list)
+
+
+class DnsClient(object):
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        self.waiters = {}
+
+        self.dns_server = DnsServerList()
+
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(1)
+
+        self.running = True
+        self.th = threading.Thread(target=self.recv_worker)
+        self.th.start()
+
+    def stop(self):
+        self.running = False
+
+    def recv_worker(self):
+        while self.running:
+            try:
+                response, server = self.sock.recvfrom(8192)
+            except Exception as e:
+                # xlog.exception("sock.recvfrom except:%r", e)
+                continue
+
+            if not response:
+                continue
+
+            try:
+                p = DNSRecord.parse(response)
+            except Exception as e:
+                xlog.exception("parse response fail:%r", e)
+                continue
+
+            if len(p.questions) == 0:
+                xlog.warn("received response without question")
+                continue
+
+            id = p.header.id
+
+            if id not in self.waiters:
+                continue
+
+            que = self.waiters[id]
+            org_domain = que.domain
+            domain = str(p.questions[0].qname)
+            xlog.debug("recev %s from:%s domain:%s org:%s", len(p.rr), server, domain, org_domain)
+            ips = []
+            for r in p.rr:
+                ip = str(r.rdata)
+                if r.rtype == 5:
+                    # CNAME
+                    xlog.debug("local dns %s recv %s cname:%s from:%s", org_domain, domain, ip, server)
+                    d = DNSRecord(DNSHeader(id))
+                    d.add_question(DNSQuestion(ip, QTYPE.A))
+                    req_pack = d.pack()
+
+                    server = self.dns_server.get()
+                    self.sock.sendto(req_pack, (server, 53))
+
+                    d = DNSRecord()
+                    d.add_question(DNSQuestion(ip, QTYPE.AAAA))
+                    req_pack = d.pack()
+
+                    server = self.dns_server.get()
+                    self.sock.sendto(req_pack, (server, 53))
+                    continue
+
+                if "." in ip and g.ip_region.check_ip(ip):
+                    cn = g.ip_region.cn
+                else:
+                    cn = "XX"
+                ips.append(ip+"|"+cn)
+
+            if len(ips):
+                g.domain_cache.set_ips(org_domain, ips)
+            que.notify_all()
+
+        xlog.info("DNS Client recv worker exit.")
+        self.sock.close()
+
+    def send_request(self, id, domain):
+        try:
+            d = DNSRecord(DNSHeader(id))
+            d.add_question(DNSQuestion(domain, QTYPE.A))
+            req4_pack = d.pack()
+
+            d = DNSRecord()
+            d.add_question(DNSQuestion(domain, QTYPE.AAAA))
+            req6_pack = d.pack()
+
+            if "." in domain:
+                server = self.dns_server.get()
+            else:
+                server = self.dns_server.get_local_server()
+
+            self.sock.sendto(req4_pack, (server, 53))
+            # xlog.debug("send req:%s to:%s", domain, server)
+
+            self.sock.sendto(req6_pack, (server, 53))
+            # xlog.debug("send req:%s to:%s", domain, server)
+        except Exception as e:
+            xlog.warn("request dns except:%r", e)
+
+    def query(self, domain, timeout=3):
+        end_time = time.time() + timeout
+        id = random.randint(0, 65535)
+        que = simple_queue.Queue()
+        que.domain = domain
+
+        ips = []
+        while time.time() < end_time:
+            self.send_request(id, domain)
+
+            self.waiters[id] = que
+            que.wait(time.time() + 0.5)
+            ips = g.domain_cache.get_ips(domain)
+            if len(ips):
+                break
+            if "." in domain:
+                self.dns_server.next_server()
+            else:
+                break
+
+        if id in self.waiters:
+            del self.waiters[id]
+
+        return ips
+
+
+class DnsServer(object):
+    def __init__(self, bind_ip="127.0.0.1", port=53, ttl=24*3600):
+        self.bind_ip = bind_ip
+        self.port = port
+        self.ttl = ttl
+        self.th = None
+
+        self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            self.serverSock.bind((bind_ip, self.port))
+            xlog.info("start DNS server at %s:%d", self.bind_ip, self.port)
+            self.running = True
+            self.sockets = [self.serverSock]
+        except Exception as e:
+            self.running = False
+            xlog.warn("bind DNS %s:%d fail", bind_ip, port)
+            xlog.warn("You can try: install libcap2-bin")
+            xlog.warn("Then: sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python2.7")
+            xlog.warn("Or run XX-Net as root")
+
     def in_country(self, ips):
         for ip_cn in ips:
             ipcn_p = ip_cn.split("|")
@@ -101,103 +259,27 @@ class DnsServer(object):
                 return True
         return False
 
-    def query_local_dns(self, domain, timeout=5):
-        start_time = time.time()
-
-        ips = {}
-        ipv4_num = 0
-        ipv6_num = 0
-        return_num = 0
-        sock_timeout = 0.1
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        except Exception as e:
-            xlog.error("query_local_dns e:%r", e)
-            return []
-
-        d4 = DNSRecord()
-        d4.add_question(DNSQuestion(domain, QTYPE.A))
-        req4_pack = d4.pack()
-
-        d6 = DNSRecord()
-        d6.add_question(DNSQuestion(domain, QTYPE.AAAA))
-        req6_pack = d6.pack()
-
-        try:
-            for i in range(0, timeout):
-                sock_timeout *= 2
-                sock.settimeout(sock_timeout)
-
-                server = self.local_dns[i % len(self.local_dns)]
-                sock.sendto(req4_pack, (server, 53))
-                sock.sendto(req6_pack, (server, 53))
-                # xlog.debug("send req:%s to:%s", domain, server)
-
-                try:
-                    response, server_c = sock.recvfrom(8192)
-                except Exception as e:
-                    if time.time() - start_time > timeout:
-                        break
-                    else:
-                        continue
-
-                p = DNSRecord.parse(response)
-                # xlog.debug("recev %s from:%s", len(p.rr), server)
-
-                for r in p.rr:
-                    ip = str(r.rdata)
-                    if r.rtype == 5:
-                        # CNAME
-                        d = DNSRecord()
-                        d.add_question(DNSQuestion(ip, QTYPE.A))
-                        req_pack = d.pack()
-                        sock.sendto(req_pack, (server, 53))
-
-                        d = DNSRecord()
-                        d.add_question(DNSQuestion(ip, QTYPE.AAAA))
-                        req_pack = d.pack()
-                        sock.sendto(req_pack, (server, 53))
-                        continue
-
-                    if "." in ip:
-                        try:
-                            socket.inet_aton(ip)
-                            # legal
-                        except socket.error:
-                            # Not legal
-                            xlog.warn("query:%s rr:%s", domain, r)
-                            continue
-
-                        ipv4_num += 1
-                    elif ":" in ip:
-                        ipv6_num += 1
-                    ips[ip] = 1
-                return_num += 1
-
-                if len(ips) > 10 or return_num > 3:
-                    break
-        except Exception as e:
-            xlog.exception("request dns except:%r", e)
-        finally:
-            sock.close()
-
-        ip_list = []
-        for ip in ips:
-            ip_list.append(ip + "|XX")
-
-        return ip_list
-
     def query(self, domain, type=None):
         if utils.check_ip_valid(domain):
             return [domain]
 
         ips = g.domain_cache.get_ordered_ips(domain, type)
+        if not ips and \
+                ((g.config.auto_direct and not g.gfwlist.check(domain)) or
+                         g.user_rules.check_host(domain, 0) == "direct"):
+            ips = g.dns_client.query(domain, timeout=0.5)
+
         if not ips:
             if "." in domain:
                 ips = remote_query_dns(domain, type)
-            if not ips or self.in_country(ips):
-                ips = self.query_local_dns(domain)
-            g.domain_cache.set_ips(domain, ips, type)
+                g.domain_cache.set_ips(domain, ips, type)
+
+                if not ips or self.in_country(ips):
+                    if g.config.auto_direct or g.user_rules.check_host(domain, 0) == "direct":
+                         ips = g.dns_client.query(domain)
+            else:
+                ips = ["127.0.0.1|XX"]
+                g.domain_cache.set_ips(domain, ips, type)
 
         return ips
 
@@ -210,14 +292,20 @@ class DnsServer(object):
                 return
 
             domain = str(request.questions[0].qname)
+            if domain.endswith("."):
+                domain = domain[:-1]
 
             type = request.questions[0].qtype
             if type not in [1, 28]:
                 xlog.warn("query:%s type:%d", domain, type)
 
-            # xlog.debug("DNS query:%s type:%d from %s", domain, type, addr)
+            xlog.debug("DNS query:%s type:%d from %s", domain, type, addr)
 
             ips = self.query(domain, type)
+            if not ips:
+                xlog.debug("query:%s type:%d from:%s, get fail, cost:%d", domain, type, addr,
+                           (time.time() - start_time) * 1000)
+                return
 
             reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1, auth=1), q=request.q)
             for ip_cn in ips:

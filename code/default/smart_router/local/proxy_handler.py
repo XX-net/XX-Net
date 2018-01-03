@@ -324,11 +324,11 @@ class ProxyServer():
             handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
             return handler.handle()
 
-        req_d = self.conn.recv(len(req_line))
-        req_d = req_d.replace(url, path)
+        #req_d = self.conn.recv(len(req_line))
+        #req_d = req_d.replace(url, path)
 
         sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
         sock.replace_pattern = [url[:url_prex_len], ""]
 
         xlog.debug("http %r connect to %s:%d %s %s", self.client_address, host, port, method, path)
-        handle_domain_proxy(sock, host, port, self.client_address, req_d)
+        handle_domain_proxy(sock, host, port, self.client_address)

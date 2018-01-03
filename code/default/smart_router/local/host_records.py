@@ -160,7 +160,7 @@ class DomainRecords(object):
         self.last_save_time = time.time()
         self.need_save = False
 
-    def get_ips(self, domain, type):
+    def get_ips(self, domain, type=None):
         record = self.get(domain)
         if not record:
             return []
@@ -180,7 +180,7 @@ class DomainRecords(object):
 
         return ips
 
-    def get_ordered_ips(self, domain, type):
+    def get_ordered_ips(self, domain, type=None):
         record = self.get(domain)
         if not record:
             return []
@@ -201,11 +201,16 @@ class DomainRecords(object):
             return []
 
         ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
-        ordered_ips = [ip for ip, rate in ip_time]
+
+        ordered_ips = []
+        for ip, rate in ip_time:
+            cn = record["ip"][ip]
+            s = "%s|%s" % (ip, cn)
+            ordered_ips.append(s)
 
         return ordered_ips
 
-    def set_ips(self, domain, ips, type, rule="direct"):
+    def set_ips(self, domain, ips, type=None, rule="direct"):
         record = self.get(domain)
         if not record:
             record = {"r": rule, "ip":{}, "g": 1}

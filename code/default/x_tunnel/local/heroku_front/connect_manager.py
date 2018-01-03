@@ -22,7 +22,7 @@ import connect_control
 from config import config
 import check_ip
 
-import utils
+import check_local_network
 from xlog import getLogger
 xlog = getLogger("heroku_front")
 
@@ -248,7 +248,7 @@ class Https_connection_manager(object):
                 ip_str = ip_manager.get_gws_ip()
                 if not ip_str:
                     xlog.warning("no enough ip")
-                    time.sleep(60)
+                    time.sleep(10)
                     break
 
                 ssl_sock = self._create_ssl_connection( (ip_str, 443) )
@@ -293,6 +293,10 @@ class Https_connection_manager(object):
 
             ip_manager.report_connect_fail(ip)
             connect_control.report_connect_fail()
+            if not check_local_network.is_ok():
+                time.sleep(10)
+            else:
+                time.sleep(1)
 
             return False
         finally:

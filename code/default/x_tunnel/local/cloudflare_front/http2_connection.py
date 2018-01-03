@@ -211,7 +211,7 @@ class HTTP2_worker(HTTP_worker):
     def get_rtt_rate(self):
         return self.rtt + len(self.streams) * 3000
 
-    def close(self, reason=""):
+    def close(self, reason="conn close"):
         self.keep_running = False
         self.accept_task = False
         # Notify loop to exit
