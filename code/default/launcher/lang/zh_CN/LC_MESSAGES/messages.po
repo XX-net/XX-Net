@@ -47,8 +47,8 @@ msgstr "关于 XX-Net"
 msgid "General Settings"
 msgstr "通用"
 
-msgid "System Update"
-msgstr "升级"
+msgid "System Version"
+msgstr "版本"
 
 msgid "Proxy Setting"
 msgstr "代理"
@@ -78,7 +78,7 @@ msgid "Popup Status Page on Startup"
 msgstr "启动时弹出状态页"
 
 msgid "Allow Remote"
-msgstr "允许远程连接"
+msgstr "允许远程访问控制页"
 
 msgid "Help"
 msgstr "帮助"
@@ -95,8 +95,11 @@ msgstr "模块管理"
 msgid "Enable"
 msgstr "启用"
 
-msgid "LAN proxy(Generally not needed)"
-msgstr "局域网代理（一般无需设置）"
+msgid "LAN proxy"
+msgstr "局域网代理（前置代理）"
+
+msgid "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this."
+msgstr "一般无需设置，只有那些需要通过内部代理访问外网的用户才需要设置。"
 
 msgid "Proxy type"
 msgstr "代理类型"
@@ -105,7 +108,7 @@ msgid "Proxy IP address or domain name"
 msgstr "代理服务器"
 
 msgid "Port"
-msgstr "端口"
+msgstr "代理端口"
 
 msgid "User name"
 msgstr "用户名"
@@ -115,6 +118,9 @@ msgstr "密码"
 
 msgid "Save"
 msgstr "保存"
+
+msgid "Do you really need LAN proxy? <a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">Help</a>."
+msgstr "你似乎没有设置局域网代理的需要．．．（请查看<a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">帮助</a>）"
 
 msgid "Failed reading the settings."
 msgstr "读取设置失败。"
@@ -183,16 +189,16 @@ msgid "Local version"
 msgstr "本地版本"
 
 msgid "Released"
-msgstr "已发布"
+msgstr "发布的"
 
-msgid "Upgrade to"
-msgstr "升级到"
+msgid "Download & Change to"
+msgstr "下载并切至"
 
 msgid "no hash check"
 msgstr "不校验"
 
 msgid "Local"
-msgstr "本地"
+msgstr "本地的"
 
 msgid "Change to this version"
 msgstr "切至此版本"
@@ -210,7 +216,7 @@ msgid "Deleting local version fail."
 msgstr "删除本地版本失败。"
 
 msgid "(Remote Web Control Enabled)"
-msgstr "(已允许远程连接)"
+msgstr "(已允许远程访问)"
 
 msgid "Adaptive width"
 msgstr "自适应宽度"
@@ -219,7 +225,7 @@ msgid "Exit the program"
 msgstr "退出程序"
 
 msgid "Remind me later"
-msgstr "下次再提醒我"
+msgstr "以后再提醒我"
 
 msgid "Do not remind me this version"
 msgstr "忽略此版本"

@@ -152,26 +152,29 @@ msgstr "转账流量"
 msgid "X-Tunnel Configuration"
 msgstr "X-Tunnel 配置"
 
-msgid "Login ..."
+msgid "Logining ..."
 msgstr "正在登录..."
 
 msgid "Please wait ..."
 msgstr "请稍侯..."
 
 msgid "Connect to server fail:"
-msgstr "登录到服务器失败："
+msgstr "连接服务器失败："
 
 msgid "Email seems invalid."
 msgstr "电子邮件地址似乎是无效的。"
 
 msgid "Password needs at least 6 charactors."
-msgstr "密码至少需要6个字符组成。"
+msgstr "密码需要至少6个字符。"
 
 msgid "Connect to server fail, check Front log first."
-msgstr "连接到服务器失败，请检查前端日志。"
+msgstr "连接服务器失败，请检查前端日志。"
 
 msgid "Incorrect Email or password."
 msgstr "用户名或密码不正确。"
+
+msgid "Registered successfully, "
+msgstr "注册成功，"
 
 msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"

@@ -1,12 +1,13 @@
 <form id="config_proxy" method="POST" onSubmit="onSubmit(); return false;">
         <div class="row-fluid">
             <div class="span4">
-                <label for="enable-proxy">{{ _( "LAN proxy(Generally not needed)" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
+                <label for="enable-proxy">{{ _( "LAN proxy" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <input id="enable-proxy" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
+        <p class="tip">* {{ _( "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this." ) }}</p>
         <div id="proxy-options" style="display: none;">
             <div class="row-fluid">
                 <div class="span4">

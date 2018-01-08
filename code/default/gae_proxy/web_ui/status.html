@@ -34,7 +34,7 @@
                 <td id="ipv6-num"></td>
             </tr>
             <tr>
-                <td>{{ _( "Is Idle" ) }}</td>
+                <td>{{ _( "System Status" ) }}</td>
                 <td id="is-idle"></td>
             </tr>
             <tr>
@@ -82,7 +82,7 @@
                 <td id="proxy-status"></td>
             </tr>
             <tr>
-                <td>{{ _( "Listening Proxy" ) }}</td>
+                <td>{{ _( "Listening At" ) }}</td>
                 <td id="proxy-listen"></td>
             </tr>
             <tr>
@@ -106,15 +106,15 @@
         </thead>
         <tbody>
             <tr id="hidden-appids">
-                <td>{{ _( "Working AppIDs" ) }}</td>
+                <td>{{ _( "working AppIDs" ) }}</td>
                 <td id="working-appid"></td>
             </tr>
             <tr id="tr-out-of-quota-appids" hidden="true">
-                <td>{{ _( "Out-of-quota AppIDs" ) }}</td>
+                <td>{{ _( "out-of-quota AppIDs" ) }}</td>
                 <td id="out-of-quota-appids"></td>
             </tr>
             <tr id="tr-not-exist-appids" hidden="true">
-                <td>{{ _( "Nonexistent AppIDs" ) }}</td>
+                <td>{{ _( "not-exist AppIDs" ) }}</td>
                 <td id="not-exist-appids"></td>
             </tr>
         </tbody>
@@ -179,7 +179,7 @@
     <button id="pop-up-report" class="btn btn-primary">{{ _( "Diagnostic Info" ) }}</button>
     <br><br>
     <div id="tip">
-            <a href="https://github.com/XX-net/XX-Net/issues">{{ _("Check Github issues") }}</a>{{ _(" or ")}} <a href="https://groups.google.com/forum/#!forum/xx-net">{{ _("Google Group Discussions") }}</a><br>
+            {{ _("Check") }} <a href="https://github.com/XX-net/XX-Net/issues">{{ _("GitHub issues") }}</a> {{ _("or")}} <a href="https://groups.google.com/forum/#!forum/xx-net">{{ _("Google Group Discussions") }}</a><br>
     </div>
     <br><br>
 </div> <!-- #details -->
@@ -400,7 +400,7 @@
                         return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">').replace('$2', '</a>'), 'none');
                     }else{
                         if (result['ipv6_state'] == "Fail"){
-                            return updateProperty('#noob-info', '{{ _( "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>" ) }}', 'none');
+                            return updateProperty('#noob-info', '{{ _( "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>." ) }}', 'none');
                         }else{
                             return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}', 'none');
                         }
@@ -410,12 +410,12 @@
                 if (result['working_appid'] == ""){
                     if ( result['out_of_quota_appids'] != "" ){
                         if ( is_public_appid(result['gae_appid']) ){
-                            return updateProperty('#noob-info', '{{ _( "Public appid out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'none');
+                            return updateProperty('#noob-info', '{{ _( "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'none');
                         }else{
-                            return updateProperty('#noob-info', '{{ _( "Your appid out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy more APPID</a>" ) }}', 'none');
+                            return updateProperty('#noob-info', '{{ _( "Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more AppID</a>." ) }}', 'none');
                         }
                     }else{
-                        return updateProperty('#noob-info', '{{ _( "No working appid. Please check." ) }}', 'none');
+                        return updateProperty('#noob-info', '{{ _( "No working AppID. Please check." ) }}', 'none');
                     }
                 }
 
@@ -441,7 +441,7 @@
 
                 if ( is_public_appid(result['gae_appid']) ){
                     if ( result['out_of_quota_appids'].length > 200 ){
-                        return updateProperty('#noob-info', '{{ _( "You are using public APPID. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/Register-Google-appid\" target=\"_blank\">deploy your own APPID</a>" ) }}', 'hard');
+                        return updateProperty('#noob-info', '{{ _( "You are using public AppIDs. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'hard');
                     }
                 }
 
@@ -460,7 +460,7 @@
     }
     function appid_string(appid){
         if (is_public_appid(appid)){
-            return "{{ _( "You are using the public Appid." ) }}";
+            return '{{ _( "You are using public AppIDs." ) }}';
         }else{
             return appid;
         }
