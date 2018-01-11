@@ -53,11 +53,11 @@ msgstr "PAC 策略"
 msgid "Auto-Try Direct"
 msgstr "自动尝试直连"
 
-msgid "Auto-Try GAE"
-msgstr "自动尝试GAE代理"
+msgid "Auto-Try GAEProxy"
+msgstr "自动尝试GAEProxy"
 
-msgid "Black->GAE"
-msgstr "黑名单->GAE"
+msgid "Black->GAEProxy"
+msgstr "黑名单->GAEProxy"
 
 msgid "Black->X-Tunnel"
 msgstr "黑名单->X-Tunnel"
@@ -69,16 +69,16 @@ msgid "Settings saved successfully."
 msgstr "设置保存成功。"
 
 msgid "Direct List"
-msgstr "直连列表"
+msgstr "直连"
 
-msgid "GAE List"
-msgstr "走GAE的列表"
+msgid "GAEProxy List"
+msgstr "走GAEProxy"
 
-msgid "Socks List"
-msgstr "走Socks的列表"
+msgid "SOCKS List"
+msgstr "走SOCKS"
 
 msgid "Redirect HTTPS"
-msgstr "重定向到HTTPS"
+msgstr "重定向HTTPS"
 
 msgid "Black List"
 msgstr "黑名单"

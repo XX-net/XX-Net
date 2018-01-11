@@ -128,6 +128,9 @@ msgstr "当前状态："
 msgid "idle"
 msgstr "空闲"
 
+msgid "working"
+msgstr "工作"
+
 msgid "Authorization"
 msgstr "授权"
 
@@ -278,8 +281,8 @@ msgstr "IPv4 IP数"
 msgid "IPv6 Number"
 msgstr "IPv6 IP数"
 
-msgid "System Status"
-msgstr "系统状态"
+msgid "XX-Net Status"
+msgstr "XX-Net 状态"
 
 msgid "IP Quality"
 msgstr "IP延迟"
@@ -332,8 +335,8 @@ msgstr "超额AppID"
 msgid "not-exist AppIDs"
 msgstr "不存在的AppID"
 
-msgid "System Version"
-msgstr "系统版本"
+msgid "System Info"
+msgstr "系统信息"
 
 msgid "Diagnostic Info"
 msgstr "诊断信息"

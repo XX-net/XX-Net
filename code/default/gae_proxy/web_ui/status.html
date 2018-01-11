@@ -34,7 +34,7 @@
                 <td id="ipv6-num"></td>
             </tr>
             <tr>
-                <td>{{ _( "System Status" ) }}</td>
+                <td>{{ _( "XX-Net Status" ) }}</td>
                 <td id="is-idle"></td>
             </tr>
             <tr>
@@ -61,10 +61,6 @@
                 <td>{{ _( "Block Status" ) }}(<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Blocked" target="_blank">{{ _( "Help" ) }}</a>)</td>
                 <td id="block-stat"></td>
             </tr>
-            <!--tr pro="False">
-                <td>{{ _( "XX-Net Version" ) }}</td>
-                <td id="xxnet-version"></td>
-            </tr-->
         </tbody>
     </table>
 
@@ -120,7 +116,7 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "System Version" ) }}</h4>
+    <h4>{{ _( "System Info" ) }}</h4>
     <table id="version" class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -216,7 +212,7 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
-                var information = new Array(
+                var information = [
                     'sys-platform: ' + result['sys_platform'],
                     'os-system: ' + result['os_system'],
                     'os-version: ' + result['os_version'],
@@ -246,7 +242,7 @@
                     'Appids_Out_Of_Quota: ' + (result['out_of_quota_appids'].length != 0),
                     'Appids_Not_Exist: ' + (result['not_exist_appids'].length != 0),
                     'Using_Public_Appid: ' + is_public_appid(result['gae_appid'])
-                    );
+                ];
 
                 updateProperty("textarea#DiagInfo","XX-Net Status:\n\n" + information.join("\n"));
 
@@ -329,15 +325,14 @@
                     'td#ipv6-status': result['ipv6_state'],
                     'td#ipv4-num': result['good_ipv4_num'],
                     'td#ipv6-num': result['good_ipv6_num'],
-                    'td#is-idle': result['is_idle'],
+                    'td#is-idle': result['is_idle'] ? '{{ _( "idle" ) }}' : '{{ _( "working" ) }}',
                     'td#connection-status': connection_status_string(result['connected_link_new'], result['worker_h1'], result['worker_h2']),
                     'td#browser-proxy-setting': test_http_proxy_setting(),
                     'td#ca-status': ca_status_str,
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
                     'td#ip-quality': result['ip_quality'],
                     'td#block-stat': result['block_stat']
-
-                }
+                };
                 for (var item in updates) {
                     updateProperty(item, updates[item]);
                 }
@@ -465,15 +460,6 @@
     function connection_status_string(connected_link_new, worker_h1, worker_h2){
         return conn_str = '{{ _( "new:" ) }}' + connected_link_new + ' ' + '{{ _( "h1:" ) }}'+ worker_h1 + ' ' + '{{ _( "h2:" ) }}'+ worker_h2;
     }
-    function proxy_status_string(proxy_state,proxy_url){
-        if (proxy_state == "Auto proxy enabled"){
-            return '{{ _( "Auto proxy enabled at " ) }}' + proxy_url
-        }else if (proxy_state == "Proxy enabled"){
-            return '{{ _( "Proxy enabled at " ) }}' + proxy_url
-        }else{
-            return '{{ _( "Proxy disabled" ) }}'
-        }
-    }
 
     function test_http_proxy_setting() {
         if (window.http_proxy_setting === "OK" || window.https_proxy_setting === "OK") {
@@ -588,5 +574,5 @@
                 }
             }
         });
-    };
+    }
 </script>
