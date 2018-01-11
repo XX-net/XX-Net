@@ -14,16 +14,17 @@ xlog = getLogger("smart_router")
 
 class GfwList(object):
     def __init__(self):
-        self.gfwlist = self.load()
+        self.gfw_black_list = self.load("gfw_black_list.txt")
+        self.gfw_white_list = self.load("gfw_white_list.txt")
 
-    def load(self):
-        user_file = os.path.join(data_path, "gfw_black_list.txt")
+    def load(self, name):
+        user_file = os.path.join(data_path, name)
         if os.path.isfile(user_file):
             list_file = user_file
         else:
-            list_file = os.path.join(current_path, "gfw_black_list.txt")
+            list_file = os.path.join(current_path, name)
 
-        xlog.info("Load GFW black list file:%s", list_file)
+        xlog.info("Load file:%s", list_file)
 
         fd = open(list_file, "r")
         gfwdict = {}
@@ -38,18 +39,22 @@ class GfwList(object):
         return tuple(gfwlist)
 
     def check(self, host):
-        if not host.endswith(self.gfwlist):
+        if host.endswith(self.gfw_white_list):
+            return False
+
+        if not host.endswith(self.gfw_black_list):
             return False
 
         # check avoid wrong match like xgoogle.com
         dpl = host.split(".")
         for i in range(0, len(dpl)):
             h = ".".join(dpl[i:])
-            if h in self.gfwlist:
+            if h in self.gfw_black_list:
                 return True
 
         return False
 
     def get_pac_string(self):
-        s = '",\n"'.join(self.gfwlist)
-        return s
+        black = '",\n"'.join(self.gfw_black_list)
+        white = '",\n"'.join(self.gfw_white_list)
+        return black, white

@@ -244,8 +244,8 @@ class Https_connection_manager(object):
         time.sleep(sleep_time)
         try:
             while connect_control.allow_connect():
-                #if self.new_conn_pool.qsize() > self.connection_pool_min:
-                if self.getter_num == 0 or self.new_conn_pool.qsize() > self.connection_pool_min:
+                if self.new_conn_pool.qsize() > self.connection_pool_min:
+                #if self.getter_num == 0 or self.new_conn_pool.qsize() > self.connection_pool_min:
                     break
 
                 ip_str = ip_manager.get_gws_ip()
@@ -276,8 +276,9 @@ class Https_connection_manager(object):
 
         time_begin = time.time()
         try:
+            xlog.debug("try connect %s", ip)
             ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout, on_close=ip_manager.ssl_closed)
-
+            ip_manager.update_ip(ip, ssl_sock.handshake_time)
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s top:%s",
                        ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)
             ssl_sock.last_use_time = ssl_sock.create_time

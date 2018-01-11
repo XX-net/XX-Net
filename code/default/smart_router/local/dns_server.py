@@ -87,6 +87,9 @@ class DnsServerList(object):
     def get(self):
         return self.server_list[self.i]
 
+    def reset_server(self):
+        self.i = 0
+
     def next_server(self):
         self.i += 1
         if self.i >= len(self.server_list):
@@ -211,6 +214,7 @@ class DnsClient(object):
         que.domain = domain
 
         ips = []
+        self.dns_server.reset_server()
         while time.time() < end_time:
             self.send_request(id, domain)
 
@@ -264,12 +268,14 @@ class DnsServer(object):
             return [domain]
 
         ips = g.domain_cache.get_ordered_ips(domain, type)
-        if not ips and \
-                ((g.config.auto_direct and not g.gfwlist.check(domain)) or
-                         g.user_rules.check_host(domain, 0) == "direct"):
-            ips = g.dns_client.query(domain, timeout=0.5)
+        if ips:
+            return ips
 
-        if not ips:
+        if g.user_rules.check_host(domain, 0) == "direct" or \
+                (g.config.auto_direct and not g.gfwlist.check(domain)):
+            ips = g.dns_client.query(domain, timeout=1)
+
+        if not ips or not self.in_country(ips):
             if "." in domain:
                 ips = remote_query_dns(domain, type)
                 g.domain_cache.set_ips(domain, ips, type)

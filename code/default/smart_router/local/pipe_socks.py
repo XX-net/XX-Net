@@ -35,7 +35,7 @@ class Buf(object):
 
 
 class PipeSocks(object):
-    def __init__(self, buf_size=256*1024):
+    def __init__(self, buf_size=16*1024):
         self.buf_size = buf_size
         self.sock_dict = {}
 
@@ -47,6 +47,34 @@ class PipeSocks(object):
         self.send_buf = {}
 
         self.running = True
+
+    def __str__(self):
+        outs = ["Pipe Sockets:"]
+        outs.append("buf_size=%d" % self.buf_size)
+        outs.append("running=%d" % self.running)
+        outs.append("")
+        outs.append("socket dict:")
+        for s in self.sock_dict:
+            outs.append(" %s =%s" % (s, self.sock_dict[s]))
+
+        outs.append("read dict:")
+        for s in self.read_set:
+            outs.append(" %s" % s)
+
+        outs.append("write dict:")
+        for s in self.write_set:
+            outs.append(" %s" % s)
+
+        outs.append("error dict:")
+        for s in self.error_set:
+            outs.append(" %s" % s)
+
+        outs.append("send buf:")
+        for s in self.send_buf:
+            buf = self.send_buf[s]
+            outs.append(" %s size=%d num=%d" % (s, buf.size, buf.num))
+
+        return "\n".join(outs)
 
     def run(self):
         self.down_th = threading.Thread(target=self.pipe)
@@ -79,13 +107,10 @@ class PipeSocks(object):
             return
 
         s2 = self.sock_dict[s1]
-        del self.sock_dict[s1]
-        self.try_remove(self.read_set, s1)
-        self.try_remove(self.write_set, s1)
-        self.try_remove(self.error_set, s1)
         if s1 in self.send_buf:
-            del self.send_buf[s1]
-        s1.close()
+            left1 = self.send_buf[s1].size
+        else:
+            left1 = 0
 
         if utils.is_private_ip(s1.ip):
             local_sock = s1
@@ -95,17 +120,25 @@ class PipeSocks(object):
             remote_sock = s1
 
         create_time = time.time() - remote_sock.create_time
-        xlog.debug("pipe close %s->%s run_time:%d upload:%d,%d download:%d,%d, by remote:%d, e:%r",
+        xlog.debug("pipe close %s->%s run_time:%d upload:%d,%d download:%d,%d, by remote:%d, left:%d e:%r",
                    local_sock, remote_sock, create_time,
                    local_sock.recved_data, local_sock.recved_times,
                    remote_sock.recved_data, remote_sock.recved_times,
-                   s1==remote_sock, e)
+                   s1==remote_sock, left1, e)
 
-        if local_sock.recved_data > 0 and local_sock.recved_times <= 2 and remote_sock.port == 443 and \
-                ((s1 == local_sock and create_time > 10) or (s1 == remote_sock)):
+        if local_sock.recved_data > 0 and local_sock.recved_times == 1 and remote_sock.port == 443 and \
+                ((s1 == local_sock and create_time > 30) or (s1 == remote_sock)):
             host = remote_sock.host
-            xlog.warn("SNI:%s blocked.", host)
-            g.domain_cache.update_rule(host, 443, "gae")
+            xlog.debug("SNI:%s fail.", host)
+            #g.domain_cache.update_rule(host, 443, "gae")
+
+        del self.sock_dict[s1]
+        self.try_remove(self.read_set, s1)
+        self.try_remove(self.write_set, s1)
+        self.try_remove(self.error_set, s1)
+        if s1 in self.send_buf:
+            del self.send_buf[s1]
+        s1.close()
 
         if s2 in self.send_buf and self.send_buf[s2].size:
             xlog.debug("pipe close %s e:%s, but s2:%s have data(%d) to send",
@@ -147,6 +180,7 @@ class PipeSocks(object):
                         continue
 
                     if not d:
+                        # socket closed by peer.
                         self.close(s1, "r")
                         continue
 
@@ -219,9 +253,10 @@ class PipeSocks(object):
 
                     if self.send_buf[s1].size == 0:
                         self.write_set.remove(s1)
-                    elif self.send_buf[s1].size < self.buf_size:
+
+                    if self.send_buf[s1].size < self.buf_size:
                         s2 = self.sock_dict[s1]
-                        if s2 not in self.read_set:
+                        if s2 not in self.read_set and s2 in self.sock_dict:
                             self.read_set.append(s2)
 
                 for s1 in list(e):

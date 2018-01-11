@@ -37,8 +37,9 @@ class ProxyServer():
             if dst_port != g.config.proxy_port and not utils.is_private_ip(ip_str):
                 xlog.debug("Redirect to:%s:%d from:%s", ip_str, dst_port, self.client_address)
                 return handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
-        except:
-            pass
+        except Exception as e:
+            xlog.exception("redirect except:%r", e)
+            return
 
         sockets = [self.conn]
         try:

@@ -86,7 +86,7 @@ class ProxySession():
                 self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker)
                 self.roundtrip_thread[i].daemon = True
                 self.roundtrip_thread[i].start()
-                time.sleep(0.2)
+                time.sleep(0.01)
 
             self.timer_th = threading.Thread(target=self.timer)
             self.timer_th.daemon = True
@@ -110,16 +110,16 @@ class ProxySession():
             self.wait_queue.stop()
 
             #xlog.debug("begin join roundtrip_thread")
-            for i in self.roundtrip_thread:
+            #for i in self.roundtrip_thread:
                 # xlog.debug("begin join %d", i)
-                try:
-                    rthead = self.roundtrip_thread[i]
-                    if rthead is threading.current_thread():
+                #try:
+                    #rthead = self.roundtrip_thread[i]
+                    #if rthead is threading.current_thread():
                         # xlog.debug("%d is self", i)
-                        continue
-                    rthead.join()
-                except:
-                    pass
+                        #continue
+                    #rthead.join()
+                #except:
+                    #pass
                 # xlog.debug("end join %d", i)
             #xlog.debug("end join roundtrip_thread")
             xlog.debug("session stopped.")

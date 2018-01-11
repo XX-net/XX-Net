@@ -50,6 +50,10 @@ data_path = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy'))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
+def get_fake_host():
+    return "deja.com"
+
+
 class User_special(object):
     def __init__(self):
         self.appid = ''
@@ -68,7 +72,7 @@ class User_special(object):
         self.use_ipv6 = "auto"
 
         self.LISTEN_IP = "127.0.0.1"
-        self.fake_host = sni_generater.get()
+        self.fake_host = ""
 
 
 class User_config(object):
@@ -138,11 +142,12 @@ class User_config(object):
             except:
                 pass
 
-            try:
-                self.user_special.fake_host = self.USER_CONFIG.get('system', 'fake_host')
-            except:
-                self.user_special.fake_host = sni_generater.get()
-                self.save()
+            #try:
+            #    self.user_special.fake_host = self.USER_CONFIG.get('system', 'fake_host')
+            #except:
+            #    self.user_special.fake_host = sni_generater.get_fake_host()
+            #    self.save()
+            self.user_special.fake_host = get_fake_host()
 
         except Exception as e:
             xlog.warn("User_config.load except:%s", e)
@@ -797,7 +802,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_not_exist()
 
     def req_debug_handler(self):
-        data = ""
+        data = "ssl_socket num:%d \n" % openssl_wrap.socks_num
         for obj in [https_manager, http_dispatch]:
             data += "%s\r\n" % obj.__class__
             for attr in dir(obj):

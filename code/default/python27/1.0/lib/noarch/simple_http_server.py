@@ -82,8 +82,11 @@ class HttpServerHandler():
         return '%s:%s' % self.client_address[:2]
 
     def parse_request(self):
-        self.raw_requestline = ""
-        self.raw_requestline = self.rfile.readline(65537)
+        try:
+            self.raw_requestline = self.rfile.readline(65537)
+        except:
+            raise GetReqTimeout()
+
         if not self.raw_requestline:
             raise GetReqTimeout()
 
@@ -449,6 +452,11 @@ class HTTPServer():
                             # It means "I don't have answer for you right now and
                             # you have told me not to wait,
                             # so here I am returning without answer."
+                            continue
+
+                        if e.args[0] == 24:
+                            self.logger.warn("max file opened when sock.accept")
+                            time.sleep(30)
                             continue
 
                         self.logger.warn("socket accept fail(errno: %s).", e.args[0])

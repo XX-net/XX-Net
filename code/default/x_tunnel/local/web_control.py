@@ -138,7 +138,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.debug("x_tunnel force update info")
             g.last_refresh_time = time_now
 
-            threading.Thread(target=proxy_session.login_process).start()
+            threading.Thread(target=proxy_session.request_balance, args=(None,None,False,False)).start()
 
             return self.response_json({
                 "res": "login_process"

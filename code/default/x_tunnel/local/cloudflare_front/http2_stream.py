@@ -29,6 +29,7 @@ from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestrin
 import simple_http_client
 
 from http_common import *
+from ip_manager import ip_manager
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 
@@ -386,3 +387,6 @@ class Stream(object):
             self.task.finish()
         else:
             self.task.response_fail("timeout")
+
+        ip_manager.report_connect_closed(self.connection.ssl_sock.ip, "down fail")
+        self.connection.close("timeout")

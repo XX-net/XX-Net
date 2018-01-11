@@ -1,6 +1,7 @@
 
 import threading
 import httplib
+import simple_queue
 
 from xlog import getLogger
 xlog = getLogger("heroku_front")
@@ -23,7 +24,7 @@ class HTTP1_worker(HTTP_worker):
         self.trace_time.append([ssl_sock.create_time, "connect"])
         self.record_active("init")
 
-        self.task_queue = Queue.Queue()
+        self.task_queue = simple_queue.Queue()
 
         threading.Thread(target=self.work_loop).start()
         threading.Thread(target=self.keep_alive_thread).start()
@@ -71,7 +72,7 @@ class HTTP1_worker(HTTP_worker):
 
     def work_loop(self):
         while connect_control.keep_running and self.keep_running:
-            task = self.task_queue.get(True)
+            task = self.task_queue.get(99999999)
             if not task:
                 # None task means exit
                 self.accept_task = False

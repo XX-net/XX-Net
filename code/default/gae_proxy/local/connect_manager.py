@@ -228,7 +228,8 @@ class Https_connection_manager(object):
                     # put ssl to worker
                     try:
                         self.ssl_timeout_cb(ssl_sock)
-                    except:
+                    except Exception as e:
+                        xlog.exception("ssl_timeout_cb except:%r", e)
                         # no appid avaiable
                         pass
 

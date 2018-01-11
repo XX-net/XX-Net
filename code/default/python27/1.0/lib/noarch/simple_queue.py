@@ -94,13 +94,14 @@ class Queue(object):
 
         end_time = time.time() + timeout
         while self.running:
-            self.wait(end_time)
-            if time.time() > end_time:
-                return
-
             with self.lock:
                 if self.queue:
                     return self.queue.pop(0)
+
+            if time.time() > end_time:
+                return
+
+            self.wait(end_time)
 
     def notify_all(self):
         while self.waiters:

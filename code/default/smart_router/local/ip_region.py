@@ -56,6 +56,9 @@ class IpRegion(object):
         self.data = struct.unpack('4s' * (data_len // 4), data)
 
     def check_ip(self, ip):
+        if ":" in ip:
+            return False
+
         #转换 IP 为 BE Uint32，实际类型 bytes
         nip = socket.inet_aton(ip)
         #确定索引范围
@@ -80,8 +83,25 @@ class IpRegion(object):
         #根据位置序数奇偶确定是否属于直连 IP
         return lo & 1
 
+    def check_ips(self, ips):
+        for ipd in ips:
+            if "|" in ipd:
+                ipl = ipd.split("|")
+                ip = ipl[0]
+            else:
+                ip = ipd
+
+            try:
+                if self.check_ip(ip):
+                    return True
+            except Exception as e:
+                xlog.exception("check ip %s fail:%r", ip, e)
+
+        return False
+
     def generate_db(self):
-        keeprange = ('0.0.0.0/8',  # 本地网络
+        keeprange = (
+                     '0.0.0.0/8',  # 本地网络
                      '10.0.0.0/8',  # 私有网络
                      '100.64.0.0/10',  # 地址共享（运营商 NAT）
                      '127.0.0.0/8',  # 环回地址

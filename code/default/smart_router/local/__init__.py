@@ -30,7 +30,7 @@ from . import global_var as g
 import dns_server
 import host_records
 import user_rules
-import proxy_handler
+from . import proxy_handler
 import web_control
 import connect_manager
 import pac_server
@@ -63,6 +63,7 @@ def load_config():
     config.set_var("proxy_port", 8086)
 
     config.set_var("dns_cache_size", 200)
+    config.set_var("pip_cache_size", 16*1024)
     config.set_var("ip_cache_size", 1000)
     config.set_var("dns_ttl", 24*3600)
     config.set_var("direct_split_SNI", 1)
@@ -109,7 +110,7 @@ def run(args):
 
     connect_manager.load_proxy_config()
     g.connect_manager = connect_manager.ConnectManager()
-    g.pipe_socks = pipe_socks.PipeSocks()
+    g.pipe_socks = pipe_socks.PipeSocks(g.config.pip_cache_size)
     g.pipe_socks.run()
     g.dns_client = dns_server.DnsClient()
 

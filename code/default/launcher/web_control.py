@@ -12,7 +12,6 @@ if __name__ == "__main__":
 import re
 import socket, ssl
 import urlparse
-import threading
 import urllib2
 import time
 
@@ -616,13 +615,58 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response("text/html", data)
 
     def req_debug_handler(self):
+        global mem_stat
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+
         try:
-            from mem_top import mem_top
-            dat = mem_top(limit=50, width=150, sep='\n')
+            import tracemalloc
+            import gc
+            gc.collect()
+
+            if not mem_stat or "reset" in reqs:
+                mem_stat = tracemalloc.take_snapshot()
+
+            snapshot = tracemalloc.take_snapshot()
+
+            if "compare" in reqs:
+                top_stats = snapshot.compare_to(mem_stat, 'traceback')
+            else:
+                top_stats = snapshot.statistics('traceback')
+
+            python_lib = os.path.join(root_path, "python27")
+
+            dat = ""
+            for stat in top_stats[:100]:
+                print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
+                lines = stat.traceback.format()
+                ll = "\n".join(lines)
+                ln = len(lines)
+                pl = ""
+                for i in xrange(ln, 0, -1):
+                    line = lines[i - 1]
+                    print(line)
+                    if line[8:].startswith(python_lib):
+                        break
+                    if not line.startswith("  File"):
+                        pl = line
+                        continue
+                    if not line[8:].startswith(root_path):
+                        break
+                    ll = line[8:] + "\n" + pl
+
+                if ll[0] == "[":
+                    pass
+
+                dat += "%d KB, count:%d %s\n" % (stat.size / 1024, stat.count, ll)
+
             self.send_response("text/plain", dat)
-        except:
+        except Exception as e:
+            xlog.exception("debug:%r", e)
             self.send_response("text/html", "no mem_top")
 
+
+mem_stat = None
 
 server = None
 def start(allow_remote=0):

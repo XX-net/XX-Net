@@ -1,6 +1,5 @@
 import time
-import collections
-import Queue
+import simple_queue
 
 from xlog import getLogger
 xlog = getLogger("heroku_front")
@@ -41,7 +40,7 @@ class Task(object):
         self.start_time = time.time()
         self.unique_id = "%s:%f" % (url, self.start_time)
         self.trace_time = []
-        self.body_queue = Queue.Queue()
+        self.body_queue = simple_queue.Queue()
         self.body_len = 0
         self.body_readed = 0
         self.content_length = None
@@ -71,7 +70,7 @@ class Task(object):
 
         if size:
             while len(self.read_buffer) < size:
-                data = self.body_queue.get(block=True)
+                data = self.body_queue.get(self.timeout)
                 if not data:
                     return ""
 
@@ -84,7 +83,7 @@ class Task(object):
                 data = self.read_buffer
                 self.read_buffer = ""
             else:
-                data = self.body_queue.get(block=True)
+                data = self.body_queue.get(self.timeout)
                 if not data:
                     return ""
 
@@ -94,7 +93,7 @@ class Task(object):
     def read_all(self):
         out_list = [self.read_buffer]
         while True:
-            data = self.body_queue.get(block=True)
+            data = self.body_queue.get(self.timeout)
             if not data:
                 break
             out_list.append(data)

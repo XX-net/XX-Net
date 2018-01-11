@@ -119,6 +119,7 @@ class HttpsDispatcher(object):
             best_score = 99999999
             best_worker = None
             idle_num = 0
+            min_idle_time = 5
             now = time.time()
             for worker in self.workers:
                 if not worker.accept_task:
@@ -136,14 +137,14 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if best_worker is None or idle_num < 1: # or (now - best_worker.last_active_time) < 2 or best_score>1000:
-                # xlog.debug("trigger get more worker")
+            if best_worker is None or idle_num < 1 or (now - best_worker.last_active_time) < min_idle_time or best_score>20000:
+                xlog.debug("trigger get more worker")
                 self.triger_create_worker_cv.notify()
 
             if nowait:
                 return best_worker
 
-            if best_worker and (now - best_worker.last_active_time) > 1:
+            if best_worker and (now - best_worker.last_active_time) > min_idle_time:
                 return best_worker
 
             self.triger_create_worker_cv.notify()

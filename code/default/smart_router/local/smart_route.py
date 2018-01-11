@@ -354,7 +354,8 @@ def handle_ip_proxy(sock, ip, port, client_address):
         if g.config.auto_direct or g.config.auto_gae:
             try:
                 host = get_sni(sock)
-                return handle_domain_proxy(sock, host, port, client_address)
+                if host:
+                    return handle_domain_proxy(sock, host, port, client_address)
             except SniNotExist as e:
                 xlog.debug("ip:%s:%d get sni fail", ip, port)
 
@@ -405,7 +406,7 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     record = g.domain_cache.get(host)
     if record:
         rule = record["r"]
-        if rule == "gae":
+        if rule == "gae" or not g.ip_region.check_ips(record["ip"]):
             rule_list = ["gae", "socks", "redirect_https", "direct"]
         else:
             rule_list = ["direct", "gae", "socks", "redirect_https"]
@@ -415,7 +416,11 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     elif g.gfwlist.check(host):
         rule_list = ["gae", "socks", "redirect_https", "direct"]
     else:
-        rule_list = ["direct", "gae", "socks", "redirect_https"]
+        ips = g.dns_srv.query(host)
+        if g.ip_region.check_ips(ips):
+            rule_list = ["direct", "gae", "socks", "redirect_https"]
+        else:
+            rule_list = ["gae", "socks", "redirect_https", "direct"]
 
     if not g.config.auto_direct and "direct" in rule_list:
         try:
