@@ -26,19 +26,33 @@ class ProxyServer():
 
         self.read_buffer = ""
         self.buffer_start = 0
+        self.support_redirect = True
 
-    def handle(self):
-        self.__class__.handle_num += 1
+    def try_redirect(self):
+        if not self.support_redirect:
+            return False
 
         try:
             dst = self.conn.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)
+        except:
+            self.support_redirect = False
+            return False
+
+        try:
             dst_port, srv_ip = struct.unpack("!2xH4s8x", dst)
             ip_str = socket.inet_ntoa(srv_ip)
             if dst_port != g.config.proxy_port and not utils.is_private_ip(ip_str):
                 xlog.debug("Redirect to:%s:%d from:%s", ip_str, dst_port, self.client_address)
-                return handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
+                handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
         except Exception as e:
             xlog.exception("redirect except:%r", e)
+
+        return True
+
+    def handle(self):
+        self.__class__.handle_num += 1
+
+        if self.try_redirect():
             return
 
         sockets = [self.conn]

@@ -105,7 +105,7 @@ def load_config():
     config.set_var("max_payload", 128 * 1024)
 
     # range 1 - 30
-    config.set_var("roundtrip_timeout", 25)
+    config.set_var("roundtrip_timeout", 15)
 
     config.set_var("network_timeout", 10)
 
