@@ -122,8 +122,8 @@ msgstr "密码"
 msgid "Save"
 msgstr "保存"
 
-msgid "Do you really need LAN proxy? <a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">Help</a>."
-msgstr "你似乎没有设置局域网代理的需要．．．（请查看<a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">帮助</a>）"
+msgid "Do you really need LAN proxy? <a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">Help</a>."
+msgstr "你似乎没有设置局域网代理的需要．．．（请查看<a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">帮助</a>）"
 
 msgid "Failed reading the settings."
 msgstr "读取设置失败。"
