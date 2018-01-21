@@ -82,7 +82,7 @@
                 <td id="proxy-listen"></td>
             </tr>
             <tr>
-                <td>{{ _( "USE IPv6" ) }}</td>
+                <td>{{ _( "IP mode" ) }}</td>
                 <td id="use-ipv6"></td>
             </tr>
             <tr>
@@ -301,6 +301,12 @@
                     var ca_status_str = "Fail";
                 }
 
+                var ip_mode = {
+                    "auto": '{{ _( "AUTO" ) }}',
+                    "force_ipv4": '{{ _( "Force IPv4" ) }}',
+                    "force_ipv6": '{{ _( "Force IPv6" ) }}'
+                };
+
                 var updates = {
                     'td#sys-platform': result['sys_platform'],
                     'td#os-system': result['os_system'],
@@ -316,7 +322,7 @@
 
                     'td#lan-proxy': result['lan_proxy'],
                     'td#proxy-listen': result['proxy_listen'],
-                    'td#use-ipv6': result['use_ipv6'],
+                    'td#use-ipv6': ip_mode[result['use_ipv6']],
                     'td#working-appid': appid_string(result['gae_appid']),
                     'td#out-of-quota-appids': result['out_of_quota_appids'],
                     'td#not-exist-appids': result['not_exist_appids'],

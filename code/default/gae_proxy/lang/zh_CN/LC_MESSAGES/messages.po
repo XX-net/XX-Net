@@ -242,17 +242,14 @@ msgstr "帮助"
 msgid "Max scan thread count"
 msgstr "最大扫描线程数"
 
-msgid "Enable IPv6(If it's available)"
-msgstr "使用IPv6"
-
 msgid "AUTO"
 msgstr "自动"
 
 msgid "Force IPv4"
-msgstr "只使用IPv4"
+msgstr "仅IPv4"
 
 msgid "Force IPv6"
-msgstr "只使用IPv6"
+msgstr "仅IPv6"
 
 msgid "IP range list"
 msgstr "IP段列表"
@@ -320,8 +317,8 @@ msgstr "代理监听"
 # msgid "PAC URL"
 # msgstr "PAC自动代理地址"
 
-msgid "USE IPv6"
-msgstr "使用IPv6"
+msgid "IP mode"
+msgstr "IP模式"
 
 msgid "LAN proxy"
 msgstr "局域网代理"
