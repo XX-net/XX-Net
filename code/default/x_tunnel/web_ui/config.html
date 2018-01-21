@@ -444,6 +444,29 @@
         var regx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return regx.test(email);
     }
+
+    function isEmailQualified(email) {
+        if (!isEmailLegal(email)) return false;
+        var host = email.split('@')[1];
+        var weakhosts = ['qq.com', 'sina.cn', 'sina.com', '126.com', '163.com', '163.net', 'yeah.net'];
+        for (var weakhost in weakhosts) {
+            if (host.indexOf(weakhost)>=0) {
+                return false;
+            }
+            /*
+            var regx = /^$/;
+            if (regx.test(host)) {
+                return false;
+            }
+            */
+        }
+        return true;
+    }
+
+    function isPswLegal(password) {
+        var regx = /^[a-zA-Z0-9_~!@#$%^&()+\-*/=.,:;'"<>\?\[\]\{\}]{6,20}$/;
+        return regx.test(password);
+    }
 </script>
 <script type="text/javascript">
     function onLoginSubmit() {
@@ -506,8 +529,14 @@
         if ( !isEmailLegal(username) ) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
-        } else if ( password.length < 6 ) {
-            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+        } else if ( !isEmailQualified(username) ) {
+            tip('{{ _("Do NOT use Chinese-service-provider\'s Email!") }}', 'error', false);
+            return;
+        } else if ( password.length < 6 || password.length > 20) {
+            tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
+            return;
+        } else if ( !isPswLegal(password) ) {
+            tip('{{ _("Password seems invalid.") }}{{ _("(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;\'\"<>\?[]{})") }}', 'error', false);
             return;
         }
 
