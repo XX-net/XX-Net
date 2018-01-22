@@ -304,6 +304,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "gae_proxy_enable": config.get(["modules", "gae_proxy", "auto_start"], 0),
                 "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
+                "system-proxy": config.get(["modules", "launcher", "proxy"], "smart_router"),
                 "no_mess_system": config.get(["no_mess_system"], 0),
                 "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1) # -1 means not set yet
             }
