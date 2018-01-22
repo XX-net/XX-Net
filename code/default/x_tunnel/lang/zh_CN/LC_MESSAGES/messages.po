@@ -164,8 +164,17 @@ msgstr "连接服务器失败："
 msgid "Email seems invalid."
 msgstr "电子邮件地址似乎是无效的。"
 
-msgid "Password needs at least 6 charactors."
-msgstr "密码需要至少6个字符。"
+msgid "Do NOT use Chinese-service-provider's Email!"
+msgstr "请勿使用国内服务提供商的邮件地址！"
+
+msgid "Password needs at least 6 charactors, and no more than 20."
+msgstr "密码需要6~20个字符。"
+
+msgid "Password seems invalid."
+msgstr "密码似乎是无效的。"
+
+msgid "(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
+msgstr "(可选:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
 
 msgid "Connect to server fail, check Front log first."
 msgstr "连接服务器失败，请检查前端日志。"
