@@ -65,7 +65,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    if ( key == 'gae_proxy_enable' || key == 'x_tunnel_enable') {
+                    if ( key == 'gae_proxy_enable' || key == 'x_tunnel_enable' || key == 'smart_router_enable') {
                         restartingService(key);
                     } else {
                         tip('{{ _( "Settings saved successfully." ) }}', 'success');

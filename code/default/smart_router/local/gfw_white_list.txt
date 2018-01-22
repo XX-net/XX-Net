@@ -1,0 +1,6 @@
+fonts.googleapis.com
+translate.googleapis.com
+clientservices.googleapis.com
+update.googleapis.com
+storage.googleapis.com
+khm.googleapis.com

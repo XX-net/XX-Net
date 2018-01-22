@@ -27,7 +27,7 @@ def start(module):
     try:
         if module not in config.config["modules"]:
             xlog.error("module not exist %s", module)
-            raise
+            raise Exception()
 
         if module in proc_handler:
             xlog.error("module %s is running", module)

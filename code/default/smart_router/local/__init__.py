@@ -30,11 +30,12 @@ from . import global_var as g
 import dns_server
 import host_records
 import user_rules
-import proxy_handler
+from . import proxy_handler
 import web_control
 import connect_manager
 import pac_server
 import pipe_socks
+import ip_region
 import gfwlist
 
 ready = False
@@ -62,6 +63,7 @@ def load_config():
     config.set_var("proxy_port", 8086)
 
     config.set_var("dns_cache_size", 200)
+    config.set_var("pip_cache_size", 16*1024)
     config.set_var("ip_cache_size", 1000)
     config.set_var("dns_ttl", 24*3600)
     config.set_var("direct_split_SNI", 1)
@@ -97,6 +99,7 @@ def run(args):
 
     load_config()
     g.gfwlist = gfwlist.GfwList()
+    g.ip_region = ip_region.IpRegion()
 
     g.domain_cache = host_records.DomainRecords(os.path.join(data_path, "domain_records.txt"),
                                                 capacity=g.config.dns_cache_size, ttl=g.config.dns_ttl)
@@ -107,8 +110,9 @@ def run(args):
 
     connect_manager.load_proxy_config()
     g.connect_manager = connect_manager.ConnectManager()
-    g.pipe_socks = pipe_socks.PipeSocks()
+    g.pipe_socks = pipe_socks.PipeSocks(g.config.pip_cache_size)
     g.pipe_socks.run()
+    g.dns_client = dns_server.DnsClient()
 
     allow_remote = args.get("allow_remote", 0)
     if allow_remote:
@@ -134,11 +138,12 @@ def run(args):
 def terminate():
     global ready
 
-    g.domain_cache.save()
-    g.ip_cache.save()
+    g.domain_cache.save(True)
+    g.ip_cache.save(True)
 
     g.connect_manager.stop()
     g.pipe_socks.stop()
+    g.dns_client.stop()
 
     g.dns_srv.stop()
     g.proxy_server.shutdown()

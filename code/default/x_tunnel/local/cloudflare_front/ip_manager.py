@@ -340,7 +340,7 @@ class IpManager():
                     self.gws_ip_pointer += 1
                     continue
 
-                down_fail_connect_interval = 600
+                down_fail_connect_interval = 120
                 down_fail_time = self.ip_dict[ip]["down_fail_time"]
                 if time_now - down_fail_time < down_fail_connect_interval:
                     self.gws_ip_pointer += 1

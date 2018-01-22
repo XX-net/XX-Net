@@ -81,6 +81,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                "Expires: 0\r\n"\
                "Content-Type: text/plain\r\n"\
                "Content-Length: 2\r\n\r\nOK"
+        self.fake_host = web_control.get_fake_host()
 
     def forward_local(self):
         """
@@ -170,7 +171,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return False
 
     def do_METHOD(self):
-        touch_active()
+        if self.path != "%s:443" % self.fake_host:
+            touch_active()
         # record active time.
         # backgroud thread will stop keep connection pool if no request for long time.
 
@@ -195,7 +197,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             xlog.info("Browse localhost by proxy")
             return self.forward_local()
 
-        if self.path == "http://www.twitter.com/xxnet":
+        if host == self.fake_host:
+        #if self.path == "http://%s/xxnet" % self.fake_host:
             xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
             # auto detect browser proxy setting is work
@@ -268,7 +271,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        if self.path != "www.twitter.com:443":
+        if self.path != "%s:443" % self.fake_host:
             touch_active()
 
         host, _, port = self.path.rpartition(':')
@@ -318,7 +321,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
 
-        if self.path == "https://www.twitter.com/xxnet":
+        if self.path == "https://%s/xxnet" % self.fake_host:
             # for web_ui status page
             # auto detect browser proxy setting is work
             xlog.debug("CONNECT %s %s", self.command, self.path)

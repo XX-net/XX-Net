@@ -22,7 +22,7 @@ import operator
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-
+import check_local_network
 from config import config
 from google_ip import google_ip
 import connect_control
@@ -228,7 +228,8 @@ class Https_connection_manager(object):
                     # put ssl to worker
                     try:
                         self.ssl_timeout_cb(ssl_sock)
-                    except:
+                    except Exception as e:
+                        xlog.exception("ssl_timeout_cb except:%r", e)
                         # no appid avaiable
                         pass
 
@@ -380,6 +381,11 @@ class Https_connection_manager(object):
 
             google_ip.report_connect_fail(ip)
             connect_control.report_connect_fail()
+
+            if not check_local_network.IPv4.is_ok():
+                time.sleep(10)
+            else:
+                time.sleep(1)
 
             if ssl_sock:
                 ssl_sock.close()

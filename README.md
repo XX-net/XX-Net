@@ -22,12 +22,13 @@
 
 
 ### 最新状态：
- 2017-12-20
-* 新版 3.9.0 Smart-Router 模块发布，请使用 8086 通用代理端口
+ 2018-01-12
+* 新版 3.9.5 Smart-Router 智能路由模块发布，特性：  
+  自动判断、切换代理。  
+  代理端口：8086   
+  
  
-* X-Tunnel 请升级到3.9.0 （[使用教程](https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)）  
-
-* GAE:  扫不到ip，请开启ipv6，请参考：
+* GAE:  请开启ipv6，请参考：
   [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)
 
   

@@ -21,7 +21,7 @@ from ip_manager import ip_manager
 import connect_control
 from config import config
 import check_ip
-
+import check_local_network
 import utils
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
@@ -174,6 +174,7 @@ class Https_connection_manager(object):
         self.class_name = "Https_connection_manager"
         self.connect_timeout = 4
         self.thread_num = 0
+        self.getter_num = 0
 
         # after new created ssl_sock timeout(50 seconds)
         # call the callback.
@@ -244,12 +245,13 @@ class Https_connection_manager(object):
         try:
             while connect_control.allow_connect():
                 if self.new_conn_pool.qsize() > self.connection_pool_min:
+                #if self.getter_num == 0 or self.new_conn_pool.qsize() > self.connection_pool_min:
                     break
 
                 ip_str = ip_manager.get_gws_ip()
                 if not ip_str:
                     xlog.warning("no enough ip")
-                    time.sleep(60)
+                    time.sleep(10)
                     break
 
                 ssl_sock = self._create_ssl_connection( (ip_str, 443) )
@@ -274,8 +276,9 @@ class Https_connection_manager(object):
 
         time_begin = time.time()
         try:
+            xlog.debug("try connect %s", ip)
             ssl_sock = check_ip.connect_ssl(ip, port=port, timeout=self.connect_timeout, on_close=ip_manager.ssl_closed)
-
+            ip_manager.update_ip(ip, ssl_sock.handshake_time)
             xlog.debug("create_ssl update ip:%s time:%d h2:%d sni:%s top:%s",
                        ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.top_domain)
             ssl_sock.last_use_time = ssl_sock.create_time
@@ -294,30 +297,38 @@ class Https_connection_manager(object):
 
             ip_manager.report_connect_fail(ip)
             connect_control.report_connect_fail()
+            if not check_local_network.is_ok():
+                time.sleep(10)
+            else:
+                time.sleep(1)
 
             return False
         finally:
             connect_control.end_connect_register(high_prior=True)
 
     def get_ssl_connection(self, max_timeout=120):
+        try:
+            self.getter_num += 1
 
-        start_time = time.time()
-        while True:
-            if self.new_conn_pool.qsize() < self.connection_pool_min:
-                self.create_more_connection()
+            start_time = time.time()
+            while True:
+                if self.new_conn_pool.qsize() < self.connection_pool_min:
+                    self.create_more_connection()
 
-            ret = self.new_conn_pool.get(True, 1)
-            if ret:
-                handshake_time, ssl_sock = ret
-                if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout:
-                    # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
-                    ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
-                    ssl_sock.close()
-                    continue
+                ret = self.new_conn_pool.get(True, 1)
+                if ret:
+                    handshake_time, ssl_sock = ret
+                    if time.time() - ssl_sock.last_use_time > self.ssl_first_use_timeout:
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
+                        ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
+                        ssl_sock.close()
+                        continue
+                    else:
+                        # xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                        return ssl_sock
                 else:
-                    # xlog.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
-                    return ssl_sock
-            else:
-                if time.time() - start_time > max_timeout:
-                    xlog.debug("create ssl timeout fail.")
-                    return None
+                    if time.time() - start_time > max_timeout:
+                        xlog.debug("create ssl timeout fail.")
+                        return None
+        finally:
+            self.getter_num -= 1

@@ -27,6 +27,7 @@ import traceback
 
 from utils import SimpleCondition
 from xlog import getLogger
+import simple_queue
 
 import connect_control
 import http_common
@@ -52,7 +53,7 @@ class HttpsDispatcher(object):
         self.last_request_time = time.time()
 
         self.triger_create_worker_cv = SimpleCondition()
-        self.wait_a_worker_cv = SimpleCondition()
+        self.wait_a_worker_cv = simple_queue.Queue()
 
         threading.Thread(target=self.dispatcher).start()
         threading.Thread(target=self.create_worker_thread).start()
@@ -118,6 +119,7 @@ class HttpsDispatcher(object):
             best_score = 99999999
             best_worker = None
             idle_num = 0
+            min_idle_time = 5
             now = time.time()
             for worker in self.workers:
                 if not worker.accept_task:
@@ -135,16 +137,19 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if best_worker is None or idle_num < 5 or (now - best_worker.last_active_time) < 2 or best_score>1000:
+            if best_worker is None or idle_num < 1 or (now - best_worker.last_active_time) < min_idle_time or best_score>20000:
+                xlog.debug("trigger get more worker")
                 self.triger_create_worker_cv.notify()
 
             if nowait:
                 return best_worker
 
-            if best_worker and (now - best_worker.last_active_time) > 1:
+            if best_worker and (now - best_worker.last_active_time) > min_idle_time:
                 return best_worker
 
-            self.wait_a_worker_cv.wait()
+            self.triger_create_worker_cv.notify()
+            self.wait_a_worker_cv.wait(time.time() + 1)
+            time.sleep(0.1)
 
     def check_free_worker(self):
         # close slowest worker,
@@ -180,12 +185,12 @@ class HttpsDispatcher(object):
         if not url:
             url = "%s %s%s" % (method, host, path)
         self.last_request_time = time.time()
-        q = Queue.Queue()
+        q = simple_queue.Queue()
         task = http_common.Task(method, host, path, headers, body, q, url, timeout)
         task.set_state("start_request")
         self.request_queue.put(task)
         # self.working_tasks[task.unique_id] = task
-        response = q.get(True)
+        response = q.get(timeout=timeout)
         task.set_state("get_response")
         # del self.working_tasks[task.unique_id]
         return response
@@ -196,7 +201,7 @@ class HttpsDispatcher(object):
             st = traceback.extract_stack()
             stl = traceback.format_list(st)
             xlog.warn("stack:%r", repr(stl))
-            task.put_data("")
+            task.finish()
             return
 
         if task.retry_count > 10:

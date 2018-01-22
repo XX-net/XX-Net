@@ -1,5 +1,5 @@
 import time
-import Queue
+import simple_queue
 
 import simple_http_client
 from config import config
@@ -23,7 +23,7 @@ class Task(object):
         self.start_time = time.time()
         self.unique_id = "%s:%f" % (url, self.start_time)
         self.trace_time = []
-        self.body_queue = Queue.Queue()
+        self.body_queue = simple_queue.Queue()
         self.body_len = 0
         self.body_readed = 0
         self.content_length = None
@@ -54,7 +54,7 @@ class Task(object):
 
         if size:
             while len(self.read_buffer) < size:
-                data = self.body_queue.get(block=True)
+                data = self.body_queue.get(self.timeout)
                 if not data:
                     return ""
 
@@ -67,7 +67,7 @@ class Task(object):
                 data = self.read_buffer
                 self.read_buffer = ""
             else:
-                data = self.body_queue.get(block=True)
+                data = self.body_queue.get(self.timeout)
                 if not data:
                     return ""
 
@@ -77,7 +77,7 @@ class Task(object):
     def read_all(self):
         out_list = []
         while True:
-            data = self.body_queue.get(block=True)
+            data = self.body_queue.get(self.timeout)
             if not data:
                 break
             out_list.append(data)
@@ -118,6 +118,9 @@ class Task(object):
         self.finish()
 
     def finish(self):
+        if self.finished:
+            return
+
         self.put_data("")
         self.finished = True
 
@@ -157,21 +160,15 @@ class HTTP_worker(object):
         inactive_time = now - self.last_active_time
 
         rtt = self.rtt
-        if inactive_time > 30:
-            if rtt > 1000:
-                rtt = 1000
+        if inactive_time > 30 and rtt > 1000:
+            rtt = self.rtt = 200
 
-        if self.version == "1.1":
-            rtt += 100
-        else:
+        if self.version != "1.1":
             rtt += len(self.streams) * 100
 
-        if inactive_time > 5:
-            score = rtt
-        elif inactive_time < 0.01:
-            score = rtt + 50000
+        if inactive_time < 1:
+            score = rtt + 5000
         else:
-            # inactive_time < 2
-            score = rtt + (5/inactive_time)*1000
+            score = rtt + (240 - inactive_time)*10
 
         return score

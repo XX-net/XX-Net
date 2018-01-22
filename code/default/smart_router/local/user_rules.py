@@ -55,6 +55,7 @@ class Config(object):
         end_fix = []
         hosts = []
 
+        content = content.replace(",", "\n").replace(";", "\n")
         lines = content.split("\n")
         for line in lines:
             line = line.strip()
@@ -83,6 +84,8 @@ class Config(object):
 
             if host.startswith("."):
                 end_fix.append(host)
+            elif host.startswith("*."):
+                end_fix.append(host[1:])
             else:
                 hosts.append(host)
 

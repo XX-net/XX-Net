@@ -18,6 +18,12 @@ except:
     pass
 
 try:
+    import tracemalloc
+    tracemalloc.start(10)
+except:
+    pass
+
+try:
     raw_input          # python 2
 except NameError:
     raw_input = input  # python 3
@@ -66,8 +72,8 @@ sys.excepthook = uncaughtExceptionHandler
 
 has_desktop = True
 
-if "arm" in platform.machine():
-    xlog.info("This is Android or IOS.")
+if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine():
+    xlog.info("This is Android or IOS or router.")
     has_desktop = False
 
     # check remove linux lib
@@ -210,7 +216,7 @@ def main():
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         import webbrowser
-        webbrowser.open("http://127.0.0.1:%s/" % host_port)
+        webbrowser.open("http://localhost:%s/" % host_port)
 
     update.start()
 

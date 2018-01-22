@@ -98,7 +98,8 @@ class HttpsDispatcher(object):
 
             try:
                 self.on_ssl_created_cb(ssl_sock, check_free_work=False)
-            except:
+            except Exception as e:
+                xlog.exception("on_ssl_created_cb e:%r", e)
                 time.sleep(10)
 
             idle_num = 0

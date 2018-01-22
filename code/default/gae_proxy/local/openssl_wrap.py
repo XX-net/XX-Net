@@ -29,7 +29,7 @@ xlog = getLogger("gae_proxy")
 ssl_version = ''
 openssl_version = OpenSSL.version.__version__
 support_alpn_npn = "no"
-
+socks_num = 0
 
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
@@ -45,12 +45,18 @@ class SSLConnection(object):
         self.running = True
         self.socket_closed = False
 
+        global socks_num
+        socks_num += 1
+
     def __del__(self):
         if not self.socket_closed:
             socket.socket.close(self._sock)
             self.socket_closed = True
             if self.on_close:
                 self.on_close(self.ip)
+                
+        global socks_num
+        socks_num -= 1
 
     def __getattr__(self, attr):
         if attr not in ('_context', '_sock', '_connection', '_makefile_refs'):

@@ -29,6 +29,7 @@ from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestrin
 import simple_http_client
 
 from http_common import *
+from ip_manager import ip_manager
 from xlog import getLogger
 xlog = getLogger("cloudflare_front")
 
@@ -312,14 +313,13 @@ class Stream(object):
         if status in [400, 403, 405]:
             self.connection.close("status %d" % status)
 
-    def close(self, reason=""):
-        self._close_cb(self.stream_id, reason)
-
+    def close(self, reason="close"):
         if not self.task.responsed:
             self.connection.retry_task_cb(self.task, reason)
         else:
-            self.task.put_data("")
+            self.task.finish()
             # empty block means fail or closed.
+        self._close_cb(self.stream_id, reason)
 
     def _handle_header_block(self, headers):
         """
@@ -387,3 +387,6 @@ class Stream(object):
             self.task.finish()
         else:
             self.task.response_fail("timeout")
+
+        ip_manager.report_connect_closed(self.connection.ssl_sock.ip, "down fail")
+        self.connection.close("timeout")

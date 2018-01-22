@@ -26,19 +26,37 @@ class ProxyServer():
 
         self.read_buffer = ""
         self.buffer_start = 0
+        self.support_redirect = True
 
-    def handle(self):
-        self.__class__.handle_num += 1
+    def try_redirect(self):
+        if not self.support_redirect:
+            return False
 
         try:
             dst = self.conn.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)
+        except:
+            self.support_redirect = False
+            return False
+
+        try:
             dst_port, srv_ip = struct.unpack("!2xH4s8x", dst)
             ip_str = socket.inet_ntoa(srv_ip)
             if dst_port != g.config.proxy_port and not utils.is_private_ip(ip_str):
                 xlog.debug("Redirect to:%s:%d from:%s", ip_str, dst_port, self.client_address)
-                return handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
-        except:
-            pass
+                handle_ip_proxy(self.conn, ip_str, dst_port, self.client_address)
+                return True
+            else:
+                return False
+        except Exception as e:
+            xlog.exception("redirect except:%r", e)
+
+        return True
+
+    def handle(self):
+        self.__class__.handle_num += 1
+
+        if self.try_redirect():
+            return
 
         sockets = [self.conn]
         try:
@@ -324,11 +342,11 @@ class ProxyServer():
             handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
             return handler.handle()
 
-        req_d = self.conn.recv(len(req_line))
-        req_d = req_d.replace(url, path)
+        #req_d = self.conn.recv(len(req_line))
+        #req_d = req_d.replace(url, path)
 
         sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
         sock.replace_pattern = [url[:url_prex_len], ""]
 
         xlog.debug("http %r connect to %s:%d %s %s", self.client_address, host, port, method, path)
-        handle_domain_proxy(sock, host, port, self.client_address, req_d)
+        handle_domain_proxy(sock, host, port, self.client_address)

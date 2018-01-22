@@ -112,8 +112,9 @@
     function onSubmit() {
         var enable = $('#enable-proxy').is(':checked') ? 1 : 0;
         var host = $('#proxy-host').val();
+        var port = $('#proxy-port').val();
         if (enable){
-            if ( host == "127.0.0.1" || host == "localhost"){
+            if ( (host == "127.0.0.1" || host == "localhost") && (port == 8086 || port == 8087 || port == 1080)){
                 tip('{{ _( "Do you really need LAN proxy? <a href="https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting">Help</a>." ) }}', 'error');
                 return;
             }
@@ -124,7 +125,7 @@
             'enable': enable,
             'type': $('#proxy-type').val(),
             'host': host,
-            'port': $('#proxy-port').val(),
+            'port': port,
             'user': $('#proxy-username').val(),
             'passwd': $('#proxy-password').val()
         };

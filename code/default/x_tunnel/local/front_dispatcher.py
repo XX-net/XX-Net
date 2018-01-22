@@ -2,8 +2,9 @@ import time
 import gae_front
 from cloudflare_front.front import front as cloudflare_front
 from heroku_front.front import front as heroku_front
-all_fronts = [gae_front, cloudflare_front]
+all_fronts = [gae_front, cloudflare_front, heroku_front]
 dns_fronts = [gae_front, cloudflare_front, heroku_front]
+session_fronts = [gae_front, cloudflare_front]
 
 # import direct_front
 # all_fronts = [direct_front]
@@ -20,7 +21,7 @@ def get_front(host, timeout):
     if host in ["dns.xx-net.net"]:
         fronts = dns_fronts
     else:
-        fronts = all_fronts
+        fronts = session_fronts
 
     while time.time() - start_time < timeout:
         best_front = None
@@ -55,6 +56,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
             method, host=host, path=path, headers=dict(headers), data=data, timeout=timeout)
 
         if status not in [200, 521]:
+            xlog.warn("front retry %s", path)
             continue
 
         return content, status, response

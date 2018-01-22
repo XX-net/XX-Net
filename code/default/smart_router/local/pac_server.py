@@ -55,7 +55,8 @@ class PacHandler(simple_http_server.HttpServerHandler):
         proxy = host + ":" + str(port)
         content = content.replace(self.PROXY_LISTEN, proxy)
 
-        content = content.replace("BLACK_LIST", g.gfwlist.get_pac_string())
+        black, white = g.gfwlist.get_pac_string()
+        content = content.replace("BLACK_LIST", black).replace("WHITE_LIST", white)
         return content
 
     def do_GET(self):
