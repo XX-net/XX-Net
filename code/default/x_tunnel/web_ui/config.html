@@ -449,8 +449,8 @@
         if (!isEmailLegal(email)) return false;
         var host = email.split('@')[1];
         var weakhosts = ['qq.com', 'sina.cn', 'sina.com', '126.com', '163.com', '163.net', 'yeah.net'];
-        for (var weakhost in weakhosts) {
-            if (host.indexOf(weakhost)>=0) {
+        for (var i in weakhosts) {
+            if (host.indexOf(weakhosts[i])>=0) {
                 return false;
             }
             /*
@@ -477,7 +477,7 @@
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
         } else if ( password.length < 6 ) {
-            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+            tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
             return;
         }
 
