@@ -233,6 +233,9 @@
     });
 </script>
 <script type="text/javascript">
+
+    window.fake_host = "";
+
     documentReadyToRun.push(function(){
         var timer = $.timer(function() {
             if ( $("#details").is(":visible")){
@@ -242,7 +245,7 @@
         });
 
         timer.set({
-            time: 3000,
+            time: 1000,
             autostart: true
         });
 
@@ -269,6 +272,12 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
+                if (window.fake_host !== result["fake_host"]) {
+                    window.fake_host = result["fake_host"];
+                    test_http_proxy_setting();
+                    test_https_proxy_setting();
+                }
+
                 var updates = {
                     'td#sys-platform': result['sys_platform'],
                     'td#os-system': result['os_system'],
@@ -306,7 +315,7 @@
                     }, 'slow');
                 }
 
-                if ( formValue == '' ) {
+                if ( formValue === '' ) {
                     tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
@@ -396,12 +405,16 @@
             return "OK";
         }
 
+        if (window.fake_host === ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'http://www.twitter.com/xxnet',
+            url: 'http://' + window.fake_host + '/xxnet',
             success: function(result) {
                 window.http_proxy_setting = result === "OK" ? "OK" : "Fail";
             },
@@ -420,12 +433,16 @@
             return "OK";
         }
 
+        if (window.fake_host === ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'https://www.twitter.com/xxnet',
+            url: 'https://' + window.fake_host + '/xxnet',
             success: function(result) {
                 window.https_proxy_setting = result == "OK" ? "OK" : "Fail";
             },
