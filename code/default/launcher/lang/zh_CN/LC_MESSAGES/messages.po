@@ -284,6 +284,9 @@ msgstr "建议您使用最新版本的Chrome浏览器。"
 msgid "Search"
 msgstr "搜索"
 
+msgid "Search all issues"
+msgstr "在 issue 中搜索（支持 GitHub issue 搜索参数）"
+
 msgid "Notice"
 msgstr "公告"
 

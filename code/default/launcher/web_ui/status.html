@@ -11,7 +11,8 @@
 
     <div id="search">
         <h4>{{ _( "Search" ) }}</h4>
-        <form accept-charset="UTF-8" action="https://github.com/XX-net/XX-Net/issues" class="subnav-search float-left" data-pjax="true" method="get" target="_blank">
+        <form accept-charset="UTF-8" action="https://github.com/XX-net/XX-Net/issues" class="subnav-search float-left"
+              data-pjax="true" method="get" target="_blank" onsubmit="q.value='is:issue is:open '+q.value">
             <div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="✓"></div>
             <input id="issues-search" name="q" placeholder='{{ _( "Search all issues" ) }}' type="text"> <!-- value="is:issue is:open " -->
             <!--<svg style="margin:0;padding:0;display:inline-block" height="16" width="16" version="1.1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z"/></svg>-->
@@ -233,6 +234,9 @@
     });
 </script>
 <script type="text/javascript">
+
+    window.fake_host = "";
+
     documentReadyToRun.push(function(){
         var timer = $.timer(function() {
             if ( $("#details").is(":visible")){
@@ -242,7 +246,7 @@
         });
 
         timer.set({
-            time: 3000,
+            time: 1000,
             autostart: true
         });
 
@@ -269,6 +273,12 @@
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
             success: function(result) {
+                if (window.fake_host !== result["fake_host"]) {
+                    window.fake_host = result["fake_host"];
+                    test_http_proxy_setting();
+                    test_https_proxy_setting();
+                }
+
                 var updates = {
                     'td#sys-platform': result['sys_platform'],
                     'td#os-system': result['os_system'],
@@ -306,7 +316,7 @@
                     }, 'slow');
                 }
 
-                if ( formValue == '' ) {
+                if ( formValue === '' ) {
                     tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
@@ -396,12 +406,16 @@
             return "OK";
         }
 
+        if (window.fake_host === ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'http://www.twitter.com/xxnet',
+            url: 'http://' + window.fake_host + '/xxnet',
             success: function(result) {
                 window.http_proxy_setting = result === "OK" ? "OK" : "Fail";
             },
@@ -420,12 +434,16 @@
             return "OK";
         }
 
+        if (window.fake_host === ""){
+            return "Fail";
+        }
+
         $.ajax({
             type: 'POST',
             dataType: 'text',
             crossDomain: true,
             timeout: 1000,
-            url: 'https://www.twitter.com/xxnet',
+            url: 'https://' + window.fake_host + '/xxnet',
             success: function(result) {
                 window.https_proxy_setting = result == "OK" ? "OK" : "Fail";
             },
@@ -539,9 +557,9 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function (result) {
-                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "no:label";
-                //var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "公告" + ',' + result['current_version'];
-
+                //var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "no:label"; //for test, get all commits without label
+                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "公告" + ',' + result['current_version'];
+                //console.log('APIurl='+APIurl);
                 $.ajax({
                     type: 'GET',
                     url: APIurl,
