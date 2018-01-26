@@ -57,7 +57,7 @@
         <div class="row-fluid">
             <div class="span4">{{ _( "Enable" ) }} {{ _( "GAE Proxy" ) }}</div> <!-- .span4 -->
             <div class="span8">
-                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
+                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" /> <!--disabled-->
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" >
@@ -148,6 +148,8 @@
                     $("#gae_proxy-enable").parent().addClass('switch-on');
 
                     $("#gae_proxy-enable").prop('checked', true);
+                    $("#gae_proxy-enable").prop('disabled', true);
+                    $("#gae_proxy-enable").parent().parent().addClass("deactivate");
                 }
                 if ( result['x_tunnel_enable'] != 0 ) {
                     $("#x-tunnel-enable").parent().removeClass('switch-off');
