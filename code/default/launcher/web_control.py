@@ -36,50 +36,6 @@ NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 i18n_translator = SimpleI18N(config.get(['language'], None))
 
 
-def test_proxy(type, host, port, user, passwd):
-    if not host:
-        return False
-
-    if host == "127.0.0.1":
-        if port in [8087, 1080]:
-            xlog.warn("set LAN Proxy to %s:%d fail.", host, port)
-            return False
-
-    client = simple_http_client.Client(proxy={
-        "type": type,
-        "host": host,
-        "port": int(port),
-        "user": user if len(user) else None,
-        "pass": passwd if len(passwd) else None
-    }, timeout=5)
-
-    urls = [
-        "https://www.microsoft.com",
-        "https://www.apple.com",
-        "https://code.jquery.com",
-        "https://cdn.bootcss.com",
-        "https://cdnjs.cloudflare.com"]
-
-    for url in urls:
-
-        header = {
-            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-            "accept": "application/json, text/javascript, */*; q=0.01",
-            "accept-encoding": "gzip, deflate, sdch",
-            "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-            "connection": "keep-alive"
-        }
-        try:
-            response = client.request("HEAD", url, header, "")
-            if response:
-                return True
-        except Exception as e:
-            xlog.exception("test_proxy %s fail:%r", url, e)
-            pass
-
-    return False
-
-
 module_menus = {}
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
@@ -232,9 +188,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
                 target_module = 'x_tunnel'
                 target_menu = 'config'
-            elif config.get(['modules', 'smart_switch', 'auto_start'], 0) == 1:
-                target_module = 'smart_switch'
-                target_menu = 'config'
+            # elif config.get(['modules', 'smart_router', 'auto_start'], 0) == 1:
+            #     target_module = 'smart_router'
+            #     target_menu = 'config'
             elif config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
                 target_module = 'gae_proxy'
                 target_menu = 'status'
@@ -270,7 +226,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
             right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
-
         else:
             right_content = ""
 
@@ -666,8 +621,49 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.exception("debug:%r", e)
             self.send_response("text/html", "no mem_top")
 
-
 mem_stat = None
+
+def test_proxy(type, host, port, user, passwd):
+    if not host:
+        return False
+
+    if host == "127.0.0.1":
+        if port in [8087, 1080, 8086]:
+            xlog.warn("set LAN Proxy to %s:%d fail.", host, port)
+            return False
+
+    client = simple_http_client.Client(proxy={
+        "type": type,
+        "host": host,
+        "port": int(port),
+        "user": user if len(user) else None,
+        "pass": passwd if len(passwd) else None
+    }, timeout=5)
+
+    urls = [
+        "https://www.microsoft.com",
+        "https://www.apple.com",
+        "https://code.jquery.com",
+        "https://cdn.bootcss.com",
+        "https://cdnjs.cloudflare.com"]
+
+    for url in urls:
+        header = {
+            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+            "accept": "application/json, text/javascript, */*; q=0.01",
+            "accept-encoding": "gzip, deflate, sdch",
+            "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+            "connection": "keep-alive"
+        }
+        try:
+            response = client.request("HEAD", url, header, "")
+            if response:
+                return True
+        except Exception as e:
+            xlog.exception("test_proxy %s fail:%r", url, e)
+            pass
+
+    return False
 
 server = None
 def start(allow_remote=0):
@@ -690,13 +686,11 @@ def start(allow_remote=0):
 
     xlog.info("launcher web control started.")
 
-
 def stop():
     global server
     xlog.info("begin to exit web control")
     server.shutdown()
     xlog.info("launcher web control exited.")
-
 
 def http_request(url, method="GET"):
     proxy_handler = urllib2.ProxyHandler({})
@@ -708,27 +702,13 @@ def http_request(url, method="GET"):
         #xlog.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
-def confirm_xxnet_exit():
-    """suppose xxnet is running, try to close it
-
-    """
+def confirm_xxnet_not_running():
+    # if xxnet is already running, try exit it
     is_xxnet_exit = False
     xlog.debug("start confirm_xxnet_exit")
 
-    #for i in range(30):
-    #    # gae_proxy(default port:8087)
-    #    if http_request("http://127.0.0.1:8087/quit") == False:
-    #        xlog.debug("good, xxnet:8087 cleared!")
-    #        is_xxnet_exit = True
-    #        break
-    #    else:
-    #        xlog.debug("<%d>: try to terminate xxnet:8087" % i)
-    #    time.sleep(1)
-
-
     for i in range(30):
-        # web_control(default port:8085)
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        host_port = config.get(["modules", "launcher", "control_port"], 8085)  # web_control(default port:8085)
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) == False:
             xlog.debug("good, xxnet:%s clear!" % host_port)
@@ -742,7 +722,7 @@ def confirm_xxnet_exit():
 
 def confirm_module_ready(port):
     if port == 0:
-        xlog.error("confirm_module_ready with port 0")
+        xlog.error("confirm_module_ready with port: 0")
         time.sleep(1)
         return False
 
@@ -764,4 +744,3 @@ def confirm_module_ready(port):
 if __name__ == "__main__":
     pass
     #confirm_xxnet_exit()
-    # http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

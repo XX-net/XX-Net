@@ -7,19 +7,17 @@
 
 <div id="config_content" class="tab-content">
     <div id="tab_content" class="tab-pane fade in active">
-    </div> <!-- #authentication -->
-</div> <!-- #tab-content -->
+    </div>
+</div>
 
 
 <!-- JavaScript -->
 <script type="text/javascript">
     title('{{ _( "Smart Router Configuration" ) }}');
 </script>
-
 <script type="text/javascript">
     $(".config_tab").click(function(){
         var id = $(this).attr('id');
-
         var url = "/module/smart_router/config_" + id + ".html";
         $("#tab_content").load(url);
     });

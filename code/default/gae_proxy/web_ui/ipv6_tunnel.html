@@ -1,27 +1,24 @@
+    <h4>{{ _( "Status" ) }}</h4>
+    <table id="status" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th width="25%">{{ _( "Property" ) }}</th>
+                <th>{{ _( "Value" ) }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ _( "IPv6 Tunnel" ) }}</td>
+                <td id="ipv6-tunnel"></td>
+            </tr>
 
-<h4>{{ _( "Status" ) }}</h4>
-<table id="status" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">{{ _( "Property" ) }}</th>
-            <th>{{ _( "Value" ) }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ _( "IPv6 Tunnel" ) }}</td>
-            <td id="ipv6-tunnel"></td>
-        </tr>
-
-    </tbody>
-</table>
-
+        </tbody>
+    </table>
     <div class="row-fluid">
         <div class="span12">
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel" type="submit">{{ _( "Enable" ) }}</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
-
     <div class="row-fluid">
         <div class="span12">
             <div id="logs" class="tab-pane">
@@ -29,6 +26,7 @@
             </div> <!-- #log -->
         </div>
     </div>
+
 <script type="text/javascript">
     function updateStatus(selector, content) {
         var previousContent = $(selector).html();
@@ -51,7 +49,6 @@
         $('#switch_ipv6_tunnel').html('{{ _( "Disable" ) }}');
     }
 </script>
-
 <script type="text/javascript">
     $('button.btn').click(function() {
         var cmd = "stop";
@@ -83,8 +80,6 @@
         });
     });
 </script>
-
-
 <script type="text/javascript">
     function updateLog(logContent) {
         $('#log').html(logContent.replace(/\n/g, '<br>'));
@@ -101,7 +96,6 @@
 
                 if ( result['status'] == 'enable' ) {
                     SwitchButtonDisable();
-
                 }else if ( result['status'] == 'disable' ) {
                     SwitchButtonEnable();
                 }
@@ -113,10 +107,8 @@
         });
     }
 </script>
-
 <script type="text/javascript">
     $(function() {
-
         window.timer  = $.timer(function() {
             updateProcess();
         });
@@ -129,12 +121,10 @@
         updateProcess();
     });
 </script>
-
 <script type="text/javascript">
     $(function() {
         resizeLogWindow();
     });
-
     $(window).resize(function() {
         resizeLogWindow();
     });

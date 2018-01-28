@@ -14,14 +14,12 @@
         </div>
     </div>
 
-
     <div class="row-fluid">
         <div class="span4">
             <label for="pac-policy">{{ _( "PAC Policy" ) }}</label>
         </div>
         <div class="span4">
             <select id="pac-policy">
-                <!-- <option value="de_DE">Deutsch</option> -->
                 <option value="black_GAE">{{ _("Black->GAEProxy" ) }}</option>
                 <option value="black_X-Tunnel">{{ _("Black->X-Tunnel" ) }}</option>
                 <option value="smart-router">{{ _("All Smart-Router" ) }}</option>
@@ -50,11 +48,8 @@
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 </script>
-
-
 <script type="text/javascript">
     function getSmartRouterConfig() {
-
         $.ajax({
             type: 'POST',
             url: '/module/smart_router/control/config',
@@ -80,17 +75,16 @@
             }
         });
     }
-</script>
-
-<script type="text/javascript">
 
     getSmartRouterConfig();
-
-
+</script>
+<script type="text/javascript">
     function setSmartRouterConfig(key, value) {
-        var pageRequests = {"cmd": "set"};
+        var pageRequests = {
+            "cmd": "set",
+            key: value
+        };
         debugger;
-        pageRequests[key]   = value;
 
         $.ajax({
             type: 'POST',
@@ -117,7 +111,6 @@
     $('#pac-policy').change(function() {
         return setSmartRouterConfig("pac_policy", $('#pac-policy').val());
     });
-
 
     $('#auto-direct').change(function() {
         return setSmartRouterConfig("auto_direct", $(this).is(':checked')? 1:0);

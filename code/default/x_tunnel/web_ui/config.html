@@ -276,7 +276,7 @@
     </div> <!-- .modal-footer -->
 </div> <!-- #transfer-bandwidth-modal -->
 
-<!-- Java Script -->
+<!-- JavaScript -->
 <script type="text/javascript">
     title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
@@ -693,17 +693,16 @@
 </script>
 <script type="text/javascript">
     function parseUnit(str) {
-        var out = [ 0, '' ]
-
-        str = String(str)
-        var num = parseFloat(str, 10)
-        out[0] = num
-        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || ''
+        var out = [ 0, '' ];
+        str = String(str);
+        var num = parseFloat(str, 10);
+        out[0] = num;
+        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || '';
         return out
     }
 
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
-        var amountUnit = parseUnit(transferAmount)
+        var amountUnit = parseUnit(transferAmount);
         if ( amountUnit[1].toUpperCase() == "G" ){
             var amount = amountUnit[0] * 1000 * 1000 * 1000;
         } else {
@@ -736,7 +735,7 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        var amountUnit = parseUnit(obj.value)
+        var amountUnit = parseUnit(obj.value);
         if ( isNaN(amountUnit[0]) ) {
             obj.value = '';
             return;

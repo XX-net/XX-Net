@@ -221,6 +221,12 @@ msgstr "删除成功。"
 msgid "Deleting local version fail."
 msgstr "删除本地版本失败。"
 
+msgid "Failed getting local versions."
+msgstr "获取本地版本失败。"
+
+msgid "Failed getting released versions."
+msgstr "获取发布版本失败。"
+
 msgid "(Remote Web Control Enabled)"
 msgstr "(已允许远程访问)"
 

@@ -1,5 +1,4 @@
 <div id="options">
-
     <div class="row-fluid">
         <div class="span4">
             <label for="language">{{ _( "Language" ) }}</label>
@@ -30,7 +29,7 @@
     <div class="row-fluid">
         <div class="span4">{{ _( "Allow Remote" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
-            <input id="allow-remote-switch" type="checkbox" data-toggle="switch" />
+            <input id="allow-remote" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
@@ -45,7 +44,6 @@
             <input id="no-mess-system" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-
 
     <div class="row-fluid">
         <div class="span4">
@@ -83,7 +81,6 @@
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 </script>
-
 <script type="text/javascript">
     $('.pull-down-control').click(function() {
         var isShown = $('i.icon', this).hasClass('icon-chevron-down');
@@ -100,8 +97,11 @@
         }
     });
 </script>
-
 <script type="text/javascript">
+    $(function() {
+        getConfig();
+    });
+
     function getConfig() {
         var pageRequests = {
             'cmd': 'get_config'
@@ -114,55 +114,54 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['auto_start'] != 0 ) {
-                    $( "#auto-start").parent().removeClass('switch-off');
-                    $( "#auto-start").parent().addClass('switch-on');
+                    $("#auto-start").parent().removeClass('switch-off');
+                    $("#auto-start").parent().addClass('switch-on');
 
-                    $( "#auto-start").prop('checked', true);
+                    $("#auto-start").prop('checked', true);
                 }
                 if ( result['popup_webui'] != 0 ) {
-                    $( "#popup-webui").parent().removeClass('switch-off');
-                    $( "#popup-webui").parent().addClass('switch-on');
+                    $("#popup-webui").parent().removeClass('switch-off');
+                    $("#popup-webui").parent().addClass('switch-on');
 
-                    $( "#popup-webui").prop('checked', true);
+                    $("#popup-webui").prop('checked', true);
                 }
                 if ( result['allow_remote_switch'] != 0 ) {
-                    $( "#allow-remote-switch").parent().removeClass('switch-off');
-                    $( "#allow-remote-switch").parent().addClass('switch-on');
+                    $("#allow-remote").parent().removeClass('switch-off');
+                    $("#allow-remote").parent().addClass('switch-on');
 
-                    $( "#allow-remote-switch").prop('checked', true);
+                    $("#allow-remote").prop('checked', true);
                 }
                 if ( result['show_systray'] != 0 ) {
-                    $( "#show-systray").parent().removeClass('switch-off');
-                    $( "#show-systray").parent().addClass('switch-on');
+                    $("#show-systray").parent().removeClass('switch-off');
+                    $("#show-systray").parent().addClass('switch-on');
 
-                    $( "#show-systray").prop('checked', true);
+                    $("#show-systray").prop('checked', true);
                 }
                 if ( result['no_mess_system'] != 0 ) {
-                    $( "#no-mess-system").parent().removeClass('switch-off');
-                    $( "#no-mess-system").parent().addClass('switch-on');
+                    $("#no-mess-system").parent().removeClass('switch-off');
+                    $("#no-mess-system").parent().addClass('switch-on');
 
-                    $( "#no-mess-system").prop('checked', true);
+                    $("#no-mess-system").prop('checked', true);
                 }
                 if ( result['gae_proxy_enable'] != 0 ) {
-                    $( "#gae_proxy-enable").parent().removeClass('switch-off');
-                    $( "#gae_proxy-enable").parent().addClass('switch-on');
+                    $("#gae_proxy-enable").parent().removeClass('switch-off');
+                    $("#gae_proxy-enable").parent().addClass('switch-on');
 
-
-                    $( "#gae_proxy-enable").prop('checked', true);
+                    $("#gae_proxy-enable").prop('checked', true);
                 }
                 if ( result['x_tunnel_enable'] != 0 ) {
-                    $( "#x-tunnel-enable").parent().removeClass('switch-off');
-                    $( "#x-tunnel-enable").parent().addClass('switch-on');
+                    $("#x-tunnel-enable").parent().removeClass('switch-off');
+                    $("#x-tunnel-enable").parent().addClass('switch-on');
 
-                    $( "#x-tunnel-enable").prop('checked', true);
+                    $("#x-tunnel-enable").prop('checked', true);
                 }
                 if ( result['smart_router_enable'] != 0 ) {
-                    $( "#smart-router-enable").parent().removeClass('switch-off');
-                    $( "#smart-router-enable").parent().addClass('switch-on');
+                    $("#smart-router-enable").parent().removeClass('switch-off');
+                    $("#smart-router-enable").parent().addClass('switch-on');
 
-                    $( "#smart-router-enable").prop('checked', true);
+                    $("#smart-router-enable").prop('checked', true);
                 }
-                $( "#language").val(result['language']);
+                $("#language").val(result['language']);
             },
             error: function() {
                 displayErrorMessage();
@@ -170,14 +169,6 @@
         });
     }
 </script>
-
-<script type="text/javascript">
-    $(function() {
-        getConfig();
-    });
-</script>
-
-
 <script type="text/javascript">
     $('#language').change(function() {
         var key   = 'language',
@@ -222,7 +213,7 @@
         return setConfig(key, value);
     });
 
-    $('#allow-remote-switch').change(function() {
+    $('#allow-remote').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'allow_remote_switch',
             value     = isChecked ? 1 : 0;
@@ -260,4 +251,3 @@
         setConfig(key, value);
     });
 </script>
-

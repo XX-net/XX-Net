@@ -563,10 +563,10 @@
     });
 
     function setConfig(key, value) {
-        var pageRequests = {};
-        pageRequests['cmd'] = 'set_config';
-        pageRequests[key]   = value;
-
+        var pageRequests = {
+            'cmd': 'set_config',
+            key: value
+        };
         $.ajax({
             type: 'GET',
             url: '/config',

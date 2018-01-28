@@ -17,7 +17,6 @@
                     <input id="gae-appid" type="text" placeholder='{{ _("Delimit multiple AppIDs with |") }}' />
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
-
             <div class="row-fluid">
                 <div class="span4">
                     <label for="show-debug-log">{{ _( "Show Debug Log" ) }}</label>
@@ -26,7 +25,6 @@
                     <input id="show-debug-log" type="checkbox" data-toggle="switch" />
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
-
             <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">{{ _("Start to deploy") }}</button>
@@ -41,7 +39,6 @@
 </div> <!-- #tab-content -->
 
 <!-- JavaScript -->
-
 <script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
@@ -49,7 +46,6 @@
 
     $('#show-debug-log').parent().removeClass('switch-off');
 </script>
-
 <script type="text/javascript">
     $(function() {
         window.status = 'init';
@@ -71,11 +67,7 @@
             scrollHeight    = $('#log')[0].scrollHeight,
             scrollTop       = $('#log').scrollTop();
 
-        if ( scrollTop + preservedHeight == scrollHeight ) {
-            window.isAutoScrollLog = true;
-        } else {
-            window.isAutoScrollLog = false;
-        }
+        window.isAutoScrollLog = scrollTop + preservedHeight == scrollHeight;
     });
 </script>
 <script type="text/javascript">
@@ -86,8 +78,7 @@
     $(window).resize(function() {
         resizeLogWindow();
     });
-</script>
-<script type="text/javascript">
+
     function resizeLogWindow() {
         var windowHeight = $(window).height(),
         preservedHeight = 300;
@@ -99,8 +90,7 @@
     function updateLog(logContent) {
         $('#log').html(logContent.replace(/\n/g, '<br>'));
     }
-</script>
-<script type="text/javascript">
+
     function getDeployStatus() {
         $.ajax({
             type: 'GET',
@@ -125,6 +115,7 @@
                     } else {
                         window.timer.stop();
                         $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result['status']);
+
                         updateLog(result['log']);
                     }
                 } else { // window.status == 'init' || window.status == 'finished' || undefined
@@ -181,13 +172,12 @@
 <script type="text/javascript">
     function onStart(){
         var appId        = $('#gae-appid').val();
-        var debug = $('#show-debug-log').is(':checked') ? 1 : 0;
+        var debug        = $('#show-debug-log').is(':checked') ? 1 : 0;
         var errorMessage = getErrorMessage(appId);
 
         if ( errorMessage.length != 0 ) {
             $('.alert').removeClass('alert-info');
             $('.alert').addClass('alert-error');
-
             $('.alert').html(errorMessage);
             return;
         } else {

@@ -191,7 +191,7 @@ def main():
 
     xlog.info("start XX-Net %s", current_version)
 
-    web_control.confirm_xxnet_exit()
+    web_control.confirm_xxnet_not_running()
 
     setup_win_python.check_setup()
 

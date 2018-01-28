@@ -33,9 +33,7 @@
             dataType: 'JSON',
             success: function(result) {
                 var ipList = result['res'];
-
                 tip('{{ _("Succeeded exporting ") }}' + ipList.split('|').length + '{{ _(" IP addresses.") }}', 'success');
-
                 ipList = conversionFormat('1', ipFormat, ipList);
                 $('#ip-list').val(ipList);
             },
@@ -62,7 +60,6 @@
         case '3': //智能正则匹配
             var tmp = ' ' + sourceData;
             var regex = /(?!\d)[^\d](([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}(?!\d))/gm;
-
             var regexResult;
             ipList = [];
             while(true) {
@@ -97,7 +94,6 @@
         return result;
     }
 </script>
-
 <script type="text/javascript">
     function onSubmit() {
         var ipFormat = $('#ip-format').val();

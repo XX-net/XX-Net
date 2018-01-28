@@ -1,4 +1,4 @@
-<form id="config_proxy" method="POST" onSubmit="onSubmit(); return false;">
+    <form id="config_proxy" method="POST" onSubmit="onSubmit(); return false;">
         <div class="row-fluid">
             <div class="span4">
                 <label for="enable-proxy">{{ _( "LAN proxy" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Intranet-proxy" target="_blank">({{ _( "Help" ) }})</a></label>
@@ -55,21 +55,22 @@
             </div> <!-- .row-fluid -->
         </div> <!-- #proxy-options -->
 
-    <div class="row-fluid">
-        <div class="span12">
-            <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
-        </div> <!-- .span12 -->
-    </div> <!-- .row-fluid -->
-</form>
+        <div class="row-fluid">
+            <div class="span12">
+                <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
+            </div> <!-- .span12 -->
+        </div> <!-- .row-fluid -->
+    </form>
+
 <script type="text/javascript">
     $(function() {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 </script>
+
 <script type="text/javascript">
     $('#enable-proxy').change(function() {
         var isChecked = $(this).is(':checked');
-
         if ( isChecked ) {
             $('#proxy-options').slideDown();
         } else {
@@ -78,7 +79,6 @@
     });
 </script>
 
-
 <script type="text/javascript">
     $(function() {
         $.ajax({
@@ -86,11 +86,9 @@
             url: '/config_proxy?cmd=get_config',
             dataType: 'JSON',
             success: function(result) {
-
                 if ( typeof(result['enable']) != 'undefined' && result['enable'] != 0 ) {
                     $('#enable-proxy').parent().removeClass('switch-off');
                     $('#enable-proxy').parent().addClass('switch-on');
-
                     $('#enable-proxy').prop('checked', true);
                     $('#proxy-options').slideDown();
                 }
@@ -99,7 +97,6 @@
                 $('#proxy-port').val(result['port']);
                 $('#proxy-username').val(result['user']);
                 $('#proxy-password').val(result['passwd']);
-
             },
             error: function(){
                 tip('{{ _( "Failed reading the settings." ) }}', 'error');
@@ -119,7 +116,6 @@
                 return;
             }
         }
-
 
         var config = {
             'enable': enable,

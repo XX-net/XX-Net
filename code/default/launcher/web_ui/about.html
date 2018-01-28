@@ -47,11 +47,10 @@
 <script type="text/javascript">
     title('{{ _( "About XX-Net" ) }}');
 </script>
-
-
 <script type="text/javascript">
-    var pageRequests = {};
-    pageRequests['cmd'] = 'get_version';
+    var pageRequests = {
+        'cmd': 'get_version'
+    };
     $.ajax({
         type: 'GET',
         url: '/config',
@@ -59,7 +58,6 @@
         dataType: 'JSON',
         success: function(result) {
             document.getElementById("about_current_version").appendChild(document.createTextNode(result['current_version']));
-            
         }
     });
 </script>

@@ -39,7 +39,6 @@
                         $('#domain-cache-list').val(result['domain_cache_list']);
                         $('#ip-cache-list').val(result['ip_cache_list']);
                     }
-
                 } else {
                     displayErrorMessage();
                 }
@@ -56,7 +55,6 @@
         var postData = {
             'cmd': "clean"
         };
-
         $.ajax({
             type: 'POST',
             url: '/module/smart_router/control/cache',
@@ -72,4 +70,3 @@
         });
     }
 </script>
-

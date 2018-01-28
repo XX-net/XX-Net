@@ -23,11 +23,9 @@
 </script>
 <script type="text/javascript">
     function doImportAction(ipList) {
-
         var postData = {
             'ipList': ipList
         };
-
         $.ajax({
             type: 'POST',
             url: '/module/gae_proxy/control/importip?cmd=importip',

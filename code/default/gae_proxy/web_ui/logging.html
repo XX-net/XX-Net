@@ -18,7 +18,6 @@
     $(function() {
         resizeLogWindow();
     });
-
     $(window).resize(function() {
         resizeLogWindow();
     });
@@ -59,11 +58,7 @@
             scrollHeight    = $('#log')[0].scrollHeight,
             scrollTop       = $('#log').scrollTop();
 
-        if ( scrollTop + preservedHeight == scrollHeight ) {
-            window.isAutoScrollLog = true;
-        } else {
-            window.isAutoScrollLog = false;
-        }
+        window.isAutoScrollLog = scrollTop + preservedHeight == scrollHeight;
     });
 </script>
 <script type="text/javascript">
@@ -82,7 +77,6 @@
             'cmd': 'get_new',
             'last_no': offset
         };
-
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/log',
@@ -137,7 +131,6 @@
             return 'ERROR';
         } else if ( log.indexOf('[CRITICAL]') != -1 ) {
             return 'CRITICAL';
-        }
-        return 'DUMMY';
+        } else return 'DUMMY';
     }
 </script>

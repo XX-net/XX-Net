@@ -24,12 +24,12 @@
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 </form> <!-- #gae_proxy-config -->
+<div class="row-fluid">
+    <div class="span12">
+        {{ _( "Advanced tricks:" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
+    </div> <!-- .span4 -->
+</div> <!-- .row-fluid -->
 
-        <div class="row-fluid">
-            <div class="span12">
-                {{ _( "Advanced tricks:" ) }} <a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-manual-config" target="_blank">{{ _( "By the configuration file" ) }}</a>
-            </div> <!-- .span4 -->
-        </div> <!-- .row-fluid -->
 <!-- JavaScript -->
 <script type="text/javascript">
     title('{{ _( "GAEProxy Configuration" ) }}');
@@ -85,7 +85,6 @@
             'appid': gaeAppId,
             'host_appengine_mode': hostAppEngine
         };
-
         $.ajax({
             type: 'POST',
             url: '/module/gae_proxy/control/config?cmd=set_config',

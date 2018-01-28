@@ -14,7 +14,7 @@
     <!-- JavaScript -->
     <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/js/flat-ui.min.js"></script>
+    <script type="text/javascript" src="/js/flat-ui.js"></script>
     <script type="text/javascript" src="/js/jquery.timer.js"></script>
     <script type="text/javascript" src="/js/spin.min.js"></script>
     <script type="text/javascript" src="/js/ladda.min.js"></script>
@@ -109,22 +109,7 @@
                 $('.container-fluid').removeClass('container-fluid');
             }
         });
-    </script>
-    <script type="text/javascript">
-        var pageRequests = {};
-        pageRequests['cmd'] = 'get_version';
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function(result) {
-                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
-                
-            }
-        });
-    </script>
-    <script type="text/javascript">
+
         $('#quit-trigger').click(function() {
             $.ajax({
                 type: 'GET',
@@ -145,9 +130,23 @@
     </script>
     <script type="text/javascript">
         var pageRequests = {
+            'cmd': 'get_version'
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
+                
+            }
+        });
+    </script>
+    <script type="text/javascript">
+        var pageRequests = {
             'cmd': 'get_config'
         };
-
         $.ajax({
             type: 'GET',
             url: '/config',
@@ -161,43 +160,37 @@
         });
     </script>
     <script type="text/javascript">
+        function displayErrorMessage() {
+            tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
+        }
+    </script>
+    <script type="text/javascript">
         var checkUpdateTimeout = 600000;
         var checkUpdateTimer;
         var versionToUpdate;
         var versionType;
 
-        function displayErrorMessage() {
-            tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
-        }
-
-        function clearProgressBar() {
-            $('#update-progress-bar').addClass('hide');
-        }
-
         function startUpdateCheck() {
             $('#update-notify').addClass('hide');
-            var pageRequests = {};
-            pageRequests['cmd'] = 'start_check';
-            check_update = $('#check-update').val();
-            if ( !check_update ) {
-                check_update = '';
-            }
-            pageRequests['check_update'] = check_update;
 
+            var pageRequests = {
+                'cmd':'start_check',
+                'check_update':$('#check-update').val()//getConfig('check-update')
+            };
             $.ajax({
                 type: 'GET',
                 url: '/update',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
-                    if ( result['res'] == 'success' ) {
+                success: function (result) {
+                    if (result['res'] === 'success') {
                         getUpdateInfo();
                         checkUpdateTimer.play();
                     } else {
-                        tip( result['reason'], "warning");
+                        tip(result['reason'], "warning");
                     }
                 },
-                error: function() {
+                error: function () {
                     displayErrorMessage();
                 }
             });
@@ -206,21 +199,22 @@
         function stopUpdateCheck() {
             $('#update-notify').addClass('hide');
             checkUpdateTimer.stop();
-            var pageRequests = {};
-            pageRequests['cmd'] = 'set_info';
-            pageRequests['info'] = 'dont-check';
 
+            var pageRequests = {
+                'cmd': 'set_info',
+                'info': 'dont-check'
+            };
             $.ajax({
                 type: 'GET',
                 url: '/update',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
-                    if ( result['res'] != 'success' ) {
-                        tip( result['reason'], "warning");
+                success: function (result) {
+                    if (result['res'] !== 'success') {
+                        tip(result['reason'], 'warning');
                     }
                 },
-                error: function() {
+                error: function () {
                     displayErrorMessage();
                 }
             });
@@ -228,21 +222,22 @@
 
         function clearUpdateInfo() {
             $('#update-notify').addClass('hide');
-            var pageRequests = {};
-            pageRequests['cmd'] = 'set_info';
-            pageRequests['info'] = '';
 
+            var pageRequests = {
+                'cmd': 'set_info',
+                'info': ''
+            };
             $.ajax({
                 type: 'GET',
                 url: '/update',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
-                    if ( result['res'] != 'success' ) {
-                        tip( result['reason'], "warning");
+                success: function (result) {
+                    if (result['res'] !== 'success') {
+                        tip(result['reason'], "warning");
                     }
                 },
-                error: function() {
+                error: function () {
                     displayErrorMessage();
                 }
             });
@@ -251,125 +246,136 @@
         function skipUpdateVersion() {
             $('#update-notify').addClass('hide');
             checkUpdateTimer.stop();
-            var pageRequests = {};
-            pageRequests['cmd'] = 'set_config';
-            pageRequests['skip_version'] = versionToUpdate;
-            pageRequests['skip_version_type'] = versionType;
 
+            var pageRequests = {
+                'cmd': 'set_config',
+                'skip_version': versionToUpdate,
+                'skip_version_type': versionType
+            };
             $.ajax({
                 type: 'GET',
                 url: '/config',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
-                    if ( result['res'] != 'success' ) {
-                        tip( result['reason'], "warning");
+                success: function (result) {
+                    if (result['res'] !== 'success') {
+                        tip(result['reason'], "warning");
                     }
                 },
-                error: function() {
+                error: function () {
                     displayErrorMessage();
                 }
             });
         }
 
-        function updateBase(checkhash){
+        function updateBase(checkhash) {
             $('#update-notify').addClass('hide');
-            var pageRequests = {};
-            pageRequests['cmd'] = 'update_version';
-            pageRequests['version'] = versionToUpdate;
 
-            if (!checkhash)
-            {
-                pageRequests['checkhash'] = 0;
-            }
-
+            var pageRequests = {
+                'cmd': 'update_version',
+                'version': versionToUpdate,
+                'checkhash': checkhash//?checkhash:0
+            };
             versionToUpdate = null;
-
             $.ajax({
                 type: 'GET',
                 url: '/update',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
-                    if ( result['res'] == 'success' ) {
-                        tip( '{{ _( "Updating in progress ..." ) }}', "info");
+                success: function (result) {
+                    if (result['res'] === 'success') {
+                        tip('{{ _( "Updating in progress ..." ) }}', "info");
                         window.updateProgress_timer.play();
                     } else {
-                        tip( result['reason'], "warning");
+                        tip(result['reason'], "warning");
                     }
                 },
-                error: function() {
+                error: function () {
                     displayErrorMessage();
                 }
             });
         }
-
         function updateVersion() {
             updateBase(1);
         }
-        function updateVersionWithoutHashCheck(){
+        function updateVersionWithoutHashCheck() {
             updateBase(0);
         }
 
         function getUpdateInfo() {
-            if ( !$('#update-notify').hasClass('hide') ||
-                 !$('#update-progress-bar').hasClass('hide')) {
+            if (!$('#update-notify').hasClass('hide') ||
+                !$('#update-progress-bar').hasClass('hide')) {
                 return;
             }
 
-            var pageRequests = {};
-            pageRequests['cmd'] = 'get_info';
-
+            var pageRequests = {
+                'cmd': 'get_info'
+            };
             $.ajax({
                 type: 'GET',
                 url: '/update',
                 data: pageRequests,
                 dataType: 'JSON',
-                success: function(result) {
+                success: function (result) {
                     versionType = result['type'];
-                    switch ( versionType ) {
-                    case 'init':
-                        window.setTimeout(startUpdateCheck, 1000);
-                        break;
-                    case 'dont-check':
-                        stopUpdateCheck();
-                        break;
-                    default:
-                        versionToUpdate = result['version'];
-                        if ( versionType && versionToUpdate ) {
-                            switch ( versionType ) {
-                            case 'stable':
-                                var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
-                                break;
-                            case 'test':
-                                var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
+                    switch (versionType) {
+                        case 'init':
+                            window.setTimeout(startUpdateCheck, 1000);
+                            break;
+                        case 'dont-check':
+                            stopUpdateCheck();
+                            break;
+                        default:
+                            versionToUpdate = result['version'];
+                            if (versionType && versionToUpdate) {
+                                switch (versionType) {
+                                    case 'stable':
+                                        var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
+                                        break;
+                                    case 'test':
+                                        var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
+                                }
+                                $('#update-message').text(popText);
+                                $('#update-viewchanges').attr("href", "https://github.com/XX-net/XX-Net/releases/tag/" + versionToUpdate);
+                                $('#update-notify').removeClass('hide');
                             }
-                            $('#update-message').text(popText);
-                            $('#update-viewchanges').attr( "href", "https://github.com/XX-net/XX-Net/releases/tag/" + versionToUpdate );
-                            $('#update-notify').removeClass('hide');
-                        }
                     }
                 }
             });
         }
 
-        function updateProgress(){
-            $.getJSON('update?cmd=get_progress', function (rst) {
-                Object.keys(rst).forEach(function (v) {
-                    if ( v == "update_status"){
-                        var stat = rst[v];
-
-                        if ( stat === "Idle"){
+        function updateProgress() { //TODO: 完善tip（详细信息、翻译, etc.)
+            $.getJSON('update?cmd=get_progress', function (result) {
+                Object.keys(result).forEach(function (v) {
+                    if (v === "update_status") {
+                        var stat = result[v];
+                        switch (stat) {
+                            case "Idle":
+                                window.updateProgress_timer.stop();
+                                break;
+                            case "Finished":
+                                tip('{{ _( "Finished." ) }}', 'info');
+                                window.loading.stop();
+                                window.updateProgress_timer.stop();
+                                break;
+                            default:
+                                if (stat.indexOf('Fail') > -1) {
+                                    tip(stat, 'warning');
+                                    window.updateProgress_timer.stop();
+                                } else {
+                                    tip(stat, 'info');
+                                }
+                        }
+                        /*
+                        if (stat === "Idle") {
                             window.updateProgress_timer.stop();
                             return;
                         }
-
-                        if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
+                        /*
+                        if ($('#upgrade-pull-icon').hasClass('icon-chevron-right')) {
                             var current_version = $('#current-version-no').html();
-                            if ( current_version == "" ){
-                                $('#current-version-no').html(" ");
-                                // avoid check next time.
-
+                            if (current_version === "") {
+                                $('#current-version-no').html(" "); // avoid check next time.
                                 check_new_version();
                             }
 
@@ -380,51 +386,53 @@
                             $('#update-options').slideDown();
                         }
 
-                        if( stat == "Finished"){
-                            tip( stat, 'info');
+                        if (stat === "Finished") {
+                            tip(stat, 'info');
                             window.loading.stop();
                             window.updateProgress_timer.stop();
-                            return;
-                        }else if ( stat.indexOf('Fail') > -1){
-                            tip( stat, 'warning');
+                            //return;
+                        } else if (stat.indexOf('Fail') > -1) {
+                            tip(stat, 'warning');
                             window.updateProgress_timer.stop();
-                        }else{
-                            tip( stat, 'info');
+                        } else {
+                            tip(stat, 'info');
                         }
-                    }else if (v.indexOf('XX-Net/zip') > -1) {
-                        if (!window.updating_button){
+                        */
+                    } else if (v.indexOf('XX-Net/zip') > -1) {
+                        if (!window.updating_button) {
                             var p = v.indexOf('XX-Net/zip') + 11;
                             var version = v.substring(p, v.length);
                             var button;
-                            if ( version == $('#test-version-no').html() ){
+                            if (version === $('#test-version-no').html()) {
                                 button = $('#update-test-version');
-                            }else if ( version == $('#stable-version-no').html() ){
+                            } else if (version === $('#stable-version-no').html()) {
                                 button = $('#update-stable-version');
-                            }else if ( $('.active a').attr('href') == '/?module=launcher&menu=config' ) {
+                            } else if ($('.active a').attr('href') === '/?module=launcher&menu=config') {
                                 return;
-                            }else{
-                                button = $('#update-progress-bar span');
+                            } else {
+                                button = $('#update-progress-bar').find('span');
                                 $('#update-progress-bar').removeClass('hide');
                             }
                             window.updating_button = button;
                         }
                         $('#update-notify').addClass('hide');
 
-                        if (!window.loading){
+                        if (!window.loading) {
                             window.loading = Ladda.create(window.updating_button[0]);
                             window.loading.start();
                         }
-                        var data = rst[v];
-                        if ( data.status === 'downloading'){
-                            var progress =  (+data.downloaded / +data.size) * 100 ;
-
+                        var data = result[v];
+                        if (data.status === 'downloading') {
+                            var progress = (+data.downloaded / +data.size) * 100;
                             window.loading.setProgress(progress);
                             window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '&#37;');
-                        }else if (data.status === "finished"){
-                            window.updating_button.html( '{{ _( "Download completed." ) }}');
+                        } else if (data.status === "finished") {
+                            window.updating_button.html('{{ _( "Download completed." ) }}');
                             window.updating_button.prop('disabled', true);
                             window.updating_button = null;
-                            window.setTimeout(clearProgressBar, 5000);
+                            window.setTimeout(function clearProgressBar() {
+                                $('#update-progress-bar').addClass('hide');
+                            }, 5000);
                             window.loading.stop();
                             window.updateProgress_timer.stop();
                         }
@@ -433,9 +441,9 @@
             });
         }
 
-        $(document).ready(function(){
+        $(document).ready(function () {
             var rfn;
-            for ( rfn in documentReadyToRun ) {
+            for (rfn in documentReadyToRun) {
                 documentReadyToRun[rfn]();
             }
             window.updateProgress_timer = $.timer(updateProgress, 1000, true);
