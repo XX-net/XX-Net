@@ -17,7 +17,7 @@
 </script>
 
 <script type="text/javascript">
-    $(".config_tab").click(function(){
+    $(".config_tab").click(function () {
         var id = $(this).attr('id');
         var url = "/module/launcher/config_" + id + ".html";
         $("#tab_content").load(url);
@@ -48,7 +48,7 @@
 
         tip(messageTemplate.format(serviceName, restatingTime), 'warning');
 
-        setTimeout(function() {
+        setTimeout(function () {
             location.reload();
         }, restatingTime * 1000);
     }
@@ -66,9 +66,9 @@
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    if ( key == 'gae_proxy_enable' || key == 'x_tunnel_enable' || key == 'smart_router_enable') {
+            success: function (result) {
+                if (result['res'] == 'success') {
+                    if (key == 'gae_proxy_enable' || key == 'x_tunnel_enable' || key == 'smart_router_enable') {
                         restartingService(key);
                     } else {
                         tip('{{ _( "Settings saved successfully." ) }}', 'success');
@@ -77,7 +77,7 @@
                     displayErrorMessage();
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });

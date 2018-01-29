@@ -36,7 +36,7 @@
 <script type="text/javascript">
     function updateStatus(selector, content) {
         var previousContent = $(selector).html();
-        if (String(previousContent) != String(content)) {
+        if (String(previousContent) !== String(content)) {
             $(selector).html(content);
         }
     }
@@ -50,13 +50,13 @@
                 var updates = {
                     '#all-ip-num': result['all_ip_num'],
                     '#left-num': result['left_num'],
-                    '#good-num': result['good_num'],
-                }
+                    '#good-num': result['good_num']
+                };
                 for (var item in updates) {
                     updateStatus(item, updates[item]);
                 }
 
-                if (result['left_num'] == 0) {
+                if (result['left_num'] === 0) {
                     enableStartButton();
                 } else {
                     disableStartButton();

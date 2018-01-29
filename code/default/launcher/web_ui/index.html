@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><!-- See http://www.w3schools.com/tags/ref_language_codes.asp -->
+<html lang="en"> <!-- See http://www.w3schools.com/tags/ref_language_codes.asp -->
 <head>
     <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
     <title>XX-Net</title>
@@ -28,496 +28,435 @@
     var documentReadyToRun = new Array();
 </script>
 <body>
-    <div id="header" class="navbar navbar-inverse navbar-fixed-top">
-        <div class="navbar-inner">
-            <div class="container">
-                <div class="row-fluid">
-                    <div id="logo" class="span8">
-                        <a href="/" title="XX-Net">
-                            <img src="/img/logo.png" alt="Logo">
-                            XX-Net
-                            <span id="version_on_logo" class="" ></span>
-                        </a>
-                        <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
-                    </div> <!-- #logo -->
-                    <div class="span4 text-right">
-                        <ul class="inline">
-                            <li>
-                                <a id="resize-window-trigger" href="javascript:void(0);" title='{{ _( "Adaptive width" ) }}'>
-                                    <img src="/img/fixed-width.png" alt="resize-window">
-                                </a>
-                            </li>
-                            <li>
-                                <a id="quit-trigger" href="javascript:void(0);" title='{{ _( "Exit the program" ) }}'>
-                                    <img src="/img/quit.png" alt="quit">
-                                </a>
-                            </li>
-                        </ul>
-                    </div> <!-- .span4 -->
-                </div> <!-- .row-fluid -->
-            </div> <!-- .container -->
-        </div> <!-- .navbar-inner -->
-    </div> <!-- #header -->
-    <div id="content">
+<div id="header" class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
         <div class="container">
             <div class="row-fluid">
-                <div id="sidebar" class="span3">
-                    <div class="sidebar-nav well">
-                        <ul class="nav nav-list">%s</ul>
-                    </div> <!-- .sidebar-nav -->
-                </div> <!-- #sidebar -->
-                <div class="span9">
-                    <div id="update-notify" class="alert fade in hide">
-                        <span id="update-notify-close">×</span>
-                        <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
-                        <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
-                        <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
-                        <span id="update-message"></span>
-                        <span> &nbsp; <a id="update-viewchanges" target="_blank">{{ _( "View changes" ) }}</a></span>
-                    </div> <!-- #update-notify -->
-                    <div id="update-progress-bar" class="popnotify fade in hide">
-                        <span class=""></span>
-                    </div><!-- #update-progress-bar -->
-                    <h2 id="title"></h2>
-                    <div id="tip" class="alert fade in hide">
-                        <button id="tip-close" type="button" class="close">×</button>
-                        <p id="tip-message" class="message"></p>
-                    </div> <!-- #tip -->
-                    %s
-                </div>
+                <div id="logo" class="span8">
+                    <a href="/" title="XX-Net">
+                        <img src="/img/logo.png" alt="Logo">
+                        XX-Net
+                        <span id="version_on_logo" class=""></span>
+                    </a>
+                    <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
+                </div> <!-- #logo -->
+                <div class="span4 text-right">
+                    <ul class="inline">
+                        <li>
+                            <a id="resize-window-trigger" href="javascript:void(0);" title='{{ _( "Adaptive width" ) }}'>
+                                <img src="/img/fixed-width.png" alt="resize-window">
+                            </a>
+                        </li>
+                        <li>
+                            <a id="quit-trigger" href="javascript:void(0);" title='{{ _( "Exit the program" ) }}'>
+                                <img src="/img/quit.png" alt="quit">
+                            </a>
+                        </li>
+                    </ul>
+                </div> <!-- .span4 -->
             </div> <!-- .row-fluid -->
         </div> <!-- .container -->
-    </div> <!-- #content -->
-    <!-- JavaScript -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script type="text/javascript">
-        $(function() {
-            window.isFullWidth = false;
-        });
-    </script>
-    <script type="text/javascript">
-        $('#resize-window-trigger').click(function() {
-            isFullWidth = !isFullWidth;
+    </div> <!-- .navbar-inner -->
+</div> <!-- #header -->
+<div id="content">
+    <div class="container">
+        <div class="row-fluid">
+            <div id="sidebar" class="span3">
+                <div class="sidebar-nav well">
+                    <ul class="nav nav-list">%s</ul>
+                </div> <!-- .sidebar-nav -->
+            </div> <!-- #sidebar -->
+            <div class="span9">
+                <div id="update-notify" class="alert fade in hide">
+                    <span id="update-notify-close">×</span>
+                    <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
+                    <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
+                    <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
+                    <span id="update-message"></span>
+                    <span> &nbsp; <a id="update-viewchanges" target="_blank">{{ _( "View changes" ) }}</a></span>
+                </div> <!-- #update-notify -->
+                <div id="update-progress-bar" class="popnotify fade in hide">
+                    <span class=""></span>
+                </div> <!-- #update-progress-bar -->
+                <h2 id="title"></h2>
+                <div id="tip" class="alert fade in hide">
+                    <button id="tip-close" type="button" class="close">×</button>
+                    <p id="tip-message" class="message"></p>
+                </div> <!-- #tip -->
+                %s
+            </div>
+        </div> <!-- .row-fluid -->
+    </div> <!-- .container -->
+</div> <!-- #content -->
+<!-- JavaScript -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script type="text/javascript">
+    $(function () {
+        window.isFullWidth = false;
+    });
+</script>
+<script type="text/javascript">
+    $('#resize-window-trigger').click(function () {
+        isFullWidth = !isFullWidth;
 
-            if ( isFullWidth ) {
-                $('img', this).attr('src', '/img/full-width.png');
-                $('.container').addClass('container-fluid');
-                $('.container').removeClass('container');
-            } else {
-                $('img', this).attr('src', '/img/fixed-width.png');
-                $('.container-fluid').addClass('container');
-                $('.container-fluid').removeClass('container-fluid');
+        if (isFullWidth) {
+            $('img', this).attr('src', '/img/full-width.png');
+            $('.container').addClass('container-fluid');
+            $('.container').removeClass('container');
+        } else {
+            $('img', this).attr('src', '/img/fixed-width.png');
+            $('.container-fluid').addClass('container');
+            $('.container-fluid').removeClass('container-fluid');
+        }
+    });
+
+    $('#quit-trigger').click(function () {
+        $.ajax({
+            type: 'GET',
+            url: '/quit',
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['status'] == 'success') {
+                    tip('{{ _( "Exited successfully." ) }}', 'success');
+                } else {
+                    tip('{{ _( "Exitting failed." ) }}', 'error');
+                }
+            },
+            error: function () {
+                tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
             }
         });
+    });
+</script>
+<script type="text/javascript">
+    var pageRequests = {
+        'cmd': 'get_version'
+    };
+    $.ajax({
+        type: 'GET',
+        url: '/config',
+        data: pageRequests,
+        dataType: 'JSON',
+        success: function (result) {
+            document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
+        }
+    });
+</script>
+<script type="text/javascript">
+    var pageRequests = {
+        'cmd': 'get_config'
+    };
+    $.ajax({
+        type: 'GET',
+        url: '/config',
+        data: pageRequests,
+        dataType: 'JSON',
+        success: function (result) {
+            if (result['allow_remote_connect'] != 0) {
+                $('#remote-connection-identifier').show();
+            }
+        }
+    });
+</script>
+<script type="text/javascript">
+    function displayErrorMessage() {
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
+    }
+</script>
+<script type="text/javascript">
+    var checkUpdateTimeout = 600000;
+    var checkUpdateTimer;
+    var versionToUpdate;
+    var versionType;
 
-        $('#quit-trigger').click(function() {
-            $.ajax({
-                type: 'GET',
-                url: '/quit',
-                dataType: 'JSON',
-                success: function(result) {
-                    if ( result['status'] == 'success' ) {
-                        tip('{{ _( "Exited successfully." ) }}', 'success');
-                    } else {
-                        tip('{{ _( "Exitting failed." ) }}', 'error');
-                    }
-                },
-                error: function() {
-                    tip('{{ _( "Exitting failed. A network error occurred." ) }}', 'error');
-                }
-            });
-        });
-    </script>
-    <script type="text/javascript">
+    function startUpdateCheck() {
+        $('#update-notify').addClass('hide');
+
         var pageRequests = {
-            'cmd': 'get_version'
+            'cmd': 'start_check',
+            'check_update': $('#check-update').val()//getConfig('check-update')
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] === 'success') {
+                    getUpdateInfo();
+                    checkUpdateTimer.play();
+                } else {
+                    tip(result['reason'], "warning");
+                }
+            },
+            error: function () {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    function stopUpdateCheck() {
+        $('#update-notify').addClass('hide');
+        checkUpdateTimer.stop();
+
+        var pageRequests = {
+            'cmd': 'set_info',
+            'info': 'dont-check'
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] !== 'success') {
+                    tip(result['reason'], 'warning');
+                }
+            },
+            error: function () {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    function clearUpdateInfo() {
+        $('#update-notify').addClass('hide');
+
+        var pageRequests = {
+            'cmd': 'set_info',
+            'info': ''
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] !== 'success') {
+                    tip(result['reason'], "warning");
+                }
+            },
+            error: function () {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    function skipUpdateVersion() {
+        $('#update-notify').addClass('hide');
+        checkUpdateTimer.stop();
+
+        var pageRequests = {
+            'cmd': 'set_config',
+            'skip_version': versionToUpdate,
+            'skip_version_type': versionType
         };
         $.ajax({
             type: 'GET',
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
-                
+            success: function (result) {
+                if (result['res'] !== 'success') {
+                    tip(result['reason'], "warning");
+                }
+            },
+            error: function () {
+                displayErrorMessage();
             }
         });
-    </script>
-    <script type="text/javascript">
+    }
+
+    function updateBase(checkhash) {
+        $('#update-notify').addClass('hide');
+
         var pageRequests = {
-            'cmd': 'get_config'
+            'cmd': 'update_version',
+            'version': versionToUpdate,
+            'checkhash': checkhash || 0
+        };
+        versionToUpdate = null;
+        $.ajax({
+            type: 'GET',
+            url: '/update',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] === 'success') {
+                    tip('{{ _( "Updating in progress ..." ) }}', "info");
+                    window.updateProgress_timer.play();
+                } else {
+                    tip(result['reason'], "warning");
+                }
+            },
+            error: function () {
+                displayErrorMessage();
+            }
+        });
+    }
+    function updateVersion() {
+        updateBase(1);
+    }
+    function updateVersionWithoutHashCheck() {
+        updateBase(0);
+    }
+
+    function getUpdateInfo() {
+        if (!$('#update-notify').hasClass('hide') ||
+            !$('#update-progress-bar').hasClass('hide')) {
+            return;
+        }
+
+        var pageRequests = {
+            'cmd': 'get_info'
         };
         $.ajax({
             type: 'GET',
-            url: '/config',
+            url: '/update',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['allow_remote_connect'] != 0 ) {
-                    $('#remote-connection-identifier').show();
+            success: function (result) {
+                versionType = result['type'];
+                switch (versionType) {
+                    case 'init':
+                        window.setTimeout(startUpdateCheck, 1000);
+                        break;
+                    case 'dont-check':
+                        stopUpdateCheck();
+                        break;
+                    default:
+                        versionToUpdate = result['version'];
+                        if (versionType && versionToUpdate) {
+                            switch (versionType) {
+                                case 'stable':
+                                    var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
+                                    break;
+                                case 'test':
+                                    var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
+                            }
+                            $('#update-message').text(popText);
+                            $('#update-viewchanges').attr("href", "https://github.com/XX-net/XX-Net/releases/tag/" + versionToUpdate);
+                            $('#update-notify').removeClass('hide');
+                        }
                 }
             }
         });
-    </script>
-    <script type="text/javascript">
-        function displayErrorMessage() {
-            tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
-        }
-    </script>
-    <script type="text/javascript">
-        var checkUpdateTimeout = 600000;
-        var checkUpdateTimer;
-        var versionToUpdate;
-        var versionType;
+    }
 
-        function startUpdateCheck() {
-            $('#update-notify').addClass('hide');
-
-            var pageRequests = {
-                'cmd':'start_check',
-                'check_update':$('#check-update').val()//getConfig('check-update')
-            };
-            $.ajax({
-                type: 'GET',
-                url: '/update',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    if (result['res'] === 'success') {
-                        getUpdateInfo();
-                        checkUpdateTimer.play();
-                    } else {
-                        tip(result['reason'], "warning");
-                    }
-                },
-                error: function () {
-                    displayErrorMessage();
-                }
-            });
-        }
-
-        function stopUpdateCheck() {
-            $('#update-notify').addClass('hide');
-            checkUpdateTimer.stop();
-
-            var pageRequests = {
-                'cmd': 'set_info',
-                'info': 'dont-check'
-            };
-            $.ajax({
-                type: 'GET',
-                url: '/update',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    if (result['res'] !== 'success') {
-                        tip(result['reason'], 'warning');
-                    }
-                },
-                error: function () {
-                    displayErrorMessage();
-                }
-            });
-        }
-
-        function clearUpdateInfo() {
-            $('#update-notify').addClass('hide');
-
-            var pageRequests = {
-                'cmd': 'set_info',
-                'info': ''
-            };
-            $.ajax({
-                type: 'GET',
-                url: '/update',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    if (result['res'] !== 'success') {
-                        tip(result['reason'], "warning");
-                    }
-                },
-                error: function () {
-                    displayErrorMessage();
-                }
-            });
-        }
-
-        function skipUpdateVersion() {
-            $('#update-notify').addClass('hide');
-            checkUpdateTimer.stop();
-
-            var pageRequests = {
-                'cmd': 'set_config',
-                'skip_version': versionToUpdate,
-                'skip_version_type': versionType
-            };
-            $.ajax({
-                type: 'GET',
-                url: '/config',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    if (result['res'] !== 'success') {
-                        tip(result['reason'], "warning");
-                    }
-                },
-                error: function () {
-                    displayErrorMessage();
-                }
-            });
-        }
-
-        function updateBase(checkhash) {
-            $('#update-notify').addClass('hide');
-
-            var pageRequests = {
-                'cmd': 'update_version',
-                'version': versionToUpdate,
-                'checkhash': checkhash//?checkhash:0
-            };
-            versionToUpdate = null;
-            $.ajax({
-                type: 'GET',
-                url: '/update',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    if (result['res'] === 'success') {
-                        tip('{{ _( "Updating in progress ..." ) }}', "info");
-                        window.updateProgress_timer.play();
-                    } else {
-                        tip(result['reason'], "warning");
-                    }
-                },
-                error: function () {
-                    displayErrorMessage();
-                }
-            });
-        }
-        function updateVersion() {
-            updateBase(1);
-        }
-        function updateVersionWithoutHashCheck() {
-            updateBase(0);
-        }
-
-        function getUpdateInfo() {
-            if (!$('#update-notify').hasClass('hide') ||
-                !$('#update-progress-bar').hasClass('hide')) {
-                return;
-            }
-
-            var pageRequests = {
-                'cmd': 'get_info'
-            };
-            $.ajax({
-                type: 'GET',
-                url: '/update',
-                data: pageRequests,
-                dataType: 'JSON',
-                success: function (result) {
-                    versionType = result['type'];
-                    switch (versionType) {
-                        case 'init':
-                            window.setTimeout(startUpdateCheck, 1000);
+    function updateProgress() { //TODO: 完善tip（详细信息、翻译, etc.)
+        $.getJSON('update?cmd=get_progress', function (result) {
+            Object.keys(result).forEach(function (v) {
+                if (v === "update_status") {
+                    var stat = result[v];
+                    switch (stat) {
+                        case "Idle":
+                            window.updateProgress_timer.stop();
                             break;
-                        case 'dont-check':
-                            stopUpdateCheck();
+                        case "Finished":
+                            tip('{{ _( "Finished." ) }}', 'info');
+                            window.loading.stop();
+                            window.updateProgress_timer.stop();
                             break;
                         default:
-                            versionToUpdate = result['version'];
-                            if (versionType && versionToUpdate) {
-                                switch (versionType) {
-                                    case 'stable':
-                                        var popText = '{{ _( "New " ) }}{{ _( "Stable version" ) }} ' + versionToUpdate;
-                                        break;
-                                    case 'test':
-                                        var popText = '{{ _( "New " ) }}{{ _( "Test version" ) }} ' + versionToUpdate;
-                                }
-                                $('#update-message').text(popText);
-                                $('#update-viewchanges').attr("href", "https://github.com/XX-net/XX-Net/releases/tag/" + versionToUpdate);
-                                $('#update-notify').removeClass('hide');
+                            if (stat.indexOf('Fail') > -1) {
+                                tip(stat, 'warning');
+                                window.updateProgress_timer.stop();
+                            } else {
+                                tip(stat, 'info');
                             }
+                    }
+                    /*
+                    if (stat === "Idle") {
+                        window.updateProgress_timer.stop();
+                        return;
+                    }
+                    /*
+                    if ($('#upgrade-pull-icon').hasClass('icon-chevron-right')) {
+                        var current_version = $('#current-version-no').html();
+                        if (current_version === "") {
+                            $('#current-version-no').html(" "); // avoid check next time.
+                            check_new_version();
+                        }
+
+                        $('.version-line').slideDown('fast');
+
+                        $('#upgrade-pull-icon').removeClass('icon-chevron-right');
+                        $('#upgrade-pull-icon').addClass('icon-chevron-down');
+                        $('#update-options').slideDown();
+                    }
+
+                    if (stat === "Finished") {
+                        tip(stat, 'info');
+                        window.loading.stop();
+                        window.updateProgress_timer.stop();
+                        //return;
+                    } else if (stat.indexOf('Fail') > -1) {
+                        tip(stat, 'warning');
+                        window.updateProgress_timer.stop();
+                    } else {
+                        tip(stat, 'info');
+                    }
+                    */
+                } else if (v.indexOf('XX-Net/zip') > -1) {
+                    if (!window.updating_button) {
+                        var p = v.indexOf('XX-Net/zip') + 11;
+                        var version = v.substring(p, v.length);
+                        var button;
+                        if (version === $('#test-version-no').html()) {
+                            button = $('#update-test-version');
+                        } else if (version === $('#stable-version-no').html()) {
+                            button = $('#update-stable-version');
+                        } else if ($('.active a').attr('href') === '/?module=launcher&menu=config') {
+                            return;
+                        } else {
+                            button = $('#update-progress-bar').find('span');
+                            $('#update-progress-bar').removeClass('hide');
+                        }
+                        window.updating_button = button;
+                    }
+                    $('#update-notify').addClass('hide');
+
+                    if (!window.loading) {
+                        window.loading = Ladda.create(window.updating_button[0]);
+                        window.loading.start();
+                    }
+                    var data = result[v];
+                    if (data.status === 'downloading') {
+                        var progress = (+data.downloaded / +data.size) * 100;
+                        window.loading.setProgress(progress);
+                        window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '&#37;');
+                    } else if (data.status === "finished") {
+                        window.updating_button.html('{{ _( "Download completed." ) }}');
+                        window.updating_button.prop('disabled', true);
+                        window.updating_button = null;
+                        window.setTimeout(function clearProgressBar() {
+                            $('#update-progress-bar').addClass('hide');
+                        }, 5000);
+                        window.loading.stop();
+                        window.updateProgress_timer.stop();
                     }
                 }
             });
-        }
-
-        function updateProgress() { //TODO: 完善tip（详细信息、翻译, etc.)
-            $.getJSON('update?cmd=get_progress', function (result) {
-                Object.keys(result).forEach(function (v) {
-                    if (v === "update_status") {
-                        var stat = result[v];
-                        switch (stat) {
-                            case "Idle":
-                                window.updateProgress_timer.stop();
-                                break;
-                            case "Finished":
-                                tip('{{ _( "Finished." ) }}', 'info');
-                                window.loading.stop();
-                                window.updateProgress_timer.stop();
-                                break;
-                            default:
-                                if (stat.indexOf('Fail') > -1) {
-                                    tip(stat, 'warning');
-                                    window.updateProgress_timer.stop();
-                                } else {
-                                    tip(stat, 'info');
-                                }
-                        }
-                        /*
-                        if (stat === "Idle") {
-                            window.updateProgress_timer.stop();
-                            return;
-                        }
-                        /*
-                        if ($('#upgrade-pull-icon').hasClass('icon-chevron-right')) {
-                            var current_version = $('#current-version-no').html();
-                            if (current_version === "") {
-                                $('#current-version-no').html(" "); // avoid check next time.
-                                check_new_version();
-                            }
-
-                            $('.version-line').slideDown('fast');
-
-                            $('#upgrade-pull-icon').removeClass('icon-chevron-right');
-                            $('#upgrade-pull-icon').addClass('icon-chevron-down');
-                            $('#update-options').slideDown();
-                        }
-
-                        if (stat === "Finished") {
-                            tip(stat, 'info');
-                            window.loading.stop();
-                            window.updateProgress_timer.stop();
-                            //return;
-                        } else if (stat.indexOf('Fail') > -1) {
-                            tip(stat, 'warning');
-                            window.updateProgress_timer.stop();
-                        } else {
-                            tip(stat, 'info');
-                        }
-                        */
-                    } else if (v.indexOf('XX-Net/zip') > -1) {
-                        if (!window.updating_button) {
-                            var p = v.indexOf('XX-Net/zip') + 11;
-                            var version = v.substring(p, v.length);
-                            var button;
-                            if (version === $('#test-version-no').html()) {
-                                button = $('#update-test-version');
-                            } else if (version === $('#stable-version-no').html()) {
-                                button = $('#update-stable-version');
-                            } else if ($('.active a').attr('href') === '/?module=launcher&menu=config') {
-                                return;
-                            } else {
-                                button = $('#update-progress-bar').find('span');
-                                $('#update-progress-bar').removeClass('hide');
-                            }
-                            window.updating_button = button;
-                        }
-                        $('#update-notify').addClass('hide');
-
-                        if (!window.loading) {
-                            window.loading = Ladda.create(window.updating_button[0]);
-                            window.loading.start();
-                        }
-                        var data = result[v];
-                        if (data.status === 'downloading') {
-                            var progress = (+data.downloaded / +data.size) * 100;
-                            window.loading.setProgress(progress);
-                            window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '&#37;');
-                        } else if (data.status === "finished") {
-                            window.updating_button.html('{{ _( "Download completed." ) }}');
-                            window.updating_button.prop('disabled', true);
-                            window.updating_button = null;
-                            window.setTimeout(function clearProgressBar() {
-                                $('#update-progress-bar').addClass('hide');
-                            }, 5000);
-                            window.loading.stop();
-                            window.updateProgress_timer.stop();
-                        }
-                    }
-                });
-            });
-        }
-
-        $(document).ready(function () {
-            var rfn;
-            for (rfn in documentReadyToRun) {
-                documentReadyToRun[rfn]();
-            }
-            window.updateProgress_timer = $.timer(updateProgress, 1000, true);
-            updateProgress();
-            checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
-            window.setTimeout(getUpdateInfo, 1000);
         });
+    }
 
-        $('#update-now').click(updateVersion);
-        $('#update-next').click(clearUpdateInfo);
-        $('#update-skip').click(skipUpdateVersion);
-        $('#update-notify-close').click(clearUpdateInfo);
-        // site.js fix
-        $('#tip-close').click(tipClose);
-    </script>
-    <script type="text/javascript">
-        //pop up notify on top of status web page.
-        function popup_notify(text,linkText,linkHref,open_in_newtab,bcolor)
-        {
-            var notify_area = document.getElementById("notify-area");
-            
-            //create new div for notify
-            var newdiv = notify_area.appendChild(document.createElement("div"));
-            newdiv.className = "popnotify";
-            if(bcolor != "")
-            {
-                newdiv.style.backgroundColor=bcolor;
-            }
-            
-            //in new div create span as notify text
-            var notify_text_span = newdiv.appendChild(document.createElement("span"));
-            //write the notify text in
-            notify_text_span.appendChild(document.createTextNode(text));
-            notify_text_span.className = "popnotify-text";
-            
-            //in new div create span as link
-            var notify_link_span = newdiv.appendChild(document.createElement("span"));
-            notify_link_span.className = "popnotify-text";
-            //in link span create link
-            var notify_link = notify_link_span.appendChild(document.createElement("a"));
-            if(linkHref)
-            {
-                //write link address in
-                notify_link.href = linkHref;
-            }
-            else
-                notify_link.href = "#"; //go nowhere
-            if(open_in_newtab)
-            {
-                notify_link.target = "_blank";
-            }
-            //write link text in
-            notify_link.appendChild(document.createTextNode(linkText));
-            
-            //create close notify button
-            var notify_close_btn = newdiv.appendChild(document.createElement("span"));
-            notify_close_btn.className = "popnotify-close-btn";
-            notify_close_btn.appendChild(document.createTextNode("×"));
-            notify_close_btn.style = "float:right; cursor: pointer;";
-            notify_close_btn.onclick = function()
-            {
-                //close this popup
-                notify_area.removeChild(this.parentNode);
-            }
-            //return the link object , can be used as button
-            return notify_link_span;
+    $(document).ready(function () {
+        var rfn;
+        for (rfn in documentReadyToRun) {
+            documentReadyToRun[rfn]();
         }
-        //Examples .  uncomment to see .
-        /*
-        var aaa = popup_notify("This is notify example. ","click text");
-        aaa.onclick = function() { alert('hello'); } 
-        popup_notify("This is notify example 2 . ", "","","", "yellow");
-        popup_notify("This is notify example 3 . ","Link text","whereDoWeGo",1,"#dddddd");
-        */
-    </script>
+        window.updateProgress_timer = $.timer(updateProgress, 1000, true);
+        updateProgress();
+        checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
+        window.setTimeout(getUpdateInfo, 1000);
+    });
+
+    $('#update-now').click(updateVersion);
+    $('#update-next').click(clearUpdateInfo);
+    $('#update-skip').click(skipUpdateVersion);
+    $('#update-notify-close').click(clearUpdateInfo);
+    // site.js fix
+    $('#tip-close').click(tipClose);
+</script>
 </body>
 </html>

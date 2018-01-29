@@ -30,21 +30,21 @@
     <div class="row-fluid">
         <div class="span4">{{ _( "Auto-Try Direct" ) }}</div> <!-- .span4 -->
         <div class="span8">
-            <input id="auto-direct" type="checkbox" data-toggle="switch" />
+            <input id="auto-direct" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
     <div class="row-fluid">
         <div class="span4">{{ _( "Auto-Try GAEProxy" ) }}</div> <!-- .span4 -->
         <div class="span8">
-            <input id="auto-gae" type="checkbox" data-toggle="switch" />
+            <input id="auto-gae" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 </div>
 
 
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 </script>
@@ -53,24 +53,24 @@
         $.ajax({
             type: 'POST',
             url: '/module/smart_router/control/config',
-            success: function(result) {
-                if ( result['auto_direct'] != 0 ) {
-                    $( "#auto-direct").parent().removeClass('switch-off');
-                    $( "#auto-direct").parent().addClass('switch-on');
+            success: function (result) {
+                if (result['auto_direct'] != 0) {
+                    $("#auto-direct").parent().removeClass('switch-off');
+                    $("#auto-direct").parent().addClass('switch-on');
 
-                    $( "#auto-direct").prop('checked', true);
+                    $("#auto-direct").prop('checked', true);
                 }
 
-                if ( result['auto_gae'] != 0 ) {
-                    $( "#auto-gae").parent().removeClass('switch-off');
-                    $( "#auto-gae").parent().addClass('switch-on');
+                if (result['auto_gae'] != 0) {
+                    $("#auto-gae").parent().removeClass('switch-off');
+                    $("#auto-gae").parent().addClass('switch-on');
 
-                    $( "#auto-gae").prop('checked', true);
+                    $("#auto-gae").prop('checked', true);
                 }
-                $( "#country").val(result['country']);
-                $( "#pac-policy").val(result['pac_policy']);
+                $("#country").val(result['country']);
+                $("#pac-policy").val(result['pac_policy']);
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
@@ -91,32 +91,32 @@
             url: '/module/smart_router/control/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     tip('{{ _( "Settings saved successfully." ) }}', 'success');
                 } else {
                     displayErrorMessage();
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     }
 
-    $('#country').change(function() {
+    $('#country').change(function () {
         return setSmartRouterConfig("country", $('#country').val());
     });
 
-    $('#pac-policy').change(function() {
+    $('#pac-policy').change(function () {
         return setSmartRouterConfig("pac_policy", $('#pac-policy').val());
     });
 
-    $('#auto-direct').change(function() {
-        return setSmartRouterConfig("auto_direct", $(this).is(':checked')? 1:0);
+    $('#auto-direct').change(function () {
+        return setSmartRouterConfig("auto_direct", $(this).is(':checked') ? 1 : 0);
     });
 
-    $('#auto-gae').change(function() {
-        return setSmartRouterConfig("auto_gae", $(this).is(':checked')? 1:0);
+    $('#auto-gae').change(function () {
+        return setSmartRouterConfig("auto_gae", $(this).is(':checked') ? 1 : 0);
     });
 </script>

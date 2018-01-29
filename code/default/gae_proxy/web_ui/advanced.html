@@ -14,7 +14,7 @@
     title('{{ _("GAEProxy Advanced Configuration") }}');
 </script>
 <script type="text/javascript">
-    $(".advanced_tab").click(function(){
+    $(".advanced_tab").click(function () {
         var id = $(this).attr('id');
         var url = "/module/gae_proxy/" + id + ".html";
         $("#tab_content").load(url);

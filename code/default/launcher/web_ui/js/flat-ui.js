@@ -312,7 +312,6 @@ $(function () {
       $parent[checkAction ? 'addClass' : 'removeClass' ](ch) && checkAction ? $el.attr(ch, true) : $el.removeAttr(ch);
       $el.trigger(e).trigger('change');
     }
-
   }
 
 
@@ -453,7 +452,6 @@ $(function () {
         $el.trigger('change');
       }
     }
-
   }
 
 
