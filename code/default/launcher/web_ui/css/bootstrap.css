@@ -4451,10 +4451,11 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini {
 .modal {
 	position: absolute;
 	top: 10%;
-	left: 50%;
+	left: 15%;
+	right: 15%;
+	margin: auto;
 	z-index: 1050;
 	width: 560px;
-	margin-left: -280px;
 	background-color: #fff;
 	border: 1px solid #999;
 	border: 1px solid rgba(0,0,0,0.3);
@@ -4500,7 +4501,7 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini {
 .modal-body {
 	position: relative;
 	padding: 15px;
-	overflow-y: auto
+	overflow: auto
 }
 
 .modal-form {

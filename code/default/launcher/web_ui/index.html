@@ -458,5 +458,83 @@
     // site.js fix
     $('#tip-close').click(tipClose);
 </script>
+<div id="display-issue-modal" class="modal hide fade" style="width: auto;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3 id="display-issue-model-title">{{ _( "Info" ) }}</h3>
+    </div> <!-- .modal-header -->
+    <div id="display-issue-modal-body" class="modal-body">
+    </div> <!-- .modal-body -->
+    <div class="modal-footer">
+    </div> <!-- .modal-footer -->
+</div> <!-- #display-issue-modal -->
+<link rel="stylesheet" type="text/css" href="/css/primer-markdown.css">
+<script type="text/javascript">
+    function renderMD(rawText, mode, context) {
+        if (rawText === undefined) {
+            throw new Error("rawText undefined");
+        }
+        var res = document.createElement('div');
+        res.setAttribute('class', 'markdown-body');
+        var rq = {
+            'text': rawText,
+            'mode': mode || 'gfm',
+            'context': context || 'xx-net/XX-Net'
+        };
+        $.ajax({
+            async: false,
+            type: 'POST',
+            url: 'https://api.github.com/markdown',
+            data: JSON.stringify(rq),
+            contentType: 'application/json',
+            dataType: 'html',// Accept: application/vnd.github.v3.html+json
+            // timeout: 1000,
+            success: function (result) {
+                res.innerHTML = result;
+            },
+            error: function (result) {
+                throw new Error("Failed rendering.");
+            }
+        });
+        return res;
+    }
+
+    function popIssue(issueID, repo) {
+        repo = repo || 'xx-net/XX-Net';
+        // issueID = issueID || RELEASENOTE_ISSUEID
+        try {
+            var APIurl = 'https://api.github.com/repos/' + repo + '/issues/' + issueID;
+            $.ajax({
+                async: false,
+                type: 'GET',
+                url: APIurl,
+                dataType: 'JSON',
+                success: function (result) {
+                    var title = document.getElementById('display-issue-model-title');
+                    title.innerHTML = result['title'];
+                    var rawText = result['body'];
+                    var rendered;
+                    try {
+                        rendered = renderMD(rawText);
+                    }
+                    catch (err) {
+                        throw err;
+                    }
+                    var body = document.getElementById('display-issue-modal-body');
+                    body.innerHTML = rendered.outerHTML;
+                    // body.style('https://unpkg.com/primer-markdown/build/build.css');
+                    $('#display-issue-modal').modal();
+                },
+                error: function (result) {
+                    throw new Error("Failed loading.");
+                }
+            });
+        }
+        catch (err) {
+            // console.log(err.message);
+            // tip('{ { _( err ) }}', 'error');
+        }
+    }
+</script>
 </body>
 </html>
