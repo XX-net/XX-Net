@@ -5,7 +5,6 @@ import yaml
 from xlog import getLogger
 xlog = getLogger("launcher")
 
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
@@ -40,7 +39,6 @@ def save():
 def get(path, default_val=""):
     global config
     try:
-        value = default_val
         cmd = "config"
         for p in path:
             cmd += '["%s"]' % p
@@ -101,6 +99,5 @@ def init():
 
     if recheck_module_path():
         save()
-
 
 init()

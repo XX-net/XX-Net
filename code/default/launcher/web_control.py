@@ -5,8 +5,8 @@ import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
 import re
@@ -47,10 +47,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         modules = config.get(['modules'], None)
         for module in modules:
             values = modules[module]
-            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1: # skip php_proxy module
+            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1:  # skip php_proxy module
                 continue
 
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml") # launcher & gae_proxy modules
+            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")  # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
 
@@ -60,8 +60,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             module_menu = yaml.load(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(),
-                              key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
+        module_menus = sorted(new_module_menus.iteritems(), key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
@@ -102,7 +101,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
-            xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path )
+            xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path)
             return
 
         url_path = urlparse.urlparse(self.path).path
@@ -198,7 +197,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 target_module = 'launcher'
                 target_menu = 'about'
 
-
         if len(module_menus) == 0:
             self.load_module_menus()
 
@@ -208,7 +206,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         current_version = update_from_github.current_version()
         menu_content = ''
-        for module,v in module_menus:
+        for module, v in module_menus:
             #xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += '<li class="nav-header">%s</li>\n' % title
@@ -260,10 +258,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
                 "system-proxy": config.get(["modules", "launcher", "proxy"], "smart_router"),
                 "no_mess_system": config.get(["no_mess_system"], 0),
-                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1) # -1 means not set yet
+                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1)  # -1 means not set yet
             }
             data = json.dumps(dat)
-        if reqs['cmd'] == ['get_version']:
+        elif reqs['cmd'] == ['get_version']:
             current_version = update_from_github.current_version()
             data = '{"current_version":"%s"}' % (current_version)
         elif reqs['cmd'] == ['set_config']:
@@ -289,7 +287,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         config.save()
 
                     data = '{"res":"success"}'
-
             elif 'language' in reqs:
                 language = reqs['language'][0]
 
@@ -303,7 +300,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     self.load_module_menus()
 
                     data = '{"res":"success"}'
-
             elif 'popup_webui' in reqs:
                 popup_webui = int(reqs['popup_webui'][0])
                 if popup_webui != 0 and popup_webui != 1:
@@ -313,7 +309,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-
             elif 'allow_remote_switch' in reqs:
                 allow_remote_switch = int(reqs['allow_remote_switch'][0])
                 if allow_remote_switch != 0 and allow_remote_switch != 1:
@@ -345,7 +340,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     start()
                     module_init.start_all_auto()
                     xlog.debug("launcher web control restarted.")
-
             elif 'show_systray' in reqs:
                 show_systray = int(reqs['show_systray'][0])
                 if show_systray != 0 and show_systray != 1:
@@ -355,7 +349,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-
             elif 'no_mess_system' in reqs:
                 no_mess_system = int(reqs['no_mess_system'][0])
                 if no_mess_system != 0 and no_mess_system != 1:
@@ -372,7 +365,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 else:
                     config.set(["modules", "launcher", "keep_old_ver_num"], keep_old_ver_num)
                     config.save()
-                    
+
                     data = '{"res":"success"}'
             elif 'auto_start' in reqs:
                 auto_start = int(reqs['auto_start'][0])
@@ -388,7 +381,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-
             elif 'show_detail' in reqs:
                 show_detail = int(reqs['show_detail'][0])
                 if show_detail != 0 and show_detail != 1:
@@ -398,8 +390,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
-
-            elif 'gae_proxy_enable' in reqs :
+            elif 'gae_proxy_enable' in reqs:
                 gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:
                     data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
@@ -412,7 +403,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.stop("gae_proxy")
                     self.load_module_menus()
                     data = '{"res":"success"}'
-            elif 'x_tunnel_enable' in reqs :
+            elif 'x_tunnel_enable' in reqs:
                 x_tunnel_enable = int(reqs['x_tunnel_enable'][0])
                 if x_tunnel_enable != 0 and x_tunnel_enable != 1:
                     data = '{"res":"fail, x_tunnel_enable:%s"}' % x_tunnel_enable
@@ -425,7 +416,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.stop("x_tunnel")
                     self.load_module_menus()
                     data = '{"res":"success"}'
-            elif 'smart_router_enable' in reqs :
+            elif 'smart_router_enable' in reqs:
                 smart_router_enable = int(reqs['smart_router_enable'][0])
                 if smart_router_enable != 0 and smart_router_enable != 1:
                     data = '{"res":"fail, smart_router_enable:%s"}' % smart_router_enable
@@ -484,20 +475,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 data = '{"res":"false", "reason": "version not exist"}'
         elif reqs['cmd'] == ['get_localversions']:
             local_versions = update_from_github.get_local_versions()
-            
+
             s = ""
             for v in local_versions:
                 if not s == "":
                     s += ","
-                s += ' { "v":"%s" , "folder":"%s" } ' % (v[0],v[1])
-            data = '[  %s  ]' %(s)
+                s += ' { "v":"%s" , "folder":"%s" } ' % (v[0], v[1])
+            data = '[  %s  ]' % (s)
         elif reqs['cmd'] == ['del_localversion']:
-            if update_from_github.del_version( reqs['version'][0] ):
+            if update_from_github.del_version(reqs['version'][0]):
                 data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
-            
-            
+
         self.send_response('text/html', data)
 
     def req_config_proxy_handler(self):
@@ -623,6 +613,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
 mem_stat = None
 
+
 def test_proxy(type, host, port, user, passwd):
     if not host:
         return False
@@ -665,6 +656,7 @@ def test_proxy(type, host, port, user, passwd):
 
     return False
 
+
 server = None
 def start(allow_remote=0):
     global server
@@ -686,11 +678,13 @@ def start(allow_remote=0):
 
     xlog.info("launcher web control started.")
 
+
 def stop():
     global server
     xlog.info("begin to exit web control")
     server.shutdown()
     xlog.info("launcher web control exited.")
+
 
 def http_request(url, method="GET"):
     proxy_handler = urllib2.ProxyHandler({})
@@ -701,6 +695,7 @@ def http_request(url, method="GET"):
     except Exception as e:
         #xlog.exception("web_control http_request:%s fail:%s", url, e)
         return False
+
 
 def confirm_xxnet_not_running():
     # if xxnet is already running, try exit it
@@ -719,6 +714,7 @@ def confirm_xxnet_not_running():
         time.sleep(1)
     xlog.debug("finished confirm_xxnet_exit")
     return is_xxnet_exit
+
 
 def confirm_module_ready(port):
     if port == 0:
@@ -740,6 +736,7 @@ def confirm_module_ready(port):
         else:
             time.sleep(1)
     return False
+
 
 if __name__ == "__main__":
     pass

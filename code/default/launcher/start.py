@@ -48,7 +48,6 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
-
 create_data_path()
 
 
@@ -175,7 +174,6 @@ def exit_handler():
     module_init.stop_all()
     web_control.stop()
 
-
 atexit.register(exit_handler)
 
 
@@ -220,8 +218,8 @@ def main():
 
     update.start()
 
-    update_from_github.delete_to_save_disk()
-    
+    update_from_github.cleanup()
+
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
     else:
@@ -230,7 +228,6 @@ def main():
 
     module_init.stop_all()
     sys.exit()
-
 
 if __name__ == '__main__':
     try:
