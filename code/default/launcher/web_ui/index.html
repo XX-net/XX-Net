@@ -129,34 +129,36 @@
     });
 </script>
 <script type="text/javascript">
-    var pageRequests = {
-        'cmd': 'get_version'
-    };
-    $.ajax({
-        type: 'GET',
-        url: '/config',
-        data: pageRequests,
-        dataType: 'JSON',
-        success: function (result) {
-            document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
-        }
-    });
-</script>
-<script type="text/javascript">
-    var pageRequests = {
-        'cmd': 'get_config'
-    };
-    $.ajax({
-        type: 'GET',
-        url: '/config',
-        data: pageRequests,
-        dataType: 'JSON',
-        success: function (result) {
-            if (result['allow_remote_connect'] != 0) {
-                $('#remote-connection-identifier').show();
+    init();
+    function init() {
+        var pageRequests = {
+            'cmd': 'get_version'
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
             }
-        }
-    });
+        });
+
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['allow_remote_connect'] != 0) {
+                    $('#remote-connection-identifier').show();
+                }
+            }
+        });
+    }
 </script>
 <script type="text/javascript">
     function displayErrorMessage() {
