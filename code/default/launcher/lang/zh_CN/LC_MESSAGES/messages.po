@@ -269,6 +269,15 @@ msgstr "下载中..."
 msgid "Download completed."
 msgstr "下载完成。"
 
+msgid "Hello!"
+msgstr "你好！"
+
+msgid "You seem to be on your first visit."
+msgstr "你似乎是初次到访。"
+
+msgid "Learn more"
+msgstr "了解更多"
+
 msgid "System"
 msgstr "系统"
 

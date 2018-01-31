@@ -60,6 +60,11 @@
 </div> <!-- #header -->
 <div id="content">
     <div class="container">
+        <div id="welcome" class="hero-unit hide" style="padding-left: 70px;">
+            <h1 id="welcome-title">{{ _( "Hello!" ) }}</h1>
+            <p id="welcome-message">{{ _( "You seem to be on your first visit." ) }}</p>
+            <a id="btn-learnmore" class="btn btn-primary btn-large">{{ _( "Learn more" ) }}</a>
+        </div>
         <div class="row-fluid">
             <div id="sidebar" class="span3">
                 <div class="sidebar-nav well">
@@ -93,6 +98,7 @@
 <script type="text/javascript">
     $(function () {
         window.isFullWidth = false;
+        window.RELEASENOTE_ISSUEID = 1; //as default, an error issue, for failed-getting-releasenote-issue condition
     });
 </script>
 <script type="text/javascript">
@@ -127,6 +133,13 @@
             }
         });
     });
+
+    $('#btn-learnmore').click(function () {
+        popIssue(window.RELEASENOTE_ISSUEID);
+        setTimeout(function () {
+            $('#welcome').addClass('hide');
+        }, 1000);
+    });
 </script>
 <script type="text/javascript">
     init();
@@ -141,6 +154,20 @@
             dataType: 'JSON',
             success: function (result) {
                 document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
+
+                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + result['current_version']; //console.log('APIurl='+APIurl);
+                $.ajax({
+                    type: 'GET',
+                    url: APIurl,
+                    dataType: 'JSON',
+                    success: function (result) {
+                        var issueURL = result[0]['url'].split('/');
+                        window.RELEASENOTE_ISSUEID = issueURL[7];
+                    },
+                    error: function (result) {
+                        console.log("Failed getting RELEASENOTE_ISSUEID.");
+                    }
+                });
             }
         });
 
@@ -503,7 +530,7 @@
 
     function popIssue(issueID, repo) {
         repo = repo || 'xx-net/XX-Net';
-        // issueID = issueID || RELEASENOTE_ISSUEID
+        issueID = issueID || window.RELEASENOTE_ISSUEID
         try {
             var APIurl = 'https://api.github.com/repos/' + repo + '/issues/' + issueID;
             $.ajax({
