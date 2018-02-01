@@ -261,9 +261,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1)  # -1 means not set yet
             }
             data = json.dumps(dat)
-        elif reqs['cmd'] == ['get_version']:
-            current_version = update_from_github.current_version()
-            data = '{"current_version":"%s"}' % (current_version)
         elif reqs['cmd'] == ['set_config']:
             if 'skip_version' in reqs:
                 skip_version = reqs['skip_version'][0]
@@ -431,6 +428,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
+        elif reqs['cmd'] == ['get_version']:
+            current_version = update_from_github.current_version()
+            data = '{"current_version":"%s"}' % current_version
 
         self.send_response('text/html', data)
 

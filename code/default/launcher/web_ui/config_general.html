@@ -99,10 +99,10 @@
 </script>
 <script type="text/javascript">
     $(function () {
-        getConfig();
+        getConfig_Init();
     });
 
-    function getConfig() {
+    function getConfig_Init() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -176,7 +176,7 @@
         var key   = 'language',
             value = $(this).val();
 
-        setConfig(key, value);
+        applyChange(key, value);
 
         setTimeout(function () {
             location.reload();
@@ -188,7 +188,7 @@
             key       = 'auto_start',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        return applyChange(key, value);
     });
 
     $('#show-systray').change(function () {
@@ -196,7 +196,7 @@
             key       = 'show_systray',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        return applyChange(key, value);
     });
 
     $('#no-mess-system').change(function () {
@@ -204,7 +204,7 @@
             key       = 'no_mess_system',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        return applyChange(key, value);
     });
 
     $('#popup-webui').change(function () {
@@ -212,7 +212,7 @@
             key       = 'popup_webui',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        return applyChange(key, value);
     });
 
     $('#allow-remote').change(function () {
@@ -226,7 +226,7 @@
             location.reload();
         }, 8 * 1000);
 
-        return setConfig(key, value);
+        return applyChange(key, value);
     });
 
     $('#gae_proxy-enable').change(function () {
@@ -234,7 +234,7 @@
             key       = 'gae_proxy_enable',
             value     = isChecked ? 1 : 0;
 
-        setConfig(key, value);
+        applyChange(key, value);
     });
 
     $('#x-tunnel-enable').change(function () {
@@ -242,7 +242,7 @@
             key       = 'x_tunnel_enable',
             value     = isChecked ? 1 : 0;
 
-        setConfig(key, value);
+        applyChange(key, value);
     });
 
     $('#smart-router-enable').change(function () {
@@ -250,6 +250,6 @@
             key       = 'smart_router_enable',
             value     = isChecked ? 1 : 0;
 
-        setConfig(key, value);
+        applyChange(key, value);
     });
 </script>

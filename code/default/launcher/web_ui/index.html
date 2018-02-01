@@ -142,8 +142,66 @@
     });
 </script>
 <script type="text/javascript">
-    init();
-    function init() {
+    function getConfig(key) {
+        var result;
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+        $.ajax({
+            async: false,
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (res) {
+                result = res;
+            },
+            error: function (res) {
+                result = res;
+            }
+        });
+        if (key) {
+            var res = result;
+            result = "nomatch";
+            Object.keys(res).forEach(function (t) {
+                if (t === key) {
+                    result = res[t];
+                    //return;
+                }
+            });
+        }
+        return result;
+    }
+
+    function setConfig(key, value) {
+        var result;
+        var pageRequests = {
+            'cmd': 'set_config'
+        };
+        pageRequests[key] = value;
+        $.ajax({
+            async: false,
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (res) {
+                result = res;
+            },
+            error: function (res) {
+                result = res;
+            }
+        });
+        return result;
+    }
+
+    function displayErrorMessage() {
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
+    }
+</script>
+<script type="text/javascript">
+    init_main();
+    function init_main() {
         var pageRequests = {
             'cmd': 'get_version'
         };
@@ -161,6 +219,10 @@
                     url: APIurl,
                     dataType: 'JSON',
                     success: function (result) {
+                        if (result.length === 0) {
+                            console.log("NO RELEASENOTE_ISSUEID related to this version.");
+                            return;
+                        }
                         var issueURL = result[0]['url'].split('/');
                         window.RELEASENOTE_ISSUEID = issueURL[7];
                     },
@@ -171,25 +233,9 @@
             }
         });
 
-        var pageRequests = {
-            'cmd': 'get_config'
-        };
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function (result) {
-                if (result['allow_remote_connect'] != 0) {
-                    $('#remote-connection-identifier').show();
-                }
-            }
-        });
-    }
-</script>
-<script type="text/javascript">
-    function displayErrorMessage() {
-        tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
+        if (getConfig('allow_remote_connect') !== 0) {
+            $('#remote-connection-identifier').show();
+        }
     }
 </script>
 <script type="text/javascript">

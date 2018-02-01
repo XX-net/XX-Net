@@ -76,11 +76,11 @@
 
         tip('{{ _( "Checking settings ..." ) }}', 'info');
 
-        return setConfig(gaeAppId, hostAppEngine);
+        return setAppID(gaeAppId, hostAppEngine);
     }
 </script>
 <script type="text/javascript">
-    function setConfig(gaeAppId, hostAppEngine) {
+    function setAppID(gaeAppId, hostAppEngine) {
         var config = {
             'appid': gaeAppId,
             'host_appengine_mode': hostAppEngine

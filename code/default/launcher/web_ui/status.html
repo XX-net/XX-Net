@@ -252,7 +252,7 @@
         updateDetailStatus();
         updateNoobStatus();
         updateNotice();
-        getConfig();
+        update_show_detail();
     });
 </script>
 <script type="text/javascript">
@@ -476,20 +476,7 @@
         return setConfig(key, value);
     });
 
-    function setConfig(key, value) {
-        var pageRequests = {
-            'cmd': 'set_config',
-            key: value
-        };
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON'
-        });
-    }
-
-    function getConfig() {
+    function update_show_detail() {
         var pageRequests = {
             'cmd': 'get_config'
         };
