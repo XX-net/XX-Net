@@ -98,8 +98,10 @@
 <script type="text/javascript">
     $(function () {
         window.isFullWidth = false;
-        window.RELEASENOTE_ISSUEID = 1; //as default, an error issue, for failed-getting-releasenote-issue condition
+        window.wiki_ISSUEID = 1; //as default, an wiki/help issue, for failed-getting-releasenote-issue condition
     });
+    window.RELEASENOTE_ISSUEID = window.wiki_ISSUEID;
+    window.welcomeISSUEID = window.wiki_ISSUEID;
 </script>
 <script type="text/javascript">
     $('#resize-window-trigger').click(function () {
@@ -135,7 +137,7 @@
     });
 
     $('#btn-learnmore').click(function () {
-        popIssue(window.RELEASENOTE_ISSUEID);
+        popIssue(window.welcomeISSUEID);
         setTimeout(function () {
             $('#welcome').addClass('hide');
         }, 1000);
@@ -232,6 +234,33 @@
                 });
             }
         });
+
+        switch (getConfig('postUpdateStat')) {
+            case "noChange":
+                $('#welcome').addClass('hide');
+                break;
+            case "isNew":
+                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                $('#welcome-message').text('{{ _( "You seem to be on your first visit." ) }}');
+                window.welcomeISSUEID = window.wiki_ISSUEID;
+                $('#welcome').removeClass('hide');
+                setTimeout(function () {
+                    $('#welcome').addClass('hide');
+                    setConfig('postUpdateStat', "noChange");
+                }, 15 * 1000);
+                break;
+            case "isPostUpdate":
+                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                $('#welcome-message').text('{{ _( "new to this version?" ) }}');
+                window.welcomeISSUEID = window.RELEASENOTE_ISSUEID;
+                $('#welcome').removeClass('hide');
+                setTimeout(function () {
+                    $('#welcome').addClass('hide');
+                    setConfig('postUpdateStat', "noChange");
+                }, 15 * 1000);
+                break;
+            default:
+        }
 
         if (getConfig('allow_remote_connect') !== 0) {
             $('#remote-connection-identifier').show();

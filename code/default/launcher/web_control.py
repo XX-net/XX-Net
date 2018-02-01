@@ -258,7 +258,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
                 "system-proxy": config.get(["modules", "launcher", "proxy"], "smart_router"),
                 "no_mess_system": config.get(["no_mess_system"], 0),
-                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1)  # -1 means not set yet
+                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1),  # -1 means not set yet
+                "postUpdateStat": config.get(["update", "postUpdateStat"], "noChange"),
             }
             data = json.dumps(dat)
         elif reqs['cmd'] == ['set_config']:
@@ -425,6 +426,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     else:
                         module_init.stop("smart_router")
                     self.load_module_menus()
+                    data = '{"res":"success"}'
+            elif 'postUpdateStat' in reqs:
+                postUpdateStat = reqs['postUpdateStat'][0]
+                if postUpdateStat not in ["noChange", "isNew", "isPostUpdate"]:
+                    data = '{"res":"fail, postUpdateStat:%s"}' % postUpdateStat
+                else:
+                    config.set(["update", "postUpdateStat"], postUpdateStat)
+                    config.save()
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'

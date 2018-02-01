@@ -193,12 +193,8 @@ def main():
 
     setup_win_python.check_setup()
 
-    last_run_version = config.get(["modules", "launcher", "last_run_version"], "0.0.0")
-    if last_run_version != current_version:
-        import post_update
-        post_update.run(last_run_version)
-        config.set(["modules", "launcher", "last_run_version"], current_version)
-        config.save()
+    import post_update
+    post_update.check()
 
     allow_remote = 0
     if len(sys.argv) > 1:

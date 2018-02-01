@@ -12,6 +12,23 @@ from xlog import getLogger
 xlog = getLogger("launcher")
 import config
 
+
+def check():
+    import update_from_github
+    current_version = update_from_github.current_version()
+    last_run_version = config.get(["modules", "launcher", "last_run_version"], "0.0.0")
+    if last_run_version == "0.0.0":
+        postUpdateStat = "isNew"
+    elif last_run_version != current_version:
+        postUpdateStat = "isPostUpdate"
+        run(last_run_version)
+    else:
+        return
+    config.set(["update", "postUpdateStat"], postUpdateStat)
+    config.set(["modules", "launcher", "last_run_version"], current_version)
+    config.save()
+
+
 def older_or_equal(version, reference_version):
     try:
         p = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
