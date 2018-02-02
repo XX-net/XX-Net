@@ -137,6 +137,9 @@ msgstr "等待设置检查..."
 msgid "Settings saved successfully."
 msgstr "保存设置成功。"
 
+msgid "Failed saving settings: "
+msgstr "保存设置失败："
+
 msgid "Failed saving settings."
 msgstr "保存设置失败。"
 

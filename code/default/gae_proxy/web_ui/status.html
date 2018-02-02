@@ -105,11 +105,11 @@
                 <td>{{ _( "working AppIDs" ) }}</td>
                 <td id="working-appid"></td>
             </tr>
-            <tr id="tr-out-of-quota-appids" hidden="true">
+            <tr id="tr-out-of-quota-appids">
                 <td>{{ _( "out-of-quota AppIDs" ) }}</td>
                 <td id="out-of-quota-appids"></td>
             </tr>
-            <tr id="tr-not-exist-appids" hidden="true">
+            <tr id="tr-not-exist-appids">
                 <td>{{ _( "not-exist AppIDs" ) }}</td>
                 <td id="not-exist-appids"></td>
             </tr>
@@ -343,12 +343,12 @@
                     'td#scan-ip-thread-num': result['scan_ip_thread_num'],
                     'td#ip-quality': result['ip_quality'],
                     'td#block-stat': result['block_stat']
-                }
+                };
 
                 if (window.fake_host == "") {
                     window.fake_host = result["fake_host"];
-                    test_http_proxy_setting()
-                    test_https_proxy_setting()
+                    test_http_proxy_setting();
+                    test_https_proxy_setting();
                 }
                 for (var item in updates) {
                     updateProperty(item, updates[item]);
@@ -502,7 +502,7 @@
             },
             error: function (result, textStatus, errorThrown) {
                 window.http_proxy_setting = "Fail";
-            },
+            }
         });
 
         if (window.http_proxy_setting === "Fail") {
@@ -535,7 +535,7 @@
             },
             error: function (result, textStatus, errorThrown) {
                 window.https_proxy_setting = "Fail";
-            },
+            }
         });
 
         if (window.https_proxy_setting === "Fail") {
@@ -560,7 +560,7 @@
             $("#details").slideUp();
         }
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
     function update_show_detail() {

@@ -252,7 +252,7 @@
         } else {
             startUpdateCheck()
         }
-        return applyChange(key, value);
+        setConfig(key, value);
     });
 
     $('.update-button').click(function () {
@@ -299,24 +299,7 @@
 
         if (!(keep_old_ver_num >= 0 && keep_old_ver_num <= 99 )) return;
 
-        var pageRequests = {
-            'cmd': 'set_config',
-            'keep_old_ver_num': keep_old_ver_num
-        };
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function (result) {
-                if (result['res'] === 'success') {
-                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
-                }
-            },
-            error: function () {
-                displayErrorMessage();
-            }
-        });
+        setConfig('keep_old_ver_num', keep_old_ver_num);
     });
 </script>
 <script type="text/javascript">

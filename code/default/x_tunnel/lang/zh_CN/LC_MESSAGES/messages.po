@@ -182,6 +182,9 @@ msgstr "连接服务器失败，请检查前端日志。"
 msgid "Incorrect Email or password."
 msgstr "用户名或密码不正确。"
 
+msgid "Login fail:"
+msgstr "登录失败："
+
 msgid "Registered successfully, "
 msgstr "注册成功，"
 

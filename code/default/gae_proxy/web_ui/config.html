@@ -97,12 +97,12 @@
                     if (result['reason'].indexOf("appid fail") > -1) {
                         tip('{{ _( "AppID invalid:" ) }}' + result['reason'].substring(11) + '{{ _( ", deploy AppID before using." ) }}', 'error');
                     } else {
-                        tip('{{ _( "Failed saving settings." ) }}' + ": " + result['reason'], 'error');
+                        tip('{{ _( "Failed saving settings: " ) }}' + result['reason'], 'error');
                     }
                 }
             },
             error: function () {
-                tip('{{ _( "Failed saving settings." ) }}' + ".", 'error');
+                tip('{{ _( "Failed saving settings." ) }}', 'error');
             }
         });
     }

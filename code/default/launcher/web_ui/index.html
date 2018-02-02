@@ -99,9 +99,9 @@
     $(function () {
         window.isFullWidth = false;
         window.wiki_ISSUEID = 1; //as default, an wiki/help issue, for failed-getting-releasenote-issue condition
+        window.RELEASENOTE_ISSUEID = window.wiki_ISSUEID;
+        window.welcomeISSUEID = window.wiki_ISSUEID;
     });
-    window.RELEASENOTE_ISSUEID = window.wiki_ISSUEID;
-    window.welcomeISSUEID = window.wiki_ISSUEID;
 </script>
 <script type="text/javascript">
     $('#resize-window-trigger').click(function () {
@@ -176,25 +176,33 @@
     }
 
     function setConfig(key, value) {
-        var result;
+        //var result;
         var pageRequests = {
             'cmd': 'set_config'
         };
         pageRequests[key] = value;
         $.ajax({
-            async: false,
+            //async: false,
             type: 'GET',
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function (res) {
-                result = res;
+            success: function (result) {
+                if (result && (result['res'] === 'success')) {
+                    if (key === 'postUpdateStat') return;
+                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
+                    if (key === 'gae_proxy_enable' || key === 'x_tunnel_enable' || key === 'smart_router_enable') {
+                        restartingService(key); //call from config.html
+                    }
+                } else {
+                    displayErrorMessage();
+                }
             },
-            error: function (res) {
-                result = res;
+            error: function (result) {
+                displayErrorMessage();
             }
         });
-        return result;
+        //return result;
     }
 
     function displayErrorMessage() {
@@ -605,17 +613,17 @@
 
     function popIssue(issueID, repo) {
         repo = repo || 'xx-net/XX-Net';
-        issueID = issueID || window.RELEASENOTE_ISSUEID
+        issueID = issueID || window.RELEASENOTE_ISSUEID;
         try {
             var APIurl = 'https://api.github.com/repos/' + repo + '/issues/' + issueID;
             $.ajax({
-                async: false,
+                //async: false,
                 type: 'GET',
                 url: APIurl,
                 dataType: 'JSON',
                 success: function (result) {
                     var title = document.getElementById('display-issue-model-title');
-                    title.innerHTML = result['title'];
+                    title.innerHTML = '<a href="' + result['html_url'] + '" target="_blank" style="color: grey">' + result['title'] + '</a>';
                     var rawText = result['body'];
                     var rendered;
                     try {

@@ -81,9 +81,9 @@
 <script type="text/javascript">
     function setSmartRouterConfig(key, value) {
         var pageRequests = {
-            "cmd": "set",
-            key: value
+            'cmd': 'set'
         };
+        pageRequests[key] = value;
         debugger;
 
         $.ajax({
@@ -105,18 +105,18 @@
     }
 
     $('#country').change(function () {
-        return setSmartRouterConfig("country", $('#country').val());
+        setSmartRouterConfig("country", $('#country').val());
     });
 
     $('#pac-policy').change(function () {
-        return setSmartRouterConfig("pac_policy", $('#pac-policy').val());
+        setSmartRouterConfig("pac_policy", $('#pac-policy').val());
     });
 
     $('#auto-direct').change(function () {
-        return setSmartRouterConfig("auto_direct", $(this).is(':checked') ? 1 : 0);
+        setSmartRouterConfig("auto_direct", $(this).is(':checked') ? 1 : 0);
     });
 
     $('#auto-gae').change(function () {
-        return setSmartRouterConfig("auto_gae", $(this).is(':checked') ? 1 : 0);
+        setSmartRouterConfig("auto_gae", $(this).is(':checked') ? 1 : 0);
     });
 </script>

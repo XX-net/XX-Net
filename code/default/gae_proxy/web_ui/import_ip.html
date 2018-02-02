@@ -32,10 +32,10 @@
             data: postData,
             dataType: 'JSON',
             success: function (result) {
-                tip('Success import ' + result['res'] + ' IP.', 'success');
+                tip('{{ _( "Success import ") }}' + result['res'] + '{{ _( " IP.") }}', 'success');
             },
             error: function () {
-                tip('Import IP fail');
+                tip('{{ _( "Failed importing IP.") }}');
             }
         });
     }

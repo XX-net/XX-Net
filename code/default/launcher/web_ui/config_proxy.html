@@ -137,11 +137,11 @@
                 if (result['res'] == 'success') {
                     tip('{{ _( "Settings saved successfully." ) }}', 'success');
                 } else {
-                    tip('{{ _( "Failed saving settings." ) }}' + ":  " + result['reason'], 'error');
+                    tip('{{ _( "Failed saving settings: " ) }}'+ result['reason'], 'error');
                 }
             },
             error: function () {
-                tip('{{ _( "Failed saving settings." ) }}' + ".", 'error');
+                tip('{{ _( "Failed saving settings." ) }}', 'error');
             }
         });
     }

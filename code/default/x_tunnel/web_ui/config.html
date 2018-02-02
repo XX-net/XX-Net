@@ -511,7 +511,7 @@
                     } else if (result['reason'] == "account not exist") {
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
                     } else {
-                        tip('Login fail:' + result['reason'], 'error', false);
+                        tip('{{ _("Login fail:") }}' + result['reason'], 'error', false);
                     }
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');

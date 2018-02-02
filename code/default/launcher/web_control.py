@@ -237,7 +237,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            check_update = config.get(["update", "check_update"], "notice-stable")
 
             if module_init.xargs.get("allow_remote", 0):
                 allow_remote_connect = 1
@@ -245,7 +244,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 allow_remote_connect = config.get(["modules", "launcher", "allow_remote_connect"], 0)
 
             dat = {
-                "check_update": check_update,
+                "check_update": config.get(["update", "check_update"], "notice-stable"),
                 "language": config.get(["language"], i18n_translator.lang),
                 "popup_webui": config.get(["modules", "launcher", "popup_webui"], 1),
                 "allow_remote_connect": allow_remote_connect,
