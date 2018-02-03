@@ -127,9 +127,9 @@
     title('{{ _( "X-Tunnel Status Info" ) }}');
 </script>
 <script type="text/javascript">
-    documentReadyToRun.push(function(){
-        var timer = $.timer(function() {
-            if ( $("#details").is(":visible")){
+    documentReadyToRun.push(function () {
+        var timer = $.timer(function () {
+            if ($("#details").is(":visible")) {
                 updateDetailStatus();
             }
         });
@@ -145,8 +145,7 @@
 </script>
 <script type="text/javascript">
     function updateProperty(table, key, value) {
-        var item = $('#'+table).find('.'+key);
-
+        var item = $('#' + table).find('.' + key);
         var previousContent = item.html();
         if (String(previousContent) != String(value)) {
             item.html(value);
@@ -158,29 +157,27 @@
             type: 'GET',
             url: '/module/x_tunnel/control/status',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 for (var front in result["status"]) {
-                    for( key in result["status"][front] ) {
+                    for (key in result["status"][front]) {
                         value = result["status"][front][key];
                         updateProperty(front, key, value);
                     }
                 }
             },
-            error: function(result) {
+            error: function (result) {
                 var formValue = $('#sys-platform').html();
 
-                if ( tipHasClose() ) {
+                if (tipHasClose()) {
                     $('html, body').animate({
                         scrollTop: 0
                     }, 'slow');
                 }
 
-                if ( formValue == '' ) {
+                if (formValue == '') {
                     tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("X-Tunnel")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
         });
     }
-
 </script>
-

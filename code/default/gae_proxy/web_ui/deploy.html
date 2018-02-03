@@ -14,19 +14,17 @@
                     <label for="gae-appid">GAE AppID (<a href="https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids" target="_blank">{{ _( "How to apply" ) }}</a>)</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
-                    <input id="gae-appid" type="text" placeholder='{{ _("Delimit multiple AppIDs with |") }}' />
+                    <input id="gae-appid" type="text" placeholder='{{ _("Delimit multiple AppIDs with |") }}'/>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
-
             <div class="row-fluid">
                 <div class="span4">
                     <label for="show-debug-log">{{ _( "Show Debug Log" ) }}</label>
                 </div> <!-- .span4 -->
                 <div class="span8">
-                    <input id="show-debug-log" type="checkbox" data-toggle="switch" />
+                    <input id="show-debug-log" type="checkbox" data-toggle="switch"/>
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
-
             <div class="row-fluid">
                 <div class="span12">
                     <button class="btn btn-primary btn-block" type="submit">{{ _("Start to deploy") }}</button>
@@ -41,21 +39,19 @@
 </div> <!-- #tab-content -->
 
 <!-- JavaScript -->
-
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 
     $('#show-debug-log').parent().removeClass('switch-off');
 </script>
-
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         window.status = 'init';
         window.isAutoScrollLog = true;
 
-        window.timer  = $.timer(function() {
+        window.timer = $.timer(function () {
             getDeployStatus();
         });
 
@@ -66,31 +62,26 @@
     });
 </script>
 <script type="text/javascript">
-    $('#log').scroll(function() {
+    $('#log').scroll(function () {
         var preservedHeight = $('#log').height() + 10,
             scrollHeight    = $('#log')[0].scrollHeight,
             scrollTop       = $('#log').scrollTop();
 
-        if ( scrollTop + preservedHeight == scrollHeight ) {
-            window.isAutoScrollLog = true;
-        } else {
-            window.isAutoScrollLog = false;
-        }
+        window.isAutoScrollLog = (scrollTop + preservedHeight === scrollHeight);
     });
 </script>
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         resizeLogWindow();
     });
 
-    $(window).resize(function() {
+    $(window).resize(function () {
         resizeLogWindow();
     });
-</script>
-<script type="text/javascript">
+
     function resizeLogWindow() {
         var windowHeight = $(window).height(),
-        preservedHeight = 300;
+            preservedHeight = 300;
 
         $('#log').css('height', windowHeight - preservedHeight);
     }
@@ -99,23 +90,22 @@
     function updateLog(logContent) {
         $('#log').html(logContent.replace(/\n/g, '<br>'));
     }
-</script>
-<script type="text/javascript">
+
     function getDeployStatus() {
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/deploy?cmd=get_log',
             dataType: 'JSON',
-            success: function(result) {
-                if ( window.status == 'running' ) {
-                    if ( result['status'] == 'init' ) {
+            success: function (result) {
+                if (window.status == 'running') {
+                    if (result['status'] == 'init') {
                         window.timer.stop();
                         $('.alert').html('{{ _("Current status: ") }}{{ _("XX-Net was reset.") }}');
 
                         changeButtonStatus('start');
-                    } else if ( result['status'] == 'running' ) {
+                    } else if (result['status'] == 'running') {
                         updateLog(result['log']);
-                    } else if ( result['status'] == 'finished' ) {
+                    } else if (result['status'] == 'finished') {
                         window.timer.stop();
                         window.status = 'finished';
                         $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed.") }} <br>{{ _("Please go to ") }}<a href="/?module=gae_proxy&menu=config">{{ _("the configuration page ") }}</a>{{ _("to set AppID to enable them.") }}');
@@ -125,19 +115,20 @@
                     } else {
                         window.timer.stop();
                         $('.alert').html('{{ _("Current status: ") }}{{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result['status']);
+
                         updateLog(result['log']);
                     }
                 } else { // window.status == 'init' || window.status == 'finished' || undefined
-                    if ( result['status'] == 'init' ) {
+                    if (result['status'] == 'init') {
                         window.timer.stop();
                         $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
-                    } else if ( result['status'] == 'running' ) {
+                    } else if (result['status'] == 'running') {
                         window.status = 'running';
                         $('.alert').html('{{ _("Current status: ") }}{{ _("deploying ...") }}');
 
                         updateLog(result['log']);
                         changeButtonStatus('cancel');
-                    } else if ( result['status'] == 'finished' ) {
+                    } else if (result['status'] == 'finished') {
                         window.timer.stop();
                         window.status = 'finished';
                         $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment completed.") }}');
@@ -149,7 +140,7 @@
                         updateLog(result['log']);
                     }
                 }
-                if(window.isAutoScrollLog == true){
+                if (window.isAutoScrollLog == true) {
                     $('#log').scrollTop($('#log')[0].scrollHeight);
                 }
             }
@@ -158,11 +149,11 @@
 </script>
 <script type="text/javascript">
     function changeButtonStatus(status) {
-        if ( status == 'start' ) {
+        if (status == 'start') {
             $('button.btn').removeClass('btn-danger');
             $('button.btn').addClass('btn-primary');
             $('button.btn').html('{{ _("Start to deploy") }}');
-        } else if ( status == 'cancel' ) {
+        } else if (status == 'cancel') {
             $('button.btn').removeClass('btn-primary');
             $('button.btn').addClass('btn-danger');
             $('button.btn').html('{{ _("Terminate deploying") }}');
@@ -170,24 +161,23 @@
     }
 </script>
 <script type="text/javascript">
-    $('button.btn').click(function() {
-        if ( $('button.btn').html() == '{{ _("Start to deploy") }}' ){
+    $('button.btn').click(function () {
+        if ($('button.btn').html() == '{{ _("Start to deploy") }}') {
             onStart();
-        } else if ( $('button.btn').html() == '{{ _("Terminate deploying") }}' ) {
+        } else if ($('button.btn').html() == '{{ _("Terminate deploying") }}') {
             onCancel();
         }
     });
 </script>
 <script type="text/javascript">
-    function onStart(){
+    function onStart() {
         var appId        = $('#gae-appid').val();
-        var debug = $('#show-debug-log').is(':checked') ? 1 : 0;
+        var debug        = $('#show-debug-log').is(':checked') ? 1 : 0;
         var errorMessage = getErrorMessage(appId);
 
-        if ( errorMessage.length != 0 ) {
+        if (errorMessage.length != 0) {
             $('.alert').removeClass('alert-info');
             $('.alert').addClass('alert-error');
-
             $('.alert').html(errorMessage);
             return;
         } else {
@@ -205,11 +195,11 @@
             type: 'POST',
             url: '/module/gae_proxy/control/deploy?cmd=cancel',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 changeButtonStatus('start');
                 $('.alert').html('{{ _("Current status: ") }}{{ _("Deployment cancelled.") }}');
             },
-            error: function(result){
+            error: function (result) {
                 $('.alert').html('{{ _("Current status: ") }} {{ _("An exception occurred.") }}<br>{{ _("The exception info: ") }}' + result);
             }
         });
@@ -219,7 +209,7 @@
     function getErrorMessage(appId) {
         var errorMessage = '';
 
-        if ( appId.length == 0 || !isAppIdValid(appId) ) {
+        if (appId.length == 0 || !isAppIdValid(appId)) {
             errorMessage += '{{ _("Your AppID is either empty or invalid.") }}<br>';
         }
 
@@ -238,7 +228,7 @@
             url: '/module/gae_proxy/control/deploy?cmd=deploy',
             data: authentication,
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 window.timer.play();
                 $('.nav-tabs a:last').tab('show');
             }

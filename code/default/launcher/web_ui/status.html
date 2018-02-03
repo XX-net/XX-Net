@@ -11,20 +11,19 @@
 
     <div id="search">
         <h4>{{ _( "Search" ) }}</h4>
-        <form accept-charset="UTF-8" action="https://github.com/XX-net/XX-Net/issues" class="subnav-search float-left"
-              data-pjax="true" method="get" target="_blank" onsubmit="q.value='is:issue is:open '+q.value">
+        <form accept-charset="UTF-8" action="https://github.com/XX-net/XX-Net/issues" data-pjax="true" method="get" target="_blank" onsubmit="q.value='is:issue is:open '+q.value">
             <div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="✓"></div>
             <input id="issues-search" name="q" placeholder='{{ _( "Search all issues" ) }}' type="text"> <!-- value="is:issue is:open " -->
             <!--<svg style="margin:0;padding:0;display:inline-block" height="16" width="16" version="1.1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z"/></svg>-->
         </form>
-        <br />
+        <br/>
     </div> <!-- #search -->
 
     <div id="notice">
         <h4>{{ _( "Notice" ) }}</h4>
         <ul id="notice-content" style="overflow:auto; width:auto; height:auto; max-height:200px; list-style-type:circle"></ul>
         <!--<svg height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>-->
-        <br />
+        <br/>
     </div> <!-- #notice -->
 
     <h4>{{ _( "Status" ) }}</h4>
@@ -157,7 +156,7 @@
 <div class="row-fluid">
     <div class="span3 bold">{{ _( "Show Details" ) }}</div>
     <div class="span9">
-        <input id="show-detail" type="checkbox" />
+        <input id="show-detail" type="checkbox"/>
     </div>
 </div>
 
@@ -179,12 +178,12 @@
     title('{{ _( "XX-Net Status Info" ) }}');
 </script>
 <script type="text/javascript">
-    function OneKeyReport(){
+    function OneKeyReport() {
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 var information = [
                     'sys-platform: ' + result['sys_platform'],
                     'os-system: ' + result['os_system'],
@@ -202,7 +201,7 @@
                     'gws-ip-num: ' + 'total:' + result['ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
                     'ipv4-status: ' + result['ipv4_state'],
                     'ipv6-status: ' + result['ipv6_state'],
-                    'connected-link: ' + 'new:' + result['connected_link_new'] + ' used:'+ result['connected_link_used'],
+                    'connected-link: ' + 'new:' + result['connected_link_new'] + ' used:' + result['connected_link_used'],
                     'worker: ' + 'h1:' + result['worker_h1'] + ' h2:' + result['worker_h2'],
                     'scan-ip-thread-num: ' + result['scan_ip_thread_num'],
                     'ip-quality: ' + result['ip_quality'],
@@ -217,18 +216,18 @@
                     'Using_Public_Appid: ' + is_public_appid(result['gae_appid'])
                 ];
 
-                updateProperty("textarea#DiagInfo","XX-Net Status:\n\n" + information.join("\n"));
+                updateProperty("textarea#DiagInfo", "XX-Net Status:\n\n" + information.join("\n"));
 
-                IssueURL = 'https://github.com/XX-net/XX-Net/issues/new?body={{ _( "-----------%0AProblem Description:%0APlease describe your problem, running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A" ) }}' + encodeURIComponent(information.join("\n")) + ";"; 
-                $("a#one-key-issue").attr("href",IssueURL);
+                IssueURL = 'https://github.com/XX-net/XX-Net/issues/new?body={{ _( "-----------%0AProblem Description:%0APlease describe your problem, running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A" ) }}' + encodeURIComponent(information.join("\n")) + ";";
+                $("a#one-key-issue").attr("href", IssueURL);
                 GGroupURL = "https://groups.google.com/forum/#!forum/xx-net";
                 // The one-key generaton function is to be designed as Github does有待设计类似Github Issue的一键生成功能
                 $("a#go-to-google-group").attr("href", GGroupURL);
             }
-          })
+        })
     }
 
-    $("#pop-up-report").click(function(){
+    $("#pop-up-report").click(function () {
         OneKeyReport();
         $('#report-issue-modal').modal();
     });
@@ -237,9 +236,9 @@
 
     window.fake_host = "";
 
-    documentReadyToRun.push(function(){
-        var timer = $.timer(function() {
-            if ( $("#details").is(":visible")){
+    documentReadyToRun.push(function () {
+        var timer = $.timer(function () {
+            if ($("#details").is(":visible")) {
                 updateDetailStatus();
             }
             updateNoobStatus();
@@ -253,7 +252,7 @@
         updateDetailStatus();
         updateNoobStatus();
         updateNotice();
-        getConfig();
+        update_show_detail();
     });
 </script>
 <script type="text/javascript">
@@ -263,7 +262,7 @@
             $(selector).html(content);
         }
         if (attrclass) {
-            $(selector).attr("class",attrclass);
+            $(selector).attr("class", attrclass);
         }
     }
 
@@ -272,7 +271,7 @@
             type: 'GET',
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 if (window.fake_host !== result["fake_host"]) {
                     window.fake_host = result["fake_host"];
                     test_http_proxy_setting();
@@ -296,27 +295,27 @@
 
                     'td#is-idle': result['is_idle'] ? '{{ _( "idle" ) }}' : '{{ _( "working" ) }}',
                     'td#browser-proxy-setting': test_http_proxy_setting(),
-                    'td#ca-status': ( test_http_proxy_setting() === "OK") ? test_https_proxy_setting() : "Fail",
+                    'td#ca-status': (test_http_proxy_setting() === "OK") ? test_https_proxy_setting() : "Fail",
                     'td#block-stat': result['block_stat']
                 };
                 for (var item in updates) {
                     updateProperty(item, updates[item]);
                 }
 
-                if ( !tipHasClose() ) {
+                if (!tipHasClose()) {
                     tipClose();
                 }
             },
-            error: function(result) {
+            error: function (result) {
                 var formValue = $('#sys-platform').html();
 
-                if ( tipHasClose() ) {
+                if (tipHasClose()) {
                     $('html, body').animate({
                         scrollTop: 0
                     }, 'slow');
                 }
 
-                if ( formValue === '' ) {
+                if (formValue === '') {
                     tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
@@ -328,57 +327,57 @@
             type: 'GET',
             url: '/module/gae_proxy/control/status',
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['ipv4_state'] == "Fail" && result['ipv6_state'] == "Fail"){
+            success: function (result) {
+                if (result['ipv4_state'] == "Fail" && result['ipv6_state'] == "Fail") {
                     return updateProperty('#noob-info', '{{ _( "Your local network failed. Please check your network and firewall." ) }}', 'none');
                 }
 
-                if ( result['good_ipv4_num'] + result['good_ipv6_num'] < 1){
-                    if ( result['scan_ip_thread_num'] < 1 ){
+                if (result['good_ipv4_num'] + result['good_ipv6_num'] < 1) {
+                    if (result['scan_ip_thread_num'] < 1) {
                         return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">').replace('$2', '</a>'), 'none');
-                    }else{
-                        if (result['ipv6_state'] == "Fail"){
+                    } else {
+                        if (result['ipv6_state'] == "Fail") {
                             return updateProperty('#noob-info', '{{ _( "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>." ) }}', 'none');
-                        }else{
+                        } else {
                             return updateProperty('#noob-info', '{{ _( "XX-Net is scanning IP. Please wait about half an hour." ) }}', 'none');
                         }
                     }
                 }
 
-                if (result['working_appid'] == ""){
-                    if ( result['out_of_quota_appids'] != "" ){
-                        if ( is_public_appid(result['gae_appid']) ){
+                if (result['working_appid'] == "") {
+                    if (result['out_of_quota_appids'] != "") {
+                        if (is_public_appid(result['gae_appid'])) {
                             return updateProperty('#noob-info', '{{ _( "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'none');
-                        }else{
+                        } else {
                             return updateProperty('#noob-info', '{{ _( "Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more AppID</a>." ) }}', 'none');
                         }
-                    }else{
+                    } else {
                         return updateProperty('#noob-info', '{{ _( "No working AppID. Please check." ) }}', 'none');
                     }
                 }
 
-                if ( (result['connected_link_new'] + result['worker_h1'] + result['worker_h2']) < 1 ){
-                    if ( result['is_idle'] ){
+                if ((result['connected_link_new'] + result['worker_h1'] + result['worker_h2']) < 1) {
+                    if (result['is_idle']) {
                         return updateProperty('#noob-info', '{{ _( "System is Idle." ) }}', 'fluent');
-                    }else{
+                    } else {
                         return updateProperty('#noob-info', '{{ _( "Connection not established yet." ) }}', 'none');
                     }
                 }
 
-                if ( test_http_proxy_setting() == "Fail" ){
+                if (test_http_proxy_setting() == "Fail") {
                     return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/%E8%AE%BE%E7%BD%AE%E4%BB%A3%E7%90%86" target="_blank">' + '{{ _( "Please check your browser proxy setting." ) }}' + '</a>', 'none');
-                } else  if ( test_http_proxy_setting() == "Detecting" ){
+                } else if (test_http_proxy_setting() == "Detecting") {
                     return updateProperty('#noob-info', '{{ _( "Detecting ..." ) }}', 'none');
                 }
 
-                if ( test_https_proxy_setting() == "Fail"){
+                if (test_https_proxy_setting() == "Fail") {
                     return updateProperty('#noob-info', '<a href="https://github.com/XX-net/XX-Net/wiki/GoAgent-Import-CA" target="_blank">' + '{{ _( "Please import certificates to your browser." ) }}' + '</a>', 'none');
-                } else  if ( test_https_proxy_setting() == "Detecting" ){
+                } else if (test_https_proxy_setting() == "Detecting") {
                     return updateProperty('#noob-info', '{{ _( "Detecting ..." ) }}', 'none');
                 }
 
-                if ( is_public_appid(result['gae_appid']) ){
-                    if ( result['out_of_quota_appids'].length > 200 ){
+                if (is_public_appid(result['gae_appid'])) {
+                    if (result['out_of_quota_appids'].length > 200) {
                         return updateProperty('#noob-info', '{{ _( "You are using public AppIDs. You are recommended to <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'hard');
                     }
                 }
@@ -386,9 +385,9 @@
                 return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'].trim() + '{{ _( ", Everything is OK. Welcome to the FREE Internet." ) }}', 'fluent');
 
             },
-            error: function(result) {
+            error: function (result) {
                 var infoValue = $('#noob-info').html();
-                if ( infoValue == '' ) {
+                if (infoValue == '') {
                     tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 } else {
                     updateProperty('#noob-info', '{{ _("No response from process: ")}}{{ _("XX-Net")}}{{ _(". It might have already exited.")}}', 'none');
@@ -397,7 +396,7 @@
         });
     }
 
-    function is_public_appid(appids){
+    function is_public_appid(appids) {
         return appids.length <= 1;
     }
 
@@ -406,7 +405,7 @@
             return "OK";
         }
 
-        if (window.fake_host === ""){
+        if (window.fake_host === "") {
             return "Fail";
         }
 
@@ -416,10 +415,10 @@
             crossDomain: true,
             timeout: 1000,
             url: 'http://' + window.fake_host + '/xxnet',
-            success: function(result) {
+            success: function (result) {
                 window.http_proxy_setting = result === "OK" ? "OK" : "Fail";
             },
-            error: function(result, textStatus, errorThrown) {
+            error: function (result, textStatus, errorThrown) {
                 window.http_proxy_setting = "Fail";
             }
         });
@@ -434,7 +433,7 @@
             return "OK";
         }
 
-        if (window.fake_host === ""){
+        if (window.fake_host === "") {
             return "Fail";
         }
 
@@ -444,10 +443,10 @@
             crossDomain: true,
             timeout: 1000,
             url: 'https://' + window.fake_host + '/xxnet',
-            success: function(result) {
-                window.https_proxy_setting = result == "OK" ? "OK" : "Fail";
+            success: function (result) {
+                window.https_proxy_setting = (result === "OK") ? "OK" : "Fail";
             },
-            error: function(result, textStatus, errorThrown) {
+            error: function (result, textStatus, errorThrown) {
                 window.https_proxy_setting = "Fail";
             }
         });
@@ -460,37 +459,24 @@
     test_http_proxy_setting();
     test_https_proxy_setting();
 
-    $(function() {
+    $(function () {
         $('#show-detail').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 
-    $('#show-detail').change(function() {
+    $('#show-detail').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'show_detail',
             value     = isChecked ? 1 : 0;
         if (isChecked) {
-            $( "#details" ).slideDown();
+            $("#details").slideDown();
         } else {
-            $( "#details" ).slideUp();
+            $("#details").slideUp();
         }
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    function setConfig(key, value) {
-        var pageRequests = {};
-        pageRequests['cmd'] = 'set_config';
-        pageRequests[key]   = value;
-
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON'
-        });
-    }
-
-    function getConfig() {
+    function update_show_detail() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -499,17 +485,17 @@
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['show_detail'] !== 0 ) {
-                    $( "#show-detail").parent().removeClass('switch-off');
-                    $( "#show-detail").parent().addClass('switch-on');
-                    $( "#show-detail").prop('checked', true);
-                    $( "#details" ).slideDown();
+            success: function (result) {
+                if (result['show_detail'] !== 0) {
+                    $("#show-detail").parent().removeClass('switch-off');
+                    $("#show-detail").parent().addClass('switch-on');
+                    $("#show-detail").prop('checked', true);
+                    $("#details").slideDown();
                 } else {
-                    $( "#show-detail").parent().addClass('switch-off');
-                    $( "#show-detail").parent().removeClass('switch-on');
-                    $( "#show-detail").prop('checked', false);
-                    $( "#details" ).slideUp();
+                    $("#show-detail").parent().addClass('switch-off');
+                    $("#show-detail").parent().removeClass('switch-on');
+                    $("#show-detail").prop('checked', false);
+                    $("#details").slideUp();
                 }
 
                 switch(result['system-proxy']) {

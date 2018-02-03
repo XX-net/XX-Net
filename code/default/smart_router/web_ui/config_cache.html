@@ -27,24 +27,23 @@
 </form> <!-- #import-export-ip -->
 
 <script type="text/javascript">
-    function loadCacheList(){
+    function loadCacheList() {
         $.ajax({
             type: 'POST',
             url: '/module/smart_router/control/cache',
             data: {},
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     {
                         $('#domain-cache-list').val(result['domain_cache_list']);
                         $('#ip-cache-list').val(result['ip_cache_list']);
                     }
-
                 } else {
                     displayErrorMessage();
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
@@ -56,20 +55,18 @@
         var postData = {
             'cmd': "clean"
         };
-
         $.ajax({
             type: 'POST',
             url: '/module/smart_router/control/cache',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 loadCacheList();
                 tip('{{ _( "Clean Cache successfully." ) }}', 'success');
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     }
 </script>
-

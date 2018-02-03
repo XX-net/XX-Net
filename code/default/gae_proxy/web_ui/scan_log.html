@@ -7,16 +7,16 @@
         </div> <!-- .row-fluid -->
 
 <script type="text/javascript">
-    function loadScanIpLog(){
+    function loadScanIpLog() {
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/scan_ip?cmd=get_scan_ip_log',
             dataType: 'html',
-            success: function(result) {
+            success: function (result) {
                 $('#log').html(result.replace(/\n/g, '<br>'));
                 $('#log').scrollTop($('#log')[0].scrollHeight);
             },
-            error: function(){
+            error: function () {
                 tip('{{ _("Failed reading the log.") }}', 'error');
             }
         });
@@ -24,7 +24,7 @@
     loadScanIpLog();
 </script>
 <script type="text/javascript">
-    $('#reload-scan-ip-log').click(function(){
+    $('#reload-scan-ip-log').click(function () {
         loadScanIpLog();
     });
 </script>

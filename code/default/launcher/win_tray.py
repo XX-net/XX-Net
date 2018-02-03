@@ -5,10 +5,10 @@
 if __name__ == "__main__":
     import os, sys
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'win32'))
     sys.path.append(win32_lib)
 
 import webbrowser
@@ -27,11 +27,11 @@ from systray import SysTrayIcon, win32_adapter
 import locale
 lang_code, code_page = locale.getdefaultlocale()
 
+
 class Win_tray():
     def __init__(self):
         icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
-        self.systray = SysTrayIcon(icon_path, "XX-Net", 
-            self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
+        self.systray = SysTrayIcon(icon_path, "XX-Net", self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
         self.INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path, 0, winreg.KEY_ALL_ACCESS)
@@ -76,7 +76,7 @@ class Win_tray():
                     return "unknown"
         except:
             pass
-        
+
         return "disable"
 
     def on_right_click(self):
@@ -85,11 +85,11 @@ class Win_tray():
 
     def make_menu(self):
         proxy_stat = self.get_proxy_state()
-        gae_proxy_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="gae" else 0
-        x_tunnel_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="x_tunnel" else 0
-        smart_router_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="smart_router" else 0
-        pac_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="pac" else 0
-        disable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="disable" else 0
+        gae_proxy_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "gae" else 0
+        x_tunnel_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "x_tunnel" else 0
+        smart_router_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "smart_router" else 0
+        pac_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "pac" else 0
+        disable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "disable" else 0
 
         if lang_code == "zh_CN":
             menu_options = [(u"设置", None, self.on_show, 0)]
@@ -103,10 +103,10 @@ class Win_tray():
                 menu_options.append((u"全局通过智能路由代理", None, self.on_enable_smart_router, smart_router_checked))
 
             menu_options += [
-                        (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
-                        (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                        (u"重启各模块", None, self.on_restart_each_module, 0),
-                        (u'退出', None, SysTrayIcon.QUIT, False)]
+                (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
+                (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
+                (u"重启各模块", None, self.on_restart_each_module, 0),
+                (u'退出', None, SysTrayIcon.QUIT, False)]
         else:
             menu_options = [(u"Config", None, self.on_show, 0)]
             if config.get(["modules", "gae_proxy", "auto_start"], 0) == 1:
@@ -184,6 +184,7 @@ class Win_tray():
         if callback:
             callback(data, res)
         return res
+
 
 sys_tray = Win_tray()
 

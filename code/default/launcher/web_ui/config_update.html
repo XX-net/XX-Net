@@ -1,4 +1,3 @@
-
     <div id="update-options">
         <div class="row-fluid">
             <div class="span3">
@@ -30,7 +29,7 @@
                 <label for="test-version-no">{{ _( "Version of the test one" ) }}: </label>
             </div>
             <div class="span4" id="test-version-no" style="margin-top:10px"></div>
-            <div class="span2" >
+            <div class="span2">
                 <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
@@ -43,24 +42,24 @@
                 <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
-
-        <hr>
-        
+        <hr/>
         <div class="row-fluid">
             <div class="span3">
-                <label>{{ _( "Keep old versions count" ) }}
-                <br/>(0~99, 99 = {{ _( "keep all" ) }})</label>
+                <label>
+                    {{ _( "Keep old versions count" ) }}
+                    <br/>
+                    (0~99, 99 = {{ _( "keep all" ) }})
+                </label>
             </div>
             <div class="span3">
                 <input id="keep_old_ver_num" type="number" min=0 max=99 value="abc"/>
             </div>
             <div class="span3">
-                <button id="save_keep_old_ver_num" class="btn btn-primary" >{{ _( "Save" ) }}</button>
+                <button id="save_keep_old_ver_num" class="btn btn-primary">{{ _( "Save" ) }}</button>
             </div>
         </div>
-        
-        <hr/>
     </div> <!-- #advanced-options -->
+    <hr/>
 
     <div class="row-fluid">
         <div class="span4">
@@ -69,7 +68,6 @@
             </label>
         </div> <!-- .span4 -->
     </div>
-
     <div id="manual-update" style="display: none;">
         <br/>
         <div class="row-fluid">
@@ -81,23 +79,24 @@
                 <label>{{ _( "Released version" ) }} :</label>
             </div>
             <div class="span3">
-                <select id="released-versions-selector"><option>{{ _( "Released" ) }}</option> </select>
+                <select id="released-versions-selector">
+                    <option>{{ _( "Released" ) }}</option>
+                </select>
             </div>
-
             <div class="span3">
                 <button class="btn btn-primary ladda-button" data-style="slide-up" id="manual-upgrade-to">{{ _( "Download & Change to" ) }} ({{ _( "no hash check" ) }})</button>
             </div>
         </div>
-
         <br>
         <div class="row-fluid">
             <div class="span3">
                 <label>{{ _( "Local version" ) }} :</label>
             </div>
             <div class="span3">
-                <select id="local-versions-selector"> <option>{{ _( "Local" ) }}</option> </select>
+                <select id="local-versions-selector">
+                    <option>{{ _( "Local" ) }}</option>
+                </select>
             </div>
-
             <div class="span3">
                 <button class="btn btn-primary ladda-button" data-style="slide-up" id="set-as-local-version">{{ _( "Change to this version" ) }}</button>
             </div>
@@ -108,22 +107,21 @@
     </div>
 
 <script type="text/javascript">
-    $('.pull-down-control').click(function() {
+    $('.pull-down-control').click(function () {
         var isShown = $('i.icon', this).hasClass('icon-chevron-down');
         var id = $(this).attr('for');
 
-        if ( !isShown ) {
+        if (!isShown) {
             $('i.icon', this).removeClass('icon-chevron-right');
             $('i.icon', this).addClass('icon-chevron-down');
-            $('#'+id).slideDown();
+            $('#' + id).slideDown();
         } else {
             $('i.icon', this).removeClass('icon-chevron-down');
             $('i.icon', this).addClass('icon-chevron-right');
-            $('#'+id).slideUp();
+            $('#' + id).slideUp();
         }
     });
 </script>
-
 <script type="text/javascript">
     function updateGetConfig() {
         var pageRequests = {
@@ -135,20 +133,19 @@
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                $( "#check-update").val(result['check_update']);
+            success: function (result) {
+                $("#check-update").val(result['check_update']);
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     }
 
-    $(function() {
+    $(function () {
         updateGetConfig();
     });
 </script>
-
 <script type="text/javascript">
     function versionCompare(v1, v2, options) {
         var lexicographical = options && options.lexicographical,
@@ -196,33 +193,35 @@
 
         return 0;
     }
-    $('#check-new-version').click(function(){
+
+    $('#check-new-version').click(function () {
         check_new_version();
     });
 
-    function check_new_version(){
+    function check_new_version() {
         var button = $('#check-new-version');
         var loading = Ladda.create(button[0]);
         loading.start();
 
-        var pageRequests = {};
-        pageRequests['cmd'] = 'get_new_version';
+        var pageRequests = {
+            'cmd': 'get_new_version'
+        };
 
         $.ajax({
             type: 'GET',
             url: '/update',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] === 'success') {
                     $('#current-version-no').html(result['current_version']);
                     $('#test-version-no').html(result['test_version']);
                     $('#stable-version-no').html(result['stable_version']);
 
-                    if(versionCompare(result['test_version'], result['current_version']) <= 0){
+                    if (versionCompare(result['test_version'], result['current_version']) <= 0) {
                         $('#update-test-version').addClass("hide");
                     }
-                    if(versionCompare(result['stable_version'], result['current_version']) <= 0){
+                    if (versionCompare(result['stable_version'], result['current_version']) <= 0) {
                         $('#update-stable-version').addClass("hide");
                     }
 
@@ -233,7 +232,7 @@
                 }
                 $('#check-new-version-process').addClass('hide');
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
                 $('#check-new-version-process').addClass('hide');
             },
@@ -243,27 +242,25 @@
         });
     }
 </script>
-
 <script type="text/javascript">
-
-    $('#check-update').change(function() {
+    $('#check-update').change(function () {
         var key   = 'check_update',
             value = $(this).val();
 
-        if ( value == 'dont-check' ) {
+        if (value === 'dont-check') {
             stopUpdateCheck()
         } else {
             startUpdateCheck()
         }
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    $('.update-button').click(function(){
+    $('.update-button').click(function () {
         var id = $(this).attr('id');
-        if(id == 'update-test-version'){
+        if (id === 'update-test-version') {
             versionToUpdate = $('#test-version-no').html();
             //window.updating_button = $('#update-test-version');
-        }else if(id == 'update-stable-version'){
+        } else if (id === 'update-stable-version') {
             versionToUpdate = $('#stable-version-no').html();
             //window.updating_button = $('#update-stable-version');
         }
@@ -274,61 +271,39 @@
         updateVersion();
     });
 </script>
-
 <script type="text/javascript">
-    $(function() {
-        var pageRequests = {};
-        pageRequests['cmd'] = 'get_config';
-
+    $(function () {
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
         $.ajax({
             type: 'GET',
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['keep_old_ver_num'] >=0 && result['keep_old_ver_num'] <=99 )
-                {
-                    $("#keep_old_ver_num").val( result['keep_old_ver_num'] );
-                }else{
+            success: function (result) {
+                if (result['keep_old_ver_num'] >= 0 && result['keep_old_ver_num'] <= 99) {
+                    $("#keep_old_ver_num").val(result['keep_old_ver_num']);
+                } else {
                     //$("#keep_old_ver_num").val(-1);
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
-                
             }
         });
     });
-    
+
     $("#save_keep_old_ver_num").click(function () {
         keep_old_ver_num = $("#keep_old_ver_num").val();
-        
-        if ( ! (keep_old_ver_num >=0 && keep_old_ver_num <=99 ) ) return;
-        
-        var pageRequests = {};
-        pageRequests['cmd'] = 'set_config';
-        pageRequests['keep_old_ver_num'] = keep_old_ver_num;
 
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    tip('{{ _( "Settings saved successfully." ) }}', 'success');
-                }
-            },
-            error: function() {
-                displayErrorMessage();
-                
-            }
-        });
+        if (!(keep_old_ver_num >= 0 && keep_old_ver_num <= 99 )) return;
+
+        setConfig('keep_old_ver_num', keep_old_ver_num);
     });
 </script>
 <script type="text/javascript">
-    $('#manual-upgrade-to').click(function(){
-
+    $('#manual-upgrade-to').click(function () {
         versionToUpdate = $("#released-versions-selector").val();
 
         window.loading = Ladda.create(this);
@@ -337,123 +312,104 @@
         updateVersionWithoutHashCheck();
     });
 
-    $('#set-as-local-version').click(function(){
-
-        var v = $("#local-versions-selector").val();
-        
-        var pageRequests={};
-        pageRequests['cmd'] = 'set_localversion';
-        pageRequests['version'] = v;
+    $('#set-as-local-version').click(function () {
+        var pageRequests = {
+            'cmd': 'set_localversion',
+            'version': $("#local-versions-selector").val()
+        };
         $.ajax({
             type: 'GET',
             url: '/update',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] === 'success') {
                     tip('{{ _( "Settings saved successfully." ) }}', 'success');
-                }else{
+                } else {
                     tip('{{ _( "Settings save fail:" ) }}' + result['reason'], 'warning');
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     });
-    
-    $('#delete-local-version').click(function(){
 
-        var v = $("#local-versions-selector").val();
-        
-        var pageRequests={};
-        pageRequests['cmd'] = 'del_localversion';
-        pageRequests['version'] = v;
+    $('#delete-local-version').click(function () {
+        var pageRequests = {
+            'cmd': 'del_localversion',
+            'version': $("#local-versions-selector").val()
+        };
         $.ajax({
             type: 'GET',
             url: '/update',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] === 'success') {
                     tip('{{ _( "Deleted successfully." ) }}', 'success');
-                }else{
+                } else {
                     tip('{{ _( "Deleting local version fail." ) }}', 'warning');
                 }
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     });
 
-    function show_localversions()
-    {
-        var pageRequests = {};
-        pageRequests['cmd'] = 'get_localversions';
+    $("#local-versions-selector").focus(function () {
+        get_localversions();
+    });
+    $("#released-versions-selector").focus(function () {
+        get_releasedversions();
+    });
+    function get_localversions() {
+        var pageRequests = {
+            'cmd': 'get_localversions'
+        };
         $.ajax({
             type: 'GET',
             url: '/update',
             data: pageRequests,
             dataType: 'json',
-            success: function(result) {
-                
+            success: function (result) {
                 $("#local-versions-selector").html("");
-                
-                var lv = result;
-                for(var i = 0 ; i < lv.length; ++i)
-                {
-                    var v = lv[i]['v'];
-                    var f = lv[i]['folder'];
-                    var new_option = document.getElementById("local-versions-selector").appendChild(document.createElement("option"));
-                    new_option.value=f;
-                    t = v;
-                    if (f != v)
-                    {
-                        t += '("' + f + '")'
+
+                for (var i in result) {
+                    var v = result[i]['v'];
+                    var f = result[i]['folder'];
+                    if (f !== v) {
+                        v += '("' + f + '")'
                     }
-                    $(new_option).text(t);
+                    var new_option = document.getElementById("local-versions-selector").appendChild(document.createElement("option"));
+                    new_option.value = f;
+                    new_option.text = v;
                 }
             },
-            error: function() {
-                tip( 'Getting local versions failed.');
+            error: function () {
+                tip('{{ _( "Failed getting local versions." ) }}', 'error');
             }
         });
     }
-    
-    function show_releasedversions()
-    {
+    function get_releasedversions() {
         $.ajax({
             type: 'GET',
             url: 'https://api.github.com/repos/XX-net/XX-Net/releases',
             dataType: 'json',
-            success: function(result) {
-                
+            success: function (result) {
                 $("#released-versions-selector").html("");
-                
-                var vs = result;
-                for(var i = 0 ; i < 30 && vs[i]; ++i)
-                {
-                    var v = vs[i]['tag_name'];
+
+                for (var i in result) {
+                    var ver = result[i]['tag_name'];
                     var new_option = document.getElementById("released-versions-selector").appendChild(document.createElement("option"));
-                    new_option.value=v;
-                    $(new_option).text(v);
+                    new_option.value = ver;
+                    new_option.text = ver;
                 }
             },
-            error: function() {
-                tip( 'Getting released versions failed.');
+            error: function () {
+                tip('{{ _( "Failed getting released versions." ) }}', 'error');
             }
         });
-        show_releasedversions = function(){};
     }
-    
-    $(function(){
-        $("#local-versions-selector").focus(function(){
-            show_localversions();
-        });
-        
-        $("#released-versions-selector").focus(function(){
-            show_releasedversions();
-        });
-    });
 </script>

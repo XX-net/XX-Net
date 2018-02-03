@@ -48,7 +48,6 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
-
 create_data_path()
 
 
@@ -175,7 +174,6 @@ def exit_handler():
     module_init.stop_all()
     web_control.stop()
 
-
 atexit.register(exit_handler)
 
 
@@ -191,16 +189,12 @@ def main():
 
     xlog.info("start XX-Net %s", current_version)
 
-    web_control.confirm_xxnet_exit()
+    web_control.confirm_xxnet_not_running()
 
     setup_win_python.check_setup()
 
-    last_run_version = config.get(["modules", "launcher", "last_run_version"], "0.0.0")
-    if last_run_version != current_version:
-        import post_update
-        post_update.run(last_run_version)
-        config.set(["modules", "launcher", "last_run_version"], current_version)
-        config.save()
+    import post_update
+    post_update.check()
 
     allow_remote = 0
     if len(sys.argv) > 1:
@@ -220,8 +214,8 @@ def main():
 
     update.start()
 
-    update_from_github.delete_to_save_disk()
-    
+    update_from_github.cleanup()
+
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
     else:
@@ -230,7 +224,6 @@ def main():
 
     module_init.stop_all()
     sys.exit()
-
 
 if __name__ == '__main__':
     try:

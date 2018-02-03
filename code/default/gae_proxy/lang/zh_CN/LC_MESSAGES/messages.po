@@ -116,6 +116,9 @@ msgstr "无效的AppID："
 msgid ", deploy AppID before using."
 msgstr "，使用前请先部署。"
 
+msgid "Failed saving settings: "
+msgstr "保存设置失败："
+
 msgid "Failed saving settings."
 msgstr "保存设置失败。"
 
@@ -205,6 +208,15 @@ msgstr "导出IP失败。"
 
 msgid "IP list"
 msgstr "IP列表"
+
+msgid "Success import "
+msgstr "成功导入 "
+
+msgid " IP."
+msgstr "个IP。"
+
+msgid "Failed importing IP."
+msgstr "导入IP失败。"
 
 msgid "Enable"
 msgstr "启用"

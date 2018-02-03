@@ -137,6 +137,9 @@ msgstr "等待设置检查..."
 msgid "Settings saved successfully."
 msgstr "保存设置成功。"
 
+msgid "Failed saving settings: "
+msgstr "保存设置失败："
+
 msgid "Failed saving settings."
 msgstr "保存设置失败。"
 
@@ -221,6 +224,12 @@ msgstr "删除成功。"
 msgid "Deleting local version fail."
 msgstr "删除本地版本失败。"
 
+msgid "Failed getting local versions."
+msgstr "获取本地版本失败。"
+
+msgid "Failed getting released versions."
+msgstr "获取发布版本失败。"
+
 msgid "(Remote Web Control Enabled)"
 msgstr "(已允许远程访问)"
 
@@ -262,6 +271,18 @@ msgstr "下载中..."
 
 msgid "Download completed."
 msgstr "下载完成。"
+
+msgid "Hello!"
+msgstr "你好！"
+
+msgid "You seem to be on your first visit."
+msgstr "你似乎是初次到访。"
+
+msgid "new to this version?"
+msgstr "第一次使用此版本？"
+
+msgid "Learn more"
+msgstr "了解更多"
 
 msgid "System"
 msgstr "系统"

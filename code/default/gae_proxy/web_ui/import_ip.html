@@ -23,21 +23,19 @@
 </script>
 <script type="text/javascript">
     function doImportAction(ipList) {
-
         var postData = {
             'ipList': ipList
         };
-
         $.ajax({
             type: 'POST',
             url: '/module/gae_proxy/control/importip?cmd=importip',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                tip('Success import ' + result['res'] + ' IP.', 'success');
+            success: function (result) {
+                tip('{{ _( "Success import ") }}' + result['res'] + '{{ _( " IP.") }}', 'success');
             },
-            error: function() {
-                tip('Import IP fail');
+            error: function () {
+                tip('{{ _( "Failed importing IP.") }}');
             }
         });
     }

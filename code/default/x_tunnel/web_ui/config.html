@@ -10,11 +10,11 @@
             <h4>{{ _("Login") }}</h4>
             <p>
                 <label for="login-username">{{ _("Email") }}</label>
-                <input id="login-username" type="text" />
+                <input id="login-username" type="text"/>
             </p>
             <p>
                 <label for="login-password">{{ _("Password") }}</label>
-                <input id="login-password" type="password" />
+                <input id="login-password" type="password"/>
             </p>
             <p>
                 <button class="btn btn-primary btn-block" type="submit">{{ _("Login") }}</button>
@@ -27,11 +27,11 @@
             <h4>{{ _("Register") }}</h4>
             <p>
                 <label for="register-username">{{ _("Email") }}</label>
-                <input id="register-username" type="text" />
+                <input id="register-username" type="text"/>
             </p>
             <p>
                 <label for="register-password">{{ _("Password") }}</label>
-                <input id="register-password" type="password" />
+                <input id="register-password" type="password"/>
             </p>
             <p>
                 <button class="btn btn-primary btn-block" type="submit">{{ _("Register") }}</button>
@@ -174,7 +174,7 @@
         <table id="history-list" class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th >{{ _("Time") }}</th>
+                    <th>{{ _("Time") }}</th>
                     <th>{{ _("Action") }}</th>
                 </tr>
             </thead>
@@ -217,7 +217,7 @@
         <select id="charge-plan" name="os0">
             <option value="Quarterly">{{ _("Quarterly") }} $4.50</option>
             <option value="Yearly">{{ _("Yearly") }} $15.00</option>
-        </select> 
+        </select>
         <!-- Account Field -->
         <input type="hidden" name="on1" value="account">
         <input class="login-account" type="hidden" name="os1">
@@ -240,11 +240,11 @@
         <div class="alert alert-error hide"></div> <!-- .alert-error -->
         <p>
             <label for="transfer-credit-username">{{ _("Username transfer to") }}</label>
-            <input id="transfer-credit-username" type="text" placeholder='{{ _("Email Address") }}' />
+            <input id="transfer-credit-username" type="text" placeholder='{{ _("Email Address") }}'/>
         </p>
         <p>
             <label for="transfer-credit-amount">{{ _("Credit to transfer") }} (<strong>USD</strong>)</label>
-            <input id="transfer-credit-amount" type="text" value="0" onkeyup="isDecimalNumber(this)" />
+            <input id="transfer-credit-amount" type="text" value="0" onkeyup="isDecimalNumber(this)"/>
         </p>
     </div> <!-- .modal-body -->
     <div class="modal-footer">
@@ -262,11 +262,11 @@
         <div class="alert alert-error hide"></div> <!-- .alert-error -->
         <p>
             <label for="transfer-bandwidth-username">{{ _("Username transfer to") }}</label>
-            <input id="transfer-bandwidth-username" type="text" placeholder='{{ _("Email Address") }}' />
+            <input id="transfer-bandwidth-username" type="text" placeholder='{{ _("Email Address") }}'/>
         </p>
         <p>
             <label for="transfer-bandwidth-amount">{{ _("Bandwidth to transfer") }} (<strong>MB</strong>)</label>
-            <input id="transfer-bandwidth-amount" type="text" onkeyup="isDecimalNumber(this)" />
+            <input id="transfer-bandwidth-amount" type="text" onkeyup="isDecimalNumber(this)"/>
         </p>
     </div> <!-- .modal-body -->
     <div class="modal-footer">
@@ -276,13 +276,13 @@
     </div> <!-- .modal-footer -->
 </div> <!-- #transfer-bandwidth-modal -->
 
-<!-- Java Script -->
+<!-- JavaScript -->
 <script type="text/javascript">
     title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
 <script type="text/javascript">
-    $(function() {
-        window.refresh_timer = $.timer(function() {
+    $(function () {
+        window.refresh_timer = $.timer(function () {
             getUserInfo(0);
         });
 
@@ -294,12 +294,12 @@
         var force_update = 0;
         var navigationType = performance.navigation.type;
         if (navigationType === performance.navigation.TYPE_BACK_FORWARD) {
-          // console.log("Back/Forward button");
+            // console.log("Back/Forward button");
         } else if (navigationType === performance.navigation.TYPE_RELOAD) {
-          console.log("Reloaded");
-          force_update = 1;
+            console.log("Reloaded");
+            force_update = 1;
         } else if (navigationType === performance.navigation.TYPE_NAVIGATE) {
-          // console.log("Normal navigation");
+            // console.log("Normal navigation");
         }
 
         tip('{{ _("Logining ...") }}', 'info', false);
@@ -309,7 +309,7 @@
     });
 </script>
 <script type="text/javascript">
-    $('#info').dblclick(function(){
+    $('#info').dblclick(function () {
         // force update info from server
         // when double click info page
         getUserInfo(1);
@@ -317,13 +317,13 @@
 </script>
 <!-- Summary -->
 <script type="text/javascript">
-    $('#register-trigger').click(function() {
+    $('#register-trigger').click(function () {
         $('#login-form').addClass('hide');
         $('#register-form').removeClass('hide');
     });
 </script>
 <script type="text/javascript">
-    $('#login-trigger').click(function() {
+    $('#login-trigger').click(function () {
         $('#register-form').addClass('hide');
         $('#login-form').removeClass('hide');
     });
@@ -331,7 +331,7 @@
 <script type="text/javascript">
     function getUserInfo(force) {
         var url = '/module/x_tunnel/control/info';
-        if ( force ) {
+        if (force) {
             url = url + "?force=1";
         }
 
@@ -339,8 +339,8 @@
             type: 'GET',
             url: url,
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] == 'logout' ){
+            success: function (result) {
+                if (result['res'] == 'logout') {
                     tipClose();
                     $('#login-form').removeClass('hide');
                     $('#account-information').addClass('hide');
@@ -352,12 +352,12 @@
                     return;
                 }
 
-                if( result['res'] == 'login_process' ){
+                if (result['res'] == 'login_process') {
                     tip('{{ _("Logining ...") }}', 'info', false);
                     return;
                 }
 
-                if( result['res'] != 'success' ){
+                if (result['res'] != 'success') {
                     tip('{{ _("Connect to server fail:") }}' + result['reason'], 'warning', false);
                     $('#login-username').val(result['login_account']);
                     $('#login-password').val('_HiddenPassword');
@@ -392,11 +392,11 @@
     function getAvailableBandwidth(bandwidthList) {
         $('#available-bandwidth tbody').empty();
 
-        if ( bandwidthList['current'] ) {
+        if (bandwidthList['current']) {
             displayBandwidth(bandwidthList['current']);
         }
-        if ( bandwidthList['backup'] ) {
-            bandwidthList['backup'].forEach(function(entry) {
+        if (bandwidthList['backup']) {
+            bandwidthList['backup'].forEach(function (entry) {
                 displayBandwidth(entry);
             });
         }
@@ -417,9 +417,9 @@
 </script>
 <script type="text/javascript">
     function getCreditForHumanReading(credit) {
-        if ( parseFloat(credit) == 0 ) {
+        if (parseFloat(credit) == 0) {
             $('#transfer-credit-trigger').addClass('hide');
-        }else{
+        } else {
             $('#transfer-credit-trigger').removeClass('hide');
         }
         return '$ ' + parseFloat(credit).toFixed(2);
@@ -430,7 +430,7 @@
         var base        = 1000,
             bandwidth   = Math.round(bandwidth) / base / base;
 
-        if ( bandwidth > base ) {
+        if (bandwidth > base) {
             bandwidth = bandwidth / base;
             bandwidth = parseFloat(bandwidth).toFixed(2) + ' GB';
         } else {
@@ -450,7 +450,7 @@
         var host = email.split('@')[1];
         var weakhosts = ['qq.com', 'sina.cn', 'sina.com', '126.com', '163.com', '163.net', 'yeah.net'];
         for (var i in weakhosts) {
-            if (host.indexOf(weakhosts[i])>=0) {
+            if (host.indexOf(weakhosts[i]) >= 0) {
                 return false;
             }
             /*
@@ -473,10 +473,10 @@
         var username = $('#login-username').val(),
             password = $('#login-password').val();
 
-        if ( !isEmailLegal(username) ) {
+        if (!isEmailLegal(username)) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
-        } else if ( password.length < 6 ) {
+        } else if (password.length < 6) {
             tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
             return;
         }
@@ -490,7 +490,7 @@
 <script type="text/javascript">
     function doLoginAction(username, password) {
         var postData = {
-            'username': username, 
+            'username': username,
             'password': password,
             'is_register': 0
         };
@@ -500,18 +500,18 @@
             url: '/module/x_tunnel/control/login',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     getUserInfo(0);
                 } else {
-                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False") {
                         tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
-                    }else if ( result['reason'] == "auth fail" ){
+                    } else if (result['reason'] == "auth fail") {
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
-                    }else if ( result['reason'] == "account not exist" ){
+                    } else if (result['reason'] == "account not exist") {
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
-                    }else{
-                        tip('Login fail:' + result['reason'], 'error', false);
+                    } else {
+                        tip('{{ _("Login fail:") }}' + result['reason'], 'error', false);
                     }
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
@@ -526,16 +526,16 @@
         var username = $('#register-username').val(),
             password = $('#register-password').val();
 
-        if ( !isEmailLegal(username) ) {
+        if (!isEmailLegal(username)) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
-        } else if ( !isEmailQualified(username) ) {
+        } else if (!isEmailQualified(username)) {
             tip('{{ _("Do NOT use Chinese-service-provider\'s Email!") }}', 'error', false);
             return;
-        } else if ( password.length < 6 || password.length > 20) {
+        } else if (password.length < 6 || password.length > 20) {
             tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
             return;
-        } else if ( !isPswLegal(password) ) {
+        } else if (!isPswLegal(password)) {
             tip('{{ _("Password seems invalid.") }}{{ _("(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;\'\"<>\?[]{})") }}', 'error', false);
             return;
         }
@@ -548,7 +548,7 @@
 <script type="text/javascript">
     function doRegisterAction(username, password) {
         var postData = {
-            'username': username, 
+            'username': username,
             'password': password,
             'is_register': 1
         };
@@ -558,15 +558,15 @@
             url: '/module/x_tunnel/control/register',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     // register success, hide '#register-form' and login.
                     // $('#register-form').addClass('hide');
                     tip('{{ _("Registered successfully, ") }}{{ _("Logining ...") }}', 'info', false);
 
                     return doLoginAction(username, password);
                 } else {
-                    if ( result['reason'] == 'user exist' ) {
+                    if (result['reason'] == 'user exist') {
                         tip('{{ _("Email has been taken by another user.") }}', 'error', false);
                     } else {
                         tip('{{ _("Unknown error occurred.") }}', 'error', false);
@@ -580,12 +580,12 @@
     }
 </script>
 <script type="text/javascript">
-    $('#logout-trigger').click(function() {
+    $('#logout-trigger').click(function () {
         $.ajax({
             type: 'POST',
             url: '/module/x_tunnel/control/logout',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 window.refresh_timer.stop();
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
@@ -594,20 +594,20 @@
                 // Fix bugs in Firefox
                 $('button[type=submit]').removeAttr('disabled');
             },
-            error: function(result) {
-                tip('{{ _("Failed to log out.") }}', false);   
+            error: function (result) {
+                tip('{{ _("Failed to log out.") }}', false);
             }
         });
     });
 </script>
 <script type="text/javascript">
-    $('#charge-trigger').click(function() {
+    $('#charge-trigger').click(function () {
         $('.alert-warning', '#charge-modal').addClass('hide');
         $('#charge-modal').modal();
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#charge-modal').click(function() {
+    $('.btn-primary', '#charge-modal').click(function () {
         $(this).attr('disabled', 'disabled');
         $(this).html('{{ _("Please refresh page.") }}');
 
@@ -615,17 +615,17 @@
     });
 </script>
 <script type="text/javascript">
-    $('#transfer-credit-trigger').click(function() {
+    $('#transfer-credit-trigger').click(function () {
         $('.alert', '#transfer-credit-modal').addClass('hide');
         $('#transfer-credit-modal').modal();
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#transfer-credit-modal').click(function() {
+    $('.btn-primary', '#transfer-credit-modal').click(function () {
         var transferAccount = $('#transfer-credit-username').val(),
             transferAmount  = $('#transfer-credit-amount').val();
 
-        if ( !isEmailLegal(transferAccount) ) {
+        if (!isEmailLegal(transferAccount)) {
             $('.alert', '#transfer-credit-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
             $('.alert', '#transfer-credit-modal').removeClass('hide');
             return;
@@ -649,8 +649,8 @@
             url: '/module/x_tunnel/control/transfer',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     getUserInfo(1);
                 } else {
                     $('.alert', '#transfer-credit-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
@@ -663,7 +663,7 @@
     }
 </script>
 <script type="text/javascript">
-    $('#available-bandwidth').delegate('a.transfer', 'click', function() {
+    $('#available-bandwidth').delegate('a.transfer', 'click', function () {
         var maxAvailableBandwidth = $('.bandwidth', $(this).parent()).html(),
             expireTime            = $('.expire-time', $(this).parent().parent()).attr('data-value');
 
@@ -675,12 +675,12 @@
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#transfer-bandwidth-modal').click(function() {
+    $('.btn-primary', '#transfer-bandwidth-modal').click(function () {
         var transferAccount = $('#transfer-bandwidth-username').val(),
             transferAmount  = $('#transfer-bandwidth-amount').val(),
             expireTime      = $('#bandwidth-expire-time').val();
 
-        if ( !isEmailLegal(transferAccount) ) {
+        if (!isEmailLegal(transferAccount)) {
             $('.alert', '#transfer-bandwidth-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
             $('.alert', '#transfer-bandwidth-modal').removeClass('hide');
             return;
@@ -693,18 +693,17 @@
 </script>
 <script type="text/javascript">
     function parseUnit(str) {
-        var out = [ 0, '' ]
-
-        str = String(str)
-        var num = parseFloat(str, 10)
-        out[0] = num
-        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || ''
+        var out = [0, ''];
+        str = String(str);
+        var num = parseFloat(str, 10);
+        out[0] = num;
+        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || '';
         return out
     }
 
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
-        var amountUnit = parseUnit(transferAmount)
-        if ( amountUnit[1].toUpperCase() == "G" ){
+        var amountUnit = parseUnit(transferAmount);
+        if (amountUnit[1].toUpperCase() == "G") {
             var amount = amountUnit[0] * 1000 * 1000 * 1000;
         } else {
             var amount = amountUnit[0] * 1000 * 1000;
@@ -721,8 +720,8 @@
             url: '/module/x_tunnel/control/transfer',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     getUserInfo(1);
                 } else {
                     $('.alert', '#transfer-bandwidth-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
@@ -736,18 +735,18 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        var amountUnit = parseUnit(obj.value)
-        if ( isNaN(amountUnit[0]) ) {
+        var amountUnit = parseUnit(obj.value);
+        if (isNaN(amountUnit[0])) {
             obj.value = '';
             return;
         }
-        if ( amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "" ){
+        if (amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "") {
             alert('{{ _("Unit should be M or G.") }}');
             return;
         }
-        if ( obj != null ) {
-            if ( amountUnit[0].toString().split('.').length > 1 &&
-                   amountUnit[0].toString().split(".")[1].length > 2 ) {
+        if (obj != null) {
+            if (amountUnit[0].toString().split('.').length > 1 &&
+                amountUnit[0].toString().split(".")[1].length > 2) {
                 alert('{{ _("Transfer amount should not more than 2 decimal places.") }}');
             }
         }
@@ -755,11 +754,11 @@
 </script>
 <!-- Plans -->
 <script type="text/javascript">
-    $('#quarterly-plan-trigger').click(function() {
+    $('#quarterly-plan-trigger').click(function () {
         orderPlan('Quarterly', 'quarterly');
     });
 
-    $('#yearly-plan-trigger').click(function() {
+    $('#yearly-plan-trigger').click(function () {
         orderPlan('Yearly', "yearly");
     });
 </script>
@@ -767,15 +766,15 @@
     function orderPlan(planName, planValue) {
         $.ajax({
             data: {
-                'product': 'x_tunnel', 
+                'product': 'x_tunnel',
                 'plan': planValue
             },
             type: 'POST',
             url: '/module/x_tunnel/control/order',
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] != 'success' ){
-                    if ( result['reason'] == "balance not enough" ) {
+            success: function (result) {
+                if (result['res'] != 'success') {
+                    if (result['reason'] == "balance not enough") {
                         $('#charge-plan', '#charge-modal').val(planName);
                         //$('.alert-warning', '#charge-modal').removeClass('hide');
 
@@ -802,7 +801,7 @@
 </script>
 <!-- History -->
 <script type="text/javascript">
-    $('#get-history-button').click(function() {
+    $('#get-history-button').click(function () {
         getHistory();
 
         $('#get-history-button').attr('disabled', 'disabled');
@@ -816,20 +815,20 @@
         $.ajax({
             type: 'GET',
             data: {
-                'start': 1999999999, 
-                'end': 0, 
+                'start': 1999999999,
+                'end': 0,
                 'limit': 1000
             },
             url: '/module/x_tunnel/control/get_history',
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] != 'success' ){
+            success: function (result) {
+                if (result['res'] != 'success') {
                     tip('{{ _("Get Fail:") }}' + result['reason'], 'warning', false);
                 } else {
                     tipClose();
                 }
 
-                result['history'].forEach(function(entry) {
+                result['history'].forEach(function (entry) {
                     displayHistory(entry[1]);
                 });
 
@@ -840,13 +839,13 @@
     }
 </script>
 <script type="text/javascript">
-    function displayHistory(item){
+    function displayHistory(item) {
         var timeString = item['time'];
-        delete item['time']; 
+        delete item['time'];
 
         var message = '';
-        for ( property in item ) {
-            message += property + ':' + item[property]+'; ';
+        for (property in item) {
+            message += property + ':' + item[property] + '; ';
         }
 
         $('#history-list tbody').append('<tr><td>%s</td><td>%s</td></tr>'.format(timeString, message));

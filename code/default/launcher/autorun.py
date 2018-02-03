@@ -8,18 +8,16 @@ import sys
 from xlog import getLogger
 xlog = getLogger("launcher")
 
-
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-top_path = os.path.abspath( os.path.join(root_path, os.pardir, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
+top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
 if sys.platform == 'win32':
     import _winreg
     _registry = _winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
+
     def get_runonce():
-        return _winreg.OpenKey(_registry,
-                r"Software\Microsoft\Windows\CurrentVersion\Run", 0,
-        _winreg.KEY_ALL_ACCESS)
+        return _winreg.OpenKey(_registry, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, _winreg.KEY_ALL_ACCESS)
 
     def add(name, application):
         """add a new autostart entry"""
@@ -33,7 +31,7 @@ if sys.platform == 'win32':
         exists = True
         try:
             _winreg.QueryValueEx(key, name)
-        except : #WindowsError
+        except:  # WindowsError
             exists = False
         _winreg.CloseKey(key)
         return exists
@@ -70,12 +68,12 @@ elif sys.platform.startswith('linux'):
                 return
 
         """add a new autostart entry"""
-        desktop_entry = "[Desktop Entry]\n"\
-            "Name=%s\n"\
-            "Exec=%s\n"\
-            "Type=Application\n"\
-            "Terminal=false\n"\
-            "X-GNOME-Autostart-enabled=true" % (name, application)
+        desktop_entry = "[Desktop Entry]\n" \
+                        "Name=%s\n" \
+                        "Exec=%s\n" \
+                        "Type=Application\n" \
+                        "Terminal=false\n" \
+                        "X-GNOME-Autostart-enabled=true" % (name, application)
         with open(getfilename(name), "w") as f:
             f.write(desktop_entry)
 
@@ -85,7 +83,7 @@ elif sys.platform.startswith('linux'):
 
     def remove(name):
         """delete an autostart entry"""
-        if(exists(name)):
+        if (exists(name)):
             os.unlink(getfilename(name))
 
     run_cmd = os.path.join(top_path, "start")
@@ -129,16 +127,18 @@ elif sys.platform == 'darwin':
 
         if not os.path.isdir(launch_path):
             os.mkdir(launch_path, 0o755)
-            
+
         with open(plist_file_path, "w") as f:
             f.write(file_content)
+
     def remove(name):
-        if(os.path.isfile(plist_file_path)):
+        if (os.path.isfile(plist_file_path)):
             os.unlink(plist_file_path)
             xlog.info("remove file:%s", plist_file_path)
 else:
     def add(name, cmd):
         pass
+
     def remove(name):
         pass
 
@@ -156,6 +156,7 @@ def test():
     finally:
         remove("test_xxx")
     assert not exists("test_xxx")
+
 
 if __name__ == "__main__":
     test()

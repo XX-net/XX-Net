@@ -8,15 +8,14 @@
 </ul>
 <div id="advanced_content" class="tab-content">
     <div id="tab_content" class="tab-pane fade in active">
-    </div> <!-- #authentication -->
-</div> <!-- #tab-content -->
+    </div>
+</div>
 <script type="text/javascript">
     title('{{ _("GAEProxy Advanced Configuration") }}');
 </script>
 <script type="text/javascript">
-    $(".advanced_tab").click(function(){
+    $(".advanced_tab").click(function () {
         var id = $(this).attr('id');
-        
         var url = "/module/gae_proxy/" + id + ".html";
         $("#tab_content").load(url);
     });

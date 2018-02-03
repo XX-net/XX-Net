@@ -4,8 +4,7 @@ import subprocess
 import sys
 
 
-class SimpleI18N():
-
+class SimpleI18N:
     def __init__(self, lang=None):
         if lang:
             self.lang = lang
