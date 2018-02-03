@@ -520,7 +520,7 @@ def handler(method, url, headers, body, wfile):
     content_length = int(response.headers.get('Content-Length', 0))
     content_range = response.headers.get('Content-Range', '')
     # content_range 分片时合并用到
-    if content_range:
+    if content_range and 'bytes */' not in content_range:
         start, end, length = tuple(int(x) for x in re.search(
             r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
     else:
