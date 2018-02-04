@@ -202,8 +202,8 @@ class User_config(object):
 user_config = User_config()
 
 
-def get_fake_host():
-    return user_config.user_special.fake_host
+#def get_fake_host():
+#    return user_config.user_special.fake_host
 
 
 def get_openssl_version():
@@ -432,49 +432,49 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             lan_proxy = "Disable"
 
         res_arr = {
-                   "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
-                   "os_system": platform.system(),
-                   "os_version": platform.version(),
-                   "os_release": platform.release(),
-                   "architecture": platform.architecture(),
-                   "os_detail": env_info.os_detail(),
-                   "language": self.get_os_language(),
-                   "browser": user_agent,
-                   "xxnet_version": self.xxnet_version(),
-                   "python_version": platform.python_version(),
-                   "openssl_version": get_openssl_version(),
+            "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
+            "os_system": platform.system(),
+            "os_version": platform.version(),
+            "os_release": platform.release(),
+            "architecture": platform.architecture(),
+            "os_detail": env_info.os_detail(),
+            "language": self.get_os_language(),
+            "browser": user_agent,
+            "xxnet_version": self.xxnet_version(),
+            "python_version": platform.python_version(),
+            "openssl_version": get_openssl_version(),
 
-                   "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
-                   "use_ipv6": config.USE_IPV6,
-                   "lan_proxy": lan_proxy,
+            "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
+            "use_ipv6": config.USE_IPV6,
+            "lan_proxy": lan_proxy,
 
-                   "gae_appid": "|".join(config.GAE_APPIDS),
-                   "working_appid": "|".join(appid_manager.working_appid_list),
-                   "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
-                   "not_exist_appids": "|".join(appid_manager.not_exist_appids),
+            "gae_appid": "|".join(config.GAE_APPIDS),
+            "working_appid": "|".join(appid_manager.working_appid_list),
+            "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
+            "not_exist_appids": "|".join(appid_manager.not_exist_appids),
 
-                   "ipv4_state": check_local_network.IPv4.get_stat(),
-                   "ipv6_state": check_local_network.IPv6.get_stat(),
-                   # "ipv6_tunnel": ipv6_tunnel.state(),
-                   "ip_num": len(google_ip.gws_ip_list),
-                   "good_ipv4_num": google_ip.good_ipv4_num,
-                   "good_ipv6_num": google_ip.good_ipv6_num,
-                   "connected_link_new": len(https_manager.new_conn_pool.pool),
-                   "connected_link_used": len(https_manager.gae_conn_pool.pool),
-                   "worker_h1": http_dispatch.h1_num,
-                   "worker_h2": http_dispatch.h2_num,
-                   "is_idle": int(http_dispatch.is_idle()),
-                   "scan_ip_thread_num": google_ip.scan_thread_count,
-                   "ip_quality": google_ip.ip_quality(),
-                   "block_stat": connect_control.block_stat(),
+            "ipv4_state": check_local_network.IPv4.get_stat(),
+            "ipv6_state": check_local_network.IPv6.get_stat(),
+            #"ipv6_tunnel": ipv6_tunnel.state(),
+            "ip_num": len(google_ip.gws_ip_list),
+            "good_ipv4_num": google_ip.good_ipv4_num,
+            "good_ipv6_num": google_ip.good_ipv6_num,
+            "connected_link_new": len(https_manager.new_conn_pool.pool),
+            "connected_link_used": len(https_manager.gae_conn_pool.pool),
+            "worker_h1": http_dispatch.h1_num,
+            "worker_h2": http_dispatch.h2_num,
+            "is_idle": int(http_dispatch.is_idle()),
+            "scan_ip_thread_num": google_ip.scan_thread_count,
+            "ip_quality": google_ip.ip_quality(),
+            "block_stat": connect_control.block_stat(),
 
-                   "high_prior_connecting_num": connect_control.high_prior_connecting_num,
-                   "low_prior_connecting_num": connect_control.low_prior_connecting_num,
-                   "high_prior_lock": len(connect_control.high_prior_lock),
-                   "low_prior_lock": len(connect_control.low_prior_lock),
+            "high_prior_connecting_num": connect_control.high_prior_connecting_num,
+            "low_prior_connecting_num": connect_control.low_prior_connecting_num,
+            "high_prior_lock": len(connect_control.high_prior_lock),
+            "low_prior_lock": len(connect_control.low_prior_lock),
 
-                    "fake_host": get_fake_host()
-                   }
+            "fake_host": get_fake_host()
+        }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response_nc('text/html', data)
 
