@@ -98,7 +98,7 @@
 <script type="text/javascript">
     $(function () {
         window.isFullWidth = false;
-        window.wiki_ISSUEID = 1; //as default, an wiki/help issue, for failed-getting-releasenote-issue condition
+        window.wiki_ISSUEID = 9696; //as default, an wiki/help issue, for failed-getting-releasenote-issue condition
         window.RELEASENOTE_ISSUEID = window.wiki_ISSUEID;
         window.welcomeISSUEID = window.wiki_ISSUEID;
     });
@@ -434,7 +434,9 @@
                         window.setTimeout(startUpdateCheck, 1000);
                         break;
                     case 'dont-check':
-                        stopUpdateCheck();
+                        //stopUpdateCheck();
+                        $('#update-notify').addClass('hide');
+                        checkUpdateTimer.stop();
                         break;
                     default:
                         versionToUpdate = result['version'];
