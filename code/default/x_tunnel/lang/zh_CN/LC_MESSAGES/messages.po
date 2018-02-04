@@ -26,6 +26,9 @@ msgstr "前端"
 msgid "Info"
 msgstr "信息"
 
+msgid "Settings"
+msgstr "设置"
+
 msgid "Plans"
 msgstr "套餐"
 
@@ -85,6 +88,15 @@ msgstr "到期时间"
 
 msgid "Left Bandwidth"
 msgstr "剩余流量"
+
+msgid "server"
+msgstr "服务器"
+
+msgid "AUTO"
+msgstr "自动"
+
+msgid "Submit"
+msgstr "提交"
 
 msgid "Plans and Pricing"
 msgstr "套餐和价格"
