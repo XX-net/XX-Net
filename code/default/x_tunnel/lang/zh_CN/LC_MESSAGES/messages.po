@@ -206,6 +206,9 @@ msgstr "电子邮件地址已被他人使用。"
 msgid "Unknown error occurred."
 msgstr "发生未知错误。"
 
+msgid "previously selected server nolonger available, automatically try "
+msgstr "先前所选服务器不再可用，尝试 "
+
 msgid "Failed to log out."
 msgstr "注销失败。"
 

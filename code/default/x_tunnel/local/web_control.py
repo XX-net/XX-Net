@@ -236,7 +236,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
         def is_server_available(server):
-            if g.selectable and server == 'auto':
+            if g.selectable and server == '':
                 return True, "auto"
             else:
                 for choice in g.selectable:
@@ -247,8 +247,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         if reqs['cmd'] == ['get']:
             g.config.load()
             server = {
-                'selected': g.config.server_host, # "auto" as default
                 'selectable': g.selectable,
+                'selected': 'auto' if g.config.server_host == '' else g.config.server_host,  # "auto" as default
                 'available': is_server_available(g.config.server_host)
             }
             res = {
@@ -257,9 +257,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['set']:
             if 'server' in self.postvars:
                 server = str(self.postvars['server'][0])
+                server = '' if server == 'auto' else server
 
                 if is_server_available(server):
-                    g.config.server_host = server
+                    g.server_host = g.config.server_host = server
+                    g.server_port = g.config.server_port = 443
+                    g.session.reset()
                     g.config.save()
                     res = {"res": "success"}
                 else:

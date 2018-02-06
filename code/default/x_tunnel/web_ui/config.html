@@ -621,8 +621,8 @@
                     var record = selectable[i];
                     var new_option = document.createElement('option');
                     new_option.value = record[0];
-                    new_option.text = record[1] + '@' + record[2];
-                    server_selector.appendChild(new_option);
+                    new_option.text = record[1] + ' @ ' + record[2];
+                    server_selector.append(new_option);
                 }
 
                 if (result['server']['available']) {
@@ -653,7 +653,7 @@
             success: function (result) {
                 if (result['res'] === 'success') {
                     $('button[type=submit]', '#adv-setting').html('{{ _("Submit") }}');
-                    $('button[type=submit]', '#adv-setting').removeAttribute('disabled');
+                    $('button[type=submit]', '#adv-setting').removeAttr('disabled');
                     tip('{{ _("Settings saved successfully.") }}', 'success');
                     getUserInfo(1);
                 } else {
