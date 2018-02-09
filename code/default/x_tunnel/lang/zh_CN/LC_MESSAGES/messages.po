@@ -26,6 +26,9 @@ msgstr "前端"
 msgid "Info"
 msgstr "信息"
 
+msgid "Settings"
+msgstr "设置"
+
 msgid "Plans"
 msgstr "套餐"
 
@@ -85,6 +88,15 @@ msgstr "到期时间"
 
 msgid "Left Bandwidth"
 msgstr "剩余流量"
+
+msgid "server"
+msgstr "服务器"
+
+msgid "AUTO"
+msgstr "自动"
+
+msgid "Submit"
+msgstr "提交"
 
 msgid "Plans and Pricing"
 msgstr "套餐和价格"
@@ -193,6 +205,9 @@ msgstr "电子邮件地址已被他人使用。"
 
 msgid "Unknown error occurred."
 msgstr "发生未知错误。"
+
+msgid "previously selected server nolonger available, automatically try "
+msgstr "先前所选服务器不再可用，尝试 "
 
 msgid "Failed to log out."
 msgstr "注销失败。"

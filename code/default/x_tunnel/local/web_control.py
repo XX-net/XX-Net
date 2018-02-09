@@ -41,6 +41,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_response('text/html', data)
         elif path == "/info":
             return self.req_info_handler()
+        elif path == "/config":
+            return self.req_config_handler()
         elif path == "/get_history":
             return self.req_get_history_handler()
         elif path == "/status":
@@ -76,6 +78,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_logout_handler()
         elif path == "/register":
             return self.req_login_handler()
+        elif path == "/config":
+            return self.req_config_handler()
         elif path == "/order":
             return self.req_order_handler()
         elif path == "/transfer":
@@ -226,6 +230,50 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         g.session.stop()
 
         return self.response_json({"res": "success"})
+
+    def req_config_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+
+        def is_server_available(server):
+            if g.selectable and server == '':
+                return True, "auto"
+            else:
+                for choice in g.selectable:
+                    if choice[0] == server:
+                        return True, "selectable"
+                return False, "unselectable"
+
+        if reqs['cmd'] == ['get']:
+            g.config.load()
+            server = {
+                'selectable': g.selectable,
+                'selected': 'auto' if g.config.server_host == '' else g.config.server_host,  # "auto" as default
+                'available': is_server_available(g.config.server_host)
+            }
+            res = {
+                'server': server,
+            }
+        elif reqs['cmd'] == ['set']:
+            if 'server' in self.postvars:
+                server = str(self.postvars['server'][0])
+                server = '' if server == 'auto' else server
+
+                if is_server_available(server):
+                    g.server_host = g.config.server_host = server
+                    g.server_port = g.config.server_port = 443
+                    g.session.reset()
+                    g.config.save()
+                    res = {"res": "success"}
+                else:
+                    res = {
+                        "res": "fail",
+                        "reason": "server not available"
+                    }
+            else:
+                res = {"res": "fail"}
+
+        return self.response_json(res)
 
     def req_order_handler(self):
         product = self.postvars['product'][0]
