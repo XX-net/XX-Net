@@ -70,15 +70,15 @@ class APPID_manager(object):
         with self.lock:
             if appid not in self.not_exist_appids:
                 self.not_exist_appids.append(appid)
-                try:
-                    config.GAE_APPIDS.remove(appid)
-                except:
-                    pass
+            try:
+                config.GAE_APPIDS.remove(appid)
+            except:
+                pass
 
-                try:
-                    self.working_appid_list.remove(appid)
-                except:
-                    pass
+            try:
+                self.working_appid_list.remove(appid)
+            except:
+                pass
 
     def appid_exist(self, appids):
         for appid in appids.split('|'):
