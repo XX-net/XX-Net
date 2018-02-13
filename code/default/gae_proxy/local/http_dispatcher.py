@@ -32,6 +32,7 @@ from connect_manager import https_manager
 from http1 import HTTP1_worker
 from http2_connection import HTTP2_worker
 import http_common
+import simple_queue
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -187,11 +188,11 @@ class HttpsDispatcher(object):
     def request(self, headers, body, url, timeout):
         # xlog.debug("task start request:%s timeout:%d", url, timeout)
         self.last_request_time = time.time()
-        q = Queue.Queue()
+        q = simple_queue.Queue()
         task = http_common.Task(headers, body, q, url, timeout)
         task.set_state("start_request")
         self.request_queue.put(task)
-        response = q.get(True)
+        response = q.get(timeout=timeout)
         task.set_state("get_response")
         return response
 

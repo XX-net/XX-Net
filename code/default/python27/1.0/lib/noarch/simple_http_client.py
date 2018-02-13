@@ -1,5 +1,5 @@
 
-
+import select
 import urlparse
 import socket
 import httplib
@@ -122,7 +122,9 @@ class Response(BaseResponse):
                 except socket.error as e:
                     # logging.exception("e:%r", e)
                     if e.errno in [2, 11, 10035]:
-                        time.sleep(0.1)
+                        #time.sleep(0.1)
+                        time_left = start_time + timeout - time.time()
+                        r, w, e = select.select([sock], [], [], time_left)
                         continue
                     else:
                         raise e
@@ -197,6 +199,9 @@ class Response(BaseResponse):
             print("not work")
 
     def _read_plain(self, read_len, timeout):
+        if read_len == 0:
+            return ""
+
         if read_len is not None and len(self.read_buffer) - self.buffer_start > read_len:
             out_str = self.read_buffer[self.buffer_start:self.buffer_start + read_len]
             self.buffer_start += read_len
@@ -230,7 +235,9 @@ class Response(BaseResponse):
             except socket.error as e:
                 # logging.exception("e:%r", e)
                 if e.errno in [2, 11, 10035]:
-                    time.sleep(0.1)
+                    #time.sleep(0.1)
+                    time_left = start_time + timeout - time.time()
+                    r, w, e = select.select([self.connection], [], [], time_left)
                     continue
                 else:
                     raise e

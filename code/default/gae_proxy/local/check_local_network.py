@@ -21,7 +21,11 @@ if __name__ == "__main__":
         sys.path.append(linux_lib)
 
 
-from config import config
+try:
+    from .config import config
+except:
+    from config import config
+
 import simple_http_client
 from xlog import getLogger
 xlog = getLogger("gae_proxy")

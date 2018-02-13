@@ -144,7 +144,7 @@ def download_file(url, filename):
                 progress[url]["status"] = "finished"
                 return True
         except Exception as e:
-            xlog.exception("download %s to %s fail:%r", url, filename, e)
+            xlog.warn("download %s to %s fail:%r", url, filename, e)
             continue
 
     progress[url]["status"] = "failed"

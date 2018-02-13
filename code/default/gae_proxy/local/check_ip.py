@@ -131,7 +131,7 @@ def load_proxy_config():
             proxy_type = socks.SOCKS5
         else:
             xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            raise
+            raise Exception()
 
         socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
 load_proxy_config()

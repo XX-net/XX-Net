@@ -1,13 +1,12 @@
-from web_control import user_config
 import check_ip
-from connect_manager import https_manager
-from http_dispatcher import http_dispatch
 from config import config
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
 def set_proxy(args):
+    from web_control import user_config
+
     xlog.info("set_proxy:%s", args)
 
     user_config.user_special.proxy_enable = args["enable"]
@@ -28,6 +27,8 @@ def set_proxy(args):
 
 
 def is_workable():
+    from connect_manager import https_manager
+    from http_dispatcher import http_dispatch
     if http_dispatch.is_idle():
         return True
 
@@ -43,7 +44,9 @@ def is_workable():
 
 
 def set_bind_ip(args):
+    from web_control import user_config
+
     xlog.info("set_bind_ip:%s", args)
 
-    user_config.LISTEN_IP = args["ip"]
+    user_config.user_special.LISTEN_IP = args["ip"]
     user_config.save()

@@ -21,4 +21,9 @@ sub_menus: {
 #    title: {{ _("Heroku") }}{{ _("Front") }}{{ _("Log") }},
 #    url: heroku_front_logging
 #  }
+
+  6:{
+    title: {{ _("TLS Relay") }}{{ _("Front") }}{{ _("Log") }},
+    url: tls_relay_front_logging
+  },
 }

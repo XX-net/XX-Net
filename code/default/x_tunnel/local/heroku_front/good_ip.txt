@@ -2,12 +2,10 @@
 174.129.207.175 dev.cortet.co gws 286 0 0
 50.17.221.221 dev.cortet.co gws 286 0 0
 54.197.236.14 dev.cortet.co gws 286 0 0
-184.73.255.243 dev.cortet.co gws 286 0 0
 174.129.198.71 dev.cortet.co gws 286 0 0
 50.19.124.196 dev.cortet.co gws 286 0 0
 174.129.248.90 dev.cortet.co gws 286 0 0
 50.17.240.73 dev.cortet.co gws 286 0 0
-54.225.183.82 dev.cortet.co gws 286 0 0
 50.16.191.188 dev.cortet.co gws 286 0 0
 50.19.241.114 dev.cortet.co gws 286 0 0
 54.221.214.149 dev.cortet.co gws 286 0 0
@@ -15,7 +13,6 @@
 50.17.200.61 dev.cortet.co gws 286 0 0
 54.225.188.69 dev.cortet.co gws 286 0 0
 54.235.99.161 dev.cortet.co gws 286 0 0
-54.235.127.144 dev.cortet.co gws 286 0 0
 54.235.143.243 dev.cortet.co gws 286 0 0
 54.235.181.144 dev.cortet.co gws 286 0 0
 54.243.155.11 dev.cortet.co gws 286 0 0

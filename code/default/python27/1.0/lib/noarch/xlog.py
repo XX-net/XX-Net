@@ -229,6 +229,21 @@ class Logger():
             return ""
 
 
+class null():
+    @staticmethod
+    def debug(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def info(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def warn(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def exception(fmt, *args, **kwargs):
+        pass
+
+
 loggerDict = {}
 
 

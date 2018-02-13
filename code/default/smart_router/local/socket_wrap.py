@@ -15,6 +15,10 @@ class SocketWrap(object):
         self.closed = False
         self.replace_pattern = None
 
+        self.buf = []
+        self.buf_size = 0
+        self.buf_num = 0
+
     def __getattr__(self, attr):
         return getattr(self._sock, attr)
 
@@ -42,3 +46,21 @@ class SocketWrap(object):
                 d = "%s %s %s" % (method, url, http_version) + d[line_end:]
 
         return d
+
+    def add_dat(self, data):
+        self.buf.append(data)
+        self.buf_size += len(data)
+        self.buf_num += 1
+
+    def get_dat(self):
+        if not self.buf:
+            return ""
+        dat = self.buf.pop(0)
+        self.buf_size -= len(dat)
+        self.buf_num -= 1
+        return dat
+
+    def restore_dat(self, dat):
+        self.buf.insert(0, dat)
+        self.buf_size += len(dat)
+        self.buf_num += 1

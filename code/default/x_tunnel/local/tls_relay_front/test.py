@@ -3,8 +3,9 @@
 
 import os
 import sys
+#import tracemalloc
+import gc
 import time
-import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -30,29 +31,25 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
-
 from front import front
 from xlog import getLogger
-xlog = getLogger("heroku_front")
-xlog.set_buffer(2000)
+xlog = getLogger("tls_relay")
 
 
-def get():
-    start_time = time.time()
-    content, status, response = front.request("GET", "scan1.xx-net.com", path="/wait?time=5")
-    time_cost = time.time() - start_time
-    xlog.info("GET cost:%f", time_cost)
-    xlog.info("status:%d content:%s", status, content)
+def t1():
+    content, status, response = front.request("GET", "scan1.xx-net.net", timeout=1000)
+    print status
+
+    del response
+    #print("del response")
     front.stop()
 
 
 if __name__ == '__main__':
-    import traceback
-
     try:
-        get()
-    except Exception:
-        traceback.print_exc(file=sys.stdout)
+        t1()
     except KeyboardInterrupt:
-        front.stop()
+        #terminate()
+        import sys
+
         sys.exit()

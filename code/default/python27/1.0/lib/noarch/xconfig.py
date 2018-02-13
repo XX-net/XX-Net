@@ -10,6 +10,10 @@ class Config(object):
         self.default_config = {}
         self.file_config = {}
         self.config_path = config_path
+        self.set_default()
+
+    def set_default(self):
+        pass
 
     def load(self):
         if os.path.isfile(self.config_path):

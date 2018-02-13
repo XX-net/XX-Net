@@ -12,6 +12,7 @@ import sys
 
 
 list_lock = threading.Lock()
+th_lock = threading.Lock()
 queue_list = []
 timer_th = None
 
@@ -21,14 +22,15 @@ timeout_interval = 0.1
 
 def timer_thread():
     global timer_th
-    while len(queue_list):
+    while True:
         with list_lock:
             to_del = []
+            wait_count = 0
             for q in queue_list:
-                q.check()
+                wait_count += q.check()
 
                 c = sys.getrefcount(q)
-                # print(c)
+                # print(c, id(q))
                 if c <= 3:
                     # reference of object, less then 3 means no out side use.
                     to_del.append(q)
@@ -37,21 +39,27 @@ def timer_thread():
                 # print("del queue")
                 queue_list.remove(q)
 
+            if wait_count == 0:
+                break
+
         time.sleep(timeout_interval)
 
-    # If no more queue in reference, thread will exist, application will exist graceful.
-    timer_th = None
+    with th_lock:
+        timer_th = None
     # print("simple queue timer exit")
 
 
 def _add_queue(qq):
-    global timer_th
     with list_lock:
         queue_list.append(qq)
 
-    if not timer_th:
-        timer_th = threading.Thread(target=timer_thread)
-        timer_th.start()
+
+def _add_wait():
+    global timer_th
+    with th_lock:
+        if not timer_th:
+            timer_th = threading.Thread(target=timer_thread)
+            timer_th.start()
 
 
 class Queue(object):
@@ -72,12 +80,13 @@ class Queue(object):
         self.running = True
 
     def check(self):
-        with self.lock:
-            if not self.waiters:
-                return
+        if not self.waiters:
+            return 0
 
-            if time.time() > self.waiters[0][0]:
-                self.notify()
+        if time.time() > self.waiters[0][0]:
+            self.notify()
+
+        return 1
 
     def put(self, item):
         with self.lock:
@@ -142,6 +151,8 @@ class Queue(object):
                     self.waiters.append((end_time, lock))
                 else:
                     self.waiters.insert(i, (end_time, lock))
+
+            _add_wait()
 
         lock.acquire()
 

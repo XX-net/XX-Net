@@ -63,7 +63,7 @@ def load_config():
     config.set_var("proxy_port", 8086)
 
     config.set_var("dns_cache_size", 200)
-    config.set_var("pip_cache_size", 16*1024)
+    config.set_var("pip_cache_size", 32*1024)
     config.set_var("ip_cache_size", 1000)
     config.set_var("dns_ttl", 24*3600)
     config.set_var("direct_split_SNI", 1)

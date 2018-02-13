@@ -15,7 +15,6 @@ import struct
 
 
 import xlog
-logging = xlog.getLogger("simple_http_server")
 
 
 class GetReqTimeout(Exception):
@@ -42,7 +41,7 @@ class HttpServerHandler():
     rbufsize = -1
     wbufsize = 0
 
-    def __init__(self, sock, client, args, logger=logging):
+    def __init__(self, sock, client, args, logger=None):
         self.connection = sock
         sock.setblocking(1)
         sock.settimeout(300)
@@ -50,7 +49,10 @@ class HttpServerHandler():
         self.wfile = socket._fileobject(self.connection, "wb", self.wbufsize, close=True)
         self.client_address = client
         self.args = args
-        self.logger = logger
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = xlog.getLogger("simple_http_server")
 
         self.setup()
 
@@ -137,6 +139,7 @@ class HttpServerHandler():
         # Examine the headers and look for a Connection directive
         self.headers = self.MessageClass(self.rfile, 0)
 
+        self.host = self.headers.get('Host', "")
         conntype = self.headers.get('Connection', "")
         if conntype.lower() == 'close':
             self.close_connection = 1
@@ -334,6 +337,24 @@ class HttpServerHandler():
             if len(content):
                 self.wfile.write(content)
 
+    def send_redirect(self, url, headers={}, content="", status=307, text="Temporary Redirect"):
+        headers["Location"] = url
+        data = []
+        data.append('HTTP/1.1 %d\r\n' % status)
+        data.append('Content-Length: %s\r\n' % len(content))
+
+        if len(headers):
+            if isinstance(headers, dict):
+                for key in headers:
+                    data.append("%s: %s\r\n" % (key, headers[key]))
+            elif isinstance(headers, basestring):
+                data.append(headers)
+        data.append("\r\n")
+
+        data.append(content)
+        data_str = "".join(data)
+        self.wfile.write(data_str)
+
     def send_response_nc(self, mimetype="", content="", headers="", status=200):
         no_cache_headers = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
         return self.send_response(mimetype, content, no_cache_headers + headers, status)
@@ -366,7 +387,7 @@ class HttpServerHandler():
 
 
 class HTTPServer():
-    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=logging):
+    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog):
         self.sockets = []
         self.running = True
         if isinstance(address, tuple):
@@ -424,6 +445,14 @@ class HTTPServer():
         self.sockets.append(sock)
         self.logger.info("server %s:%d started.", addr[0], addr[1])
 
+    def dopoll(self, poller):
+        while True:
+            try:
+                return poller.poll()
+            except IOError as e:
+                if e.errno != 4:  # EINTR:
+                    raise
+
     def serve_forever(self):
         if hasattr(select, 'epoll'):
 
@@ -436,7 +465,15 @@ class HTTPServer():
                 fn_map[fn] = sock
 
             while self.running:
-                events = p.poll(timeout=1)
+                try:
+                    events = p.poll(timeout=1)
+                except IOError as e:
+                    if e.errno != 4:  # EINTR:
+                        raise
+                    else:
+                        time.sleep(1)
+                        continue
+
                 for fn, event in events:
                     if fn not in fn_map:
                         self.logger.error("p.poll get fn:%d", fn)

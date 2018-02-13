@@ -30,7 +30,7 @@ from xlog import getLogger
 xlog = getLogger("smart_router")
 
 
-def remote_query_dns(domain, type):
+def remote_query_dns(domain, type=None):
     if not g.x_tunnel:
         return []
 
@@ -124,6 +124,7 @@ class DnsClient(object):
         while self.running:
             try:
                 response, server = self.sock.recvfrom(8192)
+                server, port = server
             except Exception as e:
                 # xlog.exception("sock.recvfrom except:%r", e)
                 continue
@@ -160,14 +161,12 @@ class DnsClient(object):
                     d.add_question(DNSQuestion(ip, QTYPE.A))
                     req_pack = d.pack()
 
-                    server = self.dns_server.get()
                     self.sock.sendto(req_pack, (server, 53))
 
                     d = DNSRecord()
                     d.add_question(DNSQuestion(ip, QTYPE.AAAA))
                     req_pack = d.pack()
 
-                    server = self.dns_server.get()
                     self.sock.sendto(req_pack, (server, 53))
                     continue
 
@@ -184,7 +183,7 @@ class DnsClient(object):
         xlog.info("DNS Client recv worker exit.")
         self.sock.close()
 
-    def send_request(self, id, domain):
+    def send_request(self, id, domain, server):
         try:
             d = DNSRecord(DNSHeader(id))
             d.add_question(DNSQuestion(domain, QTYPE.A))
@@ -193,11 +192,6 @@ class DnsClient(object):
             d = DNSRecord()
             d.add_question(DNSQuestion(domain, QTYPE.AAAA))
             req6_pack = d.pack()
-
-            if "." in domain:
-                server = self.dns_server.get()
-            else:
-                server = self.dns_server.get_local_server()
 
             self.sock.sendto(req4_pack, (server, 53))
             # xlog.debug("send req:%s to:%s", domain, server)
@@ -215,16 +209,20 @@ class DnsClient(object):
 
         ips = []
         self.dns_server.reset_server()
-        while time.time() < end_time:
-            self.send_request(id, domain)
+        for i in xrange(0, len(self.dns_server.server_list)):
+            if time.time() > end_time:
+                break
+
+            server = self.dns_server.server_list[i]
+            self.send_request(id, domain, server)
 
             self.waiters[id] = que
-            que.wait(time.time() + 0.5)
+            que.wait(time.time() + 1)
             ips = g.domain_cache.get_ips(domain)
             if len(ips):
                 break
             if "." in domain:
-                self.dns_server.next_server()
+                continue
             else:
                 break
 
@@ -250,9 +248,15 @@ class DnsServer(object):
         except Exception as e:
             self.running = False
             xlog.warn("bind DNS %s:%d fail", bind_ip, port)
-            xlog.warn("You can try: install libcap2-bin")
-            xlog.warn("Then: sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python2.7")
-            xlog.warn("Or run XX-Net as root")
+
+            import platform
+            value = platform.platform()
+            if "x86" in value or "i686" in value or "amd64" in value:
+                xlog.warn("You can try: install libcap2-bin")
+                xlog.warn("Then: sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python2.7")
+                xlog.warn("Or run XX-Net as root")
+            elif "mips" in value:
+                xlog.warn("Router platform")
 
     def in_country(self, ips):
         for ip_cn in ips:
@@ -271,7 +275,13 @@ class DnsServer(object):
         if ips:
             return ips
 
-        if g.user_rules.check_host(domain, 0) == "direct" or \
+        rule = g.user_rules.check_host(domain, 0)
+        if rule == "black":
+            ips = ["127.0.0.1|XX"]
+            xlog.debug("DNS query:%s in black", domain)
+            return ips
+
+        if rule == "direct" or \
                 (g.config.auto_direct and not g.gfwlist.check(domain)):
             ips = g.dns_client.query(domain, timeout=1)
 
@@ -352,9 +362,5 @@ class DnsServer(object):
 
 
 if __name__ == '__main__':
-    dns_server = DnsServer(port=8053)
-    try:
-        dns_server.server_forever()
-    except KeyboardInterrupt:  # Ctrl + C on console
-        dns_server.stop()
-        os._exit(0)
+    r = remote_query_dns("apple.com")
+    print(r)

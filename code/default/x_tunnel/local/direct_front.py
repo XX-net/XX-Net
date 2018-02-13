@@ -7,6 +7,7 @@ import collections
 import simple_http_client
 import random
 
+import global_var as g
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
@@ -96,10 +97,6 @@ def worker_num():
 
 def request(method, host, schema="http", path="/", headers={}, data="", timeout=60):
     global last_success_time, last_fail_time, continue_fail_num, success_num, fail_num
-
-    r = random.randint(0, 100)
-    if r < 70:
-        return "", 602, {}
 
     timeout = 30
     # use http to avoid cert fail

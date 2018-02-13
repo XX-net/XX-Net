@@ -4,3 +4,7 @@ clientservices.googleapis.com
 update.googleapis.com
 storage.googleapis.com
 khm.googleapis.com
+baidu.com
+bdimg.com
+taobao.com
+qq.com

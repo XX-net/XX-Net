@@ -620,12 +620,12 @@ class HTTP20Connection(object):
         # Parse the header. We can use the returned memoryview directly here.
         frame, length = Frame.parse_frame_header(header)
 
-        if (length > FRAME_MAX_LEN):
+        if (length > FRAME_MAX_ALLOWED_LEN):
             log.warning(
                 "Frame size exceeded on stream %d (received: %d, max: %d)",
                 frame.stream_id,
                 length,
-                FRAME_MAX_LEN
+                FRAME_MAX_ALLOWED_LEN
             )
             self._send_rst_frame(frame.stream_id, 6) # 6 = FRAME_SIZE_ERROR
 

@@ -21,20 +21,11 @@ import errno
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-
-from pyasn1.codec.der import decoder as der_decoder
-from subj_alt_name import SubjectAltName
-from xlog import getLogger
-xlog = getLogger("heroku_front")
-
-ssl_version = ''
-openssl_version = OpenSSL.version.__version__
-support_alpn_npn = "no"
+#openssl_version = OpenSSL.version.__version__
+socks_num = 0
 
 
 class SSLConnection(object):
-    """OpenSSL Connection Wrapper"""
 
     def __init__(self, context, sock, ip=None, on_close=None):
         self._context = context
@@ -47,12 +38,18 @@ class SSLConnection(object):
         self.running = True
         self.socket_closed = False
 
+        global socks_num
+        socks_num += 1
+
     def __del__(self):
         if not self.socket_closed:
             socket.socket.close(self._sock)
             self.socket_closed = True
             if self.on_close:
                 self.on_close(self.ip)
+                
+        global socks_num
+        socks_num -= 1
 
     def __getattr__(self, attr):
         if attr not in ('_context', '_sock', '_connection', '_makefile_refs'):
@@ -102,7 +99,7 @@ class SSLConnection(object):
                 else:
                     raise e
             except Exception as e:
-                #xlog.exception("e:%r", e)
+                #self.logger.exception("e:%r", e)
                 raise e
 
         return 0
@@ -127,7 +124,7 @@ class SSLConnection(object):
                 return 0
             raise
         except Exception as e:
-            #xlog.exception("ssl send:%r", e)
+            #self.logger.exception("ssl send:%r", e)
             raise
 
     def __send_memoryview(self, data, flags=0):
@@ -160,7 +157,7 @@ class SSLConnection(object):
         if pending:
             ret = self._connection.recv_into(buf)
             if not ret:
-                # xlog.debug("recv_into 0")
+                # self.logger.debug("recv_into 0")
                 pass
             return ret
 
@@ -168,7 +165,7 @@ class SSLConnection(object):
             try:
                 ret = self.__iowait(self._connection.recv_into, buf)
                 if not ret:
-                    # xlog.debug("recv_into 0")
+                    # self.logger.debug("recv_into 0")
                     pass
                 return ret
             except OpenSSL.SSL.ZeroReturnError:
@@ -183,7 +180,7 @@ class SSLConnection(object):
             except errno.EAGAIN:
                 continue
             except Exception as e:
-                #xlog.exception("recv_into:%r", e)
+                #self.logger.exception("recv_into:%r", e)
                 raise e
 
     def read(self, bufsiz, flags=0):
@@ -215,108 +212,81 @@ class SSLConnection(object):
         self._makefile_refs += 1
         return socket._fileobject(self, mode, bufsize, close=True)
 
+
+class SSLContext(OpenSSL.SSL.Context):
+    def __init__(self, logger, ca_certs=None, cipher_suites=None, support_http2=True):
+        self.logger = logger
+
+        if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
+            ssl_version = "TLSv1_2"
+        elif hasattr(OpenSSL.SSL, "TLSv1_1_METHOD"):
+            ssl_version = "TLSv1_1"
+        elif hasattr(OpenSSL.SSL, "TLSv1_METHOD"):
+            ssl_version = "TLSv1"
+        else:
+            ssl_version = "SSLv23"
+
+        if sys.platform == "darwin":
+            # MacOS pyOpenSSL has TLSv1_2_METHOD attr but can use.
+            # There for we hard code here.
+            # may be try/cache is a better solution.
+            ssl_version = "TLSv1"
+
+        # freenas openssl support fix from twitter user "himanzero"
+        # https://twitter.com/himanzero/status/645231724318748672
+        if sys.platform == "freebsd9":
+            ssl_version = "TLSv1"
+
+        self.logger.info("SSL use version:%s", ssl_version)
+
+        protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
+        self._ssl_context = OpenSSL.SSL.Context(protocol_version)
+
+        if ca_certs:
+            self._ssl_context.load_verify_locations(os.path.abspath(ca_certs))
+            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+        else:
+            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
+
+        if cipher_suites:
+            self.set_cipher_list(':'.join(cipher_suites))
+
+        self.support_alpn_npn = None
+        if support_http2:
+            try:
+                self._ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
+                self.logger.info("OpenSSL support alpn")
+                self.support_alpn_npn = "alpn"
+                return
+            except Exception as e:
+                #xlog.exception("set_alpn_protos:%r", e)
+                pass
+
+            try:
+                self._ssl_context.set_npn_select_callback(SSLContext.npn_select_callback)
+                self.logger.info("OpenSSL support npn")
+                self.support_alpn_npn = "npn"
+            except Exception as e:
+                #xlog.exception("set_npn_select_callback:%r", e)
+                self.logger.info("OpenSSL dont't support npn/alpn, no HTTP/2 supported.")
+                pass
+
     @staticmethod
     def npn_select_callback(conn, protocols):
-        # xlog.debug("npn protocl:%s", ";".join(protocols))
+        # self.logger.debug("npn protocl:%s", ";".join(protocols))
         if b"h2" in protocols:
             conn.protos = "h2"
             return b"h2"
         else:
             return b"http/1.1"
 
-    @staticmethod
-    def context_builder(ca_certs=None, cipher_suites=None):
-        global ssl_version, support_alpn_npn
+    def __getattr__(self, attr):
+        return getattr(self._ssl_context, attr)
 
-        if not ca_certs:
-            ca_certs = os.path.join(current_path, "cacert.pem")
-
-        if not ssl_version:
-            if hasattr(OpenSSL.SSL, "TLSv1_2_METHOD"):
-                ssl_version = "TLSv1_2"
-            elif hasattr(OpenSSL.SSL, "TLSv1_1_METHOD"):
-                ssl_version = "TLSv1_1"
-            elif hasattr(OpenSSL.SSL, "TLSv1_METHOD"):
-                ssl_version = "TLSv1"
-            else:
-                ssl_version = "SSLv23"
-
-            if sys.platform == "darwin":
-                # MacOS pyOpenSSL has TLSv1_2_METHOD attr but can use.
-                # There for we hard code here.
-                # may be try/cache is a better solution.
-                ssl_version = "TLSv1"
-
-            # freenas openssl support fix from twitter user "himanzero"
-            # https://twitter.com/himanzero/status/645231724318748672
-            if sys.platform == "freebsd9":
-                ssl_version = "TLSv1"
-
-            xlog.info("SSL use version:%s", ssl_version)
-
-        protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
-        ssl_context = OpenSSL.SSL.Context(protocol_version)
-        if ca_certs:
-            ssl_context.load_verify_locations(os.path.abspath(ca_certs))
-            ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
-        else:
-            ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
-
-        # change default cipher suites.
-        # Google video ip can act as Google FrontEnd if cipher suits not include
-        # RC4-SHA:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256
-        #
-        # 'ALL', '!aNULL', '!eNULL'
-        #if not cipher_suites:
-        #    cipher_suites = ('ALL:!RC4-SHA:!ECDHE-RSA-RC4-SHA:!ECDHE-RSA-AES128-GCM-SHA256:!AES128-GCM-SHA256:!ECDHE-RSA-AES128-SHA:!AES128-SHA',)
-        #ssl_context.set_cipher_list(':'.join(cipher_suites))
-
-        if True:
-            try:
-                ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
-                xlog.info("OpenSSL support alpn")
-                support_alpn_npn = "alpn"
-                return ssl_context
-            except Exception as e:
-                #xlog.exception("set_alpn_protos:%r", e)
-                pass
-
-            try:
-                ssl_context.set_npn_select_callback(SSLConnection.npn_select_callback)
-                xlog.info("OpenSSL support npn")
-                support_alpn_npn = "npn"
-            except Exception as e:
-                #xlog.exception("set_npn_select_callback:%r", e)
-                xlog.info("OpenSSL dont't support npn/alpn, no HTTP/2 supported.")
-
-        return ssl_context
-
-
-def get_subj_alt_name(peer_cert):
-    '''
-    Copied from ndg.httpsclient.ssl_peer_verification.ServerSSLCertVerification
-    Extract subjectAltName DNS name settings from certificate extensions
-    @param peer_cert: peer certificate in SSL connection.  subjectAltName
-    settings if any will be extracted from this
-    @type peer_cert: OpenSSL.crypto.X509
-    '''
-    # Search through extensions
-    dns_name = []
-    general_names = SubjectAltName()
-    for i in range(peer_cert.get_extension_count()):
-        ext = peer_cert.get_extension(i)
-        ext_name = ext.get_short_name()
-        if ext_name == "subjectAltName":
-            # PyOpenSSL returns extension data in ASN.1 encoded form
-            ext_dat = ext.get_data()
-            decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
-
-            for name in decoded_dat:
-                if isinstance(name, SubjectAltName):
-                    for entry in range(len(name)):
-                        component = name.getComponentByPosition(entry)
-                        n = str(component.getComponent())
-                        if n.startswith("*"):
-                            continue
-                        dns_name.append(n)
-    return dns_name
+    def set_ca(self, fn):
+        try:
+            self._ssl_context.load_verify_locations(fn)
+            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+        except Exception as e:
+            self.logger.debug("set_ca fail:%r", e)
+            return

@@ -29,8 +29,9 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
+
 import xlog
-logger = xlog.getLogger("check_ip")
+logger = xlog.getLogger("tls_relay")
 logger.set_buffer(500)
 
 from front_base.openssl_wrap import SSLContext

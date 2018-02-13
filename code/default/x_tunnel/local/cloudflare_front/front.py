@@ -151,7 +151,7 @@ class Front(object):
         if not worker:
             return None
 
-        return worker.get_score()
+        return worker.get_score() * 10
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         if host not in self.dispatchs:

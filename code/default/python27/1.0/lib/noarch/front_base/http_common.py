@@ -1,34 +1,13 @@
 import time
+
 import simple_queue
-
-from xlog import getLogger
-xlog = getLogger("heroku_front")
-
-
-class GAE_Exception(Exception):
-    def __init__(self, error_code, message):
-        xlog.debug("GAE_Exception %r %r", error_code, message)
-        self.error_code = error_code
-        self.message = "%r:%s" % (error_code, message)
-
-    def __str__(self):
-        # for %s
-        return repr(self.message)
-
-    def __repr__(self):
-        # for %r
-        return repr(self.message)
-
-
-class BaseResponse(object):
-    def __init__(self, status=601, reason="", headers={}, body=""):
-        self.status = status
-        self.reason = reason
-        self.headers = headers
+import simple_http_client
 
 
 class Task(object):
-    def __init__(self, method, host, path, headers, body, queue, url, timeout):
+    def __init__(self, logger, config, method, host, path, headers, body, queue, url, timeout):
+        self.logger = logger
+        self.config = config
         self.method = method
         self.host = host
         self.path = path
@@ -44,6 +23,7 @@ class Task(object):
         self.body_len = 0
         self.body_readed = 0
         self.content_length = None
+        self.worker = None
         self.read_buffer = ""
         self.responsed = False
         self.finished = False
@@ -91,7 +71,7 @@ class Task(object):
         return data
 
     def read_all(self):
-        out_list = [self.read_buffer]
+        out_list = []
         while True:
             data = self.body_queue.get(self.timeout)
             if not data:
@@ -104,7 +84,8 @@ class Task(object):
         # for debug trace
         time_now = time.time()
         self.trace_time.append((time_now, stat))
-        # xlog.debug("%s stat:%s", self.unique_id, stat)
+        if self.config.show_state_debug:
+            self.logger.debug("%s stat:%s", self.unique_id, stat)
         return time_now
 
     def get_trace(self):
@@ -119,27 +100,33 @@ class Task(object):
 
     def response_fail(self, reason=""):
         if self.responsed:
-            xlog.error("http_common responsed_fail but responed.%s", self.url)
+            self.logger.error("http_common responsed_fail but responed.%s", self.url)
             self.put_data("")
             return
 
         self.responsed = True
         err_text = "response_fail:%s" % reason
-        xlog.debug("%s %s", self.url, err_text)
-        res = BaseResponse(body=err_text)
+        self.logger.debug("%s %s", self.url, err_text)
+        res = simple_http_client.BaseResponse(body=err_text)
+        res.task = self
+        res.worker = self.worker
         self.queue.put(res)
         self.finish()
 
     def finish(self):
+        if self.finished:
+            return
+
         self.put_data("")
         self.finished = True
 
 
-class HTTP_worker(object):
-    def __init__(self, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+class HttpWorker(object):
+    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb):
+        self.logger = logger
+        self.ip_manager = ip_manager
+        self.config = config
         self.ssl_sock = ssl_sock
-        self.last_active_time = self.ssl_sock.create_time
-        self.last_request_time = self.ssl_sock.create_time
         self.init_rtt = ssl_sock.handshake_time / 2
         self.rtt = self.init_rtt
         self.speed = 1
@@ -147,15 +134,14 @@ class HTTP_worker(object):
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
-        self.log_debug_data = log_debug_data
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
         self.speed_history = []
+        self.last_active_time = ssl_sock.create_time
 
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
-        self.log_debug_data(rtt, sent, received)
         self.speed = speed
         self.speed_history.append(speed)
 
@@ -163,7 +149,8 @@ class HTTP_worker(object):
         self.accept_task = False
         self.keep_running = False
         self.ssl_sock.close()
-        xlog.debug("%s worker close:%s", self.ip, reason)
+        self.logger.debug("%s worker close:%s", self.ip, reason)
+        self.ip_manager.report_connect_closed(self.ssl_sock.ip, reason)
         self.close_cb(self)
 
     def get_score(self):
@@ -171,21 +158,15 @@ class HTTP_worker(object):
         inactive_time = now - self.last_active_time
 
         rtt = self.rtt
-        if inactive_time > 30:
-            if rtt > 1000:
-                rtt = 1000
+        if inactive_time > 30 and rtt > 1000:
+            rtt = self.rtt = 200
 
-        if self.version == "1.1":
-            rtt += 100
-        else:
+        if self.version != "1.1":
             rtt += len(self.streams) * 100
 
-        if inactive_time > 10:
-            score = rtt
-        elif inactive_time < 0.001:
-            score = rtt + 50000
+        if inactive_time < 1:
+            score = rtt + 5000
         else:
-            # inactive_time < 2
-            score = rtt + (10/inactive_time)*1000
+            score = rtt + (240 - inactive_time)*10
 
         return score

@@ -26,10 +26,10 @@ from hyper.http20.exceptions import ProtocolError, StreamResetError
 from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
+from hyper.packages.hpack.hpack_compat import Encoder, Decoder
+import simple_http_client
 
 from http_common import *
-from xlog import getLogger
-xlog = getLogger("heroku_front")
 
 
 # Define a set of states for a HTTP/2 stream.
@@ -50,23 +50,23 @@ class Stream(object):
     pair.
     """
     def __init__(self,
+                 logger,
+                 config,
                  connection,
                  ip,
                  stream_id,
-                 host,
                  task,
                  send_cb,
                  close_cb,
-                 header_encoder,
-                 header_decoder,
                  receive_window_manager,
                  remote_window_size,
                  max_frame_size):
 
+        self.logger = logger
+        self.config = config
         self.connection = connection
         self.ip = ip
         self.stream_id = stream_id
-        self.host = host
         self.task = task
         self.state = STATE_IDLE
         self.get_head_time = None
@@ -87,8 +87,8 @@ class Stream(object):
 
         # A reference to the header encoder and decoder objects belonging to
         # the parent connection.
-        self._encoder = header_encoder
-        self._decoder = header_decoder
+        self._encoder = Encoder()
+        self._decoder = Decoder()
 
         self.request_headers = HTTPHeaderMap()
 
@@ -111,9 +111,9 @@ class Stream(object):
         self.response_body = []
         self.response_body_len = 0
 
-        threading.Thread(target=self.timeout_response).start()
+        threading.Thread(target=self.start_request).start()
 
-    def start(self):
+    def start_request(self):
         """
         Open the stream. Does this by encoding and sending the headers: no more
         calls to ``add_header`` are allowed after this method is called.
@@ -123,12 +123,13 @@ class Stream(object):
         # Strip any headers invalid in H2.
         #headers = h2_safe_headers(self.request_headers)
 
-        self.add_header(":method", self.task.method)
-        self.add_header(":scheme", "https")
-        self.add_header(":authority", self.host)
-        self.add_header(":path", self.task.path)
+        self.add_header(":Method", self.task.method)
+        self.add_header(":Scheme", "https")
+        self.add_header(":Authority", self.task.host)
+        self.add_header(":Path", self.task.path)
 
         default_headers = (':method', ':scheme', ':authority', ':path')
+        #headers = h2_safe_headers(self.task.headers)
         for name, value in self.task.headers.items():
             is_default = to_native_string(name) in default_headers
             self.add_header(name, value, replace=is_default)
@@ -154,12 +155,17 @@ class Stream(object):
         header_frame.flags.add('END_HEADERS')
 
         # Send the header frame.
+        self.task.set_state("start send header")
         self._send_cb(header_frame)
 
         # Transition the stream state appropriately.
         self.state = STATE_OPEN
 
+        self.task.set_state("start send left body")
         self.send_left_body()
+        self.task.set_state("end send left body")
+
+        self.timeout_response()
 
     def add_header(self, name, value, replace=False):
         """
@@ -200,7 +206,7 @@ class Stream(object):
         Handle a frame received on this stream.
         called by connection.
         """
-        # xlog.debug("stream %d recved frame %r", self.stream_id, frame)
+        # self.logger.debug("stream %d recved frame %r", self.stream_id, frame)
         if frame.type == WindowUpdateFrame.type:
             self.remote_window_size += frame.window_increment
             self.send_left_body()
@@ -208,7 +214,7 @@ class Stream(object):
             # Begin the header block for the response headers.
             self.response_header_datas = [frame.data]
         elif frame.type == PushPromiseFrame.type:
-            xlog.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
+            self.logger.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
         elif frame.type == ContinuationFrame.type:
             # Continue a header block begun with either HEADERS or PUSH_PROMISE.
             self.response_header_datas.append(frame.data)
@@ -224,10 +230,10 @@ class Stream(object):
                 size = frame.flow_controlled_length
                 increment = self.receive_window_manager._handle_frame(size)
                 #if increment:
-                #    xlog.debug("stream:%d frame size:%d increase win:%d", self.stream_id, size, increment)
+                #    self.logger.debug("stream:%d frame size:%d increase win:%d", self.stream_id, size, increment)
 
                 #content_len = int(self.request_headers.get("Content-Length")[0])
-                #xlog.debug("%s get:%d s:%d", self.ip, self.response_body_len, size)
+                #self.logger.debug("%s get:%d s:%d", self.ip, self.response_body_len, size)
 
                 if increment and not self._remote_closed:
                     w = WindowUpdateFrame(self.stream_id)
@@ -242,19 +248,18 @@ class Stream(object):
                 self._send_cb(w)
         elif frame.type == RstStreamFrame.type:
             # Rest Frame send from server is not define in RFC
-            # but GAE server will not work on this connection anymore
             inactive_time = time.time() - self.connection.last_active_time
-            xlog.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
+            self.logger.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
                        self.ip, self.stream_id, inactive_time, frame.error_code)
             self.connection.close("RESET")
         elif frame.type in FRAMES:
             # This frame isn't valid at this point.
             #raise ValueError("Unexpected frame %s." % frame)
-            xlog.error("%s Unexpected frame %s.", self.ip, frame)
+            self.logger.error("%s Unexpected frame %s.", self.ip, frame)
         else:  # pragma: no cover
             # Unknown frames belong to extensions. Just drop it on the
             # floor, but log so that users know that something happened.
-            xlog.error("%s Received unknown frame, type %d", self.ip, frame.type)
+            self.logger.error("%s Received unknown frame, type %d", self.ip, frame.type)
             pass
 
         if 'END_HEADERS' in frame.flags:
@@ -277,7 +282,7 @@ class Stream(object):
                 self.send_response()
 
         if 'END_STREAM' in frame.flags:
-            #xlog.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
+            #self.logger.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
             time_now = time.time()
             time_cost = time_now - self.get_head_time
             if time_cost > 0 and \
@@ -289,33 +294,33 @@ class Stream(object):
             self._close_remote()
 
             self.close("end stream")
+            if not self.task.finished:
+                self.connection.continue_timeout = 0
 
     def send_response(self):
         if self.task.responsed:
-            xlog.warn("http2_stream send_response but responsed.%s", self.task.url)
+            self.logger.error("http2_stream send_response but responsed.%s", self.task.url)
             self.close("h2 stream send_response but sended.")
             return
 
         self.task.responsed = True
         status = int(self.response_headers[b':status'][0])
-        if status in [400, 403]:
-            self.connection.rtt = 2000
-
         strip_headers(self.response_headers)
-        response = BaseResponse(status=status, headers=self.response_headers)
+        response = simple_http_client.BaseResponse(status=status, headers=self.response_headers)
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task
         self.task.queue.put(response)
+        if status in self.config.http2_status_to_close:
+            self.connection.close("status %d" % status)
 
-    def close(self, reason=""):
-        self._close_cb(self.stream_id, reason)
-
+    def close(self, reason="close"):
         if not self.task.responsed:
-            self.connection.retry_task_cb(self.task)
+            self.connection.retry_task_cb(self.task, reason)
         else:
-            self.task.put_data("")
+            self.task.finish()
             # empty block means fail or closed.
+        self._close_cb(self.stream_id, reason)
 
     def _handle_header_block(self, headers):
         """
@@ -367,16 +372,24 @@ class Stream(object):
         )
 
     def timeout_response(self):
-        while time.time() - self.task.start_time < self.task.timeout:
+        start_time = time.time()
+        while time.time() - start_time < self.task.timeout:
             time.sleep(1)
             if self._remote_closed:
                 return
 
-        xlog.warn("h2 %s %s timeout %s",
+        self.logger.warn("h2 timeout %s task_trace:%s worker_trace:%s",
                   self.connection.ssl_sock.ip,
-                  self.task.unique_id,
+                  self.task.get_trace(),
                   self.connection.get_trace())
+        self.task.set_state("timeout")
+
         if self.task.responsed:
             self.task.finish()
         else:
             self.task.response_fail("timeout")
+
+        self.connection.continue_timeout += 1
+        if self.connection.continue_timeout > self.connection.config.http2_max_timeout_tasks and \
+                time.time() - self.connection.last_active_time > 60:
+            self.connection.close("down fail")
