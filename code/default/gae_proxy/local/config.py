@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-
 import ConfigParser
 import os
 import re
 import io
 
-
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-
 
 
 class Config(object):
@@ -53,9 +50,27 @@ class Config(object):
         self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
         self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
 
-        self.PUBLIC_APPIDS = [x.strip() for x in self.CONFIG.get('gae', 'public_appid').split("|")]
+        def appids_init(appids):
+            # NOT keeping appids' order
+            #appids_set = {x.strip() for x in appids.split('|')}
+            #if '' in appids_set:
+            #    appids_set.remove('')
+            #return list(appids_set)
+
+            # keeping appids' order
+            appids_list = [x.strip() for x in appids.split('|')]
+
+            striped_appids_list = list(set(appids_list))
+            striped_appids_list.sort(key=appids_list.index)
+
+            if '' in striped_appids_list:
+                striped_appids_list.remove('')
+
+            return striped_appids_list
+
+        self.PUBLIC_APPIDS = appids_init(self.CONFIG.get('gae', 'public_appid'))
         if self.CONFIG.get('gae', 'appid'):
-            self.GAE_APPIDS = [x.strip() for x in self.CONFIG.get('gae', 'appid').split("|")]
+            self.GAE_APPIDS = appids_init(self.CONFIG.get('gae', 'appid'))
         else:
             self.GAE_APPIDS = []
         self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()

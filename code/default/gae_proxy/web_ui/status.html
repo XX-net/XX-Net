@@ -328,7 +328,7 @@
                     'td#lan-proxy': (result['lan_proxy'] === 'Disable') ? '{{ _( "Disable" ) }}' : result['lan_proxy'],
                     'td#proxy-listen': result['proxy_listen'],
                     'td#use-ipv6': ip_mode[result['use_ipv6']],
-                    'td#working-appid': appid_string(result['gae_appid']),
+                    'td#working-appid': appid_string(result['working_appid']),
                     'td#out-of-quota-appids': result['out_of_quota_appids'],
                     'td#not-exist-appids': result['not_exist_appids'],
 
@@ -468,7 +468,7 @@
         }
     }
     function is_public_appid(appids) {
-        if (appids.length > 1) {
+        if (appids.length > 0) {
             return false;
         } else {
             return true;
