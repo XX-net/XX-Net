@@ -9,6 +9,8 @@ import utils
 import simple_http_server
 from socket_wrap import SocketWrap
 import global_var as g
+from gae_proxy.local import check_local_network
+
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -66,6 +68,14 @@ def is_clienthello(data):
         return len(data) == 2 + ord(data[1])
     else:
         return False
+
+
+def have_ipv6(ips):
+    for ip in ips:
+        if ":" in ip:
+            return True
+
+    return False
 
 
 def extract_sni_name(packet):
@@ -404,7 +414,11 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         return try_loop("domain user", [rule], sock, host, port, client_address, left_buf)
 
     record = g.domain_cache.get(host)
-    if record:
+    ips = g.dns_srv.query(host)
+
+    if check_local_network.IPv6.is_ok() and have_ipv6(ips):
+        rule_list = ["direct", "gae", "socks", "redirect_https"]
+    elif record:
         rule = record["r"]
         if rule == "gae" or not g.ip_region.check_ips(record["ip"]):
             rule_list = ["gae", "socks", "redirect_https", "direct"]

@@ -51,7 +51,13 @@ def remote_query_dns(domain, type=None):
 
 class DnsServerList(object):
     def __init__(self):
-        self.server_list = self.get_dns_server()
+        self.local_list = self.get_dns_server()
+
+        if g.config.country_code == "CN":
+            self.public_list = ['114.114.114.114', "180.76.76.76", "198.15.67.245", "202.46.32.19", "64.214.116.84"]
+        else:
+            self.public_list = ['8.8.8.8', "208.67.222.222", "209.244.0.3", "8.26.56.26", "37.235.1.174", "91.239.100.100"]
+
         self.i = 0
 
     def get_dns_server(self):
@@ -68,13 +74,6 @@ class DnsServerList(object):
             with open('/etc/resolv.conf', 'rb') as fp:
                 iplist = re.findall(r'(?m)^nameserver\s+(\S+)', fp.read())
 
-        self.local_server_list = list(iplist)
-
-        if g.config.country_code == "CN":
-            iplist += ['114.114.114.114', "180.76.76.76", "198.15.67.245", "202.46.32.19", "64.214.116.84"]
-        else:
-            iplist += ['8.8.8.8', "208.67.222.222", "209.244.0.3", "8.26.56.26", "37.235.1.174", "91.239.100.100"]
-
         out_list = []
         for ip in iplist:
             if ip == "127.0.0.1":
@@ -84,21 +83,21 @@ class DnsServerList(object):
 
         return out_list
 
-    def get(self):
-        return self.server_list[self.i]
+    def get_local(self):
+        return self.local_list[self.i]
 
     def reset_server(self):
         self.i = 0
 
     def next_server(self):
         self.i += 1
-        if self.i >= len(self.server_list):
-            self.i = self.i % len(self.server_list)
+        if self.i >= len(self.local_list):
+            self.i = self.i % len(self.local_list)
 
-        xlog.debug("next dns server:%s", self.get())
+        xlog.debug("next dns server:%s", self.get_local())
 
-    def get_local_server(self):
-        return random.choice(self.local_server_list)
+    def get_public(self):
+        return random.choice(self.public_list)
 
 
 class DnsClient(object):
@@ -208,13 +207,16 @@ class DnsClient(object):
         que.domain = domain
 
         ips = []
-        self.dns_server.reset_server()
-        for i in xrange(0, len(self.dns_server.server_list)):
+        if "." not in domain:
+            server_list = self.dns_server.local_list
+        else:
+            server_list = self.dns_server.public_list
+
+        for ip in server_list:
             if time.time() > end_time:
                 break
 
-            server = self.dns_server.server_list[i]
-            self.send_request(id, domain, server)
+            self.send_request(id, domain, ip)
 
             self.waiters[id] = que
             que.wait(time.time() + 1)
