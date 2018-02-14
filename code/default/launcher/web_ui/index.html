@@ -61,6 +61,7 @@
 <div id="content">
     <div class="container">
         <div id="welcome" class="hero-unit hide" style="padding-left: 70px;">
+            <button type="button" class="close" onclick="welcomeClose();" aria-hidden="true">&times;</button>
             <h1 id="welcome-title">{{ _( "Hello!" ) }}</h1>
             <p id="welcome-message">{{ _( "You seem to be on your first visit." ) }}</p>
             <a id="btn-learnmore" class="btn btn-primary btn-large">{{ _( "Learn more" ) }}</a>
@@ -142,6 +143,11 @@
             $('#welcome').addClass('hide');
         }, 1000);
     });
+
+    function welcomeClose() {
+        $('#welcome').addClass('hide');
+        setConfig('postUpdateStat', "noChange");
+    }
 </script>
 <script type="text/javascript">
     function getConfig(key) {
@@ -238,37 +244,32 @@
                     },
                     error: function (result) {
                         console.log("Failed getting RELEASENOTE_ISSUEID.");
+                    },
+                    complete: function (result) {
+                        switch (getConfig('postUpdateStat')) {
+                            case "noChange":
+                                $('#welcome').addClass('hide');
+                                break;
+                            case "isNew":
+                                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                                $('#welcome-message').text('{{ _( "You seem to be on your first visit." ) }}');
+                                window.welcomeISSUEID = window.wiki_ISSUEID;
+                                $('#welcome').removeClass('hide');
+                                setTimeout(welcomeClose(), 15 * 1000);
+                                break;
+                            case "isPostUpdate":
+                                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                                $('#welcome-message').text('{{ _( "new to this version?" ) }}');
+                                window.welcomeISSUEID = window.RELEASENOTE_ISSUEID;
+                                $('#welcome').removeClass('hide');
+                                setTimeout(welcomeClose(), 15 * 1000);
+                                break;
+                            default:
+                        }
                     }
                 });
             }
         });
-
-        switch (getConfig('postUpdateStat')) {
-            case "noChange":
-                $('#welcome').addClass('hide');
-                break;
-            case "isNew":
-                $('#welcome-title').text('{{ _( "Hello!" ) }}');
-                $('#welcome-message').text('{{ _( "You seem to be on your first visit." ) }}');
-                window.welcomeISSUEID = window.wiki_ISSUEID;
-                $('#welcome').removeClass('hide');
-                setTimeout(function () {
-                    $('#welcome').addClass('hide');
-                    setConfig('postUpdateStat', "noChange");
-                }, 15 * 1000);
-                break;
-            case "isPostUpdate":
-                $('#welcome-title').text('{{ _( "Hello!" ) }}');
-                $('#welcome-message').text('{{ _( "new to this version?" ) }}');
-                window.welcomeISSUEID = window.RELEASENOTE_ISSUEID;
-                $('#welcome').removeClass('hide');
-                setTimeout(function () {
-                    $('#welcome').addClass('hide');
-                    setConfig('postUpdateStat', "noChange");
-                }, 15 * 1000);
-                break;
-            default:
-        }
 
         if (getConfig('allow_remote_connect') !== 0) {
             $('#remote-connection-identifier').show();
