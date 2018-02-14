@@ -20,6 +20,9 @@ msgstr ""
 msgid "Heroku"
 msgstr ""
 
+msgid "TLS-Relay"
+msgstr ""
+
 msgid "Front"
 msgstr "前端"
 
