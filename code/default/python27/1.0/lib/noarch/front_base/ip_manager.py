@@ -733,12 +733,23 @@ class IpManager():
         to_remove = []
         for ip in self.ip_dict:
             dat = self.ip_dict[ip]
-            if dat["fail_times"] > 3:
+            if dat["fail_times"] > 0:
                 to_remove.append(ip)
                 self.logger.debug("ip_manager remove continue fail ip:%s", ip)
 
         for ip in to_remove:
             del self.ip_dict[ip]
+
+        self.try_sort_ip(True)
+
+    def update_ips(self, ips):
+        for ip in ips:
+            if ip not in self.ip_dict:
+                self.add_ip(ip)
+
+        for ip in list(self.ip_dict.keys()):
+            if ip not in ips:
+                del self.ip_dict[ip]
 
         self.try_sort_ip(True)
 

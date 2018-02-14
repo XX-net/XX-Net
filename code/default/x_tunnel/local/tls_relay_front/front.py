@@ -129,9 +129,6 @@ class Front(object):
         if not ips:
             return
 
-        #self.logger.info("set_ips:%s", ips)
-        #self.ip_manager.clean_failed_ips()
-        #self.host_manager.reset()
         host_info = {}
         ca_certs = []
         ipss = []
@@ -139,12 +136,13 @@ class Front(object):
             dat = ips[ip]
             ca_cert = dat["ca_crt"]
             sni = dat["sni"]
-            self.ip_manager.add_ip(ip)
+
             host_info[ip] = {"sni":sni, "ca_crt":ca_cert}
             if ca_cert not in ca_certs:
                 ca_certs.append(ca_cert)
             ipss.append(ip)
 
+        self.ip_manager.update_ips(ipss)
         self.ip_manager.save(True)
         self.host_manager.set_host(host_info)
 

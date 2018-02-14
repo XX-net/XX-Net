@@ -18,6 +18,7 @@ quota = 0
 
 server_host = ""
 server_port = 0
+selectable = []
 balance = 0
 
 stat = {

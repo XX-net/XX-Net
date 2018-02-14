@@ -75,7 +75,7 @@ def load_config():
 
     config.set_var("api_server", "center.xx-net.net")
     config.set_var("server_host", "")
-    config.set_var("server_port", 0)
+    config.set_var("server_port", 443)
     config.set_var("use_https", 1)
     config.set_var("port_range", 1)
 
@@ -135,24 +135,6 @@ def load_config():
     g.config = config
 
 
-def terminate():
-    global ready
-    g.running = False
-    g.http_client.stop()
-
-    if g.socks5_server:
-        xlog.info("Close Socks5 server ")
-        g.socks5_server.server_close()
-        g.socks5_server.shutdown()
-        g.socks5_server = None
-
-    if g.session:
-        xlog.info("Stopping session")
-        g.session.stop()
-        g.session = None
-    ready = False
-
-
 def main(args):
     global ready
     load_config()
@@ -163,7 +145,7 @@ def main(args):
 
     g.running = True
     if not g.server_host or not g.server_port:
-        if g.config.server_host and g.config.server_port:
+        if g.config.server_host and g.config.server_port == 443:
             xlog.info("Session Server:%s:%d", g.config.server_host, g.config.server_port)
             g.server_host = g.config.server_host
             g.server_port = g.config.server_port
@@ -188,6 +170,24 @@ def main(args):
 
     ready = True
     g.socks5_server.serve_forever()
+
+
+def terminate():
+    global ready
+    g.running = False
+    g.http_client.stop()
+
+    if g.socks5_server:
+        xlog.info("Close Socks5 server ")
+        g.socks5_server.server_close()
+        g.socks5_server.shutdown()
+        g.socks5_server = None
+
+    if g.session:
+        xlog.info("Stopping session")
+        g.session.stop()
+        g.session = None
+    ready = False
 
 
 if __name__ == '__main__':

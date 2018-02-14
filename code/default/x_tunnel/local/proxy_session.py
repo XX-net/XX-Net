@@ -798,6 +798,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
             g.server_port = info["port"]
             xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
 
+        g.selectable = info["selectable"]
+
         g.balance = info["balance"]
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
                   g.balance, g.quota)

@@ -1,5 +1,6 @@
 <ul class="nav nav-tabs">
     <li class="active"><a href="#info" data-toggle="tab">{{ _("Info") }}</a></li>
+    <li class="hide"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
     <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
     <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
     <li class="hide"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
@@ -91,6 +92,26 @@
                 </table>
             </div> <!-- .section -->
         </div> <!-- #account-information -->
+    </div> <!-- #info -->
+    <div id="advanced" class="tab-pane fade in">
+        <form id="adv-setting" onSubmit="onAdvSettingSubmit(); return false;">
+            <div class="row-fluid">
+                <div class="span3">
+                    <label for="server-selector">{{ _( "server" ) }}</label>
+                </div>
+                <div class="span6">
+                    <select id="server-selector">
+                        <option value="auto">{{ _( "AUTO" ) }}</option>
+                    </select>
+                </div>
+            </div>
+            <br/>
+            <div class="row-fluid">
+                <div class="span12">
+                    <button class="btn btn-primary btn-block" type="submit">{{ _("Submit") }}</button>
+                </div>
+            </div>
+        </form>
     </div> <!-- #info -->
     <div id="plans" class="tab-pane fade in">
         <div class="section">
@@ -575,6 +596,73 @@
                     $('button[type=submit]', '#register-form').html('{{ _("Register") }}');
                     $('button[type=submit]', '#register-form').removeAttr('disabled');
                 }
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $('a[href="#advanced"]').click(function () {
+        AdvSettingInit();
+    });
+
+    function AdvSettingInit() {
+        //$("#server-selector").val('auto');
+        var pageRequests = {'cmd': 'get'};
+        $.ajax({
+            type: 'GET',
+            url: '/module/x_tunnel/control/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                var server_selector = $("#server-selector");
+                server_selector.find("option[value!='auto']").remove(); //$("#server-selector").empty();
+                var selectable = result['server']['selectable'];
+                for (var i in selectable) {
+                    var record = selectable[i];
+                    var new_option = document.createElement('option');
+                    new_option.value = record[0];
+                    new_option.text = record[1] + ' @ ' + record[2];
+                    server_selector.append(new_option);
+                }
+
+                if (result['server']['available']) {
+                    server_selector.val(result['server']['selected']);
+                } else {
+                    server_selector.val('auto');
+                    tip('{{ _( "previously selected server nolonger available, automatically try " ) }}{{_("AUTO")}}', 'error');
+                }
+            },
+            error: function (result) {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    function onAdvSettingSubmit() {
+        $('button[type=submit]', '#adv-setting').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#adv-setting').attr('disabled', 'disabled');
+
+        var server = $("#server-selector").val();
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/config?cmd=set',
+            data: {
+                'server': server,
+            },
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] === 'success') {
+                    $('button[type=submit]', '#adv-setting').html('{{ _("Submit") }}');
+                    $('button[type=submit]', '#adv-setting').removeAttr('disabled');
+                    tip('{{ _("Settings saved successfully.") }}', 'success');
+                    getUserInfo(1);
+                } else {
+                    //tip('{{ _( "Failed saving settings: " ) }}'+ result['reason'], 'error');
+                    displayErrorMessage();
+                }
+            },
+            error: function (result) {
+                displayErrorMessage();
             }
         });
     }
