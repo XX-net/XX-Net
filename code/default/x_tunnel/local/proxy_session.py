@@ -141,7 +141,7 @@ class ProxySession():
                 break
 
             self.check_report_status()
-            sleep(10)
+            sleep(30)
 
     def check_report_status(self):
         if g.stat["timeout_roundtrip"] - self.last_state["timeout"] < g.config.timeout_threshold:

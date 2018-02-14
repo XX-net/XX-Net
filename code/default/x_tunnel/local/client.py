@@ -114,7 +114,7 @@ def load_config():
     config.set_var("windows_size", 16 * 1024 * 1024)
 
     # reporter
-    config.set_var("timeout_threshold", 5)
+    config.set_var("timeout_threshold", 2)
 
     config.set_var("enable_gae_proxy", 1)
     config.set_var("enable_cloudflare", 1)
