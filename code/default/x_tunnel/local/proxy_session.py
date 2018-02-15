@@ -141,11 +141,19 @@ class ProxySession():
                 break
 
             self.check_report_status()
-            sleep(30)
+            sleep(60)
 
     def check_report_status(self):
-        if g.stat["timeout_roundtrip"] - self.last_state["timeout"] < g.config.timeout_threshold:
-            self.last_state["timeout"] = g.stat["timeout_roundtrip"]
+        if not g.config.login_account:
+            return
+
+        good_ip_num = 0
+        for ip in g.tls_relay_front.ip_manager.ip_dict:
+            ip_state = g.tls_relay_front.ip_manager.ip_dict[ip]
+            fail_times = ip_state["fail_times"]
+            if fail_times == 0:
+                good_ip_num += 1
+        if good_ip_num:
             return
 
         stat = self.get_stat()

@@ -30,7 +30,7 @@ msgid "Settings"
 msgstr "设置"
 
 msgid "Plans"
-msgstr "套餐"
+msgstr "购买套餐"
 
 msgid "History"
 msgstr "历史"
