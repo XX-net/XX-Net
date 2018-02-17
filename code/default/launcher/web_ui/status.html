@@ -534,8 +534,8 @@
     }
 
     function updateNotice(contents, appendMode) {
-        appendMode = appendMode || false;
-        if (contents.length <= 0) return;
+        //appendMode = appendMode || false;
+        if (!contents || contents.length <= 0) return;
 
         var content = document.getElementById('notice-content');
         if (!appendMode) {

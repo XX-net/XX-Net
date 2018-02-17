@@ -171,7 +171,7 @@
         }
     }
     function getRELEASENOTE_ISSUEID(currentVer) {
-        var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer; //console.log('APIurl='+APIurl);
+        var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer; //console.log('APIurl='+APIurl);
         $.ajax({
             type: 'GET',
             url: APIurl,
@@ -190,7 +190,7 @@
                 var currentVer_Split = currentVer.split('.');
                 currentVer_Split[2] = 'x';
                 var currentVer_Big = currentVer_Split.join('.');
-                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
+                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
                 $.ajax({
                     type: 'GET',
                     url: APIurl,
@@ -620,7 +620,7 @@
         var rq = {
             'text': rawText,
             'mode': mode || 'gfm',
-            'context': context || 'xx-net/XX-Net'
+            'context': context || 'XX-net/XX-Net'
         };
         $.ajax({
             async: false,
@@ -641,7 +641,7 @@
     }
 
     function popIssue(issueID, repo) {
-        repo = repo || 'xx-net/XX-Net';
+        repo = repo || 'XX-net/XX-Net';
         issueID = issueID || window.RELEASENOTE_ISSUEID;
         try {
             var APIurl = 'https://api.github.com/repos/' + repo + '/issues/' + issueID;
