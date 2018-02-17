@@ -167,7 +167,7 @@ class ProxySession():
             "password": str(g.config.login_password),
             "stat": stat,
         }
-        xlog.warn("start report_stat")
+        xlog.debug("start report_stat")
         status, info = call_api("/report_stat", report_dat)
         if not status:
             xlog.warn("report fail.")

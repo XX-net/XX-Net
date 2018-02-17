@@ -41,7 +41,10 @@ def t1():
     print status
 
     del response
-    #print("del response")
+
+    content, status, response = front.request("GET", "scan1.xx-net.net", timeout=1000)
+    print status
+
     front.stop()
 
 

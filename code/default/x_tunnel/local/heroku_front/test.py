@@ -39,7 +39,7 @@ xlog.set_buffer(2000)
 
 def get():
     start_time = time.time()
-    content, status, response = front.request("GET", "dns.xx-net.com", path="/query?domain=www.google.com")
+    content, status, response = front.request("GET", "dns.xx-net.net", path="/query?domain=www.google.com")
     time_cost = time.time() - start_time
     xlog.info("GET cost:%f", time_cost)
     xlog.info("status:%d content:%s", status, content)

@@ -135,6 +135,9 @@ class Front(object):
     def _request(self, method, host, path="/", headers={}, data="", timeout=40):
         try:
             response = self.http_dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
+            if not response:
+                return "", 500, {}
+
             status = response.status
             if status != 200:
                 xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
@@ -144,15 +147,14 @@ class Front(object):
             return content, status, response
         except Exception as e:
             xlog.exception("front request %s %s%s fail:%r", method, host, path, e)
-
             return "", 500, {}
 
     def request(self, method, host, schema="http", path="/", headers={}, data="", timeout=40):
         # change top domain to xx-net.net
         # this domain bypass the cloudflare front for ipv4
-        p = host.find(".")
-        host_sub = host[:p]
-        host = host_sub + ".xx-net.net"
+        #p = host.find(".")
+        #host_sub = host[:p]
+        #host = host_sub + ".xx-net.net"
 
         schema = "http"
         # force schema to http, avoid cert fail on heroku curl.
