@@ -36,12 +36,17 @@ from http2_connection import Http2Worker
 class HttpsDispatcher(object):
     idle_time = 20 * 60
 
-    def __init__(self, logger, config, ip_manager, connection_manager):
+    def __init__(self, logger, config, ip_manager, connection_manager,
+                 http1worker=Http1Worker,
+                 http2worker=Http2Worker):
         self.logger = logger
         self.config = config
         self.ip_manager = ip_manager
         self.connection_manager = connection_manager
         self.connection_manager.set_ssl_created_cb(self.on_ssl_created_cb)
+
+        self.http1worker = http1worker
+        self.http2worker = http2worker
 
         self.request_queue = Queue.Queue()
         self.workers = []
@@ -72,10 +77,10 @@ class HttpsDispatcher(object):
             raise Exception("on_ssl_created_cb ssl_sock None")
 
         if ssl_sock.h2:
-            worker = Http2Worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = self.http2worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
             self.h2_num += 1
         else:
-            worker = Http1Worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = self.http1worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
             self.h1_num += 1
 
         self.workers.append(worker)

@@ -45,7 +45,7 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
-    <div class="row-fluid" style="display: none;">
+    <div class="row-fluid">
         <div class="span4">
             <label for="modules-manager" class="pull-down-control">
                 <i class="icon icon-chevron-right"></i> {{ _( "Module management" ) }}
@@ -54,7 +54,7 @@
     </div> <!-- .row-fluid -->
     <div id="modules-manager" style="display: none;">
         <hr>
-        <div class="row-fluid">
+        <div class="row-fluid" style="display: none;">
             <div class="span4">{{ _( "Enable" ) }} {{ _( "GAE Proxy" ) }}</div> <!-- .span4 -->
             <div class="span8">
                 <input id="gae_proxy-enable" type="checkbox" data-toggle="switch"/> <!--disabled-->

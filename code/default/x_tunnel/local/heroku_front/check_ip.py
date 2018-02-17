@@ -63,7 +63,7 @@ if __name__ == "__main__":
     else:
         wait_time = 0
 
-    config_path = os.path.join(module_data_path, "tls_relay.json")
+    config_path = os.path.join(module_data_path, "heroku_front.json")
     config = Config(config_path)
 
     openssl_context = SSLContext(logger)

@@ -15,7 +15,6 @@ the stream by the endpoint that initiated the stream.
 """
 
 
-import time
 import threading
 from hyper.common.headers import HTTPHeaderMap
 from hyper.packages.hyperframe.frame import (
@@ -26,7 +25,6 @@ from hyper.http20.exceptions import ProtocolError, StreamResetError
 from hyper.http20.util import h2_safe_headers
 from hyper.http20.response import strip_headers
 from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestring
-from hyper.packages.hpack.hpack_compat import Encoder, Decoder
 import simple_http_client
 
 from http_common import *
@@ -58,6 +56,8 @@ class Stream(object):
                  task,
                  send_cb,
                  close_cb,
+                 encoder,
+                 decoder,
                  receive_window_manager,
                  remote_window_size,
                  max_frame_size):
@@ -87,8 +87,8 @@ class Stream(object):
 
         # A reference to the header encoder and decoder objects belonging to
         # the parent connection.
-        self._encoder = Encoder()
-        self._decoder = Decoder()
+        self._encoder = encoder
+        self._decoder = decoder
 
         self.request_headers = HTTPHeaderMap()
 
@@ -123,9 +123,11 @@ class Stream(object):
         # Strip any headers invalid in H2.
         #headers = h2_safe_headers(self.request_headers)
 
+        host = self.connection.get_host(self.task.host)
+
         self.add_header(":Method", self.task.method)
         self.add_header(":Scheme", "https")
-        self.add_header(":Authority", self.task.host)
+        self.add_header(":Authority", host)
         self.add_header(":Path", self.task.path)
 
         default_headers = (':method', ':scheme', ':authority', ':path')
@@ -135,7 +137,7 @@ class Stream(object):
             self.add_header(name, value, replace=is_default)
 
         # Encode the headers.
-        encoded_headers = self._encoder.encode(self.request_headers)
+        encoded_headers = self._encoder(self.request_headers)
 
         # It's possible that there is a substantial amount of data here. The
         # data needs to go into one HEADERS frame, followed by a number of
@@ -212,7 +214,8 @@ class Stream(object):
             self.send_left_body()
         elif frame.type == HeadersFrame.type:
             # Begin the header block for the response headers.
-            self.response_header_datas = [frame.data]
+            #self.response_header_datas = [frame.data]
+            self.response_header_datas.append(frame.data)
         elif frame.type == PushPromiseFrame.type:
             self.logger.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
         elif frame.type == ContinuationFrame.type:
@@ -265,7 +268,12 @@ class Stream(object):
         if 'END_HEADERS' in frame.flags:
             # Begin by decoding the header block. If this fails, we need to
             # tear down the entire connection.
-            headers = self._decoder.decode(b''.join(self.response_header_datas))
+            header_data = b''.join(self.response_header_datas)
+            try:
+                headers = self._decoder.decode(header_data)
+            except Exception as e:
+                self.logger.exception("decode h2 header %s fail:%r", header_data, e)
+                raise e
 
             self._handle_header_block(headers)
             # We've handled the headers, zero them out.
@@ -320,6 +328,7 @@ class Stream(object):
         else:
             self.task.finish()
             # empty block means fail or closed.
+        self._close_remote()
         self._close_cb(self.stream_id, reason)
 
     def _handle_header_block(self, headers):

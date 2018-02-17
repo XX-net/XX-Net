@@ -65,7 +65,8 @@ class ProxySession():
         self.last_state = {
             "timeout": 0,
         }
-        threading.Thread(target=self.reporter).start()
+        if g.config.enable_tls_relay:
+            threading.Thread(target=self.reporter).start()
 
     def start(self):
         with self.lock:

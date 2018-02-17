@@ -47,9 +47,6 @@ class ConfigBase(xconfig.Config):
         self.set_var("connect_force_http2", 0)
 
         # ip manager
-        self.set_var("use_ipv6", "auto")
-        self.set_var("ipv6_scan_ratio", 0.5)
-
         self.set_var("check_exist_ip_on_startup", 0)
         self.set_var("auto_adjust_scan_ip_thread_num", 1)
         self.set_var("max_scan_ip_thread_num", 0)
@@ -61,3 +58,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("long_fail_threshold", 300)
         self.set_var("long_fail_connect_interval", 180)
         self.set_var("short_fail_connect_interval", 10)
+
+        # ip source
+        self.set_var("use_ipv6", "auto") #
+        self.set_var("ipv6_scan_ratio", 0.5)

@@ -18,6 +18,7 @@ from hyper.packages.hyperframe.frame import (
 from http2_stream import Stream
 from hyper.http20.window import BaseFlowControlManager
 
+from hyper.packages.hpack.hpack_compat import Encoder, Decoder
 
 # this is defined in rfc7540
 # default window size 64k
@@ -100,6 +101,8 @@ class Http2Worker(HttpWorker):
         # every frame put to this queue must allowed by stream window and connection window
         # any data frame blocked by connection window should put to self.blocked_send_frames
         self.send_queue = Queue.Queue()
+        self.encoder = Encoder()
+        self.decoder = Decoder()
 
         # keep blocked data frame in this buffer
         # which is allowed by stream window but blocked by connection window.
@@ -144,6 +147,10 @@ class Http2Worker(HttpWorker):
         task.set_state("h2_req")
         self.request_task(task)
 
+    def encode_header(self, headers):
+        with self.request_lock:
+            return self.encoder.encode(headers)
+
     def request_task(self, task):
         with self.request_lock:
             # create stream to process task
@@ -153,7 +160,7 @@ class Http2Worker(HttpWorker):
             self.next_stream_id += 2
 
         stream = Stream(self.logger, self.config, self, self.ip, stream_id, task,
-                    self._send_cb, self._close_stream_cb,
+                    self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
                     FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
                     self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
                     self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
@@ -468,3 +475,6 @@ class Http2Worker(HttpWorker):
         out_list.append(" h2.stream_num:%d" % len(self.streams))
         out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))
         return ",".join(out_list)
+
+    def get_host(self, task_host):
+        return task_host

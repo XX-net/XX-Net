@@ -2,9 +2,7 @@
 # coding:utf-8
 
 
-import cgi
 import os
-import re
 import time
 import urlparse
 
