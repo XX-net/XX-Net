@@ -148,6 +148,69 @@
         $('#welcome').addClass('hide');
         setConfig('postUpdateStat', "noChange");
     }
+    function updateWelcome() {
+        switch (getConfig('postUpdateStat')) {
+            case "noChange":
+                $('#welcome').addClass('hide');
+                break;
+            case "isNew":
+                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                $('#welcome-message').text('{{ _( "You seem to be on your first visit." ) }}');
+                window.welcomeISSUEID = window.wiki_ISSUEID;
+                $('#welcome').removeClass('hide');
+                setTimeout(welcomeClose(), 15 * 1000);
+                break;
+            case "isPostUpdate":
+                $('#welcome-title').text('{{ _( "Hello!" ) }}');
+                $('#welcome-message').text('{{ _( "new to this version?" ) }}');
+                window.welcomeISSUEID = window.RELEASENOTE_ISSUEID;
+                $('#welcome').removeClass('hide');
+                setTimeout(welcomeClose(), 15 * 1000);
+                break;
+            default:
+        }
+    }
+    function getRELEASENOTE_ISSUEID(currentVer) {
+        var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer; //console.log('APIurl='+APIurl);
+        $.ajax({
+            type: 'GET',
+            url: APIurl,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result.length === 0) {
+                    console.log("NO RELEASENOTE_ISSUEID related to '" + currentVer + "'.");
+                    return;
+                }
+                var issueURL = result[0]['url'].split('/');
+                window.RELEASENOTE_ISSUEID = issueURL[7];
+            },
+            error: function (result) {
+                console.log("Failed getting RELEASENOTE_ISSUEID of '" + currentVer + "'.");
+
+                var currentVer_Split = currentVer.split('.');
+                currentVer_Split[2] = 'x';
+                var currentVer_Big = currentVer_Split.join('.');
+                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
+                $.ajax({
+                    type: 'GET',
+                    url: APIurl,
+                    dataType: 'JSON',
+                    success: function (result) {
+                        if (result.length === 0) {
+                            console.log("NO RELEASENOTE_ISSUEID related to '" + currentVer_Big + "'.");
+                            return;
+                        }
+                        var issueURL = result[0]['url'].split('/');
+                        window.RELEASENOTE_ISSUEID = issueURL[7];
+                    },
+                    error: function (result) {
+                        console.log("Failed getting RELEASENOTE_ISSUEID of '" + currentVer_Big + "'.");
+                    }
+                });
+            },
+            complete: updateWelcome()
+        });
+    }
 </script>
 <script type="text/javascript">
     function getConfig(key) {
@@ -227,47 +290,10 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function (result) {
-                document.getElementById("version_on_logo").appendChild(document.createTextNode(result['current_version']));
+                var currentVer = result['current_version'];
+                document.getElementById("version_on_logo").appendChild(document.createTextNode(currentVer));
 
-                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "发布" + ',' + result['current_version']; //console.log('APIurl='+APIurl);
-                $.ajax({
-                    type: 'GET',
-                    url: APIurl,
-                    dataType: 'JSON',
-                    success: function (result) {
-                        if (result.length === 0) {
-                            console.log("NO RELEASENOTE_ISSUEID related to this version.");
-                            return;
-                        }
-                        var issueURL = result[0]['url'].split('/');
-                        window.RELEASENOTE_ISSUEID = issueURL[7];
-                    },
-                    error: function (result) {
-                        console.log("Failed getting RELEASENOTE_ISSUEID.");
-                    },
-                    complete: function (result) {
-                        switch (getConfig('postUpdateStat')) {
-                            case "noChange":
-                                $('#welcome').addClass('hide');
-                                break;
-                            case "isNew":
-                                $('#welcome-title').text('{{ _( "Hello!" ) }}');
-                                $('#welcome-message').text('{{ _( "You seem to be on your first visit." ) }}');
-                                window.welcomeISSUEID = window.wiki_ISSUEID;
-                                $('#welcome').removeClass('hide');
-                                setTimeout(welcomeClose(), 15 * 1000);
-                                break;
-                            case "isPostUpdate":
-                                $('#welcome-title').text('{{ _( "Hello!" ) }}');
-                                $('#welcome-message').text('{{ _( "new to this version?" ) }}');
-                                window.welcomeISSUEID = window.RELEASENOTE_ISSUEID;
-                                $('#welcome').removeClass('hide');
-                                setTimeout(welcomeClose(), 15 * 1000);
-                                break;
-                            default:
-                        }
-                    }
-                });
+                getRELEASENOTE_ISSUEID(currentVer);
             }
         });
 
