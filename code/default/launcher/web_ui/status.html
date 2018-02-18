@@ -251,7 +251,7 @@
 
         updateDetailStatus();
         updateNoobStatus();
-        updateNotice();
+        getNotice();
         update_show_detail();
     });
 </script>
@@ -533,7 +533,57 @@
         });
     }
 
-    function updateNotice() {
+    function updateNotice(contents, appendMode) {
+        //appendMode = appendMode || false;
+        if (!contents || contents.length <= 0) return;
+
+        var content = document.getElementById('notice-content');
+        if (!appendMode) {
+            content.innerHTML = '';
+        }
+
+        var i, limit = 30;
+        var cur = content.firstChild;
+        for (i = 0; i < limit && cur && contents.length > 0; i++) {
+            var issue = contents[0];
+            if (cur.id.substring(6) < issue[0]) {
+                var li = document.createElement('li');
+                li.setAttribute('id', "issue_" + issue[0]);
+                var a = document.createElement('a');
+                a.textContent = issue[1];
+                a.href = issue[2];
+                a.setAttribute('target', '_blank');
+                li.appendChild(a);
+                content.insertBefore(li, cur);
+                contents.shift();
+            } else if (cur.id.substring(6) == issue[0]) {
+                cur = cur.nextSibling;
+                contents.shift();
+            } else if (cur.id.substring(6) > issue[0]) {
+                cur = cur.nextSibling;
+            } else {
+                displayErrorMessage();
+            }
+        }
+        if (contents.length > 0) {
+            while (i < limit && contents.length > 0) {
+                var issue = contents.shift();
+                var li = document.createElement('li');
+                li.setAttribute('id', "issue_" + issue[0]);
+                var a = document.createElement('a');
+                a.textContent = issue[1];
+                a.href = issue[2];
+                a.setAttribute('target', '_blank');
+                li.appendChild(a);
+                content.appendChild(li);
+                i++;
+            }
+            return;
+        }
+        //if (cur && i >= limit) { //exceed limit, do nothing for now }
+    }
+
+    function getNotice() {
         var pageRequests = {
             'cmd': 'get_version'
         };
@@ -543,38 +593,46 @@
             data: pageRequests,
             dataType: 'JSON',
             success: function (result) {
-                //var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "no:label"; //for test, get all commits without label
-                var APIurl = "https://api.github.com/repos/xx-net/XX-Net/issues?" + "labels=" + "公告" + ',' + result['current_version'];
-                //console.log('APIurl='+APIurl);
+                //var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "no:label"; //for test, get all commits without label
+                var currentVer = result['current_version'];
+                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "公告" + ',' + currentVer; //console.log('APIurl='+APIurl);
                 $.ajax({
                     type: 'GET',
                     url: APIurl,
                     dataType: 'JSON',
                     success: function (result) {
-                        var content = document.getElementById('notice-content');
-                        var ul = document.createElement('ul');
-                        var limit = 30;
-                        for (var i = 0; i < Math.min(limit, result.length); i++) {
+                        var t = [];
+                        for (var i = 0; i < result.length; i++) {
                             var issue = result[i];
-                            var li = document.createElement('li');
-                            var a = document.createElement('a');
-                            a.href = issue.html_url;
-                            a.textContent = issue.title;
-                            a.setAttribute('target', '_blank');
-                            li.appendChild(a);
-                            //ul.appendChild(li);
-                            content.appendChild(li);
+                            t.push([issue.number, issue.title, issue.html_url]);
                         }
-                        //content.empty();
-                        //content.appendChild(ul);
+                        updateNotice(t, true);
                     },
                     error: function (result) {
-                        tip('{{ _( "Failed loading notice." ) }}', 'error');
+                        console.log("Failed loading notice of '" + currentVer + "'.");
                     }
                 });
-            },
-            error: function (result) {
-                tip('{{ _( "Failed loading notice." ) }}', 'error');
+
+                var currentVer_Split = currentVer.split('.');
+                currentVer_Split[2] = 'x';
+                var currentVer_Big = currentVer_Split.join('.');
+                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "公告" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
+                $.ajax({
+                    type: 'GET',
+                    url: APIurl,
+                    dataType: 'JSON',
+                    success: function (result) {
+                        var t = [];
+                        for (var i = 0; i < result.length; i++) {
+                            var issue = result[i];
+                            t.push([issue.number, issue.title, issue.html_url]);
+                        }
+                        updateNotice(t, true);
+                    },
+                    error: function (result) {
+                        console.log("Failed loading notice of '" + currentVer_Big + "'.");
+                    }
+                });
             }
         });
     }
