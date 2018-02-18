@@ -1,7 +1,7 @@
 
 ## 下载(Download)：
 稳定版(Stable)：  
-https://codeload.github.com/XX-net/XX-Net/zip/3.10.2
+https://codeload.github.com/XX-net/XX-Net/zip/3.10.4
 
 
 测试版(Test)：  
