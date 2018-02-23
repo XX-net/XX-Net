@@ -308,7 +308,7 @@ class Http2Worker(HttpWorker):
             return
 
         # Parse the header. We can use the returned memoryview directly here.
-        frame, length = Frame.parse_frame_header(header)
+        frame, length = Frame.parse_frame_header(header.tobytes())
 
         if length > FRAME_MAX_ALLOWED_LEN:
             self.logger.error("%s Frame size exceeded on stream %d (received: %d, max: %d)",
@@ -317,7 +317,7 @@ class Http2Worker(HttpWorker):
 
         data = self._recv_payload(length)
         self.last_active_time = time.time()
-        self._consume_frame_payload(frame, data)
+        self._consume_frame_payload(frame, data.tobytes())
 
     def _recv_payload(self, length):
         if not length:
