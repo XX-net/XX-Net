@@ -257,10 +257,10 @@ msgstr "最大扫描线程数"
 msgid "AUTO"
 msgstr "自动"
 
-msgid "Force IPv4"
+msgid "Force-IPv4"
 msgstr "仅IPv4"
 
-msgid "Force IPv6"
+msgid "Force-IPv6"
 msgstr "仅IPv6"
 
 msgid "IP range list"
@@ -342,7 +342,7 @@ msgid "out-of-quota AppIDs"
 msgstr "超额AppID"
 
 msgid "not-exist AppIDs"
-msgstr "不存在的AppID"
+msgstr "无效AppID"
 
 msgid "System Info"
 msgstr "系统信息"
@@ -388,8 +388,11 @@ msgstr "指导"
 msgid " to troubleshoot."
 msgstr "去解决。"
 
-msgid "Your local network failed. Please check your network and firewall."
+msgid "Your local network failed, please check your network and firewall."
 msgstr "网络无法连接，请检查网络和防火墙设置。"
+
+msgid " not available, Please check."
+msgstr " 不可用，请检查。"
 
 msgid "You may want to $1turn on IP scaner$2."
 msgstr "您应该考虑$1开启IP扫描器$2。"

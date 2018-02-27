@@ -303,8 +303,8 @@
 
                 var ip_mode = {
                     "auto": '{{ _( "AUTO" ) }}',
-                    "force_ipv4": '{{ _( "Force IPv4" ) }}',
-                    "force_ipv6": '{{ _( "Force IPv6" ) }}'
+                    "force_ipv4": '{{ _( "Force-IPv4" ) }}',
+                    "force_ipv6": '{{ _( "Force-IPv6" ) }}'
                 };
 
                 var updates = {
@@ -380,7 +380,6 @@
         });
     }
 
-
     function updateNoobStatus() {
         $.ajax({
             type: 'GET',
@@ -388,7 +387,13 @@
             dataType: 'JSON',
             success: function (result) {
                 if (result['ipv4_state'] == "Fail" && result['ipv6_state'] == "Fail") {
-                    return updateProperty('#noob-info', '{{ _( "Your local network failed. Please check your network and firewall." ) }}', 'none');
+                    return updateProperty('#noob-info', '{{ _( "Your local network failed, please check your network and firewall." ) }}', 'none');
+                } else {
+                    if (result['use_ipv6'] == "force_ipv6" && result['ipv6_state'] == "Fail") {
+                        return updateProperty('#noob-info', '"{{ _( "Force-IPv6" ) }}"{{ _( " not available, Please check." ) }}', 'none');
+                    } else if (result['use_ipv6'] == "force_ipv4" && result['ipv4_state'] == "Fail") {
+                        return updateProperty('#noob-info', '"{{ _( "Force-IPv4" ) }}"{{ _( " not available, Please check." ) }}', 'none');
+                    }
                 }
 
                 if (result['good_ipv4_num'] + result['good_ipv6_num'] < 1) {
