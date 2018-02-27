@@ -39,10 +39,7 @@ import errno
 import socket
 import ssl
 import urlparse
-import io
-import threading
 import OpenSSL
-import struct
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
@@ -51,11 +48,10 @@ xlog = getLogger("gae_proxy")
 import simple_http_client
 import simple_http_server
 from cert_util import CertUtil
-from config import config
 import gae_handler
 import direct_handler
-from connect_control import touch_active
 import web_control
+from front import front
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
@@ -159,34 +155,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 print s
                 return True
 
-            for h in config.PROXY_HOSTS_ONLY:
-                # if PROXY_HOSTS_ONLY is not empty
-                # only proxy these hosts
-                if s.endswith(h):
-                    return False
-
-        if len(config.PROXY_HOSTS_ONLY) > 0:
-            return True
-        else:
-            return False
+        return False
 
     def do_METHOD(self):
-        if self.path != "%s:443" % self.fake_host:
-            touch_active()
-        # record active time.
-        # backgroud thread will stop keep connection pool if no request for long time.
-
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
-        if host_ip == "127.0.0.1" and port == str(config.LISTEN_PORT):
-            controller = web_control.ControlHandler(self.client_address, self.headers, self.command, self.path, self.rfile, self.wfile)
-            if self.command == "GET":
-                return controller.do_GET()
-            elif self.command == "POST":
-                return controller.do_POST()
-            else:
-                xlog.warn("method not defined: %s", self.command)
-                return
 
         if self.path[0] == '/' and host:
             self.path = 'http://%s%s' % (host, self.path)
@@ -194,7 +167,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             host = urlparse.urlparse(self.path).netloc
 
         if self.is_local([host, host_ip]):
-            xlog.info("Browse localhost by proxy")
+            xlog.debug("Browse localhost by proxy")
             return self.forward_local()
 
         if host == self.fake_host:
@@ -206,18 +179,18 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         self.parsed_url = urlparse.urlparse(self.path)
 
-        if host in config.HOSTS_GAE:
+        if host in front.config.HOSTS_GAE:
             return self.do_AGENT()
 
         # redirect http request to https request
         # avoid key word filter when pass through GFW
-        if host in config.HOSTS_FWD or host in config.HOSTS_DIRECT:
+        if host in front.config.HOSTS_DIRECT:
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
-        if host.endswith(config.HOSTS_GAE_ENDSWITH):
+        if host.endswith(front.config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
 
-        if host.endswith(config.HOSTS_FWD_ENDSWITH) or host.endswith(config.HOSTS_DIRECT_ENDSWITH):
+        if host.endswith(front.config.HOSTS_DIRECT_ENDSWITH):
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         return self.do_AGENT()
@@ -271,19 +244,17 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-        if self.path != "%s:443" % self.fake_host:
-            touch_active()
 
         host, _, port = self.path.rpartition(':')
 
-        if host in config.HOSTS_GAE:
+        if host in front.config.HOSTS_GAE:
             return self.do_CONNECT_AGENT()
-        if host in config.HOSTS_DIRECT:
+        if host in front.config.HOSTS_DIRECT:
             return self.do_CONNECT_DIRECT()
 
-        if host.endswith(config.HOSTS_GAE_ENDSWITH):
+        if host.endswith(front.config.HOSTS_GAE_ENDSWITH):
             return self.do_CONNECT_AGENT()
-        if host.endswith(config.HOSTS_DIRECT_ENDSWITH):
+        if host.endswith(front.config.HOSTS_DIRECT_ENDSWITH):
             return self.do_CONNECT_DIRECT()
 
         return self.do_CONNECT_AGENT()

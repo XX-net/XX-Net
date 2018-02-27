@@ -45,10 +45,11 @@ def init():
         return False
 
     gae_proxy = proc_handler["gae_proxy"]["imp"].local
-    gae_proxy.http_dispatcher.http_dispatch.log_debug_data = log_debug_data
-    gae_proxy.http_dispatcher.http_dispatch.close_all_worker()
+    gae_proxy.front.front.http_dispatcher.log_debug_data = log_debug_data
+    gae_proxy.front.front.http_dispatcher.close_all_worker()
 
     threading.Thread(target=debug_data_clearup_thread).start()
+
 
 def log_debug_data(rtt, sent, received):
     global recent_sent, recent_received, total_sent, total_received
@@ -62,6 +63,7 @@ def log_debug_data(rtt, sent, received):
         recent_received += received
         total_sent += sent
         total_received += received
+
 
 def get_rtt():
     now = time.time()
@@ -77,6 +79,7 @@ def get_rtt():
         return rtt
 
     return rtts[0][0]
+
 
 def debug_data_clearup_thread():
     global recent_sent, recent_received
@@ -95,6 +98,7 @@ def debug_data_clearup_thread():
 
         time.sleep(1)
 
+
 def get_score(host=""):
     now = time.time()
     if now - last_fail_time < 5*60 and \
@@ -104,7 +108,7 @@ def get_score(host=""):
     if not gae_proxy:
         return None
 
-    worker = gae_proxy.http_dispatcher.http_dispatch.get_worker(nowait=True)
+    worker = gae_proxy.front.front.http_dispatcher.get_worker(nowait=True)
     if not worker:
         return None
 
@@ -115,7 +119,7 @@ def worker_num():
     if not gae_proxy:
         return 0
 
-    return len(gae_proxy.http_dispatcher.http_dispatch.workers)
+    return len(gae_proxy.front.front.http_dispatcher.workers)
 
 
 def request(method, host, schema="https", path="/", headers={}, data="", timeout=60):

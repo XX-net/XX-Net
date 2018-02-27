@@ -207,7 +207,7 @@ class Ipv6PoolSource(object):
                 except:
                     continue
 
-    def get_ipv6(self):
+    def get_ip(self):
         return random.choice(self.ipv6_list)
 
 

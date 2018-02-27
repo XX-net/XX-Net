@@ -18,7 +18,7 @@ from hyper.packages.hyperframe.frame import (
 from http2_stream import Stream
 from hyper.http20.window import BaseFlowControlManager
 
-from hyper.packages.hpack.hpack_compat import Encoder, Decoder
+from hyper.packages.hpack import Encoder, Decoder
 
 # this is defined in rfc7540
 # default window size 64k
@@ -148,8 +148,7 @@ class Http2Worker(HttpWorker):
         self.request_task(task)
 
     def encode_header(self, headers):
-        with self.request_lock:
-            return self.encoder.encode(headers)
+        return self.encoder.encode(headers)
 
     def request_task(self, task):
         with self.request_lock:
@@ -159,12 +158,13 @@ class Http2Worker(HttpWorker):
             # http/2 client use odd stream_id
             self.next_stream_id += 2
 
-        stream = Stream(self.logger, self.config, self, self.ip, stream_id, task,
-                    self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
-                    FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
-                    self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
-                    self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
-        self.streams[stream_id] = stream
+            stream = Stream(self.logger, self.config, self, self.ip, stream_id, task,
+                        self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
+                        FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
+                        self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
+                        self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
+            self.streams[stream_id] = stream
+            stream.start_request()
 
     def send_loop(self):
         while self.keep_running:
@@ -327,6 +327,7 @@ class Http2Worker(HttpWorker):
         buffer_view = memoryview(buffer)
         index = 0
         data_length = -1
+
         # _sock.recv(length) might not read out all data if the given length
         # is very large. So it should be to retrieve from socket repeatedly.
         while length and data_length:
@@ -368,7 +369,7 @@ class Http2Worker(HttpWorker):
                 stream = self.streams[frame.stream_id]
                 stream.receive_frame(frame)
             except KeyError as e:
-                if frame.type != WindowUpdateFrame.type:
+                if frame.type not in [WindowUpdateFrame.type]:
                     self.logger.exception("%s Unexpected stream identifier %d, frame.type:%s e:%r",
                                    self.ip, frame.stream_id, frame, e)
         else:
@@ -376,7 +377,7 @@ class Http2Worker(HttpWorker):
 
     def receive_frame(self, frame):
         if frame.type == WindowUpdateFrame.type:
-            self.logger.debug("WindowUpdateFrame %d", frame.window_increment)
+            # self.logger.debug("WindowUpdateFrame %d", frame.window_increment)
             self.increase_remote_window_size(frame.window_increment)
 
         elif frame.type == PingFrame.type:
@@ -475,6 +476,3 @@ class Http2Worker(HttpWorker):
         out_list.append(" h2.stream_num:%d" % len(self.streams))
         out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))
         return ",".join(out_list)
-
-    def get_host(self, task_host):
-        return task_host

@@ -65,6 +65,7 @@ def win32_version_string():
 
     return version_string
 
+
 def os_detail():
     if sys.platform == "win32":
         return win32_version_string()

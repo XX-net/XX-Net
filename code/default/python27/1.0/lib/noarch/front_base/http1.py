@@ -126,10 +126,7 @@ class Http1Worker(HttpWorker):
         self.record_active("request")
         task.set_state("h1_req")
 
-        if task.host:
-            task.headers['Host'] = task.host
-        else:
-            task.headers['Host'] = self.ssl_sock.host
+        task.headers['Host'] = self.get_host(task.host)
 
         task.headers["Content-Length"] = len(task.body)
         request_data = '%s %s HTTP/1.1\r\n' % (task.method, task.path)
@@ -153,7 +150,7 @@ class Http1Worker(HttpWorker):
             task.set_state("response_begin")
 
         except Exception as e:
-            self.logger.exception("%s h1_request:%r inactive_time:%d task.timeout:%d",
+            self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
                            self.ip, e, time.time()-self.last_active_time, task.timeout)
             self.logger.warn('%s trace:%s', self.ip, self.get_trace())
 
@@ -166,33 +163,49 @@ class Http1Worker(HttpWorker):
 
         time_left = timeout - (time.time() - start_time)
 
-        try:
-            data = response.readall(timeout=time_left)
-        except Exception as e:
-            self.logger.exception("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
-                           self.ip, response.chunked, task.url, task.timeout, e)
-            self.logger.warn('%s trace:%s', self.ip, self.get_trace())
-            self.close("down fail")
-            return
+        if task.method == "HEAD" or response.status in [204, 304]:
+            response.content_length = 0
 
-        response.worker = self
-        response.task = task
         response.ssl_sock = self.ssl_sock
-
-        length = len(data)
-        task.content_length = length
-        task.put_data(data)
+        response.task = task
+        response.worker = self
+        task.content_length = response.content_length
         task.responsed = True
         task.queue.put(response)
+
+        try:
+            read_target = int(response.content_length)
+        except:
+            read_target = 0
+
+        data_len = 0
+        while True:
+            try:
+                data = response.read(timeout=time_left)
+                if not data:
+                    break
+            except Exception as e:
+                self.logger.warn("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
+                               self.ip, response.chunked, task.url, task.timeout, e)
+                self.logger.warn('%s trace:%s', self.ip, self.get_trace())
+                self.close("down fail")
+                return
+
+            task.put_data(data)
+            length = len(data)
+            data_len += length
+            if read_target and data_len >= read_target:
+                break
+
         task.finish()
 
-        self.ssl_sock.received_size += length
+        self.ssl_sock.received_size += data_len
         time_cost = (time.time() - start_time)
         if time_cost != 0:
-            speed = length / time_cost
+            speed = data_len / time_cost
             task.set_state("h1_finish[SP:%d]" % speed)
 
-        self.transfered_size += len(request_data) + length
+        self.transfered_size += len(request_data) + data_len
         self.task = None
         self.accept_task = True
         self.idle_cb()
@@ -202,14 +215,14 @@ class Http1Worker(HttpWorker):
 
     def head_request(self):
         if not self.ssl_sock.host:
-            self.logger.warn("try head but no host set")
+            # self.logger.warn("try head but no host set")
             return True
 
         # for keep alive, not work now.
         self.request_onway = True
         self.record_active("head")
         start_time = time.time()
-        self.logger.debug("head request %s", self.ip)
+        # self.logger.debug("head request %s", self.ip)
         request_data = 'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % self.ssl_sock.host
 
         try:

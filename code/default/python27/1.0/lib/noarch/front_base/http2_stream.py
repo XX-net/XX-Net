@@ -111,8 +111,6 @@ class Stream(object):
         self.response_body = []
         self.response_body_len = 0
 
-        threading.Thread(target=self.start_request).start()
-
     def start_request(self):
         """
         Open the stream. Does this by encoding and sending the headers: no more
@@ -164,9 +162,10 @@ class Stream(object):
         self.state = STATE_OPEN
 
         self.task.set_state("start send left body")
-        self.send_left_body()
-        self.task.set_state("end send left body")
+        threading.Thread(target=self.left_work).start()
 
+    def left_work(self):
+        self.send_left_body()
         self.timeout_response()
 
     def add_header(self, name, value, replace=False):
@@ -202,6 +201,7 @@ class Stream(object):
             if self.request_body_left == 0:
                 self.request_body_sended = True
                 self._close_local()
+        self.task.set_state("end send left body")
 
     def receive_frame(self, frame):
         """

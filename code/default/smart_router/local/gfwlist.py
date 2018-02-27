@@ -58,3 +58,9 @@ class GfwList(object):
         black = '",\n"'.join(self.gfw_black_list)
         white = '",\n"'.join(self.gfw_white_list)
         return black, white
+
+    def is_white(self, host):
+        if host.endswith(self.gfw_white_list):
+            return True
+        else:
+            return False

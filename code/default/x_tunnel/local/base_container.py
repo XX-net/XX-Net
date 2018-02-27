@@ -67,7 +67,7 @@ class ReadBuffer(object):
             raise Exception("ReadBuffer buf_len:%d, start:%d len:%d" % (buf_len, begin, size))
 
         self.size = size
-        self.buf = buf
+        self.buf = memoryview(buf)
         self.begin = begin
 
     def __len__(self):

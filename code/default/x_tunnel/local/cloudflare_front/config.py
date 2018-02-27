@@ -11,10 +11,10 @@ class Config(ConfigBase):
         self.set_var("front_continue_fail_block", 180)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 0)
+        self.set_var("dispather_min_idle_workers", 1)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
-        self.set_var("dispather_max_workers", 60)
+        self.set_var("dispather_max_workers", 5)
 
         # http 2 worker
         self.set_var("http2_status_to_close", [400, 403, 405])
@@ -27,6 +27,9 @@ class Config(ConfigBase):
         # check_ip
         self.set_var("check_ip_host", "xxnet4.herokuapp.com")
         self.set_var("check_ip_content", "OK")
+
+        # connect_creator
+        self.set_var("check_sni", 1)
 
         # host_manager
         self.set_var("update_domains", 1)

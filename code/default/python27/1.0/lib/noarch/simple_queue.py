@@ -83,8 +83,11 @@ class Queue(object):
         if not self.waiters:
             return 0
 
-        if time.time() > self.waiters[0][0]:
-            self.notify()
+        try:
+            if time.time() > self.waiters[0][0]:
+                self.notify()
+        except:
+            pass
 
         return 1
 

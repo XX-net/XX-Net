@@ -43,8 +43,19 @@ class ConfigBase(xconfig.Config):
         self.set_var("https_new_connect_num", 1)
         self.set_var("http1_new_connect_num", 1)
 
+        # check_ip
+        self.set_var("check_ip_host", "")
+        self.set_var("check_ip_path", "/")
+        self.set_var("check_ip_accept_status", [200])
+        self.set_var("check_ip_content", "OK")
+
         # connect_creator
+        self.set_var("connect_force_http1", 0)
         self.set_var("connect_force_http2", 0)
+        self.set_var("check_pkp", [])
+        self.set_var("check_commonname", "")
+        self.set_var("check_sni", 0) # 0, 1, string
+        self.set_var("min_intermediate_CA", 0)
 
         # ip manager
         self.set_var("check_exist_ip_on_startup", 0)
@@ -60,5 +71,11 @@ class ConfigBase(xconfig.Config):
         self.set_var("short_fail_connect_interval", 10)
 
         # ip source
-        self.set_var("use_ipv6", "auto") #
-        self.set_var("ipv6_scan_ratio", 0.5)
+        self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6
+        self.set_var("ipv6_scan_ratio", 50) # 0 - 100
+
+    def load(self):
+        super(ConfigBase, self).load()
+
+        if self.check_pkp:
+            self.CHECK_PKP = set(self.check_pkp)

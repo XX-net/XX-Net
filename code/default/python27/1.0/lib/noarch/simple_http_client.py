@@ -201,6 +201,8 @@ class Response(BaseResponse):
     def _read_plain(self, read_len, timeout):
         if read_len == 0:
             return ""
+        #elif read_len > 0:
+        #    return self._read_size(read_len, timeout)
 
         if read_len is not None and len(self.read_buffer) - self.buffer_start > read_len:
             out_str = self.read_buffer[self.buffer_start:self.buffer_start + read_len]
@@ -212,8 +214,8 @@ class Response(BaseResponse):
 
         self.connection.setblocking(0)
         start_time = time.time()
-        out_list = [ self.read_buffer[self.buffer_start:] ]
         out_len = len(self.read_buffer) - self.buffer_start
+        out_list = [ self.read_buffer[self.buffer_start:] ]
 
         self.read_buffer = ""
         self.buffer_start = 0
@@ -249,6 +251,51 @@ class Response(BaseResponse):
             raise Exception("time out")
 
         return "".join(out_list)
+
+    def _read_size(self, read_len, timeout):
+        if len(self.read_buffer) - self.buffer_start > read_len:
+            buf = memoryview(self.read_buffer)
+            out_str = buf[self.buffer_start:self.buffer_start + read_len]
+            self.buffer_start += read_len
+            if len(self.read_buffer) == self.buffer_start:
+                self.read_buffer = ""
+                self.buffer_start = 0
+            return out_str
+
+        self.connection.setblocking(0)
+        start_time = time.time()
+        out_len = len(self.read_buffer) - self.buffer_start
+        out_bytes = bytearray(read_len)
+        view = memoryview(out_bytes)
+        view[0:out_len] = self.read_buffer[self.buffer_start:]
+
+        self.read_buffer = ""
+        self.buffer_start = 0
+
+        while time.time() - start_time < timeout:
+            if out_len >= read_len:
+                break
+
+            to_read = read_len - out_len
+            to_read = min(to_read, 65535)
+
+            try:
+                nbytes = self.connection.recv_into(view[out_len:], to_read)
+            except socket.error as e:
+                # logging.exception("e:%r", e)
+                if e.errno in [2, 11, 10035]:
+                    # time.sleep(0.1)
+                    time_left = start_time + timeout - time.time()
+                    r, w, e = select.select([self.connection], [], [], time_left)
+                    continue
+                else:
+                    raise e
+
+            out_len += nbytes
+        if out_len < read_len:
+            raise Exception("time out")
+
+        return out_bytes
 
     def _read_chunked(self, timeout):
         line = self.read_line(timeout)

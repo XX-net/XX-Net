@@ -9,8 +9,6 @@
 # the wrap is used to keep some attribute like ip/appid for ssl
 
 # __iowait and makefile is used for gevent but not use now.
-
-
 import sys
 import os
 import select
@@ -18,11 +16,117 @@ import time
 import socket
 import errno
 
+
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
+import datetime
+import ssl
+from pyasn1.type import univ, constraint, char, namedtype, tag
+from pyasn1.codec.der.decoder import decode
+from pyasn1.error import PyAsn1Error
 #openssl_version = OpenSSL.version.__version__
 socks_num = 0
+
+
+class _GeneralName(univ.Choice):
+    # We are only interested in dNSNames. We use a default handler to ignore
+    # other types.
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('dNSName', char.IA5String().subtype(
+                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
+            )
+        ),
+    )
+
+
+class _GeneralNames(univ.SequenceOf):
+    componentType = _GeneralName()
+    sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
+
+
+class SSLCert:
+    def __init__(self, cert):
+        """
+            Returns a (common name, [subject alternative names]) tuple.
+        """
+        self.x509 = cert
+
+    @classmethod
+    def from_pem(klass, txt):
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
+        return klass(x509)
+
+    @classmethod
+    def from_der(klass, der):
+        pem = ssl.DER_cert_to_PEM_cert(der)
+        return klass.from_pem(pem)
+
+    def to_pem(self):
+        return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, self.x509)
+
+    def digest(self, name):
+        return self.x509.digest(name)
+
+    @property
+    def issuer(self):
+        return self.x509.get_issuer().get_components()
+
+    @property
+    def notbefore(self):
+        t = self.x509.get_notBefore()
+        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
+
+    @property
+    def notafter(self):
+        t = self.x509.get_notAfter()
+        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
+
+    @property
+    def has_expired(self):
+        return self.x509.has_expired()
+
+    @property
+    def subject(self):
+        return self.x509.get_subject().get_components()
+
+    @property
+    def serial(self):
+        return self.x509.get_serial_number()
+
+    @property
+    def keyinfo(self):
+        pk = self.x509.get_pubkey()
+        types = {
+            OpenSSL.crypto.TYPE_RSA: "RSA",
+            OpenSSL.crypto.TYPE_DSA: "DSA",
+        }
+        return (
+            types.get(pk.type(), "UNKNOWN"),
+            pk.bits()
+        )
+
+    @property
+    def cn(self):
+        c = None
+        for i in self.subject:
+            if i[0] == "CN":
+                c = i[1]
+        return c
+
+    @property
+    def altnames(self):
+        altnames = []
+        for i in range(self.x509.get_extension_count()):
+            ext = self.x509.get_extension(i)
+            if ext.get_short_name() == "subjectAltName":
+                try:
+                    dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
+                except PyAsn1Error:
+                    continue
+                for i in dec[0]:
+                    altnames.append(i[0].asOctets())
+        return altnames
 
 
 class SSLConnection(object):
@@ -152,10 +256,10 @@ class SSLConnection(object):
                 return ""
             raise
 
-    def recv_into(self, buf):
+    def recv_into(self, buf, nbytes=None):
         pending = self._connection.pending()
         if pending:
-            ret = self._connection.recv_into(buf)
+            ret = self._connection.recv_into(buf, nbytes)
             if not ret:
                 # self.logger.debug("recv_into 0")
                 pass
@@ -163,7 +267,7 @@ class SSLConnection(object):
 
         while self.running:
             try:
-                ret = self.__iowait(self._connection.recv_into, buf)
+                ret = self.__iowait(self._connection.recv_into, buf, nbytes)
                 if not ret:
                     # self.logger.debug("recv_into 0")
                     pass
@@ -237,6 +341,7 @@ class SSLContext(OpenSSL.SSL.Context):
         if sys.platform == "freebsd9":
             ssl_version = "TLSv1"
 
+        self.ssl_version = ssl_version
         self.logger.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)

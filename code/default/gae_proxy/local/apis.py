@@ -1,41 +1,22 @@
-import check_ip
-from config import config
+
+from front import front, direct_front
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
 def set_proxy(args):
-    from web_control import user_config
-
-    xlog.info("set_proxy:%s", args)
-
-    user_config.user_special.proxy_enable = args["enable"]
-    user_config.user_special.proxy_type = args["type"]
-    user_config.user_special.proxy_host = args["host"]
-    try:
-        user_config.user_special.proxy_port = int(args["port"])
-    except:
-        user_config.user_special.proxy_port = 0
-
-    user_config.user_special.proxy_user = args["user"]
-    user_config.user_special.proxy_passwd = args["passwd"]
-
-    user_config.save()
-    config.load()
-
-    check_ip.load_proxy_config()
+    front.set_proxy(args)
+    direct_front.set_proxy(args)
 
 
 def is_workable():
-    from connect_manager import https_manager
-    from http_dispatcher import http_dispatch
-    if http_dispatch.is_idle():
+    if front.http_dispatcher.is_idle():
         return True
 
-    num = len(https_manager.new_conn_pool.pool) +\
-          len(https_manager.gae_conn_pool.pool) + \
-          http_dispatch.h1_num + \
-          http_dispatch.h2_num
+    num = len(front.connect_manager.new_conn_pool.pool) +\
+          len(front.connect_manager.gae_conn_pool.pool) + \
+          front.http_dispatcher.h1_num + \
+          front.http_dispatcher.h2_num
 
     if num > 0:
         return True
@@ -44,9 +25,7 @@ def is_workable():
 
 
 def set_bind_ip(args):
-    from web_control import user_config
-
     xlog.info("set_bind_ip:%s", args)
 
-    user_config.user_special.LISTEN_IP = args["ip"]
-    user_config.save()
+    front.config.listen_ip = args["ip"]
+    front.config.save()

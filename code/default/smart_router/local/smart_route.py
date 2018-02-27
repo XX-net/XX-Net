@@ -427,6 +427,8 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
 
         if not g.domain_cache.accept_gae(host):
             rule_list.remove("gae")
+    elif g.gfwlist.is_white(host):
+        rule_list = ["direct", "gae", "socks", "redirect_https"]
     elif g.gfwlist.check(host):
         rule_list = ["gae", "socks", "redirect_https", "direct"]
     else:

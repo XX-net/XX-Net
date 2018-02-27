@@ -56,12 +56,6 @@
                 if (!result['appid'] || result['appid'] == '') {
                     $('#public-appid-tip').removeClass("hide");
                 }
-
-                if (result['host_appengine_mode'] == 'gae') {
-                    $('#deploy-via-gae').parent().removeClass('switch-off');
-                    $('#deploy-via-gae').parent().addClass('switch-on');
-                    $('#deploy-via-gae').prop('checked', true);
-                }
             },
             error: function () {
                 tip('{{ _( "Failed reading the settings." ) }}', 'error');
@@ -71,19 +65,17 @@
 </script>
 <script type="text/javascript">
     function onSubmit() {
-        var gaeAppId          = $('#gae-appid').val(),
-            hostAppEngine     = $('#deploy-via-gae').is(':checked') ? 'gae' : 'direct';
+        var gaeAppId          = $('#gae-appid').val();
 
         tip('{{ _( "Checking settings ..." ) }}', 'info');
 
-        return setAppID(gaeAppId, hostAppEngine);
+        return setAppID(gaeAppId);
     }
 </script>
 <script type="text/javascript">
-    function setAppID(gaeAppId, hostAppEngine) {
+    function setAppID(gaeAppId) {
         var config = {
-            'appid': gaeAppId,
-            'host_appengine_mode': hostAppEngine
+            'appid': gaeAppId
         };
         $.ajax({
             type: 'POST',

@@ -8,3 +8,4 @@ baidu.com
 bdimg.com
 taobao.com
 qq.com
+alicdn.com

@@ -4,11 +4,8 @@
 import urlparse
 import os
 import cgi
-import time
-import hashlib
 
 from xlog import getLogger
-import threading
 xlog = getLogger("smart_router")
 
 import simple_http_server

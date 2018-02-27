@@ -56,7 +56,7 @@ class HttpsDispatcher(object):
         self.last_request_time = time.time()
         self.running = True
 
-        self.triger_create_worker_cv = SimpleCondition()
+        self.trigger_create_worker_cv = SimpleCondition()
         self.wait_a_worker_cv = simple_queue.Queue()
 
         threading.Thread(target=self.dispatcher).start()
@@ -93,7 +93,7 @@ class HttpsDispatcher(object):
 
     def create_worker_thread(self):
         while self.running:
-            self.triger_create_worker_cv.wait()
+            self.trigger_create_worker_cv.wait()
 
             try:
                 ssl_sock = self.connection_manager.get_ssl_connection()
@@ -145,12 +145,13 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if best_worker is None or \
-                    idle_num < self.config.dispather_min_idle_workers or \
-                    (now - best_worker.last_active_time) < self.config.dispather_work_min_idle_time or \
-                    best_score > self.config.dispather_work_max_score:
+            if len(self.workers) < self.config.dispather_max_workers and \
+                    (best_worker is None or
+                    idle_num < self.config.dispather_min_idle_workers or
+                    (now - best_worker.last_active_time) < self.config.dispather_work_min_idle_time or
+                    best_score > self.config.dispather_work_max_score):
                 # self.logger.debug("trigger get more worker")
-                self.triger_create_worker_cv.notify()
+                self.trigger_create_worker_cv.notify()
 
             if nowait or \
                     (best_worker and (now - best_worker.last_active_time) >= self.config.dispather_work_min_idle_time):
@@ -271,7 +272,7 @@ class HttpsDispatcher(object):
 
         # wait up threads to exit.
         self.wait_a_worker_cv.notify()
-        self.triger_create_worker_cv.notify()
+        self.trigger_create_worker_cv.notify()
 
     def is_idle(self):
         return time.time() - self.last_request_time > self.idle_time

@@ -73,7 +73,7 @@ class Task(object):
     def read_all(self):
         out_list = []
         while True:
-            data = self.body_queue.get(self.timeout)
+            data = self.read()
             if not data:
                 break
             out_list.append(data)
@@ -170,3 +170,9 @@ class HttpWorker(object):
             score = rtt + (240 - inactive_time)*10
 
         return score
+
+    def get_host(self, task_host):
+        if task_host:
+            return task_host
+        else:
+            return self.ssl_sock.host
