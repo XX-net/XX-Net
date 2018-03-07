@@ -14,8 +14,7 @@ def set_proxy(args):
     xlog.info("set_proxy:%s", args)
     for front in front_dispatcher.all_fronts:
         try:
-            api = front.apis
-            api.set_proxy(args)
+            front.set_proxy(args)
         except Exception as e:
             xlog.exception("set_proxy except:%r", e)
 
@@ -30,7 +29,7 @@ def is_workable():
     workable_call_times += 1
     for i in xrange(0, loop_num):
         for front in front_dispatcher.session_fronts:
-            score = front.front.get_score()
+            score = front.get_dispatcher().get_score()
             if score is None:
                 continue
             else:

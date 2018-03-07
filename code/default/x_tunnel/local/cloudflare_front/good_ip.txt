@@ -1,4 +1,3 @@
- sni200439.cloudflaressl.com gws 210 0 1
 190.93.247.123 sni200439.cloudflaressl.com gws 210 0 1
 104.19.128.160 sni200439.cloudflaressl.com gws 211 0 1
 141.101.114.208 sni200439.cloudflaressl.com gws 213 0 1

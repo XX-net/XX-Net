@@ -15,6 +15,7 @@ class Config(ConfigBase):
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
         self.set_var("dispather_max_workers", 60)
+        self.set_var("dispather_score_factor", 0.1)
 
         # http1
         self.set_var("http1_first_ping_wait", 10)
@@ -28,7 +29,7 @@ class Config(ConfigBase):
 
         # check_ip
         self.set_var("check_ip_host", "xxnet4.herokuapp.com")
-        self.set_var("check_ip_content", "OK")
+        self.set_var("check_ip_content", "We are building new site.")
 
         # connect_creator
         self.set_var("check_sni", "herokuapp.com")

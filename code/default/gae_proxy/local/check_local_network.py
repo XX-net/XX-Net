@@ -178,8 +178,10 @@ def report_fail(ip):
         IPv6.report_fail()
 
 
-def is_ok(ip):
-    if "." in ip:
+def is_ok(ip=None):
+    if not ip:
+        return IPv4.is_ok() or IPv6.is_ok()
+    elif "." in ip:
         return IPv4.is_ok()
     else:
         return IPv6.is_ok()

@@ -81,6 +81,9 @@ class Front(object):
             logger, self.config, self.ip_manager, self.connect_manager
         )
 
+    def get_dispatcher(self):
+        return self.http_dispatcher
+
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         response = self.http_dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
 

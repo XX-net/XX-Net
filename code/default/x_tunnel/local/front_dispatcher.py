@@ -1,4 +1,5 @@
 import time
+import threading
 
 all_fronts = []
 light_fronts = []
@@ -42,6 +43,17 @@ def init():
         # session_fronts.append(direct_front)
         light_fronts.append(direct_front)
 
+    threading.Thread(target=debug_data_clearup_thread).start()
+
+
+def debug_data_clearup_thread():
+    while g.running:
+        for front in all_fronts:
+            dispatcher = front.get_dispatcher()
+            dispatcher.statistic()
+
+        time.sleep(3)
+
 
 def get_front(host, timeout):
     start_time = time.time()
@@ -54,9 +66,14 @@ def get_front(host, timeout):
         best_front = None
         best_score = 9999999
         for front in fronts:
-            score = front.get_score(host)
+            dispatcher = front.get_dispatcher(host)
+            if not dispatcher:
+                continue
+
+            score = dispatcher.get_score()
             if not score:
                 continue
+
             if score < best_score:
                 best_score = score
                 best_front = front

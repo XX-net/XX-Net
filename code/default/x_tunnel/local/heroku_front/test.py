@@ -42,7 +42,7 @@ def get():
     content, status, response = front.request("GET", "dns.xx-net.net", path="/query?domain=www.google.com")
     time_cost = time.time() - start_time
     xlog.info("GET cost:%f", time_cost)
-    xlog.info("status:%d content:%s", status, content)
+    xlog.info("status:%d content:%s", status, content.tobytes())
     front.stop()
 
 

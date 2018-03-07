@@ -41,9 +41,14 @@ def remote_query_dns(domain, type=None):
         xlog.warn("remote_query_dns fail status:%d", status)
         return []
 
+    if isinstance(content, memoryview):
+        content = content.tobytes()
+
     try:
         rs = json.loads(content)
-        return rs["ip"]
+        ips = rs["ip"]
+        g.domain_cache.set_ips(domain, ips)
+        return ips
     except Exception as e:
         xlog.warn("remote_query_dns json:%s parse fail:%s", content, e)
         return []
@@ -119,65 +124,124 @@ class DnsClient(object):
     def stop(self):
         self.running = False
 
+    def query_over_tcp(self, domain, type=None):
+        if type is None:
+            types = [1, 28]
+        else:
+            types = [type]
+
+        ips = []
+        for t in types:
+            query_time = 0
+            for server_ip in self.dns_server.public_list:
+                query_time += 1
+                if query_time > 3:
+                    break
+
+                try:
+                    d = DNSRecord(DNSHeader())
+                    d.add_question(DNSQuestion(domain, t))
+                    a_pkt = d.send(server_ip, 53, tcp=True, timeout=1)
+                    p = DNSRecord.parse(a_pkt)
+                    if len(p.rr) == 0:
+                        xlog.warn("query_over_tcp for %s type:%d server:%s return none",
+                                  domain, t, server_ip)
+                        continue
+
+                    for r in p.rr:
+                        ip = str(r.rdata)
+
+                        if "." in ip and g.ip_region.check_ip(ip):
+                            cn = g.ip_region.cn
+                        else:
+                            cn = "XX"
+                        ips.append(ip+"|"+cn)
+
+                    break
+                except Exception as e:
+                    xlog.warn("query_over_tcp %s type:%s server:%s except:%r", domain, type, server_ip,e)
+
+        if ips:
+            g.domain_cache.set_ips(domain, ips, type)
+
+        return ips
+
     def recv_worker(self):
         while self.running:
             try:
-                response, server = self.sock.recvfrom(8192)
-                server, port = server
-            except Exception as e:
-                # xlog.exception("sock.recvfrom except:%r", e)
-                continue
-
-            if not response:
-                continue
-
-            try:
-                p = DNSRecord.parse(response)
-            except Exception as e:
-                xlog.exception("parse response fail:%r", e)
-                continue
-
-            if len(p.questions) == 0:
-                xlog.warn("received response without question")
-                continue
-
-            id = p.header.id
-
-            if id not in self.waiters:
-                continue
-
-            que = self.waiters[id]
-            org_domain = que.domain
-            domain = str(p.questions[0].qname)
-            xlog.debug("recev %s from:%s domain:%s org:%s", len(p.rr), server, domain, org_domain)
-            ips = []
-            for r in p.rr:
-                ip = str(r.rdata)
-                if r.rtype == 5:
-                    # CNAME
-                    xlog.debug("local dns %s recv %s cname:%s from:%s", org_domain, domain, ip, server)
-                    d = DNSRecord(DNSHeader(id))
-                    d.add_question(DNSQuestion(ip, QTYPE.A))
-                    req_pack = d.pack()
-
-                    self.sock.sendto(req_pack, (server, 53))
-
-                    d = DNSRecord()
-                    d.add_question(DNSQuestion(ip, QTYPE.AAAA))
-                    req_pack = d.pack()
-
-                    self.sock.sendto(req_pack, (server, 53))
+                try:
+                    response, server = self.sock.recvfrom(8192)
+                    server, port = server
+                except Exception as e:
+                    # xlog.exception("sock.recvfrom except:%r", e)
                     continue
 
-                if "." in ip and g.ip_region.check_ip(ip):
-                    cn = g.ip_region.cn
-                else:
-                    cn = "XX"
-                ips.append(ip+"|"+cn)
+                if not response:
+                    continue
 
-            if len(ips):
-                g.domain_cache.set_ips(org_domain, ips)
-            que.notify_all()
+                try:
+                    p = DNSRecord.parse(response)
+                except Exception as e:
+                    xlog.exception("dns client parse response fail:%r", e)
+                    continue
+
+                if len(p.questions) == 0:
+                    xlog.warn("received response without question")
+                    continue
+
+                id = p.header.id
+
+                if id not in self.waiters:
+                    continue
+
+                que = self.waiters[id]
+                org_domain = que.domain
+                domain = str(p.questions[0].qname)
+                xlog.debug("recev %s from:%s domain:%s org:%s", len(p.rr), server, domain, org_domain)
+                ips = []
+                for r in p.rr:
+                    ip = str(r.rdata)
+                    if r.rtype == 5:
+                        # CNAME
+                        if ip.endswith("."):
+                            ip = ip[:-1]
+
+                        if ip == domain:
+                            xlog.warn("recv domain[%s] == ip[%s]", domain, ip)
+                            continue
+
+                        query_count = g.domain_cache.get_query_count(domain)
+                        if query_count >= 50:
+                            xlog.warn("%s ip:%s query_count:%d", domain, ip, query_count)
+                            continue
+
+                        g.domain_cache.add_query_count(domain)
+
+                        xlog.debug("local dns %s recv %s cname:%s from:%s", org_domain, domain, ip, server)
+                        d = DNSRecord(DNSHeader(id))
+                        d.add_question(DNSQuestion(ip, QTYPE.A))
+                        req_pack = d.pack()
+
+                        self.sock.sendto(req_pack, (server, 53))
+
+                        d = DNSRecord()
+                        d.add_question(DNSQuestion(ip, QTYPE.AAAA))
+                        req_pack = d.pack()
+
+                        self.sock.sendto(req_pack, (server, 53))
+                        continue
+
+                    if "." in ip and g.ip_region.check_ip(ip):
+                        cn = g.ip_region.cn
+                    else:
+                        cn = "XX"
+                    ips.append(ip+"|"+cn)
+
+                if len(ips):
+                    g.domain_cache.set_ips(org_domain, ips)
+                que.notify_all()
+            except Exception as e:
+                xlog.exception("dns recv_worker except:%r", e)
 
         xlog.info("DNS Client recv worker exit.")
         self.sock.close()
@@ -198,16 +262,20 @@ class DnsClient(object):
             self.sock.sendto(req6_pack, (server, 53))
             # xlog.debug("send req:%s to:%s", domain, server)
         except Exception as e:
-            xlog.warn("request dns except:%r", e)
+            xlog.warn("send_request except:%r", e)
 
-    def query(self, domain, timeout=3):
+    def query(self, domain, timeout=3, use_local=False):
         end_time = time.time() + timeout
-        id = random.randint(0, 65535)
+        while True:
+            id = random.randint(0, 65535)
+            if id not in self.waiters:
+                break
+
         que = simple_queue.Queue()
         que.domain = domain
 
         ips = []
-        if "." not in domain:
+        if use_local:
             server_list = self.dns_server.local_list
         else:
             server_list = self.dns_server.public_list
@@ -223,10 +291,6 @@ class DnsClient(object):
             ips = g.domain_cache.get_ips(domain)
             if len(ips):
                 break
-            if "." in domain:
-                continue
-            else:
-                break
 
         if id in self.waiters:
             del self.waiters[id]
@@ -235,30 +299,40 @@ class DnsClient(object):
 
 
 class DnsServer(object):
-    def __init__(self, bind_ip="127.0.0.1", port=53, ttl=24*3600):
+    def __init__(self, bind_ip="127.0.0.1", port=53, backup_port=5353, ttl=24*3600):
         self.bind_ip = bind_ip
         self.port = port
+        self.backup_port = backup_port
         self.ttl = ttl
         self.th = None
+        self.bing_linsten()
 
+    def bing_linsten(self):
         self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            self.serverSock.bind((bind_ip, self.port))
+            self.serverSock.bind((self.bind_ip, self.port))
             xlog.info("start DNS server at %s:%d", self.bind_ip, self.port)
             self.running = True
             self.sockets = [self.serverSock]
+            return
+        except:
+            xlog.warn("bind DNS %s:%d fail", self.bind_ip, self.port)
+            pass
+
+        try:
+            self.serverSock.bind((self.bind_ip, self.backup_port))
+            xlog.info("start DNS server at %s:%d", self.bind_ip, self.backup_port)
+            self.running = True
+            self.sockets = [self.serverSock]
+            return
         except Exception as e:
             self.running = False
-            xlog.warn("bind DNS %s:%d fail", bind_ip, port)
+            xlog.warn("bind DNS %s:%d fail", self.bind_ip, self.backup_port)
 
-            import platform
-            value = platform.platform()
-            if "x86" in value or "i686" in value or "amd64" in value:
+            if sys.platform.startswith("linux"):
                 xlog.warn("You can try: install libcap2-bin")
                 xlog.warn("Then: sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python2.7")
                 xlog.warn("Or run XX-Net as root")
-            elif "mips" in value:
-                xlog.warn("Router platform")
 
     def in_country(self, ips):
         for ip_cn in ips:
@@ -283,23 +357,43 @@ class DnsServer(object):
             xlog.debug("DNS query:%s in black", domain)
             return ips
 
-        if rule == "direct" or \
-                (g.config.auto_direct and not g.gfwlist.check(domain)):
-            ips = g.dns_client.query(domain, timeout=1)
+        if g.gfwlist.check(domain) or rule in ["gae", "socks"]:
+            ips = remote_query_dns(domain, type)
+            if not ips and g.config.auto_direct:
+                ips = g.dns_client.query_over_tcp(domain, type)
 
-        if not ips or not self.in_country(ips):
-            if "." in domain:
-                ips = remote_query_dns(domain, type)
-                g.domain_cache.set_ips(domain, ips, type)
+            return ips
 
-                if not ips or self.in_country(ips):
-                    if g.config.auto_direct or g.user_rules.check_host(domain, 0) == "direct":
-                         ips = g.dns_client.query(domain)
-            else:
+        if "." not in domain:
+            ips = g.dns_client.query(domain, timeout=1, use_local=True)
+            if not ips:
                 ips = ["127.0.0.1|XX"]
                 g.domain_cache.set_ips(domain, ips, type)
+            return ips
+
+        # case: normal domain, not in black list
+        if g.config.auto_direct:
+            ips = g.dns_client.query(domain, timeout=1)
+            if not ips:
+                ips = g.dns_client.query(domain, timeout=1, use_local=True)
+
+        if not ips:
+            ips = remote_query_dns(domain, type)
 
         return ips
+
+    def direct_query(self, request, client_addr):
+        start_time = time.time()
+        for server_ip in g.dns_client.dns_server.public_list:
+            try:
+                a_pkt = request.send(server_ip, 53, tcp=True, timeout=1)
+                # a = DNSRecord.parse(a_pkt)
+                self.serverSock.sendto(a_pkt, client_addr)
+                return
+            except:
+                if time.time() - start_time > 5:
+                    xlog.warn("direct_query %s timeout", request)
+                    break
 
     def on_udp_query(self, req_data, addr):
         start_time = time.time()
@@ -315,7 +409,8 @@ class DnsServer(object):
 
             type = request.questions[0].qtype
             if type not in [1, 28]:
-                xlog.warn("query:%s type:%d", domain, type)
+                xlog.info("direct_query:%s type:%d", domain, type)
+                return self.direct_query(request, addr)
 
             xlog.debug("DNS query:%s type:%d from %s", domain, type, addr)
 

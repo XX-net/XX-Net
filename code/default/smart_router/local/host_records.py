@@ -47,12 +47,18 @@ class DomainRecords(object):
 
     def get(self, domain):
         with self.lock:
-            record = None
             try:
                 record = self.cache.pop(domain)
-                self.cache[domain] = record
+
+                time_now = time.time()
+                if time_now - record["update"] > self.ttl:
+                   record = None
             except KeyError:
-                pass
+                record = None
+
+            if not record:
+                record = {"r": "unknown", "ip": {}, "g": 1, "query_count": 0}
+            self.cache[domain] = record
             return record
 
     def set(self, domain, record):
@@ -165,11 +171,7 @@ class DomainRecords(object):
 
     def get_ips(self, domain, type=None):
         record = self.get(domain)
-        if not record:
-            return []
-
-        time_now = time.time()
-        if len(record["ip"]) == 0 or time_now - record["update"] > self.ttl:
+        if len(record["ip"]) == 0:
             return []
 
         ips = []
@@ -185,11 +187,7 @@ class DomainRecords(object):
 
     def get_ordered_ips(self, domain, type=None):
         record = self.get(domain)
-        if not record:
-            return []
-
-        time_now = time.time()
-        if len(record["ip"]) == 0 or time_now - record["update"] > self.ttl:
+        if len(record["ip"]) == 0:
             return []
 
         ip_rate = {}
@@ -215,9 +213,6 @@ class DomainRecords(object):
 
     def set_ips(self, domain, ips, type=None, rule="direct"):
         record = self.get(domain)
-        if not record:
-            record = {"r": rule, "ip":{}, "g": 1}
-
         if rule != "direct":
             record["r"] = rule
 
@@ -233,26 +228,26 @@ class DomainRecords(object):
 
     def update_rule(self, domain, port, rule):
         record = self.get(domain)
-        if not record:
-            record = {"r": rule, "ip": {}, "g": 1}
-        else:
-            record["r"] = rule
+        record["r"] = rule
         return self.set(domain, record)
 
     def report_gae_deny(self, domain, port=None):
         record = self.get(domain)
-        if not record:
-            record = {"r": "direct", "ip": {}, "g": 0}
-        else:
-            record["g"] = 0
+        record["g"] = 0
         return self.set(domain, record)
 
     def accept_gae(self, domain, port=None):
         record = self.get(domain)
-        if not record:
-            return True
-        else:
-            return record["g"]
+        return record["g"]
+
+    def get_query_count(self, domain):
+        record = self.get(domain)
+        return record["query_count"]
+
+    def add_query_count(self, domain):
+        record = self.get(domain)
+        record["query_count"] += 1
+        self.set(domain, record)
 
 
 class IpRecord(object):

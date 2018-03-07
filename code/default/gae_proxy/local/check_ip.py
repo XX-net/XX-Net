@@ -3,8 +3,7 @@
 
 import sys
 import os
-import OpenSSL
-import socket
+import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
@@ -67,7 +66,81 @@ class CheckIp(front_base.check_ip.CheckIp):
         return True
 
 
+class CheckAllIp(object):
+
+    def __init__(self):
+        ca_certs = os.path.join(current_path, "cacert.pem")
+        openssl_context = SSLContext(
+            logger, ca_certs=ca_certs,
+            cipher_suites=['ALL', "!RC4-SHA", "!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
+                           "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
+        )
+        host_manager = HostManagerBase()
+        connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
+                                         debug=True)
+        self.check_ip = CheckIp(logger, config, connect_creator)
+
+        self.lock = threading.Lock()
+
+        self.in_fd = open("ipv6_list.txt", "r")
+        self.out_fd = open(
+            os.path.join(module_data_path, "ipv6_list.txt"),
+            "w"
+        )
+
+    def get_ip(self):
+        with self.lock:
+            while True:
+                line = self.in_fd.readline()
+                if not line:
+                    raise Exception()
+
+                try:
+                    ip = line.split()[0]
+                    return ip
+                except:
+                    continue
+
+    def write_ip(self, ip, host, handshake):
+        with self.lock:
+            self.out_fd.write("%s %s gws %d 0 0\n" % (ip, host, handshake))
+            self.out_fd.flush()
+
+    def checker(self):
+        while True:
+            try:
+                ip = self.get_ip()
+            except Exception as e:
+                xlog.info("no ip left")
+                return
+
+            try:
+                res = self.check_ip.check_ip(ip)
+            except Exception as e:
+                xlog.warn("check except:%r", e)
+                continue
+
+            if not res or not res.ok:
+                xlog.debug("ip:%s fail", ip)
+                continue
+
+            if res.h2:
+                self.write_ip(ip, res.domain, res.handshake_time)
+
+    def run(self):
+        for i in range(0, 100):
+            threading.Thread(target=self.checker).start()
+
+
+def check_all():
+    check = CheckAllIp()
+    check.run()
+    exit(0)
+
+
 if __name__ == "__main__":
+    #check_all()
+
     # case 1: only ip
     # case 2: ip + domain
     #    connect use domain

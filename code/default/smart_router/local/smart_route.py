@@ -416,11 +416,13 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     record = g.domain_cache.get(host)
     ips = g.dns_srv.query(host)
 
-    if check_local_network.IPv6.is_ok() and have_ipv6(ips):
-        rule_list = ["direct", "gae", "socks", "redirect_https"]
-    elif record:
+    #if check_local_network.IPv6.is_ok() and have_ipv6(ips) and port == 443:
+    #    rule_list = ["direct", "gae", "socks", "redirect_https"]
+    # gae is more faster then direct.
+
+    if record and record["r"] != "unknown":
         rule = record["r"]
-        if rule == "gae" or not g.ip_region.check_ips(record["ip"]):
+        if rule == "gae":
             rule_list = ["gae", "socks", "redirect_https", "direct"]
         else:
             rule_list = ["direct", "gae", "socks", "redirect_https"]

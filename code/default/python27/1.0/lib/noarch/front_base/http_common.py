@@ -24,7 +24,9 @@ class Task(object):
         self.body_readed = 0
         self.content_length = None
         self.worker = None
-        self.read_buffer = ""
+        self.read_buffers = []
+        self.read_buffer_len = 0
+
         self.responsed = False
         self.finished = False
         self.retry_count = 0
@@ -46,39 +48,87 @@ class Task(object):
     def read(self, size=None):
         # fail or cloe if return ""
         if self.body_readed == self.content_length:
-            return ""
+            return memoryview(b'')
 
         if size:
-            while len(self.read_buffer) < size:
+            while self.read_buffer_len < size:
                 data = self.body_queue.get(self.timeout)
                 if not data:
-                    return ""
+                    return memoryview(b'')
 
-                self.read_buffer += data
+                self.read_buffers.append(data)
+                self.read_buffer_len += len(data)
 
-            data = self.read_buffer[:size]
-            self.read_buffer = self.read_buffer[size:]
+            if len(self.read_buffers[0]) == size:
+                data = self.read_buffers[0]
+                self.read_buffers = []
+                self.read_buffer_len = 0
+            elif len(self.read_buffers[0]) >= size:
+                data = self.read_buffers[0][:size]
+                self.read_buffers[0] = self.read_buffers[0][size:]
+                self.read_buffer_len -= size
+            else:
+                buff = bytearray(self.read_buffer_len)
+                buff_view = memoryview(buff)
+                p = 0
+                for data in self.read_buffers:
+                    buff_view[p:] = data
+                    p += len(data)
+
+                if self.read_buffer_len == size:
+                    self.read_buffers = []
+                    self.read_buffer_len = 0
+                    data = buff_view
+                else:
+                    data = buff_view[:size]
+
+                    self.read_buffers = [buff_view[size:]]
+                    self.read_buffer_len -= size
+
         else:
-            if len(self.read_buffer):
-                data = self.read_buffer
-                self.read_buffer = ""
+            if self.read_buffers:
+                data = self.read_buffers.pop(0)
+                self.read_buffer_len -= len(data)
             else:
                 data = self.body_queue.get(self.timeout)
                 if not data:
-                    return ""
+                    return memoryview(b'')
 
         self.body_readed += len(data)
         return data
 
     def read_all(self):
-        out_list = []
-        while True:
-            data = self.read()
-            if not data:
-                break
-            out_list.append(data)
+        if self.content_length:
+            buff = bytearray(int(self.content_length))
+            buff_view = memoryview(buff)
+            p = 0
+            for data in self.read_buffers:
+                buff_view[p:p+len(data)] = data
+                p += len(data)
 
-        return "".join(out_list)
+            self.read_buffers = []
+            self.read_buffer_len = 0
+
+            while p < self.content_length:
+                data = self.read()
+                if not data:
+                    break
+
+                buff_view[p:p + len(data)] = data[0:len(data)]
+                p += len(data)
+
+            return buff_view[:p]
+        else:
+            out = list()
+            while True:
+                data = self.read()
+                if not data:
+                    break
+                if isinstance(data, memoryview):
+                    data = data.tobytes()
+                out.append(data)
+            out_buf = "".join(out)
+            return memoryview(out_buf)
 
     def set_state(self, stat):
         # for debug trace
@@ -122,7 +172,7 @@ class Task(object):
 
 
 class HttpWorker(object):
-    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb):
+    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
         self.logger = logger
         self.ip_manager = ip_manager
         self.config = config
@@ -134,6 +184,7 @@ class HttpWorker(object):
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
+        self.log_debug_data = log_debug_data
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
@@ -144,6 +195,7 @@ class HttpWorker(object):
         self.rtt = rtt
         self.speed = speed
         self.speed_history.append(speed)
+        self.log_debug_data(rtt, sent, received)
 
     def close(self, reason):
         self.accept_task = False

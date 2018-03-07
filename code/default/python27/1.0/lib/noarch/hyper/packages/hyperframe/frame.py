@@ -213,7 +213,7 @@ class DataFrame(Padding, Frame):
 
     def parse_body(self, data):
         padding_data_length = self.parse_padding_data(data)
-        self.data = data[padding_data_length:len(data)-self.total_padding].tobytes()
+        self.data = data[padding_data_length:len(data)-self.total_padding]
         self.body_len = len(data)
 
     @property
@@ -545,7 +545,7 @@ class HeadersFrame(Padding, Priority, Frame):
             priority_data_length = 0
 
         self.body_len = len(data)
-        self.data = data[priority_data_length:len(data)-self.total_padding].tobytes()
+        self.data = data[priority_data_length:len(data)-self.total_padding]
 
 
 class ContinuationFrame(Frame):
@@ -573,7 +573,7 @@ class ContinuationFrame(Frame):
         return self.data
 
     def parse_body(self, data):
-        self.data = data.tobytes()
+        self.data = data
         self.body_len = len(data)
 
 

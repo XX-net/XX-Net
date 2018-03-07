@@ -189,26 +189,29 @@ class Ipv6PoolSource(object):
         self.config = config
         self.list_fn = list_fn
 
-        self.ipv6_list = []
-        self.load_ipv6()
+        self.fd = open(list_fn, "r")
+        self.fsize = os.path.getsize(list_fn)
 
-    def load_ipv6(self):
-        with open(self.list_fn, "r") as fd:
-            for line in fd.readlines():
-                if not line:
-                    continue
-                try:
-                    lp = line.split()
-                    ip = lp[0]
-                    if not ip:
-                        continue
+    def get_slice(self):
+        max_slice_len = 120
 
-                    self.ipv6_list.append(ip)
-                except:
-                    continue
+        position = random.randint(0, self.fsize - max_slice_len)
+        self.fd.seek(position)
+        slice = self.fd.read(max_slice_len)
+
+        if slice is None or len(slice) < max_slice_len:
+            self.logger.warn("get_slice fail")
+            raise Exception()
+
+        ns = slice.split("\n")
+        slice = ns[1]
+        return slice
 
     def get_ip(self):
-        return random.choice(self.ipv6_list)
+        line = self.get_slice()
+        lp = line.split()
+        ip = lp[0]
+        return ip
 
 
 class IpCombineSource(object):

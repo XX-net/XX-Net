@@ -70,6 +70,8 @@ xlog = getLogger("gae_proxy")
 
 
 def inflate(data):
+    if isinstance(data, memoryview):
+        data = data.tobytes()
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
 
@@ -521,6 +523,7 @@ def handler(method, url, headers, body, wfile):
             send_header(wfile, key, value)
             #xlog.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")
+        wfile.flush()
         # 写入除body外内容
     except Exception as e:
         xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
@@ -556,10 +559,11 @@ def handler(method, url, headers, body, wfile):
         body_sended += len(data)
         try:
             # https 包装
-            ret = wfile.write(data)
+            ret = wfile._sock.sendall(data)
             if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
                 xlog.debug("send to browser wfile.write ret:%d", ret)
-                ret = wfile.write(data)
+                #ret = wfile.write(data)
+                wfile._sock.sendall(data)
         except Exception as e_b:
             if e_b[0] in (errno.ECONNABORTED, errno.EPIPE,
                           errno.ECONNRESET) or 'bad write retry' in repr(e_b):
@@ -662,6 +666,7 @@ class RangeFetch2(object):
                 #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
             self.wfile.write("\r\n")
+            self.wfile.flush()
         except Exception as e:
             self.keep_running = False
             xlog.info("RangeFetch send response fail:%r %s", e, self.url)
@@ -692,11 +697,11 @@ class RangeFetch2(object):
                     self.data_size -= len(data)
 
             try:
-                ret = self.wfile.write(data)
+                ret = self.wfile._sock.sendall(data)
                 if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
                     xlog.debug(
                         "send to browser wfile.write ret:%d, retry", ret)
-                    ret = self.wfile.write(data)
+                    ret = self.wfile._sock.sendall(data)
                     xlog.debug("send to browser wfile.write ret:%d", ret)
                 del data
             except Exception as e:

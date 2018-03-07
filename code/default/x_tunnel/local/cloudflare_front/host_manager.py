@@ -21,22 +21,23 @@ class HostManager(HostManagerBase):
             threading.Thread(target=self.update_front_domains).start()
         
     def load(self):
-        if os.path.isfile(self.fn):
-            fn = self.fn
-        else:
-            fn = self.default_fn
+        for fn in [self.fn, self.default_fn]:
+            if not os.path.isfile(self.fn):
+                continue
 
-        lns = []
-        try:
-            with open(fn, "r") as fd:
-                ds = json.load(fd)
-                for top in ds:
-                    subs = ds[top]
-                    subs = [str(s) for s in subs]
-                    lns.append([str(top), subs])
-            self.ns = lns
-        except Exception as e:
-            self.logger.warn("load %s for host fail.", fn)
+            lns = []
+            try:
+                with open(fn, "r") as fd:
+                    ds = json.load(fd)
+                    for top in ds:
+                        subs = ds[top]
+                        subs = [str(s) for s in subs]
+                        lns.append([str(top), subs])
+                self.ns = lns
+                self.logger.info("load %s success", fn)
+                return True
+            except Exception as e:
+                self.logger.warn("load %s for host fail.", fn)
 
     def get_sni_host(self, ip):
         top_domain, subs = random.choice(self.ns)
@@ -66,25 +67,32 @@ class HostManager(HostManagerBase):
 
                 url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
                 response = client.request("GET", url)
-                if response.status != 200:
-                    self.logger.warn("update front domains fail:%d", response.status)
-                    raise Exception("status:%r", response.status)
+                if not response or response.status != 200:
+                    if response:
+                        self.logger.warn("update front domains fail:%d", response.status)
+                    next_update_time = time.time() + (1800)
+                    continue
+
+                content = response.text
+                if isinstance(content, memoryview):
+                    content = content.tobytes()
 
                 need_update = True
                 front_domains_fn = self.fn
                 if os.path.exists(front_domains_fn):
                     with open(front_domains_fn, "r") as fd:
                         old_content = fd.read()
-                        if response.text == old_content:
+                        if content == old_content:
                             need_update = False
 
                 if need_update:
                     with open(front_domains_fn, "w") as fd:
-                        fd.write(response.text)
+                        fd.write(content)
                     self.load()
 
+                    self.logger.info("updated cloudflare front domains from github.")
+
                 next_update_time = time.time() + (4 * 3600)
-                self.logger.info("updated cloudflare front domains from github.")
             except Exception as e:
                 next_update_time = time.time() + (1800)
-                self.logger.debug("updated cloudflare front domains from github fail:%r", e)
+                self.logger.exception("updated cloudflare front domains from github fail:%r", e)

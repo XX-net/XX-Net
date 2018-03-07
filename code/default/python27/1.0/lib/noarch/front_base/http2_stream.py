@@ -266,16 +266,24 @@ class Stream(object):
             pass
 
         if 'END_HEADERS' in frame.flags:
+            if self.response_headers is not None:
+                raise ProtocolError("Too many header blocks.")
+
             # Begin by decoding the header block. If this fails, we need to
             # tear down the entire connection.
-            header_data = b''.join(self.response_header_datas)
+            if len(self.response_header_datas) == 1:
+                header_data = self.response_header_datas[0]
+            else:
+                header_data = b''.join(self.response_header_datas)
+
             try:
                 headers = self._decoder.decode(header_data)
             except Exception as e:
                 self.logger.exception("decode h2 header %s fail:%r", header_data, e)
                 raise e
 
-            self._handle_header_block(headers)
+            self.response_headers = HTTPHeaderMap(headers)
+
             # We've handled the headers, zero them out.
             self.response_header_datas = None
 
@@ -331,31 +339,6 @@ class Stream(object):
         self._close_remote()
         self._close_cb(self.stream_id, reason)
 
-    def _handle_header_block(self, headers):
-        """
-        Handles the logic for receiving a completed headers block.
-
-        A headers block is an uninterrupted sequence of one HEADERS frame
-        followed by zero or more CONTINUATION frames, and is terminated by a
-        frame bearing the END_HEADERS flag.
-
-        HTTP/2 allows receipt of up to three such blocks on a stream. The first
-        is optional, and contains a 1XX response. The second is mandatory, and
-        must contain a final response (200 or higher). The third is optional,
-        and may contain 'trailers', headers that are sent after a chunk-encoded
-        body is sent.
-
-        Here we only process the simple state: no push, one header frame.
-        """
-
-        if self.response_headers is None:
-            self.response_headers = HTTPHeaderMap(headers)
-        else:
-            # Received too many headers blocks.
-            raise ProtocolError("Too many header blocks.")
-
-        return
-
     @property
     def _local_closed(self):
         return self.state in (STATE_CLOSED, STATE_HALF_CLOSED_LOCAL)
@@ -399,6 +382,6 @@ class Stream(object):
             self.task.response_fail("timeout")
 
         self.connection.continue_timeout += 1
-        if self.connection.continue_timeout > self.connection.config.http2_max_timeout_tasks and \
-                time.time() - self.connection.last_active_time > 60:
+        if self.connection.continue_timeout >= self.connection.config.http2_max_timeout_tasks and \
+                time.time() - self.connection.last_active_time > self.connection.config.http2_timeout_active:
             self.connection.close("down fail")

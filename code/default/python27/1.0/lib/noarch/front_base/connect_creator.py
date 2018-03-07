@@ -105,7 +105,7 @@ class ConnectCreator(object):
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 
-        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context, sock, ip, on_close=close_cb)
+        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip, on_close=close_cb)
         ssl_sock.set_connect_state()
 
         if sni:
@@ -177,8 +177,12 @@ class ConnectCreator(object):
             if pub_key not in self.config.CHECK_PKP:
                 # google_ip.report_connect_fail(ip, force_remove=True)
                 raise socket.error('The intermediate CA is mismatching.')
-
+        self.get_ssl_cert_domain(ssl_sock)
         issuer_commonname = next((v for k, v in cert_chain[0].get_issuer().get_components() if k == 'CN'), '')
+        if self.debug:
+            self.logger.debug("issued by:%s", issuer_commonname)
+            self.logger.debug("Common Name:%s", ssl_sock.domain)
+
         if self.config.check_commonname and not issuer_commonname.startswith(self.config.check_commonname):
             raise socket.error(' certficate is issued by %r, not Google' % (issuer_commonname))
 
@@ -191,16 +195,14 @@ class ConnectCreator(object):
         except Exception as e:
             #self.logger.warn("get_subj_alt_name fail:%r", e)
             alt_names = [""]
+        if self.debug:
+            self.logger.debug('alt names: "%s"', '", "'.join(alt_names))
 
         if self.config.check_sni:
             if isinstance(self.config.check_sni, str):
                 if self.config.check_sni not in alt_names:
                     raise socket.error('check sni fail, alt_names:%s' % (alt_names))
             else:
-                if ssl_sock.sni not in alt_names:
+                alt_names = tuple(alt_names)
+                if not ssl_sock.sni.endswith(alt_names):
                     raise socket.error('check sni:%s fail, alt_names:%s' % (ssl_sock.sni, alt_names))
-        if self.debug:
-            self.logger.debug("alt names:%s", alt_names)
-
-        if self.debug:
-            self.logger.debug("issued by:%s", issuer_commonname)

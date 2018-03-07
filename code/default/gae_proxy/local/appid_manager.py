@@ -26,17 +26,17 @@ class AppidManager(object):
         self.reset_appid()
 
     def get_public_appid(self):
-        max_id_len = 32
+        max_id_len = 50
 
         position = random.randint(0, self.public_appids_fsize - max_id_len)
         self.public_appids_fd.seek(position)
-        slice = self.public_appids_fd.read(max_id_len)
+        slice = self.public_appids_fd.read(max_id_len * 2)
 
         if slice is None or len(slice) < max_id_len:
             self.logger.warn("get_public_appid fail")
             raise Exception()
 
-        ns = slice.split("|")
+        ns = slice.split("\n")
         appid = ns[1]
         return appid
 

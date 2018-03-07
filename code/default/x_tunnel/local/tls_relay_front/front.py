@@ -1,7 +1,4 @@
 import os
-import time
-import threading
-import collections
 
 import xlog
 logger = xlog.getLogger("tls_relay")
@@ -28,10 +25,6 @@ class Front(object):
     name = "tls_relay_front"
 
     def __init__(self):
-        self.success_num = 0
-        self.fail_num = 0
-        self.continue_fail_num = 0
-        self.last_fail_time = 0
         self.running = True
 
         self.logger = logger
@@ -61,69 +54,15 @@ class Front(object):
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager)
 
-        self.rtts = collections.deque([(0, time.time())])
-        self.rtts_lock = threading.Lock()
-        self.traffics = collections.deque()
-        self.traffics_lock = threading.Lock()
-        self.recent_sent = 0
-        self.recent_received = 0
-        self.total_sent = 0
-        self.total_received = 0
-
         self.account = ""
         self.password = ""
 
-        threading.Thread(target=self.debug_data_clearup_thread).start()
+    def get_dispatcher(self, host=None):
+        return self.http_dispatcher
 
     def set_x_tunnel_account(self, account, password):
         self.account = account
         self.password = password
-
-    def log_debug_data(self, rtt, sent, received):
-        now = time.time()
-
-        self.rtts.append((rtt, now))
-
-        with self.traffics_lock:
-            self.traffics.append((sent, received, now))
-            self.recent_sent += sent
-            self.recent_received += received
-            self.total_sent += sent
-            self.total_received += received
-
-    def get_rtt(self):
-        now = time.time()
-
-        while len(self.rtts) > 1:
-            with self.rtts_lock:
-                rtt, log_time = rtt_log = max(self.rtts)
-
-                if now - log_time > 5:
-                    self.rtts.remove(rtt_log)
-                    continue
-
-            return rtt
-
-        return self.rtts[0][0]
-
-    def debug_data_clearup_thread(self):
-        while self.running:
-            now = time.time()
-
-            with self.rtts_lock:
-                if len(self.rtts) > 1 and now - self.rtts[0][-1] > 5:
-                    self.rtts.popleft()
-
-            with self.traffics_lock:
-                if self.traffics and now - self.traffics[0][-1] > 60:
-                    sent, received, _ = self.traffics.popleft()
-                    self.recent_sent -= sent
-                    self.recent_received -= received
-
-            time.sleep(1)
-
-    def worker_num(self):
-        return len(self.http_dispatcher.workers)
 
     def set_ips(self, ips):
         if not ips:
@@ -152,18 +91,6 @@ class Front(object):
         self.openssl_context.set_ca(self.ca_cert_fn)
         self.logger.info("set_ips:%s", ",".join(ipss))
 
-    def get_score(self, host=None):
-        now = time.time()
-        if now - self.last_fail_time < self.config.front_continue_fail_block and \
-                self.continue_fail_num > self.config.front_continue_fail_num:
-            return None
-
-        worker = self.http_dispatcher.get_worker(nowait=True)
-        if not worker:
-            return None
-
-        return worker.get_score()
-
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         headers = dict(headers)
         headers["XX-Account"] = self.account
@@ -174,14 +101,6 @@ class Front(object):
             return "", 602, {}
 
         status = response.status
-        if status not in [200, 405]:
-            # logger.warn("front request %s %s%s fail, status:%d", method, host, path, status)
-            self.fail_num += 1
-            self.continue_fail_num += 1
-            self.last_fail_time = time.time()
-        else:
-            self.success_num += 1
-            self.continue_fail_num = 0
 
         content = response.task.read_all()
         if status == 200:

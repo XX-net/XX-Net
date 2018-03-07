@@ -63,14 +63,14 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def req_ip_list_handler(self):
         time_now = time.time()
         data = "<html><body><div  style='float: left; white-space:nowrap;font-family: monospace;'>"
-        data += "time:%d  pointer:%d<br>\r\n" % (time_now, front.ip_manager.gws_ip_pointer)
+        data += "time:%d  pointer:%d<br>\r\n" % (time_now, front.ip_manager.ip_pointer)
         data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th>"
         data += "<th>down_fail</th><th>links</th>"
         data += "<th>get_time</th><th>success_time</th><th>fail_time</th><th>down_fail_time</th>"
         data += "<th>data_active</th><th>transfered_data</th><th>Trans</th>"
         data += "<th>history</th></tr>\n"
         i = 1
-        for ip in front.ip_manager.gws_ip_list:
+        for ip in front.ip_manager.ip_list:
             handshake_time = front.ip_manager.ip_dict[ip]["handshake_time"]
 
             fail_times = front.ip_manager.ip_dict[ip]["fail_times"]
@@ -124,6 +124,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         data = ""
         objs = [front.connect_manager] + front.dispatchs.values()
         for obj in objs:
+
             data += "%s\r\n" % obj.__class__
             for attr in dir(obj):
                 if attr.startswith("__"):

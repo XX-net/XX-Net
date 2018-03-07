@@ -317,7 +317,7 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
 
-class SSLContext(OpenSSL.SSL.Context):
+class SSLContext(object):
     def __init__(self, logger, ca_certs=None, cipher_suites=None, support_http2=True):
         self.logger = logger
 
@@ -345,21 +345,21 @@ class SSLContext(OpenSSL.SSL.Context):
         self.logger.info("SSL use version:%s", ssl_version)
 
         protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % ssl_version)
-        self._ssl_context = OpenSSL.SSL.Context(protocol_version)
+        self.context = OpenSSL.SSL.Context(protocol_version)
 
         if ca_certs:
-            self._ssl_context.load_verify_locations(os.path.abspath(ca_certs))
-            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+            self.context.load_verify_locations(os.path.abspath(ca_certs))
+            self.context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         else:
-            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x,    e, d, ok: ok)
+            self.context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
 
         if cipher_suites:
-            self.set_cipher_list(':'.join(cipher_suites))
+            self.context.set_cipher_list(':'.join(cipher_suites))
 
         self.support_alpn_npn = None
         if support_http2:
             try:
-                self._ssl_context.set_alpn_protos([b'h2', b'http/1.1'])
+                self.context.set_alpn_protos([b'h2', b'http/1.1'])
                 self.logger.info("OpenSSL support alpn")
                 self.support_alpn_npn = "alpn"
                 return
@@ -368,7 +368,7 @@ class SSLContext(OpenSSL.SSL.Context):
                 pass
 
             try:
-                self._ssl_context.set_npn_select_callback(SSLContext.npn_select_callback)
+                self.context.set_npn_select_callback(SSLContext.npn_select_callback)
                 self.logger.info("OpenSSL support npn")
                 self.support_alpn_npn = "npn"
             except Exception as e:
@@ -385,13 +385,10 @@ class SSLContext(OpenSSL.SSL.Context):
         else:
             return b"http/1.1"
 
-    def __getattr__(self, attr):
-        return getattr(self._ssl_context, attr)
-
     def set_ca(self, fn):
         try:
-            self._ssl_context.load_verify_locations(fn)
-            self._ssl_context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+            self.context.load_verify_locations(fn)
+            self.context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
         except Exception as e:
             self.logger.debug("set_ca fail:%r", e)
             return

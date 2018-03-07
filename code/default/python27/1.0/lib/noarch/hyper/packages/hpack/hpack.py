@@ -448,7 +448,10 @@ class Decoder(object):
         """
         log.debug("Decoding %s", data)
 
-        data_mem = memoryview(data)
+        if not isinstance(data, memoryview):
+            data_mem = memoryview(data)
+        else:
+            data_mem = data
         headers = []
         data_len = len(data)
         inflated_size = 0

@@ -71,8 +71,9 @@ class RawFrame(object):
 class Http2Worker(HttpWorker):
     version = "2"
 
-    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb):
-        super(Http2Worker, self).__init__(logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb)
+    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+        super(Http2Worker, self).__init__(
+            logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.network_buffer_size = 128 * 1024
 
@@ -308,7 +309,7 @@ class Http2Worker(HttpWorker):
             return
 
         # Parse the header. We can use the returned memoryview directly here.
-        frame, length = Frame.parse_frame_header(header.tobytes())
+        frame, length = Frame.parse_frame_header(header)
 
         if length > FRAME_MAX_ALLOWED_LEN:
             self.logger.error("%s Frame size exceeded on stream %d (received: %d, max: %d)",
@@ -317,7 +318,7 @@ class Http2Worker(HttpWorker):
 
         data = self._recv_payload(length)
         self.last_active_time = time.time()
-        self._consume_frame_payload(frame, data.tobytes())
+        self._consume_frame_payload(frame, data)
 
     def _recv_payload(self, length):
         if not length:
@@ -472,6 +473,7 @@ class Http2Worker(HttpWorker):
 
     def get_trace(self):
         out_list = []
+        out_list.append(" continue_timeout:%d" % self.continue_timeout)
         out_list.append(" processed:%d" % self.processed_tasks)
         out_list.append(" h2.stream_num:%d" % len(self.streams))
         out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))

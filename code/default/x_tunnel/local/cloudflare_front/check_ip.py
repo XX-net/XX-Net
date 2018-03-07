@@ -29,6 +29,7 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
+import utils
 import xlog
 logger = xlog.getLogger("cloudflare_front")
 logger.set_buffer(500)
@@ -36,6 +37,7 @@ logger.set_buffer(500)
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
+from front_base.host_manager import HostManagerBase
 
 
 from config import Config
@@ -46,17 +48,22 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
+    default_ip = "172.64.50.59"
+
+    host = None
     if len(sys.argv) > 1:
         ip = sys.argv[1]
+        if not utils.check_ip_valid(ip):
+            ip = default_ip
+            host = sys.argv[1]
     else:
-        ip = "104.28.77.8"
+        ip = default_ip
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
-    print("test ip:%s" % ip)
+    xlog.info("test ip:%s", ip)
 
     if len(sys.argv) > 2:
-        top_domain = sys.argv[2]
-    else:
-        top_domain = None
+        host = sys.argv[2]
+    xlog.info("host:%s", host)
 
     if len(sys.argv) > 3:
         wait_time = int(sys.argv[3])
@@ -67,14 +74,14 @@ if __name__ == "__main__":
     config = Config(config_path)
 
     openssl_context = SSLContext(logger)
-
-    connect_creator = ConnectCreator(logger, config, openssl_context)
+    host_manager = HostManagerBase()
+    connect_creator = ConnectCreator(logger, config, openssl_context, host_manager, debug=True)
     check_ip = CheckIp(logger, config, connect_creator)
 
-    res = check_ip.check_ip(ip, top_domain=top_domain, wait_time=wait_time)
+    res = check_ip.check_ip(ip, host=host, wait_time=wait_time)
     if not res:
-        print("connect fail")
+        xlog.warn("connect fail")
     elif res.ok:
-        print("success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time))
+        xlog.info("success, domain:%s handshake:%d", res.host, res.handshake_time)
     else:
-        print("not support")
+        xlog.warn("not support")

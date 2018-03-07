@@ -50,7 +50,7 @@ if [ $os_name = 'Linux' ]; then
             sudo zypper in -y python-pyOpenSSL
         elif has_command apt-get; then
             # Debian or Debian-like
-            sudo apt-get install -y python-openssl
+            sudo apt-get install -y python-openssl python-pycparser
         elif has_command dnf; then
             # Fedora
             sudo dnf install -y pyOpenSSL

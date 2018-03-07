@@ -9,8 +9,9 @@ import simple_http_client
 class Http1Worker(HttpWorker):
     version = "1.1"
 
-    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb):
-        super(Http1Worker, self).__init__(logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb)
+    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+        super(Http1Worker, self).__init__(logger, ip_manager, config, ssl_sock,
+                                          close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.last_active_time = self.ssl_sock.create_time
         self.last_request_time = self.ssl_sock.create_time

@@ -1,7 +1,4 @@
 import os
-import time
-import threading
-import collections
 
 import xlog
 logger = xlog.getLogger("cloudflare_front")
@@ -63,118 +60,29 @@ class Front(object):
 
         self.dispatchs = {}
 
-        self.success_num = 0
-        self.fail_num = 0
-        self.continue_fail_num = 0
-        self.last_fail_time = 0
+    def get_dispatcher(self, host=None):
+        if host is None:
+            host = self.last_host
+        else:
+            self.last_host = host
 
-        self.rtts = collections.deque([(0, time.time())])
-        self.rtts_lock = threading.Lock()
-        self.traffics = collections.deque()
-        self.traffics_lock = threading.Lock()
-        self.recent_sent = 0
-        self.recent_received = 0
-        self.total_sent = 0
-        self.total_received = 0
-
-        threading.Thread(target=self.debug_data_clearup_thread).start()
-
-    def log_debug_data(self, rtt, sent, received):
-        now = time.time()
-
-        self.rtts.append((rtt, now))
-
-        with self.traffics_lock:
-            self.traffics.append((sent, received, now))
-            self.recent_sent += sent
-            self.recent_received += received
-            self.total_sent += sent
-            self.total_received += received
-
-    def get_rtt(self):
-        now = time.time()
-
-        while len(self.rtts) > 1:
-            with self.rtts_lock:
-                rtt, log_time = rtt_log = max(self.rtts)
-
-                if now - log_time > 5:
-                    self.rtts.remove(rtt_log)
-                    continue
-
-            return rtt
-
-        return self.rtts[0][0]
-
-    def debug_data_clearup_thread(self):
-        while self.running:
-            now = time.time()
-
-            with self.rtts_lock:
-                if len(self.rtts) > 1 and now - self.rtts[0][-1] > 5:
-                    self.rtts.popleft()
-
-            with self.traffics_lock:
-                if self.traffics and now - self.traffics[0][-1] > 60:
-                    sent, received, _ = self.traffics.popleft()
-                    self.recent_sent -= sent
-                    self.recent_received -= received
-
-            time.sleep(1)
-
-    def init_host_dispatcher(self, host):
         if host not in self.dispatchs:
             http_dispatcher = HttpsDispatcher(
                 logger, self.config, self.ip_manager, self.connect_manager,
                 http2worker=CloudflareHttp2Worker)
             self.dispatchs[host] = http_dispatcher
 
-    def worker_num(self):
-        host = self.last_host
-        self.init_host_dispatcher(host)
-
         dispatcher = self.dispatchs[host]
-        return len(dispatcher.workers)
-
-    def get_score(self, host=None):
-        now = time.time()
-        if now - self.last_fail_time < 60 and \
-                self.continue_fail_num > 10:
-            return None
-
-        if host is None:
-            host = self.last_host
-
-        self.init_host_dispatcher(host)
-
-        dispatcher = self.dispatchs[host]
-        worker = dispatcher.get_worker(nowait=True)
-        if not worker:
-            return None
-
-        return worker.get_score() * 10
+        return dispatcher
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
-        self.init_host_dispatcher(host)
-
-        self.last_host = host
-
-        dispatcher = self.dispatchs[host]
+        dispatcher = self.get_dispatcher(host)
         response = dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
         if not response:
             self.logger.warn("req %s get response timeout", path)
             return "", 602, {}
 
         status = response.status
-        if status not in [200, 405]:
-            # self.logger.warn("front request %s %s%s fail, status:%d", method, host, path, status)
-            self.fail_num += 1
-            self.continue_fail_num += 1
-            self.last_fail_time = time.time()
-        else:
-            self.success_num += 1
-            self.continue_fail_num = 0
-
         content = response.task.read_all()
         if status == 200:
             self.logger.debug("%s %s%s status:%d trace:%s", method, response.worker.host, path, status,

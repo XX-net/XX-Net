@@ -47,7 +47,12 @@ class BaseResponse(object):
 class TxtResponse(BaseResponse):
     def __init__(self, buffer):
         BaseResponse.__init__(self)
-        self.read_buffer = buffer
+        if isinstance(buffer, memoryview):
+            self.view = buffer
+            self.read_buffer = buffer.tobytes()
+        else:
+            self.read_buffer = buffer
+            self.view = memoryview(buffer)
         self.buffer_start = 0
         self.parse()
 
@@ -88,7 +93,7 @@ class TxtResponse(BaseResponse):
             key = str(key.title())
             self.headers[key] = value
 
-        self.body = self.read_buffer[self.buffer_start:]
+        self.body = self.view[self.buffer_start:]
         self.read_buffer = ""
         self.buffer_start = 0
 
@@ -308,9 +313,10 @@ class Response(BaseResponse):
         #    read_len = int(self.content_length)
 
         if not self.chunked:
-            return self._read_plain(read_len, timeout)
+            data = self._read_plain(read_len, timeout)
         else:
-            return self._read_chunked(timeout)
+            data = self._read_chunked(timeout)
+        return memoryview(data)
 
     def readall(self, timeout=60):
         start_time = time.time()

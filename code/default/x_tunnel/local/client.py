@@ -137,11 +137,14 @@ def load_config():
 
 def main(args):
     global ready
+
+    g.xxnet_version = xxnet_version
+
     load_config()
     front_dispatcher.init()
     g.data_path = data_path
 
-    xlog.info("xxnet_version:%s", xxnet_version())
+    xlog.info("xxnet_version:%s", g.xxnet_version)
 
     g.running = True
     if not g.server_host or not g.server_port:

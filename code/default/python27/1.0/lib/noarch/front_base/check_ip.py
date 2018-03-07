@@ -44,12 +44,14 @@ class CheckIp(object):
             self.logger.warn("connect timeout")
             return False
         except Exception as e:
-            self.logger.exception("test_xtunnel_ip %s e:%r", ip, e)
+            self.logger.exception("check_ip:%s create_ssl except:%r", ip, e)
             return False
 
         ssl_sock.ok = False
 
-        if self.config.check_ip_host:
+        if host:
+            pass
+        elif self.config.check_ip_host:
             host = self.config.check_ip_host
         else:
             host = ssl_sock.host
@@ -83,7 +85,7 @@ class CheckIp(object):
         if response.status not in self.config.check_ip_accept_status:
             return False
 
-        content = response.read(timeout=1)
+        content = response.read()
         if self.config.check_ip_content not in content:
             self.logger.warn("app check content:%s", content)
             return False

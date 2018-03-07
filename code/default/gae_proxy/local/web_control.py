@@ -618,8 +618,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             config.save()
             config.load()
 
-            if front.ip_manager.max_scan_ip_thread_num != thread_num_for_scan_ip:
-                front.ip_manager.adjust_scan_thread_num(thread_num_for_scan_ip)
+            front.ip_manager.adjust_scan_thread_num()
 
             #reponse 
             data='{"res":"success"}'

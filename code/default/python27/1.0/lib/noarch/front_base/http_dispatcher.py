@@ -20,7 +20,6 @@ performance:
 
 import Queue
 import operator
-import os
 import threading
 import time
 import traceback
@@ -56,6 +55,27 @@ class HttpsDispatcher(object):
         self.last_request_time = time.time()
         self.running = True
 
+        # for statistic
+        self.success_num = 0
+        self.fail_num = 0
+        self.continue_fail_num = 0
+        self.last_fail_time = 0
+        self.rtts = []
+        self.last_sent = self.total_sent = 0
+        self.last_received = self.total_received = 0
+        self.second_stats = Queue.deque()
+        self.last_statistic_time = time.time()
+        self.second_stat = {
+            "rtt": 0,
+            "sent": 0,
+            "received": 0
+        }
+        self.minute_stat = {
+            "rtt": 0,
+            "sent": 0,
+            "received": 0
+        }
+
         self.trigger_create_worker_cv = SimpleCondition()
         self.wait_a_worker_cv = simple_queue.Queue()
 
@@ -77,10 +97,14 @@ class HttpsDispatcher(object):
             raise Exception("on_ssl_created_cb ssl_sock None")
 
         if ssl_sock.h2:
-            worker = self.http2worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = self.http2worker(
+                self.logger, self.ip_manager, self.config, ssl_sock,
+              self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h2_num += 1
         else:
-            worker = self.http1worker(self.logger, self.ip_manager, self.config, ssl_sock, self.close_cb, self.retry_task_cb, self._on_worker_idle_cb)
+            worker = self.http1worker(
+                self.logger, self.ip_manager, self.config, ssl_sock,
+                self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
             self.h1_num += 1
 
         self.workers.append(worker)
@@ -202,13 +226,24 @@ class HttpsDispatcher(object):
         task = http_common.Task(self.logger, self.config, method, host, path, headers, body, q, url, timeout)
         task.set_state("start_request")
         self.request_queue.put(task)
-        # self.working_tasks[task.unique_id] = task
+
         response = q.get(timeout=timeout)
+        if response and response.status==200:
+            self.success_num += 1
+            self.continue_fail_num = 0
+        else:
+            self.fail_num += 1
+            self.continue_fail_num += 1
+            self.last_fail_time = time.time()
+
         task.set_state("get_response")
-        # del self.working_tasks[task.unique_id]
         return response
 
     def retry_task_cb(self, task, reason=""):
+        self.fail_num += 1
+        self.continue_fail_num += 1
+        self.last_fail_time = time.time()
+
         if task.responsed:
             self.logger.warn("retry but responsed. %s", task.url)
             st = traceback.extract_stack()
@@ -295,6 +330,59 @@ class HttpsDispatcher(object):
         self.h1_num = 0
         self.h2_num = 0
 
+    def log_debug_data(self, rtt, sent, received):
+        self.rtts.append(rtt)
+        self.total_sent += sent
+        self.total_received += received
+
+    def statistic(self):
+        now = time.time()
+        if now > self.last_statistic_time + 60:
+            rtt = 0
+            sent = 0
+            received = 0
+            for stat in self.second_stats:
+                rtt = max(rtt, stat["rtt"])
+                sent += stat["sent"]
+                received += stat["received"]
+            self.minute_stat = {
+                "rtt": rtt,
+                "sent": sent,
+                "received": received
+            }
+            self.second_stats = Queue.deque()
+            self.last_statistic_time = now
+
+        if len(self.rtts):
+            rtt = max(self.rtts)
+        else:
+            rtt = 0
+
+        self.second_stat = {
+            "rtt": rtt,
+            "sent": self.total_sent - self.last_sent,
+            "received": self.total_received - self.last_received
+        }
+        self.rtts = []
+        self.last_sent = self.total_sent
+        self.last_received = self.total_received
+        self.second_stats.append(self.second_stat)
+
+    def worker_num(self):
+        return len(self.workers)
+
+    def get_score(self):
+        now = time.time()
+        if now - self.last_fail_time < 60 and \
+                self.continue_fail_num > 10:
+            return None
+
+        worker = self.get_worker(nowait=True)
+        if not worker:
+            return None
+
+        return worker.get_score() * self.config.dispather_score_factor
+
     def to_string(self):
         now = time.time()
         worker_rate = {}
@@ -309,8 +397,8 @@ class HttpsDispatcher(object):
                        (w.ip, w.rtt, w.keep_running,  w.accept_task,
                         (now-w.ssl_sock.create_time), (now-w.last_active_time), w.processed_tasks)
             if w.version == "2":
-                out_str += " streams:%d ping_on_way:%d remote_win:%d send_queue:%d\r\n" % \
-                           (len(w.streams), w.ping_on_way, w.remote_window_size, w.send_queue.qsize())
+                out_str += " continue_timeout:%d streams:%d ping_on_way:%d remote_win:%d send_queue:%d\r\n" % \
+                   (w.continue_timeout, len(w.streams), w.ping_on_way, w.remote_window_size, w.send_queue.qsize())
 
             elif w.version == "1.1":
                 out_str += " Trace:%s" % w.get_trace()

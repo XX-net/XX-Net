@@ -17,6 +17,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
         self.set_var("dispather_max_workers", 60)
+        self.set_var("dispather_score_factor", 1)
 
         # http 1.1 worker
         self.set_var("http1_first_ping_wait", 300)
@@ -27,6 +28,7 @@ class ConfigBase(xconfig.Config):
         # http 2 worker
         self.set_var("http2_max_concurrent", 60)
         self.set_var("http2_max_timeout_tasks", 5)
+        self.set_var("http2_timeout_active", 15)
         self.set_var("http2_status_to_close", [])
 
         # worker_base
@@ -61,7 +63,8 @@ class ConfigBase(xconfig.Config):
         self.set_var("check_exist_ip_on_startup", 0)
         self.set_var("auto_adjust_scan_ip_thread_num", 1)
         self.set_var("max_scan_ip_thread_num", 0)
-        self.set_var("max_good_ip_num", 3000)
+        self.set_var("max_good_ip_num", 100)
+        self.set_var("target_handshake_time", 300)
         self.set_var("max_links_per_ip", 1)
         self.set_var("ip_connect_interval", 5)
         self.set_var("record_ip_history", 0)
