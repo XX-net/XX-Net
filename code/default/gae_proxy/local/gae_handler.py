@@ -214,7 +214,10 @@ def pack_request(method, url, headers, body):
 
     # kwargs['options'] =
     kwargs['validate'] = front.config.GAE_VALIDATE
-    kwargs['maxsize'] = front.config.AUTORANGE_MAXSIZE
+    if url.endswith(".js"):
+        kwargs['maxsize'] = front.config.JS_MAXSIZE
+    else:
+        kwargs['maxsize'] = front.config.AUTORANGE_MAXSIZE
     kwargs['timeout'] = '19'
     # gae 用的参数　ｅｎｄ
 

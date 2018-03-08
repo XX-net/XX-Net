@@ -18,7 +18,8 @@ class Config(ConfigBase):
 
         # auto range
         self.set_var("AUTORANGE_THREADS", 20)
-        self.set_var("AUTORANGE_MAXSIZE", 2097152)
+        self.set_var("AUTORANGE_MAXSIZE", 548576)
+        self.set_var("JS_MAXSIZE", 2097152)
 
         # gae
         self.set_var("GAE_PASSWORD", "")
@@ -140,6 +141,14 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
     def load(self):
         super(Config, self).load()
+
+        if not os.path.isfile(self.config_path):
+            for fn in [
+                os.path.join(module_data_path, "config.ini"),
+                os.path.join(module_data_path, "manual.ini")
+            ]:
+                self.load_old_config(fn)
+
         self.HOSTS_GAE = tuple(self.hosts_gae)
         self.HOSTS_DIRECT = tuple(self.hosts_direct)
         self.HOSTS_GAE_ENDSWITH = tuple(self.hosts_gae_endswith)
@@ -147,6 +156,26 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         self.br_sites = tuple(self.BR_SITES)
         self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
+
+    def load_old_config(self, fn):
+        if not os.path.isfile(fn):
+            return
+
+        with open(fn, "r") as fd:
+            for line in fd.readlines():
+                if line.startswith("appid"):
+                    try:
+                        appid_str = line.split("=")[1]
+                        appids = []
+                        for appid in appid_str.split("|"):
+                            appid = appid.strip()
+                            appids.append(appid)
+                        self.GAE_APPIDS = appids
+                    except Exception as e:
+                        pass
+                elif line.startswith("password"):
+                    password = line.split("=")[1].strip()
+                    self.GAE_PASSWORD = password
 
 
 config_path = os.path.join(module_data_path, "config.json")

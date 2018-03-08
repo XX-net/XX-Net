@@ -413,13 +413,17 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     if rule:
         return try_loop("domain user", [rule], sock, host, port, client_address, left_buf)
 
-    record = g.domain_cache.get(host)
-    ips = g.dns_srv.query(host)
+    if g.config.block_advertisement and g.gfwlist.is_advertisement(host):
+        xlog.info("block advertisement %s:%d", host, port)
+        sock.close()
+        return
 
+    #ips = g.dns_srv.query(host)
     #if check_local_network.IPv6.is_ok() and have_ipv6(ips) and port == 443:
     #    rule_list = ["direct", "gae", "socks", "redirect_https"]
     # gae is more faster then direct.
 
+    record = g.domain_cache.get(host)
     if record and record["r"] != "unknown":
         rule = record["r"]
         if rule == "gae":
