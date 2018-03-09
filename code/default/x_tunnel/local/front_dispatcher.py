@@ -14,9 +14,10 @@ xlog = getLogger("x_tunnel")
 def init():
     if g.config.enable_gae_proxy:
         import gae_front
-        all_fronts.append(gae_front)
-        session_fronts.append(gae_front)
-        light_fronts.append(gae_front)
+        if gae_front.get_dispatcher():
+            all_fronts.append(gae_front)
+            session_fronts.append(gae_front)
+            light_fronts.append(gae_front)
 
     if g.config.enable_cloudflare:
         from cloudflare_front.front import front as cloudflare_front

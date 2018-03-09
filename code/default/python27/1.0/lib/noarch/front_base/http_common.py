@@ -214,12 +214,12 @@ class HttpWorker(object):
             rtt = self.rtt = 200
 
         if self.version != "1.1":
-            rtt += len(self.streams) * 100
+            rtt += len(self.streams) * 500
 
         if inactive_time < 1:
             score = rtt + 5000
         else:
-            score = rtt + (240 - inactive_time)*10
+            score = rtt + (240 - inactive_time)*1
 
         return score
 

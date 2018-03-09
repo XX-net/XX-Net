@@ -54,6 +54,19 @@ def remote_query_dns(domain, type=None):
         return []
 
 
+allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
+
+
+def is_valid_hostname(hostname):
+    hostname = hostname.upper()
+    if len(hostname) > 255:
+        return False
+    if hostname.endswith("."):
+        hostname = hostname[:-1]
+
+    return all(allowed.match(x) for x in hostname.split("."))
+
+
 class DnsServerList(object):
     def __init__(self):
         self.local_list = self.get_dns_server()
@@ -347,6 +360,10 @@ class DnsServer(object):
         if utils.check_ip_valid(domain):
             return [domain]
 
+        if not is_valid_hostname(domain):
+            xlog.warn("DNS query:%s not valid, type:%d", domain, type)
+            return []
+
         ips = g.domain_cache.get_ordered_ips(domain, type)
         if ips:
             return ips
@@ -404,6 +421,7 @@ class DnsServer(object):
                 return
 
             domain = str(request.questions[0].qname)
+
             if domain.endswith("."):
                 domain = domain[:-1]
 
@@ -418,7 +436,6 @@ class DnsServer(object):
             if not ips:
                 xlog.debug("query:%s type:%d from:%s, get fail, cost:%d", domain, type, addr,
                            (time.time() - start_time) * 1000)
-                return
 
             reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1, auth=1), q=request.q)
             for ip_cn in ips:

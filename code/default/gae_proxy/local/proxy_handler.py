@@ -158,6 +158,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         return False
 
     def do_METHOD(self):
+        self.close_connection = 1
+
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
 

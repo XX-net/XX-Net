@@ -75,7 +75,7 @@ class Http2Worker(HttpWorker):
         super(Http2Worker, self).__init__(
             logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
-        self.network_buffer_size = 128 * 1024
+        self.network_buffer_size = 65535
 
         # Google http/2 time out is 4 mins.
         self.ssl_sock.settimeout(240)

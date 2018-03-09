@@ -138,7 +138,7 @@ def load_config():
 def main(args):
     global ready
 
-    g.xxnet_version = xxnet_version
+    g.xxnet_version = xxnet_version()
 
     load_config()
     front_dispatcher.init()

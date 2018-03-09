@@ -73,6 +73,7 @@ class Config(ConfigBase):
 
         # http 2 worker
         self.set_var("http2_max_concurrent", 20)
+        self.set_var("http2_target_concurrent", 1)
         self.set_var("http2_max_timeout_tasks", 1)
         self.set_var("http2_timeout_active", 0)
 
@@ -127,10 +128,11 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         ])
         self.set_var("check_commonname", "Google")
         self.set_var("min_intermediate_CA", 3)
+        self.set_var("support_http2", 0)
 
         # ip_manager
-        self.set_var("max_scan_ip_thread_num", 1)
-        self.set_var("max_good_ip_num", 100)
+        self.set_var("max_scan_ip_thread_num", 5)
+        self.set_var("max_good_ip_num", 500)
         self.set_var("target_handshake_time", 600)
 
         # ip source

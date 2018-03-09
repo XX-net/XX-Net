@@ -95,6 +95,9 @@ class HttpServerHandler():
         if len(self.raw_requestline) > 65536:
             raise ParseReqFail("Recv command line too large")
 
+        if self.raw_requestline[0] == '\x16':
+            raise socket.error
+
         self.command = None  # set in case of error on the first line
         self.request_version = version = self.default_request_version
 

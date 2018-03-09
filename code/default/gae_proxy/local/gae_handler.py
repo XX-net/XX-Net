@@ -175,12 +175,15 @@ def send_response(wfile, status=404, headers={}, body=''):
     if 'Connection' not in headers:
         headers['Connection'] = 'close'
 
-    wfile.write("HTTP/1.1 %d\r\n" % status)
-    for key, value in headers.items():
-        #wfile.write("%s: %s\r\n" % (key, value))
-        send_header(wfile, key, value)
-    wfile.write("\r\n")
-    wfile.write(body)
+    try:
+        wfile.write("HTTP/1.1 %d\r\n" % status)
+        for key, value in headers.items():
+            #wfile.write("%s: %s\r\n" % (key, value))
+            send_header(wfile, key, value)
+        wfile.write("\r\n")
+        wfile.write(body)
+    except:
+        xlog.warn("send response fail")
 
 
 def return_fail_message(wfile):
@@ -330,7 +333,7 @@ def request_gae_server(headers, body, url, timeout):
     return response
 
 
-def request_gae_proxy(method, url, headers, body, timeout=120, retry=True):
+def request_gae_proxy(method, url, headers, body, timeout=30, retry=True):
     headers = dict(headers)
     # make retry and time out
     time_request = time.time()

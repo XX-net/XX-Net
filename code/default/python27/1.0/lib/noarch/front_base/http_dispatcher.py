@@ -173,7 +173,8 @@ class HttpsDispatcher(object):
                     (best_worker is None or
                     idle_num < self.config.dispather_min_idle_workers or
                     (now - best_worker.last_active_time) < self.config.dispather_work_min_idle_time or
-                    best_score > self.config.dispather_work_max_score):
+                    best_score > self.config.dispather_work_max_score or
+                     (best_worker.version == "2" and len(best_worker.streams) >= self.config.http2_target_concurrent)):
                 # self.logger.debug("trigger get more worker")
                 self.trigger_create_worker_cv.notify()
 

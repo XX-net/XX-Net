@@ -27,6 +27,7 @@ class ConfigBase(xconfig.Config):
 
         # http 2 worker
         self.set_var("http2_max_concurrent", 60)
+        self.set_var("http2_target_concurrent", 60)
         self.set_var("http2_max_timeout_tasks", 5)
         self.set_var("http2_timeout_active", 15)
         self.set_var("http2_status_to_close", [])

@@ -38,7 +38,7 @@ class Front(object):
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
-            logger, ca_certs=ca_certs,
+            logger, ca_certs=ca_certs, support_http2=config.support_http2,
             cipher_suites=['ALL', "!RC4-SHA","!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
                            "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
         )

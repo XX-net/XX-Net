@@ -32,7 +32,7 @@ class Front(object):
         self.config = Config(config_path)
 
         ca_certs = os.path.join(current_path, "cacert.pem")
-        self.host_manager = host_manager.HostManager(self.config.appids)
+        self.host_manager = host_manager.HostManager(self.logger, self.config.appids)
 
         openssl_context = SSLContext(logger, ca_certs=ca_certs)
         self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
@@ -95,21 +95,28 @@ class Front(object):
 
         # self.logger.info('%s "PHP %s %s %s" %s %s', handler.address_string(), handler.command, url, handler.protocol_version, response.status, response.getheader('Content-Length', '-'))
         # self.logger.debug("status:%d", status)
-        if status == 200:
-            self.logger.debug("%s %s%s trace:%s", method, host, path, response.task.get_trace())
+
+        if hasattr(response, "task"):
+            self.logger.debug("%s %s%s status:%d trace:%s", method, host, path, status, response.task.get_trace())
         else:
-            if status == 404:
-                heroku_host = response.ssl_sock.host
-                self.logger.warn("heroku:%s fail", heroku_host)
-                try:
-                    self.host_manager.remove(heroku_host)
-                except:
-                    pass
+            self.logger.debug("%s %s%s status:%d", method, host, path, status)
+
+        if status == 404:
+            heroku_host = response.ssl_sock.host
+            self.logger.warn("heroku appid:%s fail", heroku_host)
+            try:
+                self.host_manager.remove(heroku_host)
+            except:
+                pass
+            return "", 501, {}
+
+        if not content:
+            return "", 501, {}
 
         try:
             res = simple_http_client.TxtResponse(content)
         except Exception as e:
-            self.logger.exception("decode %s response except:%r", content, e)
+            self.logger.warn("decode %s response except:%r", content, e)
             return "", 501, {}
 
         res.worker = response.worker

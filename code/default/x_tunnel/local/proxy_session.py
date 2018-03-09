@@ -146,7 +146,7 @@ class ProxySession():
             sleep(60)
 
     def check_report_status(self):
-        if not g.config.login_account or not self.running:
+        if not g.config.login_account or not self.running or time.time() - self.last_send_time > 60:
             return
 
         good_ip_num = 0
@@ -195,8 +195,12 @@ class ProxySession():
         total_sent = 0
         total_received = 0
         for front in g.http_client.all_fronts:
+            if not front:
+                continue
             name = front.name
             dispatcher = front.get_dispatcher()
+            if not dispatcher:
+                continue
             score = dispatcher.get_score()
             if score is None:
                 score = "False"

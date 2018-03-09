@@ -14,6 +14,7 @@ import socket, ssl
 import urlparse
 import urllib2
 import time
+import threading
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
@@ -613,6 +614,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     pass
 
                 dat += "%d KB, count:%d %s\n" % (stat.size / 1024, stat.count, ll)
+
+            if hasattr(threading, "_start_trace"):
+                dat += "\n\nThread stat:\n"
+                for path in threading._start_trace:
+                    n = threading._start_trace[path]
+                    if n <= 1:
+                        continue
+                    dat += "%s => %d\n\n" % (path, n)
 
             self.send_response("text/plain", dat)
         except Exception as e:

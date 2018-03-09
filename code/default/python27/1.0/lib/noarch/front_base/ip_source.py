@@ -193,11 +193,11 @@ class Ipv6PoolSource(object):
         self.fsize = os.path.getsize(list_fn)
 
     def get_slice(self):
-        max_slice_len = 120
+        max_slice_len = 200
 
         position = random.randint(0, self.fsize - max_slice_len)
         self.fd.seek(position)
-        slice = self.fd.read(max_slice_len)
+        slice = self.fd.read(max_slice_len * 2)
 
         if slice is None or len(slice) < max_slice_len:
             self.logger.warn("get_slice fail")
