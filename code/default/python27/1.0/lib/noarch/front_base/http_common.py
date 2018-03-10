@@ -177,7 +177,7 @@ class HttpWorker(object):
         self.ip_manager = ip_manager
         self.config = config
         self.ssl_sock = ssl_sock
-        self.init_rtt = ssl_sock.handshake_time / 2
+        self.init_rtt = ssl_sock.handshake_time / 3
         self.rtt = self.init_rtt
         self.speed = 1
         self.ip = ssl_sock.ip
@@ -210,16 +210,22 @@ class HttpWorker(object):
         inactive_time = now - self.last_active_time
 
         rtt = self.rtt
-        if inactive_time > 30 and rtt > 1000:
-            rtt = self.rtt = 200
+        if inactive_time > 30:
+            if rtt > 1000:
+                rtt = 1000
 
-        if self.version != "1.1":
-            rtt += len(self.streams) * 500
-
-        if inactive_time < 1:
-            score = rtt + 5000
+        if self.version == "1.1":
+            rtt += 100
         else:
-            score = rtt + (240 - inactive_time)*1
+            rtt += len(self.streams) * 100
+
+        if inactive_time > 1:
+            score = rtt
+        elif inactive_time < 0.1:
+            score = rtt + 1000
+        else:
+            # inactive_time < 2
+            score = rtt + (1 / inactive_time) * 1000
 
         return score
 

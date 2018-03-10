@@ -63,6 +63,7 @@ import ssl
 import urlparse
 import threading
 import zlib
+import traceback
 
 from front import front
 from xlog import getLogger
@@ -274,7 +275,7 @@ def unpack_response(response):
     except Exception as e:
         response.worker.close("unpack protocol error")
         front.ip_manager.recheck_ip(response.ssl_sock.ip)
-        raise GAE_Exception(600, "unpack protocol:%r" % e)
+        raise GAE_Exception(600, "unpack protocol:%r at:%s" % (e, traceback.format_exc()))
 
 
 def request_gae_server(headers, body, url, timeout):

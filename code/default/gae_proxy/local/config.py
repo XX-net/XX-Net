@@ -80,8 +80,8 @@ class Config(ConfigBase):
         # connect_manager
         self.set_var("https_max_connect_thread", 10)
         self.set_var("ssl_first_use_timeout", 5)
-        self.set_var("connection_pool_min", 0)
-        self.set_var("https_new_connect_num", 0)
+        self.set_var("connection_pool_min", 1)
+        self.set_var("https_new_connect_num", 3)
         self.set_var("https_keep_alive", 5)
 
         # check_ip
@@ -128,11 +128,11 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         ])
         self.set_var("check_commonname", "Google")
         self.set_var("min_intermediate_CA", 3)
-        self.set_var("support_http2", 0)
+        self.set_var("support_http2", 1)
 
         # ip_manager
-        self.set_var("max_scan_ip_thread_num", 5)
-        self.set_var("max_good_ip_num", 500)
+        self.set_var("max_scan_ip_thread_num", 10)
+        self.set_var("max_good_ip_num", 3000)
         self.set_var("target_handshake_time", 600)
 
         # ip source
