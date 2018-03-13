@@ -16,28 +16,59 @@ if __name__ == "__main__":
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('Gdk', '3.0')
-from gi.repository import Gtk as gtk
-from gi.repository import Gdk as gdk
-gdk.threads_init()
-
 try:
-    gi.require_version('Notify', '0.7')
-    from gi.repository import Notify as notify
-    notify.init('XX-Net Notify')
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gdk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import Gdk as gdk
+    use_gi = True
 except:
-    xlog.warn("import Notify fail, please install libnotify if possible.")
-    notify = None
+    import pygtk
+    pygtk.require('2.0')
+    import gtk
+    import gtk.gdk as gdk
+    use_gi = False
+gdk.threads_init()
 
 import module_init
 
-try:
-    gi.require_version('AppIndicator3', '0.1')
-    from gi.repository import AppIndicator3 as appindicator
-except:
-    appindicator = None
+if use_gi:
+    try:
+        gi.require_version('Notify', '0.7')
+        from gi.repository import Notify as notify
+        notify.init('XX-Net Notify')
+        new_notification = notify.Notification.new
+    except:
+        xlog.warn("import Notify fail, please install libnotify if possible.")
+        notify = None
+
+    try:
+        gi.require_version('AppIndicator3', '0.1')
+        from gi.repository import AppIndicator3 as appindicator
+        new_appindicator = appindicator.Indicator.new
+        appind_category = appindicator.IndicatorCategory.APPLICATION_STATUS
+        appind_status = appindicator.IndicatorStatus.ACTIVE
+    except:
+        appindicator = None
+        popup_trayicon_menu = lambda m, s, b, t: m.popup(None, None, gtk.StatusIcon.position_menu, s, b, t)
+else:
+    try:
+        import pynotify as notify
+        notify.init('XX-Net Notify')
+        new_notification = notify.Notification
+    except:
+        xlog.warn("import pynotify fail, please install python-notify if possible.")
+        notify = None
+
+    try:
+        import appindicator
+        new_appindicator = appindicator.Indicator
+        appind_category = appindicator.CATEGORY_APPLICATION_STATUS
+        appind_status = appindicator.STATUS_ACTIVE
+    except:
+        appindicator = None
+        popup_trayicon_menu = lambda m, s, b, t: m.popup(None, None, gtk.status_icon_position_menu, b, t, s)
 
 
 class Gtk_tray():
@@ -51,8 +82,8 @@ class Gtk_tray():
             self.trayicon = self.gtk_trayicon(logo_filename)
 
     def appind_trayicon(self, logo_filename):
-        trayicon = appindicator.Indicator.new('XX-Net', 'indicator-messages', appindicator.IndicatorCategory.APPLICATION_STATUS)
-        trayicon.set_status(appindicator.IndicatorStatus.ACTIVE)
+        trayicon = new_appindicator('XX-Net', 'indicator-messages', appind_category)
+        trayicon.set_status(appind_status)
         trayicon.set_attention_icon('indicator-messages-new')
         trayicon.set_icon(logo_filename)
         trayicon.set_menu(self.make_menu())
@@ -63,7 +94,7 @@ class Gtk_tray():
         trayicon = gtk.StatusIcon()
         trayicon.set_from_file(logo_filename)
 
-        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, trayicon.position_menu, trayicon, b, t))
+        trayicon.connect('popup-menu', lambda i, b, t: popup_trayicon_menu(self.make_menu(), trayicon, b, t))
         trayicon.connect('activate', self.show_control_web)
         trayicon.set_tooltip_text('XX-Net')
         trayicon.set_visible(True)
@@ -91,7 +122,7 @@ class Gtk_tray():
         if not notify:
             return False
 
-        n = notify.Notification.new('Test', msg)
+        n = new_notification('Test', msg)
         for k in buttons:
             data = buttons[k]["data"]
             label = buttons[k]["label"]
