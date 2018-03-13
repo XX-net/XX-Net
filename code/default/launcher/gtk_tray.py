@@ -9,7 +9,6 @@ import webbrowser
 from xlog import getLogger
 xlog = getLogger("launcher")
 
-import pygtk
 import config
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -17,24 +16,27 @@ if __name__ == "__main__":
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
-pygtk.require('2.0')
-import gtk
-gtk.gdk.threads_init()
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+gdk.threads_init()
 
 try:
-    import pynotify
-    pynotify.init('XX-Net Notify')
+    gi.require_version('Notify', '0.7')
+    from gi.repository import Notify as notify
+    notify.init('XX-Net Notify')
 except:
-    xlog.warn("import pynotify fail, please install python-notify if possiable.")
-    pynotify = None
+    xlog.warn("import Notify fail, please install libnotify if possible.")
+    notify = None
 
 import module_init
 
 try:
-    import platform
-    import appindicator
+    gi.require_version('AppIndicator3', '0.1')
+    from gi.repository import AppIndicator3 as appindicator
 except:
-    platform = None
     appindicator = None
 
 
@@ -43,14 +45,14 @@ class Gtk_tray():
     def __init__(self):
         logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
 
-        if platform and appindicator and platform.dist()[0].lower() == 'ubuntu':
-            self.trayicon = self.ubuntu_trayicon(logo_filename)
+        if appindicator:
+            self.trayicon = self.appind_trayicon(logo_filename)
         else:
             self.trayicon = self.gtk_trayicon(logo_filename)
 
-    def ubuntu_trayicon(self, logo_filename):
-        trayicon = appindicator.Indicator('XX-Net', 'indicator-messages', appindicator.CATEGORY_APPLICATION_STATUS)
-        trayicon.set_status(appindicator.STATUS_ACTIVE)
+    def appind_trayicon(self, logo_filename):
+        trayicon = appindicator.Indicator.new('XX-Net', 'indicator-messages', appindicator.IndicatorCategory.APPLICATION_STATUS)
+        trayicon.set_status(appindicator.IndicatorStatus.ACTIVE)
         trayicon.set_attention_icon('indicator-messages-new')
         trayicon.set_icon(logo_filename)
         trayicon.set_menu(self.make_menu())
@@ -61,9 +63,9 @@ class Gtk_tray():
         trayicon = gtk.StatusIcon()
         trayicon.set_from_file(logo_filename)
 
-        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
+        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, trayicon.position_menu, trayicon, b, t))
         trayicon.connect('activate', self.show_control_web)
-        trayicon.set_tooltip('XX-Net')
+        trayicon.set_tooltip_text('XX-Net')
         trayicon.set_visible(True)
 
         return trayicon
@@ -86,10 +88,10 @@ class Gtk_tray():
 
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
-        if not pynotify:
+        if not notify:
             return False
 
-        n = pynotify.Notification('Test', msg)
+        n = notify.Notification.new('Test', msg)
         for k in buttons:
             data = buttons[k]["data"]
             label = buttons[k]["label"]
@@ -114,9 +116,9 @@ class Gtk_tray():
         gtk.main_quit()
 
     def serve_forever(self):
-        gtk.gdk.threads_enter()
+        gdk.threads_enter()
         gtk.main()
-        gtk.gdk.threads_leave()
+        gdk.threads_leave()
 
 sys_tray = Gtk_tray()
 
