@@ -86,9 +86,9 @@ if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in p
 elif sys.platform.startswith("linux"):
     def X_is_running():
         try:
-            import pygtk
-            pygtk.require('2.0')
-            import gtk
+            import gi
+            gi.require_version('Gtk', '3.0')
+            from gi.repository import Gtk as gtk
 
             from subprocess import Popen, PIPE
             p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
