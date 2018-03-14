@@ -86,10 +86,6 @@ if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in p
 elif sys.platform.startswith("linux"):
     def X_is_running():
         try:
-            import pygtk
-            pygtk.require('2.0')
-            import gtk
-
             from subprocess import Popen, PIPE
             p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
             p.communicate()
@@ -97,7 +93,25 @@ elif sys.platform.startswith("linux"):
         except:
             return False
 
-    if X_is_running():
+    def has_gi():
+        try:
+            import gi
+            gi.require_version('Gtk', '3.0')
+            from gi.repository import Gtk as gtk
+            return True
+        except:
+            return False
+
+    def has_pygtk():
+        try:
+            import pygtk
+            pygtk.require('2.0')
+            import gtk
+            return True
+        except:
+            return False
+
+    if X_is_running() and (has_gi() or has_pygtk()):
         from gtk_tray import sys_tray
     else:
         from non_tray import sys_tray
