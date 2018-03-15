@@ -18,7 +18,7 @@ class Config(ConfigBase):
         self.set_var("dispather_score_factor", 10)
 
         # http 2 worker
-        self.set_var("http2_status_to_close", [400, 403, 405])
+        #self.set_var("http2_status_to_close", [])
 
         # connect_manager
         self.set_var("ssl_first_use_timeout", 5)
@@ -31,11 +31,8 @@ class Config(ConfigBase):
         # connect_creator
         self.set_var("check_sni", 1)
 
-        # host_manager
-        self.set_var("update_domains", 1)
-
         # ip_manager
-        self.set_var("max_scan_ip_thread_num", 1)
+        self.set_var("max_scan_ip_thread_num", 5)
         self.set_var("max_good_ip_num", 100)
         self.set_var("target_handshake_time", 550)
 

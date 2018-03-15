@@ -36,9 +36,9 @@ class CheckIp(object):
             self.logger.exception("http2 get response fail:%r", e)
             return False
 
-    def check_ip(self, ip, host=None, wait_time=0):
+    def check_ip(self, ip, sni=None, host=None, wait_time=0):
         try:
-            ssl_sock = self.connect_creator.connect_ssl(ip, sni=host)
+            ssl_sock = self.connect_creator.connect_ssl(ip, sni=sni)
             self.connect_creator.get_ssl_cert_domain(ssl_sock)
         except socket.timeout:
             self.logger.warn("connect timeout")
@@ -86,6 +86,9 @@ class CheckIp(object):
             return False
 
         content = response.read()
+        if isinstance(content, memoryview):
+            content = content.tobytes()
+
         if self.config.check_ip_content not in content:
             self.logger.warn("app check content:%s", content)
             return False

@@ -31,6 +31,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("http2_max_timeout_tasks", 5)
         self.set_var("http2_timeout_active", 15)
         self.set_var("http2_status_to_close", [])
+        self.set_var("http2_show_debug", 0)
 
         # worker_base
         self.set_var("show_state_debug", 0)

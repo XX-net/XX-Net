@@ -26,6 +26,12 @@ def init():
         light_fronts.append(cloudflare_front)
         g.cloudflare_front = cloudflare_front
 
+    if g.config.enable_cloudfront:
+        from cloudfront_front.front import front as cloudfront_front
+        all_fronts.append(cloudfront_front)
+        session_fronts.append(cloudfront_front)
+        light_fronts.append(cloudfront_front)
+
     if g.config.enable_heroku:
         from heroku_front.front import front as heroku_front
         all_fronts.append(heroku_front)

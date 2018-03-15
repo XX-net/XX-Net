@@ -49,7 +49,7 @@ class Front(object):
 
         self.host_manager.appid_manager = self.appid_manager
 
-        self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
+        self.ip_checker = CheckIp(xlog.null, self.config, self.connect_creator)
 
         self.ipv4_source = Ipv4RangeSource(
             logger, self.config,
@@ -66,12 +66,12 @@ class Front(object):
         )
         self.ip_manager = IpManager(
             logger, self.config, self.ip_source, check_local_network,
-            self.check_ip.check_ip,
+            self.check_ip,
             None,
             os.path.join(module_data_path, "good_ip.txt"),
             scan_ip_log=None)
 
-        self.appid_manager.check_api = self.check_ip.check_ip
+        self.appid_manager.check_api = self.ip_checker.check_ip
         self.appid_manager.ip_manager = self.ip_manager
 
         self.connect_manager = ConnectManager(
@@ -80,6 +80,11 @@ class Front(object):
         self.http_dispatcher = HttpsDispatcher(
             logger, self.config, self.ip_manager, self.connect_manager
         )
+
+    def check_ip(self, ip):
+        sni = self.host_manager.sni_manager.get()
+        host = "xxnet-1.appspot.com"
+        return self.ip_checker.check_ip(ip, sni=sni, host=host)
 
     def get_dispatcher(self):
         return self.http_dispatcher

@@ -1,4 +1,4 @@
-
+import random
 
 class HostManagerBase(object):
 

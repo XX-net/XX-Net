@@ -3,7 +3,6 @@
 
 import sys
 import os
-import json
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +31,7 @@ elif sys.platform == "darwin":
 
 import utils
 import xlog
-logger = xlog.getLogger("cloudflare_front")
+logger = xlog.getLogger("cloudfront_front")
 logger.set_buffer(500)
 
 from front_base.openssl_wrap import SSLContext
@@ -40,21 +39,7 @@ from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 from front_base.host_manager import HostManagerBase
 
-
 from config import Config
-
-
-def check_all_domain(check_ip):
-    with open(os.path.join(current_path, "front_domains.json"), "r") as fd:
-        content = fd.read()
-        cs = json.loads(content)
-        for host in cs:
-            host = "scan1." + host
-            res = check_ip.check_ip(ip, host=host, wait_time=wait_time)
-            if not res or not res.ok:
-                xlog.warn("host:%s fail", host)
-            else:
-                xlog.info("host:%s ok", host)
 
 
 class CheckAllIp(object):
@@ -65,7 +50,7 @@ class CheckAllIp(object):
 
         self.in_fd = open("good_ip.txt", "r")
         self.out_fd = open(
-            os.path.join(module_data_path, "cloudflare_checked_ip.txt"),
+            os.path.join(module_data_path, "cloudfront_checked_ip.txt"),
             "w"
         )
 
@@ -113,7 +98,7 @@ class CheckAllIp(object):
 
 
 def check_all_ip(check_ip):
-    check = CheckAllIp(check_ip, "scan1.movistar.gq")
+    check = CheckAllIp(check_ip, "scan1.xx-net.net")
     check.run()
 
 
@@ -122,9 +107,10 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
-    default_ip = "141.101.120.131"
+    default_ip = "54.192.37.196"
 
-    host = "cloudflare.com"
+    sni = "afdsfafa.cloudfront.net"
+    host = "scan1.xx-net.net"
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         if not utils.check_ip_valid(ip):
@@ -144,19 +130,18 @@ if __name__ == "__main__":
     else:
         wait_time = 0
 
-    config_path = os.path.join(module_data_path, "cloudflare_front.json")
+    config_path = os.path.join(module_data_path, "cloudfront_front.json")
     config = Config(config_path)
 
-    openssl_context = SSLContext(logger)
+    openssl_context = SSLContext(logger, support_http2=True)
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager, debug=True)
     check_ip = CheckIp(logger, config, connect_creator)
 
-    #check_all_domain(check_ip)
-    check_all_ip(check_ip)
-    exit(0)
+    #check_all_ip(check_ip)
+    #exit(0)
 
-    res = check_ip.check_ip(ip, host=host, wait_time=wait_time)
+    res = check_ip.check_ip(ip, sni=sni, host=host, wait_time=wait_time)
     if not res:
         xlog.warn("connect fail")
     elif res.ok:

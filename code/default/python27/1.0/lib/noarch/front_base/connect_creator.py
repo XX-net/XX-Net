@@ -109,6 +109,9 @@ class ConnectCreator(object):
         ssl_sock.set_connect_state()
 
         if sni:
+            if self.debug:
+                self.logger.debug("sni:%s", sni)
+
             try:
                 ssl_sock.set_tlsext_host_name(sni)
             except:
@@ -180,11 +183,18 @@ class ConnectCreator(object):
         self.get_ssl_cert_domain(ssl_sock)
         issuer_commonname = next((v for k, v in cert_chain[0].get_issuer().get_components() if k == 'CN'), '')
         if self.debug:
+            for cert in cert_chain:
+                for k, v in cert.get_issuer().get_components():
+                    if k != "CN":
+                        continue
+                    cn = v
+                    self.logger.debug("cn:%s", cn)
+
             self.logger.debug("issued by:%s", issuer_commonname)
             self.logger.debug("Common Name:%s", ssl_sock.domain)
 
         if self.config.check_commonname and not issuer_commonname.startswith(self.config.check_commonname):
-            raise socket.error(' certficate is issued by %r, not Google' % (issuer_commonname))
+            raise socket.error(' certficate is issued by %r' % (issuer_commonname))
 
         cert = ssl_sock.get_peer_certificate()
         if not cert:

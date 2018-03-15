@@ -174,7 +174,8 @@ class Http2Worker(HttpWorker):
                 # None frame means exist
                 break
 
-            # self.logger.debug("%s Send:%s", self.ip, str(frame))
+            if self.config.http2_show_debug:
+                self.logger.debug("%s Send:%s", self.ip, str(frame))
             data = frame.serialize()
             try:
                 self._sock.send(data, flush=False)
@@ -344,7 +345,8 @@ class Http2Worker(HttpWorker):
     def _consume_frame_payload(self, frame, data):
         frame.parse_body(data)
 
-        # self.logger.debug("%s Recv:%s", self.ip, str(frame))
+        if self.config.http2_show_debug:
+            self.logger.debug("%s Recv:%s", self.ip, str(frame))
 
         # Maintain our flow control window. We do this by delegating to the
         # chosen WindowManager.

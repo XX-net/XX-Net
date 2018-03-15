@@ -123,10 +123,10 @@ class Stream(object):
 
         host = self.connection.get_host(self.task.host)
 
-        self.add_header(":Method", self.task.method)
-        self.add_header(":Scheme", "https")
-        self.add_header(":Authority", host)
-        self.add_header(":Path", self.task.path)
+        self.add_header(":method", self.task.method)
+        self.add_header(":scheme", "https")
+        self.add_header(":authority", host)
+        self.add_header(":path", self.task.path)
 
         default_headers = (':method', ':scheme', ':authority', ':path')
         #headers = h2_safe_headers(self.task.headers)
@@ -153,6 +153,8 @@ class Stream(object):
         # way, due to the restriction above it's definitely the end of the
         # headers.
         header_frame.flags.add('END_HEADERS')
+        if self.request_body_left == 0:
+            header_frame.flags.add('END_STREAM')
 
         # Send the header frame.
         self.task.set_state("start send header")
@@ -165,7 +167,9 @@ class Stream(object):
         threading.Thread(target=self.left_work).start()
 
     def left_work(self):
-        self.send_left_body()
+        if self.request_body_left > 0:
+            self.send_left_body()
+
         self.timeout_response()
 
     def add_header(self, name, value, replace=False):

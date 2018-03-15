@@ -336,6 +336,11 @@ class IpManager():
                     self.ip_pointer_reset_time = time_now
 
                 ip = self.ip_list[self.ip_pointer]
+                if "." in ip and self.config.use_ipv6 == "force_ipv6":
+                    continue
+                elif ":" in ip and self.config.use_ipv6 == "force_ipv4":
+                    continue
+
                 get_time = self.ip_dict[ip]["get_time"]
                 if time_now - get_time < self.ip_connect_interval:
                     self.ip_pointer += 1
