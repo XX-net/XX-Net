@@ -132,7 +132,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 10)
-        self.set_var("max_good_ip_num", 3000)
+        self.set_var("max_good_ip_num", 1000)
         self.set_var("target_handshake_time", 600)
 
         # ip source

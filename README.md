@@ -22,8 +22,11 @@
 
 
 ### 最新状态：
- 2018-03-13
-* 这几天墙封得很严重，请大家开启IPv6，参考:  
+ 2018-03-16
+* X-Tunnel 新版 3.11.1 发布，新增cloudfront通道.
+
+
+* GAE_Proxy 请开启IPv6，参考:  
   [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)
 
     
