@@ -27,27 +27,27 @@ exit
 @echo off
 
 
-sc config RpcEptMapper start=auto
+sc config RpcEptMapper start= auto
 sc start RpcEptMapper
 
-sc config DcomLaunch start=auto
+sc config DcomLaunch start= auto
 sc start DcomLaunch
 
-sc config RpcSs start=auto
+sc config RpcSs start= auto
 sc start RpcSs
 
-sc config nsi start=auto
+sc config nsi start= auto
 sc start nsi
-sc config Wingmt start=auto
+sc config Wingmt start= auto
 sc start Winmgmt
 
-sc config Dhcp start=auto
+sc config Dhcp start= auto
 sc start Dhcp
 
-sc config WinHttpAutoProxySvc start=auto
+sc config WinHttpAutoProxySvc start= auto
 sc start WinHttpAutoProxySvc
 
-sc config iphlpsvc start=auto
+sc config iphlpsvc start= auto
 sc start iphlpsvc
 
 netsh int ipv6 reset
