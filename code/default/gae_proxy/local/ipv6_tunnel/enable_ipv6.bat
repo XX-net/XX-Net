@@ -38,7 +38,7 @@ sc start RpcSs
 
 sc config nsi start= auto
 sc start nsi
-sc config Wingmt start= auto
+sc config Winmgmt start= auto
 sc start Winmgmt
 
 sc config Dhcp start= auto
