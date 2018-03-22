@@ -146,8 +146,8 @@ skip_headers = frozenset(['Vary',
                           'Proxy-Connection',
                           'Upgrade',
                           'X-Chrome-Variations',
-                          'Connection',
-                          'Cache-Control'
+                          #'Connection',
+                          #'Cache-Control'
                           ])
 
 
@@ -334,7 +334,7 @@ def request_gae_server(headers, body, url, timeout):
     return response
 
 
-def request_gae_proxy(method, url, headers, body, timeout=30, retry=True):
+def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
     headers = dict(headers)
     # make retry and time out
     time_request = time.time()
@@ -517,6 +517,9 @@ def handler(method, url, headers, body, wfile):
             continue
         response_headers[key] = value
 
+    response_headers["Persist"] = ""
+    response_headers["Connection"] = "Persist"
+
     if 'X-Head-Content-Length' in response_headers:
         if method == "HEAD":
             response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
@@ -568,7 +571,7 @@ def handler(method, url, headers, body, wfile):
             # https 包装
             ret = wfile._sock.sendall(data)
             if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                xlog.debug("send to browser wfile.write ret:%d", ret)
+                #xlog.debug("send to browser wfile.write ret:%d", ret)
                 #ret = wfile.write(data)
                 wfile._sock.sendall(data)
         except Exception as e_b:
@@ -656,6 +659,9 @@ class RangeFetch2(object):
             response_headers['Content-Length'] = str(
                 self.req_end - res_begin + 1)
             state_code = 206
+
+        response_headers["Persist"] = ""
+        response_headers["Connection"] = "Persist"
 
         xlog.info('RangeFetch %d-%d started(%r) ',
                   res_begin, self.req_end, self.url)
@@ -804,8 +810,8 @@ class RangeFetch2(object):
 
                 data = response.task.read()
                 if not data:
-                    xlog.warn("RangeFetch [%s] get body fail %s",
-                              response.ssl_sock.ip, self.url)
+                    xlog.warn("RangeFetch [%s] get body fail, begin:%d %s",
+                              response.ssl_sock.ip, begin, self.url)
                     break
 
                 data_len = len(data)

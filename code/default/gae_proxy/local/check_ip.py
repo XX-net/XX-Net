@@ -149,6 +149,7 @@ if __name__ == "__main__":
         ip = sys.argv[1]
     else:
         ip = "46.134.208.94"
+        ip = "2001:ee0:3203:a::12"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     print("test ip:%s" % ip)
 

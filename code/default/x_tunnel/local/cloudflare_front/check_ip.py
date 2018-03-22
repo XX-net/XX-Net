@@ -96,7 +96,7 @@ class CheckAllIp(object):
                 return
 
             try:
-                res = self.check_ip.check_ip(ip, host=host)
+                res = self.check_ip.check_ip(ip, sni=host, host=host)
             except Exception as e:
                 xlog.warn("check fail:%s except:%r", e)
                 continue
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     default_ip = "141.101.120.131"
 
-    host = "cloudflare.com"
+    host = "xx-net.net"
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         if not utils.check_ip_valid(ip):
@@ -153,10 +153,10 @@ if __name__ == "__main__":
     check_ip = CheckIp(logger, config, connect_creator)
 
     #check_all_domain(check_ip)
-    check_all_ip(check_ip)
-    exit(0)
+    #check_all_ip(check_ip)
+    #exit(0)
 
-    res = check_ip.check_ip(ip, host=host, wait_time=wait_time)
+    res = check_ip.check_ip(ip, sni=host, host=host, wait_time=wait_time)
     if not res:
         xlog.warn("connect fail")
     elif res.ok:

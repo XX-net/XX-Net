@@ -14,11 +14,12 @@ class Config(ConfigBase):
         self.set_var("dispather_min_idle_workers", 0)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
-        self.set_var("dispather_max_workers", 1)
-        self.set_var("dispather_score_factor", 100)
+        self.set_var("dispather_max_workers", 2)
+        self.set_var("dispather_score_factor", 1000)
 
         # http 2 worker
-        #self.set_var("http2_status_to_close", [])
+        self.set_var("http2_max_concurrent", 30)
+        self.set_var("http2_status_to_close", [403])
 
         # connect_manager
         self.set_var("ssl_first_use_timeout", 5)

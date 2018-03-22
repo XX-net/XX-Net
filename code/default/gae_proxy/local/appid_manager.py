@@ -5,6 +5,7 @@ import random
 import threading
 import time
 import os
+from front_base.random_get_slice import RandomGetSlice
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -13,32 +14,16 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 class AppidManager(object):
     lock = threading.Lock()
 
-    def __init__(self, config, logger,):
+    def __init__(self, config, logger):
         self.config = config
         self.logger = logger
         self.check_api = None
         self.ip_manager = None
 
         fn = os.path.join(current_path, "appids.txt")
-        self.public_appids_fd = open(fn, "r")
-        self.public_appids_fsize = os.path.getsize(fn)
+        self.public_appid = RandomGetSlice(fn, 60)
 
         self.reset_appid()
-
-    def get_public_appid(self):
-        max_id_len = 50
-
-        position = random.randint(0, self.public_appids_fsize - max_id_len)
-        self.public_appids_fd.seek(position)
-        slice = self.public_appids_fd.read(max_id_len * 2)
-
-        if slice is None or len(slice) < max_id_len:
-            self.logger.warn("get_public_appid fail")
-            raise Exception()
-
-        ns = slice.split("\n")
-        appid = ns[1]
-        return appid
 
     def reset_appid(self):
         # called by web_control
@@ -69,7 +54,7 @@ class AppidManager(object):
             return appid
         else:
             for _ in xrange(0, 10):
-                appid = self.get_public_appid()
+                appid = self.public_appid.get()
                 if appid in self.out_of_quota_appids or appid in self.not_exist_appids:
                     continue
                 else:

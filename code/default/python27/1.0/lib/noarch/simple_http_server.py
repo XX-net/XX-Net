@@ -44,7 +44,7 @@ class HttpServerHandler():
     def __init__(self, sock, client, args, logger=None):
         self.connection = sock
         sock.setblocking(1)
-        sock.settimeout(300)
+        sock.settimeout(60)
         self.rfile = socket._fileobject(self.connection, "rb", self.rbufsize, close=True)
         self.wfile = socket._fileobject(self.connection, "wb", self.wbufsize, close=True)
         self.client_address = client
@@ -53,6 +53,7 @@ class HttpServerHandler():
             self.logger = logger
         else:
             self.logger = xlog.getLogger("simple_http_server")
+        #self.logger.debug("new connect from:%s", self.address_string())
 
         self.setup()
 
@@ -282,7 +283,10 @@ class HttpServerHandler():
 
     def WebSocket_on_connect(self):
         # Define the function and return True to accept
-        self.logger.warn("unhandler WebSocket from %s", self.address_string())
+        self.logger.warn("unhandled WebSocket from %s", self.address_string())
+        self.send_error(501, "Not supported")
+        self.close_connection = 1
+
         return False
 
     def do_GET(self):
@@ -532,8 +536,7 @@ class HTTPServer():
 
     def shutdown(self):
         self.running = False
-        while self.sockets:
-            time.sleep(1)
+        self.server_close()
 
     def server_close(self):
         for sock in self.sockets:

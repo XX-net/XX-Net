@@ -42,8 +42,6 @@ function createDesktopStartup() {
 
 # create a desktop startup file when the distro is Ubuntu.
 DIS=`cat /etc/issue 2> /dev/null`
-if [[ $DIS == *Ubuntu* ]]; then
+if [[ $DIS == *Ubuntu* || $DIS == *Debian* ]]; then
     createDesktopStartup
-else
-    echo "Not ubuntu. Not creating shortcut"
 fi

@@ -61,7 +61,6 @@ elif sys.platform == "darwin":
 
 import traceback
 import platform
-import threading
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
@@ -86,7 +85,7 @@ from cert_util import CertUtil
 import simple_http_server
 import proxy_handler
 import env_info
-from front import front
+from front import front, direct_front
 
 
 proxy_server = None
@@ -124,6 +123,9 @@ def main(args):
     else:
         listen_ip = front.config.listen_ip
 
+    front.start()
+    direct_front.start()
+
     proxy_server = simple_http_server.HTTPServer(
         (listen_ip, front.config.listen_port), proxy_handler.GAEProxyHandler, logger=xlog)
 
@@ -135,10 +137,12 @@ def main(args):
 # called by launcher/module/stop
 def terminate():
     global ready, proxy_server
-    ready = False
-    proxy_server.shutdown()
-    front.stop()
+
     xlog.info("start to terminate GAE_Proxy")
+    ready = False
+    front.stop()
+    direct_front.stop()
+    proxy_server.shutdown()
 
 
 if __name__ == '__main__':

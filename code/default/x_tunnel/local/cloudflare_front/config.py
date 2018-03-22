@@ -36,7 +36,7 @@ class Config(ConfigBase):
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 1)
-        self.set_var("max_good_ip_num", 100)
-        self.set_var("target_handshake_time", 550)
+        self.set_var("max_good_ip_num", 50)
+        self.set_var("target_handshake_time", 300)
 
         self.load()

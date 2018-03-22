@@ -9,7 +9,7 @@ import utils
 import simple_http_server
 from socket_wrap import SocketWrap
 import global_var as g
-from gae_proxy.local import check_local_network
+import socks
 
 from xlog import getLogger
 xlog = getLogger("smart_router")
@@ -32,6 +32,12 @@ class RedirectHttpsFail(Exception):
 
 class SniNotExist(Exception):
     pass
+
+
+class NotSupported(Exception):
+    def __init__(self, req, sock):
+        self.req = req
+        self.sock = sock
 
 
 class SslWrapFail(Exception):
@@ -136,7 +142,7 @@ def get_sni(sock, left_buf=""):
 
     leaddata = ""
     for _ in xrange(2):
-        leaddata = left_buf + sock.recv(1024, socket.MSG_PEEK)
+        leaddata = left_buf + sock.recv(65535, socket.MSG_PEEK)
         if leaddata:
             break
         else:
@@ -238,6 +244,44 @@ def do_socks(sock, host, port, client_address, left_buf=""):
     g.x_tunnel.global_var.session.conn_list[conn_id].start(block=True)
 
 
+def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
+    # TODO: bug exist
+
+    sock.close()
+    return
+
+    if not g.x_tunnel:
+        return
+
+    try:
+        remote_sock = socks.create_connection(
+            (host, port),
+            proxy_type="socks5", proxy_addr="127.0.0.1", proxy_port=1080, timeout=15
+        )
+    except Exception as e:
+        xlog.warn("do_unwrap_socks connect to x-tunnel for %s:%d proxy fail.", host, port)
+        return
+
+    if req.path.startswith("https"):
+        try:
+            ssl_sock = ssl.wrap_socket(remote_sock)
+        except:
+            xlog.warn("do_unwrap_socks ssl_wrap for %s:%d proxy fail.", host, port)
+            return
+    else:
+        ssl_sock = remote_sock
+
+    if not isinstance(sock, SocketWrap):
+        sock = SocketWrap(sock, "x-tunnel", port, host)
+
+    xlog.info("host:%s:%d do_unwrap_socks", host, port)
+
+    ssl_sock.send(left_buf)
+    sw = SocketWrap(ssl_sock, client_address[0], client_address[1])
+    sock.recved_times = 3
+    g.pipe_socks.add_socks(sock, sw)
+
+
 def do_gae(sock, host, port, client_address, left_buf=""):
     sock.setblocking(1)
     if left_buf:
@@ -264,13 +308,29 @@ def do_gae(sock, host, port, client_address, left_buf=""):
     if req.path[0] == '/':
         req.path = '%s://%s%s' % (schema, req.headers['Host'], req.path)
 
-    if req.path in ["http://www.twitter.com/xxnet", "https://www.twitter.com/xxnet"]:
+    if req.path in ["http://www.twitter.com/xxnet",
+                    "https://www.twitter.com/xxnet",
+                    "http://www.deja.com/xxnet",
+                    "https://www.deja.com/xxnet"
+                    ]:
         # for web_ui status page
         # auto detect browser proxy setting is work
         xlog.debug("CONNECT %s %s", req.command, req.path)
         req.wfile.write(req.self_check_response_data)
         ssl_sock.close()
         return
+
+    if req.upgrade == "websocket":
+        xlog.debug("gae %s not support WebSocket", req.path)
+        raise NotSupported(req, ssl_sock)
+
+    if len(req.path) >= 1024:
+        xlog.debug("gae %s path len exceed 1024 limit", req.path)
+        raise NotSupported(req, ssl_sock)
+
+    if req.command not in ["GET", "PUT", "POST", "DELETE", "PATCH", "HEAD"]:
+        xlog.debug("gae %s %s, method not supported", req.command, req.path)
+        raise NotSupported(req, ssl_sock)
 
     req.parsed_url = urlparse.urlparse(req.path)
     req.do_METHOD()
@@ -302,15 +362,25 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     continue
 
                 try:
-                    sni_host = get_sni(sock, left_buf)
-                    xlog.info("%s %s:%d gae", scense, host, port)
+                    # sni_host = get_sni(sock, left_buf)
+                    xlog.info("%s %s:%d try gae", scense, host, port)
                     do_gae(sock, host, port, client_address, left_buf)
                     return
+                except NotSupported as e:
+                    req = e.req
+                    left_bufs = [req.raw_requestline]
+                    for k in req.headers:
+                        v = req.headers[k]
+                        left_bufs.append("%s: %s\r\n" % (k, v))
+                    left_bufs.append("\r\n")
+                    left_buf = "".join(left_bufs)
+
+                    return do_unwrap_socks(e.sock, host, port, client_address, req, left_buf=left_buf)
                 except SniNotExist:
                     xlog.debug("%s domain:%s get sni fail", scense, host)
                     continue
                 except (SslWrapFail, simple_http_server.ParseReqFail) as e:
-                    xlog.warn("%s domain:%s sni:%s fail:%r", scense, host, sni_host, e)
+                    xlog.warn("%s domain:%s fail:%r", scense, host, e)
                     g.domain_cache.report_gae_deny(host, port)
                     sock.close()
                     return

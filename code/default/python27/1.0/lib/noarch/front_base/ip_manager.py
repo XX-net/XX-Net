@@ -269,7 +269,11 @@ class IpManager():
             scan_ip_thread_num = self.config.max_scan_ip_thread_num
         else:
             try:
-                last_ip = self.ip_list[-1]
+                if len(self.ip_list) > 100:
+                    last_ip = self.ip_list[100]
+                else:
+                    last_ip = self.ip_list[-1]
+
                 last_ip_handshake_time = self._ip_rate(self.ip_dict[last_ip])
                 scan_ip_thread_num = int( (last_ip_handshake_time - self.config.target_handshake_time)/2 * self.config.max_scan_ip_thread_num/50 )
             except Exception as e:
@@ -638,7 +642,6 @@ class IpManager():
 
     def scan_ip_worker(self):
         while self.scan_thread_count <= self.scan_ip_thread_num and self.running:
-
             try:
                 time.sleep(1)
                 ip = self.ip_source.get_ip()
@@ -661,7 +664,7 @@ class IpManager():
                     self.remove_slowest_ip()
                     self.save()
             except Exception as e:
-                self.logger.exception("google_ip.runJob fail:%r", e)
+                self.logger.exception("scan_ip_worker except:%r", e)
 
         self.scan_thread_lock.acquire()
         self.scan_thread_count -= 1

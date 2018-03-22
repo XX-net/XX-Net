@@ -49,6 +49,9 @@ class Front(object):
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager)
 
     def get_dispatcher(self, host=None):
+        if len(self.host_manager.appids) == 0:
+            return None
+
         return self.http_dispatcher
 
     def set_ips(self, ips):

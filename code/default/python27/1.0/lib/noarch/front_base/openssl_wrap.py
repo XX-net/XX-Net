@@ -25,9 +25,10 @@ import ssl
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
-#openssl_version = OpenSSL.version.__version__
 socks_num = 0
 
+# This is a throwaway variable to deal with a python bug
+throwaway = datetime.datetime.strptime('20110101','%Y%m%d')
 
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
@@ -272,8 +273,8 @@ class SSLConnection(object):
                     # self.logger.debug("recv_into 0")
                     pass
                 return ret
-            except OpenSSL.SSL.ZeroReturnError:
-                continue
+            except OpenSSL.SSL.ZeroReturnError as e:
+                raise e
             except OpenSSL.SSL.SysCallError as e:
                 if e[0] == -1 and 'Unexpected EOF' in e[1]:
                     # errors when reading empty strings are expected and can be ignored
@@ -364,7 +365,7 @@ class SSLContext(object):
                 self.support_alpn_npn = "alpn"
                 return
             except Exception as e:
-                #xlog.exception("set_alpn_protos:%r", e)
+                # self.logger.exception("set_alpn_protos:%r", e)
                 pass
 
             try:

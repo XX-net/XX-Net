@@ -5,13 +5,14 @@ logger = xlog.getLogger("cloudfront_front")
 logger.set_buffer(500)
 
 from front_base.openssl_wrap import SSLContext
-from front_base.connect_creator import ConnectCreator
+#from front_base.connect_creator import ConnectCreator
 from front_base.ip_manager import IpManager
 from front_base.ip_source import Ipv4RangeSource
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 
+from connect_creator import ConnectCreator
 from config import Config
 import host_manager
 from gae_proxy.local import check_local_network

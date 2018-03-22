@@ -12,17 +12,20 @@ class HostManager(HostManagerBase):
 
         self.sni_manager = SniManager(logger)
 
-    def get_sni_host(self, ip):
+    def get_host(self):
         if not self.appid_manager:
-            raise Exception()
+            return ""
 
-        sni = self.sni_manager.get()
         appid = self.appid_manager.get()
         if not appid:
             self.logger.warn("no appid")
             time.sleep(10)
             raise Exception()
 
-        top_domain = appid + ".appspot.com"
-        return sni, top_domain
+        return appid + ".appspot.com"
+
+    def get_sni_host(self, ip):
+        sni = self.sni_manager.get()
+        host = self.get_host()
+        return sni, host
 

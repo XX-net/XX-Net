@@ -57,6 +57,9 @@ def debug_data_clearup_thread():
     while g.running:
         for front in all_fronts:
             dispatcher = front.get_dispatcher()
+            if not dispatcher:
+                continue
+
             dispatcher.statistic()
 
         time.sleep(3)

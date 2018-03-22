@@ -72,7 +72,7 @@ class Task(object):
                 buff_view = memoryview(buff)
                 p = 0
                 for data in self.read_buffers:
-                    buff_view[p:] = data
+                    buff_view[p:p+len(data)] = data
                     p += len(data)
 
                 if self.read_buffer_len == size:
@@ -217,7 +217,7 @@ class HttpWorker(object):
         if self.version == "1.1":
             rtt += 100
         else:
-            rtt += len(self.streams) * 100
+            rtt += len(self.streams) * 500
 
         if inactive_time > 1:
             score = rtt

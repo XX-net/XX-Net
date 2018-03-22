@@ -306,7 +306,7 @@ class Http2Worker(HttpWorker):
             header = self._sock.recv(9)
         except Exception as e:
             self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip, e, time.time()-self.last_active_time)
-            self.close("disconnect:%r" % e)
+            self.close("ConnectionReset:%r" % e)
             return
 
         # Parse the header. We can use the returned memoryview directly here.
@@ -317,7 +317,12 @@ class Http2Worker(HttpWorker):
                 self.ip, frame.stream_id, length, FRAME_MAX_LEN)
             # self._send_rst_frame(frame.stream_id, 6) # 6 = FRAME_SIZE_ERROR
 
-        data = self._recv_payload(length)
+        try:
+            data = self._recv_payload(length)
+        except Exception as e:
+            self.close("ConnectionReset:%r" % e)
+            return
+
         self.last_active_time = time.time()
         self._consume_frame_payload(frame, data)
 

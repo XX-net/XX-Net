@@ -15,7 +15,6 @@ from front_base.ip_source import Ipv4RangeSource, Ipv6PoolSource, IpCombineSourc
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from check_ip import CheckIp
-from front_base.host_manager import HostManagerBase
 
 from appid_manager import AppidManager
 
@@ -29,12 +28,11 @@ class Front(object):
     name = "gae_front"
 
     def __init__(self):
-        self.running = True
-
         self.logger = logger
         self.config = config
 
-        self.host_manager = host_manager.HostManager(self.config, logger)
+    def start(self):
+        self.running = True
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
@@ -42,12 +40,14 @@ class Front(object):
             cipher_suites=['ALL', "!RC4-SHA","!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
                            "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
         )
-        self.connect_creator = ConnectCreator(
-            logger, self.config, self.openssl_context, self.host_manager)
 
         self.appid_manager = AppidManager(self.config, logger)
 
+        self.host_manager = host_manager.HostManager(self.config, logger)
         self.host_manager.appid_manager = self.appid_manager
+
+        self.connect_creator = ConnectCreator(
+            logger, self.config, self.openssl_context, self.host_manager)
 
         self.ip_checker = CheckIp(xlog.null, self.config, self.connect_creator)
 
@@ -125,9 +125,12 @@ class DirectFront(object):
     name = "direct_front"
 
     def __init__(self):
+        pass
+
+    def start(self):
         self.running = True
 
-        self.host_manager = HostManagerBase()
+        self.host_manager = host_manager.HostManager(front.config, logger)
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
@@ -139,8 +142,9 @@ class DirectFront(object):
         self.connect_creator = ConnectCreator(
             logger, front.config, self.openssl_context, self.host_manager)
 
+        self.ip_manager = front.ip_manager
         self.connect_manager = ConnectManager(
-            logger, front.config, self.connect_creator, front.ip_manager, check_local_network)
+            logger, front.config, self.connect_creator, self.ip_manager, check_local_network)
 
         self.dispatchs = {}
 

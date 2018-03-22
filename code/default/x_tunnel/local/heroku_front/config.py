@@ -35,7 +35,7 @@ class Config(ConfigBase):
         self.set_var("check_sni", "herokuapp.com")
 
         # host_manager
-        self.set_var("appids", ["xxnet4.herokuapp.com"])
+        self.set_var("appids", []) # "xxnet4.herokuapp.com"
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 0)

@@ -53,6 +53,8 @@ class HttpsDispatcher(object):
         self.h1_num = 0
         self.h2_num = 0
         self.last_request_time = time.time()
+        self.task_count_lock = threading.Lock()
+        self.task_count = 0
         self.running = True
 
         # for statistic
@@ -219,26 +221,38 @@ class HttpsDispatcher(object):
             self.close_cb(slowest_worker)
 
     def request(self, method, host, path, headers, body, url="", timeout=60):
-        # self.logger.debug("task start request")
-        if not url:
-            url = "%s %s%s" % (method, host, path)
-        self.last_request_time = time.time()
-        q = simple_queue.Queue()
-        task = http_common.Task(self.logger, self.config, method, host, path, headers, body, q, url, timeout)
-        task.set_state("start_request")
-        self.request_queue.put(task)
+        if self.task_count > self.config.max_task_num:
+            self.logger.warn("task num exceed")
+            time.sleep(1)
+            return None
 
-        response = q.get(timeout=timeout)
-        if response and response.status==200:
-            self.success_num += 1
-            self.continue_fail_num = 0
-        else:
-            self.fail_num += 1
-            self.continue_fail_num += 1
-            self.last_fail_time = time.time()
+        with self.task_count_lock:
+            self.task_count += 1
 
-        task.set_state("get_response")
-        return response
+        try:
+            # self.logger.debug("task start request")
+            if not url:
+                url = "%s %s%s" % (method, host, path)
+            self.last_request_time = time.time()
+            q = simple_queue.Queue()
+            task = http_common.Task(self.logger, self.config, method, host, path, headers, body, q, url, timeout)
+            task.set_state("start_request")
+            self.request_queue.put(task)
+
+            response = q.get(timeout=timeout)
+            if response and response.status==200:
+                self.success_num += 1
+                self.continue_fail_num = 0
+            else:
+                self.fail_num += 1
+                self.continue_fail_num += 1
+                self.last_fail_time = time.time()
+
+            task.set_state("get_response")
+            return response
+        finally:
+            with self.task_count_lock:
+                self.task_count -= 1
 
     def retry_task_cb(self, task, reason=""):
         self.fail_num += 1

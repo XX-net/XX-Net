@@ -409,7 +409,7 @@
                 }
 
                 if (is_public_appid(result['gae_appid'])) {
-                    if (result['out_of_quota_appids'].length > 100) {
+                    if (result['out_of_quota_appids'].length > 2000) {
                         return updateProperty('#noob-info', '{{ _( "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'none');
                     }
                 } else {

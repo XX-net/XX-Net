@@ -71,12 +71,15 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
 
         self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
-               "Access-Control-Allow-Origin: *\r\n"\
-               "Cache-Control: no-cache, no-store, must-revalidate\r\n"\
-               "Pragma: no-cache\r\n"\
-               "Expires: 0\r\n"\
-               "Content-Type: text/plain\r\n"\
-               "Content-Length: 2\r\n\r\nOK"
+            "Access-Control-Allow-Origin: *\r\n"\
+            "Cache-Control: no-cache, no-store, must-revalidate\r\n"\
+            "Pragma: no-cache\r\n"\
+            "Expires: 0\r\n"\
+            "Content-Type: text/plain\r\n"\
+            "Keep-Alive:\r\n"\
+            "Persist:\r\n"\
+            "Connection: Keep-Alive, Persist"\
+            "Content-Length: 2\r\n\r\nOK"
         self.fake_host = web_control.get_fake_host()
 
     def forward_local(self):
@@ -158,13 +161,17 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         return False
 
     def do_METHOD(self):
-        self.close_connection = 1
-
+        self.close_connection = 0
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
 
+        if isinstance(self.connection, ssl.SSLSocket):
+            method = "https"
+        else:
+            method = "http"
+
         if self.path[0] == '/' and host:
-            self.path = 'http://%s%s' % (host, self.path)
+            self.path = '%s://%s%s' % (method, host, self.path)
         elif not host and '://' in self.path:
             host = urlparse.urlparse(self.path).netloc
 
@@ -173,8 +180,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return self.forward_local()
 
         if host == self.fake_host:
-        #if self.path == "http://%s/xxnet" % self.fake_host:
-            xlog.debug("%s %s", self.command, self.path)
+            # xlog.debug("%s %s", self.command, self.path)
             # for web_ui status page
             # auto detect browser proxy setting is work
             return self.wfile.write(self.self_check_response_data)
@@ -187,13 +193,21 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         # redirect http request to https request
         # avoid key word filter when pass through GFW
         if host in front.config.HOSTS_DIRECT:
-            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+            if isinstance(self.connection, ssl.SSLSocket):
+                return self.Direct()
+            else:
+                xlog.debug("Host:%s Direct redirect to https", host)
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         if host.endswith(front.config.HOSTS_GAE_ENDSWITH):
             return self.do_AGENT()
 
         if host.endswith(front.config.HOSTS_DIRECT_ENDSWITH):
-            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+            if isinstance(self.connection, ssl.SSLSocket):
+                return self.Direct()
+            else:
+                xlog.debug("Host:%s Direct redirect to https", host)
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
 
         return self.do_AGENT()
 
@@ -242,11 +256,11 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
             return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
-        xlog.debug("GAE %s %s", self.command, self.path)
+        xlog.debug("GAE %s %s from:%s", self.command, self.path, self.address_string())
         gae_handler.handler(self.command, self.path, request_headers, payload, self.wfile)
 
     def do_CONNECT(self):
-
+        self.close_connection = 0
         host, _, port = self.path.rpartition(':')
 
         if host in front.config.HOSTS_GAE:
@@ -268,7 +282,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         port = int(port)
         certfile = CertUtil.get_cert(host)
         # xlog.info('https GAE %s %s:%d ', self.command, host, port)
-        self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
@@ -282,7 +295,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
             return
 
-        self.__realconnection = self.connection
         self.__realwfile = self.wfile
         self.__realrfile = self.rfile
         self.connection = ssl_sock
@@ -313,15 +325,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         except NetWorkIOError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
                 raise
-        finally:
-            if self.__realconnection:
-                try:
-                    self.__realconnection.shutdown(socket.SHUT_WR)
-                    self.__realconnection.close()
-                except NetWorkIOError:
-                    pass
-                finally:
-                    self.__realconnection = None
 
     def do_CONNECT_DIRECT(self):
         """deploy fake cert to client"""
@@ -347,7 +350,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
             return
 
-        self.__realconnection = self.connection
         self.__realwfile = self.wfile
         self.__realrfile = self.rfile
         self.connection = ssl_sock
@@ -355,11 +357,14 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.wfile = self.connection.makefile('wb', 0)
 
         self.parse_request()
+        self.Direct()
 
+    def Direct(self):
+        host, _, port = self.path.rpartition(':')
         if self.path[0] == '/' and host:
             self.path = 'https://%s%s' % (self.headers['Host'], self.path)
 
-        xlog.debug('GAE CONNECT Direct %s %s', self.command, self.path)
+        xlog.debug('Direct %s %s', self.command, self.path)
 
         try:
             if self.path[0] == '/' and host:
@@ -386,19 +391,9 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     return
 
             direct_handler.handler(self.command, host, path, request_headers, payload, self.wfile)
-
         except NetWorkIOError as e:
             if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
                 raise
-        finally:
-            if self.__realconnection:
-                try:
-                    self.__realconnection.shutdown(socket.SHUT_WR)
-                    self.__realconnection.close()
-                except NetWorkIOError:
-                    pass
-                finally:
-                    self.__realconnection = None
 
 
 def wrap_ssl(sock, host, port, client_address):
