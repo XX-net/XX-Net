@@ -78,7 +78,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             "Content-Type: text/plain\r\n"\
             "Keep-Alive:\r\n"\
             "Persist:\r\n"\
-            "Connection: Keep-Alive, Persist"\
+            "Connection: Keep-Alive, Persist\r\n"\
             "Content-Length: 2\r\n\r\nOK"
         self.fake_host = web_control.get_fake_host()
 
