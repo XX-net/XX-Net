@@ -16,6 +16,13 @@ if __name__ == "__main__":
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
+#Only enable AppIndicator in the DEs that are Unity and QT-based
+enable_appind = False
+if 'XDG_CURRENT_DESKTOP' in os.environ:
+    cur_desktops = os.environ['XDG_CURRENT_DESKTOP'].split(':')
+    if {'Unity', 'KDE', 'LXQt', 'ENLIGHTENMENT'}.intersection(cur_desktops):
+        enable_appind = True
+
 try:
     import gi
     gi.require_version('Gtk', '3.0')
@@ -23,12 +30,15 @@ try:
     from gi.repository import Gtk as gtk
     from gi.repository import Gdk as gdk
     use_gi = True
+    xlog.info('Using PyGObject as the GUI Backend.')
 except:
     import pygtk
     pygtk.require('2.0')
     import gtk
     import gtk.gdk as gdk
     use_gi = False
+    xlog.info('Using PyGTK as the GUI Backend.')
+
 gdk.threads_init()
 
 import module_init
@@ -44,6 +54,7 @@ if use_gi:
         notify = None
 
     try:
+        assert(enable_appind)
         gi.require_version('AppIndicator3', '0.1')
         from gi.repository import AppIndicator3 as appindicator
         new_appindicator = appindicator.Indicator.new
@@ -62,6 +73,7 @@ else:
         notify = None
 
     try:
+        assert(enable_appind)
         import appindicator
         new_appindicator = appindicator.Indicator
         appind_category = appindicator.CATEGORY_APPLICATION_STATUS
@@ -78,6 +90,7 @@ class Gtk_tray():
 
         if appindicator:
             self.trayicon = self.appind_trayicon(logo_filename)
+            xlog.info('AppIndicator found and used.')
         else:
             self.trayicon = self.gtk_trayicon(logo_filename)
 
@@ -87,6 +100,10 @@ class Gtk_tray():
         trayicon.set_attention_icon('indicator-messages-new')
         trayicon.set_icon(logo_filename)
         trayicon.set_menu(self.make_menu())
+        try:  #this method does not exist when using pygtk and python2-appindicator
+            trayicon.set_title('XX-Net')
+        except:
+            pass
 
         return trayicon
 
@@ -97,6 +114,7 @@ class Gtk_tray():
         trayicon.connect('popup-menu', lambda i, b, t: popup_trayicon_menu(self.make_menu(), trayicon, b, t))
         trayicon.connect('activate', self.show_control_web)
         trayicon.set_tooltip_text('XX-Net')
+        trayicon.set_title('XX-Net')
         trayicon.set_visible(True)
 
         return trayicon
@@ -104,7 +122,7 @@ class Gtk_tray():
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
-                    ('restart gae_proxy', self.on_restart_gae_proxy),
+                    (u'Reset Each Module', self.on_restart_each_module),
                     (u'Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
@@ -137,9 +155,9 @@ class Gtk_tray():
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
-    def on_restart_gae_proxy(self, widget=None, data=None):
-        module_init.stop("gae_proxy")
-        module_init.start("gae_proxy")
+    def on_restart_each_module(self, widget=None, data=None):
+        module_init.stop_all()
+        module_init.start_all_auto()
 
     def on_quit(self, widget, data=None):
         module_init.stop_all()
