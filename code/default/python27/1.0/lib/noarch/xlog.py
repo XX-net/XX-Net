@@ -9,6 +9,8 @@ import json
 import shutil
 import types
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 CRITICAL = 50
 FATAL = CRITICAL
