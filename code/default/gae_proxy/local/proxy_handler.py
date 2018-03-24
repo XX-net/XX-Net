@@ -194,7 +194,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         # avoid key word filter when pass through GFW
         if host in front.config.HOSTS_DIRECT:
             if isinstance(self.connection, ssl.SSLSocket):
-                return self.Direct()
+                return self.do_DIRECT()
             else:
                 xlog.debug("Host:%s Direct redirect to https", host)
                 return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
@@ -204,7 +204,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
         if host.endswith(front.config.HOSTS_DIRECT_ENDSWITH):
             if isinstance(self.connection, ssl.SSLSocket):
-                return self.Direct()
+                return self.do_DIRECT()
             else:
                 xlog.debug("Host:%s Direct redirect to https", host)
                 return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
@@ -335,8 +335,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return
 
         certfile = CertUtil.get_cert(host)
-        xlog.info('GAE %s %s:%d ', self.command, host, port)
-        self.__realconnection = None
         self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
 
         try:
@@ -357,45 +355,46 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.wfile = self.connection.makefile('wb', 0)
 
         self.parse_request()
-        self.Direct()
+        self.do_DIRECT()
 
-    def Direct(self):
-        host, _, port = self.path.rpartition(':')
-        if self.path[0] == '/' and host:
-            self.path = 'https://%s%s' % (self.headers['Host'], self.path)
-
-        xlog.debug('Direct %s %s', self.command, self.path)
-
-        try:
-            if self.path[0] == '/' and host:
-                self.path = 'http://%s%s' % (host, self.path)
-            elif not host and '://' in self.path:
-                host = urlparse.urlparse(self.path).netloc
-
+    def do_DIRECT(self):
+        if self.path[0] == '/':
+            host = self.headers['Host']
+            path = self.path
+            url = 'https://%s%s' % (host, self.path)
+        else:
+            url = self.path
             self.parsed_url = urlparse.urlparse(self.path)
+            host = self.parsed_url[1]
             if len(self.parsed_url[4]):
                 path = '?'.join([self.parsed_url[2], self.parsed_url[4]])
             else:
                 path = self.parsed_url[2]
 
-            request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        xlog.debug('DIRECT %s %s', self.command, url)
 
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+
+        if 'Content-Length' in request_headers:
+            try:
+                payload_len = int(request_headers.get('Content-Length', 0))
+                # xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
+                payload = self.rfile.read(payload_len)
+            except NetWorkIOError as e:
+                xlog.error('Direct %s read payload failed:%s', url, e)
+                return
+        else:
             payload = b''
-            if 'Content-Length' in request_headers:
-                try:
-                    payload_len = int(request_headers.get('Content-Length', 0))
-                    #xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
-                    payload = self.rfile.read(payload_len)
-                except NetWorkIOError as e:
-                    xlog.error('handle_method_urlfetch read payload failed:%s', e)
-                    return
 
+        try:
             direct_handler.handler(self.command, host, path, request_headers, payload, self.wfile)
         except NetWorkIOError as e:
+            xlog.warn('DIRECT %s %s except:%r', self.command, url, e)
             if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
                 raise
 
 
+# called by smart_router
 def wrap_ssl(sock, host, port, client_address):
     certfile = CertUtil.get_cert(host or 'www.google.com')
     ssl_sock = ssl.wrap_socket(sock, keyfile=CertUtil.cert_keyfile,

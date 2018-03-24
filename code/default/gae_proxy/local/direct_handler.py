@@ -61,7 +61,6 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
                                   response.ssl_sock.ip, host, server_type, response.status)
                         direct_front.ip_manager.report_connect_fail(response.ssl_sock.ip, force_remove=True)
                         response.worker.close()
-                        #response.close()
                         continue
                 break
         except OpenSSL.SSL.SysCallError as e:
@@ -93,21 +92,22 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
             if isinstance(data, memoryview):
                 data = data.tobytes()
 
-            length += len(data)
+            data_len = len(data)
+            length += data_len
             if 'Transfer-Encoding' in response.headers:
-                if not data:
-                    wfile.write('0\r\n\r\n')
+                if not data_len:
+                    wfile._sock.sendall('0\r\n\r\n')
                     break
-                wfile.write('%x\r\n' % len(data))
-                wfile.write(data)
-                wfile.write('\r\n')
+                wfile._sock.sendall('%x\r\n' % data_len)
+                wfile._sock.sendall(data)
+                wfile._sock.sendall('\r\n')
             else:
-                if not data:
+                if not data_len:
                     break
                 wfile._sock.sendall(data)
 
         xlog.info("DIRECT t:%d s:%d %d %s %s",
                   (time.time()-time_request)*1000, length, response.status, host, path)
     except Exception as e:
-        xlog.info("DIRECT %d %s %s, t:%d send to client except:%r",
+        xlog.warn("DIRECT %d %s %s, t:%d send to client except:%r",
                   response.status, host, path, (time.time()-time_request)*1000, e)

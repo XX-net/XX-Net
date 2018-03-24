@@ -408,8 +408,8 @@ class HttpsDispatcher(object):
 
         out_str = 'thread num:%d\r\n' % threading.activeCount()
         for w, r in w_r:
-            out_str += "%s rtt:%d running:%d accept:%d live:%d inactive:%d processed:%d" % \
-                       (w.ip, w.rtt, w.keep_running,  w.accept_task,
+            out_str += "%s score:%d rtt:%d running:%d accept:%d live:%d inactive:%d processed:%d" % \
+                       (w.ip, w.get_score(), w.rtt, w.keep_running,  w.accept_task,
                         (now-w.ssl_sock.create_time), (now-w.last_active_time), w.processed_tasks)
             if w.version == "2":
                 out_str += " continue_timeout:%d streams:%d ping_on_way:%d remote_win:%d send_queue:%d\r\n" % \

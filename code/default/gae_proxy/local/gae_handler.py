@@ -249,6 +249,9 @@ def unpack_response(response):
         if not data:
             raise GAE_Exception(600, "get protocol head fail")
 
+        if len(data) !=2:
+            raise GAE_Exception(600, "get protocol head fail, data:%s, len:%d" % (data, len(data)))
+
         headers_length, = struct.unpack('!h', data)
         data = response.task.read(size=headers_length)
         if not data:

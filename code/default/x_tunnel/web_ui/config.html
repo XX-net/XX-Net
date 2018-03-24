@@ -679,6 +679,7 @@
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');
 
+                $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                 // Fix bugs in Firefox
                 $('button[type=submit]').removeAttr('disabled');
             },

@@ -17,6 +17,7 @@ class Config(object):
     rule_list = ["direct", "gae", "socks", "black", "redirect_https"]
 
     def __init__(self):
+        self.rule_lists = {}
         self.host_rules = {}
         self.end_rules = {}
 
@@ -96,6 +97,7 @@ class Config(object):
         self.end_rules = {}
 
         for section in self.rule_list:
+            self.rule_lists[section] = tuple()
             fn = os.path.join(data_path, "%s_list.txt" % section)
             if not os.path.isfile(fn):
                 continue
@@ -103,6 +105,7 @@ class Config(object):
             with open(fn, "r") as fd:
                 content = fd.read()
                 hosts, end_fix = self.parse_rules(content)
+                self.rule_lists[section] = tuple(hosts + end_fix)
                 if section == "redirect_https":
                     self.redirect_https_host_rules = tuple(hosts)
                     self.redirect_https_end_rules = tuple(end_fix)
