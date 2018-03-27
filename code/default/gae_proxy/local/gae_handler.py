@@ -194,7 +194,7 @@ def return_fail_message(wfile):
     return
 
 
-def pack_request(method, url, headers, body):
+def pack_request(method, url, headers, body, timeout):
     headers = dict(headers)
     if isinstance(body, basestring) and body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
@@ -222,7 +222,7 @@ def pack_request(method, url, headers, body):
         kwargs['maxsize'] = front.config.JS_MAXSIZE
     else:
         kwargs['maxsize'] = front.config.AUTORANGE_MAXSIZE
-    kwargs['timeout'] = '19'
+    kwargs['timeout'] = str(timeout)
     # gae 用的参数　ｅｎｄ
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
@@ -337,7 +337,7 @@ def request_gae_server(headers, body, url, timeout):
     return response
 
 
-def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
+def request_gae_proxy(method, url, headers, body, timeout=None):
     headers = dict(headers)
     # make retry and time out
     time_request = time.time()
@@ -375,16 +375,15 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
     else:
         del headers["Accept-Encoding"]
 
-    request_headers, request_body = pack_request(method, url, headers, body)
     error_msg = []
 
-    while True:
-        if time.time() - time_request > timeout:
-            raise GAE_Exception(600, b"".join(error_msg))
+    if not timeout:
+        timeouts = [5, 20, 30]
+    else:
+        timeouts = [timeout]
 
-        if not retry and error_msg:
-            raise GAE_Exception(600, b"".join(error_msg))
-
+    for timeout in timeouts:
+        request_headers, request_body = pack_request(method, url, headers, body, timeout)
         try:
             response = request_gae_server(request_headers, request_body, url, timeout)
 
@@ -431,6 +430,8 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
             err_msg = 'gae_handler.handler %r %s , retry...' % (e, url)
             error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
+
+    raise GAE_Exception(600, b"".join(error_msg))
 
 
 def handler(method, url, headers, body, wfile):

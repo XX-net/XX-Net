@@ -56,15 +56,38 @@ class Config(ConfigBase):
             ".googlevideo.com"
         ])
 
+        self.set_var("google_endswith", [
+            ".youtube.com",
+            ".googlevideo.com",
+            "..googleapis.com",
+            ".google.com",
+            ".googleusercontent.com",
+            ".ytimg.com",
+            ".doubleclick.net",
+            ".google-analytics.com",
+            ".googlegroups.com",
+            ".googlesource.com",
+            ".gstatic.com",
+            ".appspot.com",
+            ".gvt1.com",
+            ".android.com",
+            ".ggpht.com",
+            ".googleadservices.com",
+            ".googlesyndication.com",
+            ".2mdn.net"
+        ])
+
         # front
         self.set_var("front_continue_fail_num", 10)
         self.set_var("front_continue_fail_block", 0)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 10)
+        self.set_var("dispather_min_idle_workers", 5)
         self.set_var("dispather_work_min_idle_time", 0)
-        self.set_var("dispather_work_max_score", 200000)
+        self.set_var("dispather_work_max_score", 1000)
+        self.set_var("dispather_min_workers", 50)
         self.set_var("dispather_max_workers", 90)
+        self.set_var("dispather_max_idle_workers", 30)
 
         # http 1 worker
         self.set_var("http1_first_ping_wait", 5)
@@ -81,6 +104,7 @@ class Config(ConfigBase):
         self.set_var("https_max_connect_thread", 10)
         self.set_var("ssl_first_use_timeout", 5)
         self.set_var("connection_pool_min", 1)
+        self.set_var("https_connection_pool_max", 10)
         self.set_var("https_new_connect_num", 3)
         self.set_var("https_keep_alive", 5)
 
@@ -133,7 +157,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 10)
         self.set_var("max_good_ip_num", 500)
-        self.set_var("target_handshake_time", 600)
+        self.set_var("target_handshake_time", 200)
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
@@ -155,6 +179,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         self.HOSTS_DIRECT = tuple(self.hosts_direct)
         self.HOSTS_GAE_ENDSWITH = tuple(self.hosts_gae_endswith)
         self.HOSTS_DIRECT_ENDSWITH = tuple(self.hosts_direct_endswith)
+        self.GOOGLE_ENDSWITH = tuple(self.google_endswith)
 
         self.br_sites = tuple(self.BR_SITES)
         self.br_endswith = tuple(self.BR_SITES_ENDSWITH)

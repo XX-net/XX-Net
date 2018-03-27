@@ -174,6 +174,7 @@ class HttpsDispatcher(object):
             if len(self.workers) < self.config.dispather_max_workers and \
                     (best_worker is None or
                     idle_num < self.config.dispather_min_idle_workers or
+                    len(self.workers) < self.config.dispather_min_workers or
                     (now - best_worker.last_active_time) < self.config.dispather_work_min_idle_time or
                     best_score > self.config.dispather_work_max_score or
                      (best_worker.version == "2" and len(best_worker.streams) >= self.config.http2_target_concurrent)):
@@ -211,7 +212,7 @@ class HttpsDispatcher(object):
                     slowest_score = score
                     slowest_worker = worker
 
-            if idle_num < 10 or \
+            if idle_num < self.config.dispather_max_idle_workers or \
                     idle_num < int(len(self.workers) * 0.3) or \
                     len(self.workers) < self.config.dispather_max_workers:
                 return

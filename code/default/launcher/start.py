@@ -236,10 +236,10 @@ def main():
     update_from_github.cleanup()
 
     if config.get(["modules", "launcher", "show_systray"], 1):
-        threading.Thread(target=sys_tray.serve_forever).start()
-
-    while True:
-        time.sleep(1)
+        sys_tray.serve_forever()
+    else:
+        while True:
+            time.sleep(1)
 
 
 if __name__ == '__main__':

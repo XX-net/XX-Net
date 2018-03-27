@@ -61,9 +61,9 @@ class Task(object):
 
             if len(self.read_buffers[0]) == size:
                 data = self.read_buffers[0]
-                self.read_buffers = []
-                self.read_buffer_len = 0
-            elif len(self.read_buffers[0]) >= size:
+                self.read_buffers.pop(0)
+                self.read_buffer_len -= size
+            elif len(self.read_buffers[0]) > size:
                 data = self.read_buffers[0][:size]
                 self.read_buffers[0] = self.read_buffers[0][size:]
                 self.read_buffer_len -= size

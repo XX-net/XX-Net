@@ -247,9 +247,6 @@ def do_socks(sock, host, port, client_address, left_buf=""):
 def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
     # TODO: bug exist
 
-    sock.close()
-    return
-
     if not g.x_tunnel:
         return
 
@@ -324,9 +321,9 @@ def do_gae(sock, host, port, client_address, left_buf=""):
         xlog.debug("gae %s not support WebSocket", req.path)
         raise NotSupported(req, ssl_sock)
 
-    if len(req.path) >= 1024:
-        xlog.debug("gae %s path len exceed 1024 limit", req.path)
-        raise NotSupported(req, ssl_sock)
+    #if len(req.path) >= 2084:
+    #    xlog.debug("gae %s path len exceed 1024 limit", req.path)
+    #    raise NotSupported(req, ssl_sock)
 
     if req.command not in ["GET", "PUT", "POST", "DELETE", "PATCH", "HEAD"]:
         xlog.debug("gae %s %s, method not supported", req.command, req.path)

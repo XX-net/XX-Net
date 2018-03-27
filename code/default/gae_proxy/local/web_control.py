@@ -353,7 +353,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "good_ipv4_num": front.ip_manager.good_ipv4_num,
             "good_ipv6_num": front.ip_manager.good_ipv6_num,
             "connected_link_new": len(front.connect_manager.new_conn_pool.pool),
-            "connected_link_used": len(front.connect_manager.gae_conn_pool.pool),
             "worker_h1": front.http_dispatcher.h1_num,
             "worker_h2": front.http_dispatcher.h2_num,
             "is_idle": int(front.http_dispatcher.is_idle()),

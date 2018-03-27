@@ -25,66 +25,54 @@ class ConnectPool():
         self.pool_lock = threading.Lock()
         self.not_empty = threading.Condition(self.pool_lock)
         self.pool = {}
-        self.h1_num = 0
 
-    def qsize(self, only_h1=False):
-        if only_h1:
-            return self.h1_num
-        else:
-            return len(self.pool)
+    def qsize(self):
+        return len(self.pool)
 
     def put(self, item):
         handshake_time, sock = item
         self.not_empty.acquire()
         try:
             self.pool[sock] = handshake_time
-            if not sock.h2:
-                self.h1_num += 1
             self.not_empty.notify()
         finally:
             self.not_empty.release()
 
-    def get(self, block=True, timeout=None, only_h1=False):
+    def get(self, block=True, timeout=None):
         self.not_empty.acquire()
         try:
             if not block:
-                if self.qsize(only_h1=only_h1) == 0:
+                if self.qsize() == 0:
                     return None
             elif timeout is None:
-                while self.qsize(only_h1=only_h1) == 0:
+                while self.qsize() == 0:
                     self.not_empty.wait()
             elif timeout < 0:
                 raise ValueError("'timeout' must be a positive number")
             else:
                 end_time = time.time() + timeout
-                while not self.qsize(only_h1=only_h1):
+                while not self.qsize():
                     remaining = end_time - time.time()
                     if remaining <= 0.0:
                         return None
                     self.not_empty.wait(remaining)
 
-            item = self._get(only_h1=only_h1)
+            item = self._get()
             return item
         finally:
             self.not_empty.release()
 
-    def get_nowait(self, only_h1=False):
-        return self.get(block=False, only_h1=only_h1)
+    def get_nowait(self):
+        return self.get(block=False)
 
-    def _get(self, only_h1=False):
+    def _get(self):
         fastest_time = 9999
         fastest_sock = None
         for sock in self.pool:
-            if only_h1 and sock.h2:
-                continue
-
             hs_time = self.pool[sock]
             if hs_time < fastest_time or not fastest_sock:
                 fastest_time = hs_time
                 fastest_sock = sock
-
-        if not fastest_sock.h2:
-            self.h1_num -= 1
 
         self.pool.pop(fastest_sock)
         return fastest_time, fastest_sock
@@ -103,9 +91,6 @@ class ConnectPool():
                     slowest_handshake_time = handshake_time
                     slowest_sock = sock
 
-            if not slowest_sock.h2:
-                self.h1_num -= 1
-
             self.pool.pop(slowest_sock)
             return slowest_handshake_time, slowest_sock
         finally:
@@ -122,9 +107,6 @@ class ConnectPool():
                 if inactive_time >= maxtime:
                     return_list.append(sock)
 
-                    if not sock.h2:
-                        self.h1_num -= 1
-
                     del self.pool[sock]
 
             return return_list
@@ -138,7 +120,6 @@ class ConnectPool():
                 sock.close()
 
             self.pool = {}
-            self.h1_num = 0
         finally:
             self.pool_lock.release()
 
@@ -150,7 +131,7 @@ class ConnectPool():
             i = 0
             for item in pool:
                 sock,t = item
-                out_str += "%d \t %s handshake:%d not_active_time:%d h2:%d\r\n" % (i, sock.ip, t, time.time() - sock.last_use_time, sock.h2)
+                out_str += "%d \t %s handshake:%d not_active_time:%d \r\n" % (i, sock.ip, t, time.time() - sock.last_use_time)
                 i += 1
         finally:
             self.pool_lock.release()
@@ -160,7 +141,7 @@ class ConnectPool():
 
 class ConnectManager(object):
     def __init__(self, logger, config, connect_creator, ip_manager, check_local_network):
-        self.class_name = "ConnectFactory"
+        self.class_name = "ConnectManager"
         self.logger = logger
         self.config = config
         self.connect_creator = connect_creator
@@ -175,7 +156,7 @@ class ConnectManager(object):
 
         self.get_num_lock = threading.Lock()
         self.https_get_num = 0
-        self.http1_get_num = 0
+        self.no_ip_lock = threading.Lock()
 
         # after new created ssl_sock timeout(50 seconds)
         # call the callback.
@@ -183,8 +164,6 @@ class ConnectManager(object):
         self.ssl_timeout_cb = None
         
         self.new_conn_pool = ConnectPool()
-        self.gae_conn_pool = ConnectPool()
-        self.host_conn_pool = {}
 
         self.connecting_more_thread = None
 
@@ -203,10 +182,6 @@ class ConnectManager(object):
 
     def stop(self):
         self.running = False
-        #if self.keep_conn_th:
-        #    self.keep_conn_th.join()
-
-        #self.keep_alive_th.join()
 
     def set_ssl_created_cb(self, cb):
         self.ssl_timeout_cb = cb
@@ -229,35 +204,7 @@ class ConnectManager(object):
                         # no appid avaiable
                         pass
 
-            for host in self.host_conn_pool:
-                host_list = self.host_conn_pool[host].get_need_keep_alive(maxtime=self.config.https_keep_alive-3)
-
-                for ssl_sock in host_list:
-                    self.ip_manager.report_connect_closed(ssl_sock.ip, "host pool alive_timeout")
-                    ssl_sock.close()
-
             time.sleep(1)
-
-    def save_ssl_connection_for_reuse(self, ssl_sock, host=None, call_time=0):
-        # only used by direct mode now, host ssl.
-        if call_time:
-            ssl_sock.last_use_time = call_time
-        else:
-            ssl_sock.last_use_time = time.time()
-
-        if host:
-            if host not in self.host_conn_pool:
-                self.host_conn_pool[host] = ConnectPool()
-
-            self.host_conn_pool[host].put( (ssl_sock.handshake_time, ssl_sock) )
-
-        else:
-            self.gae_conn_pool.put( (ssl_sock.handshake_time, ssl_sock) )
-
-            while self.gae_conn_pool.qsize() > self.config.https_connection_pool_max:
-                handshake_time, ssl_sock = self.gae_conn_pool.get_slowest()
-                self.ip_manager.report_connect_closed(ssl_sock.ip, "slowest %d" % ssl_sock.handshake_time)
-                ssl_sock.close()
 
     def keep_connection_daemon(self):
         while self.running:
@@ -268,10 +215,16 @@ class ConnectManager(object):
             self.connect_process()
 
     def _need_more_ip(self):
-        if self.http1_get_num or self.https_get_num:
+        if self.https_get_num:
             return True
         else:
             return False
+
+    def create_more_connection(self):
+        if not self.connecting_more_thread:
+            with self.thread_num_lock:
+                self.connecting_more_thread = threading.Thread(target=self.create_more_connection_worker)
+                self.connecting_more_thread.start()
 
     def create_more_connection_worker(self):
         while self.thread_num < self.config.https_max_connect_thread and \
@@ -287,17 +240,10 @@ class ConnectManager(object):
         with self.thread_num_lock:
             self.connecting_more_thread = None
 
-    def create_more_connection(self):
-        if not self.connecting_more_thread:
-            with self.thread_num_lock:
-                self.connecting_more_thread = threading.Thread(target=self.create_more_connection_worker)
-                self.connecting_more_thread.start()
-
     def connect_thread(self, sleep_time=0):
         time.sleep(sleep_time)
         try:
             while self.running and self._need_more_ip():
-
                 if self.new_conn_pool.qsize() > self.config.https_connection_pool_max:
                     break
 
@@ -311,12 +257,13 @@ class ConnectManager(object):
         try:
             ip_str = self.ip_manager.get_ip()
             if not ip_str:
-                time.sleep(1)
-                #self.logger.warning("no enough ip")
+                with self.no_ip_lock:
+                    self.logger.warning("not enough ip")
+                    time.sleep(10)
                 return
 
             #self.logger.debug("create ssl conn %s", ip_str)
-            ssl_sock = self._create_ssl_connection( (ip_str, 443) )
+            ssl_sock = self._create_ssl_connection(ip_str)
             if not ssl_sock:
                 time.sleep(1)
                 return
@@ -324,12 +271,10 @@ class ConnectManager(object):
             self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
             time.sleep(1)
         except Exception as e:
-            pass
+            self.logger.exception("connect_process except:%r", e)
 
-    def _create_ssl_connection(self, ip_port):
-        sock = None
+    def _create_ssl_connection(self, ip):
         ssl_sock = None
-        ip = ip_port[0]
 
         try:
             ssl_sock = self.connect_creator.connect_ssl(ip, port=443,
@@ -341,107 +286,41 @@ class ConnectManager(object):
 
             return ssl_sock
         except Exception as e:
-            self.logger.debug("connect %s fail:%r", ip, e)
-
             self.ip_manager.report_connect_fail(ip, str(e))
 
-            if not self.check_local_network.IPv4.is_ok():
+            if not self.check_local_network.is_ok(ip):
+                self.logger.debug("connect %s network fail", ip)
                 time.sleep(10)
             else:
+                self.logger.debug("connect %s fail:%r", ip, e)
                 time.sleep(1)
 
             if ssl_sock:
                 ssl_sock.close()
-            if sock:
-                sock.close()
 
-    def get_ssl_connection(self, host=''):
+    def get_ssl_connection(self):
         with self.get_num_lock:
             self.https_get_num += 1
 
-        ssl_sock = None
+        start_time = time.time()
+        self.create_more_connection()
         try:
-            if host:
-                only_h1=True
-                if host in self.host_conn_pool:
-                    while True:
-                        ret = self.host_conn_pool[host].get_nowait(only_h1=True)
-                        if ret:
-                            handshake_time, ssl_sock = ret
-                        else:
-                            ssl_sock = None
-                            break
-
-                        if time.time() - ssl_sock.last_use_time < self.config.https_keep_alive + 1:
-                            self.logger.debug("host_conn_pool %s get:%s handshake:%d", host, ssl_sock.ip, handshake_time)
-                            break
-                        else:
-                            self.ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
-                            ssl_sock.close()
-                            continue
-            else:
-                only_h1=False
-                while True:
-                    ret = self.gae_conn_pool.get_nowait()
-                    if ret:
-                        handshake_time, ssl_sock = ret
+            while self.running:
+                ret = self.new_conn_pool.get(block=True, timeout=1)
+                if ret:
+                    handshake_time, ssl_sock = ret
+                    if time.time() - ssl_sock.last_use_time < self.config.https_keep_alive - 1:
+                        # self.logger.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
+                        return ssl_sock
                     else:
-                        ssl_sock = None
-                        break
-
-                    if time.time() - ssl_sock.last_use_time < self.config.https_keep_alive + 1:
-                        self.logger.debug("ssl_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
-                        break
-                    else:
+                        # self.logger.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
                         self.ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
                         ssl_sock.close()
                         continue
-
-            self.create_more_connection()
-
-            if ssl_sock:
-                return ssl_sock
-            else:
-                start_time = time.time()
-                while self.running:
-                    ret = self.new_conn_pool.get(True, 1, only_h1=only_h1)
-                    if ret:
-                        handshake_time, ssl_sock = ret
-                        if time.time() - ssl_sock.last_use_time < self.config.https_keep_alive - 1:
-                            # self.logger.debug("new_conn_pool.get:%s handshake:%d", ssl_sock.ip, handshake_time)
-                            return ssl_sock
-                        else:
-                            # self.logger.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
-                            self.ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
-                            ssl_sock.close()
-                            continue
-                    else:
-                        if time.time() - start_time > self.max_timeout:
-                            self.logger.debug("create ssl timeout fail.")
-                            return None
+                else:
+                    if time.time() - start_time > self.max_timeout:
+                        self.logger.debug("create ssl timeout fail.")
+                        return None
         finally:
             with self.get_num_lock:
                 self.https_get_num -= 1
-
-    def get_new_ssl(self, only_h1=True):
-        with self.get_num_lock:
-            if only_h1:
-                self.http1_get_num += 1
-            else:
-                self.https_get_num += 1
-
-        try:
-            self.create_more_connection()
-            ret = self.new_conn_pool.get(True, self.max_timeout, only_h1=only_h1)
-            if ret:
-                handshake_time, ssl_sock = ret
-                return ssl_sock
-            else:
-                self.logger.debug("get_new_ssl timeout fail.")
-                return None
-        finally:
-            with self.get_num_lock:
-                if only_h1:
-                    self.http1_get_num -= 1
-                else:
-                    self.https_get_num -= 1
