@@ -116,7 +116,7 @@ elif sys.platform.startswith("linux"):
         except:
             return False
 
-    if X_is_running() and (has_gi() or has_pygtk()):
+    if X_is_running() and (has_pygtk() or has_gi()):
         from gtk_tray import sys_tray
     else:
         from non_tray import sys_tray
