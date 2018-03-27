@@ -24,6 +24,13 @@ if 'XDG_CURRENT_DESKTOP' in os.environ:
         enable_appind = True
 
 try:
+    import pygtk
+    pygtk.require('2.0')
+    import gtk
+    import gtk.gdk as gdk
+    use_gi = False
+    xlog.info('Using PyGTK as the GUI Backend.')
+except:
     import gi
     gi.require_version('Gtk', '3.0')
     gi.require_version('Gdk', '3.0')
@@ -31,13 +38,6 @@ try:
     from gi.repository import Gdk as gdk
     use_gi = True
     xlog.info('Using PyGObject as the GUI Backend.')
-except:
-    import pygtk
-    pygtk.require('2.0')
-    import gtk
-    import gtk.gdk as gdk
-    use_gi = False
-    xlog.info('Using PyGTK as the GUI Backend.')
 
 gdk.threads_init()
 
@@ -93,6 +93,7 @@ class Gtk_tray():
             xlog.info('AppIndicator found and used.')
         else:
             self.trayicon = self.gtk_trayicon(logo_filename)
+            xlog.info('Gtk.StatusIcon used.')
 
     def appind_trayicon(self, logo_filename):
         trayicon = new_appindicator('XX-Net', 'indicator-messages', appind_category)
