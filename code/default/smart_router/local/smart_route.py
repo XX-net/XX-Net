@@ -4,6 +4,7 @@ import struct
 import urlparse
 import io
 import ssl
+import OpenSSL
 
 import utils
 import simple_http_server
@@ -245,36 +246,40 @@ def do_socks(sock, host, port, client_address, left_buf=""):
 
 
 def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
-    # TODO: bug exist
-
     if not g.x_tunnel:
         return
 
     try:
         remote_sock = socks.create_connection(
             (host, port),
-            proxy_type="socks5", proxy_addr="127.0.0.1", proxy_port=1080, timeout=15
+            proxy_type="socks5h", proxy_addr="127.0.0.1", proxy_port=1080, timeout=15
         )
     except Exception as e:
         xlog.warn("do_unwrap_socks connect to x-tunnel for %s:%d proxy fail.", host, port)
         return
 
-    if req.path.startswith("https"):
+    if isinstance(req.connection, ssl.SSLSocket):
         try:
-            ssl_sock = ssl.wrap_socket(remote_sock)
+            # TODO: send SNI
+            remote_ssl_sock = ssl.wrap_socket(remote_sock)
         except:
             xlog.warn("do_unwrap_socks ssl_wrap for %s:%d proxy fail.", host, port)
             return
     else:
-        ssl_sock = remote_sock
+        remote_ssl_sock = remote_sock
+
+    # avoid close by req.__del__
+    req.rfile._close = False
+    req.wfile._close = False
+    req.connection = None
 
     if not isinstance(sock, SocketWrap):
-        sock = SocketWrap(sock, "x-tunnel", port, host)
+        sock = SocketWrap(sock, client_address[0], client_address[1])
 
     xlog.info("host:%s:%d do_unwrap_socks", host, port)
 
-    ssl_sock.send(left_buf)
-    sw = SocketWrap(ssl_sock, client_address[0], client_address[1])
+    remote_ssl_sock.send(left_buf)
+    sw = SocketWrap(remote_ssl_sock, "x-tunnel", port, host)
     sock.recved_times = 3
     g.pipe_socks.add_socks(sock, sw)
 
@@ -282,30 +287,30 @@ def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
 def do_gae(sock, host, port, client_address, left_buf=""):
     sock.setblocking(1)
     if left_buf:
-        ssl_sock = sock
         schema = "http"
     else:
         leadbyte = sock.recv(1, socket.MSG_PEEK)
         if leadbyte in ('\x80', '\x16'):
             try:
-                ssl_sock = g.gae_proxy.proxy_handler.wrap_ssl(sock._sock, host, port, client_address)
+                sock._sock = g.gae_proxy.proxy_handler.wrap_ssl(sock._sock, host, port, client_address)
             except Exception as e:
                 raise SslWrapFail()
 
             schema = "https"
         else:
-            ssl_sock = sock
             schema = "http"
 
-    ssl_sock.setblocking(1)
+    sock.setblocking(1)
     xlog.debug("host:%s:%d do gae", host, port)
-    req = g.gae_proxy.proxy_handler.GAEProxyHandler(ssl_sock, client_address, None, xlog)
+    req = g.gae_proxy.proxy_handler.GAEProxyHandler(sock._sock, client_address, None, xlog)
     req.parse_request()
 
     if req.path[0] == '/':
-        req.path = '%s://%s%s' % (schema, req.headers['Host'], req.path)
+        url = '%s://%s%s' % (schema, req.headers['Host'], req.path)
+    else:
+        url = req.path
 
-    if req.path in ["http://www.twitter.com/xxnet",
+    if url in ["http://www.twitter.com/xxnet",
                     "https://www.twitter.com/xxnet",
                     "http://www.deja.com/xxnet",
                     "https://www.deja.com/xxnet"
@@ -314,20 +319,19 @@ def do_gae(sock, host, port, client_address, left_buf=""):
         # auto detect browser proxy setting is work
         xlog.debug("CONNECT %s %s", req.command, req.path)
         req.wfile.write(req.self_check_response_data)
-        ssl_sock.close()
         return
 
     if req.upgrade == "websocket":
         xlog.debug("gae %s not support WebSocket", req.path)
-        raise NotSupported(req, ssl_sock)
+        raise NotSupported(req, sock)
 
-    #if len(req.path) >= 2084:
-    #    xlog.debug("gae %s path len exceed 1024 limit", req.path)
-    #    raise NotSupported(req, ssl_sock)
+    if len(req.path) >= 2048:
+        xlog.debug("gae %s path len exceed 1024 limit", req.path)
+        raise NotSupported(req, sock)
 
-    if req.command not in ["GET", "PUT", "POST", "DELETE", "PATCH", "HEAD"]:
+    if req.command not in ["GET", "PUT", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
         xlog.debug("gae %s %s, method not supported", req.command, req.path)
-        raise NotSupported(req, ssl_sock)
+        raise NotSupported(req, sock)
 
     req.parsed_url = urlparse.urlparse(req.path)
     req.do_METHOD()
@@ -360,7 +364,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
 
                 try:
                     # sni_host = get_sni(sock, left_buf)
-                    xlog.info("%s %s:%d try gae", scense, host, port)
+                    # xlog.info("%s %s:%d try gae", scense, host, port)
                     do_gae(sock, host, port, client_address, left_buf)
                     return
                 except NotSupported as e:

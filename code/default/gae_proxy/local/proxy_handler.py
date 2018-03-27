@@ -60,6 +60,17 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
     bufsize = 65535
     local_names = []
+    self_check_response_data = "HTTP/1.1 200 OK\r\n" \
+                               "Access-Control-Allow-Origin: *\r\n" \
+                               "Cache-Control: no-cache, no-store, must-revalidate\r\n" \
+                               "Pragma: no-cache\r\n" \
+                               "Expires: 0\r\n" \
+                               "Content-Type: text/plain\r\n" \
+                               "Keep-Alive:\r\n" \
+                               "Persist:\r\n" \
+                               "Connection: Keep-Alive, Persist\r\n" \
+                               "Content-Length: 2\r\n\r\nOK"
+    fake_host = web_control.get_fake_host()
 
     def setup(self):
         self.__class__.do_GET = self.__class__.do_METHOD
@@ -68,18 +79,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.__class__.do_HEAD = self.__class__.do_METHOD
         self.__class__.do_DELETE = self.__class__.do_METHOD
         self.__class__.do_OPTIONS = self.__class__.do_METHOD
-
-        self.self_check_response_data = "HTTP/1.1 200 OK\r\n"\
-            "Access-Control-Allow-Origin: *\r\n"\
-            "Cache-Control: no-cache, no-store, must-revalidate\r\n"\
-            "Pragma: no-cache\r\n"\
-            "Expires: 0\r\n"\
-            "Content-Type: text/plain\r\n"\
-            "Keep-Alive:\r\n"\
-            "Persist:\r\n"\
-            "Connection: Keep-Alive, Persist\r\n"\
-            "Content-Length: 2\r\n\r\nOK"
-        self.fake_host = web_control.get_fake_host()
 
     def forward_local(self):
         """

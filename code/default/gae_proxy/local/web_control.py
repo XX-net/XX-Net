@@ -629,9 +629,6 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         data = "New conn:\n"
         data += front.connect_manager.new_conn_pool.to_string()
 
-        data += "\nGAE conn:\n"
-        data += front.connect_manager.gae_conn_pool.to_string()
-
         for host in front.connect_manager.host_conn_pool:
             data += "\nHost:%s\n" % host
             data += front.connect_manager.host_conn_pool[host].to_string()

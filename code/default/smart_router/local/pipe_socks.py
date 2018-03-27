@@ -1,6 +1,8 @@
 import threading
 import select
 import time
+import ssl
+import socket
 
 import utils
 
@@ -51,6 +53,15 @@ class PipeSocks(object):
         self.running = False
 
     def add_socks(self, s1, s2):
+        for s in [s1, s2]:
+            if isinstance(s._sock, socket._closedsocket) or \
+                    (isinstance(s._sock, ssl.SSLSocket) and
+                     isinstance(s._sock._sock, socket._closedsocket)):
+                xlog.warn("try to add_socks closed socket:%s %s", s1, s2)
+                s1.close()
+                s2.close()
+                return
+
         s1.setblocking(0)
         s2.setblocking(0)
 
@@ -239,6 +250,12 @@ class PipeSocks(object):
                     self.close(s1, "e")
             except Exception as e:
                 xlog.exception("pipe except:%r", e)
+                for s in list(self.error_set):
+                    if isinstance(s._sock, socket._closedsocket) or \
+                            (isinstance(s._sock, ssl.SSLSocket) and
+                             isinstance(s._sock._sock, socket._closedsocket)):
+                        xlog.warn("socket %s is closed", s)
+                        self.close(s, "e")
 
         for s in list(self.error_set):
             self.close(s, "stop")

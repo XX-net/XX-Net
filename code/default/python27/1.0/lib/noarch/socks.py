@@ -296,9 +296,10 @@ class socksocket(_BaseSocket):
                 proxy_type = PROXY_TYPE_HTTP
                 self.resolve_dest = False
             elif "socks5" in proxy_type:
-                proxy_type = PROXY_TYPE_SOCKS5
                 if proxy_type == "socks5h":
                     self.resolve_dest = False
+                    rdns = True
+                proxy_type = PROXY_TYPE_SOCKS5
             elif "socks4" in proxy_type:
                 proxy_type = PROXY_TYPE_SOCKS4
             else:

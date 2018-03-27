@@ -14,7 +14,6 @@ def is_workable():
         return True
 
     num = len(front.connect_manager.new_conn_pool.pool) +\
-          len(front.connect_manager.gae_conn_pool.pool) + \
           front.http_dispatcher.h1_num + \
           front.http_dispatcher.h2_num
 

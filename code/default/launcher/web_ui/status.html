@@ -346,15 +346,17 @@
                     }
                 }
 
-                if (result['working_appid'] == "") {
-                    if (result['out_of_quota_appids'] != "") {
-                        if (is_public_appid(result['gae_appid'])) {
-                            return updateProperty('#noob-info', '{{ _( "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'none');
-                        } else {
+                if (is_public_appid(result['gae_appid'])) {
+                    if (result['out_of_quota_appids'].length > 2000) {
+                        return updateProperty('#noob-info', '{{ _( "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>." ) }}', 'none');
+                    }
+                } else {
+                    if (result['working_appid'] == "") {
+                        if (result['out_of_quota_appids'].length > 0){
                             return updateProperty('#noob-info', '{{ _( "Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more AppID</a>." ) }}', 'none');
+                        } else {
+                            return updateProperty('#noob-info', '{{ _( "No working AppID. Please check." ) }}', 'none');
                         }
-                    } else {
-                        return updateProperty('#noob-info', '{{ _( "No working AppID. Please check." ) }}', 'none');
                     }
                 }
 
