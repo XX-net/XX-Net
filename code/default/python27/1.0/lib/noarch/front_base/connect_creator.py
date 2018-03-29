@@ -168,7 +168,7 @@ class ConnectCreator(object):
     def check_cert(self, ssl_sock):
         cert_chain = ssl_sock.get_peer_cert_chain()
         if not cert_chain:
-            raise socket.error('certficate is none')
+            raise socket.error('certificate is none, sni:%s' % ssl_sock.sni)
 
         if len(cert_chain) < self.config.min_intermediate_CA:
             raise socket.error('No intermediate CA was found.')
@@ -194,11 +194,11 @@ class ConnectCreator(object):
             self.logger.debug("Common Name:%s", ssl_sock.domain)
 
         if self.config.check_commonname and not issuer_commonname.startswith(self.config.check_commonname):
-            raise socket.error(' certficate is issued by %r' % (issuer_commonname))
+            raise socket.error(' certificate is issued by %r' % (issuer_commonname))
 
         cert = ssl_sock.get_peer_certificate()
         if not cert:
-            raise socket.error('certficate is none')
+            raise socket.error('certificate is none')
 
         if self.config.check_sni:
             # get_subj_alt_name cost near 100ms. be careful.

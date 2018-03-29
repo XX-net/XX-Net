@@ -56,7 +56,7 @@ response:
 
 import errno
 import time
-import struct
+import xstruct as struct
 import re
 import string
 import ssl

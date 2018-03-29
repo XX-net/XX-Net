@@ -29,15 +29,18 @@ class Config(ConfigBase):
         self.set_var("hosts_direct", [
             "scholar.google.com",
             "scholar.google.com.hk",
+            "appengine.google.com"
             #"www.google.com"
         ])
         self.set_var("hosts_gae", [
-            "appengine.google.com",
             "accounts.google.com"
         ])
 
         self.set_var("hosts_direct_endswith", [
-            ".appspot.com"
+            ".appspot.com",
+            ".google.com",
+            ".gmail.com",
+            ".youtube.com"
         ])
         self.set_var("hosts_gae_endswith", [])
 
@@ -56,6 +59,7 @@ class Config(ConfigBase):
             ".googlevideo.com"
         ])
 
+        # some unsupport request like url length > 2048, will go Direct
         self.set_var("google_endswith", [
             ".youtube.com",
             ".googlevideo.com",

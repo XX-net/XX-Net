@@ -1,7 +1,7 @@
 import threading
 import time
 import socket
-import struct
+import xstruct as struct
 import select
 
 import utils

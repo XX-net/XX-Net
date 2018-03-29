@@ -8,7 +8,7 @@ data and logic for aiding the connection when it comes to reading from the
 socket.
 """
 import collections
-import struct
+import xstruct as struct
 
 from .flags import Flag, Flags
 from ...http20 import errors

@@ -7,7 +7,7 @@ class ConnectCreator(ConnectCreatorBase):
     def check_cert(self, ssl_sock):
         cert_chain = ssl_sock.get_peer_cert_chain()
         if not cert_chain:
-            raise socket.error(' certficate is none')
+            raise socket.error(' certificate is none, sni:%s' % ssl_sock.sni)
 
         self.get_ssl_cert_domain(ssl_sock)
         issuer_commonname = next((v for k, v in cert_chain[0].get_issuer().get_components() if k == 'CN'), '')
@@ -24,6 +24,9 @@ class ConnectCreator(ConnectCreatorBase):
 
         if self.config.check_commonname and not issuer_commonname.startswith(self.config.check_commonname):
             raise socket.error(' certficate is issued by %r' % (issuer_commonname))
+
+        if not self.config.check_sni:
+            return True
 
         cert = ssl_sock.get_peer_certificate()
         if not cert:
