@@ -18,7 +18,8 @@ path_to_script () {
 
 goto_script_path() {
   PATH_TO_SCRIPT="$(path_to_script "$0")"
-  cd $PATH_TO_SCRIPT
+  # XX-Net fails to start if the install path contains spaces, so it must be quoted.
+  cd "$PATH_TO_SCRIPT"
 }
 
 goto_script_path
