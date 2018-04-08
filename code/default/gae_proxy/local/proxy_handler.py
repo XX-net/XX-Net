@@ -107,7 +107,10 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             key = key.title()
             out_list.append("%s: %s\r\n" % (key, response.headers[key]))
         out_list.append("\r\n")
-        out_list.append(response.text)
+        content = response.text
+        if isinstance(content, memoryview):
+            content = content.tobytes()
+        out_list.append(content)
 
         self.wfile.write("".join(out_list))
 
@@ -318,7 +321,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             xlog.warn('DIRECT %s %s except:%r', self.command, self.url, e)
             if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
                 raise
-
+        except Exception as e:
+            xlog.exception('DIRECT %s %s except:%r', self.command, self.url, e)
 
 # called by smart_router
 def wrap_ssl(sock, host, port, client_address):

@@ -42,6 +42,13 @@
     </div> <!-- .row-fluid -->
 
     <div class="row-fluid">
+        <div class="span4">{{ _( "Enable Fake CA" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="enable_fake_ca" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
         <div class="span4">{{ _( "Block Advertisement" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="block_advertisement" type="checkbox" data-toggle="switch"/>
@@ -73,6 +80,12 @@
                     $("#auto-gae").parent().addClass('switch-on');
 
                     $("#auto-gae").prop('checked', true);
+                }
+                if (result['enable_fake_ca'] != 0) {
+                    $("#enable_fake_ca").parent().removeClass('switch-off');
+                    $("#enable_fake_ca").parent().addClass('switch-on');
+
+                    $("#enable_fake_ca").prop('checked', true);
                 }
                 if (result['block_advertisement'] != 0) {
                     $("#block_advertisement").parent().removeClass('switch-off');
@@ -131,6 +144,10 @@
 
     $('#auto-gae').change(function () {
         setSmartRouterConfig("auto_gae", $(this).is(':checked') ? 1 : 0);
+    });
+
+    $('#enable_fake_ca').change(function () {
+        setSmartRouterConfig("enable_fake_ca", $(this).is(':checked') ? 1 : 0);
     });
 
     $('#block_advertisement').change(function () {

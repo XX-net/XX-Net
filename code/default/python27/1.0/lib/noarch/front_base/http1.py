@@ -13,8 +13,6 @@ class Http1Worker(HttpWorker):
         super(Http1Worker, self).__init__(logger, ip_manager, config, ssl_sock,
                                           close_cb, retry_task_cb, idle_cb, log_debug_data)
 
-        self.last_active_time = self.ssl_sock.create_time
-        self.last_request_time = self.ssl_sock.create_time
         self.task = None
         self.request_onway = False
         self.transfered_size = 0
@@ -68,20 +66,20 @@ class Http1Worker(HttpWorker):
 
         if self.config.http1_ping_interval:
             while self.keep_running:
-                time_to_ping = max(self.config.http1_ping_interval - (time.time() - self.last_active_time), 0.2)
+                time_to_ping = max(self.config.http1_ping_interval - (time.time() - self.last_recv_time), 0.2)
                 time.sleep(time_to_ping)
 
                 if not self.request_onway and \
-                        time.time() - self.last_active_time > self.config.http1_ping_interval - 1:
+                        time.time() - self.last_recv_time > self.config.http1_ping_interval - 1:
                     self.task_queue.put("ping")
                     time.sleep(1)
 
         elif self.config.http1_idle_time:
             while self.keep_running:
-                time_to_sleep = max(self.config.http1_idle_time - (time.time() - self.last_active_time), 0.2)
+                time_to_sleep = max(self.config.http1_idle_time - (time.time() - self.last_recv_time), 0.2)
                 time.sleep(time_to_sleep)
 
-                if not self.request_onway and time.time() - self.last_active_time > self.config.http1_idle_time:
+                if not self.request_onway and time.time() - self.last_recv_time > self.config.http1_idle_time:
                     self.close("idle timeout")
                     return
 
@@ -93,27 +91,28 @@ class Http1Worker(HttpWorker):
                 self.accept_task = False
                 self.keep_running = False
                 return
-            elif task == "ping":
+
+            if task == "ping":
                 if not self.head_request():
                     self.ip_manager.recheck_ip(self.ssl_sock.ip)
                     self.close("keep alive")
                     return
-                else:
-                    self.last_active_time = time.time()
-                    continue
+
+                self.last_recv_time = time.time()
+                continue
 
             # self.logger.debug("http1 get task")
             time_now = time.time()
-            if time_now - self.last_active_time > self.config.http1_idle_time:
-                self.logger.warn("get task but inactive time:%d", time_now - self.last_active_time)
+            if time_now - self.last_recv_time > self.config.http1_idle_time:
+                self.logger.warn("get task but inactive time:%d", time_now - self.last_recv_time)
                 self.task = task
-                self.close("inactive timeout %d" % (time_now - self.last_active_time))
+                self.close("inactive timeout %d" % (time_now - self.last_recv_time))
                 return
 
             self.request_task(task)
             self.request_onway = False
-            self.last_request_time = time_now
-            self.last_active_time = time_now
+            self.last_send_time = time_now
+            self.last_recv_time = time_now
 
             if self.processed_tasks > self.config.http1_max_process_tasks:
                 self.close("lift end.")
@@ -152,7 +151,7 @@ class Http1Worker(HttpWorker):
 
         except Exception as e:
             self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
-                           self.ip, e, time.time()-self.last_active_time, task.timeout)
+                             self.ip, e, time.time() - self.last_recv_time, task.timeout)
             self.logger.warn('%s trace:%s', self.ip, self.get_trace())
 
             self.retry_task_cb(task)
@@ -211,7 +210,7 @@ class Http1Worker(HttpWorker):
         self.accept_task = True
         self.idle_cb()
         self.processed_tasks += 1
-        self.last_active_time = time.time()
+        self.last_recv_time = time.time()
         self.record_active("Res")
 
     def head_request(self):

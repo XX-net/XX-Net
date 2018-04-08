@@ -84,7 +84,6 @@ class Http2Worker(HttpWorker):
         self.next_stream_id = 1
         self.streams = {}
         self.last_ping_time = time.time()
-        self.last_active_time = self.ssl_sock.create_time - 1
         self.continue_timeout = 0
 
         # count ping not ACK
@@ -190,6 +189,8 @@ class Http2Worker(HttpWorker):
                 # combine header and payload in one tcp package.
                 if not self.send_queue._qsize():
                     self._sock.flush()
+
+                self.last_send_time = time.time()
             except socket.error as e:
                 if e.errno not in (errno.EPIPE, errno.ECONNRESET):
                     self.logger.warn("%s http2 send fail:%r", self.ip, e)
@@ -305,9 +306,10 @@ class Http2Worker(HttpWorker):
         try:
             header = self._sock.recv(9)
         except Exception as e:
-            self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip, e, time.time()-self.last_active_time)
+            self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip, e, time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)
             return
+        self.last_recv_time = time.time()
 
         # Parse the header. We can use the returned memoryview directly here.
         frame, length = Frame.parse_frame_header(header)
@@ -323,7 +325,6 @@ class Http2Worker(HttpWorker):
             self.close("ConnectionReset:%r" % e)
             return
 
-        self.last_active_time = time.time()
         self._consume_frame_payload(frame, data)
 
     def _recv_payload(self, length):
@@ -339,6 +340,7 @@ class Http2Worker(HttpWorker):
         # is very large. So it should be to retrieve from socket repeatedly.
         while length and data_length:
             data = self._sock.recv(length)
+            self.last_recv_time = time.time()
             data_length = len(data)
             end = index + data_length
             buffer_view[index:end] = data[:]
@@ -406,7 +408,6 @@ class Http2Worker(HttpWorker):
                 p.flags.add('ACK')
                 p.opaque_data = frame.opaque_data
                 self._send_cb(p)
-            # self.last_active_time = time.time()
 
         elif frame.type == SettingsFrame.type:
             if 'ACK' not in frame.flags:
@@ -428,7 +429,7 @@ class Http2Worker(HttpWorker):
             # If an error occured, try to read the error description from
             # code registry otherwise use the frame's additional data.
             error_string = frame._extra_info()
-            time_cost = time.time() - self.last_active_time
+            time_cost = time.time() - self.last_recv_time
             if frame.additional_data != "session_timed_out":
                 self.logger.warn("goaway:%s, t:%d", error_string, time_cost)
 
@@ -485,3 +486,22 @@ class Http2Worker(HttpWorker):
         out_list.append(" h2.stream_num:%d" % len(self.streams))
         out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))
         return ",".join(out_list)
+
+    def check_active(self, now):
+        if not self.keep_running or len(self.streams) == 0:
+            return
+
+        if now - self.last_send_time > 3:
+            self.send_ping()
+            return
+
+        if now - self.last_recv_time > 6:
+            self.close("active timeout")
+
+        for sid in self.streams.keys():
+            try:
+                stream = self.streams[sid]
+            except:
+                pass
+
+            stream.check_timeout(now)

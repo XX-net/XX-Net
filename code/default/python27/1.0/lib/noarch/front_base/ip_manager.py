@@ -525,7 +525,8 @@ class IpManager():
             self.search_more_ip()
 
     def report_connect_closed(self, ip, reason=""):
-        self.logger.debug("%s close:%s", ip, reason)
+        # if reason not in ["idle timeout"]:
+            # self.logger.debug("%s close:%s", ip, reason)
         if reason != "down fail":
             return
 

@@ -189,7 +189,8 @@ class HttpWorker(object):
         self.keep_running = True
         self.processed_tasks = 0
         self.speed_history = []
-        self.last_active_time = ssl_sock.create_time
+        self.last_recv_time = self.ssl_sock.create_time
+        self.last_send_time = self.ssl_sock.create_time
 
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
@@ -201,13 +202,14 @@ class HttpWorker(object):
         self.accept_task = False
         self.keep_running = False
         self.ssl_sock.close()
-        self.logger.debug("%s worker close:%s", self.ip, reason)
+        if reason not in ["idle timeout"]:
+            self.logger.debug("%s worker close:%s", self.ip, reason)
         self.ip_manager.report_connect_closed(self.ssl_sock.ip, reason)
         self.close_cb(self)
 
     def get_score(self):
         now = time.time()
-        inactive_time = now - self.last_active_time
+        inactive_time = now - self.last_recv_time
 
         rtt = self.rtt
         if inactive_time > 30:

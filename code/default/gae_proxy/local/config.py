@@ -29,20 +29,23 @@ class Config(ConfigBase):
         self.set_var("hosts_direct", [
             "scholar.google.com",
             "scholar.google.com.hk",
-            "appengine.google.com"
+            "appengine.google.com",
+            "accounts.google.com"
             #"www.google.com"
         ])
-        self.set_var("hosts_gae", [
-            "accounts.google.com"
-        ])
-
         self.set_var("hosts_direct_endswith", [
             ".appspot.com",
-            ".google.com",
+            #".google.com",
             ".gmail.com",
             ".youtube.com"
         ])
-        self.set_var("hosts_gae_endswith", [])
+
+        self.set_var("hosts_gae", [
+            "mail.google.com"
+        ])
+        self.set_var("hosts_gae_endswith", [
+
+        ])
 
         # sites using br
         self.set_var("BR_SITES", [
@@ -172,12 +175,13 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
     def load(self):
         super(Config, self).load()
 
+        need_save = 0
         if not os.path.isfile(self.config_path):
             for fn in [
                 os.path.join(module_data_path, "config.ini"),
                 os.path.join(module_data_path, "manual.ini")
             ]:
-                self.load_old_config(fn)
+                need_save += self.load_old_config(fn)
 
         self.HOSTS_GAE = tuple(self.hosts_gae)
         self.HOSTS_DIRECT = tuple(self.hosts_direct)
@@ -188,10 +192,14 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         self.br_sites = tuple(self.BR_SITES)
         self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
 
+        if need_save:
+            self.save()
+
     def load_old_config(self, fn):
         if not os.path.isfile(fn):
-            return
+            return 0
 
+        need_save = 0
         with open(fn, "r") as fd:
             for line in fd.readlines():
                 if line.startswith("appid"):
@@ -202,11 +210,15 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                             appid = appid.strip()
                             appids.append(appid)
                         self.GAE_APPIDS = appids
+                        need_save += 1
                     except Exception as e:
                         pass
                 elif line.startswith("password"):
                     password = line.split("=")[1].strip()
                     self.GAE_PASSWORD = password
+                    need_save += 1
+
+        return need_save
 
 
 config_path = os.path.join(module_data_path, "config.json")

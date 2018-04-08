@@ -109,5 +109,5 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
         xlog.info("DIRECT t:%d s:%d %d %s %s",
                   (time.time()-time_request)*1000, length, response.status, host, path)
     except Exception as e:
-        xlog.warn("DIRECT %d %s %s, t:%d send to client except:%r",
-                  response.status, host, path, (time.time()-time_request)*1000, e)
+        xlog.exception("DIRECT %s %d %s %s, t:%d send to client except:%r",
+                 method, response.status, host, path, (time.time()-time_request)*1000, e)

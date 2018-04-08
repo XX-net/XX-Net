@@ -72,6 +72,7 @@ def load_config():
     config.set_var("country_code", "CN")
     config.set_var("auto_direct", True)
     config.set_var("auto_gae", True)
+    config.set_var("enable_fake_ca", True)
     config.set_var("block_advertisement", True)
 
     config.load()

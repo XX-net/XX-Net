@@ -110,6 +110,7 @@ class Stream(object):
         # Unconsumed response data chunks
         self.response_body = []
         self.response_body_len = 0
+        self.start_time = time.time()
 
     def start_request(self):
         """
@@ -169,8 +170,6 @@ class Stream(object):
     def left_work(self):
         if self.request_body_left > 0:
             self.send_left_body()
-
-        self.timeout_response()
 
     def add_header(self, name, value, replace=False):
         """
@@ -255,7 +254,7 @@ class Stream(object):
                 self._send_cb(w)
         elif frame.type == RstStreamFrame.type:
             # Rest Frame send from server is not define in RFC
-            inactive_time = time.time() - self.connection.last_active_time
+            inactive_time = time.time() - self.connection.last_recv_time
             self.logger.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
                        self.ip, self.stream_id, inactive_time, frame.error_code)
             self.connection.close("RESET")
@@ -367,12 +366,12 @@ class Stream(object):
             else STATE_CLOSED
         )
 
-    def timeout_response(self):
-        start_time = time.time()
-        while time.time() - start_time < self.task.timeout:
-            time.sleep(1)
-            if self._remote_closed:
-                return
+    def check_timeout(self, now):
+        if time.time() - self.start_time < self.task.timeout:
+            return
+
+        if self._remote_closed:
+            return
 
         self.logger.warn("h2 timeout %s task_trace:%s worker_trace:%s",
                   self.connection.ssl_sock.ip,
@@ -386,6 +385,6 @@ class Stream(object):
             self.task.response_fail("timeout")
 
         self.connection.continue_timeout += 1
-        if self.connection.continue_timeout >= self.connection.config.http2_max_timeout_tasks and \
-                time.time() - self.connection.last_active_time > self.connection.config.http2_timeout_active:
-            self.connection.close("down fail")
+        #if self.connection.continue_timeout >= self.connection.config.http2_max_timeout_tasks and \
+        #        time.time() - self.connection.last_redv_time > self.connection.config.http2_timeout_active:
+        #    self.connection.close("down fail")

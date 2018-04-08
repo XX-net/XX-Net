@@ -7,6 +7,7 @@ import threading
 import struct
 
 import utils
+import random_get_slice
 
 random.seed(time.time()* 1000000)
 
@@ -189,26 +190,10 @@ class Ipv6PoolSource(object):
         self.config = config
         self.list_fn = list_fn
 
-        self.fd = open(list_fn, "r")
-        self.fsize = os.path.getsize(list_fn)
-
-    def get_slice(self):
-        max_slice_len = 200
-
-        position = random.randint(0, self.fsize - max_slice_len)
-        self.fd.seek(position)
-        slice = self.fd.read(max_slice_len * 2)
-
-        if slice is None or len(slice) < max_slice_len:
-            self.logger.warn("get_slice fail")
-            raise Exception()
-
-        ns = slice.split("\n")
-        slice = ns[1]
-        return slice
+        self.source = random_get_slice.RandomGetSlice(list_fn, 200)
 
     def get_ip(self):
-        line = self.get_slice()
+        line = self.source.get()
         lp = line.split()
         ip = lp[0]
         return ip
