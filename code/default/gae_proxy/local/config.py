@@ -31,13 +31,9 @@ class Config(ConfigBase):
             "scholar.google.com.hk",
             "appengine.google.com",
             "accounts.google.com"
-            #"www.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
             ".appspot.com",
-            #".google.com",
-            ".gmail.com",
-            ".youtube.com"
         ])
 
         self.set_var("hosts_gae", [
