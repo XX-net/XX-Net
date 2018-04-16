@@ -35,7 +35,6 @@
 
 
 
-
 import sys
 import os
 
@@ -60,11 +59,8 @@ elif sys.platform == "darwin":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
-import time
 import traceback
 import platform
-import threading
-import urllib2
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
@@ -73,127 +69,85 @@ work_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(work_path)
 
 
-def create_data_path():
+def check_create_data_path():
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
 
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
-create_data_path()
 
-
-from config import config
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-xlog.set_buffer(2000)
-if config.log_file:
-    log_file = os.path.join(data_gae_proxy_path, "local.log")
-    xlog.set_file(log_file)
+xlog.set_buffer(1000)
 
 from cert_util import CertUtil
-import pac_server
 import simple_http_server
 import proxy_handler
-import connect_control
 import env_info
-import connect_manager
-from gae_handler import spawn_later
+from front import front, direct_front
 
 
+proxy_server = None
 # launcher/module_init will check this value for start/stop finished
 ready = False
-
-def pre_start():
-
-    if config.PAC_ENABLE:
-        pac_ip = config.PAC_IP
-        url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
-        spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
 
 
 def log_info():
     xlog.info('------------------------------------------------------')
     xlog.info('Python Version     : %s', platform.python_version())
     xlog.info('OS                 : %s', env_info.os_detail())
-    xlog.info('Listen Address     : %s:%d', config.LISTEN_IP, config.LISTEN_PORT)
-    if config.PROXY_ENABLE:
-        xlog.info('%s Proxy    : %s:%s', config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
-    xlog.info('GAE APPID          : %s', '|'.join(config.GAE_APPIDS))
-    if config.PAC_ENABLE:
-        xlog.info('Pac Server         : http://%s:%d/%s', config.PAC_IP, config.PAC_PORT, config.PAC_FILE)
-        #info += 'Pac File           : file://%s\n' % os.path.join(self.DATA_PATH, self.PAC_FILE)
+    xlog.info('Listen Address     : %s:%d', front.config.listen_ip, front.config.listen_port)
+    if front.config.PROXY_ENABLE:
+        xlog.info('%s Proxy    : %s:%s', front.config.PROXY_TYPE, front.config.PROXY_HOST, front.config.PROXY_PORT)
+
+    if len(front.config.GAE_APPIDS):
+        xlog.info('GAE APPID          : %s', '|'.join(front.config.GAE_APPIDS))
+    else:
+        xlog.info("Using public APPID")
     xlog.info('------------------------------------------------------')
 
 
-def main():
-    global ready
+def main(args):
+    global ready, proxy_server
 
-    connect_control.keep_running = True
-    config.load()
-    connect_manager.https_manager.load_config()
+    check_create_data_path()
 
-    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
-    # to profile gae_proxy, run proxy.py, visit some web by proxy, then visit http://127.0.0.1:8084/quit to quit and print result.
-    do_profile = config.do_profile
-    if do_profile:
-        import cProfile, pstats
-        pr = cProfile.Profile()
-        pr.enable()
-
-    global __file__
-    __file__ = os.path.abspath(__file__)
-    if os.path.islink(__file__):
-        __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    #xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
-    pre_start()
     log_info()
 
     CertUtil.init_ca()
 
-    proxy_daemon = simple_http_server.HTTPServer((config.LISTEN_IP, config.LISTEN_PORT), proxy_handler.GAEProxyHandler)
-    proxy_thread = threading.Thread(target=proxy_daemon.serve_forever)
-    proxy_thread.setDaemon(True)
-    proxy_thread.start()
+    allow_remote = args.get("allow_remote", 0)
+    if allow_remote:
+        listen_ip = "0.0.0.0"
+    else:
+        listen_ip = front.config.listen_ip
 
-    if config.PAC_ENABLE:
-        pac_daemon = simple_http_server.HTTPServer((config.PAC_IP, config.PAC_PORT), pac_server.PACServerHandler)
-        pac_thread = threading.Thread(target=pac_daemon.serve_forever)
-        pac_thread.setDaemon(True)
-        pac_thread.start()
+    front.start()
+    direct_front.start()
+
+    proxy_server = simple_http_server.HTTPServer(
+        (listen_ip, front.config.listen_port), proxy_handler.GAEProxyHandler, logger=xlog)
 
     ready = True  # checked by launcher.module_init
-
-    while connect_control.keep_running:
-        time.sleep(1)
-
-    xlog.info("Exiting gae_proxy module...")
-    proxy_daemon.shutdown()
-    proxy_daemon.server_close()
-    proxy_thread.join()
-    if config.PAC_ENABLE:
-        pac_daemon.shutdown()
-        pac_daemon.server_close()
-        pac_thread.join()
-    ready = False  # checked by launcher.module_init
-    xlog.debug("## GAEProxy set keep_running: %s", connect_control.keep_running)
-
-    if do_profile:
-        pr.disable()
-        pr.print_stats()
+    
+    proxy_server.serve_forever()
 
 
 # called by launcher/module/stop
 def terminate():
+    global ready, proxy_server
+
     xlog.info("start to terminate GAE_Proxy")
-    connect_control.keep_running = False
-    xlog.debug("## Set keep_running: %s", connect_control.keep_running)
+    ready = False
+    front.stop()
+    direct_front.stop()
+    proxy_server.shutdown()
 
 
 if __name__ == '__main__':
     try:
-        main()
+        main({})
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:

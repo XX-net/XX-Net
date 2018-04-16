@@ -1,5 +1,6 @@
 <ul class="nav nav-tabs">
     <li class="active"><a href="#info" data-toggle="tab">{{ _("Info") }}</a></li>
+    <li class="hide"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
     <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
     <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
     <li class="hide"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
@@ -10,11 +11,11 @@
             <h4>{{ _("Login") }}</h4>
             <p>
                 <label for="login-username">{{ _("Email") }}</label>
-                <input id="login-username" type="text" />
+                <input id="login-username" type="text"/>
             </p>
             <p>
                 <label for="login-password">{{ _("Password") }}</label>
-                <input id="login-password" type="password" />
+                <input id="login-password" type="password"/>
             </p>
             <p>
                 <button class="btn btn-primary btn-block" type="submit">{{ _("Login") }}</button>
@@ -27,11 +28,11 @@
             <h4>{{ _("Register") }}</h4>
             <p>
                 <label for="register-username">{{ _("Email") }}</label>
-                <input id="register-username" type="text" />
+                <input id="register-username" type="text"/>
             </p>
             <p>
                 <label for="register-password">{{ _("Password") }}</label>
-                <input id="register-password" type="password" />
+                <input id="register-password" type="password"/>
             </p>
             <p>
                 <button class="btn btn-primary btn-block" type="submit">{{ _("Register") }}</button>
@@ -61,7 +62,7 @@
                     <div class="span8">
                         <p>
                             <span id="credit">N/a</span>
-                            <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a>
+                            <!-- <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a> -->
                             <a id="transfer-credit-trigger" href="javascript:void(0);">[{{ _("Transfer") }}]</a>
                         </p>
                     </div> <!-- .span8 -->
@@ -91,6 +92,26 @@
                 </table>
             </div> <!-- .section -->
         </div> <!-- #account-information -->
+    </div> <!-- #info -->
+    <div id="advanced" class="tab-pane fade in">
+        <form id="adv-setting" onSubmit="onAdvSettingSubmit(); return false;">
+            <div class="row-fluid">
+                <div class="span3">
+                    <label for="server-selector">{{ _( "server" ) }}</label>
+                </div>
+                <div class="span6">
+                    <select id="server-selector">
+                        <option value="auto">{{ _( "AUTO" ) }}</option>
+                    </select>
+                </div>
+            </div>
+            <br/>
+            <div class="row-fluid">
+                <div class="span12">
+                    <button class="btn btn-primary btn-block" type="submit">{{ _("Submit") }}</button>
+                </div>
+            </div>
+        </form>
     </div> <!-- #info -->
     <div id="plans" class="tab-pane fade in">
         <div class="section">
@@ -174,7 +195,7 @@
         <table id="history-list" class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th >{{ _("Time") }}</th>
+                    <th>{{ _("Time") }}</th>
                     <th>{{ _("Action") }}</th>
                 </tr>
             </thead>
@@ -186,7 +207,7 @@
         <h4>{{ _("Help") }}</h4>
         <div class="row-fluid">
             <div class="span4">
-                <label>Socks5</label>
+                <label>SOCKS5</label>
             </div> <!-- .span4 -->
             <div class="span8">
                 <p>127.0.0.1:1080</p>
@@ -197,7 +218,7 @@
                 <label>Wiki</label>
             </div> <!-- .span4 -->
             <div class="span8">
-                <p><a href="https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B" target="_blank">X-Tunnel Wiki@GitHub</a></p>
+                <p><a href='{{ _( "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel" ) }}' target="_blank">X-Tunnel Wiki@GitHub</a></p>
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
     </div> <!-- #help -->
@@ -217,7 +238,7 @@
         <select id="charge-plan" name="os0">
             <option value="Quarterly">{{ _("Quarterly") }} $4.50</option>
             <option value="Yearly">{{ _("Yearly") }} $15.00</option>
-        </select> 
+        </select>
         <!-- Account Field -->
         <input type="hidden" name="on1" value="account">
         <input class="login-account" type="hidden" name="os1">
@@ -240,11 +261,11 @@
         <div class="alert alert-error hide"></div> <!-- .alert-error -->
         <p>
             <label for="transfer-credit-username">{{ _("Username transfer to") }}</label>
-            <input id="transfer-credit-username" type="text" placeholder="{{ _("Email Address") }}" />
+            <input id="transfer-credit-username" type="text" placeholder='{{ _("Email Address") }}'/>
         </p>
         <p>
             <label for="transfer-credit-amount">{{ _("Credit to transfer") }} (<strong>USD</strong>)</label>
-            <input id="transfer-credit-amount" type="text" value="0" onkeyup="isDecimalNumber(this)" />
+            <input id="transfer-credit-amount" type="text" value="0" onkeyup="isDecimalNumber(this)"/>
         </p>
     </div> <!-- .modal-body -->
     <div class="modal-footer">
@@ -262,11 +283,11 @@
         <div class="alert alert-error hide"></div> <!-- .alert-error -->
         <p>
             <label for="transfer-bandwidth-username">{{ _("Username transfer to") }}</label>
-            <input id="transfer-bandwidth-username" type="text" placeholder="{{ _("Email Address") }}" />
+            <input id="transfer-bandwidth-username" type="text" placeholder='{{ _("Email Address") }}'/>
         </p>
         <p>
             <label for="transfer-bandwidth-amount">{{ _("Bandwidth to transfer") }} (<strong>MB</strong>)</label>
-            <input id="transfer-bandwidth-amount" type="text" onkeyup="isDecimalNumber(this)" />
+            <input id="transfer-bandwidth-amount" type="text" onkeyup="isDecimalNumber(this)"/>
         </p>
     </div> <!-- .modal-body -->
     <div class="modal-footer">
@@ -276,26 +297,40 @@
     </div> <!-- .modal-footer -->
 </div> <!-- #transfer-bandwidth-modal -->
 
-<!-- Java Script -->
+<!-- JavaScript -->
 <script type="text/javascript">
-    title('X-Tunnel');
+    title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
 <script type="text/javascript">
-    $(function() {
-        window.timer  = $.timer(function() {
+    $(function () {
+        window.refresh_timer = $.timer(function () {
             getUserInfo(0);
         });
 
-        window.timer.set({
-            time: 10000,
-            autostart: false
+        window.refresh_timer.set({
+            time: 1000,
+            autostart: true
         });
 
-        getUserInfo(0);
+        var force_update = 0;
+        var navigationType = performance.navigation.type;
+        if (navigationType === performance.navigation.TYPE_BACK_FORWARD) {
+            // console.log("Back/Forward button");
+        } else if (navigationType === performance.navigation.TYPE_RELOAD) {
+            console.log("Reloaded");
+            force_update = 1;
+        } else if (navigationType === performance.navigation.TYPE_NAVIGATE) {
+            // console.log("Normal navigation");
+        }
+
+        tip('{{ _("Logining ...") }}', 'info', false);
+        $('button[type=submit]', '#login-form').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#login-form').attr('disabled', 'disabled');
+        getUserInfo(force_update);
     });
 </script>
 <script type="text/javascript">
-    $('#info').dblclick(function(){
+    $('#info').dblclick(function () {
         // force update info from server
         // when double click info page
         getUserInfo(1);
@@ -303,13 +338,13 @@
 </script>
 <!-- Summary -->
 <script type="text/javascript">
-    $('#register-trigger').click(function() {
+    $('#register-trigger').click(function () {
         $('#login-form').addClass('hide');
         $('#register-form').removeClass('hide');
     });
 </script>
 <script type="text/javascript">
-    $('#login-trigger').click(function() {
+    $('#login-trigger').click(function () {
         $('#register-form').addClass('hide');
         $('#login-form').removeClass('hide');
     });
@@ -317,47 +352,59 @@
 <script type="text/javascript">
     function getUserInfo(force) {
         var url = '/module/x_tunnel/control/info';
-        if ( force ) {
+        if (force) {
             url = url + "?force=1";
         }
+
         $.ajax({
             type: 'GET',
             url: url,
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] == 'logout' ){
+            success: function (result) {
+                if (result['res'] == 'logout') {
                     tipClose();
+                    $('#login-form').removeClass('hide');
+                    $('#account-information').addClass('hide');
+
+                    $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
+                    $('button[type=submit]', '#login-form').removeAttr('disabled');
+
+                    window.refresh_timer.stop();
                     return;
-                }else if( result['res'] != 'success' ){
-                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
-                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
-                        $('#login-form').addClass('hide');
-                        $('#account-information').removeClass('hide');
-                        $('#login-account').html(result['login_account']);
-                        $('.login-account').val(result['login_account']);
-                        return;
-                    }else{
-                        tip('Get Fail:' + result['reason'], 'warning', false);
-                        return;
-                    }
-                } else {
-                    tipClose();
                 }
-                getAvailableBandwidth(result['quota_list']);
 
-                //getBillingHistory();
-                // not imp yet
+                if (result['res'] == 'login_process') {
+                    tip('{{ _("Logining ...") }}', 'info', false);
+                    return;
+                }
 
-                window.timer.play();
+                if (result['res'] != 'success') {
+                    tip('{{ _("Connect to server fail:") }}' + result['reason'], 'warning', false);
+                    $('#login-username').val(result['login_account']);
+                    $('#login-password').val('_HiddenPassword');
+
+                    $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
+                    $('button[type=submit]', '#login-form').removeAttr('disabled');
+
+                    return;
+                }
+
+                tipClose();
+                window.refresh_timer.play();
 
                 $('.nav-tabs > li').removeClass('hide');
+
+                $('#register-form').addClass('hide');
                 $('#login-form').addClass('hide');
                 $('#account-information').removeClass('hide');
 
                 $('#login-account').html(result['login_account']);
                 $('.login-account').val(result['login_account']);
                 $('#credit').html(getCreditForHumanReading(result['balance']));
+
                 $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
+
+                getAvailableBandwidth(result['quota_list']);
             }
         });
     }
@@ -366,11 +413,11 @@
     function getAvailableBandwidth(bandwidthList) {
         $('#available-bandwidth tbody').empty();
 
-        if ( bandwidthList['current'] ) {
+        if (bandwidthList['current']) {
             displayBandwidth(bandwidthList['current']);
         }
-        if ( bandwidthList['backup'] ) {
-            bandwidthList['backup'].forEach(function(entry) {
+        if (bandwidthList['backup']) {
+            bandwidthList['backup'].forEach(function (entry) {
                 displayBandwidth(entry);
             });
         }
@@ -391,9 +438,9 @@
 </script>
 <script type="text/javascript">
     function getCreditForHumanReading(credit) {
-        if ( parseFloat(credit) == 0 ) {
+        if (parseFloat(credit) == 0) {
             $('#transfer-credit-trigger').addClass('hide');
-        }else{
+        } else {
             $('#transfer-credit-trigger').removeClass('hide');
         }
         return '$ ' + parseFloat(credit).toFixed(2);
@@ -404,7 +451,7 @@
         var base        = 1000,
             bandwidth   = Math.round(bandwidth) / base / base;
 
-        if ( bandwidth > base ) {
+        if (bandwidth > base) {
             bandwidth = bandwidth / base;
             bandwidth = parseFloat(bandwidth).toFixed(2) + ' GB';
         } else {
@@ -418,21 +465,45 @@
         var regx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return regx.test(email);
     }
+
+    function isEmailQualified(email) {
+        if (!isEmailLegal(email)) return false;
+        var host = email.split('@')[1];
+        var weakhosts = ['qq.com', 'sina.cn', 'sina.com', '126.com', '163.com', '163.net', 'yeah.net'];
+        for (var i in weakhosts) {
+            if (host.indexOf(weakhosts[i]) >= 0) {
+                return false;
+            }
+            /*
+            var regx = /^$/;
+            if (regx.test(host)) {
+                return false;
+            }
+            */
+        }
+        return true;
+    }
+
+    function isPswLegal(password) {
+        var regx = /^[a-zA-Z0-9_~!@#$%^&()+\-*/=.,:;'"<>\?\[\]\{\}]{6,20}$/;
+        return regx.test(password);
+    }
 </script>
 <script type="text/javascript">
     function onLoginSubmit() {
         var username = $('#login-username').val(),
             password = $('#login-password').val();
 
-        if ( !isEmailLegal(username) ) {
+        if (!isEmailLegal(username)) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
-        } else if ( password.length < 6 ) {
-            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+        } else if (password.length < 6) {
+            tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
             return;
         }
 
-        $('button[type=submit]', '#login-form').html('{{ _("Please wait...") }}');
+        tip('{{ _("Logining ...") }}', 'info', false);
+        $('button[type=submit]', '#login-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#login-form').attr('disabled', 'disabled');
         return doLoginAction(username, password);
     }
@@ -440,7 +511,7 @@
 <script type="text/javascript">
     function doLoginAction(username, password) {
         var postData = {
-            'username': username, 
+            'username': username,
             'password': password,
             'is_register': 0
         };
@@ -450,16 +521,18 @@
             url: '/module/x_tunnel/control/login',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
-                    window.location.reload();
+            success: function (result) {
+                if (result['res'] == 'success') {
+                    getUserInfo(0);
                 } else {
-                    if( result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False" ){
-                        tip('{{ _("Connect to server fail, check GAE first.") }}', 'warning', false);
-                    }else if ( result['reason'] == "auth fail" ){
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False") {
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
+                    } else if (result['reason'] == "auth fail") {
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
-                    }else{
-                        tip('Login fail:' + result['reason'], 'error', false);
+                    } else if (result['reason'] == "account not exist") {
+                        tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    } else {
+                        tip('{{ _("Login fail:") }}' + result['reason'], 'error', false);
                     }
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
@@ -474,15 +547,21 @@
         var username = $('#register-username').val(),
             password = $('#register-password').val();
 
-        if ( !isEmailLegal(username) ) {
+        if (!isEmailLegal(username)) {
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
-        } else if ( password.length < 6 ) {
-            tip('{{ _("Password needs at least 6 charactors.") }}', 'error', false);
+        } else if (!isEmailQualified(username)) {
+            tip('{{ _("Do NOT use Chinese-service-provider\'s Email!") }}', 'error', false);
+            return;
+        } else if (password.length < 6 || password.length > 20) {
+            tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
+            return;
+        } else if (!isPswLegal(password)) {
+            tip('{{ _("Password seems invalid.") }}{{ _("(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;\'\"<>\?[]{})") }}', 'error', false);
             return;
         }
 
-        $('button[type=submit]', '#register-form').html('{{ _("Please wait...") }}');
+        $('button[type=submit]', '#register-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#register-form').attr('disabled', 'disabled');
         return doRegisterAction(username, password);
     }
@@ -490,7 +569,7 @@
 <script type="text/javascript">
     function doRegisterAction(username, password) {
         var postData = {
-            'username': username, 
+            'username': username,
             'password': password,
             'is_register': 1
         };
@@ -500,11 +579,15 @@
             url: '/module/x_tunnel/control/register',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
+                    // register success, hide '#register-form' and login.
+                    // $('#register-form').addClass('hide');
+                    tip('{{ _("Registered successfully, ") }}{{ _("Logining ...") }}', 'info', false);
+
                     return doLoginAction(username, password);
                 } else {
-                    if ( result['reason'] == 'user exist' ) {
+                    if (result['reason'] == 'user exist') {
                         tip('{{ _("Email has been taken by another user.") }}', 'error', false);
                     } else {
                         tip('{{ _("Unknown error occurred.") }}', 'error', false);
@@ -518,59 +601,127 @@
     }
 </script>
 <script type="text/javascript">
-    $('#logout-trigger').click(function() {
+    $('a[href="#advanced"]').click(function () {
+        AdvSettingInit();
+    });
+
+    function AdvSettingInit() {
+        //$("#server-selector").val('auto');
+        var pageRequests = {'cmd': 'get'};
+        $.ajax({
+            type: 'GET',
+            url: '/module/x_tunnel/control/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                var server_selector = $("#server-selector");
+                server_selector.find("option[value!='auto']").remove(); //$("#server-selector").empty();
+                var selectable = result['server']['selectable'];
+                for (var i in selectable) {
+                    var record = selectable[i];
+                    var new_option = document.createElement('option');
+                    new_option.value = record[0];
+                    new_option.text = record[1] + ' @ ' + record[2];
+                    server_selector.append(new_option);
+                }
+
+                if (result['server']['available']) {
+                    server_selector.val(result['server']['selected']);
+                } else {
+                    server_selector.val('auto');
+                    tip('{{ _( "previously selected server nolonger available, automatically try " ) }}{{_("AUTO")}}', 'error');
+                }
+            },
+            error: function (result) {
+                displayErrorMessage();
+            }
+        });
+    }
+
+    function onAdvSettingSubmit() {
+        $('button[type=submit]', '#adv-setting').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#adv-setting').attr('disabled', 'disabled');
+
+        var server = $("#server-selector").val();
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/config?cmd=set',
+            data: {
+                'server': server,
+            },
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] === 'success') {
+                    $('button[type=submit]', '#adv-setting').html('{{ _("Submit") }}');
+                    $('button[type=submit]', '#adv-setting').removeAttr('disabled');
+                    tip('{{ _("Settings saved successfully.") }}', 'success');
+                    getUserInfo(1);
+                } else {
+                    //tip('{{ _( "Failed saving settings: " ) }}'+ result['reason'], 'error');
+                    displayErrorMessage();
+                }
+            },
+            error: function (result) {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $('#logout-trigger').click(function () {
         $.ajax({
             type: 'POST',
             url: '/module/x_tunnel/control/logout',
             dataType: 'JSON',
-            success: function(result) {
-                window.timer.stop();
+            success: function (result) {
+                window.refresh_timer.stop();
                 $('ul.nav-tabs > li').not(':first').addClass('hide');
                 $('#account-information').addClass('hide');
                 $('#login-form').removeClass('hide');
 
+                $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                 // Fix bugs in Firefox
                 $('button[type=submit]').removeAttr('disabled');
             },
-            error: function(result) {
-                tip('{{ _("Failed to log out.") }}', false);   
+            error: function (result) {
+                tip('{{ _("Failed to log out.") }}', false);
             }
         });
     });
 </script>
 <script type="text/javascript">
-    $('#charge-trigger').click(function() {
+    $('#charge-trigger').click(function () {
         $('.alert-warning', '#charge-modal').addClass('hide');
         $('#charge-modal').modal();
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#charge-modal').click(function() {
+    $('.btn-primary', '#charge-modal').click(function () {
         $(this).attr('disabled', 'disabled');
-        $(this).html('{{ _("Please refresh page") }}');
+        $(this).html('{{ _("Please refresh page.") }}');
 
         $('#charge-modal').submit();
     });
 </script>
 <script type="text/javascript">
-    $('#transfer-credit-trigger').click(function() {
+    $('#transfer-credit-trigger').click(function () {
         $('.alert', '#transfer-credit-modal').addClass('hide');
         $('#transfer-credit-modal').modal();
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#transfer-credit-modal').click(function() {
+    $('.btn-primary', '#transfer-credit-modal').click(function () {
         var transferAccount = $('#transfer-credit-username').val(),
             transferAmount  = $('#transfer-credit-amount').val();
 
-        if ( !isEmailLegal(transferAccount) ) {
+        if (!isEmailLegal(transferAccount)) {
             $('.alert', '#transfer-credit-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
             $('.alert', '#transfer-credit-modal').removeClass('hide');
             return;
         }
 
         $('.btn-primary', '#transfer-credit-modal').attr('disabled', 'disabled');
-        $('.btn-primary', '#transfer-credit-modal').html('{{ _("Please wait...") }}');
+        $('.btn-primary', '#transfer-credit-modal').html('{{ _("Please wait ...") }}');
         return doTransferCreditAction(transferAccount, transferAmount);
     });
 </script>
@@ -587,10 +738,9 @@
             url: '/module/x_tunnel/control/transfer',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     getUserInfo(1);
-                    window.location.reload();
                 } else {
                     $('.alert', '#transfer-credit-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
                     $('.alert', '#transfer-credit-modal').removeClass('hide');
@@ -602,7 +752,7 @@
     }
 </script>
 <script type="text/javascript">
-    $('#available-bandwidth').delegate('a.transfer', 'click', function() {
+    $('#available-bandwidth').delegate('a.transfer', 'click', function () {
         var maxAvailableBandwidth = $('.bandwidth', $(this).parent()).html(),
             expireTime            = $('.expire-time', $(this).parent().parent()).attr('data-value');
 
@@ -614,36 +764,35 @@
     });
 </script>
 <script type="text/javascript">
-    $('.btn-primary', '#transfer-bandwidth-modal').click(function() {
+    $('.btn-primary', '#transfer-bandwidth-modal').click(function () {
         var transferAccount = $('#transfer-bandwidth-username').val(),
             transferAmount  = $('#transfer-bandwidth-amount').val(),
             expireTime      = $('#bandwidth-expire-time').val();
 
-        if ( !isEmailLegal(transferAccount) ) {
+        if (!isEmailLegal(transferAccount)) {
             $('.alert', '#transfer-bandwidth-modal').html('{{ _("Transfer username seems not a valid Email address.") }}');
             $('.alert', '#transfer-bandwidth-modal').removeClass('hide');
             return;
         }
 
         $('.btn-primary', '#transfer-bandwidth-modal').attr('disabled', 'disabled');
-        $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Please wait...") }}');
+        $('.btn-primary', '#transfer-bandwidth-modal').html('{{ _("Please wait ...") }}');
         return doTransferBandwidthAction(transferAccount, transferAmount, expireTime);
     });
 </script>
 <script type="text/javascript">
     function parseUnit(str) {
-        var out = [ 0, '' ]
-
-        str = String(str)
-        var num = parseFloat(str, 10)
-        out[0] = num
-        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || ''
+        var out = [0, ''];
+        str = String(str);
+        var num = parseFloat(str, 10);
+        out[0] = num;
+        out[1] = str.match(/[\d.\-\+]*\s*(.*)/)[1] || '';
         return out
     }
 
     function doTransferBandwidthAction(transferAccount, transferAmount, expireTime) {
-        var amountUnit = parseUnit(transferAmount)
-        if ( amountUnit[1].toUpperCase() == "G" ){
+        var amountUnit = parseUnit(transferAmount);
+        if (amountUnit[1].toUpperCase() == "G") {
             var amount = amountUnit[0] * 1000 * 1000 * 1000;
         } else {
             var amount = amountUnit[0] * 1000 * 1000;
@@ -660,10 +809,9 @@
             url: '/module/x_tunnel/control/transfer',
             data: postData,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['res'] == 'success' ) {
+            success: function (result) {
+                if (result['res'] == 'success') {
                     getUserInfo(1);
-                    window.location.reload();
                 } else {
                     $('.alert', '#transfer-bandwidth-modal').html('{{ _("Error occurred: ") }}' + result['reason']);
                     $('.alert', '#transfer-bandwidth-modal').removeClass('hide');
@@ -676,18 +824,18 @@
 </script>
 <script type="text/javascript">
     function isDecimalNumber(obj) {
-        var amountUnit = parseUnit(obj.value)
-        if ( isNaN(amountUnit[0]) ) {
+        var amountUnit = parseUnit(obj.value);
+        if (isNaN(amountUnit[0])) {
             obj.value = '';
             return;
         }
-        if ( amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "" ){
+        if (amountUnit[1].toUpperCase() != "G" && amountUnit[1].toUpperCase() != "M" && amountUnit[1] != "") {
             alert('{{ _("Unit should be M or G.") }}');
             return;
         }
-        if ( obj != null ) {
-            if ( amountUnit[0].toString().split('.').length > 1 &&
-                   amountUnit[0].toString().split(".")[1].length > 2 ) {
+        if (obj != null) {
+            if (amountUnit[0].toString().split('.').length > 1 &&
+                amountUnit[0].toString().split(".")[1].length > 2) {
                 alert('{{ _("Transfer amount should not more than 2 decimal places.") }}');
             }
         }
@@ -695,11 +843,11 @@
 </script>
 <!-- Plans -->
 <script type="text/javascript">
-    $('#quarterly-plan-trigger').click(function() {
+    $('#quarterly-plan-trigger').click(function () {
         orderPlan('Quarterly', 'quarterly');
     });
 
-    $('#yearly-plan-trigger').click(function() {
+    $('#yearly-plan-trigger').click(function () {
         orderPlan('Yearly', "yearly");
     });
 </script>
@@ -707,30 +855,25 @@
     function orderPlan(planName, planValue) {
         $.ajax({
             data: {
-                'product': 'x_tunnel', 
+                'product': 'x_tunnel',
                 'plan': planValue
             },
             type: 'POST',
             url: '/module/x_tunnel/control/order',
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] != 'success' ){
-                    if ( result['reason'] == "balance not enough" ) {
+            success: function (result) {
+                if (result['res'] != 'success') {
+                    if (result['reason'] == "balance not enough") {
                         $('#charge-plan', '#charge-modal').val(planName);
-                        $('.alert-warning', '#charge-modal').removeClass('hide');
+                        //$('.alert-warning', '#charge-modal').removeClass('hide');
 
                         $('#charge-modal').modal();
                     } else {
                         tip('{{ _("Failed to order: ") }}' + result['reason'], 'warning', false);
                     }
                 } else {
+                    getUserInfo(1);
                     tip('{{ _("Order successfully complete.") }}', 'info', false);
-                    setTimeout(function () {
-                        getUserInfo(1);
-                        setTimeout(function () {
-                            window.location.reload();
-                        }, 1 * 1000);
-                    }, 3 * 1000);
                 }
             }
         });
@@ -747,11 +890,11 @@
 </script>
 <!-- History -->
 <script type="text/javascript">
-    $('#get-history-button').click(function() {
+    $('#get-history-button').click(function () {
         getHistory();
 
         $('#get-history-button').attr('disabled', 'disabled');
-        $('#get-history-button').html('Please wait...');
+        $('#get-history-button').html('{{ _("Please wait ...") }}');
     });
 </script>
 <script type="text/javascript">
@@ -761,20 +904,20 @@
         $.ajax({
             type: 'GET',
             data: {
-                'start': 1999999999, 
-                'end': 0, 
+                'start': 1999999999,
+                'end': 0,
                 'limit': 1000
             },
             url: '/module/x_tunnel/control/get_history',
             dataType: 'JSON',
-            success: function(result) {
-                if( result['res'] != 'success' ){
-                    tip('Get Fail:' + result['reason'], 'warning', false);
+            success: function (result) {
+                if (result['res'] != 'success') {
+                    tip('{{ _("Get Fail:") }}' + result['reason'], 'warning', false);
                 } else {
                     tipClose();
                 }
 
-                result['history'].forEach(function(entry) {
+                result['history'].forEach(function (entry) {
                     displayHistory(entry[1]);
                 });
 
@@ -785,13 +928,13 @@
     }
 </script>
 <script type="text/javascript">
-    function displayHistory(item){
+    function displayHistory(item) {
         var timeString = item['time'];
-        delete item['time']; 
+        delete item['time'];
 
         var message = '';
-        for ( property in item ) {
-            message += property + ':' + item[property]+'; ';
+        for (property in item) {
+            message += property + ':' + item[property] + '; ';
         }
 
         $('#history-list tbody').append('<tr><td>%s</td><td>%s</td></tr>'.format(timeString, message));

@@ -3,7 +3,9 @@ import platform
 import shutil
 import sys
 import time
-from instances import xlog
+
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
@@ -40,7 +42,6 @@ def is_winxp():
         return False
     return True
 
-
 def check_setup():  # 40ms
     if is_winxp():
         try:
@@ -48,11 +49,9 @@ def check_setup():  # 40ms
         except Exception as e:
             xlog.exception("setup win python except:%s", e)
 
-
 def smart_check():  # 400 ms
     import config
     # config.load()
-
     if current_path != config.get(["update", "last_path"]):
         check_setup()
 

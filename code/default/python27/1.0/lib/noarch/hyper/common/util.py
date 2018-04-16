@@ -19,8 +19,12 @@ def to_bytestring(element):
         return element.encode('utf-8')
     elif isinstance(element, bytes):
         return element
+    elif isinstance(element, memoryview):
+        return element.tobytes()
+    elif isinstance(element, int):
+        return str(element)
     else:
-        raise ValueError("Non string type.")
+        raise ValueError("Non string type:%s" % type(element))
 
 
 def to_bytestring_tuple(*x):

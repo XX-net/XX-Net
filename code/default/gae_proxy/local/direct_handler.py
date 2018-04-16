@@ -2,23 +2,18 @@
 # coding:utf-8
 
 
-import errno
 import time
 import re
 import socket
 import ssl
-import httplib
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
 
-from connect_manager import https_manager
-
 from gae_handler import return_fail_message
-from google_ip import google_ip
-from config import config
 
+from front import direct_front
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -30,191 +25,89 @@ def send_header(wfile, keyword, value):
     if keyword == 'Set-Cookie':
         for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
             wfile.write("%s: %s\r\n" % (keyword, cookie))
-            #xlog.debug("Head1 %s: %s", keyword, cookie)
     elif keyword == 'Content-Disposition' and '"' not in value:
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
-        #xlog.debug("Head1 %s: %s", keyword, value)
     elif keyword == "Alternate-Protocol":
         return
     else:
-        #xlog.debug("Head1 %s: %s", keyword, value)
         wfile.write("%s: %s\r\n" % (keyword, value))
 
 
-def fetch(method, host, path, headers, payload):
-    request_data = '%s %s HTTP/1.1\r\n' % (method, path)
-    request_data += ''.join('%s: %s\r\n' % (k, v) for k, v in headers.items())
-    request_data += '\r\n'
-
-    ssl_sock = https_manager.get_ssl_connection(host)
-    if not ssl_sock:
-        return
-
-    try:
-        ssl_sock.send(request_data.encode())
-        payload_len = len(payload)
-        start = 0
-        while start < payload_len:
-            send_size = min(payload_len - start, 65535)
-            sended = ssl_sock.send(payload[start:start+send_size])
-            start += sended
-
-        response = httplib.HTTPResponse(ssl_sock, buffering=True)
-
-        response.ssl_sock = ssl_sock
-
-        orig_timeout = ssl_sock.gettimeout()
-        ssl_sock.settimeout(90)
-        response.begin()
-        ssl_sock.settimeout(orig_timeout)
-    except httplib.BadStatusLine as e:
-        xlog.warn("direct_handler.fetch bad status line:%r", e)
-        google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
-        response = None
-    except Exception as e:
-        xlog.warn("direct_handler.fetch:%r", e)
-        google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
-        response = None
-    return response
-
-
-def handler(method, host, url, headers, body, wfile):
+def handler(method, host, path, headers, body, wfile, timeout=60):
     time_request = time.time()
 
     if "Connection" in headers and headers["Connection"] == "close":
         del headers["Connection"]
 
     errors = []
-    response = None
     while True:
-        if time.time() - time_request > 30:
+        time_left = time_request + timeout - time.time()
+        if time_left <= 0:
             return return_fail_message(wfile)
 
         try:
-            response = fetch(method, host, url, headers, body)
+            response = direct_front.request(method, host, path, headers, body, timeout=time_left)
             if response:
-                if response.status > 400:
-                    server_type = response.getheader('Server', "")
+                if response.status > 600:
+                    xlog.warn("direct %s %s % status:%d", method, host, path, response.status)
+                    continue
+                elif response.status > 400:
+                    server_type = response.headers.get('Server', "")
 
                     if "G" not in server_type and "g" not in server_type and server_type not in google_server_types:
-                        xlog.warn("IP:%s host:%s not support GAE, server type:%s status:%d", response.ssl_sock.ip, host, server_type, response.status)
-                        google_ip.report_connect_fail(response.ssl_sock.ip)
-                        response.close()
+
+                        xlog.warn("IP:%s host:%s not support GAE, server type:%s status:%d",
+                                  response.ssl_sock.ip, host, server_type, response.status)
+                        direct_front.ip_manager.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                        response.worker.close()
                         continue
                 break
         except OpenSSL.SSL.SysCallError as e:
             errors.append(e)
-            xlog.warn("direct_handler.handler err:%r %s/%s", e, host, url)
+            xlog.warn("direct_handler.handler err:%r %s/%s", e, host, path)
         except Exception as e:
             errors.append(e)
-            xlog.exception('direct_handler.handler %r %s %s , retry...', e, host, url)
+            xlog.exception('direct_handler.handler %r %s %s , retry...', e, host, path)
+
+    response_headers = {}
+    for key, value in response.headers.items():
+        key = key.title()
+        response_headers[key] = value
+
+    response_headers["Persist"] = ""
+    response_headers["Connection"] = "Persist"
 
     try:
-        send_to_browser = True
-        try:
-            response_headers = dict((k.title(), v) for k, v in response.getheaders())
-            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-            for key, value in response.getheaders():
-                send_header(wfile, key, value)
-            wfile.write("\r\n")
-        except Exception as e:
-            send_to_browser = False
-            wait_time = time.time()-time_request
-            xlog.info("direct_handler.handler send response fail. t:%d e:%r %s%s", wait_time, e, host, url)
+        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
+        for key in response_headers:
+            value = response_headers[key]
+            send_header(wfile, key, value)
+        wfile.write("\r\n")
+        wfile.flush()
 
-
-        if method == 'HEAD' or response.status in (204, 304):
-            xlog.info("DIRECT t:%d %d %s %s", (time.time()-time_request)*1000, response.status, host, url)
-            https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
-            response.close()
-            return
-
-        if 'Transfer-Encoding' in response_headers:
-            length = 0
-            while True:
-                try:
-                    data = response.read(8192)
-                except httplib.IncompleteRead, e:
-                    data = e.partial
-                except Exception as e:
-                    google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-                    xlog.warn("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
-                    response.close()
-                    return
-
-                if send_to_browser:
-                    try:
-                        if not data:
-                            wfile.write('0\r\n\r\n')
-                            break
-                        length += len(data)
-                        wfile.write('%x\r\n' % len(data))
-                        wfile.write(data)
-                        wfile.write('\r\n')
-                    except Exception as e:
-                        send_to_browser = False
-                        xlog.info("direct_handler.handler send Transfer-Encoding t:%d e:%r %s/%s", time.time()-time_request, e, host, url)
-                else:
-                    if not data:
-                        break
-
-            https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host)
-            response.close()
-            xlog.info("DIRECT chucked t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
-            return
-
-        content_length = int(response.getheader('Content-Length', 0))
-        content_range = response.getheader('Content-Range', '')
-        if content_range:
-            start, end, length = tuple(int(x) for x in re.search(r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
-        else:
-            start, end, length = 0, content_length-1, content_length
-
-        time_last_read = time.time()
+        length = 0
         while True:
-            if start > end:
-                https_manager.save_ssl_connection_for_reuse(response.ssl_sock, host, call_time=time_request)
-                xlog.info("DIRECT t:%d s:%d %d %s %s", (time.time()-time_request)*1000, length, response.status, host, url)
-                return
+            data = response.task.read()
+            if isinstance(data, memoryview):
+                data = data.tobytes()
 
-            to_read = end - start + 1
-            data = response.read(to_read)
-            if not data:
-                if time.time() - time_last_read > 20:
-                    google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-                    response.close()
-                    xlog.warn("read timeout t:%d len:%d left:%d %s %s", (time.time()-time_request)*1000, length, (end-start), host, url)
-                    return
-                else:
-                    time.sleep(0.1)
-                    continue
-
-            time_last_read = time.time()
             data_len = len(data)
-            start += data_len
-            if send_to_browser:
-                try:
-                    ret = wfile.write(data)
-                    if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                        xlog.debug("send to browser wfile.write ret:%d", ret)
-                        ret = wfile.write(data)
-                except Exception as e_b:
-                    if e_b[0] in (errno.ECONNABORTED, errno.EPIPE, errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                        xlog.info('direct_handler send to browser return %r %s %r', e_b, host, url)
-                    else:
-                        xlog.info('direct_handler send to browser return %r %s %r', e_b, host, url)
-                    send_to_browser = False
+            length += data_len
+            if 'Transfer-Encoding' in response.headers:
+                if not data_len:
+                    wfile._sock.sendall('0\r\n\r\n')
+                    break
+                wfile._sock.sendall('%x\r\n' % data_len)
+                wfile._sock.sendall(data)
+                wfile._sock.sendall('\r\n')
+            else:
+                if not data_len:
+                    break
+                wfile._sock.sendall(data)
 
-
-    except NetWorkIOError as e:
-        google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-        time_except = time.time()
-        time_cost = time_except - time_request
-        if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
-            xlog.exception("direct_handler err:%r %s %s time:%d", e, host, url, time_cost)
-        else:
-            xlog.exception("direct_handler except:%r %s %s", e, host, url)
+        xlog.info("DIRECT t:%d s:%d %d %s %s",
+                  (time.time()-time_request)*1000, length, response.status, host, path)
     except Exception as e:
-        google_ip.report_connect_closed(response.ssl_sock.ip, "receive fail")
-        xlog.exception("direct_handler except:%r %s %s", e, host, url)
+        xlog.exception("DIRECT %s %d %s %s, t:%d send to client except:%r",
+                 method, response.status, host, path, (time.time()-time_request)*1000, e)

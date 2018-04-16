@@ -1,12 +1,16 @@
 
 ## 下载(Download)：
-稳定版(Stable)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.3.6
+稳定版(Stable)：  
+https://codeload.github.com/XX-net/XX-Net/zip/3.11.9
 
 
-测试版(Test)：
-https://codeload.github.com/XX-net/XX-Net/zip/3.4.2
+测试版(Test)：  
+https://codeload.github.com/XX-net/XX-Net/zip/3.11.9
 
 
-极客精简版(Geek mini version):
-https://github.com/xyuanmu/XX-Mini
+Android:  
+集成fqrouter和XX-Net，推荐：  
+https://github.com/XndroidDev/Xndroid/releases
+
+单纯XX-Net，不能自动设置代理：    
+https://github.com/XX-net/xxnet-android/releases/download/3.6.3/XX-Net-3.6.3-debug.apk

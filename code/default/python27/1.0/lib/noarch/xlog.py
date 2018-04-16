@@ -9,6 +9,8 @@ import json
 import shutil
 import types
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 CRITICAL = 50
 FATAL = CRITICAL
@@ -21,7 +23,8 @@ NOTSET = 0
 
 
 class Logger():
-    def __init__(self, buffer_size=0, file_name=None, roll_num=1):
+    def __init__(self, name, buffer_size=0, file_name=None, roll_num=1):
+        self.name = name
         self.file_max_size = 1024 * 1024
         self.buffer_lock = threading.Lock()
         self.buffer = {} # id => line
@@ -35,8 +38,16 @@ class Logger():
             self.set_file(file_name)
 
     def set_buffer(self, buffer_size):
-        self.buffer_size = buffer_size
-        
+        with self.buffer_lock:
+            self.buffer_size = buffer_size
+            buffer_len = len(self.buffer)
+            if buffer_len > self.buffer_size:
+                for i in range(self.last_no - buffer_len, self.last_no - self.buffer_size):
+                    try:
+                        del self.buffer[i]
+                    except:
+                        pass
+
     def setLevel(self, level):
         if level == "DEBUG":
             self.min_level = DEBUG
@@ -87,7 +98,7 @@ class Logger():
         else:
             self.file_size = 0
 
-        self.log_fd = open(file_name, "w")
+        self.log_fd = open(file_name, "a+")
 
     def roll_log(self):
         for i in range(self.roll_num, 1, -1):
@@ -109,7 +120,8 @@ class Logger():
         try:
             self.set_console_color(console_color)
             try:
-                sys.stderr.write(string)
+                console_string = '%s [%s][%s] %s\n' % (time_str, self.name, level, fmt % args)
+                sys.stderr.write(console_string)
             except:
                 pass
             self.set_console_color(self.reset_color)
@@ -178,18 +190,6 @@ class Logger():
         self.log('CRITICAL', self.err_color, 'D7DF01', fmt, *args, **kwargs)
     
     #=================================================================
-    def set_buffer_size(self, set_size):
-        self.buffer_lock.acquire()
-        self.buffer_size = set_size
-        buffer_len = len(buffer)
-        if buffer_len > self.buffer_size:
-            for i in range(self.last_no - buffer_len, self.last_no - self.buffer_size):
-                try:
-                    del self.buffer[i]
-                except:
-                    pass
-        self.buffer_lock.release()
-    
     def get_last_lines(self, max_lines):
         self.buffer_lock.acquire()
         buffer_len = len(self.buffer)
@@ -231,11 +231,32 @@ class Logger():
             return ""
 
 
+class null():
+    @staticmethod
+    def debug(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def info(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def warn(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def exception(fmt, *args, **kwargs):
+        pass
+
+
 loggerDict = {}
 
 
 def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
-    global loggerDict
+    global loggerDict, default_log
+    if name is None:
+        for n in loggerDict:
+            name = n
+            break
+    if name is None:
+        name = "default"
 
     if not isinstance(name, basestring):
         raise TypeError('A logger name must be string or Unicode')
@@ -245,6 +266,39 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
     if name in loggerDict:
         return loggerDict[name]
     else:
-        logger_instance = Logger(buffer_size, file_name, roll_num)
+        logger_instance = Logger(name, buffer_size, file_name, roll_num)
         loggerDict[name] = logger_instance
+        default_log = logger_instance
         return logger_instance
+
+
+default_log = getLogger()
+
+
+def debug(fmt, *args, **kwargs):
+    default_log.debug(fmt, *args, **kwargs)
+
+
+def info(fmt, *args, **kwargs):
+    default_log.info(fmt, *args, **kwargs)
+
+
+def warning(fmt, *args, **kwargs):
+    default_log.warnin(fmt, *args, **kwargs)
+
+
+def warn(fmt, *args, **kwargs):
+    default_log.warn(fmt, *args, **kwargs)
+
+
+def error(fmt, *args, **kwargs):
+    default_log.error(fmt, *args, **kwargs)
+
+
+def exception(self, fmt, *args, **kwargs):
+    self.error(fmt, *args, **kwargs)
+    self.error("Except stack:%s", traceback.format_exc(), **kwargs)
+
+
+def critical(fmt, *args, **kwargs):
+    default_log.critical(fmt, *args, **kwargs)

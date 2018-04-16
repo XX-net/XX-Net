@@ -6,37 +6,44 @@ hyper/http20/exceptions
 This defines exceptions used in the HTTP/2 portion of hyper.
 """
 
-class HTTP20Error(Exception):
-    """
-    The base class for all of ``hyper``'s HTTP/2-related exceptions.
-    """
-    pass
 
-
-class HPACKEncodingError(HTTP20Error):
+class HPACKError(Exception):
     """
-    An error has been encountered while performing HPACK encoding.
+    The base class for all ``hpack`` exceptions.
     """
     pass
 
 
-class HPACKDecodingError(HTTP20Error):
+class HPACKDecodingError(HPACKError):
     """
     An error has been encountered while performing HPACK decoding.
     """
     pass
 
 
-class ConnectionError(HTTP20Error):
+class InvalidTableIndex(HPACKDecodingError):
     """
-    The remote party signalled an error affecting the entire HTTP/2
-    connection, and the connection has been closed.
+    An invalid table index was received.
     """
     pass
 
 
-class ProtocolError(HTTP20Error):
+class OversizedHeaderListError(HPACKDecodingError):
     """
-    The remote party violated the HTTP/2 protocol.
+    A header list that was larger than we allow has been received. This may be
+    a DoS attack.
+
+    .. versionadded:: 2.3.0
+    """
+    pass
+
+
+class InvalidTableSizeError(HPACKDecodingError):
+    """
+    An attempt was made to change the decoder table size to a value larger than
+    allowed, or the list was shrunk and the remote peer didn't shrink their
+    table size.
+
+    .. versionadded:: 3.0.0
     """
     pass

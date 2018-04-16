@@ -4,18 +4,22 @@ import json
 import os
 
 
-
 class Config(object):
-    default_config = {}
-    file_config = {}
-
     def __init__(self, config_path):
+
+        self.default_config = {}
+        self.file_config = {}
         self.config_path = config_path
+        self.set_default()
+
+    def set_default(self):
+        pass
 
     def load(self):
         if os.path.isfile(self.config_path):
             with file(self.config_path, 'r') as f:
-                self.file_config = json.loads(f.read())
+                content = f.read()
+                self.file_config = json.loads(content)
 
         for var_name in self.default_config:
             if self.file_config and var_name in self.file_config:
