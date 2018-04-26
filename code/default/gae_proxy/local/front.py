@@ -34,8 +34,7 @@ class Front(object):
     def start(self):
         self.running = True
 
-        #ca_certs = os.path.join(current_path, "cacert.pem")
-        ca_certs = None
+        ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
             logger, ca_certs=ca_certs, support_http2=config.support_http2,
             cipher_suites=['ALL', "!RC4-SHA","!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
@@ -133,8 +132,7 @@ class DirectFront(object):
 
         self.host_manager = host_manager.HostManager(front.config, logger)
 
-        #ca_certs = os.path.join(current_path, "cacert.pem")
-        ca_certs = None
+        ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
             logger, ca_certs=ca_certs, support_http2=False,
             cipher_suites=['ALL', "!RC4-SHA", "!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
