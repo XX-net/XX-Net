@@ -29,15 +29,15 @@ class Config(ConfigBase):
         self.set_var("hosts_direct", [
             "scholar.google.com",
             "scholar.google.com.hk",
-            "appengine.google.com",
-            "accounts.google.com"
+            "appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
             ".appspot.com",
         ])
 
         self.set_var("hosts_gae", [
-            "mail.google.com"
+            "mail.google.com",
+            "accounts.google.com"
         ])
         self.set_var("hosts_gae_endswith", [
 
@@ -62,7 +62,7 @@ class Config(ConfigBase):
         self.set_var("google_endswith", [
             ".youtube.com",
             ".googlevideo.com",
-            "..googleapis.com",
+            ".googleapis.com",
             ".google.com",
             ".googleusercontent.com",
             ".ytimg.com",
@@ -154,7 +154,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 '''
         ])
         self.set_var("check_commonname", "Google")
-        self.set_var("min_intermediate_CA", 3)
+        self.set_var("min_intermediate_CA", 2)
         self.set_var("support_http2", 1)
 
         # ip_manager
@@ -164,7 +164,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
-        self.set_var("ipv6_scan_ratio", 90) # 0 - 100
+        self.set_var("ipv6_scan_ratio", 50) # 0 - 100
 
         self.load()
 
