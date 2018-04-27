@@ -333,7 +333,7 @@ msgid "IP mode"
 msgstr "IP模式"
 
 msgid "LAN proxy"
-msgstr "局域网代理"
+msgstr "前置代理"
 
 msgid "working AppIDs"
 msgstr "工作AppID"

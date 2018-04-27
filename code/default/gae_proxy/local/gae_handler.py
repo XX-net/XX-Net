@@ -317,7 +317,7 @@ def request_gae_server(headers, body, url, timeout):
             appid, response.ssl_sock.ip)
         # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
         response.worker.close("appid not exist:%s" % appid)
-        raise GAE_Exception(603, "appid not support GAE")
+        raise GAE_Exception(603, "appid not exist %s" % appid)
 
     if response.status == 503:
         xlog.warning('APPID %r out of Quota, remove it. %s',

@@ -102,6 +102,7 @@ class Config(ConfigBase):
         self.set_var("http2_target_concurrent", 1)
         self.set_var("http2_max_timeout_tasks", 1)
         self.set_var("http2_timeout_active", 0)
+        self.set_var("http2_ping_min_interval", 15)
 
         # connect_manager
         self.set_var("https_max_connect_thread", 10)

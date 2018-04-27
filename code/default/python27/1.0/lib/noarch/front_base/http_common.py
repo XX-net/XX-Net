@@ -156,7 +156,7 @@ class Task(object):
 
         self.responsed = True
         err_text = "response_fail:%s" % reason
-        self.logger.debug("%s %s", self.url, err_text)
+        self.logger.warn("%s %s", self.url, err_text)
         res = simple_http_client.BaseResponse(body=err_text)
         res.task = self
         res.worker = self.worker

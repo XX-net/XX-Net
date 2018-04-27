@@ -491,17 +491,19 @@ class Http2Worker(HttpWorker):
         if not self.keep_running or len(self.streams) == 0:
             return
 
-        if now - self.last_send_time > 3:
-            self.send_ping()
-            return
-
-        if now - self.last_recv_time > 6:
-            self.close("active timeout")
-
         for sid in self.streams.keys():
             try:
                 stream = self.streams[sid]
+                stream.check_timeout(now)
             except:
                 pass
 
-            stream.check_timeout(now)
+        if len(self.streams) > 0 and\
+                now - self.last_send_time > 3 and \
+                now - self.last_ping_time > self.config.http2_ping_min_interval:
+
+            if self.ping_on_way > 0:
+                self.close("active timeout")
+                return
+
+            self.send_ping()

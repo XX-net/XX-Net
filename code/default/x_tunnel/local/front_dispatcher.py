@@ -74,7 +74,7 @@ def get_front(host, timeout):
 
     while time.time() - start_time < timeout:
         best_front = None
-        best_score = 9999999
+        best_score = 999999999
         for front in fronts:
             dispatcher = front.get_dispatcher(host)
             if not dispatcher:
@@ -104,6 +104,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
     while time.time() - start_time < timeout:
         front = get_front(host, timeout)
         if not front:
+            xlog.warn("get_front fail")
             return "", 602, {}
 
         content, status, response = front.request(

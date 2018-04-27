@@ -424,7 +424,6 @@ firecola1
 first-hearth-192112
 first-tine-148607
 fishding-001
-fishding-002
 fishding-003
 fishding-004
 fishding-005

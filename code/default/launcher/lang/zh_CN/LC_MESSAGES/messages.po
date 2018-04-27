@@ -50,8 +50,8 @@ msgstr "通用"
 msgid "System Version"
 msgstr "版本"
 
-msgid "Proxy Setting"
-msgstr "代理"
+msgid "LAN Proxy Setting"
+msgstr "前置代理"
 
 msgid "System Configuration"
 msgstr "系统配置"
@@ -102,7 +102,7 @@ msgid "Enable"
 msgstr "启用"
 
 msgid "LAN proxy"
-msgstr "局域网代理（前置代理）"
+msgstr "前置代理"
 
 msgid "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this."
 msgstr "一般无需设置，只有那些需要通过内部代理访问外网的用户才需要设置。"
@@ -126,7 +126,7 @@ msgid "Save"
 msgstr "保存"
 
 msgid "Do you really need LAN proxy? <a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">Help</a>."
-msgstr "你似乎没有设置局域网代理的需要．．．（请查看<a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">帮助</a>）"
+msgstr "你似乎没有设置前置代理的需要．．．（请查看<a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">帮助</a>）"
 
 msgid "Failed reading the settings."
 msgstr "读取设置失败。"
@@ -348,7 +348,7 @@ msgid "Launcher Web UI"
 msgstr "Web 控制页"
 
 msgid "LAN proxy"
-msgstr "局域网代理"
+msgstr "前置代理"
 
 msgid "System Info"
 msgstr "系统信息"
