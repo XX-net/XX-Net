@@ -25,7 +25,8 @@ class HostManager(HostManagerBase):
         return appid + ".appspot.com"
 
     def get_sni_host(self, ip):
-        sni = self.sni_manager.get()
+        #sni = self.sni_manager.get()
         host = self.get_host()
+        sni = host
         return sni, host
 
