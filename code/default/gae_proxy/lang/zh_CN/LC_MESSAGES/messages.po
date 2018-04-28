@@ -248,6 +248,9 @@ msgstr "读取日志失败。"
 msgid "Auto-adjust scan thread count"
 msgstr "自动调整扫描线程数"
 
+msgid "How enable"
+msgstr "如何开启"
+
 msgid "Help"
 msgstr "帮助"
 
