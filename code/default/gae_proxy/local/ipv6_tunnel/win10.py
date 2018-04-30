@@ -4,7 +4,9 @@
 import os
 import sys
 import time
+import platform
 from .common import *
+from .pteredor import local_ip_startswith
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
@@ -40,7 +42,7 @@ enable_cmds = """
 net start "ip helper"
 netsh interface ipv6 reset
 
-netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net
+netsh interface teredo set state type=%s servername=%s.
 
 # Keep teredo interface route
 route DELETE ::/0
@@ -97,6 +99,12 @@ def elevate(cmd):
 last_get_state_time = 0
 last_state = "unknown"
 
+client_ext = 'natawareclient' if float(platform.win32_ver()[0]) > 7 else 'enterpriseclient'
+
+def client_type():
+    ip = [line for line in run("route print").split("\r\n") if " 0.0.0.0 " in line][0].split()[-2]
+    return client_ext if ip.startswith(local_ip_startswith) else 'client'
+
 
 def get_teredo_interface():
     r = run("ifconfig /all")
@@ -109,10 +117,11 @@ def state():
         return last_state
 
     last_get_state_time = time.time()
-    r = run("netsh interface Teredo show state")
+    r = run("netsh interface teredo show state")
     xlog.debug("netsh state: %s", r)
+    type = get_line_value(r, 2)
     last_state = get_line_value(r, 6)
-    if last_state == "offline":
+    if type == "disabled" or last_state == "offline":
         last_state = "disable"
     elif last_state in ["qualified", "dormant"]:
         last_state = "enable"
@@ -121,13 +130,19 @@ def state():
 
 
 def enable():
-    new_enable_cmds = enable_cmds.replace("teredo.remlab.net", best_server())
+    new_enable_cmds = enable_cmds % (client_type(), best_server())
     r = run_cmds(new_enable_cmds)
     return r
 
 
 def disable():
     r = run_cmds(disable_cmds)
+    return r
+
+
+def set_best_server():
+    r = run("netsh interface teredo set state %s %s. default default default"
+            % (client_type(), best_server()))
     return r
 
 
