@@ -50,38 +50,34 @@ sc start WinHttpAutoProxySvc
 sc config iphlpsvc start= auto
 sc start iphlpsvc
 
-netsh int ipv6 reset
+netsh interface ipv6 reset
 
-netsh int teredo set state default
-netsh int 6to4 set state default
-netsh int isatap set state default
-netsh int teredo set state server=teredo.remlab.net
-netsh int ipv6 set teredo enterpriseclient
-netsh int ter set state enterpriseclient
+netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net
+
+:: Keep teredo interface route
 route DELETE ::/0
-netsh int ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
-netsh int ipv6 set prefix 2002::/16 30 1
-netsh int ipv6 set prefix 2001::/32 5 1
+netsh interface ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
+
+:: Set IPv6 prefixpolicies
+:: 2001::/16 Aggregate global unicast address
+:: 2002::/16 6to4 tunnel
+:: 2001::/32 teredo tunnel
+netsh interface ipv6 set prefixpolicies 2001::/16 35 1
+netsh interface ipv6 set prefixpolicies 2002::/16 30 2
+netsh interface ipv6 set prefixpolicies 2001::/32 25 2
+
+:: Fix look up AAAA on teredo
+:: http://technet.microsoft.com/en-us/library/bb727035.aspx
+:: http://ipv6-or-no-ipv6.blogspot.com/2009/02/teredo-ipv6-on-vista-no-aaaa-resolving.html
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
+:: Enable all IPv6 parts
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
 :: Set Group Policy
 :: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_DefaultQualified 
 :: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_State 
 
-
-netsh int teredo set state default
-netsh int 6to4 set state default
-netsh int isatap set state default
-netsh int teredo set state server=teredo.remlab.net
-netsh int ipv6 set teredo enterpriseclient
-netsh int ter set state enterpriseclient
-route DELETE ::/0
-netsh int ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
-netsh int ipv6 set prefix 2002::/16 30 1
-netsh int ipv6 set prefix 2001::/32 5 1
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
 ipconfig /flushdns
 
@@ -92,10 +88,10 @@ exit
 :output
 @echo off
 ipconfig /all
-netsh int ipv6 show teredo
-netsh int ipv6 show route
-netsh int ipv6 show int
-netsh int ipv6 show prefix
-netsh int ipv6 show address
+netsh interface ipv6 show teredo
+netsh interface ipv6 show route
+netsh interface ipv6 show interface
+netsh interface ipv6 show prefixpolicies
+netsh interface ipv6 show address
 route print
 notepad ..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt
