@@ -50,13 +50,14 @@ sc start WinHttpAutoProxySvc
 sc config iphlpsvc start= auto
 sc start iphlpsvc
 
+:: Reset IPv6
 netsh interface ipv6 reset
 
-netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net
+netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net.
 
-:: Keep teredo interface route
-route DELETE ::/0
-netsh interface ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
+:: Keep teredo interface route (not needed with reset?)
+:: route DELETE ::/0
+:: netsh interface ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
 
 :: Set IPv6 prefixpolicies
 :: 2001::/16 Aggregate global unicast address

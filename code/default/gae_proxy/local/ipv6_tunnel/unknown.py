@@ -10,9 +10,13 @@ def state():
     return "Developing"
 
 
-def enable():
+def enable(is_local=False):
     return "Developing"
 
 
-def disable():
+def disable(is_local=False):
+    return "Developing"
+
+
+def set_best_server(is_local=False):
     return "Developing"

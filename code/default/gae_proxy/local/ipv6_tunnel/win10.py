@@ -37,36 +37,65 @@ xlog = getLogger("gae_proxy")
 
 # TODO; Win10 Home and Win10 Profession is different.
 
+enable_ipv6_temp = os.path.join(current_path, 'enable_ipv6_temp.bat')
+disable_ipv6_temp = os.path.join(current_path, 'disable_ipv6_temp.bat')
+set_best_server_temp = os.path.join(current_path, 'set_best_server_temp.bat')
+
 enable_cmds = """
-# Start
-net start "ip helper"
+:: Start
+@echo off
+
+:: Config servers
+sc config RpcEptMapper start= auto
+sc start RpcEptMapper
+
+sc config DcomLaunch start= auto
+sc start DcomLaunch
+
+sc config RpcSs start= auto
+sc start RpcSs
+
+sc config nsi start= auto
+sc start nsi
+sc config Winmgmt start= auto
+sc start Winmgmt
+
+sc config Dhcp start= auto
+sc start Dhcp
+
+sc config WinHttpAutoProxySvc start= auto
+sc start WinHttpAutoProxySvc
+
+sc config iphlpsvc start= auto
+sc start iphlpsvc
+
+:: Reset IPv6
 netsh interface ipv6 reset
 
 netsh interface teredo set state type=%s servername=%s.
 
-# Keep teredo interface route
-route DELETE ::/0
-netsh interface ipv6 add route ::/0 "Teredo Tunneling Pseudo-Interface"
-
-# Set IPv6 prefixpolicies
-# 2001::/16 Aggregate global unicast address
-# 2002::/16 6to4 tunnel
-# 2001::/32 teredo tunnel
+:: Set IPv6 prefixpolicies
+:: 2001::/16 Aggregate global unicast address
+:: 2002::/16 6to4 tunnel
+:: 2001::/32 teredo tunnel
 netsh interface ipv6 set prefixpolicies 2001::/16 35 1
 netsh interface ipv6 set prefixpolicies 2002::/16 30 2
 netsh interface ipv6 set prefixpolicies 2001::/32 25 2
 
-# Fix look up AAAA on teredo
-# http://technet.microsoft.com/en-us/library/bb727035.aspx
-# http://ipv6-or-no-ipv6.blogspot.com/2009/02/teredo-ipv6-on-vista-no-aaaa-resolving.html
+:: Fix look up AAAA on teredo
+:: http://technet.microsoft.com/en-us/library/bb727035.aspx
+:: http://ipv6-or-no-ipv6.blogspot.com/2009/02/teredo-ipv6-on-vista-no-aaaa-resolving.html
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
-# Enable all IPv6 parts
+:: Enable all IPv6 parts
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
-ipconfig /all
 ipconfig /flushdns
 
+:: Over & show state
+@echo on
+
+ipconfig /all
 netsh interface ipv6 show teredo
 netsh interface ipv6 show route
 netsh interface ipv6 show interface
@@ -74,9 +103,8 @@ netsh interface ipv6 show prefixpolicies
 netsh interface ipv6 show address
 route print
 
-#
-# reboot system at first time.
-# 
+@echo reboot system at first time!
+@pause
 """
 
 
@@ -87,11 +115,11 @@ netsh interface isatap set state disabled
 """
 
 
-def elevate(cmd):
+def elevate(script_path):
     # use this if need admin
     import win32elevate
     try:
-        win32elevate.elevateAdminRun(cmd)
+        win32elevate.elevateAdminRun(script_path)
     except Exception as e:
         xlog.warning('elevate e:%r', e)
 
@@ -129,22 +157,29 @@ def state():
     return last_state
 
 
-def enable():
-    new_enable_cmds = enable_cmds % (client_type(), best_server())
-    r = run_cmds(new_enable_cmds)
-    return r
+def enable(is_local=False):
+    if is_local:
+        new_enable_cmds = enable_cmds % (client_type(), best_server())
+        with open(enable_ipv6_temp, 'w') as fp:
+            fp.write(new_enable_cmds)
+        elevate(enable_ipv6_temp)
 
 
-def disable():
-    r = run_cmds(disable_cmds)
-    return r
+def disable(is_local=False):
+    if is_local:
+        with open(disable_ipv6_temp, 'w') as fp:
+            fp.write(disable_cmds)
+        elevate(disable_ipv6_temp)
 
 
-def set_best_server():
-    r = run("netsh interface teredo set state %s %s. default default default"
-            % (client_type(), best_server()))
-    return r
+def set_best_server(is_local=False):
+    if is_local:
+        set_server_cmds = ("netsh interface teredo set state %s %s. default default default"
+                           % (client_type(), best_server()))
+        with open(set_best_server_temp, 'w') as fp:
+            fp.write(set_server_cmds)
+        elevate(set_best_server_temp)
 
 
 if __name__ == '__main__':
-    print enable()
+    enable(True)
