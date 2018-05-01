@@ -103,9 +103,9 @@ netsh interface teredo set state type=%%s servername=%%s.
 :: 2001::/16 Aggregate global unicast address
 :: 2002::/16 6to4 tunnel
 :: 2001::/32 teredo tunnel
-netsh interface ipv6 set prefixpolicies 2001::/16 35 1
-netsh interface ipv6 set prefixpolicies 2002::/16 30 2
-netsh interface ipv6 set prefixpolicies 2001::/32 25 2
+netsh interface ipv6 set prefixpolicy 2001::/16 35 1
+netsh interface ipv6 set prefixpolicy 2002::/16 30 2
+netsh interface ipv6 set prefixpolicy 2001::/32 25 2
 
 :: Fix look up AAAA on teredo
 :: http://technet.microsoft.com/en-us/library/bb727035.aspx
@@ -124,7 +124,7 @@ ipconfig /all
 netsh interface ipv6 show teredo
 netsh interface ipv6 show route
 netsh interface ipv6 show interface
-netsh interface ipv6 show prefixpolicies
+netsh interface ipv6 show prefixpolicy
 netsh interface ipv6 show address
 route print
 goto :eof
