@@ -42,10 +42,27 @@ disable_ipv6_temp = os.path.join(current_path, 'disable_ipv6_temp.bat')
 set_best_server_temp = os.path.join(current_path, 'set_best_server_temp.bat')
 
 enable_cmds = """
-:: Start
-@echo off
+@echo Starting...
+@set log_file="%s"
 
-:: Config servers
+@echo Config servers...
+@call:[config servers]>"%%%log_file%%%"
+
+@echo Reset IPv6...
+@call:[reset ipv6]>"%%%log_file%%%"
+
+@echo Set IPv6 Tunnel...
+@call:[set ipv6]>"%%%log_file%%%"
+
+@call:[print state]>"%%%log_file%%%"
+
+@echo Over
+@echo Reboot system at first time!
+@pause
+exit
+
+
+:[config servers]
 sc config RpcEptMapper start= auto
 sc start RpcEptMapper
 
@@ -57,6 +74,7 @@ sc start RpcSs
 
 sc config nsi start= auto
 sc start nsi
+
 sc config Winmgmt start= auto
 sc start Winmgmt
 
@@ -69,10 +87,17 @@ sc start WinHttpAutoProxySvc
 sc config iphlpsvc start= auto
 sc start iphlpsvc
 
-:: Reset IPv6
-netsh interface ipv6 reset
+goto :eof
 
-netsh interface teredo set state type=%s servername=%s.
+
+:[reset ipv6]
+netsh interface ipv6 reset
+ipconfig /flushdns
+goto :eof
+
+
+:[set ipv6]
+netsh interface teredo set state type=%%s servername=%%s.
 
 :: Set IPv6 prefixpolicies
 :: 2001::/16 Aggregate global unicast address
@@ -90,11 +115,11 @@ Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters
 :: Enable all IPv6 parts
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
-ipconfig /flushdns
+goto :eof
 
-:: Over & show state
-@echo on
 
+:[print state]
+:: Show state
 ipconfig /all
 netsh interface ipv6 show teredo
 netsh interface ipv6 show route
@@ -102,10 +127,8 @@ netsh interface ipv6 show interface
 netsh interface ipv6 show prefixpolicies
 netsh interface ipv6 show address
 route print
-
-@echo reboot system at first time!
-@pause
-"""
+goto :eof
+""" % log_file
 
 
 disable_cmds="""
@@ -125,6 +148,7 @@ def elevate(script_path):
 
 
 last_get_state_time = 0
+last_set_server_time = 0
 last_state = "unknown"
 
 client_ext = 'natawareclient' if float(platform.win32_ver()[0]) > 7 else 'enterpriseclient'
@@ -174,6 +198,12 @@ def disable(is_local=False):
 
 def set_best_server(is_local=False):
     if is_local:
+        global last_set_server_time
+        now = time.time()
+        if now - last_set_server_time < 60 * 3:
+            return
+
+        last_set_server_time = now
         set_server_cmds = ("netsh interface teredo set state %s %s. default default default"
                            % (client_type(), best_server()))
         with open(set_best_server_temp, 'w') as fp:
