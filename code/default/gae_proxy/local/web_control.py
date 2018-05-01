@@ -704,6 +704,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         log_path = os.path.join(data_path, "ipv6_tunnel.log")
         time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
 
+        client_ip = self.client_address[0]
+        is_local = client_ip.endswith("127.0.0.1") or client_ip == "::1"
+
         if reqs['cmd'] in [['enable'], ['disable']]:
             cmd = reqs['cmd'][0]
             xlog.info("ipv6_tunnel switch %s", cmd)
@@ -715,11 +718,16 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     xlog.warn("remove %s fail:%r", log_path, e)
 
             if cmd == "enable":
-                ipv6_tunnel.enable()
+                ipv6_tunnel.enable(is_local)
             elif cmd == "disable":
-                ipv6_tunnel.disable()
+                ipv6_tunnel.disable(is_local)
             else:
                 xlog.warn("unknown cmd:%s", cmd)
+
+            data = '{"res":"success", "time":"%s"}' % time_now
+
+        elif reqs['cmd'] == ['set_best_server']:
+            ipv6_tunnel.set_best_server(is_local)
 
             data = '{"res":"success", "time":"%s"}' % time_now
 
