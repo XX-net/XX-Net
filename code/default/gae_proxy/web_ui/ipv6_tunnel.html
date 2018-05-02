@@ -1,27 +1,23 @@
-
-<h4>{{ _( "Status" ) }}</h4>
-<table id="status" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th width="25%">{{ _( "Property" ) }}</th>
-            <th>{{ _( "Value" ) }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ _( "IPv6 Tunnel" ) }}</td>
-            <td id="ipv6-tunnel"></td>
-        </tr>
-
-    </tbody>
-</table>
-
+    <h4>{{ _( "Status" ) }}</h4>
+    <table id="status" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th width="25%">{{ _( "Property" ) }}</th>
+                <th>{{ _( "Value" ) }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ _( "IPv6 Tunnel" ) }}</td>
+                <td id="ipv6-tunnel"></td>
+            </tr>
+        </tbody>
+    </table>
     <div class="row-fluid">
         <div class="span12">
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel" type="submit">{{ _( "Enable" ) }}</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
-
     <div class="row-fluid">
         <div class="span12">
             <div id="logs" class="tab-pane">
@@ -29,6 +25,7 @@
             </div> <!-- #log -->
         </div>
     </div>
+
 <script type="text/javascript">
     function updateStatus(selector, content) {
         var previousContent = $(selector).html();
@@ -36,28 +33,27 @@
             $(selector).html(content);
         }
     }
-    function SwitchButtonEnable(){
-        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")){
+    function SwitchButtonEnable() {
+        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")) {
             $('#switch_ipv6_tunnel').removeClass('btn-inverse');
             $('#switch_ipv6_tunnel').addClass('btn-primary');
         }
         $('#switch_ipv6_tunnel').html('{{ _( "Enable" ) }}');
     }
-    function SwitchButtonDisable(){
-        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")){
+    function SwitchButtonDisable() {
+        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")) {
             $('#switch_ipv6_tunnel').removeClass('btn-inverse');
             $('#switch_ipv6_tunnel').addClass('btn-primary');
         }
         $('#switch_ipv6_tunnel').html('{{ _( "Disable" ) }}');
     }
 </script>
-
 <script type="text/javascript">
-    $('button.btn').click(function() {
+    $('button.btn').click(function () {
         var cmd = "stop";
-        if ( $('#switch_ipv6_tunnel').html() == '{{ _( "Enable" ) }}' ){
+        if ($('#switch_ipv6_tunnel').html() == '{{ _( "Enable" ) }}') {
             cmd = "enable";
-        } else if ( $('#switch_ipv6_tunnel').html() == '{{ _( "Disable" ) }}' ){
+        } else if ($('#switch_ipv6_tunnel').html() == '{{ _( "Disable" ) }}') {
             cmd = "disable";
         } else {
             return;
@@ -70,21 +66,19 @@
             type: 'GET',
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=' + cmd,
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 window.timer.stop();
                 $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
-                if ( !tipHasClose() ) {
+                if (!tipHasClose()) {
                     tipClose();
                 }
             },
-            error: function(result) {
-                tip('{{ _( "No response from GAEProxy process. It might have already exited." ) }}', 'warning', false);
+            error: function (result) {
+                tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
             }
         });
     });
 </script>
-
-
 <script type="text/javascript">
     function updateLog(logContent) {
         $('#log').html(logContent.replace(/\n/g, '<br>'));
@@ -95,29 +89,26 @@
             type: 'GET',
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=get_log',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 updateStatus('td#ipv6-tunnel', result['status']);
                 updateLog(result['log']);
 
-                if ( result['status'] == 'enable' ) {
+                if (result['status'] == 'enable') {
                     SwitchButtonDisable();
-
-                }else if ( result['status'] == 'disable' ) {
+                } else if (result['status'] == 'disable') {
                     SwitchButtonEnable();
                 }
 
-                if(window.isAutoScrollLog == true){
+                if (window.isAutoScrollLog == true) {
                     $('#log').scrollTop($('#log')[0].scrollHeight);
                 }
             }
         });
     }
 </script>
-
 <script type="text/javascript">
-    $(function() {
-
-        window.timer  = $.timer(function() {
+    $(function () {
+        window.timer = $.timer(function () {
             updateProcess();
         });
 
@@ -129,13 +120,11 @@
         updateProcess();
     });
 </script>
-
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         resizeLogWindow();
     });
-
-    $(window).resize(function() {
+    $(window).resize(function () {
         resizeLogWindow();
     });
     function resizeLogWindow() {

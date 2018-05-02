@@ -4,6 +4,10 @@
   很多问题在最新测试版中已解决。
   
 
+* 是否看过webUI `系统` - `状态` - `公告`？
+  请查看[公告](http://localhost:8085/?module=launcher&menu=status)有无类似的问题。
+  
+
 * 是否看过Issues区最近的讨论？
   请在 (https://github.com/XX-net/XX-Net/issues) 搜索有无类似的问题。
   
@@ -38,5 +42,3 @@
 * X-tunnel 无法连接  
   如果能够登录，请确认代理端口为1080.
   如果速度不稳定或无法登录，请贴出X-Tunnel 的Status页面。
-   
-

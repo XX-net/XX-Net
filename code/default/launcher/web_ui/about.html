@@ -17,7 +17,7 @@
     <div class="row-fluid">
         <div class="span3"><strong>Wiki</strong></div> <!-- .span4 -->
         <div class="span8">
-            <a href="https://github.com/XX-net/XX-Net/wiki"  target="_blank">GitHub@XX-Net/Wiki</a>
+            <a href="https://github.com/XX-net/XX-Net/wiki" target="_blank">GitHub@XX-Net/Wiki</a>
         </div> <!-- .span8 -->
     </div> <!-- .div.fluid -->
     <div class="row-fluid">
@@ -34,7 +34,7 @@
     </div> <!-- .div.fluid -->
 </div> <!-- #about -->
 <div id="thanks">
-    <h3>{{ _( "Thanks the following projects" ) }}</h3>
+    <h3>{{ _( "Thanks to the following projects" ) }}</h3>
     <ol>
         <li>Google</li>
         <li>GoAgent</li>
@@ -47,19 +47,17 @@
 <script type="text/javascript">
     title('{{ _( "About XX-Net" ) }}');
 </script>
-
-
 <script type="text/javascript">
-    var pageRequests = {};
-    pageRequests['cmd'] = 'get_version';
+    var pageRequests = {
+        'cmd': 'get_version'
+    };
     $.ajax({
         type: 'GET',
         url: '/config',
         data: pageRequests,
         dataType: 'JSON',
-        success: function(result) {
+        success: function (result) {
             document.getElementById("about_current_version").appendChild(document.createTextNode(result['current_version']));
-            
         }
     });
 </script>

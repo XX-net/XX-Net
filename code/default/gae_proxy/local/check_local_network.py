@@ -21,7 +21,12 @@ if __name__ == "__main__":
         sys.path.append(linux_lib)
 
 
+#try:
+#    from code.default.gae_proxy.local.config import config
+#except:
+#    from code.default.gae_proxy.local.config import config
 from config import config
+
 import simple_http_client
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
@@ -173,8 +178,10 @@ def report_fail(ip):
         IPv6.report_fail()
 
 
-def is_ok(ip):
-    if "." in ip:
+def is_ok(ip=None):
+    if not ip:
+        return IPv4.is_ok() or IPv6.is_ok()
+    elif "." in ip:
         return IPv4.is_ok()
     else:
         return IPv6.is_ok()

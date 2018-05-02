@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -8,10 +7,12 @@ import re
 import zipfile
 import shutil
 import stat
+import glob
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+code_path = os.path.abspath(os.path.join(root_path, os.pardir))
 data_root = os.path.join(top_path, 'data')
 python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
@@ -31,9 +32,10 @@ download_path = os.path.join(data_root, 'downloads')
 if not os.path.isdir(download_path):
     os.mkdir(download_path)
 
-progress = {} # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
+progress = {}  # link => {"size", 'downloaded', status:downloading|canceled|finished:failed}
 progress["update_status"] = "Idle"
 update_info = "init"
+
 
 def init_update_info(check_update):
     global update_info
@@ -44,12 +46,13 @@ def init_update_info(check_update):
     elif check_update != "init":
         update_info = ""
 
+
 init_update_info(config.get(["update", "check_update"]))
 
 
 def request(url, retry=0, timeout=30):
     if retry == 0:
-        if config.get(["proxy", "enable"], 0):
+        if int(config.get(["proxy", "enable"], 0)):
             client = simple_http_client.Client(proxy={
                 "type": config.get(["proxy", "type"], ""),
                 "host": config.get(["proxy", "host"], ""),
@@ -88,6 +91,9 @@ def download_file(url, filename):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             req = request(url, i, timeout=120)
+            if not req:
+                continue
+
             start_time = time.time()
             timeout = 300
 
@@ -138,7 +144,7 @@ def download_file(url, filename):
                 progress[url]["status"] = "finished"
                 return True
         except Exception as e:
-            xlog.exception("download %s to %s fail:%r", url, filename, e)
+            xlog.warn("download %s to %s fail:%r", url, filename, e)
             continue
 
     progress[url]["status"] = "failed"
@@ -162,7 +168,7 @@ def parse_readme_versions(readme_file):
     except Exception as e:
         xlog.exception("xxnet_version fail:%r", e)
 
-    raise "get_version_fail:" % readme_file
+    raise "get_version_fail:%s" % readme_file
 
 
 def current_version():
@@ -216,10 +222,10 @@ def hash_file_sum(filename):
 
 
 def overwrite(xxnet_version, xxnet_unzip_path):
-    progress["update_status"] = "Over writing"
+    progress["update_status"] = "Overwriting"
     try:
         for root, subdirs, files in os.walk(xxnet_unzip_path):
-            relate_path = root[len(xxnet_unzip_path)+1:]
+            relate_path = root[len(xxnet_unzip_path) + 1:]
             target_relate_path = relate_path
             if sys.platform == 'win32':
                 if target_relate_path.startswith("code\\default"):
@@ -242,9 +248,9 @@ def overwrite(xxnet_version, xxnet_unzip_path):
                 dst_file = os.path.join(top_path, target_relate_path, filename)
                 if not os.path.isfile(dst_file) or hash_file_sum(src_file) != hash_file_sum(dst_file):
                     xlog.info("copy %s => %s", src_file, dst_file)
-                    #modify by outofmemo, files in '/sdcard' are not allowed to chmod for Android
-                    #and shutil.copy() will call shutil.copymode()
-                    if sys.platform != 'win32' and os.path.isfile("/system/bin/dalvikvm")==False and os.path.isfile("/system/bin/dalvikvm64")==False and os.path.isfile(dst_file):
+                    # modify by outofmemo, files in '/sdcard' are not allowed to chmod for Android
+                    # and shutil.copy() will call shutil.copymode()
+                    if sys.platform != 'win32' and os.path.isfile("/system/bin/dalvikvm") == False and os.path.isfile("/system/bin/dalvikvm64") == False and os.path.isfile(dst_file):
                         st = os.stat(dst_file)
                         shutil.copy(src_file, dst_file)
                         if st.st_mode & stat.S_IEXEC:
@@ -253,13 +259,13 @@ def overwrite(xxnet_version, xxnet_unzip_path):
                         shutil.copyfile(src_file, dst_file)
 
     except Exception as e:
-        xlog.warn("update over write fail:%r", e)
-        progress["update_status"] = "Over write Fail:%r" % e
+        xlog.warn("update overwrite fail:%r", e)
+        progress["update_status"] = "Overwrite Fail:%r" % e
         raise e
     xlog.info("update file finished.")
 
 
-def download_overwrite_new_version(xxnet_version,checkhash=1):
+def download_overwrite_new_version(xxnet_version, checkhash=1):
     global update_progress
 
     xxnet_url = 'https://codeload.github.com/XX-net/XX-Net/zip/%s' % xxnet_version
@@ -300,6 +306,49 @@ def download_overwrite_new_version(xxnet_version,checkhash=1):
     shutil.rmtree(xxnet_unzip_path, ignore_errors=True)
 
 
+def get_local_versions():
+    def get_folder_version(folder):
+        f = os.path.join(code_path, folder, "version.txt")
+        try:
+            with open(f) as fd:
+                content = fd.read()
+                p = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
+                m = p.match(content)
+                if m:
+                    version = m.group(1) + "." + m.group(2) + "." + m.group(3)
+                    return version
+        except:
+            return False
+
+    files_in_code_path = os.listdir(code_path)
+    local_versions = []
+    for name in files_in_code_path:
+        if os.path.isdir(os.path.join(code_path, name)):
+            v = get_folder_version(name)
+            if v:
+                local_versions.append([v, name])
+    local_versions.sort(key=lambda s: map(int, s[0].split('.')), reverse=True)
+    return local_versions
+
+
+def get_current_version_dir():
+    current_dir = os.path.split(root_path)[-1]
+    return current_dir
+
+
+def del_version(version):
+    if version == get_current_version_dir():
+        xlog.warn("try to delect current version.")
+        return False
+
+    try:
+        shutil.rmtree(os.path.join(top_path, "code", version))
+        return True
+    except Exception as e:
+        xlog.warn("deleting fail: %s", e)
+        return False
+
+
 def update_current_version(version):
     start_script = os.path.join(top_path, "code", version, "launcher", "start.py")
     if not os.path.isfile(start_script):
@@ -337,12 +386,12 @@ def restart_xxnet(version=None):
     os._exit(0)
 
 
-def update_version(version,checkhash=1):
+def update_version(version, checkhash=1):
     global update_progress, update_info
     _update_info = update_info
     update_info = ""
     try:
-        download_overwrite_new_version(version,checkhash)
+        download_overwrite_new_version(version, checkhash)
 
         update_current_version(version)
 
@@ -359,7 +408,82 @@ def start_update_version(version, checkhash=1):
         return progress["update_status"]
 
     progress["update_status"] = "Start update"
-    th = threading.Thread(target=update_version, args=(version,checkhash))
+    th = threading.Thread(target=update_version, args=(version, checkhash))
     th.start()
     return True
 
+
+def cleanup():
+    def rm_paths(path_list):
+        del_fullpaths = []
+        for ps in path_list:
+            pt = os.path.join(top_path, ps)
+            pt = glob.glob(pt)
+            del_fullpaths += pt
+        if del_fullpaths:
+            xlog.info("DELETE: %s", ' , '.join(del_fullpaths))
+
+            for pt in del_fullpaths:
+                try:
+                    if os.path.isfile(pt):
+                        os.remove(pt)
+                    elif os.path.isdir(pt):
+                        shutil.rmtree(pt)
+                except:
+                    pass
+
+    keep_old_num = config.get(["modules", "launcher", "keep_old_ver_num"], 6)  # default keep several old versions
+    if keep_old_num < 99 and keep_old_num >= 0:  # 99 means don't delete any old version
+        del_paths = []
+        local_vs = get_local_versions()
+        for i in range(len(local_vs)):
+            if local_vs[i][0] == current_version():
+                for u in range(i + keep_old_num + 1, len(local_vs)):
+                    del_paths.append("code/" + local_vs[u][1] + "/")
+                break
+        if del_paths:
+            rm_paths(del_paths)
+
+    del_paths = []
+    if config.get(["savedisk", "clear_cache"], 0):
+        del_paths += [
+            "data/*/*.*.log",
+            "data/*/*.log.*",
+            "data/downloads/XX-Net-*.zip"
+        ]
+
+    if config.get(["savedisk", "del_win"], 0):
+        del_paths += [
+            "code/*/python27/1.0/WinSxS/",
+            "code/*/python27/1.0/*.dll",
+            "code/*/python27/1.0/*.exe",
+            "code/*/python27/1.0/Microsoft.VC90.CRT.manifest",
+            "code/*/python27/1.0/lib/win32/"
+        ]
+    if config.get(["savedisk", "del_mac"], 0):
+        del_paths += [
+            "code/*/python27/1.0/lib/darwin/"
+        ]
+    if config.get(["savedisk", "del_linux"], 0):
+        del_paths += [
+            "code/*/python27/1.0/lib/linux/"
+        ]
+    if config.get(["savedisk", "del_gae"], 0):
+        del_paths += [
+            "code/*/gae_proxy/"
+        ]
+    if config.get(["savedisk", "del_gae_server"], 0):
+        del_paths += [
+            "code/*/gae_proxy/server/"
+        ]
+    if config.get(["savedisk", "del_xtunnel"], 0):
+        del_paths += [
+            "code/*/x_tunnel/"
+        ]
+    if config.get(["savedisk", "del_smartroute"], 0):
+        del_paths += [
+            "code/*/smart_router/"
+        ]
+
+    if del_paths:
+        rm_paths(del_paths)

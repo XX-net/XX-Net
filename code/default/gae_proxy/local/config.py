@@ -1,159 +1,222 @@
-#!/usr/bin/env python
-# coding:utf-8
-
-
-import ConfigParser
 import os
-import re
-import io
+
+from front_base.config import ConfigBase
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'gae_proxy')
 
 
-from xlog import getLogger
-xlog = getLogger("gae_proxy")
+class Config(ConfigBase):
+    def __init__(self, fn):
+        super(Config, self).__init__(fn)
 
+        # proxy
+        self.set_var("listen_ip", "127.0.0.1")
+        self.set_var("listen_port", 8087)
 
+        # auto range
+        self.set_var("AUTORANGE_THREADS", 20)
+        self.set_var("AUTORANGE_MAXSIZE", 548576)
+        self.set_var("JS_MAXSIZE", 2097152)
 
-class Config(object):
-    current_path = os.path.dirname(os.path.abspath(__file__))
+        # gae
+        self.set_var("GAE_PASSWORD", "")
+        self.set_var("GAE_VALIDATE", 0)
+
+        # host rules
+        self.set_var("hosts_direct", [
+            "scholar.google.com",
+            "scholar.google.com.hk",
+            "appengine.google.com"
+        ])
+        self.set_var("hosts_direct_endswith", [
+            ".appspot.com",
+        ])
+
+        self.set_var("hosts_gae", [
+            "mail.google.com",
+            "accounts.google.com"
+        ])
+        self.set_var("hosts_gae_endswith", [
+
+        ])
+
+        # sites using br
+        self.set_var("BR_SITES", [
+            "webcache.googleusercontent.com",
+            "www.google.com",
+            "www.google.com.hk",
+            "www.google.com.cn",
+            "fonts.googleapis.com"
+        ])
+
+        self.set_var("BR_SITES_ENDSWITH", [
+            ".youtube.com",
+            ".facebook.com",
+            ".googlevideo.com"
+        ])
+
+        # some unsupport request like url length > 2048, will go Direct
+        self.set_var("google_endswith", [
+            ".youtube.com",
+            ".googlevideo.com",
+            ".googleapis.com",
+            ".google.com",
+            ".googleusercontent.com",
+            ".ytimg.com",
+            ".doubleclick.net",
+            ".google-analytics.com",
+            ".googlegroups.com",
+            ".googlesource.com",
+            ".gstatic.com",
+            ".appspot.com",
+            ".gvt1.com",
+            ".android.com",
+            ".ggpht.com",
+            ".googleadservices.com",
+            ".googlesyndication.com",
+            ".2mdn.net"
+        ])
+
+        # front
+        self.set_var("front_continue_fail_num", 10)
+        self.set_var("front_continue_fail_block", 0)
+
+        # http_dispatcher
+        self.set_var("dispather_min_idle_workers", 5)
+        self.set_var("dispather_work_min_idle_time", 0)
+        self.set_var("dispather_work_max_score", 1000)
+        self.set_var("dispather_min_workers", 50)
+        self.set_var("dispather_max_workers", 90)
+        self.set_var("dispather_max_idle_workers", 30)
+
+        # http 1 worker
+        self.set_var("http1_first_ping_wait", 5)
+        self.set_var("http1_idle_time", 200)
+        self.set_var("http1_ping_interval", 0)
+
+        # http 2 worker
+        self.set_var("http2_max_concurrent", 20)
+        self.set_var("http2_target_concurrent", 1)
+        self.set_var("http2_max_timeout_tasks", 1)
+        self.set_var("http2_timeout_active", 0)
+        self.set_var("http2_ping_min_interval", 15)
+
+        # connect_manager
+        self.set_var("https_max_connect_thread", 10)
+        self.set_var("ssl_first_use_timeout", 5)
+        self.set_var("connection_pool_min", 1)
+        self.set_var("https_connection_pool_max", 10)
+        self.set_var("https_new_connect_num", 3)
+        self.set_var("https_keep_alive", 5)
+
+        # check_ip
+        self.set_var("check_ip_host", "xxnet-1.appspot.com")
+        self.set_var("check_ip_accept_status", [200, 503])
+        self.set_var("check_ip_content", "GoAgent")
+
+        # host_manager
+        self.set_var("GAE_APPIDS", [])
+
+        # connect_creator
+        self.set_var("check_pkp", [
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnCoEd1zYUJE6BqOC4NhQ
+SLyJP/EZcBqIRn7gj8Xxic4h7lr+YQ23MkSJoHQLU09VpM6CYpXu61lfxuEFgBLE
+XpQ/vFtIOPRT9yTm+5HpFcTP9FMN9Er8n1Tefb6ga2+HwNBQHygwA0DaCHNRbH//
+OjynNwaOvUsRBOt9JN7m+fwxcfuU1WDzLkqvQtLL6sRqGrLMU90VS4sfyBlhH82d
+qD5jK4Q1aWWEyBnFRiL4U5W+44BKEMYq7LqXIBHHOZkQBKDwYXqVJYxOUnXitu0I
+yhT8ziJqs07PRgOXlwN+wLHee69FM8+6PnG33vQlJcINNYmdnfsOEXmJHjfFr45y
+aQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr2/GIAG3.crt
+# https://pki.goog/gsr2/GTSGIAG3.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylJL6h7/ziRrqNpyGGjV
+Vl0OSFotNQl2Ws+kyByxqf5TifutNP+IW5+75+gAAdw1c3UDrbOxuaR9KyZ5zhVA
+Cu9RuJ8yjHxwhlJLFv5qJ2vmNnpiUNjfmonMCSnrTykUiIALjzgegGoYfB29lzt4
+fUVJNk9BzaLgdlc8aDF5ZMlu11EeZsOiZCx5wOdlw1aEU1pDbcuaAiDS7xpp0bCd
+c6LgKmBlUDHP+7MvvxGIQC61SRAPCm7cl/q/LJ8FOQtYVK8GlujFjgEWvKgaTUHF
+k5GiHqGL8v7BiCRJo0dLxRMB3adXEmliK+v+IO9p+zql8H4p7u2WFvexH6DkkCXg
+MwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# https://pki.goog/gsr4/GIAG3ECC.crt
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG4ANKJrwlpAPXThRcA3Z4XbkwQvW
+hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
+-----END PUBLIC KEY-----
+'''
+        ])
+        self.set_var("check_commonname", "Google")
+        self.set_var("min_intermediate_CA", 2)
+        self.set_var("support_http2", 1)
+
+        # ip_manager
+        self.set_var("max_scan_ip_thread_num", 10)
+        self.set_var("max_good_ip_num", 500)
+        self.set_var("target_handshake_time", 200)
+
+        # ip source
+        self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
+        self.set_var("ipv6_scan_ratio", 50) # 0 - 100
+
+        self.load()
 
     def load(self):
-        """load config from proxy.ini"""
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-        self.CONFIG = ConfigParser.ConfigParser()
-        self.CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
+        super(Config, self).load()
 
-        self.DATA_PATH = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir, os.pardir, 'data', 'gae_proxy'))
-        if not os.path.isdir(self.DATA_PATH):
-            self.DATA_PATH = current_path
+        need_save = 0
+        if not os.path.isfile(self.config_path):
+            for fn in [
+                os.path.join(module_data_path, "config.ini"),
+                os.path.join(module_data_path, "manual.ini")
+            ]:
+                need_save += self.load_old_config(fn)
 
-        self.CONFIG.read(self.CONFIG_FILENAME)
+        self.HOSTS_GAE = tuple(self.hosts_gae)
+        self.HOSTS_DIRECT = tuple(self.hosts_direct)
+        self.HOSTS_GAE_ENDSWITH = tuple(self.hosts_gae_endswith)
+        self.HOSTS_DIRECT_ENDSWITH = tuple(self.hosts_direct_endswith)
+        self.GOOGLE_ENDSWITH = tuple(self.google_endswith)
 
-        # load ../../../data/gae_proxy/manual.ini, set by manual
-        self.CONFIG_MANUAL_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'manual.ini'))
-        if os.path.isfile(self.CONFIG_MANUAL_FILENAME):
-            with open(self.CONFIG_MANUAL_FILENAME, 'rb') as fp:
-                content = fp.read()
-                try:
-                    self.CONFIG.readfp(io.BytesIO(content))
-                    xlog.info("load manual.ini success")
-                except Exception as e:
-                    xlog.exception("data/gae_proxy/manual.ini load error:%s", e)
+        self.br_sites = tuple(self.BR_SITES)
+        self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
 
-        # load ../../../data/gae_proxy/config.ini, set by web_ui
-        self.CONFIG_USER_FILENAME = os.path.abspath( os.path.join(self.DATA_PATH, 'config.ini'))
-        if os.path.isfile(self.CONFIG_USER_FILENAME):
-            with open(self.CONFIG_USER_FILENAME, 'rb') as fp:
-                content = fp.read()
-                try:
-                    self.CONFIG.readfp(io.BytesIO(content))
-                except Exception as e:
-                    xlog.exception("data/gae_proxy/config.ini load error:%s", e)
+        if need_save:
+            self.save()
 
-        self.LISTEN_IP = self.CONFIG.get('listen', 'ip')
-        self.LISTEN_PORT = self.CONFIG.getint('listen', 'port')
+    def load_old_config(self, fn):
+        if not os.path.isfile(fn):
+            return 0
 
-        self.PUBLIC_APPIDS = [x.strip() for x in self.CONFIG.get('gae', 'public_appid').split("|")]
-        if self.CONFIG.get('gae', 'appid'):
-            self.GAE_APPIDS = [x.strip() for x in self.CONFIG.get('gae', 'appid').split("|")]
-        else:
-            self.GAE_APPIDS = []
-        self.GAE_PASSWORD = self.CONFIG.get('gae', 'password').strip()
-        self.GAE_VALIDATE = self.CONFIG.getint('gae', 'validate')
+        need_save = 0
+        with open(fn, "r") as fd:
+            for line in fd.readlines():
+                if line.startswith("appid"):
+                    try:
+                        appid_str = line.split("=")[1]
+                        appids = []
+                        for appid in appid_str.split("|"):
+                            appid = appid.strip()
+                            appids.append(appid)
+                        self.GAE_APPIDS = appids
+                        need_save += 1
+                    except Exception as e:
+                        pass
+                elif line.startswith("password"):
+                    password = line.split("=")[1].strip()
+                    self.GAE_PASSWORD = password
+                    need_save += 1
 
-        self.PROXY_HOSTS_ONLY = []
-        for x in self.CONFIG.get('switch_rule', 'proxy_hosts_only').split("|"):
-            x = x.strip()
-            if len(x):
-                self.PROXY_HOSTS_ONLY.append(x)
-        if len(self.PROXY_HOSTS_ONLY):
-            xlog.info("Only these hosts will proxy: %s", self.PROXY_HOSTS_ONLY)
-
-        fwd_endswith = []
-        fwd_hosts = []
-        direct_endswith = []
-        direct_hosts = []
-        gae_endswith = []
-        gae_hosts = []
-        for k, v in self.CONFIG.items('hosts'):
-            if v == "fwd":
-                if k.startswith('.'):
-                    fwd_endswith.append(k)
-                else:
-                    fwd_hosts.append(k)
-            elif v == "direct":
-                if k.startswith('.'):
-                    direct_endswith.append(k)
-                else:
-                    direct_hosts.append(k)
-            elif v == "gae":
-                if k.startswith('.'):
-                    gae_endswith.append(k)
-                else:
-                    gae_hosts.append(k)
-        self.HOSTS_FWD_ENDSWITH = tuple(fwd_endswith)
-        self.HOSTS_FWD = tuple(fwd_hosts)
-        self.HOSTS_GAE_ENDSWITH = tuple(gae_endswith)
-        self.HOSTS_GAE = tuple(gae_hosts)
-
-        # hack here:
-        # 2.x.x version save host mode to direct in data/gae_proxy/config.ini
-        # now(2016.5.5) many google ip don't support direct mode.
-        try:
-            direct_hosts.remove("appengine.google.com")
-        except:
-            pass
-        try:
-            direct_hosts.remove("www.google.com")
-        except:
-            pass
-        self.HOSTS_DIRECT_ENDSWITH = tuple(direct_endswith)
-        self.HOSTS_DIRECT = tuple(direct_hosts)
-
-        self.AUTORANGE_MAXSIZE = self.CONFIG.getint('autorange', 'maxsize')
-        self.AUTORANGE_THREADS = self.CONFIG.getint('autorange', 'threads')
-
-        self.PAC_ENABLE = self.CONFIG.getint('pac', 'enable')
-        self.PAC_IP = self.CONFIG.get('pac', 'ip')
-        self.PAC_PORT = self.CONFIG.getint('pac', 'port')
-        self.PAC_FILE = self.CONFIG.get('pac', 'file').lstrip('/')
-        self.PAC_GFWLIST = self.CONFIG.get('pac', 'gfwlist')
-        self.PAC_ADBLOCK = self.CONFIG.get('pac', 'adblock') if self.CONFIG.has_option('pac', 'adblock') else ''
-        self.PAC_EXPIRED = self.CONFIG.getint('pac', 'expired')
-        self.pac_url = 'http://%s:%d/%s\n' % (self.PAC_IP, self.PAC_PORT, self.PAC_FILE)
-
-        self.PROXY_ENABLE = self.CONFIG.getint('proxy', 'enable')
-        self.PROXY_TYPE = self.CONFIG.get('proxy', 'type')
-        self.PROXY_HOST = self.CONFIG.get('proxy', 'host')
-        self.PROXY_PORT = self.CONFIG.get('proxy', 'port')
-        if self.PROXY_PORT == "":
-            self.PROXY_PORT = 0
-        else:
-            self.PROXY_PORT = int(self.PROXY_PORT)
-        self.PROXY_USER = self.CONFIG.get('proxy', 'user')
-        self.PROXY_PASSWD = self.CONFIG.get('proxy', 'passwd')
-
-        self.USE_IPV6 = self.CONFIG.get('google_ip', 'use_ipv6')
-        if self.USE_IPV6 not in ["auto", "force_ipv4", "force_ipv6"]:
-            xlog.debug("config use_ipv6 %s upgrade to auto", self.USE_IPV6)
-            self.USE_IPV6 = "auto"
-
-        self.max_links_per_ip = self.CONFIG.getint('google_ip', 'max_links_per_ip')
-        self.record_ip_history = self.CONFIG.getint('google_ip', 'record_ip_history')
-        self.ip_connect_interval = self.CONFIG.getint('google_ip', 'ip_connect_interval')
-
-        self.https_max_connect_thread = config.CONFIG.getint("connect_manager", "https_max_connect_thread")
-        self.connect_interval = config.CONFIG.getint("connect_manager", "connect_interval")
-
-        self.log_file = config.CONFIG.getint("system", "log_file")
-        self.do_profile = config.CONFIG.getint("system", "do_profile")
-
-        # change to True when finished import CA cert to browser
-        # launcher will wait import ready then open browser to show status, check update etc
-        self.cert_import_ready = False
+        return need_save
 
 
-
-config = Config()
-config.load()
-
+config_path = os.path.join(module_data_path, "config.json")
+config = Config(config_path)

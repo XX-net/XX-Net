@@ -3,7 +3,7 @@
 </div> <!-- #log-container -->
 
 <script type="text/javascript">
-    title('{{ _("Heroku Front Log") }}');
+    title('{{ _("Heroku") }}{{ _("Front") }} {{ _("Log") }}');
 </script>
 <style type="text/css">
     .DUMMY { color: black }
@@ -14,11 +14,11 @@
     .CRITICAL { color: #d7df01 }
 </style>
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         resizeLogWindow();
     });
 
-    $(window).resize(function() {
+    $(window).resize(function () {
         resizeLogWindow();
     });
 </script>
@@ -31,14 +31,14 @@
     }
 </script>
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         window.previousOffset     = 0;
         window.offset             = 1;
         window.logLineNum         = 0;
         window.isAutoScrollLog    = true;
         window.isgetLogProcessing = false;
 
-        var timer = $.timer(function() {
+        var timer = $.timer(function () {
             getLog();
         });
         timer.set({
@@ -48,57 +48,53 @@
     });
 </script>
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         getLog();
     });
 </script>
 <script type="text/javascript">
-    $('#log').scroll(function() {
+    $('#log').scroll(function () {
         var preservedHeight = $('#log').height() + 10,
             scrollHeight    = $('#log')[0].scrollHeight,
             scrollTop       = $('#log').scrollTop();
 
-        if ( scrollTop + preservedHeight == scrollHeight ) {
-            window.isAutoScrollLog = true;
-        } else {
-            window.isAutoScrollLog = false;
-        }
+        window.isAutoScrollLog = (scrollTop + preservedHeight === scrollHeight);
     });
 </script>
 <script type="text/javascript">
     function scrollLog() {
-        if ( window.isAutoScrollLog ) {
+        if (window.isAutoScrollLog) {
             $('#log').scrollTop($('#log')[0].scrollHeight);
         }
     }
 </script>
 <script type="text/javascript">
     function getLog() {
-        if ( window.isgetLogProcessing ) { 
-            return; 
+        if (window.isgetLogProcessing) {
+            return;
         }
-        if ( !window.isAutoScrollLog ) { 
-            return; 
+        if (!window.isAutoScrollLog) {
+            return;
         }
         window.isgetLogProcessing = true;
+
         var pageRequests = {
             'cmd': 'get_new',
             'last_no': offset
         };
-
         $.ajax({
             type: 'GET',
             url: '/module/x_tunnel/control/heroku_front/log',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 var newlines = document.createDocumentFragment();
                 var newlineNum = 0;
-                $.each(result, function(lineNumber, log) {
+                $.each(result, function (lineNumber, log) {
                     window.offset = lineNumber;
 
                     var logTemplate = '<p class="%s">%s</p>\n';
-                    if ( window.previousOffset != window.offset ) {
+                    if (window.previousOffset != window.offset) {
                         var newline = $(logTemplate.format(getLogLevel(log), log));
                         $(newlines).append(newline);
                         newlineNum += 1;
@@ -108,11 +104,11 @@
                 $('#log').append(newlines);
                 var maxLineNum = 1000;
                 var cutStep = 10;
-                if(window.logLineNum > maxLineNum + cutStep){
+                if (window.logLineNum > maxLineNum + cutStep) {
                     var numToCut = window.logLineNum - maxLineNum;
                     var textblock = $('#log').html();
                     var lines = textblock.split('\n');
-                    lines.splice(0,numToCut);
+                    lines.splice(0, numToCut);
                     var newtext = lines.join('\n');
                     $('#log').html(newtext);
                     window.logLineNum -= numToCut;
@@ -122,7 +118,7 @@
                 window.previousOffset = window.offset;
                 window.isgetLogProcessing = false;
             },
-            error: function(xml, info, obj) {
+            error: function (xml, info, obj) {
                 window.isgetLogProcessing = false;
             }
         });
@@ -130,17 +126,16 @@
 </script>
 <script type="text/javascript">
     function getLogLevel(log) {
-        if ( log.indexOf('[DEBUG]') != -1 ) {
+        if (log.indexOf('[DEBUG]') != -1) {
             return 'DEBUG';
-        } else if ( log.indexOf('[INFO]') != -1 ) {
+        } else if (log.indexOf('[INFO]') != -1) {
             return 'INFO';
-        } else if ( log.indexOf('[WARNING]') != -1 ) {
+        } else if (log.indexOf('[WARNING]') != -1) {
             return 'WARNING';
-        } else if ( log.indexOf('[ERROR]') != -1 ) {
+        } else if (log.indexOf('[ERROR]') != -1) {
             return 'ERROR';
-        } else if ( log.indexOf('[CRITICAL]') != -1 ) {
+        } else if (log.indexOf('[CRITICAL]') != -1) {
             return 'CRITICAL';
-        }
-        return 'DUMMY';
+        } else return 'DUMMY';
     }
 </script>

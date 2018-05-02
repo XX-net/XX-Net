@@ -241,6 +241,7 @@ class socksocket(_BaseSocket):
             raise ValueError(msg.format(type))
 
         self._proxyconn = None  # TCP connection to keep UDP relay alive
+        self.resolve_dest = True
 
         if self.default_proxy:
             self.proxy = self.default_proxy
@@ -293,7 +294,11 @@ class socksocket(_BaseSocket):
             proxy_type = proxy_type.lower()
             if "http" in proxy_type:
                 proxy_type = PROXY_TYPE_HTTP
+                self.resolve_dest = False
             elif "socks5" in proxy_type:
+                if proxy_type == "socks5h":
+                    self.resolve_dest = False
+                    rdns = True
                 proxy_type = PROXY_TYPE_SOCKS5
             elif "socks4" in proxy_type:
                 proxy_type = PROXY_TYPE_SOCKS4
@@ -696,7 +701,8 @@ class socksocket(_BaseSocket):
         if self.type == socket.SOCK_DGRAM:
             if not self._proxyconn:
                 self.bind(("", 0))
-            dest_addr = socket.gethostbyname(dest_addr)
+            if self.resolve_dest:
+                dest_addr = socket.gethostbyname(dest_addr)
 
             # If the host address is INADDR_ANY or similar, reset the peer
             # address so that packets are received from any peer

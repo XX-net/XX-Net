@@ -1,10 +1,9 @@
 <div id="options">
-
     <div class="row-fluid">
         <div class="span4">
             <label for="language">{{ _( "Language" ) }}</label>
         </div>
-        <div class="span4">
+        <div class="span3">
             <select id="language">
                 <!-- <option value="de_DE">Deutsch</option> -->
                 <option value="en_US">English</option>
@@ -18,34 +17,33 @@
     <div class="row-fluid">
         <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
-            <input id="auto-start" type="checkbox" data-toggle="switch" />
+            <input id="auto-start" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">{{ _( "Popup Status Page on Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
-            <input id="popup-webui" type="checkbox" data-toggle="switch" />
+            <input id="popup-webui" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">{{ _( "Enable Remote Web Control" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
+        <div class="span4">{{ _( "Allow Remote" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
-            <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
+            <input id="allow-remote" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Required)" ) }}</div> <!-- .span4 -->
         <div class="span8">
-            <input id="show-systray" type="checkbox" data-toggle="switch" />
+            <input id="show-systray" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span4">{{ _( "Run as Green Software" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/%E4%BB%A5%E7%BB%BF%E8%89%B2%E8%BD%AF%E4%BB%B6%E8%BF%90%E8%A1%8C" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
-            <input id="no-mess-system" type="checkbox" data-toggle="switch" />
+            <input id="no-mess-system" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-
 
     <div class="row-fluid">
         <div class="span4">
@@ -54,18 +52,24 @@
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
-    <div id="modules-manager" >
+    <div id="modules-manager" style="display: none;">
         <hr>
         <div class="row-fluid">
-            <div class="span4">{{ _( "Enable" ) }} GAE proxy</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} {{ _( "GAE Proxy" ) }}</div> <!-- .span4 -->
             <div class="span8">
-                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
+                <input id="gae_proxy-enable" type="checkbox" data-toggle="switch"/> <!--disabled-->
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
-        <div class="row-fluid" >
-            <div class="span4">{{ _( "Enable" ) }} X_tunnel</div> <!-- .span4 -->
+        <div class="row-fluid">
+            <div class="span4">{{ _( "Enable" ) }} {{ _( "X-Tunnel" ) }}</div> <!-- .span4 -->
             <div class="span8">
-                <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
+                <input id="x-tunnel-enable" type="checkbox" data-toggle="switch"/>
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid">
+            <div class="span4">{{ _( "Enable" ) }} {{ _( "Smart Router" ) }}</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="smart-router-enable" type="checkbox" data-toggle="switch"/>
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <hr>
@@ -73,30 +77,32 @@
 </div> <!-- #options -->
 
 <script type="text/javascript">
-    $(function() {
+    $(function () {
         $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
     });
 </script>
-
 <script type="text/javascript">
-    $('.pull-down-control').click(function() {
+    $('.pull-down-control').click(function () {
         var isShown = $('i.icon', this).hasClass('icon-chevron-down');
         var id = $(this).attr('for');
 
-        if ( !isShown ) {
+        if (!isShown) {
             $('i.icon', this).removeClass('icon-chevron-right');
             $('i.icon', this).addClass('icon-chevron-down');
-            $('#'+id).slideDown();
+            $('#' + id).slideDown();
         } else {
             $('i.icon', this).removeClass('icon-chevron-down');
             $('i.icon', this).addClass('icon-chevron-right');
-            $('#'+id).slideUp();
+            $('#' + id).slideUp();
         }
     });
 </script>
-
 <script type="text/javascript">
-    function getConfig() {
+    $(function () {
+        getConfig_Init();
+    });
+
+    function getConfig_Init() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -106,66 +112,65 @@
             url: '/config',
             data: pageRequests,
             dataType: 'JSON',
-            success: function(result) {
-                if ( result['auto_start'] != 0 ) {
-                    $( "#auto-start").parent().removeClass('switch-off');
-                    $( "#auto-start").parent().addClass('switch-on');
+            success: function (result) {
+                if (result['auto_start'] != 0) {
+                    $("#auto-start").parent().removeClass('switch-off');
+                    $("#auto-start").parent().addClass('switch-on');
 
-                    $( "#auto-start").prop('checked', true);
+                    $("#auto-start").prop('checked', true);
                 }
-                if ( result['popup_webui'] != 0 ) {
-                    $( "#popup-webui").parent().removeClass('switch-off');
-                    $( "#popup-webui").parent().addClass('switch-on');
+                if (result['popup_webui'] != 0) {
+                    $("#popup-webui").parent().removeClass('switch-off');
+                    $("#popup-webui").parent().addClass('switch-on');
 
-                    $( "#popup-webui").prop('checked', true);
+                    $("#popup-webui").prop('checked', true);
                 }
-                if ( result['allow_remote_connect'] != 0 ) {
-                    $( "#allow-remote-connect").parent().removeClass('switch-off');
-                    $( "#allow-remote-connect").parent().addClass('switch-on');
+                if (result['allow_remote_switch'] != 0) {
+                    $("#allow-remote").parent().removeClass('switch-off');
+                    $("#allow-remote").parent().addClass('switch-on');
 
-                    $( "#allow-remote-connect").prop('checked', true);
+                    $("#allow-remote").prop('checked', true);
                 }
-                if ( result['show_systray'] != 0 ) {
-                    $( "#show-systray").parent().removeClass('switch-off');
-                    $( "#show-systray").parent().addClass('switch-on');
+                if (result['show_systray'] != 0) {
+                    $("#show-systray").parent().removeClass('switch-off');
+                    $("#show-systray").parent().addClass('switch-on');
 
-                    $( "#show-systray").prop('checked', true);
+                    $("#show-systray").prop('checked', true);
                 }
-                if ( result['no_mess_system'] != 0 ) {
-                    $( "#no-mess-system").parent().removeClass('switch-off');
-                    $( "#no-mess-system").parent().addClass('switch-on');
+                if (result['no_mess_system'] != 0) {
+                    $("#no-mess-system").parent().removeClass('switch-off');
+                    $("#no-mess-system").parent().addClass('switch-on');
 
-                    $( "#no-mess-system").prop('checked', true);
+                    $("#no-mess-system").prop('checked', true);
                 }
-                if ( result['gae_proxy_enable'] != 0 ) {
-                    $( "#gae_proxy-enable").parent().removeClass('switch-off');
-                    $( "#gae_proxy-enable").parent().addClass('switch-on');
+                if (result['gae_proxy_enable'] != 0) {
+                    $("#gae_proxy-enable").parent().removeClass('switch-off');
+                    $("#gae_proxy-enable").parent().addClass('switch-on');
 
-
-                    $( "#gae_proxy-enable").prop('checked', true);
+                    $("#gae_proxy-enable").prop('checked', true);
+                    $("#gae_proxy-enable").prop('disabled', true);
+                    $("#gae_proxy-enable").parent().parent().addClass("deactivate");
                 }
-                if ( result['x_tunnel_enable'] != 0 ) {
-                    $( "#x-tunnel-enable").parent().removeClass('switch-off');
-                    $( "#x-tunnel-enable").parent().addClass('switch-on');
+                if (result['x_tunnel_enable'] != 0) {
+                    $("#x-tunnel-enable").parent().removeClass('switch-off');
+                    $("#x-tunnel-enable").parent().addClass('switch-on');
 
-                    $( "#x-tunnel-enable").prop('checked', true);
+                    $("#x-tunnel-enable").prop('checked', true);
                 }
-                $( "#language").val(result['language']);
+                if (result['smart_router_enable'] != 0) {
+                    $("#smart-router-enable").parent().removeClass('switch-off');
+                    $("#smart-router-enable").parent().addClass('switch-on');
+
+                    $("#smart-router-enable").prop('checked', true);
+                }
+                $("#language").val(result['language']);
             },
-            error: function() {
+            error: function () {
                 displayErrorMessage();
             }
         });
     }
 </script>
-
-<script type="text/javascript">
-    $(function() {
-        getConfig();
-    });
-</script>
-
-
 <script type="text/javascript">
     $('#language').change(function() {
         var key   = 'language',
@@ -178,47 +183,53 @@
         }, 500);
     });
 
-    $('#auto-start').change(function() {
+    $('#auto-start').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'auto_start',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    $('#show-systray').change(function() {
+    $('#show-systray').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'show_systray',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    $('#no-mess-system').change(function() {
+    $('#no-mess-system').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'no_mess_system',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    $('#popup-webui').change(function() {
+    $('#popup-webui').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'popup_webui',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        setConfig(key, value);
     });
 
-    $('#allow-remote-connect').change(function() {
+    $('#allow-remote').change(function () {
         var isChecked = $(this).is(':checked'),
-            key       = 'allow_remote_connect',
+            key       = 'allow_remote_switch',
             value     = isChecked ? 1 : 0;
 
-        return setConfig(key, value);
+        tip('{{ _( "Restarting all remote, wait to refresh." ) }}', 'info');
+
+        setTimeout(function () {
+            location.reload();
+        }, 8 * 1000);
+
+        setConfig(key, value);
     });
 
-    $('#gae_proxy-enable').change(function() {
+    $('#gae_proxy-enable').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'gae_proxy_enable',
             value     = isChecked ? 1 : 0;
@@ -226,33 +237,19 @@
         setConfig(key, value);
     });
 
-    $('#x-tunnel-enable').change(function() {
+    $('#x-tunnel-enable').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'x_tunnel_enable',
             value     = isChecked ? 1 : 0;
 
         setConfig(key, value);
     });
-</script>
 
-<script type="text/javascript">
-    function restartingService(serviceNameSlug) {
-        var serviceName     = '',
-            restatingTime   = 5,
-            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
+    $('#smart-router-enable').change(function () {
+        var isChecked = $(this).is(':checked'),
+            key       = 'smart_router_enable',
+            value     = isChecked ? 1 : 0;
 
-        if ( serviceNameSlug == 'gae_proxy_enable' ) {
-            serviceName     = '{{ _( "GAE Proxy" ) }}';
-        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
-            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
-        } else {
-            serviceName     = 'Unknown';
-        }
-
-        tip(messageTemplate.format(serviceName, restatingTime), 'warning');
-
-        setTimeout(function () {
-            location.reload();
-        }, restatingTime * 1000);
-    }
+        setConfig(key, value);
+    });
 </script>

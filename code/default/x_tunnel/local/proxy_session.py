@@ -1,7 +1,7 @@
 import time
 import json
 import threading
-import struct
+import xstruct as struct
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -10,6 +10,7 @@ import utils
 import base_container
 import encrypt
 import global_var as g
+from gae_proxy.local import check_local_network
 
 
 def encrypt_data(data):
@@ -21,9 +22,21 @@ def encrypt_data(data):
 
 def decrypt_data(data):
     if g.config.encrypt_data:
+        if isinstance(data, memoryview):
+            data = data.tobytes()
         return encrypt.Encryptor(g.config.encrypt_password, g.config.encrypt_method).decrypt(data)
     else:
         return data
+
+
+def sleep(t):
+    end_time = time.time() + t
+    while g.running:
+        if time.time() > end_time:
+            return
+
+        sleep_time = min(1, end_time - time.time())
+        time.sleep(sleep_time)
 
 
 class ProxySession():
@@ -50,9 +63,14 @@ class ProxySession():
         self.traffic = 0
         self.server_send_buf_size = 0
 
+        self.last_state = {
+            "timeout": 0,
+        }
+        if g.config.enable_tls_relay:
+            threading.Thread(target=self.reporter).start()
+
     def start(self):
-        try:
-            self.lock.acquire()
+        with self.lock:
             if self.running is True:
                 return True
 
@@ -86,44 +104,27 @@ class ProxySession():
                 self.roundtrip_thread[i] = threading.Thread(target=self.normal_roundtrip_worker)
                 self.roundtrip_thread[i].daemon = True
                 self.roundtrip_thread[i].start()
-                time.sleep(0.2)
+                time.sleep(0.01)
 
-            self.timer_th = threading.Thread(target=self.timer)
-            self.timer_th.daemon = True
-            self.timer_th.start()
+            threading.Thread(target=self.timer).start()
             xlog.info("session started.")
             return True
-        finally:
-            self.lock.release()
 
     def stop(self):
         if not self.running:
-            #xlog.warn("stop but not running")
             return
 
-        self.running = False
-        self.session_id = ""
-        self.balance = 0
-        self.close_all_connection()
+        with self.lock:
+            self.running = False
+            self.session_id = ""
+            self.balance = 0
+            self.close_all_connection()
 
-        self.send_buffer.reset()
-        self.receive_process.reset()
-        self.wait_queue.stop()
+            self.send_buffer.reset()
+            self.receive_process.reset()
+            self.wait_queue.stop()
 
-        #xlog.debug("begin join roundtrip_thread")
-        for i in self.roundtrip_thread:
-            # xlog.debug("begin join %d", i)
-            try:
-                rthead = self.roundtrip_thread[i]
-                if rthead is threading.current_thread():
-                    # xlog.debug("%d is self", i)
-                    continue
-                rthead.join()
-            except:
-                pass
-            # xlog.debug("end join %d", i)
-        #xlog.debug("end join roundtrip_thread")
-        xlog.debug("session stopped.")
+            xlog.debug("session stopped.")
 
     def reset(self):
         xlog.debug("session reset")
@@ -134,6 +135,118 @@ class ProxySession():
         while self.running:
             self.wait_queue.notify()
             time.sleep(self.send_delay)
+
+    def reporter(self):
+        sleep(5)
+        while g.running:
+            if not g.running:
+                break
+
+            self.check_report_status()
+            sleep(60)
+
+    def check_report_status(self):
+        if not g.config.login_account or not self.running or time.time() - self.last_send_time > 60:
+            return
+
+        good_ip_num = 0
+        for ip in g.tls_relay_front.ip_manager.ip_dict:
+            ip_state = g.tls_relay_front.ip_manager.ip_dict[ip]
+            fail_times = ip_state["fail_times"]
+            if fail_times == 0:
+                good_ip_num += 1
+        if good_ip_num:
+            return
+
+        stat = self.get_stat("minute")
+        stat["version"] = g.xxnet_version
+        stat["global"]["timeout"] = g.stat["timeout_roundtrip"] - self.last_state["timeout"]
+        stat["global"]["ipv6"] = check_local_network.IPv6.is_ok()
+        stat["tls_relay_front"]["ip_dict"] = g.tls_relay_front.ip_manager.ip_dict
+
+        report_dat = {
+            "account": str(g.config.login_account),
+            "password": str(g.config.login_password),
+            "stat": stat,
+        }
+        xlog.debug("start report_stat")
+        status, info = call_api("/report_stat", report_dat)
+        if not status:
+            xlog.warn("report fail.")
+            return
+
+        self.last_state["timeout"] = g.stat["timeout_roundtrip"]
+        data = info["data"]
+        g.tls_relay_front.set_ips(data["ips"])
+
+    def get_stat(self, type="second"):
+        def convert(num, units=('B', 'KB', 'MB', 'GB')):
+            for unit in units:
+                if num >= 1024:
+                    num /= 1024.0
+                else:
+                    break
+            return '{:.1f} {}'.format(num, unit)
+
+        res = {}
+        rtt = 0
+        recent_sent = 0
+        recent_received = 0
+        total_sent = 0
+        total_received = 0
+        for front in g.http_client.all_fronts:
+            if not front:
+                continue
+            name = front.name
+            dispatcher = front.get_dispatcher()
+            if not dispatcher:
+                res[name] = {
+                    "score": "False",
+                    "rtt": 9999,
+                    "success_num": 0,
+                    "fail_num": 0,
+                    "worker_num": 0,
+                    "total_traffics": "Up: 0 / Down: 0"
+                }
+                continue
+            score = dispatcher.get_score()
+            if score is None:
+                score = "False"
+            else:
+                score = int(score)
+
+            if type == "second":
+                stat = dispatcher.second_stat
+            elif type == "minute":
+                stat = dispatcher.minute_stat
+            else:
+                raise Exception()
+
+            rtt = max(rtt, stat["rtt"])
+            recent_sent += stat["sent"]
+            recent_received += stat["received"]
+            total_sent += dispatcher.total_sent
+            total_received += dispatcher.total_received
+            res[name] = {
+                "score": score,
+                "rtt": stat["rtt"],
+                "success_num": dispatcher.success_num,
+                "fail_num": dispatcher.fail_num,
+                "worker_num": dispatcher.worker_num(),
+                "total_traffics": "Up: %s / Down: %s" % (convert(dispatcher.total_sent), convert(dispatcher.total_received))
+            }
+
+        res["global"] = {
+            "handle_num": g.socks5_server.handler.handle_num,
+            "rtt": int(rtt),
+            "roundtrip_num": g.stat["roundtrip_num"],
+            "slow_roundtrip": g.stat["slow_roundtrip"],
+            "timeout_roundtrip": g.stat["timeout_roundtrip"],
+            "resend": g.stat["resend"],
+            "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent), convert(recent_received)),
+            "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
+        }
+        return res
 
     def status(self):
         out_string = "session_id:%s<br>\n" % self.session_id
@@ -192,8 +305,8 @@ class ProxySession():
                 if status == 521:
                     g.last_api_error = "session server is down."
                     xlog.warn("login session server is down, try get new server.")
-                    request_balance(update_server=True)
-                    continue
+                    g.server_host = None
+                    return False
 
                 if status != 200:
                     g.last_api_error = "session server login fail:%r" % status
@@ -208,6 +321,9 @@ class ProxySession():
                 info = decrypt_data(content)
                 magic, protocol_version, pack_type, res, message_len = struct.unpack("<cBBBH", info[:6])
                 message = info[6:]
+                if isinstance(message, memoryview):
+                    message = message.tobytes()
+
                 if magic != "P" or protocol_version != g.protocol_version or pack_type != 1:
                     xlog.error("login_session time:%d head error:%s", 1000 * time_cost, utils.str2hex(info[:6]))
                     return False
@@ -227,16 +343,9 @@ class ProxySession():
         return False
 
     def create_conn(self, sock, host, port):
-
         if not self.running:
             xlog.debug("session not running, try to connect")
-            if not self.start():
-                return None
-
-        elif time.time() - self.last_send_time > 5 * 60 - 5:
-            xlog.info("session timeout, reset it.")
-            if not self.reset():
-                return None
+            return None
 
         self.lock.acquire()
         self.last_conn_id += 1
@@ -354,7 +463,7 @@ class ProxySession():
                 force = True
 
             if self.server_send_buf_size:
-                self.server_send_buf_size -= g.config.max_payload
+                self.server_send_buf_size -= g.config.max_payload /4
                 self.server_send_buf_size = max(0, self.server_send_buf_size)
                 force = True
 
@@ -484,7 +593,8 @@ class ProxySession():
             #           transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
-                                                                  path="/data", data=upload_post_data,
+                                                                  path="/data?tid=%d" % transfer_no,
+                                                                  data=upload_post_data,
                                                                   headers={"Content-Length": str(len(upload_post_data))},
                                                                 timeout=server_timeout + g.config.network_timeout)
 
@@ -510,8 +620,9 @@ class ProxySession():
 
             if status == 521:
                 xlog.warn("X-tunnel server is down, try get new server.")
-                request_balance(update_server=True)
-                self.reset()
+                g.server_host = None
+                self.stop()
+                login_process()
                 return
 
             if status != 200:
@@ -626,16 +737,18 @@ def calculate_quota_left(quota_list):
 
 
 def call_api(path, req_info):
-    try:
-        start_time = time.time()
-        upload_post_data = json.dumps(req_info)
+    if not path.startswith("/"):
+        path = "/" + path
 
+    try:
+        upload_post_data = json.dumps(req_info)
         upload_post_data = encrypt_data(upload_post_data)
 
+        start_time = time.time()
         while time.time() - start_time < 30:
             content, status, response = g.http_client.request(method="POST", host=g.config.api_server, path=path,
                                                      headers={"Content-Type": "application/json"},
-                                                     data=upload_post_data, timeout=10)
+                                                     data=upload_post_data, timeout=5)
             if status >= 400:
                 time.sleep(1)
                 continue
@@ -650,6 +763,8 @@ def call_api(path, req_info):
             return False, reason
 
         content = decrypt_data(content)
+        if isinstance(content, memoryview):
+            content = content.tobytes()
         try:
             info = json.loads(content)
         except Exception as e:
@@ -700,6 +815,9 @@ def request_balance(account=None, password=None, is_register=False, update_serve
 
     try:
         center_login_process = True
+        if g.tls_relay_front:
+            g.tls_relay_front.set_x_tunnel_account(account, password)
+
         res, info = call_api(login_path, req_info)
         if not res:
             return False, info
@@ -712,10 +830,12 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         if g.config.server_host:
             xlog.info("use server:%s specify in config.", g.config.server_host)
             g.server_host = str(g.config.server_host)
-        elif update_server:
+        elif update_server or not g.server_host:
             g.server_host = str(info["host"])
             g.server_port = info["port"]
             xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
+
+        g.selectable = info["selectable"]
 
         g.balance = info["balance"]
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
@@ -730,28 +850,37 @@ def request_balance(account=None, password=None, is_register=False, update_serve
 
 
 login_lock = threading.Lock()
-last_login_center_time = 0
+
+
+def login_process():
+    with login_lock:
+        if not (g.config.login_account and g.config.login_password):
+            xlog.debug("x-tunnel no account")
+            return False
+
+        if not g.server_host:
+            xlog.debug("session not running, try login..")
+            res, reason = request_balance(g.config.login_account, g.config.login_password)
+            if not res:
+                xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
+                return False
+
+        if time.time() - g.session.last_send_time > 5 * 60 - 5:
+            xlog.info("session timeout, reset it.")
+            g.session.stop()
+
+        if not g.session.running:
+            return g.session.start()
+
+    return True
 
 
 def create_conn(sock, host, port):
-    global last_login_center_time
-
-    with login_lock:
-        if not g.session.running:
-            if not (g.config.login_account and g.config.login_password):
-                xlog.debug("x-tunnel no account")
-                return None
-
-            if time.time() - last_login_center_time > 60:
-                g.login_process = True
-                xlog.debug("session not running, try login..")
-                res, reason = request_balance(g.config.login_account, g.config.login_password)
-                g.login_process = False
-                if not res:
-                    xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
-                    return None
-
-                last_login_center_time = time.time()
+    for _ in xrange(0, 3):
+        if login_process():
+            break
+        else:
+            time.sleep(1)
 
     return g.session.create_conn(sock, host, port)
 
@@ -777,18 +906,3 @@ def update_quota_loop():
         time.sleep(60)
 
     xlog.warn("update_quota_loop timeout fail.")
-
-
-def login_process():
-    if g.session.running:
-        update_server = False
-    else:
-        update_server = True
-
-    res, reason = request_balance(
-        g.config.login_account, g.config.login_password,
-        is_register=False, update_server=update_server)
-
-    if res:
-        if g.quota and not g.session.running:
-            g.session.start()

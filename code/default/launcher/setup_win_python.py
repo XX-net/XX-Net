@@ -42,7 +42,6 @@ def is_winxp():
         return False
     return True
 
-
 def check_setup():  # 40ms
     if is_winxp():
         try:
@@ -50,11 +49,9 @@ def check_setup():  # 40ms
         except Exception as e:
             xlog.exception("setup win python except:%s", e)
 
-
 def smart_check():  # 400 ms
     import config
     # config.load()
-
     if current_path != config.get(["update", "last_path"]):
         check_setup()
 

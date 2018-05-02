@@ -27,27 +27,27 @@ exit
 @echo off
 
 
-sc config RpcEptMapper start=auto
+sc config RpcEptMapper start= auto
 sc start RpcEptMapper
 
-sc config DcomLaunch start=auto
+sc config DcomLaunch start= auto
 sc start DcomLaunch
 
-sc config RpcSs start=auto
+sc config RpcSs start= auto
 sc start RpcSs
 
-sc config nsi start=auto
+sc config nsi start= auto
 sc start nsi
-sc config Wingmt start=auto
+sc config Winmgmt start= auto
 sc start Winmgmt
 
-sc config Dhcp start=auto
+sc config Dhcp start= auto
 sc start Dhcp
 
-sc config WinHttpAutoProxySvc start=auto
+sc config WinHttpAutoProxySvc start= auto
 sc start WinHttpAutoProxySvc
 
-sc config iphlpsvc start=auto
+sc config iphlpsvc start= auto
 sc start iphlpsvc
 
 netsh int ipv6 reset
@@ -64,7 +64,7 @@ netsh int ipv6 set prefix 2002::/16 30 1
 netsh int ipv6 set prefix 2001::/32 5 1
 Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0xce /f
+Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
 :: Set Group Policy
 :: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_DefaultQualified 

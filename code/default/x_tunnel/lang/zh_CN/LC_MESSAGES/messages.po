@@ -3,9 +3,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
-"POT-Creation-Date: 2017-11-19 10:29+0800\n"
-"PO-Revision-Date: 2016-02-19 19:30+0800\n"
-"Last-Translator: Haozhe Xie <zjhzxhz@gmail.com>\n"
+"POT-Creation-Date: 2017-12-24 12:00+0800\n"
+"PO-Revision-Date: 2017-12-29 12:00+0800\n"
+"Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -14,14 +14,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
-msgid "Cloudflare front Log"
+msgid "Cloudflare"
 msgstr ""
+
+msgid "Heroku"
+msgstr ""
+
+msgid "TLS-Relay"
+msgstr ""
+
+msgid "Front"
+msgstr "前端"
 
 msgid "Info"
 msgstr "信息"
 
+msgid "Settings"
+msgstr "设置"
+
 msgid "Plans"
-msgstr "套餐"
+msgstr "购买套餐"
 
 msgid "History"
 msgstr "历史"
@@ -39,13 +51,13 @@ msgid "Password"
 msgstr "密码"
 
 msgid "Haven't an account?"
-msgstr "没有账户?"
+msgstr "没有账户？"
 
 msgid "Register"
 msgstr "注册"
 
 msgid "Already have an account?"
-msgstr "已有账户?"
+msgstr "已有账户？"
 
 msgid "Summary"
 msgstr "概况"
@@ -80,6 +92,15 @@ msgstr "到期时间"
 msgid "Left Bandwidth"
 msgstr "剩余流量"
 
+msgid "server"
+msgstr "服务器"
+
+msgid "AUTO"
+msgstr "自动"
+
+msgid "Submit"
+msgstr "提交"
+
 msgid "Plans and Pricing"
 msgstr "套餐和价格"
 
@@ -108,9 +129,7 @@ msgid "Action"
 msgstr "操作"
 
 msgid "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel"
-msgstr ""
-"https://github.com/XX-net/XX-"
-"Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
+msgstr "https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
 
 msgid "You haven't enough credit. Please charge first."
 msgstr "您的余额不足，请先充值。"
@@ -145,44 +164,65 @@ msgstr "流量转账"
 msgid "Bandwidth to transfer"
 msgstr "转账流量"
 
-msgid "Login ......"
-msgstr "正在登录，请稍侯。。。。。。"
+msgid "X-Tunnel Configuration"
+msgstr "X-Tunnel 配置"
 
-msgid "Please wait..."
+msgid "Logining ..."
+msgstr "正在登录..."
+
+msgid "Please wait ..."
 msgstr "请稍侯..."
 
 msgid "Connect to server fail:"
-msgstr "登录到服务器失败："
+msgstr "连接服务器失败："
 
 msgid "Email seems invalid."
 msgstr "电子邮件地址似乎是无效的。"
 
-msgid "Password needs at least 6 charactors."
-msgstr "密码至少需要6个字符组成。"
+msgid "Do NOT use Chinese-service-provider's Email!"
+msgstr "请勿使用国内服务提供商的邮件地址！"
+
+msgid "Password needs at least 6 charactors, and no more than 20."
+msgstr "密码需要6~20个字符。"
+
+msgid "Password seems invalid."
+msgstr "密码似乎是无效的。"
+
+msgid "(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
+msgstr "(可选:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
 
 msgid "Connect to server fail, check Front log first."
-msgstr "连接到服务器失败，请检查前端日志。"
+msgstr "连接服务器失败，请检查前端日志。"
 
 msgid "Incorrect Email or password."
 msgstr "用户名或密码不正确。"
+
+msgid "Login fail:"
+msgstr "登录失败："
+
+msgid "Registered successfully, "
+msgstr "注册成功，"
 
 msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"
 
 msgid "Unknown error occurred."
-msgstr "发生了未知错误。"
+msgstr "发生未知错误。"
+
+msgid "previously selected server nolonger available, automatically try "
+msgstr "先前所选服务器不再可用，尝试 "
 
 msgid "Failed to log out."
 msgstr "注销失败。"
 
-msgid "Please refresh page"
-msgstr "请刷新页面"
+msgid "Please refresh page."
+msgstr "请刷新页面。"
 
 msgid "Transfer username seems not a valid Email address."
 msgstr "转账用户名似乎不是有效的电子邮件地址。"
 
 msgid "Error occurred: "
-msgstr "发生了错误："
+msgstr "发生错误："
 
 msgid "Max Available Bandwidth: "
 msgstr "最大可用流量："
@@ -199,13 +239,13 @@ msgstr "订购失败："
 msgid "Order successfully complete."
 msgstr "订购成功完成。"
 
-msgid "Heroku Front Log"
-msgstr "Heroku 前端日志"
+msgid "Get Fail:"
+msgstr "获取失败："
 
-msgid "X-Tunnel Log"
-msgstr "X-Tunnel 日志"
+msgid "X-Tunnel"
+msgstr ""
 
-msgid "Config"
+msgid "Configuration"
 msgstr "配置"
 
 msgid "Status"
@@ -214,14 +254,11 @@ msgstr "状态"
 msgid "Log"
 msgstr "日志"
 
-msgid "Cloudflare Front Log"
-msgstr "Cloudflare 前端日志"
-
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低，部分功能无法工作。"
 
 msgid "The latest Chrome browser is recommended."
-msgstr "建议使用新版的Chrome浏览器"
+msgstr "建议使用新版的Chrome浏览器。"
 
 msgid "Global"
 msgstr "全局"
@@ -233,64 +270,59 @@ msgid "Value"
 msgstr "值"
 
 msgid "Server listen address"
-msgstr "服务监听地址"
+msgstr "监听地址"
 
 msgid "Handle num"
-msgstr "请求处理数量"
+msgstr "请求数"
 
 msgid "Response time"
 msgstr "响应时间"
 
 msgid "Roundtrip num"
-msgstr ""
+msgstr "往返数"
 
 msgid "Slow roundtrip"
-msgstr ""
+msgstr "较慢"
 
 msgid "Resend"
-msgstr ""
+msgstr "重传"
 
 msgid "Timeout roundtrip"
-msgstr ""
+msgstr "超时"
 
 msgid "Speed"
-msgstr "速度"
+msgstr "当前速度"
 
 msgid "Total use"
-msgstr ""
+msgstr "使用总量"
 
-msgid "GAE front"
-msgstr ""
+msgid "GAE"
+msgstr "GAE"
 
-msgid "Score"
-msgstr ""
+# msgid "Score"
+# msgstr "分数"
 
 msgid "Success num"
-msgstr ""
+msgstr "成功数"
 
 msgid "Fail num"
-msgstr ""
+msgstr "失败数"
 
 msgid "Worker num"
-msgstr ""
-
-msgid "Cloudflare front"
-msgstr ""
-
-msgid "Heroku front"
-msgstr ""
+msgstr "工作数"
 
 msgid "X-Tunnel Status Info"
-msgstr ""
+msgstr "X-Tunnel 状态信息"
 
-msgid ""
-"The status page is empty. Highly likely that X-Tunnel failed getting "
-"started. Please follow "
-msgstr ""
+msgid "The status page is empty. Highly likely that "
+msgstr "状态页显示空白, 很可能 "
 
-msgid "guide "
-msgstr "导航"
+msgid " failed getting started. Please follow "
+msgstr " 启动失败, 请按 "
 
-msgid "to troubleshoot."
-msgstr "到问题解决"
+msgid "guide"
+msgstr "指导"
+
+msgid " to troubleshoot."
+msgstr "去解决。"
 

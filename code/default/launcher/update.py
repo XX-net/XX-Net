@@ -18,12 +18,11 @@ import update_from_github
 import urllib2
 
 try:
-    reduce         # Python 2 
+    reduce         # Python 2
 except NameError:  # Python 3
     from functools import reduce
 
 update_url = "https://xxnet-update.appspot.com/update.json"
-
 
 update_content = ""
 update_dict = {}
@@ -31,8 +30,9 @@ new_gae_proxy_version = ""
 gae_proxy_path = ""
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 data_root = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+
 
 def get_opener():
     autoproxy = '127.0.0.1:8087'
@@ -52,9 +52,9 @@ def get_opener():
     return opener
 
 
-
 def version_to_bin(s):
     return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
+
 
 def download_file(url, file):
     try:
@@ -72,6 +72,7 @@ def download_file(url, file):
         xlog.info("download %s to %s fail", url, file)
         return False
 
+
 def sha1_file(filename):
     import hashlib
 
@@ -87,24 +88,24 @@ def sha1_file(filename):
     except:
         return False
 
+
 def install_module(module, new_version):
     import module_init
     import os, subprocess, sys
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    new_module_version_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, module, new_version))
+    new_module_version_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, module, new_version))
 
-    #check path exist
+    # check path exist
     if not os.path.isdir(new_module_version_path):
         xlog.error("install module %s dir %s not exist", module, new_module_version_path)
         return
 
-    #call setup.py
+    # call setup.py
     setup_script = os.path.join(new_module_version_path, "setup.py")
     if not os.path.isfile(setup_script):
         xlog.warn("update %s fail. setup script %s not exist", module, setup_script)
         return
-
 
     config.set(["modules", module, "current_version"], str(new_version))
     config.save()
@@ -113,7 +114,6 @@ def install_module(module, new_version):
         module_init.stop_all()
         import web_control
         web_control.stop()
-
 
         subprocess.Popen([sys.executable, setup_script], shell=False)
 
@@ -132,12 +132,13 @@ def install_module(module, new_version):
         except Exception as e:
             xlog.error("install module %s %s fail:%s", module, new_version, e)
 
+
 def download_module(module, new_version):
     import os
     global update_content, update_dict
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    download_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'data', 'downloads'))
+    download_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'downloads'))
     if not os.path.isdir(download_path):
         os.mkdir(download_path)
 
@@ -145,8 +146,6 @@ def download_module(module, new_version):
         for source in update_dict["modules"][module]["versions"][new_version]["sources"]:
             url = source["url"]
             filename = module + "-" + new_version + ".zip"
-
-
 
             file_path = os.path.join(download_path, filename)
 
@@ -161,7 +160,7 @@ def download_module(module, new_version):
                 xlog.warn("download %s sha1 wrong", url)
                 continue
 
-            module_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, module))
+            module_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, module))
             if not os.path.isdir(module_path):
                 os.path.mkdir(module_path, "755")
 
@@ -179,13 +178,13 @@ def download_module(module, new_version):
             tag_path = os.path.abspath(os.path.join(module_path, new_version))
             shutil.move(unzip_path, tag_path)
 
-            msg = "Module %s new version %s downloaded, Install?" % (module,  new_version)
+            msg = "Module %s new version %s downloaded, Install?" % (module, new_version)
             if sys.platform == "linux" or sys.platform == "linux2":
                 from gtk_tray import sys_tray
                 data_install = "%s|%s|install" % (module, new_version)
                 data_ignore = "%s|%s|ignore" % (module, new_version)
-                buttons = {1: {"data":data_install, "label":"Install", 'callback':general_gtk_callback},
-                           2: {"data":data_ignore, "label":"Ignore", 'callback':general_gtk_callback}}
+                buttons = {1: {"data": data_install, "label": "Install", 'callback': general_gtk_callback},
+                           2: {"data": data_ignore, "label": "Ignore", 'callback': general_gtk_callback}}
                 sys_tray.notify_general(msg=msg, title="Install", buttons=buttons)
             elif sys.platform == "win32":
                 from win_tray import sys_tray
@@ -208,9 +207,11 @@ def download_module(module, new_version):
     except Exception as e:
         xlog.warn("get gae_proxy source fail, content:%s err:%s", update_content, e)
 
+
 def ignore_module(module, new_version):
     config.set(["modules", module, "ignore_version"], str(new_version))
     config.save()
+
 
 def general_gtk_callback(widget=None, data=None):
     args = data.split('|')
@@ -270,14 +271,15 @@ def check_update():
         if update_from_github.update_info == "init":
             update_from_github.update_info = ""
 
+
 def check_push_update():
     global update_content, update_dict
     try:
         opener = get_opener()
 
         req_url = update_url + "?uuid=" + get_uuid() \
-            + "&version=" + update_from_github.current_version() \
-            + "&platform=" + platform.platform()
+                  + "&version=" + update_from_github.current_version() \
+                  + "&platform=" + platform.platform()
         try:
             update_content = opener.open(req_url).read()
         except Exception as e:
@@ -312,25 +314,24 @@ def check_push_update():
             if version_to_bin(new_version) > version_to_bin(current_version):
                 xlog.info("new %s version:%s", module, new_version)
 
-
                 if sys.platform == "linux" or sys.platform == "linux2":
                     from gtk_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?\nNew:%s" % (module,  new_version, describe)
+                    msg = "Module %s new version: %s, Download?\nNew:%s" % (module, new_version, describe)
                     data_download = "%s|%s|download" % (module, new_version)
                     data_ignore = "%s|%s|ignore" % (module, new_version)
-                    buttons = {1: {"data":data_download, "label":"Download", 'callback':general_gtk_callback},
-                               2: {"data":data_ignore, "label":"Ignore", 'callback':general_gtk_callback}}
+                    buttons = {1: {"data": data_download, "label": "Download", 'callback': general_gtk_callback},
+                               2: {"data": data_ignore, "label": "Ignore", 'callback': general_gtk_callback}}
                     sys_tray.notify_general(msg=msg, title="New Version", buttons=buttons)
                 elif sys.platform == "win32":
                     from win_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?" % (module,  new_version)
+                    msg = "Module %s new version: %s, Download?" % (module, new_version)
                     if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
                         download_module(module, new_version)
                     else:
                         ignore_module(module, new_version)
                 elif sys.platform == "darwin":
                     from mac_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?" % (module,  new_version)
+                    msg = "Module %s new version: %s, Download?" % (module, new_version)
                     if sys_tray.presentAlert_withTitle_(msg, "Download"):
                         download_module(module, new_version)
                     else:
@@ -343,6 +344,7 @@ def check_push_update():
         xlog.exception("check_update except:%s", e)
         return
 
+
 def create_desktop_shortcut():
     import sys
     import subprocess
@@ -351,9 +353,9 @@ def create_desktop_shortcut():
     os.chdir(work_path)
 
     if sys.platform.startswith("linux"):
-        if os.getenv("DESKTOP_SESSION","unknown") != "unknown" :  # make sure this is desktop linux
+        if os.getenv("DESKTOP_SESSION", "unknown") != "unknown":  # make sure this is desktop linux
             xxnet_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
-            cmd='env XXNETPATH="' + xxnet_path + '" "' + work_path + '/create_shortcut_linux.sh"'
+            cmd = 'env XXNETPATH="' + xxnet_path + '" "' + work_path + '/create_shortcut_linux.sh"'
             os.system(cmd)
 
     elif sys.platform == "win32":
@@ -367,9 +369,11 @@ def create_desktop_shortcut():
 
         subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
 
+
 def notify_install_tcpz_for_winXp():
     import ctypes
     ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
+
 
 def check_new_machine():
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -385,28 +389,30 @@ def check_new_machine():
             create_desktop_shortcut()
 
 
-
 def check_loop():
     check_new_machine()
 
-    #wait gae_proxy to start
-    #update need gae_proxy as proxy
+    # wait gae_proxy to start
+    # update need gae_proxy as proxy
     time.sleep(1)
 
     while True:
         check_update()
         time.sleep(3600 * 24)
 
+
 def start():
     p = threading.Thread(target=check_loop)
     p.setDaemon(True)
     p.start()
+
 
 def need_new_uuid():
     if not config.get(["update", "uuid"]):
         xlog.info("need_new_uuid: uuid is empty")
         return True
     return False
+
 
 def generate_new_uuid():
     xx_net_uuid = str(uuid.uuid4())
@@ -422,6 +428,7 @@ def get_uuid():
     xx_net_uuid = config.get(["update", "uuid"])
     xlog.info("get uuid:%s", xx_net_uuid)
     return xx_net_uuid
+
 
 if __name__ == "__main__":
     #get_uuid()

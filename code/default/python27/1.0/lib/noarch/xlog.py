@@ -9,6 +9,8 @@ import json
 import shutil
 import types
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 CRITICAL = 50
 FATAL = CRITICAL
@@ -96,7 +98,7 @@ class Logger():
         else:
             self.file_size = 0
 
-        self.log_fd = open(file_name, "w")
+        self.log_fd = open(file_name, "a+")
 
     def roll_log(self):
         for i in range(self.roll_num, 1, -1):
@@ -227,6 +229,21 @@ class Logger():
             print("line can't decode:%s" % line)
             print("Except stack:%s" % traceback.format_exc())
             return ""
+
+
+class null():
+    @staticmethod
+    def debug(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def info(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def warn(fmt, *args, **kwargs):
+        pass
+    @staticmethod
+    def exception(fmt, *args, **kwargs):
+        pass
 
 
 loggerDict = {}

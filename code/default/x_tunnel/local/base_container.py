@@ -1,7 +1,7 @@
 import threading
 import time
 import socket
-import struct
+import xstruct as struct
 import select
 
 import utils
@@ -67,7 +67,7 @@ class ReadBuffer(object):
             raise Exception("ReadBuffer buf_len:%d, start:%d len:%d" % (buf_len, begin, size))
 
         self.size = size
-        self.buf = buf
+        self.buf = memoryview(buf)
         self.begin = begin
 
     def __len__(self):
@@ -422,7 +422,7 @@ class Conn(object):
             if ':' in host:
                 # IPV6
                 ip = host
-            elif utils.check_ip_valid(host):
+            elif utils.check_ip_valid4(host):
                 # IPV4
                 ip = host
             else:
@@ -503,7 +503,10 @@ class Conn(object):
                     self.recv_notice.release()
 
             elif cmd_id == 2:  # Closed
-                self.xlog.info("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
+                dat = data.get()
+                if isinstance(dat, memoryview):
+                    dat = dat.tobytes()
+                self.xlog.debug("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, dat)
                 if self.is_client:
                     self.transfer_peer_close("finish")
                 self.stop("peer close")

@@ -9,7 +9,6 @@ import webbrowser
 from xlog import getLogger
 xlog = getLogger("launcher")
 
-import pygtk
 import config
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -17,25 +16,71 @@ if __name__ == "__main__":
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
-pygtk.require('2.0')
-import gtk
-gtk.gdk.threads_init()
+#Only enable AppIndicator in the DEs that are Unity and QT-based
+enable_appind = False
+if 'XDG_CURRENT_DESKTOP' in os.environ:
+    cur_desktops = os.environ['XDG_CURRENT_DESKTOP'].split(':')
+    if {'Unity', 'KDE', 'LXQt', 'ENLIGHTENMENT'}.intersection(cur_desktops):
+        enable_appind = True
 
 try:
-    import pynotify
-    pynotify.init('XX-Net Notify')
+    import pygtk
+    pygtk.require('2.0')
+    import gtk
+    import gtk.gdk as gdk
+    use_gi = False
+    xlog.info('Using PyGTK as the GUI Backend.')
 except:
-    xlog.warn("import pynotify fail, please install python-notify if possiable.")
-    pynotify = None
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('Gdk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import Gdk as gdk
+    use_gi = True
+    xlog.info('Using PyGObject as the GUI Backend.')
+
+gdk.threads_init()
 
 import module_init
 
-try:
-    import platform
-    import appindicator
-except:
-    platform = None
-    appindicator = None
+if use_gi:
+    try:
+        gi.require_version('Notify', '0.7')
+        from gi.repository import Notify as notify
+        notify.init('XX-Net Notify')
+        new_notification = notify.Notification.new
+    except:
+        xlog.warn("import Notify fail, please install libnotify if possible.")
+        notify = None
+
+    try:
+        assert(enable_appind)
+        gi.require_version('AppIndicator3', '0.1')
+        from gi.repository import AppIndicator3 as appindicator
+        new_appindicator = appindicator.Indicator.new
+        appind_category = appindicator.IndicatorCategory.APPLICATION_STATUS
+        appind_status = appindicator.IndicatorStatus.ACTIVE
+    except:
+        appindicator = None
+        popup_trayicon_menu = lambda m, s, b, t: m.popup(None, None, gtk.StatusIcon.position_menu, s, b, t)
+else:
+    try:
+        import pynotify as notify
+        notify.init('XX-Net Notify')
+        new_notification = notify.Notification
+    except:
+        xlog.warn("import pynotify fail, please install python-notify if possible.")
+        notify = None
+
+    try:
+        assert(enable_appind)
+        import appindicator
+        new_appindicator = appindicator.Indicator
+        appind_category = appindicator.CATEGORY_APPLICATION_STATUS
+        appind_status = appindicator.STATUS_ACTIVE
+    except:
+        appindicator = None
+        popup_trayicon_menu = lambda m, s, b, t: m.popup(None, None, gtk.status_icon_position_menu, b, t, s)
 
 
 class Gtk_tray():
@@ -43,17 +88,23 @@ class Gtk_tray():
     def __init__(self):
         logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
 
-        if platform and appindicator and platform.dist()[0].lower() == 'ubuntu':
-            self.trayicon = self.ubuntu_trayicon(logo_filename)
+        if appindicator:
+            self.trayicon = self.appind_trayicon(logo_filename)
+            xlog.info('AppIndicator found and used.')
         else:
             self.trayicon = self.gtk_trayicon(logo_filename)
+            xlog.info('Gtk.StatusIcon used.')
 
-    def ubuntu_trayicon(self, logo_filename):
-        trayicon = appindicator.Indicator('XX-Net', 'indicator-messages', appindicator.CATEGORY_APPLICATION_STATUS)
-        trayicon.set_status(appindicator.STATUS_ACTIVE)
+    def appind_trayicon(self, logo_filename):
+        trayicon = new_appindicator('XX-Net', 'indicator-messages', appind_category)
+        trayicon.set_status(appind_status)
         trayicon.set_attention_icon('indicator-messages-new')
         trayicon.set_icon(logo_filename)
         trayicon.set_menu(self.make_menu())
+        try:  #this method does not exist when using pygtk and python2-appindicator
+            trayicon.set_title('XX-Net')
+        except:
+            pass
 
         return trayicon
 
@@ -61,9 +112,10 @@ class Gtk_tray():
         trayicon = gtk.StatusIcon()
         trayicon.set_from_file(logo_filename)
 
-        trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
+        trayicon.connect('popup-menu', lambda i, b, t: popup_trayicon_menu(self.make_menu(), trayicon, b, t))
         trayicon.connect('activate', self.show_control_web)
-        trayicon.set_tooltip('XX-Net')
+        trayicon.set_tooltip_text('XX-Net')
+        trayicon.set_title('XX-Net')
         trayicon.set_visible(True)
 
         return trayicon
@@ -71,7 +123,7 @@ class Gtk_tray():
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
-                    ('restart gae_proxy', self.on_restart_gae_proxy),
+                    (u'Reset Each Module', self.on_restart_each_module),
                     (u'Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
@@ -86,10 +138,10 @@ class Gtk_tray():
 
 
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
-        if not pynotify:
+        if not notify:
             return False
 
-        n = pynotify.Notification('Test', msg)
+        n = new_notification('Test', msg)
         for k in buttons:
             data = buttons[k]["data"]
             label = buttons[k]["label"]
@@ -104,9 +156,9 @@ class Gtk_tray():
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
-    def on_restart_gae_proxy(self, widget=None, data=None):
-        module_init.stop("gae_proxy")
-        module_init.start("gae_proxy")
+    def on_restart_each_module(self, widget=None, data=None):
+        module_init.stop_all()
+        module_init.start_all_auto()
 
     def on_quit(self, widget, data=None):
         module_init.stop_all()
@@ -114,9 +166,9 @@ class Gtk_tray():
         gtk.main_quit()
 
     def serve_forever(self):
-        gtk.gdk.threads_enter()
+        gdk.threads_enter()
         gtk.main()
-        gtk.gdk.threads_leave()
+        gdk.threads_leave()
 
 sys_tray = Gtk_tray()
 

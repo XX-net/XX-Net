@@ -54,39 +54,45 @@ response:
   }
 """
 
-
 import errno
 import time
-import struct
+import xstruct as struct
 import re
-import io
 import string
 import ssl
-import cgi
-import Queue
 import urlparse
-import collections
 import threading
 import zlib
+import traceback
 
-
+from front import front
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from appids_manager import appid_manager
-
-
-from config import config
-from google_ip import google_ip
-from http_dispatcher import http_dispatch
-from http_common import *
 
 
 def inflate(data):
+    if isinstance(data, memoryview):
+        data = data.tobytes()
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
 
 def deflate(data):
     return zlib.compress(data)[2:-4]
+
+
+class GAE_Exception(Exception):
+    def __init__(self, error_code, message):
+        xlog.debug("GAE_Exception %r %r", error_code, message)
+        self.error_code = error_code
+        self.message = "%r:%s" % (error_code, message)
+
+    def __str__(self):
+        # for %s
+        return repr(self.message)
+
+    def __repr__(self):
+        # for %r
+        return repr(self.message)
 
 
 def generate_message_html(title, banner, detail=''):
@@ -140,8 +146,8 @@ skip_headers = frozenset(['Vary',
                           'Proxy-Connection',
                           'Upgrade',
                           'X-Chrome-Variations',
-                          'Connection',
-                          'Cache-Control'
+                          #'Connection',
+                          #'Cache-Control'
                           ])
 
 
@@ -170,12 +176,15 @@ def send_response(wfile, status=404, headers={}, body=''):
     if 'Connection' not in headers:
         headers['Connection'] = 'close'
 
-    wfile.write("HTTP/1.1 %d\r\n" % status)
-    for key, value in headers.items():
-        #wfile.write("%s: %s\r\n" % (key, value))
-        send_header(wfile, key, value)
-    wfile.write("\r\n")
-    wfile.write(body)
+    try:
+        wfile.write("HTTP/1.1 %d\r\n" % status)
+        for key, value in headers.items():
+            #wfile.write("%s: %s\r\n" % (key, value))
+            send_header(wfile, key, value)
+        wfile.write("\r\n")
+        wfile.write(body)
+    except:
+        xlog.warn("send response fail")
 
 
 def return_fail_message(wfile):
@@ -185,62 +194,7 @@ def return_fail_message(wfile):
     return
 
 
-def request_gae_server(headers, body, url, timeout):
-    # process on http protocol
-    # process status code return by http server
-    # raise error, let up layer retry.
-
-    response = http_dispatch.request(headers, body, url, timeout)
-    if not response:
-        raise GAE_Exception(600, "fetch gae fail")
-
-    if response.status >= 600:
-        raise GAE_Exception(
-            response.status, "fetch gae fail:%d" % response.status)
-
-    server_type = response.getheader("server", "")
-    # content_type = response.getheaders("content-type", "")
-    if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
-            response.status == 403 or response.status == 405:
-
-        # some ip can connect, and server type can be gws
-        # but can't use as GAE server
-        # so we need remove it immediately
-
-        xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
-                  response.status)
-        google_ip.recheck_ip(response.ssl_sock.ip)
-        response.worker.close("ip not support GAE")
-        raise GAE_Exception(602, "ip not support GAE")
-
-    if response.status == 404:
-        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-        appid_manager.report_not_exist(
-            response.ssl_sock.appid, response.ssl_sock.ip)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
-        response.worker.close("appid not exist:%s" % response.ssl_sock.appid)
-        raise GAE_Exception(603, "appid not support GAE")
-
-    if response.status == 503:
-        appid = response.ssl_sock.appid
-        xlog.warning('APPID %r out of Quota, remove it. %s',
-                     appid, response.ssl_sock.ip)
-        appid_manager.report_out_of_quota(appid)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
-        response.worker.close("appid out of quota:%s" % appid)
-        raise GAE_Exception(604, "appid out of quota:%s" % appid)
-
-    if response.status > 300:
-        raise GAE_Exception(605, "status:%d" % response.status)
-
-    if response.status != 200:
-        xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip,
-                  response.ssl_sock.appid, response.status)
-
-    return response
-
-
-def pack_request(method, url, headers, body):
+def pack_request(method, url, headers, body, timeout):
     headers = dict(headers)
     if isinstance(body, basestring) and body:
         if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
@@ -259,13 +213,16 @@ def pack_request(method, url, headers, body):
 
     kwargs = {}
     # gae 用的参数
-    if config.GAE_PASSWORD:
-        kwargs['password'] = config.GAE_PASSWORD
+    if front.config.GAE_PASSWORD:
+        kwargs['password'] = front.config.GAE_PASSWORD
 
     # kwargs['options'] =
-    kwargs['validate'] = config.GAE_VALIDATE
-    kwargs['maxsize'] = config.AUTORANGE_MAXSIZE
-    kwargs['timeout'] = '19'
+    kwargs['validate'] = front.config.GAE_VALIDATE
+    if url.endswith(".js"):
+        kwargs['maxsize'] = front.config.JS_MAXSIZE
+    else:
+        kwargs['maxsize'] = front.config.AUTORANGE_MAXSIZE
+    kwargs['timeout'] = str(timeout)
     # gae 用的参数　ｅｎｄ
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
@@ -292,6 +249,9 @@ def unpack_response(response):
         if not data:
             raise GAE_Exception(600, "get protocol head fail")
 
+        if len(data) !=2:
+            raise GAE_Exception(600, "get protocol head fail, data:%s, len:%d" % (data, len(data)))
+
         headers_length, = struct.unpack('!h', data)
         data = response.task.read(size=headers_length)
         if not data:
@@ -317,41 +277,146 @@ def unpack_response(response):
         return response
     except Exception as e:
         response.worker.close("unpack protocol error")
-        google_ip.recheck_ip(response.ssl_sock.ip)
-        raise GAE_Exception(600, "unpack protocol:%r" % e)
+        front.ip_manager.recheck_ip(response.ssl_sock.ip)
+        raise GAE_Exception(600, "unpack protocol:%r at:%s" % (e, traceback.format_exc()))
 
 
-def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
+def request_gae_server(headers, body, url, timeout):
+    # process on http protocol
+    # process status code return by http server
+    # raise error, let up layer retry.
+
+    response = front.request("POST", None, "/_gh/", headers, body, timeout)
+    if not response:
+        raise GAE_Exception(600, "fetch gae fail")
+
+    if response.status >= 600:
+        raise GAE_Exception(
+            response.status, "fetch gae fail:%d" % response.status)
+
+    server_type = response.getheader("server", "")
+    # content_type = response.getheaders("content-type", "")
+    if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
+            response.status == 403 or response.status == 405:
+
+        # some ip can connect, and server type can be gws
+        # but can't use as GAE server
+        # so we need remove it immediately
+
+        xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
+                  response.status)
+        front.ip_manager.recheck_ip(response.ssl_sock.ip)
+        response.worker.close("ip not support GAE")
+        raise GAE_Exception(602, "ip not support GAE")
+
+    appid = response.ssl_sock.host.split(".")[0]
+
+    if response.status == 404:
+        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+        front.appid_manager.report_not_exist(
+            appid, response.ssl_sock.ip)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
+        response.worker.close("appid not exist:%s" % appid)
+        raise GAE_Exception(603, "appid not exist %s" % appid)
+
+    if response.status == 503:
+        xlog.warning('APPID %r out of Quota, remove it. %s',
+                     appid, response.ssl_sock.ip)
+        front.appid_manager.report_out_of_quota(appid)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
+        response.worker.close("appid out of quota:%s" % appid)
+        raise GAE_Exception(604, "appid out of quota:%s" % appid)
+
+    if response.status > 300:
+        raise GAE_Exception(605, "status:%d" % response.status)
+
+    if response.status != 200:
+        xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip,
+                  appid, response.status)
+
+    return response
+
+
+def request_gae_proxy(method, url, headers, body, timeout=None):
+    headers = dict(headers)
     # make retry and time out
     time_request = time.time()
-    request_headers, request_body = pack_request(method, url, headers, body)
+
+    # GAE urlfetch will not decode br if Accept-Encoding include gzip
+    accept_encoding = headers.get("Accept-Encoding", "")
+    if "br" in accept_encoding:
+        accept_br_encoding = True
+        # xlog.debug("accept_br_encoding for %s", url)
+    else:
+        accept_br_encoding = False
+
+    host = headers.get("Host", "")
+    if not host:
+        parsed_url = urlparse.urlparse(url)
+        host = parsed_url.hostname
+
+    accept_codes = accept_encoding.replace(" ", "").split(",")
+    try:
+        accept_codes.remove("")
+    except:
+        pass
+
+    if not accept_br_encoding:
+        if "gzip" in accept_encoding:
+            if host in front.config.br_sites or host.endswith(front.config.br_endswith):
+                accept_codes.remove("gzip")
+
+    if "br" not in accept_codes:
+        accept_codes.append("br")
+
+    accept_code_str = ",".join(accept_codes)
+    if accept_code_str:
+        headers["Accept-Encoding"] = accept_code_str
+    else:
+        del headers["Accept-Encoding"]
+
     error_msg = []
 
-    while True:
-        if time.time() - time_request > timeout:
-            raise GAE_Exception(600, b"".join(error_msg))
+    if not timeout:
+        timeouts = [5, 20, 30]
+    else:
+        timeouts = [timeout]
 
-        if not retry and error_msg:
-            raise GAE_Exception(600, b"".join(error_msg))
-
+    for timeout in timeouts:
+        request_headers, request_body = pack_request(method, url, headers, body, timeout)
         try:
             response = request_gae_server(request_headers, request_body, url, timeout)
 
             response = unpack_response(response)
 
+            # xlog.debug("accept:%s content-encoding:%s url:%s", accept_encoding,
+            #           response.headers.get("Content-Encoding", ""), url)
+            if not accept_br_encoding:
+                # if gzip in Accept-Encoding, br will not decode in urlfetch
+                # else, urlfetch in GAE will auto decode br, but return br in Content-Encoding
+                if response.headers.get("Content-Encoding", "") == "br":
+                    # GAE urlfetch always return br in content-encoding even have decoded it.
+                    del response.headers["Content-Encoding"]
+                    # xlog.debug("remove br from Content-Encoding, %s", url)
+                    if host not in front.config.br_sites:
+                        front.config.BR_SITES.append(host)
+                        front.config.save()
+                        front.config.load()
+                        xlog.warn("Add %s to br_sites", host)
+
             if response.app_msg:
                 xlog.warn("server app return fail, status:%d",
                           response.app_status)
                 # if len(response.app_msg) < 2048:
-                #xlog.warn('app_msg:%s', cgi.escape(response.app_msg))
+                # xlog.warn('app_msg:%s', cgi.escape(response.app_msg))
 
                 if response.app_status == 510:
                     # reach 80% of traffic today
                     # disable for get big file.
-
-                    appid_manager.report_out_of_quota(response.ssl_sock.appid)
+                    appid = response.ssl_sock.host.split(".")[0]
+                    front.appid_manager.report_out_of_quota(appid)
                     response.worker.close(
-                        "appid out of quota:%s" % response.ssl_sock.appid)
+                        "appid out of quota:%s" % appid)
                     continue
 
             return response
@@ -359,14 +424,18 @@ def request_gae_proxy(method, url, headers, body, timeout=60, retry=True):
             err_msg = "gae_exception:%r %s" % (e, url)
             error_msg.append(err_msg)
             xlog.warn("gae_exception:%r %s", e, url)
+            if e.message == '605:status:500':
+                raise e
         except Exception as e:
             err_msg = 'gae_handler.handler %r %s , retry...' % (e, url)
             error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
 
+    raise GAE_Exception(600, b"".join(error_msg))
+
 
 def handler(method, url, headers, body, wfile):
-    if not url.startswith("http"):
+    if not url.startswith("http") and not url.startswith("HTTP"):
         xlog.error("gae:%s", url)
         return
 
@@ -398,15 +467,15 @@ def handler(method, url, headers, body, wfile):
             # don't known how many bytes to get, but get from begin position
             req_range_begin = int(req_range_begin)
             headers["Range"] = "bytes=%d-%d" % (
-                req_range_begin, req_range_begin + config.AUTORANGE_MAXSIZE - 1)
+                req_range_begin, req_range_begin + front.config.AUTORANGE_MAXSIZE - 1)
             xlog.debug("change Range %s => %s %s",
                        req_range, headers["Range"], url)
         elif req_range_begin and req_range_end:
             req_range_begin = int(req_range_begin)
             req_range_end = int(req_range_end)
-            if req_range_end - req_range_begin + 1 > config.AUTORANGE_MAXSIZE:
+            if req_range_end - req_range_begin + 1 > front.config.AUTORANGE_MAXSIZE:
                 headers["Range"] = "bytes=%d-%d" % (
-                    req_range_begin, req_range_begin + config.AUTORANGE_MAXSIZE - 1)
+                    req_range_begin, req_range_begin + front.config.AUTORANGE_MAXSIZE - 1)
                 # remove wait time for GAE server to get knowledge that content
                 # size exceed the max size per fetch
                 xlog.debug("change Range %s => %s %s",
@@ -452,6 +521,9 @@ def handler(method, url, headers, body, wfile):
             continue
         response_headers[key] = value
 
+    response_headers["Persist"] = ""
+    response_headers["Connection"] = "Persist"
+
     if 'X-Head-Content-Length' in response_headers:
         if method == "HEAD":
             response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
@@ -465,6 +537,7 @@ def handler(method, url, headers, body, wfile):
             send_header(wfile, key, value)
             #xlog.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")
+        wfile.flush()
         # 写入除body外内容
     except Exception as e:
         xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
@@ -473,7 +546,7 @@ def handler(method, url, headers, body, wfile):
     content_length = int(response.headers.get('Content-Length', 0))
     content_range = response.headers.get('Content-Range', '')
     # content_range 分片时合并用到
-    if content_range:
+    if content_range and 'bytes */' not in content_range:
         start, end, length = tuple(int(x) for x in re.search(
             r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
     else:
@@ -500,14 +573,15 @@ def handler(method, url, headers, body, wfile):
         body_sended += len(data)
         try:
             # https 包装
-            ret = wfile.write(data)
+            ret = wfile._sock.sendall(data)
             if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
-                xlog.debug("send to browser wfile.write ret:%d", ret)
-                ret = wfile.write(data)
+                #xlog.debug("send to browser wfile.write ret:%d", ret)
+                #ret = wfile.write(data)
+                wfile._sock.sendall(data)
         except Exception as e_b:
             if e_b[0] in (errno.ECONNABORTED, errno.EPIPE,
                           errno.ECONNRESET) or 'bad write retry' in repr(e_b):
-                xlog.info('gae_handler send to browser return %r %r', e_b, url)
+                xlog.info('gae_handler send to browser return %r %r, len:%d, sended:%d', e_b, url, body_length, body_sended)
             else:
                 xlog.info('gae_handler send to browser return %r %r', e_b, url)
             return
@@ -518,8 +592,8 @@ def handler(method, url, headers, body, wfile):
 
 
 class RangeFetch2(object):
-    max_buffer_size = int(config.AUTORANGE_MAXSIZE *
-                          config.AUTORANGE_THREADS * 1.3)
+    max_buffer_size = int(front.config.AUTORANGE_MAXSIZE *
+                          front.config.AUTORANGE_THREADS * 1.3)
     # max buffer size before browser receive: 20M
 
     def __init__(self, method, url, headers, body, response, wfile):
@@ -590,6 +664,9 @@ class RangeFetch2(object):
                 self.req_end - res_begin + 1)
             state_code = 206
 
+        response_headers["Persist"] = ""
+        response_headers["Connection"] = "Persist"
+
         xlog.info('RangeFetch %d-%d started(%r) ',
                   res_begin, self.req_end, self.url)
 
@@ -606,6 +683,7 @@ class RangeFetch2(object):
                 #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
             self.wfile.write("\r\n")
+            self.wfile.flush()
         except Exception as e:
             self.keep_running = False
             xlog.info("RangeFetch send response fail:%r %s", e, self.url)
@@ -613,8 +691,8 @@ class RangeFetch2(object):
 
         data_left_to_fetch = self.req_end - self.req_begin + 1
         fetch_times = int(
-            (data_left_to_fetch + config.AUTORANGE_MAXSIZE - 1) / config.AUTORANGE_MAXSIZE)
-        thread_num = min(config.AUTORANGE_THREADS, fetch_times)
+            (data_left_to_fetch + front.config.AUTORANGE_MAXSIZE - 1) / front.config.AUTORANGE_MAXSIZE)
+        thread_num = min(front.config.AUTORANGE_THREADS, fetch_times)
         for i in xrange(0, thread_num):
             threading.Thread(target=self.fetch_worker).start()
 
@@ -636,11 +714,11 @@ class RangeFetch2(object):
                     self.data_size -= len(data)
 
             try:
-                ret = self.wfile.write(data)
+                ret = self.wfile._sock.sendall(data)
                 if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
                     xlog.debug(
                         "send to browser wfile.write ret:%d, retry", ret)
-                    ret = self.wfile.write(data)
+                    ret = self.wfile._sock.sendall(data)
                     xlog.debug("send to browser wfile.write ret:%d", ret)
                 del data
             except Exception as e:
@@ -666,7 +744,7 @@ class RangeFetch2(object):
                     break
 
                 begin = self.req_begin
-                end = min(begin + config.AUTORANGE_MAXSIZE - 1, self.req_end)
+                end = min(begin + front.config.AUTORANGE_MAXSIZE - 1, self.req_end)
                 self.req_begin = end + 1
 
             self.fetch(begin, end, None)
@@ -710,7 +788,7 @@ class RangeFetch2(object):
 
             if response.status >= 300:
                 #xlog.error('RangeFetch %r return %s :%s', self.url, response.status, cgi.escape(response.body))
-                response.worker.close("range status:%s", response.status)
+                response.worker.close("range status:%s" % response.status)
                 continue
 
             content_range = response.headers.get('Content-Range', "")
@@ -736,8 +814,8 @@ class RangeFetch2(object):
 
                 data = response.task.read()
                 if not data:
-                    xlog.warn("RangeFetch [%s] get body fail %s",
-                              response.ssl_sock.ip, self.url)
+                    xlog.warn("RangeFetch [%s] get body fail, begin:%d %s",
+                              response.ssl_sock.ip, begin, self.url)
                     break
 
                 data_len = len(data)
