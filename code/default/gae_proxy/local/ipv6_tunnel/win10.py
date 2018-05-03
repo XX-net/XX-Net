@@ -46,15 +46,15 @@ enable_cmds = """
 @set log_file="%s"
 
 @echo Config servers...
-@call:[config servers]>"%%%log_file%%%"
+@call:[config servers]>"%%log_file%%"
 
 @echo Reset IPv6...
-@call:[reset ipv6]>"%%%log_file%%%"
+@call:[reset ipv6]>"%%log_file%%"
 
 @echo Set IPv6 Tunnel...
-@call:[set ipv6]>"%%%log_file%%%"
+@call:[set ipv6]>"%%log_file%%"
 
-@call:[print state]>"%%%log_file%%%"
+@call:[print state]>"%%log_file%%"
 
 @echo Over
 @echo Reboot system at first time!
