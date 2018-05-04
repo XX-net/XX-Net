@@ -704,24 +704,27 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         log_path = os.path.join(data_path, "ipv6_tunnel.log")
         time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
 
-        if reqs['cmd'] in [['enable'], ['disable']]:
+        client_ip = self.client_address[0]
+        is_local = client_ip.endswith("127.0.0.1") or client_ip == "::1"
+
+        if reqs['cmd'] in [['enable'], ['disable'], ['set_best_server']]:
             cmd = reqs['cmd'][0]
             xlog.info("ipv6_tunnel switch %s", cmd)
 
-            if os.path.isfile(log_path):
-                try:
-                    os.remove(log_path)
-                except Exception as e:
-                    xlog.warn("remove %s fail:%r", log_path, e)
+            # Don't remove log file at here.
 
             if cmd == "enable":
-                ipv6_tunnel.enable()
+                result = ipv6_tunnel.enable(is_local)
             elif cmd == "disable":
-                ipv6_tunnel.disable()
+                result = ipv6_tunnel.disable(is_local)
+            elif cmd == "set_best_server":
+                result = ipv6_tunnel.set_best_server(is_local)
             else:
                 xlog.warn("unknown cmd:%s", cmd)
 
-            data = '{"res":"success", "time":"%s"}' % time_now
+            xlog.info("ipv6_tunnel switch %s, result: %s", cmd, result)
+
+            data = json.dumps({'res': result, 'time': time_now})
 
         elif reqs['cmd'] == ['get_log']:
             if os.path.isfile(log_path):

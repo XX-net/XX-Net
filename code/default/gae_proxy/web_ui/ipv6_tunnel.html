@@ -15,7 +15,9 @@
     </table>
     <div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel" type="submit">{{ _( "Enable" ) }}</button>
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_enable" type="submit">{{ _( "Enable" ) }}</button>
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_disable" type="submit">{{ _( "Disable" ) }}</button>
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_change_server" type="submit">{{ _( "Change Server" ) }}</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
@@ -33,6 +35,7 @@
             $(selector).html(content);
         }
     }
+    /*
     function SwitchButtonEnable() {
         if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")) {
             $('#switch_ipv6_tunnel').removeClass('btn-inverse');
@@ -46,21 +49,39 @@
             $('#switch_ipv6_tunnel').addClass('btn-primary');
         }
         $('#switch_ipv6_tunnel').html('{{ _( "Disable" ) }}');
-    }
+    }*/
 </script>
 <script type="text/javascript">
+    var scriptIsRunning = false;
+
     $('button.btn').click(function () {
         var cmd = "stop";
-        if ($('#switch_ipv6_tunnel').html() == '{{ _( "Enable" ) }}') {
+        if ($(this).html() == '{{ _( "Enable" ) }}') {
+            if ($('td#ipv6-tunnel').html() == '{{ _("enable")}}' &&
+                !confirm('{{ _("IPv6 Tunnel")}}{{ _( "enable" ) }}{{ _( ", are you sure to continue?" ) }}')) {
+                return;
+            }
             cmd = "enable";
-        } else if ($('#switch_ipv6_tunnel').html() == '{{ _( "Disable" ) }}') {
+        } else if ($(this).html() == '{{ _( "Disable" ) }}') {
+            if ($('td#ipv6-tunnel').html() == '{{ _("disabled")}}' &&
+                !confirm('{{ _("IPv6 Tunnel")}}{{ _( "disabled" ) }}{{ _( ", are you sure to continue?" ) }}')) {
+                return;
+            }
             cmd = "disable";
+        } else if ($(this).html() == '{{ _( "Change Server" ) }}') {
+            cmd = "set_best_server";
         } else {
             return;
         }
 
+        if (scriptIsRunning == true) {
+            tip('{{ _("Script is running, please retry later.") }}', 'warning');
+            return;
+        }
+        
         window.timer.play();
-        $('.alert').html('{{ _("Current status: ") }}{{ _("Running ...") }}');
+        tip('{{ _("Current status: ") }}{{ _("Running ...") }}', 'info');
+        scriptIsRunning = true;
 
         $.ajax({
             type: 'GET',
@@ -68,12 +89,17 @@
             dataType: 'JSON',
             success: function (result) {
                 window.timer.stop();
+                /*
                 $('.alert').html('{{ _("Current status: ") }}{{ _("idle") }}');
                 if (!tipHasClose()) {
                     tipClose();
-                }
+                }*/
+                scriptIsRunning = false;
+                tip(result['res'], 'info');
             },
             error: function (result) {
+                window.timer.stop();
+                scriptIsRunning = false;
                 tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
             }
         });
@@ -90,14 +116,19 @@
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=get_log',
             dataType: 'JSON',
             success: function (result) {
-                updateStatus('td#ipv6-tunnel', result['status']);
+                if (result['status'] == 'enable') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("enable")}}');
+                } else if (result['status'] == 'disabled') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("disabled")}}');
+                }
                 updateLog(result['log']);
 
+                /*
                 if (result['status'] == 'enable') {
                     SwitchButtonDisable();
-                } else if (result['status'] == 'disable') {
+                } else if (result['status'] == 'disabled') {
                     SwitchButtonEnable();
-                }
+                }*/
 
                 if (window.isAutoScrollLog == true) {
                     $('#log').scrollTop($('#log')[0].scrollHeight);
@@ -129,7 +160,7 @@
     });
     function resizeLogWindow() {
         var windowHeight    = $(window).height(),
-            preservedHeight = 170;
+            preservedHeight = 500;
 
         $('#log').css('height', windowHeight - preservedHeight);
     }

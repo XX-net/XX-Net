@@ -131,6 +131,18 @@ msgstr "当前状态："
 msgid "idle"
 msgstr "空闲"
 
+msgid "enable"
+msgstr "已启用"
+
+msgid "disabled"
+msgstr "已禁用"
+
+msgid "Script is running, please retry later."
+msgstr "脚本正在运行，请稍后再试。"
+
+msgid ", are you sure to continue?"
+msgstr "，你确定要继续吗？"
+
 msgid "working"
 msgstr "工作"
 
@@ -224,6 +236,9 @@ msgstr "启用"
 msgid "Disable"
 msgstr "禁用"
 
+msgid "Change Server"
+msgstr "更换服务器"
+
 msgid "Running ..."
 msgstr "正在执行..."
 
@@ -286,6 +301,9 @@ msgstr "IPv4 状态"
 
 msgid "IPv6 Status"
 msgstr "IPv6 状态"
+
+msgid "try repair"
+msgstr "尝试修复"
 
 msgid "IPv4 Number"
 msgstr "IPv4 IP数"

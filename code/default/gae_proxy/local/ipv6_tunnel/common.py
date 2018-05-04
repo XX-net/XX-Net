@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+from .pteredor import teredo_prober
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -24,13 +25,18 @@ class Log(object):
 
 
 def best_server():
-    # TODO: find and use the best server
     # teredo.remlab.net / teredo - debian.remlab.net(Germany)
     # teredo.ngix.ne.kr(South Korea)
     # teredo.managemydedi.com(USA, Chicago)
     # teredo.trex.fi(Finland)
     # win8.ipv6.microsoft.com(The Teredo server hidden in Windows RT 8.1) of which Windows 7 has no knowledge.
     # win10.ipv6.microsoft.com
+    prober = teredo_prober()
+    prober.qualified = True
+    server_list = prober.eval_servers()
+    for qualified, server, _, _ in server_list:
+        if qualified:
+            return server
     return "teredo.remlab.net"
 
 
