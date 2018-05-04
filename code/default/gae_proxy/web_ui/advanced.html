@@ -20,10 +20,11 @@
         location.hash = "#" + id;
     });
     if (location.hash == "") {
-        var id = "advanced_tab";
+        var id = "scan_setting";
     } else {
         var id = location.hash.substr(1);
     }
+    location.hash = "#" + id;
     $(location.hash).parent().addClass("active");
     var url = "/module/gae_proxy/" + id + ".html";
     $("#tab_content").load(url);
