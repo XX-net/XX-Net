@@ -307,6 +307,10 @@
                     "force_ipv6": '{{ _( "Force-IPv6" ) }}'
                 };
 
+                if (result['ipv6_state'] == 'Fail') {
+                    result['ipv6_state'] += ' (<a href="/?module=gae_proxy&menu=advanced#ipv6_tunnel">{{ _( "try repair" ) }}</a>)';
+                }
+
                 var updates = {
                     'td#sys-platform': result['sys_platform'],
                     'td#os-system': result['os_system'],
