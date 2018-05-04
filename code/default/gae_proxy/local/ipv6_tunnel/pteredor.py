@@ -57,15 +57,20 @@ teredo_port = 3544
 link_local_addr = 'fe80::ffff:ffff:ffff'
 all_router_multicast = 'ff02::2'
 teredo_server_list = [
+    # limited
+    #'teredo.ginzado.ne.jp',
+    # disuse
+    #'debian-miredo.progsoc.org',
+    #'teredo.autotrans.consulintel.com',
+    #'teredo.ngix.ne.kr',
+    #'teredo.managemydedi.com',
+    #'teredo.ipv6.microsoft.com',
+    #'win8.ipv6.microsoft.com',
     'teredo.remlab.net',
     'teredo2.remlab.net',
     'teredo-debian.remlab.net',
-    'teredo.ngix.ne.kr',
     'teredo.trex.fi',
     'teredo.iks-jena.de',
-    'teredo.autotrans.consulintel.com',
-    'teredo.managemydedi.com',
-    'teredo.ipv6.microsoft.com',
     'win10.ipv6.microsoft.com',
     'win1710.ipv6.microsoft.com',
     'win1711.ipv6.microsoft.com'

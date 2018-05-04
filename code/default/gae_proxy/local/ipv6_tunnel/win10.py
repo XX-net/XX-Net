@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import socket
 import platform
 from .common import *
 from .pteredor import local_ip_startswith
@@ -46,15 +47,15 @@ enable_cmds = """
 @set log_file="%s"
 
 @echo Config servers...
-@call:[config servers]>"%%%log_file%%%"
+@call:[config servers]>"%%%%log_file%%%%"
 
 @echo Reset IPv6...
-@call:[reset ipv6]>"%%%log_file%%%"
+@call:[reset ipv6]>"%%%%log_file%%%%"
 
 @echo Set IPv6 Tunnel...
-@call:[set ipv6]>"%%%log_file%%%"
+@call:[set ipv6]>"%%%%log_file%%%%"
 
-@call:[print state]>"%%%log_file%%%"
+@call:[print state]>"%%%%log_file%%%%"
 
 @echo Over
 @echo Reboot system at first time!
@@ -137,16 +138,37 @@ netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
 """
 
+try:
+    socket.socket(socket.AF_INET, socket.SOCK_RAW)
+    has_admin = True
+except socket.error:
+    has_admin = False
 
+# Don't hide the console window
 def elevate(script_path):
-    # use this if need admin
-    import win32elevate
-    try:
-        win32elevate.elevateAdminRun(script_path)
-    except Exception as e:
-        xlog.warning('elevate e:%r', e)
+    global script_is_running
+    if not script_is_running:
+        script_is_running = True
 
+        if os.path.isfile(log_file):
+            try:
+                os.remove(log_file)
+            except Exception as e:
+                xlog.warn("remove %s fail:%r", log_file, e)
 
+        if has_admin:
+            os.system(script_path)
+        else:
+            # use this if need admin
+            import win32elevate
+            try:
+                win32elevate.elevateAdminRun(script_path)
+            except Exception as e:
+                xlog.warning('elevate e:%r', e)
+
+        script_is_running = False
+
+script_is_running = False
 last_get_state_time = 0
 last_set_server_time = 0
 last_state = "unknown"
@@ -182,22 +204,42 @@ def state():
 
 
 def enable(is_local=False):
-    if is_local:
+    if not is_local:
+        return "Please operating on local host."
+
+    if script_is_running:
+        return "Script is running, please retry later."
+    else:
         new_enable_cmds = enable_cmds % (client_type(), best_server())
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
         elevate(enable_ipv6_temp)
 
+        return "IPv6 tunnel is enabled, please reboot system."
+
 
 def disable(is_local=False):
-    if is_local:
+    if not is_local:
+        return "Please operating on local host."
+
+    if script_is_running:
+        return "Script is running, please retry later."
+    else:
         with open(disable_ipv6_temp, 'w') as fp:
             fp.write(disable_cmds)
         elevate(disable_ipv6_temp)
 
+        return "IPv6 tunnel is disabled."
+
 
 def set_best_server(is_local=False):
-    if is_local:
+    # Allow remote if has admin
+    if not is_local and not has_admin:
+        return "Please operating on local host."
+
+    if script_is_running:
+        return "Script is running, please retry later."
+    else:
         global last_set_server_time
         now = time.time()
         if now - last_set_server_time < 60 * 3:
@@ -209,6 +251,8 @@ def set_best_server(is_local=False):
         with open(set_best_server_temp, 'w') as fp:
             fp.write(set_server_cmds)
         elevate(set_best_server_temp)
+
+        return "Set teredo server is completed."
 
 
 if __name__ == '__main__':
