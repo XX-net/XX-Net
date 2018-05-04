@@ -581,8 +581,8 @@ if '__main__' == __name__:
         if raw_input(confirm_stop).lower() == 'y':
             runas('netsh interface teredo set state disable')
             time.sleep(1)
-            print(os.system('netsh interface teredo show state'))
             done_disabled = True
+        print(os.system('netsh interface teredo show state'))
     recommend, nat_type = main(*args, local_port=local_port, remote_port=remote_port)
     print(result_info % recommend)
     if os.name == 'nt':
@@ -598,7 +598,7 @@ if '__main__' == __name__:
                 raw_input(confirm_set).lower() == 'y'):
             cmd = 'netsh interface teredo set state type=%s servername=%s.'
             if raw_input(confirm_reset).lower() == 'y':
-                cmd += 'refreshinterval=default'
+                cmd += ' refreshinterval=default'
             if not remote_port:
                 cmd += ' clientport=default'
             runas(cmd % (client, recommend[0]))
