@@ -196,7 +196,7 @@ def state():
     type = get_line_value(r, 2)
     last_state = get_line_value(r, 6)
     if type == "disabled" or last_state == "offline":
-        last_state = "disable"
+        last_state = "disabled"
     elif last_state in ["qualified", "dormant"]:
         last_state = "enable"
 
@@ -214,6 +214,9 @@ def enable(is_local=False):
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
         elevate(enable_ipv6_temp)
+
+        global last_set_server_time
+        last_set_server_time = time.time()
 
         return "IPv6 tunnel is enabled, please reboot system."
 
@@ -242,8 +245,9 @@ def set_best_server(is_local=False):
     else:
         global last_set_server_time
         now = time.time()
-        if now - last_set_server_time < 60 * 3:
-            return
+        wait_time = 3 - (now - last_set_server_time) // 60
+        if wait_time > 0:
+            return "Don't epeated, please retry in %d minutes later." % wait_time
 
         last_set_server_time = now
         set_server_cmds = ("netsh interface teredo set state %s %s. default default default"
