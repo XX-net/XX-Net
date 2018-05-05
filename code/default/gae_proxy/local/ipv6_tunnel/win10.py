@@ -101,10 +101,10 @@ goto :eof
 netsh interface teredo set state type=%%s servername=%%s.
 
 :: Set IPv6 prefixpolicies
-:: 2001::/16 Aggregate global unicast address
+:: 2001::/16 Aggregate global unicast address; not default
 :: 2002::/16 6to4 tunnel
 :: 2001::/32 teredo tunnel
-netsh interface ipv6 set prefixpolicy 2001::/16 35 1
+netsh interface ipv6 add prefixpolicy 2001::/16 35 1
 netsh interface ipv6 set prefixpolicy 2002::/16 30 2
 netsh interface ipv6 set prefixpolicy 2001::/32 25 2
 
