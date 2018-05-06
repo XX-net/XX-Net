@@ -395,7 +395,7 @@ def application(environ, start_response):
     # for k in response_headers:
     #    v = response_headers[k]
     #    logging.debug("Head:%s: %s", k, v)
-    content_type = response_headers.get('content-type', guess_type(url)[0]) or ''
+    content_type = response_headers.get('content-type', '')
     content_encoding = response_headers.get('content-encoding', '')
     # 也是分片合并之类的细节
     if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get(
@@ -410,16 +410,19 @@ def application(environ, start_response):
                 content_encoding == '' and
                 is_text_content_type(content_type) and
                 is_binary(data)):
-            if 'deflate' in accept_encoding:
-                response_headers['Content-Encoding'] = content_encoding = 'deflate'
-            else:
-                data = inflate(data)
+            # ignore wrong "Content-Type"
+            type = guess_type(url)[0]
+            if type is None or is_text_content_type(type):
+                if 'deflate' in accept_encoding:
+                    response_headers['Content-Encoding'] = content_encoding = 'deflate'
+                else:
+                    data = inflate(data)
     else:
         if content_encoding in ('gzip', 'deflate', 'br'):
             del response_headers['Content-Encoding']
             content_encoding = ''
     if status_code == 200 and content_encoding == '' and 512 < len(
-            data) < URLFETCH_DEFLATE_MAXSIZE and content_type.startswith(('text/', 'application/json', 'application/javascript')):
+            data) < URLFETCH_DEFLATE_MAXSIZE and is_text_content_type(content_type):
         if 'gzip' in accept_encoding:
             response_headers['Content-Encoding'] = 'gzip'
             compressobj = zlib.compressobj(
