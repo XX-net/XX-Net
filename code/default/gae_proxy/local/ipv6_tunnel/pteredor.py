@@ -15,7 +15,7 @@ __version__ = '0.1.0'
 
 import sys
 
-if sys.version_info[0] < 3:
+if sys.platform == "win32" and sys.version_info[0] < 3:
     import win_inet_pton
 
 import os
