@@ -587,16 +587,11 @@ def handler(method, url, headers, body, wfile):
     content_type = response_headers.get("Content-Type", "")
     content_encoding = response_headers.get("Content-Encoding", "")
     if body_length and \
-            content_encoding in ["gzip"] and \
+            content_encoding == "gzip" and \
             is_text_content_type(content_type):
         url_guess_type = guess_type(url)[0]
         if url_guess_type is None or is_text_content_type(url_guess_type):
             # try decode and detect type
-
-            if content_encoding == "gzip":
-                decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
-            else:
-                decompress = zlib.decompressobj(-zlib.MAX_WBITS)
 
             min_block = min(8192, body_length)
             data0 = response.task.read(min_block)
@@ -607,18 +602,16 @@ def handler(method, url, headers, body, wfile):
             if isinstance(data0, memoryview):
                 data0 = data0.tobytes()
 
+            decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
             decoded_data0 = decompress.decompress(data0)
 
             if is_binary(decoded_data0):
                 try:
-                    # read all gzip data
+                    # read left gzip data
                     data = data0 + response.task.read_all().tobytes()
 
                     # decode all data
-                    if content_encoding == "gzip":
-                        decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
-                    else:
-                        decompress = zlib.decompressobj(-zlib.MAX_WBITS)
+                    decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
                     degzip_data = decompress.decompress(data)
 
                     # return deflate data if accept deflate
