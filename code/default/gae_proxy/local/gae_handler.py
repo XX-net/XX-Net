@@ -590,7 +590,7 @@ def handler(method, url, headers, body, wfile):
     content_encoding = response_headers.get("Content-Encoding", "")
     if body_length and \
             content_encoding == "gzip" and \
-            response.gps >= "GPS 3.3.2" and \
+            response.gps < "GPS 3.3.2" and \
             is_text_content_type(content_type):
         url_guess_type = guess_type(url)[0]
         if url_guess_type is None or is_text_content_type(url_guess_type):
