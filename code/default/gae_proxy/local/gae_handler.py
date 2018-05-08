@@ -64,6 +64,7 @@ import urlparse
 import threading
 import zlib
 import traceback
+from mimetypes import guess_type
 
 from front import front
 from xlog import getLogger
@@ -530,19 +531,6 @@ def handler(method, url, headers, body, wfile):
         del response_headers['X-Head-Content-Length']
         # 只是获取头
 
-    try:
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-        for key in response_headers:
-            value = response_headers[key]
-            send_header(wfile, key, value)
-            #xlog.debug("Head- %s: %s", key, value)
-        wfile.write("\r\n")
-        wfile.flush()
-        # 写入除body外内容
-    except Exception as e:
-        xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
-        return
-
     content_length = int(response.headers.get('Content-Length', 0))
     content_range = response.headers.get('Content-Range', '')
     # content_range 分片时合并用到
@@ -558,7 +546,119 @@ def handler(method, url, headers, body, wfile):
     else:
         body_length = end - start + 1
 
-    body_sended = 0
+    def send_response_headers():
+        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
+        for key in response_headers:
+            value = response_headers[key]
+            send_header(wfile, key, value)
+            # xlog.debug("Head- %s: %s", key, value)
+        wfile.write("\r\n")
+        wfile.flush()
+        # 写入除body外内容
+
+    def is_text_content_type(content_type):
+        mct, sct = content_type.split('/', 1)
+        if mct == 'text':
+            return True
+        if mct == 'application':
+            sct = sct.split(';', 1)[0]
+            if (sct in ('json', 'javascript', 'x-www-form-urlencoded') or
+                    sct.endswith(('xml', 'script')) or
+                    sct.startswith(('xml', 'rss', 'atom'))):
+                return True
+        return False
+
+    def is_binary(data):
+        if data[:3] == '\xef\xbb\xbf':
+            # utf-8 text
+            return False
+        i = 0
+        for b in data:
+            if b > '\x7f':
+                return True
+            if b == '\n' and i > 4:
+                break
+            i += 1
+            if i > 32:
+                break
+        return False
+
+    data0 = ""
+    content_type = response_headers.get("Content-Type", "")
+    content_encoding = response_headers.get("Content-Encoding", "")
+    if body_length and \
+            content_encoding in ["gzip"] and \
+            is_text_content_type(content_type):
+        url_guess_type = guess_type(url)[0]
+        if url_guess_type is None or is_text_content_type(url_guess_type):
+            # try decode and detect type
+
+            if content_encoding == "gzip":
+                decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            else:
+                decompress = zlib.decompressobj(-zlib.MAX_WBITS)
+
+            min_block = min(8192, body_length)
+            data0 = response.task.read(min_block)
+            if not data0 or len(data0) == 0:
+                xlog.warn("recv body fail:%s", url)
+                return
+
+            if isinstance(data0, memoryview):
+                data0 = data0.tobytes()
+
+            decoded_data0 = decompress.decompress(data0)
+
+            if is_binary(decoded_data0):
+                try:
+                    # read all gzip data
+                    data = data0 + response.task.read_all().tobytes()
+
+                    # decode all data
+                    if content_encoding == "gzip":
+                        decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
+                    else:
+                        decompress = zlib.decompressobj(-zlib.MAX_WBITS)
+                    degzip_data = decompress.decompress(data)
+
+                    # return deflate data if accept deflate
+                    if "deflate" in headers.get("Accept-Encoding", ""):
+                        response_headers["Content-Encoding"] = "deflate"
+                        response_headers["Content-Length"] = len(degzip_data)
+
+                        send_response_headers()
+                        wfile._sock.sendall(degzip_data)
+                        xlog.info("GAE send ungziped deflate data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
+                                  url, response.task.get_trace())
+
+                    else:
+                        # inflate data and send
+                        decoded_data = zlib.decompress(degzip_data, -zlib.MAX_WBITS)
+                        del response_headers["Content-Encoding"]
+                        response_headers["Content-Length"] = len(decoded_data)
+
+                        send_response_headers()
+                        wfile._sock.sendall(decoded_data)
+                        xlog.info("GAE send ungziped data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
+                                  url, response.task.get_trace())
+
+                    return
+                except Exception as e:
+                    xlog.info("gae_handler.handler try decode and send response fail. e:%r %s", e, url)
+                    return
+
+    try:
+        send_response_headers()
+
+        if data0:
+            wfile._sock.sendall(data0)
+            body_sended = len(data0)
+        else:
+            body_sended = 0
+    except Exception as e:
+        xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
+        return
+
     while True:
         # 可能分片发给客户端
         if body_sended >= body_length:

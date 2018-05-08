@@ -99,7 +99,9 @@ class Task(object):
 
     def read_all(self):
         if self.content_length:
-            buff = bytearray(int(self.content_length))
+            left_body = self.content_length - self.body_readed
+
+            buff = bytearray(int(left_body))
             buff_view = memoryview(buff)
             p = 0
             for data in self.read_buffers:
@@ -109,7 +111,7 @@ class Task(object):
             self.read_buffers = []
             self.read_buffer_len = 0
 
-            while p < self.content_length:
+            while p < left_body:
                 data = self.read()
                 if not data:
                     break
@@ -117,6 +119,7 @@ class Task(object):
                 buff_view[p:p + len(data)] = data[0:len(data)]
                 p += len(data)
 
+            self.body_readed += p
             return buff_view[:p]
         else:
             out = list()
