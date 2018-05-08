@@ -154,7 +154,7 @@ def is_binary(data):
             return True
         if b == '\n' and i > 4:
             break
-        i ++
+        i += 1
         if i > 32:
             break
     return False
