@@ -205,8 +205,8 @@ def enable(is_local=False):
         return "Script is running, please retry later."
     else:
         new_enable_cmds = enable_cmds % (client_type(), best_server())
-        with open(new_enable_cmds, 'w') as fp:
-            fp.write(enable_cmds)
+        with open(enable_ipv6_temp, 'w') as fp:
+            fp.write(new_enable_cmds)
         done = elevate(enable_ipv6_temp)
 
         global last_set_server_time
