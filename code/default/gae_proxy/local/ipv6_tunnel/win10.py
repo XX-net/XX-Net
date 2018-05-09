@@ -209,10 +209,9 @@ def enable(is_local=False):
             fp.write(new_enable_cmds)
         done = elevate(enable_ipv6_temp)
 
-        global last_set_server_time
-        last_set_server_time = time.time()
-
         if done:
+            global last_set_server_time
+            last_set_server_time = time.time()
             return "IPv6 tunnel is enabled, please reboot system."
         else:
             return "Enable IPv6 tunnel fail, you must authorized as admin."
@@ -249,7 +248,6 @@ def set_best_server(is_local=False):
         if wait_time > 0:
             return "Don't do this repeated, please retry in %d minutes later." % wait_time
 
-        last_set_server_time = now
         set_server_cmds = ("netsh interface teredo set state %s %s. default default default"
                            % (client_type(), best_server()))
         with open(set_best_server_temp, 'w') as fp:
@@ -258,6 +256,7 @@ def set_best_server(is_local=False):
 
 
         if done:
+            last_set_server_time = now
             return "Set teredo server is completed."
         else:
             return "Set teredo server fail, you must authorized as admin."
