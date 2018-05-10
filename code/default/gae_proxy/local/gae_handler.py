@@ -310,6 +310,8 @@ def request_gae_server(headers, body, url, timeout):
         response.worker.close("ip not support GAE")
         raise GAE_Exception(602, "ip not support GAE")
 
+    response.gps = response.getheader("x-server", "")
+
     appid = response.ssl_sock.host.split(".")[0]
 
     if response.status == 404:
@@ -588,6 +590,7 @@ def handler(method, url, headers, body, wfile):
     content_encoding = response_headers.get("Content-Encoding", "")
     if body_length and \
             content_encoding == "gzip" and \
+            response.gps < "GPS 3.3.2" and \
             is_text_content_type(content_type):
         url_guess_type = guess_type(url)[0]
         if url_guess_type is None or is_text_content_type(url_guess_type):

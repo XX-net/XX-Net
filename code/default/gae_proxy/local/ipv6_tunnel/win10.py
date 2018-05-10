@@ -7,6 +7,7 @@ import time
 import socket
 import platform
 from .common import *
+import win32elevate
 from .pteredor import local_ip_startswith
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -138,12 +139,9 @@ netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
 """
 
-try:
-    socket.socket(socket.AF_INET, socket.SOCK_RAW)
-    has_admin = True
-except socket.error:
-    has_admin = False
+has_admin = win32elevate.areAdminRightsElevated()
 
+# Use this if need admin
 # Don't hide the console window
 def elevate(script_path):
     global script_is_running
@@ -156,17 +154,13 @@ def elevate(script_path):
             except Exception as e:
                 xlog.warn("remove %s fail:%r", log_file, e)
 
-        if has_admin:
-            os.system(script_path)
-        else:
-            # use this if need admin
-            import win32elevate
-            try:
-                win32elevate.elevateAdminRun(script_path)
-            except Exception as e:
-                xlog.warning('elevate e:%r', e)
-
-        script_is_running = False
+        try:
+            win32elevate.elevateAdminRun(None, script_path, True, False)
+            return True
+        except Exception as e:
+            xlog.warning('elevate e:%r', e)
+        finally:
+            script_is_running = False
 
 script_is_running = False
 last_get_state_time = 0
@@ -213,12 +207,14 @@ def enable(is_local=False):
         new_enable_cmds = enable_cmds % (client_type(), best_server())
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
-        elevate(enable_ipv6_temp)
+        done = elevate(enable_ipv6_temp)
 
-        global last_set_server_time
-        last_set_server_time = time.time()
-
-        return "IPv6 tunnel is enabled, please reboot system."
+        if done:
+            global last_set_server_time
+            last_set_server_time = time.time()
+            return "IPv6 tunnel is enabled, please reboot system."
+        else:
+            return "Enable IPv6 tunnel fail, you must authorized as admin."
 
 
 def disable(is_local=False):
@@ -230,9 +226,12 @@ def disable(is_local=False):
     else:
         with open(disable_ipv6_temp, 'w') as fp:
             fp.write(disable_cmds)
-        elevate(disable_ipv6_temp)
+        done = elevate(disable_ipv6_temp)
 
-        return "IPv6 tunnel is disabled."
+        if done:
+            return "IPv6 tunnel is disabled."
+        else:
+            return "Disable IPv6 tunnel fail, you must authorized as admin."
 
 
 def set_best_server(is_local=False):
@@ -247,16 +246,20 @@ def set_best_server(is_local=False):
         now = time.time()
         wait_time = 3 - (now - last_set_server_time) // 60
         if wait_time > 0:
-            return "Don't epeated, please retry in %d minutes later." % wait_time
+            return "Don't do this repeated, please retry in %d minutes later." % wait_time
 
-        last_set_server_time = now
         set_server_cmds = ("netsh interface teredo set state %s %s. default default default"
                            % (client_type(), best_server()))
         with open(set_best_server_temp, 'w') as fp:
             fp.write(set_server_cmds)
-        elevate(set_best_server_temp)
+        done = elevate(set_best_server_temp)
 
-        return "Set teredo server is completed."
+
+        if done:
+            last_set_server_time = now
+            return "Set teredo server is completed."
+        else:
+            return "Set teredo server fail, you must authorized as admin."
 
 
 if __name__ == '__main__':

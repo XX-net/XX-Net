@@ -17,7 +17,7 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.1'
+__version__ = '3.3.2'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -34,6 +34,7 @@ import httplib
 import io
 import string
 import traceback
+from mimetypes import guess_type
 
 from google.appengine.api import urlfetch
 from google.appengine.api.taskqueue.taskqueue import MAX_URL_LENGTH
@@ -130,6 +131,35 @@ def format_response(status, headers, content):
     return struct.pack('!h', len(data)) + data
 
 
+def is_text_content_type(content_type):
+    mct, sct = content_type.split('/', 1)
+    if mct == 'text':
+        return True
+    if mct == 'application':
+        sct = sct.split(';', 1)[0]
+        if (sct in ('json', 'javascript', 'x-www-form-urlencoded') or
+                sct.endswith(('xml', 'script')) or
+                sct.startswith(('xml', 'rss', 'atom'))):
+            return True
+    return False
+
+
+def is_binary(data):
+    if data[:3] == '\xef\xbb\xbf':
+        # utf-8 text
+        return False
+    i = 0
+    for b in data:
+        if b > '\x7f':
+            return True
+        if b == '\n' and i > 4:
+            break
+        i += 1
+        if i > 32:
+            break
+    return False
+
+
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET' and 'HTTP_X_URLFETCH_PS1' not in environ:
         # xxnet 自用
@@ -145,7 +175,7 @@ def application(environ, start_response):
             yield 'Password: %s%s%s' % (__password__[0], '*' * (len(__password__) - 2), __password__[-1])
         raise StopIteration
 
-    start_response('200 OK', [('Content-Type', 'image/gif')])
+    start_response('200 OK', [('Content-Type', 'image/gif'), ('X-Server', 'GPS ' + __version__)])
 
     if environ['REQUEST_METHOD'] == 'HEAD':
         raise StopIteration
@@ -366,6 +396,7 @@ def application(environ, start_response):
     #    v = response_headers[k]
     #    logging.debug("Head:%s: %s", k, v)
     content_type = response_headers.get('content-type', '')
+    content_encoding = response_headers.get('content-encoding', '')
     # 也是分片合并之类的细节
     if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get(
             'accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
@@ -374,8 +405,24 @@ def application(environ, start_response):
         response_headers['Content-Range'] = 'bytes 0-%d/%d' % (
             maxsize - 1, len(data))
         data = data[:maxsize]
-    if status_code == 200 and 'content-encoding' not in response_headers and 512 < len(
-            data) < URLFETCH_DEFLATE_MAXSIZE and content_type.startswith(('text/', 'application/json', 'application/javascript')):
+    if 'gzip' in accept_encoding:
+        if (status_code == 200 and
+                content_encoding == '' and
+                is_text_content_type(content_type) and
+                is_binary(data)):
+            # ignore wrong "Content-Type"
+            type = guess_type(url)[0]
+            if type is None or is_text_content_type(type):
+                if 'deflate' in accept_encoding:
+                    response_headers['Content-Encoding'] = content_encoding = 'deflate'
+                else:
+                    data = inflate(data)
+    else:
+        if content_encoding in ('gzip', 'deflate', 'br'):
+            del response_headers['Content-Encoding']
+            content_encoding = ''
+    if status_code == 200 and content_encoding == '' and 512 < len(
+            data) < URLFETCH_DEFLATE_MAXSIZE and is_text_content_type(content_type):
         if 'gzip' in accept_encoding:
             response_headers['Content-Encoding'] = 'gzip'
             compressobj = zlib.compressobj(
