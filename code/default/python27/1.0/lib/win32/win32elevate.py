@@ -142,7 +142,7 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
                                        nShow=SW_HIDE if reattachConsole else SW_SHOW)
         if reattachConsole and not all(stream.isatty() for stream in (sys.stdin, sys.stdout,
                                                                       sys.stderr)):
-            #TODO: some streams were redirected, we need to manually work them
+            # TODO: some streams were redirected, we need to manually work them
             # currently just raise an exception
             raise NotImplementedError("win32elevate doesn't support elevating scripts with "
                                       "redirected input or output")
@@ -175,20 +175,18 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
 
 def elevateAdminRun(args=__file__, executable=sys.executable,
                     waitAndClose=False, reattachConsole=True):
-    # Don't attached to parent process when waitAndClose is "True"
-    if waitAndClose:
+    if (waitAndClose or
+        reattachConsole and
+        not all(stream.isatty() for stream in (sys.stdin, sys.stdout,sys.stderr))):
+        # Don't attached to parent process when waitAndClose is "True"
+        # TODO: some streams were redirected, we need to manually work them
+        # currently just don't attached to parent process
         reattachConsole = False
     executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None,
                                    lpVerb='' if areAdminRightsElevated() else 'runas',
                                    lpFile=executable, lpParameters=args,
                                    lpDirectory=None,
                                    nShow=SW_HIDE if reattachConsole else SW_SHOW)
-    if reattachConsole and not all(stream.isatty() for stream in (sys.stdin, sys.stdout,
-                                                                  sys.stderr)):
-        #TODO: some streams were redirected, we need to manually work them
-        # currently just raise an exception
-        raise NotImplementedError("win32elevate doesn't support elevating scripts with "
-                                  "redirected input or output")
 
     if not ShellExecuteEx(ctypes.byref(executeInfo)):
         raise ctypes.WinError()
