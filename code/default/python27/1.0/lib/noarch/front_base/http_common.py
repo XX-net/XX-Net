@@ -99,9 +99,9 @@ class Task(object):
 
     def read_all(self):
         if self.content_length:
-            left_body = self.content_length - self.body_readed
+            left_body = int(self.content_length) - self.body_readed
 
-            buff = bytearray(int(left_body))
+            buff = bytearray(left_body)
             buff_view = memoryview(buff)
             p = 0
             for data in self.read_buffers:

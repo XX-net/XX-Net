@@ -617,7 +617,7 @@ def handler(method, url, headers, body, wfile):
                     # return deflate data if accept deflate
                     if "deflate" in headers.get("Accept-Encoding", ""):
                         response_headers["Content-Encoding"] = "deflate"
-                        response_headers["Content-Length"] = len(degzip_data)
+                        response_headers["Content-Length"] = str(len(degzip_data))
 
                         send_response_headers()
                         wfile._sock.sendall(degzip_data)
@@ -628,7 +628,7 @@ def handler(method, url, headers, body, wfile):
                         # inflate data and send
                         decoded_data = zlib.decompress(degzip_data, -zlib.MAX_WBITS)
                         del response_headers["Content-Encoding"]
-                        response_headers["Content-Length"] = len(decoded_data)
+                        response_headers["Content-Length"] = str(len(decoded_data))
 
                         send_response_headers()
                         wfile._sock.sendall(decoded_data)
