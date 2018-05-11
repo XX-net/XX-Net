@@ -236,8 +236,11 @@ msgstr "启用"
 msgid "Disable"
 msgstr "禁用"
 
-msgid "Change Server"
-msgstr "更换服务器"
+msgid "Test teredo usability"
+msgstr "测试 teredo 可用性"
+
+msgid "Change teredo server"
+msgstr "更换 teredo 服务器"
 
 msgid "Running ..."
 msgstr "正在执行..."
