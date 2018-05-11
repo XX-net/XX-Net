@@ -26,10 +26,6 @@ if __name__ == "__main__":
         sys.path.append(win32_lib)
 
 
-from xlog import getLogger
-xlog = getLogger("gae_proxy")
-
-
 # TODO：Help to reset ipv6 if system Teredo Interface not exist
 # download http://download.microsoft.com/download/3/F/3/3F3CA0F7-2FAF-4C51-8DDF-3516B4D91975/MicrosoftEasyFix20164.mini.diagcab
 
@@ -112,10 +108,10 @@ netsh interface ipv6 set prefixpolicy 2001::/32 25 2
 :: Fix look up AAAA on teredo
 :: http://technet.microsoft.com/en-us/library/bb727035.aspx
 :: http://ipv6-or-no-ipv6.blogspot.com/2009/02/teredo-ipv6-on-vista-no-aaaa-resolving.html
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
+Reg add HKLM\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
 :: Enable all IPv6 parts
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
+Reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
 goto :eof
 
@@ -170,13 +166,17 @@ last_state = "unknown"
 client_ext = 'natawareclient' if float(platform.win32_ver()[0]) > 7 else 'enterpriseclient'
 
 def client_type():
-    ip = [line for line in run("route print").split("\r\n") if " 0.0.0.0 " in line][0].split()[-2]
+    try:
+        ip = [line for line in run("route print").split("\r\n") if " 0.0.0.0 " in line][0].split()[-2]
+    except:
+        xlog.warning('route setting may wrong, please check.')
+        return 'client'
     return client_ext if ip.startswith(local_ip_startswith) else 'client'
 
 
 def get_teredo_interface():
-    r = run("ifconfig /all")
-    last_state = get_line_value(r, 6)
+    r = run("ipconfig /all")
+    return "Developing"
 
 
 def state():
@@ -204,7 +204,7 @@ def enable(is_local=False):
     if script_is_running:
         return "Script is running, please retry later."
     else:
-        new_enable_cmds = enable_cmds % (client_type(), best_server())
+        new_enable_cmds = enable_cmds % (client_type(), best_server(False))
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
         done = elevate(enable_ipv6_temp)

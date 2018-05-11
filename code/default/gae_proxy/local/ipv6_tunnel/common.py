@@ -3,6 +3,9 @@ import shlex
 import subprocess
 from .pteredor import teredo_prober
 
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "gae_proxy"))
@@ -20,23 +23,43 @@ class Log(object):
         self.fd = open(log_file, "w")
 
     def write(self, content):
-        self.fd.write(content + "\r\n")
+        self.fd.write(content + "\n")
         self.fd.flush()
 
+    def close(self):
+        self.fd.close()
 
-def best_server():
-    # teredo.remlab.net / teredo - debian.remlab.net(Germany)
-    # teredo.ngix.ne.kr(South Korea)
-    # teredo.managemydedi.com(USA, Chicago)
-    # teredo.trex.fi(Finland)
-    # win8.ipv6.microsoft.com(The Teredo server hidden in Windows RT 8.1) of which Windows 7 has no knowledge.
-    # win10.ipv6.microsoft.com
+
+def new_pteredor(clear_log=True):
+    if clear_log and os.path.isfile(log_file):
+        try:
+            os.remove(log_file)
+        except Exception as e:
+            xlog.warn("remove %s fail:%r", log_file, e)
+
     prober = teredo_prober()
+    log = Log()
+    log.write('qualified: %s\nNAT type: %s' % (prober.qualified, prober.nat_type))
+    log.close()
+    return prober
+
+
+def test_teredo():
+    qualified = new_pteredor().qualified
+    return 'teredo test result is %s.' % ('qualified' if qualified else 'unknown')
+
+
+def best_server(clear_log=True):
+    prober = new_pteredor(clear_log)
     prober.qualified = True
     server_list = prober.eval_servers()
     for qualified, server, _, _ in server_list:
         if qualified:
-            return server
+            return server[0]
+    xlog.warning('no server detected, return default: teredo.remlab.net.')
+    log = Log()
+    log.write('no server detected, return default: teredo.remlab.net.')
+    log.close()
     return "teredo.remlab.net"
 
 
@@ -77,6 +100,7 @@ def run_cmds(cmds):
         out = run(cmd)
         log.write(out)
         outs.append(out)
+    log.close()
     return "\r\n".join(outs)
 
 
