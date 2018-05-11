@@ -44,15 +44,15 @@ enable_cmds = """
 @set log_file="%s"
 
 @echo Config servers...
-@call:[config servers]>"%%%%log_file%%%%"
+@call:[config servers]>>"%%%%log_file%%%%"
 
 @echo Reset IPv6...
-@call:[reset ipv6]>"%%%%log_file%%%%"
+@call:[reset ipv6]>>"%%%%log_file%%%%"
 
 @echo Set IPv6 Tunnel...
-@call:[set ipv6]>"%%%%log_file%%%%"
+@call:[set ipv6]>>"%%%%log_file%%%%"
 
-@call:[print state]>"%%%%log_file%%%%"
+@call:[print state]>>"%%%%log_file%%%%"
 
 @echo Over
 @echo Reboot system at first time!
@@ -139,12 +139,12 @@ has_admin = win32elevate.areAdminRightsElevated()
 
 # Use this if need admin
 # Don't hide the console window
-def elevate(script_path):
+def elevate(script_path, clear_log=True):
     global script_is_running
     if not script_is_running:
         script_is_running = True
 
-        if os.path.isfile(log_file):
+        if clear_log and os.path.isfile(log_file):
             try:
                 os.remove(log_file)
             except Exception as e:
@@ -204,10 +204,10 @@ def enable(is_local=False):
     if script_is_running:
         return "Script is running, please retry later."
     else:
-        new_enable_cmds = enable_cmds % (client_type(), best_server(False))
+        new_enable_cmds = enable_cmds % (client_type(), best_server())
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
-        done = elevate(enable_ipv6_temp)
+        done = elevate(enable_ipv6_temp, False)
 
         if done:
             global last_set_server_time
@@ -252,7 +252,7 @@ def set_best_server(is_local=False):
                            % (client_type(), best_server()))
         with open(set_best_server_temp, 'w') as fp:
             fp.write(set_server_cmds)
-        done = elevate(set_best_server_temp)
+        done = elevate(set_best_server_temp, False)
 
 
         if done:

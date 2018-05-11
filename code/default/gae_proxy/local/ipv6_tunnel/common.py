@@ -20,7 +20,7 @@ if os.path.isfile(log_file):
 
 class Log(object):
     def __init__(self):
-        self.fd = open(log_file, "w")
+        self.fd = open(log_file, "a")
 
     def write(self, content):
         self.fd.write(content + "\n")
@@ -30,8 +30,8 @@ class Log(object):
         self.fd.close()
 
 
-def new_pteredor(clear_log=True):
-    if clear_log and os.path.isfile(log_file):
+def new_pteredor():
+    if os.path.isfile(log_file):
         try:
             os.remove(log_file)
         except Exception as e:
@@ -49,18 +49,24 @@ def test_teredo():
     return 'teredo test result is %s.' % ('qualified' if qualified else 'unknown')
 
 
-def best_server(clear_log=True):
-    prober = new_pteredor(clear_log)
+def best_server():
+    best_server = None
+    prober = new_pteredor()
     prober.qualified = True
     server_list = prober.eval_servers()
     for qualified, server, _, _ in server_list:
         if qualified:
-            return server[0]
-    xlog.warning('no server detected, return default: teredo.remlab.net.')
+            best_server = server[0]
+            break
     log = Log()
-    log.write('no server detected, return default: teredo.remlab.net.')
+    if best_server:
+        log.write('best server is: %s.' % best_server)
+    else:
+        xlog.warning('no server detected, return default: teredo.remlab.net.')
+        log.write('no server detected, return default: teredo.remlab.net.')
+        best_server = "teredo.remlab.net"
     log.close()
-    return "teredo.remlab.net"
+    return best_server
 
 
 def run(cmd):
