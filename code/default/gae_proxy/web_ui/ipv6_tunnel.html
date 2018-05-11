@@ -85,7 +85,7 @@
         }
         
         window.timer.play();
-        tip('{{ _("Current status: ") }}{{ _("Running ...") }}', 'info');
+        tip('{{ _("Current status: ") }}"' + $(this).html() + '" {{ _("Running ...") }}', 'info');
         scriptIsRunning = true;
 
         $.ajax({
