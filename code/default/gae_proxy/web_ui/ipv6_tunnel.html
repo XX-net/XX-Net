@@ -14,11 +14,14 @@
         </tbody>
     </table>
     <div class="row-fluid">
-        <div class="span12">
+        <div class="span6">
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_enable" type="submit">{{ _( "Enable" ) }}</button>
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_disable" type="submit">{{ _( "Disable" ) }}</button>
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_change_server" type="submit">{{ _( "Change Server" ) }}</button>
-        </div> <!-- .span12 -->
+        </div> <!-- .span6 -->
+        <div class="span6">
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test" type="submit">{{ _( "Test teredo usability" ) }}</button>
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_change_server" type="submit">{{ _( "Change teredo server" ) }}</button>
+        </div> <!-- .span6 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span12">
@@ -56,19 +59,21 @@
 
     $('button.btn').click(function () {
         var cmd = "stop";
-        if ($(this).html() == '{{ _( "Enable" ) }}') {
+        if ($(this).attr('id') == 'switch_ipv6_tunnel_enable') {
             if ($('td#ipv6-tunnel').html() == '{{ _("enable")}}' &&
                 !confirm('{{ _("IPv6 Tunnel")}}{{ _( "enable" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
             cmd = "enable";
-        } else if ($(this).html() == '{{ _( "Disable" ) }}') {
+        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_disable') {
             if ($('td#ipv6-tunnel').html() == '{{ _("disabled")}}' &&
                 !confirm('{{ _("IPv6 Tunnel")}}{{ _( "disabled" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
             cmd = "disable";
-        } else if ($(this).html() == '{{ _( "Change Server" ) }}') {
+        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test') {
+            cmd = "test_teredo";
+        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_change_server') {
             cmd = "set_best_server";
         } else {
             return;
@@ -96,11 +101,13 @@
                 }*/
                 scriptIsRunning = false;
                 tip(result['res'], 'info');
+                updateProcess();
             },
             error: function (result) {
                 window.timer.stop();
                 scriptIsRunning = false;
                 tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
+                updateProcess();
             }
         });
     });
