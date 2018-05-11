@@ -122,7 +122,7 @@ ipconfig /all
 netsh interface ipv6 show teredo
 netsh interface ipv6 show route
 netsh interface ipv6 show interface
-netsh interface ipv6 show prefixpolicy
+netsh interface ipv6 show prefixpolicies
 netsh interface ipv6 show address
 route print
 goto :eof

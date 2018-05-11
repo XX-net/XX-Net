@@ -70,10 +70,10 @@ netsh interface ipv6 set prefixpolicy 2001::/32 25 2
 :: Fix look up AAAA on teredo
 :: http://technet.microsoft.com/en-us/library/bb727035.aspx
 :: http://ipv6-or-no-ipv6.blogspot.com/2009/02/teredo-ipv6-on-vista-no-aaaa-resolving.html
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
+Reg add HKLM\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfigControl /t REG_DWORD /d 0 /f
 
 :: Enable all IPv6 parts
-Reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
+Reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
 :: Set Group Policy
 :: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_DefaultQualified 
@@ -92,7 +92,7 @@ ipconfig /all
 netsh interface ipv6 show teredo
 netsh interface ipv6 show route
 netsh interface ipv6 show interface
-netsh interface ipv6 show prefixpolicy
+netsh interface ipv6 show prefixpolicies
 netsh interface ipv6 show address
 route print
 notepad ..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt
