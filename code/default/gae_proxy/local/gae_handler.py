@@ -571,6 +571,9 @@ def handler(method, url, headers, body, wfile):
         return False
 
     def is_binary(data):
+        if data[0] in '{[<':
+            # json, xml
+            return False
         if data[:3] == '\xef\xbb\xbf':
             # utf-8 text
             return False
