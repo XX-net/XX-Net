@@ -570,24 +570,6 @@ def handler(method, url, headers, body, wfile):
                 return True
         return False
 
-    def is_binary(data):
-        if data[0] in '{[<':
-            # json, xml
-            return False
-        if data[:3] == '\xef\xbb\xbf':
-            # utf-8 text
-            return False
-        i = 0
-        for b in data:
-            if b > '\x7f':
-                return True
-            if b == '\n' and i > 4:
-                break
-            i += 1
-            if i > 32:
-                break
-        return False
-
     data0 = ""
     content_type = response_headers.get("Content-Type", "")
     content_encoding = response_headers.get("Content-Encoding", "")
@@ -599,7 +581,7 @@ def handler(method, url, headers, body, wfile):
         if url_guess_type is None or is_text_content_type(url_guess_type):
             # try decode and detect type
 
-            min_block = min(8192, body_length)
+            min_block = min(1024, body_length)
             data0 = response.task.read(min_block)
             if not data0 or len(data0) == 0:
                 xlog.warn("recv body fail:%s", url)
@@ -608,36 +590,51 @@ def handler(method, url, headers, body, wfile):
             if isinstance(data0, memoryview):
                 data0 = data0.tobytes()
 
-            decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
-            decoded_data0 = decompress.decompress(data0)
+            gzip_decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            decoded_data0 = gzip_decompressor.decompress(data0)
 
-            if is_binary(decoded_data0):
+            deflate_decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+            decoded_data1 = None
+
+            CMF, FLG = bytearray(decoded_data0[:2])
+            if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
+                decoded_data1 = deflate_decompressor.decompress(decoded_data0[2:])
+            else:
                 try:
-                    # read left gzip data
-                    data = data0 + response.task.read_all().tobytes()
+                    decoded_data1 = deflate_decompressor.decompress(decoded_data0)
+                except:
+                    pass
 
-                    # decode all data
-                    decompress = zlib.decompressobj(16 + zlib.MAX_WBITS)
-                    degzip_data = decompress.decompress(data)
+            if decoded_data1:
+                try:
+                    response_headers.pop("Content-Length", None)
 
-                    # return deflate data if accept deflate
                     if "deflate" in headers.get("Accept-Encoding", ""):
+                        # return deflate data if accept deflate
                         response_headers["Content-Encoding"] = "deflate"
-                        response_headers["Content-Length"] = str(len(degzip_data))
 
                         send_response_headers()
-                        wfile._sock.sendall(degzip_data)
+                        while True:
+                            wfile._sock.sendall(decoded_data0)
+                            if response.task.body_readed >= body_length:
+                                break
+                            data = response.task.read().tobytes()
+                            decoded_data0 = gzip_decompressor.decompress(data)
                         xlog.info("GAE send ungziped deflate data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
                                   url, response.task.get_trace())
 
                     else:
                         # inflate data and send
-                        decoded_data = zlib.decompress(degzip_data, -zlib.MAX_WBITS)
                         del response_headers["Content-Encoding"]
-                        response_headers["Content-Length"] = str(len(decoded_data))
 
                         send_response_headers()
-                        wfile._sock.sendall(decoded_data)
+                        while True:
+                            wfile._sock.sendall(decoded_data1)
+                            if response.task.body_readed >= body_length:
+                                break
+                            data = response.task.read().tobytes()
+                            decoded_data0 = gzip_decompressor.decompress(data)
+                            decoded_data1 = deflate_decompressor.decompress(decoded_data0)
                         xlog.info("GAE send ungziped data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
                                   url, response.task.get_trace())
 
