@@ -17,7 +17,7 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.2'
+__version__ = '3.3.3'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -144,20 +144,15 @@ def is_text_content_type(content_type):
     return False
 
 
-def is_binary(data):
-    if data[:3] == '\xef\xbb\xbf':
-        # utf-8 text
+def is_deflate(data):
+    CMF, FLG = bytearray(data[:2])
+    if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
+        return True
+    try:
+        zlib.decompressobj(-zlib.MAX_WBITS).decompress(data[:1024])
+        return True
+    except:
         return False
-    i = 0
-    for b in data:
-        if b > '\x7f':
-            return True
-        if b == '\n' and i > 4:
-            break
-        i += 1
-        if i > 32:
-            break
-    return False
 
 
 def application(environ, start_response):
@@ -409,7 +404,7 @@ def application(environ, start_response):
         if (status_code == 200 and
                 content_encoding == '' and
                 is_text_content_type(content_type) and
-                is_binary(data)):
+                is_deflate(data)):
             # ignore wrong "Content-Type"
             type = guess_type(url)[0]
             if type is None or is_text_content_type(type):
