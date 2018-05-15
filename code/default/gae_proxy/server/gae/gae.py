@@ -149,8 +149,9 @@ def is_deflate(data):
     if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
         return True
     try:
-        zlib.decompressobj(-zlib.MAX_WBITS).decompress(data[:1024])
-        return True
+        decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+        decompressor.decompress(data[:1024])
+        return decompressor.unused_data == ''
     except:
         return False
 
