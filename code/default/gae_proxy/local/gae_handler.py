@@ -381,7 +381,7 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
     error_msg = []
 
     if not timeout:
-        timeouts = [5, 20, 30]
+        timeouts = [15, 20, 30]
     else:
         timeouts = [timeout]
 
@@ -605,7 +605,7 @@ def handler(method, url, headers, body, wfile):
                 except:
                     pass
 
-            if decoded_data1:
+            if decoded_data1 and decoded_data1 != '\xe5':
                 try:
                     response_headers.pop("Content-Length", None)
 

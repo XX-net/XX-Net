@@ -27,6 +27,7 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
+            "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
             "appengine.google.com"
