@@ -168,7 +168,7 @@ def parse_readme_versions(readme_file):
     except Exception as e:
         xlog.exception("xxnet_version fail:%r", e)
 
-    raise "get_version_fail:%s" % readme_file
+    raise Exception("get_version_fail:%s" % readme_file)
 
 
 def current_version():
