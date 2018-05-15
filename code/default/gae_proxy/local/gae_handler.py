@@ -602,10 +602,12 @@ def handler(method, url, headers, body, wfile):
             else:
                 try:
                     decoded_data1 = deflate_decompressor.decompress(decoded_data0)
+                    if deflate_decompressor.unused_data != '':
+                        decoded_data1 = None
                 except:
                     pass
 
-            if decoded_data1 and decoded_data1 != '\xe5':
+            if decoded_data1:
                 try:
                     response_headers.pop("Content-Length", None)
 
