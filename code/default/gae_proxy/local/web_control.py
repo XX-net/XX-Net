@@ -707,7 +707,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         client_ip = self.client_address[0]
         is_local = client_ip.endswith("127.0.0.1") or client_ip == "::1"
 
-        if reqs['cmd'] in [['enable'], ['disable'], ['test_teredo'], ['set_best_server']]:
+        if reqs['cmd'] in [['enable'],
+                           ['disable'],
+                           ['test_teredo'],
+                           ['test_teredo_usability'],
+                           ['test_teredo_server'],
+                           ['set_best_server']]:
             cmd = reqs['cmd'][0]
             xlog.info("ipv6_tunnel switch %s", cmd)
 
@@ -719,6 +724,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 result = ipv6_tunnel.disable(is_local)
             elif cmd == "test_teredo":
                 result = ipv6_tunnel.test_teredo()
+            elif cmd == "test_teredo_usability":
+                result = ipv6_tunnel.test_teredo(probe_server=False)
+            elif cmd == "test_teredo_server":
+                result = ipv6_tunnel.test_teredo(probe_nat=False)
             elif cmd == "set_best_server":
                 result = ipv6_tunnel.set_best_server(is_local)
             else:
