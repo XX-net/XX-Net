@@ -30,30 +30,51 @@ class Log(object):
         self.fd.close()
 
 
-def new_pteredor():
+pteredor_is_running = False
+
+
+def new_pteredor(probe_nat=True):
     if os.path.isfile(log_file):
         try:
             os.remove(log_file)
         except Exception as e:
             xlog.warn("remove %s fail:%r", log_file, e)
 
-    prober = teredo_prober()
-    log = Log()
-    log.write('qualified: %s\nNAT type: %s' % (prober.qualified, prober.nat_type))
-    log.close()
+    global pteredor_is_running
+    pteredor_is_running = probe_nat
+    prober = teredo_prober(probe_nat=probe_nat)
+    if probe_nat:
+        pteredor_is_running = False
+        log = Log()
+        log.write('qualified: %s\nNAT type: %s' % (prober.qualified, prober.nat_type))
+        log.close()
     return prober
 
 
-def test_teredo():
-    qualified = new_pteredor().qualified
-    return 'teredo test result is %s.' % ('qualified' if qualified else 'unknown')
+def test_teredo(probe_nat=True, probe_server=True):
+    if pteredor_is_running:
+        return "Script is running, please retry later."
+
+    if probe_server:
+        return 'the berst server is %s.' % best_server(probe_nat=probe_nat)
+    else:
+        qualified = new_pteredor().qualified
+        return 'teredo test result is %s.' % ('qualified' if qualified else 'unknown')
 
 
-def best_server():
+def best_server(probe_nat=False):
     best_server = None
-    prober = new_pteredor()
+    prober = new_pteredor(probe_nat=probe_nat)
     prober.qualified = True
+    if not probe_nat:
+        prober.nat_type = 'unknown'
+        prober.rs_cone_flag = 0
+
+    global pteredor_is_running
+    pteredor_is_running = True
     server_list = prober.eval_servers()
+    pteredor_is_running = False
+
     for qualified, server, _, _ in server_list:
         if qualified:
             best_server = server[0]
