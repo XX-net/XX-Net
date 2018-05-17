@@ -591,7 +591,7 @@ if '__main__' == __name__:
             client = 'client'
         else:
             import platform
-            client_ext = 'natawareclient' if float(platform.win32_ver()[0]) > 7 else 'enterpriseclient'
+            client_ext = 'natawareclient' if platform.version()[0] > '6' else 'enterpriseclient'
             client = client_ext if ip.startswith(local_ip_startswith) else 'client'
     if recommend:
         if (os.name == 'nt' and

@@ -163,7 +163,7 @@ last_get_state_time = 0
 last_set_server_time = 0
 last_state = "unknown"
 
-client_ext = 'natawareclient' if float(platform.win32_ver()[0]) > 7 else 'enterpriseclient'
+client_ext = 'natawareclient' if platform.version()[0] > '6' else 'enterpriseclient'
 
 def client_type():
     try:
