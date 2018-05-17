@@ -201,7 +201,7 @@ def enable(is_local=False):
     if not is_local:
         return "Please operating on local host."
 
-    if script_is_running:
+    if script_is_running or pteredor_is_running:
         return "Script is running, please retry later."
     else:
         new_enable_cmds = enable_cmds % (client_type(), best_server())
@@ -221,7 +221,7 @@ def disable(is_local=False):
     if not is_local:
         return "Please operating on local host."
 
-    if script_is_running:
+    if script_is_running or pteredor_is_running:
         return "Script is running, please retry later."
     else:
         with open(disable_ipv6_temp, 'w') as fp:
@@ -239,7 +239,7 @@ def set_best_server(is_local=False):
     if not is_local and not has_admin:
         return "Please operating on local host."
 
-    if script_is_running:
+    if script_is_running or pteredor_is_running:
         return "Script is running, please retry later."
     else:
         global last_set_server_time

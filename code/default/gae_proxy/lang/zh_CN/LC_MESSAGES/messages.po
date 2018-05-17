@@ -230,14 +230,35 @@ msgstr "个IP。"
 msgid "Failed importing IP."
 msgstr "导入IP失败。"
 
+msgid "Tips"
+msgstr "提示"
+
+msgid "Enable operations usually only needs to be performed once at each device."
+msgstr "启用操作通常只需要在每台设备上执行一次。"
+
+msgid "After changing the server, it takes 10-90 seconds to successfully establish a new teredo tunnel."
+msgstr "更换服务器后，需要等待 10-90 秒钟才会成功建立新的 teredo 隧道。"
+
+msgid "If win user does not understand about group policy, keep it unset."
+msgstr "Win 用户如果不了解相关组策略，请保持组策略为未设置状态。"
+
+msgid "Non-win users can also use the test button to get the fastest server for change manually."
+msgstr "非 win 用户也可以使用测试按钮来获取响应最快的服务器，以便手动更换。"
+
 msgid "Enable"
 msgstr "启用"
 
 msgid "Disable"
 msgstr "禁用"
 
-msgid "Test teredo usability"
-msgstr "测试 teredo 可用性"
+msgid "Test teredo"
+msgstr "测试 teredo"
+
+msgid "Test teredo usability only"
+msgstr "仅测试 teredo 可用性"
+
+msgid "Test teredo server only"
+msgstr "仅测试 teredo 服务器"
 
 msgid "Change teredo server"
 msgstr "更换 teredo 服务器"

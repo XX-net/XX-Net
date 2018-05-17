@@ -14,14 +14,27 @@
         </tbody>
     </table>
     <div class="row-fluid">
-        <div class="span6">
+        <h4>{{ _( "Tips" ) }}</h4>
+        <ol>
+            <li>{{ _( "Enable operations usually only needs to be performed once at each device." ) }}</li>
+            <li>{{ _( "After changing the server, it takes 10-90 seconds to successfully establish a new teredo tunnel." ) }}</li>
+            <li>{{ _( "If win user does not understand about group policy, keep it unset." ) }}</li>
+            <li>{{ _( "Non-win users can also use the test button to get the fastest server for change manually." ) }}</li>
+        </ol>
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
+        <div class="span4">
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_enable" type="submit">{{ _( "Enable" ) }}</button>
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_disable" type="submit">{{ _( "Disable" ) }}</button>
-        </div> <!-- .span6 -->
-        <div class="span6">
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test" type="submit">{{ _( "Test teredo usability" ) }}</button>
+        </div> <!-- .span4 -->
+        <div class="span4">
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test" type="submit">{{ _( "Test teredo" ) }}</button>
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test_usability" type="submit">{{ _( "Test teredo usability only" ) }}</button>
+        </div> <!-- .span4 -->
+        <div class="span4">
+            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test_server" type="submit">{{ _( "Test teredo server only" ) }}</button>
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_change_server" type="submit">{{ _( "Change teredo server" ) }}</button>
-        </div> <!-- .span6 -->
+        </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span12">
@@ -73,6 +86,10 @@
             cmd = "disable";
         } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test') {
             cmd = "test_teredo";
+        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test_usability') {
+            cmd = "test_teredo_usability";
+        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test_server') {
+            cmd = "test_teredo_server";
         } else if ($(this).attr('id') == 'switch_ipv6_tunnel_change_server') {
             cmd = "set_best_server";
         } else {
@@ -167,7 +184,7 @@
     });
     function resizeLogWindow() {
         var windowHeight    = $(window).height(),
-            preservedHeight = 500;
+            preservedHeight = 600;
 
         $('#log').css('height', windowHeight - preservedHeight);
     }

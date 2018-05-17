@@ -38,6 +38,7 @@ sc start RpcSs
 
 sc config nsi start= auto
 sc start nsi
+
 sc config Winmgmt start= auto
 sc start Winmgmt
 
@@ -83,7 +84,10 @@ Reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComp
 ipconfig /flushdns
 
 set time=%date:~0,4%-%date:~5,2%-%date:~8,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-@call :output>..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt 
+@call :output>..\..\..\..\..\data\gae_proxy\ipv6-state%time%.txt
+
+@echo Over
+@echo Reboot system at first time!
 exit
 
 :output
