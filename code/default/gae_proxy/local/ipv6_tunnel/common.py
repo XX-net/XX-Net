@@ -40,9 +40,17 @@ def new_pteredor(probe_nat=True):
         except Exception as e:
             xlog.warn("remove %s fail:%r", log_file, e)
 
-    global pteredor_is_running
+    global pteredor_is_running, usable
     pteredor_is_running = probe_nat
     prober = teredo_prober(probe_nat=probe_nat)
+
+    if prober.nat_type in ('cone', 'restricted'):
+        usable = 'usable'
+    elif prober.nat_type == 'offline':
+        usable = 'unusable'
+    else:
+        usable = 'unknown'
+
     if probe_nat:
         pteredor_is_running = False
         log = Log()
@@ -55,11 +63,13 @@ def test_teredo(probe_nat=True, probe_server=True):
     if pteredor_is_running:
         return "Script is running, please retry later."
 
+    server = ''
     if probe_server:
-        return 'the berst server is %s.' % best_server(probe_nat=probe_nat)
+        server = ' and the berst server is %s.' % best_server(probe_nat=probe_nat)
     else:
-        qualified = new_pteredor().qualified
-        return 'teredo test result is %s.' % ('qualified' if qualified else 'unknown')
+        new_pteredor()
+
+    return 'teredo test result is %s.%s' % (usable, server)
 
 
 def best_server(probe_nat=False):
