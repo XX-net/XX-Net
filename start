@@ -183,15 +183,13 @@ set_iptables) set_iptables $2;;
 
 unset_iptables) unset_iptables $2;;
 
-–) break;;
--*) echo "error: no such option $1. -h for help";exit 1;;
-*) break;;
+*) echo "unknown option $1."; shift 1;;
 esac
 done
 
 
 # Start Application
-if [ $HANGUP = '1' ]; then
+if [ $os_name = 'Darwin' ] && ! [ $HANGUP = '1' ]; then
     echo "Run XX-Net in background."
     launchWithNoHungup $ARGS
 else
