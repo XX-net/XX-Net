@@ -297,7 +297,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
 
         xlog.debug("GAE %s %s from:%s", self.command, self.url, self.address_string())
-        gae_handler.handler(self.command, self.url, request_headers, payload, self.wfile)
+        gae_handler.handler(self.command, self.host, self.url, request_headers, payload, self.wfile)
 
     def go_DIRECT(self):
         xlog.debug('DIRECT %s %s', self.command, self.url)
