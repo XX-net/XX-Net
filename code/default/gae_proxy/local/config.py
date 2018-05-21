@@ -27,7 +27,6 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
-            "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
             "appengine.google.com"
@@ -166,7 +165,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
-        self.set_var("ipv6_scan_ratio", 50) # 0 - 100
+        self.set_var("ipv6_scan_ratio", 90) # 0 - 100
 
         self.load()
 
