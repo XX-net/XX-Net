@@ -237,7 +237,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 return self.go_DIRECT()
             else:
                 xlog.debug("Host:%s Direct redirect to https", host)
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.url.replace('http://', 'https://', 1)).encode())
 
         if host.endswith(front.config.HOSTS_GAE_ENDSWITH):
             return self.go_AGENT()

@@ -526,9 +526,9 @@ def handler(method, host, url, headers, body, wfile):
 
     if (response.status == 503 and
             response_headers.get('Server') == 'HTTP server (unknown)' and
-            host in front.config.GOOGLE_ENDSWITH and
-            host not in front.config.HOSTS_GAE):
-        front.config.HOSTS_GAE += host,
+            host.endswith(front.config.GOOGLE_ENDSWITH) and
+            host not in front.config.HOSTS_DIRECT):
+        front.config.HOSTS_DIRECT += host,
 
     response_headers["Persist"] = ""
     response_headers["Connection"] = "Persist"
