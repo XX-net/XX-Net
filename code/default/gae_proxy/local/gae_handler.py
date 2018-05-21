@@ -528,6 +528,13 @@ def handler(method, host, url, headers, body, wfile):
             response_headers.get('Server') == 'HTTP server (unknown)' and
             host.endswith(front.config.GOOGLE_ENDSWITH) and
             host not in front.config.HOSTS_DIRECT):
+        if host in front.config.HOSTS_GAE:
+            try:
+                host_gae = list(front.config.HOSTS_GAE)
+                host_gae.remove(host)
+                front.config.HOSTS_GAE = tuple(host_gae)
+            except ValueError:
+                pass
         front.config.HOSTS_DIRECT += host,
 
     response_headers["Persist"] = ""
