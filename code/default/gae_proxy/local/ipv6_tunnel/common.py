@@ -65,11 +65,11 @@ def test_teredo(probe_nat=True, probe_server=True):
 
     server = ''
     if probe_server:
-        server = ' and the berst server is %s.' % best_server(probe_nat=probe_nat)
+        server = ' and the best server is %s.' % best_server(probe_nat=probe_nat)
     else:
         new_pteredor()
 
-    return 'teredo test result is %s.%s' % (usable, server)
+    return 'teredor test result is %s.%s' % (usable, server)
 
 
 def best_server(probe_nat=False):
