@@ -530,9 +530,9 @@ def handler(method, host, url, headers, body, wfile):
             host not in front.config.HOSTS_DIRECT):
         if host in front.config.HOSTS_GAE:
             try:
-                host_gae = list(front.config.HOSTS_GAE)
-                host_gae.remove(host)
-                front.config.HOSTS_GAE = tuple(host_gae)
+                hosts_gae = list(front.config.HOSTS_GAE)
+                hosts_gae.remove(host)
+                front.config.HOSTS_GAE = tuple(hosts_gae)
             except ValueError:
                 pass
         front.config.HOSTS_DIRECT += host,
