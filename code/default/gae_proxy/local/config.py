@@ -27,6 +27,7 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
+            "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
             "appengine.google.com"
@@ -161,7 +162,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 10)
         self.set_var("max_good_ip_num", 500)
-        self.set_var("target_handshake_time", 200)
+        self.set_var("target_handshake_time", 600)
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
