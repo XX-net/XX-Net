@@ -14,6 +14,8 @@ session = None
 socks5_server = None
 last_api_error = ""
 
+promote_code = ""
+promoter = ""
 quota_list = {}
 quota = 0
 

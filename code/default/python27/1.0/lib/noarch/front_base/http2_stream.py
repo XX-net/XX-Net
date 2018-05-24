@@ -165,9 +165,6 @@ class Stream(object):
         self.state = STATE_OPEN
 
         self.task.set_state("start send left body")
-        threading.Thread(target=self.left_work).start()
-
-    def left_work(self):
         if self.request_body_left > 0:
             self.send_left_body()
 
@@ -204,7 +201,7 @@ class Stream(object):
             if self.request_body_left == 0:
                 self.request_body_sended = True
                 self._close_local()
-        self.task.set_state("end send left body")
+                self.task.set_state("end send left body")
 
     def receive_frame(self, frame):
         """

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
-"POT-Creation-Date: 2017-12-24 12:00+0800\n"
+"POT-Creation-Date: 2018-05-24 10:49+0800\n"
 "PO-Revision-Date: 2017-12-29 12:00+0800\n"
 "Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
@@ -17,14 +17,14 @@ msgstr ""
 msgid "Cloudflare"
 msgstr ""
 
-msgid "Heroku"
-msgstr ""
-
-msgid "TLS-Relay"
-msgstr ""
-
 msgid "Front"
 msgstr "前端"
+
+msgid "Log"
+msgstr "日志"
+
+msgid "Cloudfront"
+msgstr ""
 
 msgid "Info"
 msgstr "信息"
@@ -56,6 +56,9 @@ msgstr "没有账户？"
 msgid "Register"
 msgstr "注册"
 
+msgid "Promoter(Optional)"
+msgstr "推荐码(可选)"
+
 msgid "Already have an account?"
 msgstr "已有账户？"
 
@@ -67,6 +70,11 @@ msgstr "账户"
 
 msgid "Logout"
 msgstr "登出"
+
+msgid ""
+"Promote Code (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-"
+"Promote-Plan'>Help</a>)"
+msgstr "给别人的推荐码(<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-%E6%8E%A8%E5%B9%BF%E8%AE%A1%E5%88%92'>帮助</a>)"
 
 msgid "Credit"
 msgstr "余额"
@@ -97,6 +105,11 @@ msgstr "服务器"
 
 msgid "AUTO"
 msgstr "自动"
+
+msgid ""
+"Promoter (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-"
+"Promote-Plan'>Help</a>)"
+msgstr "推荐人(<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-%E6%8E%A8%E5%B9%BF%E8%AE%A1%E5%88%92'>帮助</a>)"
 
 msgid "Submit"
 msgstr "提交"
@@ -129,7 +142,9 @@ msgid "Action"
 msgstr "操作"
 
 msgid "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel"
-msgstr "https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
+msgstr ""
+"https://github.com/XX-net/XX-"
+"Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B"
 
 msgid "You haven't enough credit. Please charge first."
 msgstr "您的余额不足，请先充值。"
@@ -173,23 +188,17 @@ msgstr "正在登录..."
 msgid "Please wait ..."
 msgstr "请稍侯..."
 
+msgid "Promote Code copied to Clipboard."
+msgstr "推荐码已拷贝到剪贴板"
+
 msgid "Connect to server fail:"
 msgstr "连接服务器失败："
 
 msgid "Email seems invalid."
 msgstr "电子邮件地址似乎是无效的。"
 
-msgid "Do NOT use Chinese-service-provider's Email!"
-msgstr "请勿使用国内服务提供商的邮件地址！"
-
 msgid "Password needs at least 6 charactors, and no more than 20."
 msgstr "密码需要6~20个字符。"
-
-msgid "Password seems invalid."
-msgstr "密码似乎是无效的。"
-
-msgid "(available:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
-msgstr "(可选:a-zA-Z0-9_~!@#$%^&()+-*/=.,:;'\"<>?[]{})"
 
 msgid "Connect to server fail, check Front log first."
 msgstr "连接服务器失败，请检查前端日志。"
@@ -200,17 +209,38 @@ msgstr "用户名或密码不正确。"
 msgid "Login fail:"
 msgstr "登录失败："
 
+msgid "Do NOT use Chinese-service-provider's Email!"
+msgstr "请勿使用国内服务提供商的邮件地址！"
+
+msgid "Password seems invalid."
+msgstr "密码似乎是无效的。"
+
+msgid "Promoter is invalid."
+msgstr "推荐码无效"
+
 msgid "Registered successfully, "
 msgstr "注册成功，"
 
 msgid "Email has been taken by another user."
 msgstr "电子邮件地址已被他人使用。"
 
+msgid "Promoter not exist, check it or keep it empty."
+msgstr "推荐人不存在，请确认推荐码或清空推荐码。"
+
 msgid "Unknown error occurred."
 msgstr "发生未知错误。"
 
 msgid "previously selected server nolonger available, automatically try "
 msgstr "先前所选服务器不再可用，尝试 "
+
+msgid "Can't promote yourself."
+msgstr "不能推荐自己"
+
+msgid "Settings saved successfully."
+msgstr "设置保存成功。"
+
+msgid "Failed saving settings: "
+msgstr "设置保存失败："
 
 msgid "Failed to log out."
 msgstr "注销失败。"
@@ -242,6 +272,9 @@ msgstr "订购成功完成。"
 msgid "Get Fail:"
 msgstr "获取失败："
 
+msgid "Heroku"
+msgstr ""
+
 msgid "X-Tunnel"
 msgstr ""
 
@@ -251,8 +284,8 @@ msgstr "配置"
 msgid "Status"
 msgstr "状态"
 
-msgid "Log"
-msgstr "日志"
+msgid "TLS-Relay"
+msgstr ""
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低，部分功能无法工作。"
@@ -268,9 +301,6 @@ msgstr "属性"
 
 msgid "Value"
 msgstr "值"
-
-msgid "Server listen address"
-msgstr "监听地址"
 
 msgid "Handle num"
 msgstr "请求数"
@@ -299,8 +329,8 @@ msgstr "使用总量"
 msgid "GAE"
 msgstr "GAE"
 
-# msgid "Score"
-# msgstr "分数"
+msgid "Score"
+msgstr ""
 
 msgid "Success num"
 msgstr "成功数"
@@ -310,6 +340,9 @@ msgstr "失败数"
 
 msgid "Worker num"
 msgstr "工作数"
+
+msgid "TLS_Relay"
+msgstr ""
 
 msgid "X-Tunnel Status Info"
 msgstr "X-Tunnel 状态信息"
@@ -325,4 +358,6 @@ msgstr "指导"
 
 msgid " to troubleshoot."
 msgstr "去解决。"
+
+
 

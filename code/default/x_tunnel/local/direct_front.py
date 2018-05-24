@@ -12,7 +12,11 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 name = "direct_front"
-
+last_success_time = 0
+last_fail_time = 0
+continue_fail_num = 0
+success_num = 0
+fail_num = 0
 
 def init():
     global last_success_time, last_fail_time, continue_fail_num

@@ -47,7 +47,7 @@ def init():
     if g.config.enable_direct:
         import direct_front
         all_fronts.append(direct_front)
-        # session_fronts.append(direct_front)
+        session_fronts.append(direct_front)
         light_fronts.append(direct_front)
 
     threading.Thread(target=debug_data_clearup_thread).start()

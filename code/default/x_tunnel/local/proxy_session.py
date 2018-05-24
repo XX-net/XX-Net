@@ -790,7 +790,7 @@ def call_api(path, req_info):
 center_login_process = False
 
 
-def request_balance(account=None, password=None, is_register=False, update_server=True):
+def request_balance(account=None, password=None, is_register=False, update_server=True, promoter=""):
     global center_login_process
     if not g.config.api_server:
         g.server_host = str("%s:%d" % (g.config.server_host, g.config.server_port))
@@ -811,7 +811,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         account = g.config.login_account
         password = g.config.login_password
 
-    req_info = {"account": account, "password": password, "protocol_version": "2"}
+    req_info = {"account": account, "password": password, "protocol_version": "2",
+                "promoter": promoter}
 
     try:
         center_login_process = True
@@ -837,6 +838,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
 
         g.selectable = info["selectable"]
 
+        g.promote_code = info["promote_code"]
+        g.promoter = info["promoter"]
         g.balance = info["balance"]
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
                   g.balance, g.quota)
