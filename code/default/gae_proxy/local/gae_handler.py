@@ -437,7 +437,7 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
     raise GAE_Exception(600, b"".join(error_msg))
 
 
-def handler(method, url, headers, body, wfile):
+def handler(method, host, url, headers, body, wfile):
     if not url.startswith("http") and not url.startswith("HTTP"):
         xlog.error("gae:%s", url)
         return
@@ -523,6 +523,19 @@ def handler(method, url, headers, body, wfile):
         if key in skip_headers:
             continue
         response_headers[key] = value
+
+    if (response.status == 503 and
+            response_headers.get('Server') == 'HTTP server (unknown)' and
+            host.endswith(front.config.GOOGLE_ENDSWITH) and
+            host not in front.config.HOSTS_DIRECT):
+        if host in front.config.HOSTS_GAE:
+            try:
+                hosts_gae = list(front.config.HOSTS_GAE)
+                hosts_gae.remove(host)
+                front.config.HOSTS_GAE = tuple(hosts_gae)
+            except ValueError:
+                pass
+        front.config.HOSTS_DIRECT += host,
 
     response_headers["Persist"] = ""
     response_headers["Connection"] = "Persist"
