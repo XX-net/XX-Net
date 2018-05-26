@@ -1,6 +1,8 @@
 function CreateShortcut() {
     wsh = new ActiveXObject('WScript.Shell');
-    target_path = '"C:\\Windows\\System32\\wscript.exe"';
+    fso = new ActiveXObject("Scripting.FileSystemObject")
+    system_folder = fso.GetSpecialFolder(1)
+    target_path = '"' + system_folder + '\\wscript.exe"';
     argument_file = '"' + wsh.CurrentDirectory + '\\..\\..\\..\\start.vbs"';
     icon_path = wsh.CurrentDirectory + '\\web_ui\\favicon.ico';
 
