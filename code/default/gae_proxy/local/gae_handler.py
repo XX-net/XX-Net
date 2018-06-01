@@ -572,7 +572,7 @@ def handler(method, host, url, headers, body, wfile):
         # 写入除body外内容
 
     def is_text_content_type(content_type):
-        mct, sct = content_type.split('/', 1)
+        mct, _, sct = content_type.partition('/')
         if mct == 'text':
             return True
         if mct == 'application':
@@ -609,10 +609,12 @@ def handler(method, host, url, headers, body, wfile):
             deflate_decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
             decoded_data1 = None
 
-            CMF, FLG = bytearray(decoded_data0[:2])
-            if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
-                decoded_data1 = deflate_decompressor.decompress(decoded_data0[2:])
-            else:
+            if len(decoded_data0) > 1:
+                CMF, FLG = bytearray(decoded_data0[:2])
+                if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
+                    decoded_data1 = deflate_decompressor.decompress(decoded_data0[2:])
+
+            if decoded_data1 is None and len(decoded_data0) > 0:
                 try:
                     decoded_data1 = deflate_decompressor.decompress(decoded_data0)
                     if deflate_decompressor.unused_data != '':
