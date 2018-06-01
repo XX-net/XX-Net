@@ -132,7 +132,7 @@ def format_response(status, headers, content):
 
 
 def is_text_content_type(content_type):
-    mct, sct = content_type.split('/', 1)
+    mct, _, sct = content_type.partition('/')
     if mct == 'text':
         return True
     if mct == 'application':
@@ -402,7 +402,7 @@ def application(environ, start_response):
             maxsize - 1, len(data))
         data = data[:maxsize]
     if 'gzip' in accept_encoding:
-        if (status_code == 200 and
+        if (data and status_code == 200 and
                 content_encoding == '' and
                 is_text_content_type(content_type) and
                 is_deflate(data)):
