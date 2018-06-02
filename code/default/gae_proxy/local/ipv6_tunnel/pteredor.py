@@ -425,7 +425,21 @@ local_ip_startswith = tuple(
     )
 
 import locale
-if locale.getdefaultlocale()[0] == 'zh_CN':
+
+zh_locale = None
+try:
+    zh_locale = locale.getdefaultlocale()[0] == 'zh_CN'
+except:
+    if sys.platform == "darwin":
+        try:
+            oot = os.pipe()
+            p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
+            p.communicate()
+            zh_locale = b'zh' in os.read(oot[0], 10000)
+        except:
+            pass
+
+if zh_locale:
     help_info = u'''
 pteredor [-p <port>] [-P <port>] [-h] [<server1> [<server2> [...]]]
       -p  \u8bbe\u7f6e\u672c\u5730\u5ba2\u6237\u7aef\u7aef\u53e3\u3002
