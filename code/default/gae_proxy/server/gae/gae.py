@@ -17,7 +17,7 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.3'
+__version__ = '3.3.4'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -145,15 +145,18 @@ def is_text_content_type(content_type):
 
 
 def is_deflate(data):
-    CMF, FLG = bytearray(data[:2])
-    if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
-        return True
-    try:
-        decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
-        decompressor.decompress(data[:1024])
-        return decompressor.unused_data == ''
-    except:
-        return False
+    if len(data) > 1:
+        CMF, FLG = bytearray(data[:2])
+        if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
+            return True
+    if len(data) > 0:
+        try:
+            decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+            decompressor.decompress(data[:1024])
+            return decompressor.unused_data == ''
+        except:
+            return False
+    return False
 
 
 def application(environ, start_response):
