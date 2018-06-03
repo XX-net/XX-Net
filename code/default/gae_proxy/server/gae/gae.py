@@ -17,7 +17,7 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.4'
+__version__ = '3.3.5'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -352,7 +352,6 @@ def application(environ, start_response):
                 url,
                 response)
 
-            allow_truncated = True
             m = re.search(r'=\s*(\d+)-', headers.get('Range')
                           or headers.get('range') or '')
             if m is None:
