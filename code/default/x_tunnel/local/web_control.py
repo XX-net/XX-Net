@@ -6,9 +6,10 @@ import os
 import cgi
 import time
 import hashlib
-
-from xlog import getLogger
 import threading
+
+import utils
+from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import simple_http_server
@@ -221,6 +222,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 return True
 
         username    = str(self.postvars['username'][0])
+        #username = utils.get_printable(username)
         password    = str(self.postvars['password'][0])
         promoter = self.postvars.get("promoter", [""])[0]
         is_register = int(self.postvars['is_register'][0])

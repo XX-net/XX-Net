@@ -51,7 +51,7 @@ class AppidManager(object):
                     self.reset_appid()
 
             appid = random.choice(self.working_appid_list)
-            return appid
+            return str(appid)
         else:
             for _ in xrange(0, 10):
                 appid = self.public_appid.get()

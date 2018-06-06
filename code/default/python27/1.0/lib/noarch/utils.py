@@ -218,5 +218,13 @@ def is_private_ip(ip):
         return False
 
 
+import string
+printable = set(string.printable)
+
+
+def get_printable(s):
+    return filter(lambda x: x in printable, s)
+
+
 if __name__ == '__main__':
     print(is_private_ip("fa00::1"))
