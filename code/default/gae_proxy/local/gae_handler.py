@@ -385,6 +385,9 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
     else:
         timeouts = [timeout]
 
+    if body:
+        timeouts = [timeout + 10 for timeout in timeouts]
+
     for timeout in timeouts:
         request_headers, request_body = pack_request(method, url, headers, body, timeout)
         try:
