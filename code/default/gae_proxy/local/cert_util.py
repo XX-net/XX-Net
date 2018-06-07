@@ -82,7 +82,7 @@ class CertUtil(object):
         subj.organizationName = CertUtil.ca_vendor
         # Log generated time.
         subj.organizationalUnitName = '%s Root - %d' % (CertUtil.ca_vendor, int(time.time()))
-        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor #TODO: here should be GoAgent
+        subj.commonName = '%s XX-Net' % CertUtil.ca_vendor
         ca.gmtime_adj_notBefore(- 3600 * 24)
         ca.gmtime_adj_notAfter(CertUtil.ca_validity - 3600 * 24)
         ca.set_issuer(subj)
@@ -149,9 +149,11 @@ class CertUtil(object):
 
         sans = set(sans) if sans else set()
         sans.add(commonname)
-        if not isip:
-            sans.add('*.' + commonname)
-        cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, ', '.join('DNS: %s' % x for x in sans))])
+        if isip:
+            sans = 'IP: ' + commonname
+        else:
+            sans = 'DNS: %s, DNS: *.%s' % (commonname,  commonname)
+        cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, sans)])
 
         cert.sign(CertUtil.ca_privatekey, CertUtil.ca_digest)
 
@@ -204,7 +206,7 @@ class CertUtil(object):
         return res
 
     @staticmethod
-    def import_windows_ca(common_name, certfile):
+    def import_windows_ca(certfile):
         xlog.debug("Begin to import Windows CA")
         import ctypes
         with open(certfile, 'rb') as fp:
@@ -441,8 +443,8 @@ class CertUtil(object):
         xlog.debug("Importing CA")
         commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
         if sys.platform.startswith('win'):
-            CertUtil.remove_windows_ca('%s CA' % CertUtil.ca_vendor)
-            CertUtil.import_windows_ca(commonname, certfile)
+            CertUtil.remove_windows_ca('%s XX-Net' % CertUtil.ca_vendor)
+            CertUtil.import_windows_ca(certfile)
         elif sys.platform == 'darwin':
             CertUtil.import_mac_ca(commonname, certfile)
         elif sys.platform.startswith('linux'):
