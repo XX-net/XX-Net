@@ -215,27 +215,24 @@ class CertUtil(object):
                 begin = b'-----BEGIN CERTIFICATE-----'
                 end = b'-----END CERTIFICATE-----'
                 certdata = base64.b64decode(b''.join(certdata[certdata.find(begin)+len(begin):certdata.find(end)].strip().splitlines()))
-            crypt32 = ctypes.windll.crypt32
-            for store in (0x20000, 0x10000):
-                store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | store, u'root')
-                if not store_handle:
-                    return False
-                CERT_FIND_SUBJECT_STR = 0x00080007
-                CERT_FIND_HASH = 0x10000
-                X509_ASN_ENCODING = 0x00000001
-                class CRYPT_HASH_BLOB(ctypes.Structure):
-                    _fields_ = [('cbData', ctypes.c_ulong), ('pbData', ctypes.c_char_p)]
-                assert CertUtil.ca_thumbprint
-                crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(':', '')))
-                crypt_handle = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_HASH, ctypes.byref(crypt_hash), None)
-                if crypt_handle:
-                    crypt32.CertFreeCertificateContext(crypt_handle)
-                    return True
+            crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
+            store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
+            if not store_handle:
+                return False
+            CERT_FIND_SUBJECT_STR = 0x00080007
+            CERT_FIND_HASH = 0x10000
+            X509_ASN_ENCODING = 0x00000001
+            class CRYPT_HASH_BLOB(ctypes.Structure):
+                _fields_ = [('cbData', ctypes.c_ulong), ('pbData', ctypes.c_char_p)]
+            assert CertUtil.ca_thumbprint
+            crypt_hash = CRYPT_HASH_BLOB(20, binascii.a2b_hex(CertUtil.ca_thumbprint.replace(':', '')))
+            crypt_handle = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_HASH, ctypes.byref(crypt_hash), None)
+            if crypt_handle:
+                crypt32.CertFreeCertificateContext(crypt_handle)
+                return True
 
-                # Only add to current user
-                if store == 0x10000:
-                    ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
-                crypt32.CertCloseStore(store_handle, 0)
+            ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
+            crypt32.CertCloseStore(store_handle, 0)
             del crypt32
 
 
@@ -267,26 +264,22 @@ class CertUtil(object):
                 ('cbCertEncoded', ctypes.wintypes.DWORD),
                 ('pCertInfo', ctypes.c_void_p),
                 ('hCertStore', ctypes.c_void_p),]
-        crypt32 = ctypes.windll.crypt32
-        for store in (0x20000, 0x10000):
-            try:
-                store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | store, u'root')
-                pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, None)
-                while pCertCtx:
-                    certCtx = CERT_CONTEXT.from_address(pCertCtx)
-                    certdata = ctypes.string_at(certCtx.pbCertEncoded, certCtx.cbCertEncoded)
-                    cert =  OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata)
-                    if hasattr(cert, 'get_subject'):
-                         cert = cert.get_subject()
-                    cert_name = next((v for k, v in cert.get_components() if k == 'CN'), '')
-                    if name == cert_name:
-                        crypt32.CertDeleteCertificateFromStore(crypt32.CertDuplicateCertificateContext(pCertCtx))
-                    pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
-            except Exception as e:
-                xlog.warning('CertUtil.remove_windows_ca failed: %r', e)
-                break
-            finally:
-                crypt32.CertCloseStore(store_handle, 0)
+        try:
+            crypt32 = ctypes.WinDLL(b'crypt32.dll'.decode())
+            store_handle = crypt32.CertOpenStore(10, 0, 0, 0x4000 | 0x20000, b'ROOT'.decode())
+            pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, None)
+            while pCertCtx:
+                certCtx = CERT_CONTEXT.from_address(pCertCtx)
+                certdata = ctypes.string_at(certCtx.pbCertEncoded, certCtx.cbCertEncoded)
+                cert =  OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata)
+                if hasattr(cert, 'get_subject'):
+                    cert = cert.get_subject()
+                cert_name = next((v for k, v in cert.get_components() if k == 'CN'), '')
+                if cert_name and name == cert_name:
+                    crypt32.CertDeleteCertificateFromStore(crypt32.CertDuplicateCertificateContext(pCertCtx))
+                pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
+        except Exception as e:
+            xlog.warning('CertUtil.remove_windows_ca failed: %r', e)
 
 
     @staticmethod
