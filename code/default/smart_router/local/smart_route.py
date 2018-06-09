@@ -255,7 +255,7 @@ def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
     try:
         remote_sock = socks.create_connection(
             (host, port),
-            proxy_type="socks5h", proxy_addr="127.0.0.1", proxy_port=1080, timeout=15
+            proxy_type="socks5h", proxy_addr="127.0.0.1", proxy_port=g.x_tunnel_socks_port, timeout=15
         )
     except Exception as e:
         xlog.warn("do_unwrap_socks connect to x-tunnel for %s:%d proxy fail.", host, port)
