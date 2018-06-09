@@ -75,9 +75,9 @@ class PacHandler(simple_http_server.HttpServerHandler):
         host, _, port = host.rpartition(":")
 
         if g.config.pac_policy == "black_GAE":
-            content = self.policy_black_port(host, "8087")
+            content = self.policy_black_port(host, "%s" % g.gae_proxy_listen_port)
         elif g.config.pac_policy == "black_X-Tunnel":
-            content = self.policy_black_port(host, "1080")
+            content = self.policy_black_port(host, "%s" % g.x_tunnel_socks_port)
         else:
             content = self.policy_smart_router(host)
 

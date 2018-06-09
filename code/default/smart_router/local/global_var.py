@@ -17,3 +17,6 @@ dns_client = None
 
 proxy_server = None
 dns_srv = None
+
+gae_proxy_listen_port = None
+x_tunnel_socks_port = None
