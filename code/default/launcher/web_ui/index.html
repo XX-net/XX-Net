@@ -68,6 +68,14 @@
         </div>
         <div class="row-fluid">
             <div id="sidebar" class="span3">
+                <div id="notice" class="well">
+                    <label for="notice-content" class="fluid-down-control">
+                        <i class="icon icon-chevron-right"></i> <b>{{ _( "Notice" ) }}</b>
+                    </label>
+                    <ul id="notice-content" style="display:none; overflow:auto; width:auto; height:auto; max-height:200px; list-style-type:circle"></ul>
+                    <!--<svg height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>-->
+                    <br/>
+                </div> <!-- #notice -->
                 <div class="sidebar-nav well">
                     <ul class="nav nav-list">%s</ul>
                 </div> <!-- .sidebar-nav -->
@@ -102,6 +110,22 @@
         window.wiki_ISSUEID = 9696; //as default, an wiki/help issue, for failed-getting-releasenote-issue condition
         window.RELEASENOTE_ISSUEID = window.wiki_ISSUEID;
         window.welcomeISSUEID = window.wiki_ISSUEID;
+    });
+</script>
+<script type="text/javascript">
+    $('.fluid-down-control').click(function () {
+        var isShown = $('i.icon', this).hasClass('icon-chevron-down');
+        var id = $(this).attr('for');
+
+        if (!isShown) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#' + id).slideDown();
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#' + id).slideUp();
+        }
     });
 </script>
 <script type="text/javascript">
@@ -144,10 +168,17 @@
         }, 1000);
     });
 
+    $('#notice').click(function () {
+        if ($('#notice-content', this).html() == '') {
+            getNotice();
+        }
+    });
+
     function welcomeClose() {
         $('#welcome').addClass('hide');
         setConfig('postUpdateStat', "noChange");
     }
+
     function updateWelcome() {
         switch (getConfig('postUpdateStat')) {
             case "noChange":
@@ -170,46 +201,125 @@
             default:
         }
     }
-    function getRELEASENOTE_ISSUEID(currentVer) {
-        var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer; //console.log('APIurl='+APIurl);
+
+    function updateNotice(contents, appendMode) {
+        //appendMode = appendMode || false;
+        if (!contents || contents.length <= 0) return;
+
+        var content = document.getElementById('notice-content');
+        if (!appendMode) {
+            content.innerHTML = '';
+        }
+
+        var i, limit = 30;
+        var cur = content.firstChild;
+        for (i = 0; i < limit && cur && contents.length > 0; i++) {
+            var issue = contents[0];
+            if (cur.id.substring(6) < issue[0]) {
+                var li = document.createElement('li');
+                li.setAttribute('id', "issue_" + issue[0]);
+                var a = document.createElement('a');
+                a.textContent = issue[1];
+                a.href = issue[2];
+                a.issueid = issue[0];
+                a.onclick = function() {
+                    popIssue(this.issueid);
+                    return false;
+                }
+                li.appendChild(a);
+                content.insertBefore(li, cur);
+                contents.shift();
+            } else if (cur.id.substring(6) == issue[0]) {
+                cur = cur.nextSibling;
+                contents.shift();
+            } else if (cur.id.substring(6) > issue[0]) {
+                cur = cur.nextSibling;
+            } else {
+                displayErrorMessage();
+            }
+        }
+        if (contents.length > 0) {
+            while (i < limit && contents.length > 0) {
+                var issue = contents.shift();
+                var li = document.createElement('li');
+                li.setAttribute('id', "issue_" + issue[0]);
+                var a = document.createElement('a');
+                a.textContent = issue[1];
+                a.href = issue[2];
+                a.issueid = issue[0];
+                a.onclick = function() {
+                    popIssue(this.issueid);
+                    return false;
+                }
+                li.appendChild(a);
+                content.appendChild(li);
+                i++;
+            }
+            return;
+        }
+        //if (cur && i >= limit) { //exceed limit, do nothing for now }
+    }
+
+    function getIssuesByLabels(labels, callback, repo) {
+        repo = repo || "XX-net/XX-Net";
+        //var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "no:label"; //for test, get all commits without label
+        var APIurl = "https://api.github.com/repos/" + repo + "/issues?page=1&labels=" + labels; //console.log('APIurl='+APIurl);
         $.ajax({
             type: 'GET',
             url: APIurl,
             dataType: 'JSON',
-            success: function (result) {
-                if (result.length === 0) {
-                    console.log("NO RELEASENOTE_ISSUEID related to '" + currentVer + "'.");
-                    return;
-                }
-                var issueURL = result[0]['url'].split('/');
-                window.RELEASENOTE_ISSUEID = issueURL[7];
-            },
+            success: callback,
             error: function (result) {
-                console.log("Failed getting RELEASENOTE_ISSUEID of '" + currentVer + "'.");
-
-                var currentVer_Split = currentVer.split('.');
-                currentVer_Split[2] = 'x';
-                var currentVer_Big = currentVer_Split.join('.');
-                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "发布" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
-                $.ajax({
-                    type: 'GET',
-                    url: APIurl,
-                    dataType: 'JSON',
-                    success: function (result) {
-                        if (result.length === 0) {
-                            console.log("NO RELEASENOTE_ISSUEID related to '" + currentVer_Big + "'.");
-                            return;
-                        }
-                        var issueURL = result[0]['url'].split('/');
-                        window.RELEASENOTE_ISSUEID = issueURL[7];
-                    },
-                    error: function (result) {
-                        console.log("Failed getting RELEASENOTE_ISSUEID of '" + currentVer_Big + "'.");
-                    }
-                });
-            },
-            complete: updateWelcome()
+                console.log("Failed loading issues of " + labels + ".");
+            }
         });
+    }
+
+    function getNoticeCallback(result) {
+        var t = [];
+        for (var i = 0; i < result.length; i++) {
+            var issue = result[i];
+            t.push([issue.number, issue.title, issue.html_url]);
+        }
+        updateNotice(t, true);
+    }
+
+    function getNotice() {
+        var pageRequests = {
+            'cmd': 'get_version'
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                var currentVerBig = result['current_version'].replace(/(\d+)$/, "x");
+                var currentVerBigSplit = currentVerBig.split('.');
+                currentVerBigSplit[1] = parseInt(currentVerBigSplit[1]) + 1;
+                var currentVerNextBig = currentVerBigSplit.join('.');
+                getIssuesByLabels("公告", getNoticeCallback);
+                getIssuesByLabels(currentVerBig, getNoticeCallback);
+                getIssuesByLabels(currentVerNextBig, getNoticeCallback);
+            }
+        });
+    }
+
+    function getRELEASENOTE_ISSUEID_Callback(result) {
+        if (result.length === 0) {
+            console.log("NO RELEASENOTE_ISSUEID related to '" + currentVer + "'.");
+            return;
+        }
+        var issueURL = result[0]['url'].split('/');
+        window.RELEASENOTE_ISSUEID = issueURL[7];
+    }
+
+    function getRELEASENOTE_ISSUEID(version) {
+        var versionSplit = version.split('.');
+        versionSplit[2] = 'x';
+        var versionSplitBig = versionSplit.join('.');
+        getIssuesByLabels("发布," + versionSplitBig, getRELEASENOTE_ISSUEID_Callback);
+        updateWelcome();
     }
 </script>
 <script type="text/javascript">

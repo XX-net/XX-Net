@@ -19,13 +19,6 @@
         <br/>
     </div> <!-- #search -->
 
-    <div id="notice">
-        <h4>{{ _( "Notice" ) }}</h4>
-        <ul id="notice-content" style="overflow:auto; width:auto; height:auto; max-height:200px; list-style-type:circle"></ul>
-        <!--<svg height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>-->
-        <br/>
-    </div> <!-- #notice -->
-
     <h4>{{ _( "Status" ) }}</h4>
     <table id="status" class="table table-bordered table-striped">
         <thead>
@@ -247,7 +240,6 @@
 
         updateDetailStatus();
         updateNoobStatus();
-        getNotice();
         update_show_detail();
     });
 </script>
@@ -533,110 +525,6 @@
                     updateProperty('td#lan-proxy', '{{ _( "disable" ) }}');
                 }
                 */
-            }
-        });
-    }
-
-    function updateNotice(contents, appendMode) {
-        //appendMode = appendMode || false;
-        if (!contents || contents.length <= 0) return;
-
-        var content = document.getElementById('notice-content');
-        if (!appendMode) {
-            content.innerHTML = '';
-        }
-
-        var i, limit = 30;
-        var cur = content.firstChild;
-        for (i = 0; i < limit && cur && contents.length > 0; i++) {
-            var issue = contents[0];
-            if (cur.id.substring(6) < issue[0]) {
-                var li = document.createElement('li');
-                li.setAttribute('id', "issue_" + issue[0]);
-                var a = document.createElement('a');
-                a.textContent = issue[1];
-                a.href = issue[2];
-                a.setAttribute('target', '_blank');
-                li.appendChild(a);
-                content.insertBefore(li, cur);
-                contents.shift();
-            } else if (cur.id.substring(6) == issue[0]) {
-                cur = cur.nextSibling;
-                contents.shift();
-            } else if (cur.id.substring(6) > issue[0]) {
-                cur = cur.nextSibling;
-            } else {
-                displayErrorMessage();
-            }
-        }
-        if (contents.length > 0) {
-            while (i < limit && contents.length > 0) {
-                var issue = contents.shift();
-                var li = document.createElement('li');
-                li.setAttribute('id', "issue_" + issue[0]);
-                var a = document.createElement('a');
-                a.textContent = issue[1];
-                a.href = issue[2];
-                a.setAttribute('target', '_blank');
-                li.appendChild(a);
-                content.appendChild(li);
-                i++;
-            }
-            return;
-        }
-        //if (cur && i >= limit) { //exceed limit, do nothing for now }
-    }
-
-    function getNotice() {
-        var pageRequests = {
-            'cmd': 'get_version'
-        };
-        $.ajax({
-            type: 'GET',
-            url: '/config',
-            data: pageRequests,
-            dataType: 'JSON',
-            success: function (result) {
-                //var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "no:label"; //for test, get all commits without label
-                var currentVer = result['current_version'];
-                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "公告" + ',' + currentVer; //console.log('APIurl='+APIurl);
-                $.ajax({
-                    type: 'GET',
-                    url: APIurl,
-                    dataType: 'JSON',
-                    success: function (result) {
-                        var t = [];
-                        for (var i = 0; i < result.length; i++) {
-                            var issue = result[i];
-                            t.push([issue.number, issue.title, issue.html_url]);
-                        }
-                        updateNotice(t, true);
-                    },
-                    error: function (result) {
-                        console.log("Failed loading notice of '" + currentVer + "'.");
-                    }
-                });
-
-                var currentVer_Split = currentVer.split('.');
-                currentVer_Split[2] = 'x';
-                var currentVer_Big = currentVer_Split.join('.');
-                var APIurl = "https://api.github.com/repos/XX-net/XX-Net/issues?" + "labels=" + "公告" + ',' + currentVer_Big; //console.log('APIurl='+APIurl);
-                $.ajax({
-                    type: 'GET',
-                    url: APIurl,
-                    dataType: 'JSON',
-                    success: function (result) {
-                        var t = [];
-                        for (var i = 0; i < result.length; i++) {
-                            var issue = result[i];
-                            t.push([issue.number, issue.title, issue.html_url]);
-                        }
-                        updateNotice(t, true);
-                    },
-                    error: function (result) {
-                        console.log("Failed loading notice of '" + currentVer_Big + "'.");
-                    }
-                });
             }
         });
     }
