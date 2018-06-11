@@ -225,12 +225,18 @@ class CertUtil(object):
                 ('cbCertEncoded', ctypes.wintypes.DWORD),
                 ('pCertInfo', ctypes.c_void_p),
                 ('hCertStore', ctypes.c_void_p),]
+        X509_ASN_ENCODING = 0x1
+        CERT_STORE_ADD_ALWAYS = 4
         CERT_STORE_PROV_SYSTEM = 10
         CERT_STORE_OPEN_EXISTING_FLAG = 0x4000
         CERT_SYSTEM_STORE_CURRENT_USER = 1 << 16
         CERT_SYSTEM_STORE_LOCAL_MACHINE = 2 << 16
+        CERT_FIND_SUBJECT_STR = 8 << 16 | 7
         crypt32 = ctypes.windll.crypt32
         ca_exists = False
+        store_handle = None
+        pCertCtx = None
+        ret = 0
         for store in (CERT_SYSTEM_STORE_LOCAL_MACHINE, CERT_SYSTEM_STORE_CURRENT_USER):
             try:
                 store_handle = crypt32.CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, None, CERT_STORE_OPEN_EXISTING_FLAG | store, u'root')
@@ -241,7 +247,7 @@ class CertUtil(object):
                     else:
                         continue
 
-                pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, None)
+                pCertCtx = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, common_name, None)
                 while pCertCtx:
                     certCtx = CERT_CONTEXT.from_address(pCertCtx)
                     _certdata = ctypes.string_at(certCtx.pbCertEncoded, certCtx.cbCertEncoded)
@@ -260,19 +266,24 @@ class CertUtil(object):
                             elif ret == 0 and store == CERT_SYSTEM_STORE_LOCAL_MACHINE:
                                 # to elevate
                                 break
-                    pCertCtx = crypt32.CertEnumCertificatesInStore(store_handle, pCertCtx)
+                    pCertCtx = crypt32.CertFindCertificateInStore(store_handle, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, common_name, pCertCtx)
 
                 # Only add to current user
                 if store == CERT_SYSTEM_STORE_CURRENT_USER and not ca_exists:
-                    ret = crypt32.CertAddEncodedCertificateToStore(store_handle, 0x1, certdata, len(certdata), 4, None)
+                    ret = crypt32.CertAddEncodedCertificateToStore(store_handle, X509_ASN_ENCODING, certdata, len(certdata), CERT_STORE_ADD_ALWAYS, None)
             except Exception as e:
                 xlog.warning('CertUtil.import_windows_ca failed: %r', e)
+                if isinstance(e, OSError):
+                    store_handle = None
+                    continue
                 return False
             finally:
                 if pCertCtx:
-                    crypt32.CertFreeCertificateContext(pCertCtx)
+                    trycrypt32.CertFreeCertificateContext(pCertCtx)
+                    pCertCtx = None
                 if store_handle:
                     crypt32.CertCloseStore(store_handle, 0)
+                    store_handle = None
 
         if ca_exists:
             return True
