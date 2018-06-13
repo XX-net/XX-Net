@@ -87,9 +87,8 @@ Reg add HKLM\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfig
 :: Enable all IPv6 parts
 Reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
 
-:: Set Group Policy
-:: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_DefaultQualified 
-:: HKLM\Software\Policies\Microsoft\Windows\TCPIP\v6Transition -Name Teredo_State 
+:: Reset Group Policy Teredo
+..\..\..\python27\1.0\pythonw.exe win_reset_gp.py
 
 
 ipconfig /flushdns
