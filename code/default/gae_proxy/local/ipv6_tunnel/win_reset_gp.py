@@ -20,7 +20,7 @@ if gp_regpol_new != gp_regpol_old and \
     with open(gp_regpol_file, 'wb') as f:
         f.write(gp_regpol_new)
     import platform
-    if platform.version()[0] < '5.1':
+    if platform.version() < '5.1':
         # Windows 5.0
         os.system('secedit /refreshpolicy machine_policy /enforce')
     else:
