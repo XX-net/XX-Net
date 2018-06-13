@@ -41,18 +41,18 @@ set_best_server_temp = os.path.join(current_path, 'set_best_server_temp.bat')
 
 enable_cmds = """
 @echo Starting...
-@set log_file="%s"
+@set log_file="{}"
 
 @echo Config servers...
-@call:[config servers]>>"%%%%log_file%%%%"
+@call:[config servers]>>"%log_file%"
 
 @echo Reset IPv6...
-@call:[reset ipv6]>>"%%%%log_file%%%%"
+@call:[reset ipv6]>>"%log_file%"
 
 @echo Set IPv6 Tunnel...
-@call:[set ipv6]>>"%%%%log_file%%%%"
+@call:[set ipv6]>>"%log_file%"
 
-@call:[print state]>>"%%%%log_file%%%%"
+@call:[print state]>>"%log_file%"
 
 @echo Over
 @echo Reboot system at first time!
@@ -89,13 +89,16 @@ goto :eof
 
 
 :[reset ipv6]
+""".format(log_file) + \
+'%s %s\\win_reset_gp.py' % (sys.executable, current_path) + \
+"""
 netsh interface ipv6 reset
 ipconfig /flushdns
 goto :eof
 
 
 :[set ipv6]
-netsh interface teredo set state type=%%s servername=%%s.
+netsh interface teredo set state type={} servername={}.
 
 :: Set IPv6 prefixpolicies
 :: 2001::/16 Aggregate global unicast address; not default
@@ -137,7 +140,7 @@ netsh interface ipv6 show prefixpolicies
 netsh interface ipv6 show address
 route print
 goto :eof
-""" % log_file
+"""
 
 
 disable_cmds="""
@@ -215,7 +218,7 @@ def enable(is_local=False):
     if script_is_running or pteredor_is_running:
         return "Script is running, please retry later."
     else:
-        new_enable_cmds = enable_cmds % (client_type(), best_server())
+        new_enable_cmds = enable_cmds.format(client_type(), best_server())
         with open(enable_ipv6_temp, 'w') as fp:
             fp.write(new_enable_cmds)
         done = elevate(enable_ipv6_temp, False)
