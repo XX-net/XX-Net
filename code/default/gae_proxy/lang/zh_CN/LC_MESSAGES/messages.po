@@ -239,8 +239,8 @@ msgstr "启用操作通常只需要在每台设备上执行一次。"
 msgid "After changing the server, it takes 10-90 seconds to successfully establish a new teredo tunnel."
 msgstr "更换服务器后，需要等待 10-90 秒钟才会成功建立新的 teredo 隧道。"
 
-msgid "If win user does not understand about group policy, keep it unset."
-msgstr "Win 用户如果不了解相关组策略，请保持组策略为未设置状态。"
+msgid "To use teredo tunnel, win user must keep firewall enabled, and allow outbound."
+msgstr "Win 用户使用 teredo 必须保持防火墙开启，出站放行即可。"
 
 msgid "Non-win users can also use the test button to get the fastest server for change manually."
 msgstr "非 win 用户也可以使用测试按钮来获取响应最快的服务器，以便手动更换。"
