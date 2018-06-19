@@ -206,7 +206,7 @@ class CertUtil(object):
         return res
 
     @staticmethod
-    def import_windows_ca(common_name, certfile):
+    def import_windows_ca(certfile):
         xlog.debug("Begin to import Windows CA")
         with open(certfile, 'rb') as fp:
             certdata = fp.read()
@@ -214,6 +214,11 @@ class CertUtil(object):
                 begin = b'-----BEGIN CERTIFICATE-----'
                 end = b'-----END CERTIFICATE-----'
                 certdata = base64.b64decode(b''.join(certdata[certdata.find(begin)+len(begin):certdata.find(end)].strip().splitlines()))
+        try:
+            common_name = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata).get_subject().CN
+        except Exception as e:
+            logging.error('load_certificate(certfile=%r) 失败：%s', certfile, e)
+            return -1
 
         assert certdata, 'cert file %r is broken' % certfile
         import ctypes
@@ -461,7 +466,7 @@ class CertUtil(object):
         xlog.debug("Importing CA")
         commonname = "GoAgent XX-Net - GoAgent" #TODO: here should be GoAgent - XX-Net
         if sys.platform.startswith('win'):
-            CertUtil.import_windows_ca('%s XX-Net' % CertUtil.ca_vendor, certfile)
+            CertUtil.import_windows_ca(certfile)
         elif sys.platform == 'darwin':
             CertUtil.import_mac_ca(commonname, certfile)
         elif sys.platform.startswith('linux'):
