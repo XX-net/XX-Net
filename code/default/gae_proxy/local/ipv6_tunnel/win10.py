@@ -202,11 +202,12 @@ def state():
     r = run("netsh interface teredo show state")
     xlog.debug("netsh state: %s", r)
     type = get_line_value(r, 2)
-    last_state = get_line_value(r, 6)
-    if type == "disabled" or last_state == "offline":
+    if type == "disabled":
         last_state = "disabled"
-    elif last_state in ["qualified", "dormant"]:
-        last_state = "enable"
+    else:
+        last_state = get_line_value(r, 6)
+        if "probe" in last_state:
+            last_state = "probe"
 
     return last_state
 
