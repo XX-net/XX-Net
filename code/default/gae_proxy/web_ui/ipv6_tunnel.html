@@ -140,8 +140,14 @@
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=get_log',
             dataType: 'JSON',
             success: function (result) {
-                if (result['status'] == 'enable') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("enable")}}');
+                if (result['status'] == 'offline') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("offline")}}');
+                } else if (result['status'] == 'probe') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("probe")}}');
+                } else if (result['status'] == 'qualified') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("qualified")}}');
+                } else if (result['status'] == 'dormant') {
+                    updateStatus('td#ipv6-tunnel', '{{ _("dormant")}}');
                 } else if (result['status'] == 'disabled') {
                     updateStatus('td#ipv6-tunnel', '{{ _("disabled")}}');
                 }
