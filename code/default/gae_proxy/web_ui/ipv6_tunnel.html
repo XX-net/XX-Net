@@ -8,8 +8,8 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ _( "IPv6 Tunnel" ) }}</td>
-                <td id="ipv6-tunnel"></td>
+                <td>{{ _( "Teredo Tunnel" ) }}</td>
+                <td id="teredo-tunnel"></td>
             </tr>
         </tbody>
     </table>
@@ -28,12 +28,12 @@
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_disable" type="submit">{{ _( "Disable" ) }}</button>
         </div> <!-- .span4 -->
         <div class="span4">
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test" type="submit">{{ _( "Test teredo" ) }}</button>
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test_usability" type="submit">{{ _( "Test teredo usability only" ) }}</button>
+            <button class="btn btn-primary btn-block" id="teredo_tunnel_test" type="submit">{{ _( "Test teredo" ) }}</button>
+            <button class="btn btn-primary btn-block" id="teredo_tunnel_test_usability" type="submit">{{ _( "Test teredo usability only" ) }}</button>
         </div> <!-- .span4 -->
         <div class="span4">
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_test_server" type="submit">{{ _( "Test teredo server only" ) }}</button>
-            <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_change_server" type="submit">{{ _( "Change teredo server" ) }}</button>
+            <button class="btn btn-primary btn-block" id="teredo_tunnel_test_server" type="submit">{{ _( "Test teredo server only" ) }}</button>
+            <button class="btn btn-primary btn-block" id="teredo_tunnel_change_server" type="submit">{{ _( "Change teredo server" ) }}</button>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
@@ -51,46 +51,36 @@
             $(selector).html(content);
         }
     }
-    /*
-    function SwitchButtonEnable() {
-        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")) {
-            $('#switch_ipv6_tunnel').removeClass('btn-inverse');
-            $('#switch_ipv6_tunnel').addClass('btn-primary');
-        }
-        $('#switch_ipv6_tunnel').html('{{ _( "Enable" ) }}');
-    }
-    function SwitchButtonDisable() {
-        if ($('#switch_ipv6_tunnel').hasClass("btn-inverse")) {
-            $('#switch_ipv6_tunnel').removeClass('btn-inverse');
-            $('#switch_ipv6_tunnel').addClass('btn-primary');
-        }
-        $('#switch_ipv6_tunnel').html('{{ _( "Disable" ) }}');
-    }*/
 </script>
 <script type="text/javascript">
     var scriptIsRunning = false;
 
     $('button.btn').click(function () {
         var cmd = "stop";
-        if ($(this).attr('id') == 'switch_ipv6_tunnel_enable') {
-            if ($('td#ipv6-tunnel').html() == '{{ _("enable")}}' &&
-                !confirm('{{ _("IPv6 Tunnel")}}{{ _( "enable" ) }}{{ _( ", are you sure to continue?" ) }}')) {
+        var id = $(this).attr('id');
+        var teredoStatus = $('td#teredo-tunnel').html();
+        if (id == 'switch_ipv6_tunnel_enable') {
+            if ((teredoStatus == '{{ _("qualified")}}' ||
+                 teredoStatus == '{{ _("probe")}}' ||
+                 teredoStatus == '{{ _("dormant")}}' ||
+                 teredoStatus == '{{ _("offline")}}') &&
+                !confirm('{{ _("IPv6 Tunnel")}}{{ _( "enabled" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
             cmd = "enable";
-        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_disable') {
-            if ($('td#ipv6-tunnel').html() == '{{ _("disabled")}}' &&
+        } else if (id == 'switch_ipv6_tunnel_disable') {
+            if (teredoStatus == '{{ _("disabled")}}' &&
                 !confirm('{{ _("IPv6 Tunnel")}}{{ _( "disabled" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
             cmd = "disable";
-        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test') {
+        } else if (id == 'teredo_tunnel_test') {
             cmd = "test_teredo";
-        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test_usability') {
+        } else if (id == 'teredo_tunnel_test_usability') {
             cmd = "test_teredo_usability";
-        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_test_server') {
+        } else if (id == 'teredo_tunnel_test_server') {
             cmd = "test_teredo_server";
-        } else if ($(this).attr('id') == 'switch_ipv6_tunnel_change_server') {
+        } else if (id == 'teredo_tunnel_change_server') {
             cmd = "set_best_server";
         } else {
             return;
@@ -140,19 +130,20 @@
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=get_log',
             dataType: 'JSON',
             success: function (result) {
-                if (result['status'] == 'enable') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("enable")}}');
+                if (result['status'] == 'offline') {
+                    updateStatus('td#teredo-tunnel', '{{ _("offline")}}');
+                } else if (result['status'] == 'probe') {
+                    updateStatus('td#teredo-tunnel', '{{ _("probe")}}');
+                } else if (result['status'] == 'qualified') {
+                    updateStatus('td#teredo-tunnel', '{{ _("qualified")}}');
+                } else if (result['status'] == 'dormant') {
+                    updateStatus('td#teredo-tunnel', '{{ _("dormant")}}');
                 } else if (result['status'] == 'disabled') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("disabled")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("disabled")}}');
+                } else if (result['status'] == 'unknown') {
+                    updateStatus('td#teredo-tunnel', '{{ _("unknown")}}');
                 }
                 updateLog(result['log']);
-
-                /*
-                if (result['status'] == 'enable') {
-                    SwitchButtonDisable();
-                } else if (result['status'] == 'disabled') {
-                    SwitchButtonEnable();
-                }*/
 
                 if (window.isAutoScrollLog == true) {
                     $('#log').scrollTop($('#log')[0].scrollHeight);

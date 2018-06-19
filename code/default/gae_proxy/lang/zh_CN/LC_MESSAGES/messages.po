@@ -32,6 +32,9 @@ msgstr "检查 IP"
 msgid "IPv6 Tunnel"
 msgstr "IPv6 隧道"
 
+msgid "Teredo Tunnel"
+msgstr "Teredo 隧道"
+
 msgid "GAEProxy Advanced Configuration"
 msgstr "GAEProxy 高级配置"
 
@@ -131,7 +134,22 @@ msgstr "当前状态："
 msgid "idle"
 msgstr "空闲"
 
-msgid "enable"
+msgid "unknown"
+msgstr "未知"
+
+msgid "offline"
+msgstr "离线（无法连接）"
+
+msgid "probe"
+msgstr "正在检查网络"
+
+msgid "qualified"
+msgstr "合格（已连接）"
+
+msgid "dormant"
+msgstr "休眠（未连接）"
+
+msgid "enabled"
 msgstr "已启用"
 
 msgid "disabled"
