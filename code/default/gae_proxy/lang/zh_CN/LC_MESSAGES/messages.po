@@ -149,6 +149,9 @@ msgstr "合格（已连接）"
 msgid "dormant"
 msgstr "休眠（未连接）"
 
+msgid "enabled"
+msgstr "已启用"
+
 msgid "disabled"
 msgstr "已禁用"
 
