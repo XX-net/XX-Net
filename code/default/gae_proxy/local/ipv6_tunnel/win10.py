@@ -205,7 +205,7 @@ def state():
     if type == "disabled":
         last_state = "disabled"
     else:
-        last_state = get_line_value(r, 6)
+        last_state = get_line_value(r, 6) or "unknown"
         if "probe" in last_state:
             last_state = "probe"
 
