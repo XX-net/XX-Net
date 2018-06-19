@@ -8,8 +8,8 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ _( "IPv6 Tunnel" ) }}</td>
-                <td id="ipv6-tunnel"></td>
+                <td>{{ _( "Teredo Tunnel" ) }}</td>
+                <td id="teredo-tunnel"></td>
             </tr>
         </tbody>
     </table>
@@ -73,13 +73,13 @@
     $('button.btn').click(function () {
         var cmd = "stop";
         if ($(this).attr('id') == 'switch_ipv6_tunnel_enable') {
-            if ($('td#ipv6-tunnel').html() == '{{ _("enable")}}' &&
+            if ($('td#teredo-tunnel').html() == '{{ _("enable")}}' &&
                 !confirm('{{ _("IPv6 Tunnel")}}{{ _( "enable" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
             cmd = "enable";
         } else if ($(this).attr('id') == 'switch_ipv6_tunnel_disable') {
-            if ($('td#ipv6-tunnel').html() == '{{ _("disabled")}}' &&
+            if ($('td#teredo-tunnel').html() == '{{ _("disabled")}}' &&
                 !confirm('{{ _("IPv6 Tunnel")}}{{ _( "disabled" ) }}{{ _( ", are you sure to continue?" ) }}')) {
                 return;
             }
@@ -141,15 +141,15 @@
             dataType: 'JSON',
             success: function (result) {
                 if (result['status'] == 'offline') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("offline")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("offline")}}');
                 } else if (result['status'] == 'probe') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("probe")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("probe")}}');
                 } else if (result['status'] == 'qualified') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("qualified")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("qualified")}}');
                 } else if (result['status'] == 'dormant') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("dormant")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("dormant")}}');
                 } else if (result['status'] == 'disabled') {
-                    updateStatus('td#ipv6-tunnel', '{{ _("disabled")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("disabled")}}');
                 }
                 updateLog(result['log']);
 
