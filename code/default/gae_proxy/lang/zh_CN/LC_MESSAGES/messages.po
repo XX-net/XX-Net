@@ -134,6 +134,9 @@ msgstr "当前状态："
 msgid "idle"
 msgstr "空闲"
 
+msgid "unknown"
+msgstr "未知"
+
 msgid "offline"
 msgstr "离线（无法连接）"
 
