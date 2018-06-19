@@ -140,6 +140,8 @@
                     updateStatus('td#teredo-tunnel', '{{ _("dormant")}}');
                 } else if (result['status'] == 'disabled') {
                     updateStatus('td#teredo-tunnel', '{{ _("disabled")}}');
+                } else if (result['status'] == 'unknown') {
+                    updateStatus('td#teredo-tunnel', '{{ _("unknown")}}');
                 }
                 updateLog(result['log']);
 
