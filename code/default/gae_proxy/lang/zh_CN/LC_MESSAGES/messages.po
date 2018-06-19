@@ -131,8 +131,17 @@ msgstr "当前状态："
 msgid "idle"
 msgstr "空闲"
 
-msgid "enable"
-msgstr "已启用"
+msgid "offline"
+msgstr "离线（无法连接）"
+
+msgid "probe"
+msgstr "正在检查网络"
+
+msgid "qualified"
+msgstr "合格（已连接）"
+
+msgid "dormant"
+msgstr "休眠（未连接）"
 
 msgid "disabled"
 msgstr "已禁用"
