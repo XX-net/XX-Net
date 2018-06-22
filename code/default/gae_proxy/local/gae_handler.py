@@ -718,6 +718,7 @@ class RangeFetch2(object):
         self.response = response
 
         self.keep_running = True
+        self.blocked = False
 
         self.lock = threading.Lock()
         self.waiter = threading.Condition(self.lock)
@@ -848,12 +849,12 @@ class RangeFetch2(object):
                 # at least 2 wait workers keep running
                 if self.req_begin > self.wait_begin + front.config.AUTORANGE_MAXSIZE:
                     if self.data_size > front.config.AUTORANGE_MAXBUFFERSIZE:
-                        if not blocked:
+                        if not self.blocked:
                             xlog.debug("fetch_worker blocked, buffer:%d %s",
                                        self.data_size, self.url)
-                        blocked = True
+                        self.blocked = blocked = True
                         continue
-                    blocked = False
+                    self.blocked = blocked = False
 
                 if self.req_begin >= self.req_end + 1:
                     break
