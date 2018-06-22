@@ -284,7 +284,7 @@ class CertUtil(object):
                 return False
             finally:
                 if pCertCtx:
-                    trycrypt32.CertFreeCertificateContext(pCertCtx)
+                    crypt32.CertFreeCertificateContext(pCertCtx)
                     pCertCtx = None
                 if store_handle:
                     crypt32.CertCloseStore(store_handle, 0)
