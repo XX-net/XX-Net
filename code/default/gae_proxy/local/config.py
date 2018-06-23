@@ -1,12 +1,18 @@
 import os
 
 from front_base.config import ConfigBase
+import simple_http_client
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'gae_proxy')
 
+
+headers = {"connection": "close"}
+fqrouter = simple_http_client.request("GET", "http://127.0.0.1:2515/ping", headers=headers, timeout=0.5)
+mobile = fqrouter and "PONG" in fqrouter.text
+del headers, fqrouter
 
 class Config(ConfigBase):
     def __init__(self, fn):
@@ -17,8 +23,12 @@ class Config(ConfigBase):
         self.set_var("listen_port", 8087)
 
         # auto range
-        self.set_var("AUTORANGE_THREADS", 20)
-        self.set_var("AUTORANGE_MAXSIZE", 548576)
+        self.set_var("AUTORANGE_THREADS", 10)
+        self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
+        if mobile:
+            self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024 / 8)
+        else:
+            self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024)
         self.set_var("JS_MAXSIZE", 2097152)
 
         # gae
@@ -30,18 +40,18 @@ class Config(ConfigBase):
             "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
-            "appengine.google.com"
+            "appengine.google.com",
+            "mail.google.com",
+            "accounts.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
             ".appspot.com",
         ])
 
         self.set_var("hosts_gae", [
-            "mail.google.com",
-            "accounts.google.com"
         ])
-        self.set_var("hosts_gae_endswith", [
 
+        self.set_var("hosts_gae_endswith", [
         ])
 
         # sites using br
@@ -62,7 +72,6 @@ class Config(ConfigBase):
         # some unsupport request like url length > 2048, will go Direct
         self.set_var("google_endswith", [
             ".youtube.com",
-            ".googlevideo.com",
             ".googleapis.com",
             ".google.com",
             ".googleusercontent.com",
@@ -111,7 +120,7 @@ class Config(ConfigBase):
         self.set_var("connection_pool_min", 1)
         self.set_var("https_connection_pool_max", 10)
         self.set_var("https_new_connect_num", 3)
-        self.set_var("https_keep_alive", 5)
+        self.set_var("https_keep_alive", 15)
 
         # check_ip
         self.set_var("check_ip_host", "xxnet-1.appspot.com")
@@ -165,7 +174,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         self.set_var("target_handshake_time", 600)
 
         # ip source
-        self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
+        self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
         self.set_var("ipv6_scan_ratio", 90) # 0 - 100
 
         self.load()

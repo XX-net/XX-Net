@@ -495,7 +495,7 @@ class Client(object):
                 if not data:
                     break
                 else:
-                    data_buffer.append(data)
+                    data_buffer.append(data.tobytes())
 
             response.text = "".join(data_buffer)
             return response

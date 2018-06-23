@@ -708,9 +708,6 @@ def handler(method, host, url, headers, body, wfile):
 
 
 class RangeFetch2(object):
-    max_buffer_size = int(front.config.AUTORANGE_MAXSIZE *
-                          front.config.AUTORANGE_THREADS * 1.3)
-    # max buffer size before browser receive: 20M
 
     def __init__(self, method, url, headers, body, response, wfile):
         self.method = method
@@ -843,19 +840,22 @@ class RangeFetch2(object):
         self.keep_running = False
 
     def fetch_worker(self):
-        self.blocked = False
+        blocked = False
         while self.keep_running:
-            if self.data_size > self.max_buffer_size:
-                if not self.blocked:
-                    xlog.debug("fetch_worker blocked, buffer:%d %s",
-                               self.data_size, self.url)
-                self.blocked = True
+            if blocked:
                 time.sleep(0.5)
-                continue
-
-            self.blocked = False
 
             with self.lock:
+                # at least 2 wait workers keep running
+                if self.req_begin > self.wait_begin + front.config.AUTORANGE_MAXSIZE:
+                    if self.data_size > front.config.AUTORANGE_MAXBUFFERSIZE:
+                        if not self.blocked:
+                            xlog.debug("fetch_worker blocked, buffer:%d %s",
+                                       self.data_size, self.url)
+                        self.blocked = blocked = True
+                        continue
+                    self.blocked = blocked = False
+
                 if self.req_begin >= self.req_end + 1:
                     break
 
