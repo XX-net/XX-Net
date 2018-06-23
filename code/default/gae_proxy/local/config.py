@@ -41,7 +41,6 @@ class Config(ConfigBase):
             "scholar.google.com",
             "scholar.google.com.hk",
             "appengine.google.com",
-            "mail.google.com",
             "accounts.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
