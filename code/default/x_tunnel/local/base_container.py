@@ -432,8 +432,8 @@ class Conn(object):
             sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
             # set reuseaddr option to avoid 10048 socket error
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # resize socket recv buffer 8K->32K to improve browser releated application performance
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
+            # resize socket recv buffer ->1M to improve browser releated application performance
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1048576)
             # disable negal algorithm to send http request quickly.
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             # set a short timeout to trigger timeout retry more quickly.
