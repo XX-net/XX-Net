@@ -44,7 +44,8 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
     while True:
         time_left = time_request + timeout - time.time()
         if time_left <= 0:
-            return return_fail_message(wfile)
+            return_fail_message(wfile)
+            return "ok"
 
         try:
             response = direct_front.request(method, host, path, headers, body, timeout=time_left)
@@ -108,6 +109,11 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
 
         xlog.info("DIRECT t:%d s:%d %d %s %s",
                   (time.time()-time_request)*1000, length, response.status, host, path)
+        return "ok"
+    except NetWorkIOError as e:
+        xlog.warn('DIRECT %s %s%s except:%r', method, host, path, e)
+        if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
+            raise
     except Exception as e:
-        xlog.exception("DIRECT %s %d %s %s, t:%d send to client except:%r",
+        xlog.exception("DIRECT %s %d %s%s, t:%d send to client except:%r",
                  method, response.status, host, path, (time.time()-time_request)*1000, e)

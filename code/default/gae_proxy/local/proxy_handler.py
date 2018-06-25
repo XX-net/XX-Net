@@ -165,36 +165,38 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         """deploy fake cert to client"""
         host, _, port = self.path.rpartition(':')
         port = int(port)
-        if port != 443:
+        if port not in (80, 443):
             xlog.warn("CONNECT %s port:%d not support", host, port)
             return
 
         certfile = CertUtil.get_cert(host)
-        self.wfile.write(b'HTTP/1.1 200 OK\r\n\r\n')
+        self.wfile.write(b'HTTP/1.1 200 Connection Established\r\n\r\n')
+        #self.conntunnel = True
+ 
+        leadbyte = self.connection.recv(1, socket.MSG_PEEK)
+        if leadbyte in ('\x80', '\x16'):
+            try:
+                ssl_sock = ssl.wrap_socket(self.connection, keyfile=CertUtil.cert_keyfile, certfile=certfile, server_side=True)
+            except ssl.SSLError as e:
+                xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
+                certfile = CertUtil.get_cert(host, full_name=True)
+                return
+            except Exception as e:
+                if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
+                    xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+                return
 
-        try:
-            ssl_sock = ssl.wrap_socket(self.connection, keyfile=CertUtil.cert_keyfile, certfile=certfile, server_side=True)
-        except ssl.SSLError as e:
-            xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
-            certfile = CertUtil.get_cert(host, full_name=True)
-            return
-        except Exception as e:
-            if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
-                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
-            return
+            self.__realwfile = self.wfile
+            self.__realrfile = self.rfile
+            self.connection = ssl_sock
+            self.rfile = self.connection.makefile('rb', self.bufsize)
+            self.wfile = self.connection.makefile('wb', 0)
 
-        self.__realwfile = self.wfile
-        self.__realrfile = self.rfile
-        self.connection = ssl_sock
-        self.rfile = self.connection.makefile('rb', self.bufsize)
-        self.wfile = self.connection.makefile('wb', 0)
-
-        self.parse_request()
-
-        self.do_METHOD()
+        self.close_connection = 0
 
     def do_METHOD(self):
         #self.close_connection = 0
+        self.req_payload = None
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
 
@@ -208,13 +210,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             return self.wfile.write(self.self_check_response_data)
 
         if isinstance(self.connection, ssl.SSLSocket):
-            method = "https"
+            schema = "https"
         else:
-            method = "http"
+            schema = "http"
 
         if self.path[0] == '/':
             self.host = self.headers['Host']
-            self.url = '%s://%s%s' % (method,host, self.path)
+            self.url = '%s://%s%s' % (schema, host, self.path)
         else:
             self.url = self.path
             self.parsed_url = urlparse.urlparse(self.path)
@@ -233,43 +235,63 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         # redirect http request to https request
         # avoid key word filter when pass through GFW
         if host in front.config.HOSTS_DIRECT:
-            if isinstance(self.connection, ssl.SSLSocket):
-                return self.go_DIRECT()
-            else:
-                xlog.debug("Host:%s Direct redirect to https", host)
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.url.replace('http://', 'https://', 1)).encode())
+            return self.go_DIRECT()
 
         if host.endswith(front.config.HOSTS_GAE_ENDSWITH):
             return self.go_AGENT()
 
         if host.endswith(front.config.HOSTS_DIRECT_ENDSWITH):
-            if method == "https":
-                return self.go_DIRECT()
-            else:
-                xlog.debug("Host:%s Direct redirect to https", host)
-                return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.path.replace('http://', 'https://', 1)).encode())
+            return self.go_DIRECT()
 
         return self.go_AGENT()
 
     # Called by do_METHOD and do_CONNECT_AGENT
     def go_AGENT(self):
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        payload = self.read_payload()
+
+        if self.command == "OPTIONS":
+            return self.send_method_allows(request_headers, payload)
+
+        if self.command not in self.gae_support_methods:
+            xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
+            return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
+
+        xlog.debug("GAE %s %s from:%s", self.command, self.url, self.address_string())
+        if gae_handler.handler(self.command, self.host, self.url, request_headers, payload, self.wfile, self.go_DIRECT) != "ok":
+            self.close_connection = 1
+
+    def go_DIRECT(self):
+        if not self.url.startswith("https"):
+            xlog.debug("Host:%s Direct redirect to https", host)
+            return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.url.replace('http://', 'https://', 1)).encode())
+
+        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        payload = self.read_payload()
+
+        xlog.debug("DIRECT %s %s from:%s", self.command, self.url, self.address_string())
+        if direct_handler.handler(self.command, self.host, self.path, request_headers, payload, self.wfile) != "ok":
+            self.close_connection = 1
+
+    def read_payload(self):
         def get_crlf(rfile):
             crlf = rfile.readline(2)
             if crlf != "\r\n":
                 xlog.warn("chunk header read fail crlf")
 
-        request_headers = dict((k.title(), v) for k, v in self.headers.items())
+        if self.req_payload is not None:
+            return self.req_payload
 
         payload = b''
-        if 'Content-Length' in request_headers:
+        if 'Content-Length' in self.headers:
             try:
-                payload_len = int(request_headers.get('Content-Length', 0))
+                payload_len = int(self.headers.get('Content-Length', 0))
                 #xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
                 payload = self.rfile.read(payload_len)
             except NetWorkIOError as e:
                 xlog.error('handle_method_urlfetch read payload failed:%s', e)
                 return
-        elif 'Transfer-Encoding' in request_headers:
+        elif 'Transfer-Encoding' in self.headers:
             # chunked, used by facebook android client
             payload = ""
             while True:
@@ -289,40 +311,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 payload += self.rfile.read(chunk_size)
                 get_crlf(self.rfile)
 
-        if self.command == "OPTIONS":
-            return self.send_method_allows(request_headers, payload)
-
-        if self.command not in self.gae_support_methods:
-            xlog.warn("Method %s not support in GAEProxy for %s", self.command, self.path)
-            return self.wfile.write(('HTTP/1.1 404 Not Found\r\n\r\n').encode())
-
-        xlog.debug("GAE %s %s from:%s", self.command, self.url, self.address_string())
-        gae_handler.handler(self.command, self.host, self.url, request_headers, payload, self.wfile)
-
-    def go_DIRECT(self):
-        xlog.debug('DIRECT %s %s', self.command, self.url)
-
-        request_headers = dict((k.title(), v) for k, v in self.headers.items())
-
-        if 'Content-Length' in request_headers:
-            try:
-                payload_len = int(request_headers.get('Content-Length', 0))
-                # xlog.debug("payload_len:%d %s %s", payload_len, self.command, self.path)
-                payload = self.rfile.read(payload_len)
-            except NetWorkIOError as e:
-                xlog.error('Direct %s read payload failed:%s', self.url, e)
-                return
-        else:
-            payload = b''
-
-        try:
-            direct_handler.handler(self.command, self.host, self.path, request_headers, payload, self.wfile)
-        except NetWorkIOError as e:
-            xlog.warn('DIRECT %s %s except:%r', self.command, self.url, e)
-            if e.args[0] not in (errno.ECONNABORTED, errno.ETIMEDOUT, errno.EPIPE):
-                raise
-        except Exception as e:
-            xlog.exception('DIRECT %s %s except:%r', self.command, self.url, e)
+        self.req_payload = payload
+        return payload
 
 # called by smart_router
 def wrap_ssl(sock, host, port, client_address):

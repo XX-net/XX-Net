@@ -26,10 +26,10 @@ class Config(ConfigBase):
         self.set_var("AUTORANGE_THREADS", 10)
         self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
         if mobile:
-            self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024 / 8)
+            self.set_var("AUTORANGE_MAXBUFFERSIZE", 10 * 1024 * 1024 / 8)
         else:
             self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024)
-        self.set_var("JS_MAXSIZE", 2097152)
+        self.set_var("JS_MAXSIZE", 0)
 
         # gae
         self.set_var("GAE_PASSWORD", "")
@@ -40,14 +40,15 @@ class Config(ConfigBase):
             "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
-            "appengine.google.com",
-            "accounts.google.com"
+            "appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
             ".appspot.com",
         ])
 
         self.set_var("hosts_gae", [
+            "accounts.google.com",
+            "mail.google.com"
         ])
 
         self.set_var("hosts_gae_endswith", [
@@ -97,7 +98,7 @@ class Config(ConfigBase):
         self.set_var("dispather_min_idle_workers", 5)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 1000)
-        self.set_var("dispather_min_workers", 50)
+        self.set_var("dispather_min_workers", 30)
         self.set_var("dispather_max_workers", 90)
         self.set_var("dispather_max_idle_workers", 30)
 
@@ -169,8 +170,8 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 10)
-        self.set_var("max_good_ip_num", 500)
-        self.set_var("target_handshake_time", 600)
+        self.set_var("max_good_ip_num", 100)
+        self.set_var("target_handshake_time", 500)
 
         # ip source
         self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
@@ -229,3 +230,10 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
 config_path = os.path.join(module_data_path, "config.json")
 config = Config(config_path)
+directconfig = Config(config_path)
+directconfig.dispather_min_idle_workers = 3
+directconfig.dispather_work_min_idle_time = 0
+directconfig.dispather_work_max_score = 1000
+directconfig.dispather_min_workers = 5
+directconfig.dispather_max_workers = 8
+directconfig.dispather_max_idle_workers = 5

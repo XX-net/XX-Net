@@ -440,7 +440,7 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
     raise GAE_Exception(600, b"".join(error_msg))
 
 
-def handler(method, host, url, headers, body, wfile):
+def handler(method, host, url, headers, body, wfile, fallback=None):
     if not url.startswith("http") and not url.startswith("HTTP"):
         xlog.error("gae:%s", url)
         return
@@ -501,11 +501,13 @@ def handler(method, host, url, headers, body, wfile):
     except GAE_Exception as e:
         xlog.warn("GAE %s %s request fail:%r", method, url, e)
         send_response(wfile, e.error_code, body=e.message)
-        return return_fail_message(wfile)
+        return_fail_message(wfile)
+        return "ok"
 
     if response.app_msg:
         # XX-net 自己数据包
-        return send_response(wfile, response.app_status, body=response.app_msg)
+        send_response(wfile, response.app_status, body=response.app_msg)
+        return "ok"
     else:
         response.status = response.app_status
 
@@ -527,18 +529,10 @@ def handler(method, host, url, headers, body, wfile):
             continue
         response_headers[key] = value
 
-    if (response.status == 503 and
-            response_headers.get('Server') == 'HTTP server (unknown)' and
-            host.endswith(front.config.GOOGLE_ENDSWITH) and
-            host not in front.config.HOSTS_DIRECT):
-        if host in front.config.HOSTS_GAE:
-            try:
-                hosts_gae = list(front.config.HOSTS_GAE)
-                hosts_gae.remove(host)
-                front.config.HOSTS_GAE = tuple(hosts_gae)
-            except ValueError:
-                pass
-        front.config.HOSTS_DIRECT += host,
+    if response.status == 503 and fallback and \
+            response_headers.get('Server') == 'HTTP server (unknown)' and \
+            host.endswith(front.config.GOOGLE_ENDSWITH):
+        return fallback()
 
     response_headers["Persist"] = ""
     response_headers["Connection"] = "Persist"
@@ -705,9 +699,12 @@ def handler(method, host, url, headers, body, wfile):
     # 完整一次https请求
     xlog.info("GAE t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method, url,
               response.task.get_trace())
+    return "ok"
 
 
 class RangeFetch2(object):
+
+    all_data_size = {}
 
     def __init__(self, method, url, headers, body, response, wfile):
         self.method = method
@@ -731,6 +728,9 @@ class RangeFetch2(object):
         self.req_end = 0
         self.wait_begin = 0
 
+    def get_all_buffer_size(self):
+        return sum(v for k, v in self.all_data_size.items())
+
     def put_data(self, range_begin, payload):
         with self.lock:
             if range_begin < self.wait_begin:
@@ -739,6 +739,7 @@ class RangeFetch2(object):
 
             self.data_list[range_begin] = payload
             self.data_size += len(payload)
+            self.all_data_size[self] = self.data_size
 
             if self.wait_begin in self.data_list:
                 self.waiter.notify()
@@ -812,6 +813,7 @@ class RangeFetch2(object):
         threading.Thread(target=self.fetch, args=(
             res_begin, res_end, self.response)).start()
 
+        ok = "ok"
         while self.keep_running and self.wait_begin < self.req_end + 1:
             with self.lock:
                 if self.wait_begin not in self.data_list:
@@ -825,6 +827,7 @@ class RangeFetch2(object):
                     del self.data_list[self.wait_begin]
                     self.wait_begin += len(data)
                     self.data_size -= len(data)
+                    self.all_data_size[self] = self.data_size
 
             try:
                 ret = self.wfile._sock.sendall(data)
@@ -836,8 +839,11 @@ class RangeFetch2(object):
                 del data
             except Exception as e:
                 xlog.info('RangeFetch client closed(%s). %s', e, self.url)
+                ok = None
                 break
         self.keep_running = False
+        self.all_data_size.pop(self, None)
+        return ok
 
     def fetch_worker(self):
         blocked = False
@@ -848,7 +854,7 @@ class RangeFetch2(object):
             with self.lock:
                 # at least 2 wait workers keep running
                 if self.req_begin > self.wait_begin + front.config.AUTORANGE_MAXSIZE:
-                    if self.data_size > front.config.AUTORANGE_MAXBUFFERSIZE:
+                    if self.get_all_buffer_size() > front.config.AUTORANGE_MAXBUFFERSIZE * (0.8 + len(self.all_data_size) * 0.2):
                         if not self.blocked:
                             xlog.debug("fetch_worker blocked, buffer:%d %s",
                                        self.data_size, self.url)

@@ -6,7 +6,7 @@ logger.set_buffer(500)
 
 import check_local_network
 
-from config import config
+from config import config, directconfig
 import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
@@ -83,7 +83,7 @@ class Front(object):
 
     def check_ip(self, ip):
         sni = self.host_manager.sni_manager.get()
-        host = "xxnet-1.appspot.com"
+        host = self.config.check_ip_host
         return self.ip_checker.check_ip(ip, sni=sni, host=host)
 
     def get_dispatcher(self):
@@ -151,7 +151,7 @@ class DirectFront(object):
     def get_dispatcher(self, host):
         if host not in self.dispatchs:
             http_dispatcher = HttpsDispatcher(
-                logger, front.config, front.ip_manager, self.connect_manager)
+                logger, directconfig, front.ip_manager, self.connect_manager)
             self.dispatchs[host] = http_dispatcher
 
         return self.dispatchs[host]
