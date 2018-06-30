@@ -89,15 +89,17 @@ goto :eof
 
 
 :[reset ipv6]
-""".format(log_file) + \
-'%s %s\\win_reset_gp.py' % (sys.executable, current_path) + \
-"""
 netsh interface ipv6 reset
 ipconfig /flushdns
 goto :eof
 
 
 :[set ipv6]
+:: Reset Group Policy Teredo
+{} {}\\win_reset_gp.py'
+
+""".format(log_file, sys.executable, current_path) + \
+"""
 netsh interface teredo set state type={} servername={}.
 
 :: Set IPv6 prefixpolicies

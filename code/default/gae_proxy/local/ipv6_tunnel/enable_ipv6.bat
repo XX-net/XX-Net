@@ -54,6 +54,9 @@ sc start iphlpsvc
 :: Reset IPv6
 netsh interface ipv6 reset
 
+:: Reset Group Policy Teredo
+..\..\..\python27\1.0\pythonw.exe win_reset_gp.py
+
 netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net.
 
 :: Keep teredo interface route (not needed with reset?)
@@ -86,9 +89,6 @@ Reg add HKLM\SYSTEM\CurrentControlSet\services\Dnscache\Parameters /v AddrConfig
 
 :: Enable all IPv6 parts
 Reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters /v DisabledComponents /t REG_DWORD /d 0 /f
-
-:: Reset Group Policy Teredo
-..\..\..\python27\1.0\pythonw.exe win_reset_gp.py
 
 
 ipconfig /flushdns
