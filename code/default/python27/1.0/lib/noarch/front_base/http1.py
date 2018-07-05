@@ -197,6 +197,12 @@ class Http1Worker(HttpWorker):
             if read_target and data_len >= read_target:
                 break
 
+        if read_target > data_len:
+            self.logger.warn("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
+                           self.ip, response.chunked, task.url, task.timeout, e)
+            self.ip_manager.recheck_ip(self.ssl_sock.ip)
+            self.close("down fail")
+
         task.finish()
 
         self.ssl_sock.received_size += data_len

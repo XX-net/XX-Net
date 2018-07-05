@@ -139,16 +139,26 @@ def spawn_later(seconds, target, *args, **kwargs):
     return __import__('thread').start_new_thread(wrap, args, kwargs)
 
 
-skip_headers = frozenset(['Vary',
+skip_request_headers = frozenset([
+                          'Vary',
                           'Via',
-                          'X-Google-Cache-Control',
-                          'X-Forwarded-For',
                           'Proxy-Authorization',
                           'Proxy-Connection',
                           'Upgrade',
+                          'X-Google-Cache-Control',
+                          'X-Forwarded-For',
                           'X-Chrome-Variations',
-                          #'Connection',
-                          #'Cache-Control'
+                          ])
+skip_response_headers = frozenset([
+                          # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
+                          'Transfer-Encoding',
+                          'Connection',
+                          'Upgrade',
+                          'Alt-Svc',
+                          'Alternate-Protocol',
+                          'X-Head-Content-Length',
+                          'X-Google-Cache-Control',
+                          'X-Chrome-Variations',
                           ])
 
 
@@ -163,6 +173,8 @@ def send_header(wfile, keyword, value):
         value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
         wfile.write("%s: %s\r\n" % (keyword, value))
         #xlog.debug("Head1 %s: %s", keyword, value)
+    elif keyword in skip_response_headers:
+        return
     else:
         wfile.write("%s: %s\r\n" % (keyword, value))
         #xlog.debug("Head1 %s: %s", keyword, value)
@@ -228,7 +240,7 @@ def pack_request(method, url, headers, body, timeout):
 
     payload = '%s %s HTTP/1.1\r\n' % (method, url)
     payload += ''.join('%s: %s\r\n' % (k, v)
-                       for k, v in headers.items() if k not in skip_headers)
+                       for k, v in headers.items() if k not in skip_request_headers)
     # for k, v in headers.items():
     #    xlog.debug("Send %s: %s", k, v)
     payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v)
@@ -522,10 +534,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
     #　初始化给客户端的headers
     for key, value in response.headers.items():
         key = key.title()
-        if key == 'Transfer-Encoding':
-            # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
-            continue
-        if key in skip_headers:
+        if key in skip_response_headers:
             continue
         response_headers[key] = value
 
@@ -787,11 +796,7 @@ class RangeFetch2(object):
         try:
             self.wfile.write("HTTP/1.1 %d OK\r\n" % state_code)
             for key in response_headers:
-                if key == 'Transfer-Encoding':
-                    continue
-                if key == 'X-Head-Content-Length':
-                    continue
-                if key in skip_headers:
+                if key in skip_response_headers:
                     continue
                 value = response_headers[key]
                 #xlog.debug("Head %s: %s", key.title(), value)

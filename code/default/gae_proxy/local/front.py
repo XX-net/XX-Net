@@ -6,7 +6,7 @@ logger.set_buffer(500)
 
 import check_local_network
 
-from config import config, directconfig
+from config import config, direct_config
 import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
@@ -151,7 +151,7 @@ class DirectFront(object):
     def get_dispatcher(self, host):
         if host not in self.dispatchs:
             http_dispatcher = HttpsDispatcher(
-                logger, directconfig, front.ip_manager, self.connect_manager)
+                logger, direct_config, front.ip_manager, self.connect_manager)
             self.dispatchs[host] = http_dispatcher
 
         return self.dispatchs[host]

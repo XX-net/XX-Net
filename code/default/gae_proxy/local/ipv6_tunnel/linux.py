@@ -10,6 +10,14 @@ def state():
     return "Developing"
 
 
+def state_pp():
+    return "Developing"
+
+
+def switch_pp():
+    return "Developing"
+
+
 def enable(is_local=False):
     return "Developing"
 
