@@ -14,6 +14,42 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
+msgid "Global Settings"
+msgstr "全局设置"
+
+msgid "Switch ON to submit setting level"
+msgstr "切换到 ON 才能提交设置级别"
+
+msgid "Passive mode consumes less system resources"
+msgstr "被动模式消耗更少的系统资源"
+
+msgid "Customized an adequate value for your network connection"
+msgstr "为你的网络连接自定义适当的数值"
+
+msgid "Submit setting level"
+msgstr "提交设置级别"
+
+msgid "Setting level"
+msgstr "设置级别"
+
+msgid "Passive"
+msgstr "被动"
+
+msgid "Conservative"
+msgstr "保守"
+
+msgid "Normal"
+msgstr "正常"
+
+msgid "Radical"
+msgstr "积极"
+
+msgid "Extreme"
+msgstr "极端"
+
+msgid "Connect receive buffer size"
+msgstr "连接接收缓冲大小"
+
 msgid "Scan Settings"
 msgstr "扫描设置"
 
@@ -106,6 +142,12 @@ msgstr "GAEProxy 配置"
 
 msgid "Failed reading the settings."
 msgstr "读取设置失败。"
+
+msgid "Failed reading the prefix policies."
+msgstr "读取前缀策略失败。"
+
+msgid "No teredo prefix policiy is found."
+msgstr "未发现 Teredo 前缀策略。"
 
 msgid "Checking settings ..."
 msgstr "请等待检查设置有效性..."
@@ -280,6 +322,12 @@ msgstr "仅测试 teredo 服务器"
 
 msgid "Change teredo server"
 msgstr "更换 teredo 服务器"
+
+msgid "Switch teredo first"
+msgstr "切换到 teredo 隧道优先"
+
+msgid "Switch origin first"
+msgstr "切换到原生 IPv6 优先"
 
 msgid "Running ..."
 msgstr "正在执行..."
