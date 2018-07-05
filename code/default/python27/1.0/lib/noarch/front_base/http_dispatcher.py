@@ -357,7 +357,8 @@ class HttpsDispatcher(object):
 
     def close_all_worker(self, reason="close all worker"):
         for w in list(self.workers):
-            w.close(reason)
+            if w.accept_task:
+                w.close(reason)
 
         self.workers = []
         self.h1_num = 0
