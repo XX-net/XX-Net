@@ -26,7 +26,7 @@ import front_base.openssl_wrap as openssl_wrap
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from config import config
+from config import config, direct_config
 import check_local_network
 import cert_util
 import ipv6_tunnel
@@ -377,7 +377,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     "appid": "|".join(config.GAE_APPIDS),
                     "auto_adjust_scan_ip_thread_num": config.auto_adjust_scan_ip_thread_num,
                     "scan_ip_thread_num": config.max_scan_ip_thread_num,
-                    "use_ipv6": config.use_ipv6
+                    "use_ipv6": config.use_ipv6,
+                    "setting_level": config.setting_level,
+                    "connect_receive_buffer": config.connect_receive_buffer,
                 }
                 data = json.dumps(ret_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
@@ -387,7 +389,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                         fail_appid_list = test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
-                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+                            data = json.dumps({"res": "fail",
+                                               "reason": "appid fail:" + fail_appid
+                                               })
+                            return
 
                     appid_updated = True
                     if appids:
@@ -406,13 +411,35 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 front.ip_manager.reset()
 
                 data = '{"res":"success"}'
-                self.send_response_nc('text/html', data)
                 #http_request("http://127.0.0.1:8085/init_module?module=gae_proxy&cmd=restart")
-                return
+            elif reqs['cmd'] == ['set_config_level']:
+                setting_level = self.postvars['setting_level'][0]
+                if setting_level:
+                    xlog.info("set globa config level to %s", setting_level)
+                    config.set_level(setting_level)
+                    direct_config.set_level(setting_level)
+                    front.ip_manager.load_config()
+                    front.ip_manager.adjust_scan_thread_num()
+
+                connect_receive_buffer = int(self.postvars['connect_receive_buffer'][0])
+                if 65536 <= connect_receive_buffer <= 2097152 and connect_receive_buffer != config.connect_receive_buffer:
+                    xlog.info("set connect receive buffer to %dKB", connect_receive_buffer // 1024)
+                    config.connect_receive_buffer = connect_receive_buffer
+                    config.save()
+                    config.load()
+
+                    front.connect_manager.new_conn_pool.clear()
+                    direct_front.connect_manager.new_conn_pool.clear()
+                    front.http_dispatcher.close_all_worker()
+                    for _, http_dispatcher in direct_front.dispatchs.items():
+                        http_dispatcher.close_all_worker()
+
+                data = '{"res":"success"}'
         except Exception as e:
             xlog.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response_nc('text/html', data)
+        finally:
+            self.send_response_nc('text/html', data)
 
     def req_deploy_handler(self):
         global deploy_proc
@@ -747,6 +774,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             status = ipv6_tunnel.state()
 
             data = json.dumps({'status': status, 'log': content.decode("GBK"), 'time': time_now})
+
+        elif reqs['cmd'] == ['get_priority']:
+            data = json.dumps({'res': ipv6_tunnel.state_pp(), 'time': time_now})
+
+        elif reqs['cmd'] == ['switch_pp']:
+            data = json.dumps({'res': ipv6_tunnel.switch_pp(), 'time': time_now})
 
         self.send_response_nc('text/html', data)
 

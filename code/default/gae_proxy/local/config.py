@@ -18,6 +18,10 @@ class Config(ConfigBase):
     def __init__(self, fn):
         super(Config, self).__init__(fn)
 
+        # globa setting level
+        # passive < conservative < normal < radical < extreme
+        self.set_var("setting_level", "normal")
+
         # proxy
         self.set_var("listen_ip", "127.0.0.1")
         self.set_var("listen_port", 8087)
@@ -52,6 +56,7 @@ class Config(ConfigBase):
         ])
 
         self.set_var("hosts_gae_endswith", [
+            ".googleapis.com"
         ])
 
         # sites using br
@@ -95,12 +100,14 @@ class Config(ConfigBase):
         self.set_var("front_continue_fail_block", 0)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 5)
+        self.set_var("dispather_min_idle_workers", 3)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 1000)
-        self.set_var("dispather_min_workers", 30)
-        self.set_var("dispather_max_workers", 90)
-        self.set_var("dispather_max_idle_workers", 30)
+        self.set_var("dispather_min_workers", 20)
+        self.set_var("dispather_max_workers", 50)
+        self.set_var("dispather_max_idle_workers", 15)
+
+        self.set_var("max_task_num", 80)
 
         # http 1 worker
         self.set_var("http1_first_ping_wait", 5)
@@ -118,6 +125,7 @@ class Config(ConfigBase):
         self.set_var("https_max_connect_thread", 10)
         self.set_var("ssl_first_use_timeout", 5)
         self.set_var("connection_pool_min", 1)
+        self.set_var("https_connection_pool_min", 2)
         self.set_var("https_connection_pool_max", 10)
         self.set_var("https_new_connect_num", 3)
         self.set_var("https_keep_alive", 15)
@@ -227,13 +235,167 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         return need_save
 
+    def set_level(self, level=None):
+        if level is None:
+            level = self.setting_level
+        elif level in ["passive", "conservative", "normal", "radical", "extreme"]:
+            self.setting_level = level
+
+            if level == "passive":
+                self.dispather_min_idle_workers = 0
+                self.dispather_work_min_idle_time = 0
+                self.dispather_work_max_score = 1000
+                self.dispather_min_workers = 5
+                self.dispather_max_workers = 30
+                self.dispather_max_idle_workers = 5
+                self.max_task_num = 50
+                self.https_max_connect_thread = 10
+                self.https_keep_alive = 5
+                self.https_connection_pool_min = 0
+                self.https_connection_pool_max = 10
+                self.max_scan_ip_thread_num = 10
+                self.max_good_ip_num = 60
+                self.target_handshake_time = 500
+            elif level == "conservative":
+                self.dispather_min_idle_workers = 1
+                self.dispather_work_min_idle_time = 0
+                self.dispather_work_max_score = 1000
+                self.dispather_min_workers = 10
+                self.dispather_max_workers = 30
+                self.dispather_max_idle_workers = 10
+                self.max_task_num = 50
+                self.https_max_connect_thread = 10
+                self.https_keep_alive = 15
+                self.https_connection_pool_min = 1
+                self.https_connection_pool_max = 10
+                self.max_scan_ip_thread_num = 10
+                self.max_good_ip_num = 100
+                self.target_handshake_time = 500
+            elif level == "normal":
+                self.dispather_min_idle_workers = 3
+                self.dispather_work_min_idle_time = 0
+                self.dispather_work_max_score = 1000
+                self.dispather_min_workers = 20
+                self.dispather_max_workers = 50
+                self.dispather_max_idle_workers = 15
+                self.max_task_num = 80
+                self.https_max_connect_thread = 10
+                self.https_keep_alive = 15
+                self.https_connection_pool_min = 2
+                self.https_connection_pool_max = 10
+                self.max_scan_ip_thread_num = 10
+                self.max_good_ip_num = 100
+                self.target_handshake_time = 500
+            elif level == "radical":
+                self.dispather_min_idle_workers = 4
+                self.dispather_work_min_idle_time = 1
+                self.dispather_work_max_score = 1000
+                self.dispather_min_workers = 30
+                self.dispather_max_workers = 70
+                self.dispather_max_idle_workers = 25
+                self.max_task_num = 100
+                self.https_max_connect_thread = 15
+                self.https_keep_alive = 15
+                self.https_connection_pool_min = 3
+                self.https_connection_pool_max = 15
+                self.max_scan_ip_thread_num = 20
+                self.max_good_ip_num = 100
+                self.target_handshake_time = 300
+            elif level == "extreme":
+                self.dispather_min_idle_workers = 5
+                self.dispather_work_min_idle_time = 5
+                self.dispather_work_max_score = 1000
+                self.dispather_min_workers = 45
+                self.dispather_max_workers = 100
+                self.dispather_max_idle_workers = 40
+                self.max_task_num = 130
+                self.https_max_connect_thread = 20
+                self.https_keep_alive = 15
+                self.https_connection_pool_min = 3
+                self.https_connection_pool_max = 20
+                self.max_scan_ip_thread_num = 30
+                self.max_good_ip_num = 200
+                self.target_handshake_time = 300
+
+            self.save()
+            self.load()
+
+class DirectConfig(object):
+    def __init__(self, config):
+        self._config = config
+        self.set_default()
+
+    def __getattr__(self, attr):
+        return getattr(self._config, attr)
+
+    def dummy(*args, **kwargs):
+        pass
+
+    set_var = save = load = dummy
+
+    def set_level(self, level=None):
+        if level is None:
+            level = self.setting_level
+
+        if level == "passive":
+            self.dispather_min_idle_workers = 0
+            self.dispather_work_min_idle_time = 0
+            self.dispather_work_max_score = 1000
+            self.dispather_min_workers = 0
+            self.dispather_max_workers = 8
+            self.dispather_max_idle_workers = 0
+            self.max_task_num = 16
+            self.https_max_connect_thread = 4
+            self.https_connection_pool_min = 0
+            self.https_connection_pool_max = 6
+        elif level == "conservative":
+            self.dispather_min_idle_workers = 1
+            self.dispather_work_min_idle_time = 0
+            self.dispather_work_max_score = 1000
+            self.dispather_min_workers = 1
+            self.dispather_max_workers = 8
+            self.dispather_max_idle_workers = 2
+            self.max_task_num = 16
+            self.https_max_connect_thread = 5
+            self.https_connection_pool_min = 0
+            self.https_connection_pool_max = 8
+        elif level == "normal":
+            self.dispather_min_idle_workers = 3
+            self.dispather_work_min_idle_time = 0
+            self.dispather_work_max_score = 1000
+            self.dispather_min_workers = 3
+            self.dispather_max_workers = 8
+            self.dispather_max_idle_workers = 3
+            self.max_task_num = 16
+            self.https_max_connect_thread = 6
+            self.https_connection_pool_min = 0
+            self.https_connection_pool_max = 10
+        elif level == "radical":
+            self.dispather_min_idle_workers = 4
+            self.dispather_work_min_idle_time = 1
+            self.dispather_work_max_score = 1000
+            self.dispather_min_workers = 5
+            self.dispather_max_workers = 10
+            self.dispather_max_idle_workers = 5
+            self.max_task_num = 20
+            self.https_max_connect_thread = 6
+            self.https_connection_pool_min = 1
+            self.https_connection_pool_max = 10
+        elif level == "extreme":
+            self.dispather_min_idle_workers = 5
+            self.dispather_work_min_idle_time = 5
+            self.dispather_work_max_score = 1000
+            self.dispather_min_workers = 5
+            self.dispather_max_workers = 15
+            self.dispather_max_idle_workers = 5
+            self.max_task_num = 30
+            self.https_max_connect_thread = 10
+            self.https_connection_pool_min = 1
+            self.https_connection_pool_max = 10
+
+    set_default = set_level
 
 config_path = os.path.join(module_data_path, "config.json")
 config = Config(config_path)
-directconfig = Config(config_path)
-directconfig.dispather_min_idle_workers = 3
-directconfig.dispather_work_min_idle_time = 0
-directconfig.dispather_work_max_score = 1000
-directconfig.dispather_min_workers = 5
-directconfig.dispather_max_workers = 8
-directconfig.dispather_max_idle_workers = 5
+direct_config = DirectConfig(config)
+
