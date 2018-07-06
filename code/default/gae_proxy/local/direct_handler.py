@@ -6,6 +6,7 @@ import time
 import re
 import socket
 import ssl
+import errno
 
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
@@ -67,7 +68,7 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
 
     try:
         wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-        for key, value in response.headers.items():
+        for key, value in response_headers.items():
             send_header(wfile, key, value)
         wfile.write("\r\n")
         wfile.flush()
@@ -80,7 +81,7 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
 
             data_len = len(data)
             length += data_len
-            if 'Transfer-Encoding' in response.headers:
+            if 'Transfer-Encoding' in response_headers:
                 if not data_len:
                     wfile._sock.sendall('0\r\n\r\n')
                     break
@@ -94,7 +95,7 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
 
         xlog.info("DIRECT t:%d s:%d %d %s %s",
                   (time.time()-time_request)*1000, length, response.status, host, path)
-        if 'Content-Length' in response.headers or 'Transfer-Encoding' in response.headers:
+        if 'Content-Length' in response_headers or 'Transfer-Encoding' in response_headers:
             return "ok"
     except NetWorkIOError as e:
         xlog.warn('DIRECT %s %s%s except:%r', method, host, path, e)

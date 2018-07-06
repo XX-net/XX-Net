@@ -151,7 +151,6 @@ skip_request_headers = frozenset([
                           ])
 skip_response_headers = frozenset([
                           # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
-                          'Transfer-Encoding',
                           'Connection',
                           'Upgrade',
                           'Alt-Svc',
@@ -569,8 +568,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
     def send_response_headers():
         wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-        for key in response_headers:
-            value = response_headers[key]
+        for key, value in response_headers.items():
             send_header(wfile, key, value)
             # xlog.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")

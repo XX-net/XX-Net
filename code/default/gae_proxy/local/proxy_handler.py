@@ -263,7 +263,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
     def go_DIRECT(self):
         if not self.url.startswith("https"):
-            xlog.debug("Host:%s Direct redirect to https", host)
+            xlog.debug("Host:%s Direct redirect to https", self.host)
             return self.wfile.write(('HTTP/1.1 301\r\nLocation: %s\r\nContent-Length: 0\r\n\r\n' % self.url.replace('http://', 'https://', 1)).encode())
 
         request_headers = dict((k.title(), v) for k, v in self.headers.items())
