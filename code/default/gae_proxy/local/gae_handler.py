@@ -537,6 +537,8 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             continue
         response_headers[key] = value
 
+    response_headers.pop("Transfer-Encoding", None)
+
     if response.status == 503 and fallback and \
             response_headers.get('Server') == 'HTTP server (unknown)' and \
             host.endswith(front.config.GOOGLE_ENDSWITH):
