@@ -66,7 +66,7 @@ def runas(args=sys.argv, executable=sys.executable, cwd=None,
     err = None
     try:
         if not isinstance(args, str):
-            args = subprocess.list2cmdline(sys.argv)
+            args = subprocess.list2cmdline(args)
         pExecInfo = ShellExecuteInfo()
         pExecInfo.cbSize = ctypes.sizeof(pExecInfo)
         pExecInfo.fMask |= SEE_MASK_NOCLOSEPROCESS
