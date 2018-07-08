@@ -690,7 +690,6 @@ class IpManager():
                     if self.good_ip_num >= self.max_good_ip_num * 0.6 and \
                             len(self.ip_list) >= self.max_good_ip_num * 0.9:
                         ip = self.get_ip(to_recheck=True)
-                        print(self.good_ip_num,len(self.ip_list),ip)
                         if ip and self.check_local_network.is_ok(ip):
                             self.recheck_ip(ip, first_report=False)
                             time.sleep(self.scan_recheck_interval)
