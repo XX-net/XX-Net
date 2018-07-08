@@ -353,6 +353,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "good_ipv4_num": front.ip_manager.good_ipv4_num,
             "good_ipv6_num": front.ip_manager.good_ipv6_num,
             "connected_link_new": len(front.connect_manager.new_conn_pool.pool),
+            "connection_pool_min": config.https_connection_pool_min,
             "worker_h1": front.http_dispatcher.h1_num,
             "worker_h2": front.http_dispatcher.h2_num,
             "is_idle": int(front.http_dispatcher.is_idle()),
@@ -420,9 +421,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     direct_config.set_level(setting_level)
                     front.ip_manager.load_config()
                     front.ip_manager.adjust_scan_thread_num()
+                    front.ip_manager.remove_slowest_ip()
+                    front.ip_manager.search_more_ip()
 
                 connect_receive_buffer = int(self.postvars['connect_receive_buffer'][0])
-                if 65536 <= connect_receive_buffer <= 2097152 and connect_receive_buffer != config.connect_receive_buffer:
+                if 8192 <= connect_receive_buffer <= 2097152 and connect_receive_buffer != config.connect_receive_buffer:
                     xlog.info("set connect receive buffer to %dKB", connect_receive_buffer // 1024)
                     config.connect_receive_buffer = connect_receive_buffer
                     config.save()
