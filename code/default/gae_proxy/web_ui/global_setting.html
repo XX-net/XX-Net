@@ -23,12 +23,12 @@
                 </div> <!-- .span8 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
-                <div class="span3" title="{{ _( "Customized an adequate value for your network connection") }}">
+                <div class="span3" title="{{ _( "Customized an adequate value for your network connection. large values will provide a larger bandwidth limit, but may result in tunnel connection unstable.") }}">
                     <label for="connect-receive-buffer">{{ _("Connect receive buffer size") }}
-                        (64~2048KB)</label>
+                        (8~2048KB)</label>
                 </div> <!-- .span3 -->
                 <div class="span6">
-                    <input id="connect-receive-buffer" type="number" min="64" max="2048"/>
+                    <input id="connect-receive-buffer" type="number" min="8" max="2048"/>
                 </div> <!-- .span6 -->
             </div> <!-- .row-fluid -->
             <div class="row-fluid">
@@ -64,7 +64,7 @@
         var isChecked = $("#submit-setting-level").is(':checked');
 
         var connect_receive_buffer = Number($('#connect-receive-buffer').val());
-        connect_receive_buffer = Math.max(Math.min(connect_receive_buffer, 2048), 64);
+        connect_receive_buffer = Math.max(Math.min(connect_receive_buffer, 2048), 8);
         $('#connect-receive-buffer').val(connect_receive_buffer);
 
         $.ajax({

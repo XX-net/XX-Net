@@ -427,10 +427,12 @@
                 }
 
                 if ((result['connected_link_new'] + result['worker_h1'] + result['worker_h2']) < 1) {
-                    if (result['is_idle']) {
-                        return updateProperty('#noob-info', '{{ _( "System is Idle." ) }}', 'fluent');
-                    } else {
+                    if (result['connection_pool_min'] > 0) {
                         return updateProperty('#noob-info', '{{ _( "Connection not established yet." ) }}', 'none');
+                    } else if (result['is_idle']) {
+                        return updateProperty('#noob-info', '{{ _( "System is Idle." ) }} ({{ _( "Normal" ) }})', 'fluent');
+                    } else {
+                        return updateProperty('#noob-info', '{{ _( "Connection not established yet." ) }} ({{ _( "Normal" ) }})', 'fluent');
                     }
                 }
 
