@@ -274,6 +274,12 @@ class ConnectManager(object):
             self.logger.exception("connect_process except:%r", e)
 
     def _create_ssl_connection(self, ip):
+        if not self.check_local_network.is_ok(ip):
+            self.logger.debug("connect %s blocked: network fail", ip)
+            self.ip_manager.ssl_closed(ip, "network fail")
+            time.sleep(10)
+            return
+
         ssl_sock = None
 
         try:
