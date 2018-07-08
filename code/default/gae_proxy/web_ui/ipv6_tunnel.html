@@ -195,7 +195,7 @@
                 } else if (result['status'] == 'probe') {
                     updateStatus('td#teredo-tunnel', '{{ _("probe")}}');
                 } else if (result['status'] == 'qualified') {
-                    updateStatus('td#teredo-tunnel', '{{ _("qualified")}}');
+                    updateStatus('td#teredo-tunnel', '{{ _("qualified")}} ({{ _("Still not connected? Wait for a while, or")}}<a href="/?module=gae_proxy&menu=advanced#global_setting">{{ _("try to reduce the connection buffer size")}}</a>)');
                 } else if (result['status'] == 'dormant') {
                     updateStatus('td#teredo-tunnel', '{{ _("dormant")}}');
                 } else if (result['status'] == 'disabled') {

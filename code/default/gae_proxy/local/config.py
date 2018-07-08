@@ -125,7 +125,7 @@ class Config(ConfigBase):
         self.set_var("https_max_connect_thread", 10)
         self.set_var("ssl_first_use_timeout", 5)
         self.set_var("connection_pool_min", 1)
-        self.set_var("https_connection_pool_min", 2)
+        self.set_var("https_connection_pool_min", 0)
         self.set_var("https_connection_pool_max", 10)
         self.set_var("https_new_connect_num", 3)
         self.set_var("https_keep_alive", 15)
@@ -179,7 +179,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 10)
         self.set_var("max_good_ip_num", 100)
-        self.set_var("target_handshake_time", 500)
+        self.set_var("target_handshake_time", 600)
 
         # ip source
         self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
@@ -255,7 +255,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                 self.https_connection_pool_max = 10
                 self.max_scan_ip_thread_num = 10
                 self.max_good_ip_num = 60
-                self.target_handshake_time = 500
+                self.target_handshake_time = 600
             elif level == "conservative":
                 self.dispather_min_idle_workers = 1
                 self.dispather_work_min_idle_time = 0
@@ -266,11 +266,11 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                 self.max_task_num = 50
                 self.https_max_connect_thread = 10
                 self.https_keep_alive = 15
-                self.https_connection_pool_min = 1
+                self.https_connection_pool_min = 0
                 self.https_connection_pool_max = 10
                 self.max_scan_ip_thread_num = 10
                 self.max_good_ip_num = 100
-                self.target_handshake_time = 500
+                self.target_handshake_time = 600
             elif level == "normal":
                 self.dispather_min_idle_workers = 3
                 self.dispather_work_min_idle_time = 0
@@ -281,13 +281,13 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                 self.max_task_num = 80
                 self.https_max_connect_thread = 10
                 self.https_keep_alive = 15
-                self.https_connection_pool_min = 2
+                self.https_connection_pool_min = 0
                 self.https_connection_pool_max = 10
                 self.max_scan_ip_thread_num = 10
                 self.max_good_ip_num = 100
-                self.target_handshake_time = 500
+                self.target_handshake_time = 600
             elif level == "radical":
-                self.dispather_min_idle_workers = 4
+                self.dispather_min_idle_workers = 3
                 self.dispather_work_min_idle_time = 1
                 self.dispather_work_max_score = 1000
                 self.dispather_min_workers = 30
@@ -296,11 +296,11 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                 self.max_task_num = 100
                 self.https_max_connect_thread = 15
                 self.https_keep_alive = 15
-                self.https_connection_pool_min = 3
+                self.https_connection_pool_min = 1
                 self.https_connection_pool_max = 15
                 self.max_scan_ip_thread_num = 20
                 self.max_good_ip_num = 100
-                self.target_handshake_time = 300
+                self.target_handshake_time = 1200
             elif level == "extreme":
                 self.dispather_min_idle_workers = 5
                 self.dispather_work_min_idle_time = 5
@@ -311,11 +311,11 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
                 self.max_task_num = 130
                 self.https_max_connect_thread = 20
                 self.https_keep_alive = 15
-                self.https_connection_pool_min = 3
+                self.https_connection_pool_min = 2
                 self.https_connection_pool_max = 20
                 self.max_scan_ip_thread_num = 30
                 self.max_good_ip_num = 200
-                self.target_handshake_time = 300
+                self.target_handshake_time = 1500
 
             self.save()
             self.load()
@@ -360,7 +360,7 @@ class DirectConfig(object):
             self.https_connection_pool_min = 0
             self.https_connection_pool_max = 8
         elif level == "normal":
-            self.dispather_min_idle_workers = 3
+            self.dispather_min_idle_workers = 2
             self.dispather_work_min_idle_time = 0
             self.dispather_work_max_score = 1000
             self.dispather_min_workers = 3
@@ -371,7 +371,7 @@ class DirectConfig(object):
             self.https_connection_pool_min = 0
             self.https_connection_pool_max = 10
         elif level == "radical":
-            self.dispather_min_idle_workers = 4
+            self.dispather_min_idle_workers = 3
             self.dispather_work_min_idle_time = 1
             self.dispather_work_max_score = 1000
             self.dispather_min_workers = 5

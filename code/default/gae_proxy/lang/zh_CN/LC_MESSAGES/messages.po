@@ -23,8 +23,8 @@ msgstr "切换到 ON 才能提交设置级别"
 msgid "Passive mode consumes less system resources"
 msgstr "被动模式消耗更少的系统资源"
 
-msgid "Customized an adequate value for your network connection"
-msgstr "为你的网络连接自定义适当的数值"
+msgid "Customized an adequate value for your network connection. large values will provide a larger bandwidth limit, but may result in tunnel connection unstable."
+msgstr "为你的网络连接自定义适当的数值。大的数值会提供较大的带宽上限，但是可能导致隧道连接不稳定。"
 
 msgid "Submit setting level"
 msgstr "提交设置级别"
@@ -196,6 +196,12 @@ msgstr "已启用"
 
 msgid "disabled"
 msgstr "已禁用"
+
+msgid "Still not connected? Wait for a while, or"
+msgstr "仍然连接不上？等一会儿，或者"
+
+msgid "try to reduce the connection buffer size"
+msgstr "尝试降低连接缓冲数值"
 
 msgid "Script is running, please retry later."
 msgstr "脚本正在运行，请稍后再试。"

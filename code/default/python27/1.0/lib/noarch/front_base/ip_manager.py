@@ -95,6 +95,8 @@ class IpManager():
         self.ip_pointer = 0
         self.ip_pointer_reset_time = 0
         self.scan_thread_count = 0
+        self.scan_fail_count = 0
+        self.scan_recheck_interval = 3
         self.iplist_need_save = False
         self.iplist_saved_time = 0
         self.last_sort_time = 0 # keep status for avoid wast too many cpu
@@ -143,6 +145,7 @@ class IpManager():
         self.scan_ip_thread_num = self.config.max_scan_ip_thread_num
         self.max_links_per_ip = self.config.max_links_per_ip
         self.max_good_ip_num = self.config.max_good_ip_num #3000  # stop scan ip when enough
+        self.auto_adjust_scan_ip_pointer = int(30 + self.max_good_ip_num * 0.1)
         self.ip_connect_interval = self.config.ip_connect_interval #5,10
         self.record_ip_history = self.config.record_ip_history
 
@@ -222,7 +225,7 @@ class IpManager():
 
     def _ip_rate(self, ip_info):
         return ip_info['handshake_time'] + \
-                    (ip_info['fail_times'] * 1000 ) + \
+                    (ip_info['fail_times'] * 500 ) + \
                     (ip_info['down_fail'] * 500 )
 
     def _add_ip_num(self, ip, num):
@@ -270,28 +273,32 @@ class IpManager():
         self.adjust_scan_thread_num()
 
     def adjust_scan_thread_num(self):
+        ip_num = len(self.ip_list)
+        min_scan_ip_thread_num = 1 if self.config.max_scan_ip_thread_num else 0
+
         if not self.config.auto_adjust_scan_ip_thread_num:
             scan_ip_thread_num = self.config.max_scan_ip_thread_num
-        elif len(self.ip_list) < self.config.max_good_ip_num:
-            scan_ip_thread_num = self.config.max_scan_ip_thread_num
+        elif ip_num < self.max_good_ip_num:
+            scan_ip_thread_num = int(self.config.max_scan_ip_thread_num * (1.5 - ip_num / self.max_good_ip_num))
         else:
-            min_scan_ip_thread_num = 1 if self.config.max_scan_ip_thread_num else 0
             try:
-                if len(self.ip_list) > 100:
-                    last_ip = self.ip_list[100]
+                if ip_num > self.auto_adjust_scan_ip_pointer:
+                    last_ip = self.ip_list[self.auto_adjust_scan_ip_pointer]
                 else:
                     last_ip = self.ip_list[-1]
 
                 last_ip_handshake_time = self._ip_rate(self.ip_dict[last_ip])
-                scan_ip_thread_num = int( (last_ip_handshake_time - self.config.target_handshake_time)/2 * self.config.max_scan_ip_thread_num/50 )
+                scan_ip_thread_num = int((last_ip_handshake_time - self.config.target_handshake_time) / 2 * \
+                                          self.config.max_scan_ip_thread_num / 50 * \
+                                          self.max_good_ip_num / self.good_ip_num)
             except Exception as e:
                 self.logger.warn("adjust_scan_thread_num fail:%r", e)
                 return
 
-            if scan_ip_thread_num > self.config.max_scan_ip_thread_num:
-                scan_ip_thread_num = self.config.max_scan_ip_thread_num
-            elif scan_ip_thread_num < min_scan_ip_thread_num:
-                scan_ip_thread_num = min_scan_ip_thread_num
+        if scan_ip_thread_num > self.config.max_scan_ip_thread_num:
+            scan_ip_thread_num = self.config.max_scan_ip_thread_num
+        elif scan_ip_thread_num < min_scan_ip_thread_num:
+            scan_ip_thread_num = min_scan_ip_thread_num
 
         if scan_ip_thread_num != self.scan_ip_thread_num:
             self.logger.info("Adjust scan thread num from %d to %d", self.scan_ip_thread_num, scan_ip_thread_num)
@@ -335,6 +342,8 @@ class IpManager():
                 time.sleep(1)
                 return None
 
+            ip_connect_interval = ip_num * self.scan_recheck_interval + 200 if to_recheck else self.ip_connect_interval
+
             for i in range(ip_num):
                 time_now = time.time()
                 if self.ip_pointer >= ip_num:
@@ -355,23 +364,24 @@ class IpManager():
                     continue
 
                 get_time = self.ip_dict[ip]["get_time"]
-                if time_now - get_time < self.ip_connect_interval:
+                if time_now - get_time < ip_connect_interval:
                     self.ip_pointer += 1
                     continue
 
-                if time_now - self.ip_dict[ip]['success_time'] > self.config.long_fail_threshold: # 5 min
-                    fail_connect_interval = self.config.long_fail_connect_interval # 180
-                else:
-                    fail_connect_interval = self.config.short_fail_connect_interval # 10
-                fail_time = self.ip_dict[ip]["fail_time"]
-                if time_now - fail_time < fail_connect_interval:
-                    self.ip_pointer += 1
-                    continue
+                if not to_recheck:
+                    if time_now - self.ip_dict[ip]['success_time'] > self.config.long_fail_threshold: # 5 min
+                        fail_connect_interval = self.config.long_fail_connect_interval # 180
+                    else:
+                        fail_connect_interval = self.config.short_fail_connect_interval # 10
+                    fail_time = self.ip_dict[ip]["fail_time"]
+                    if time_now - fail_time < fail_connect_interval:
+                        self.ip_pointer += 1
+                        continue
 
-                down_fail_time = self.ip_dict[ip]["down_fail_time"]
-                if time_now - down_fail_time < self.config.down_fail_connect_interval:
-                    self.ip_pointer += 1
-                    continue
+                    down_fail_time = self.ip_dict[ip]["down_fail_time"]
+                    if time_now - down_fail_time < self.config.down_fail_connect_interval:
+                        self.ip_pointer += 1
+                        continue
 
                 if self.ip_dict[ip]['links'] >= self.max_links_per_ip:
                     self.ip_pointer += 1
@@ -381,7 +391,8 @@ class IpManager():
                 # self.logger.debug("get ip:%s t:%d", ip, handshake_time)
                 self.append_ip_history(ip, "get")
                 self.ip_dict[ip]['get_time'] = time_now
-                self.ip_dict[ip]['links'] += 1
+                if not to_recheck:
+                    self.ip_dict[ip]['links'] += 1
                 self.ip_pointer += 1
                 return ip
         except Exception as e:
@@ -394,8 +405,12 @@ class IpManager():
             self.logger.error("add_ip input")
             return
 
+        time_now = time.time()
         if scan_result:
             self.check_local_network.report_ok(ip)
+            success_time = time_now
+        else:
+            success_time = 0
 
         ip = str(ip)
 
@@ -404,6 +419,7 @@ class IpManager():
         self.ip_lock.acquire()
         try:
             if ip in self.ip_dict:
+                self.ip_dict[ip]['success_time'] = success_time
                 self.ip_dict[ip]['handshake_time'] = handshake_time
                 self.ip_dict[ip]['fail_times'] = fail_times
                 if self.ip_dict[ip]['fail_time'] > 0:
@@ -418,8 +434,8 @@ class IpManager():
             self.ip_dict[ip] = {'handshake_time':handshake_time, "fail_times":fail_times,
                                     "transfered_data":0, 'data_active':0,
                                     'domain':domain, 'server':server,
-                                    "history":[[time.time(), handshake_time]], "fail_time":0,
-                                    "success_time":0, "get_time":0, "links":0,
+                                    "history":[[time_now, handshake_time]], "fail_time":0,
+                                    "success_time":success_time, "get_time":0, "links":0,
                                     "down_fail":down_fail, "down_fail_time":0}
 
             if 'gws' not in server:
@@ -612,6 +628,9 @@ class IpManager():
                 fails = property['fail_times']
                 handshake_time = property['handshake_time']
                 self.logger.info("remove_slowest_ip:%s handshake_time:%d, fails:%d", ip, handshake_time, fails)
+
+                if fails == 0:
+                    self._add_ip_num(ip, -1)
                 del self.ip_dict[ip]
 
                 if ip in self.ip_list:
@@ -642,7 +661,7 @@ class IpManager():
 
         if not result:
             if first_report:
-                if self.ip_dict[ip]['fail_times'] <= 3:
+                if self.ip_dict[ip]['fail_times'] <= 2:
                     # connect max fail 3 times.
                     # do nothing
                     return
@@ -659,18 +678,30 @@ class IpManager():
             self.logger.debug("recheck_ip:%s restore ok", ip)
 
     def scan_ip_worker(self):
+        recheck_ip = False
         while self.scan_thread_count <= self.scan_ip_thread_num and self.running:
+            time.sleep(1)
             try:
-                time.sleep(1)
-                if self.scan_ip_thread_num == 1 and self.config.max_scan_ip_thread_num > 1 and self.good_ip_num >= self.max_good_ip_num * 0.8:
-                    ip = self.get_ip(to_recheck=True)
-                    if ip:
-                        if time.time() - self.ip_dict[ip]["success_time"] < 180:
+                # work for idle and too many scan failures
+                if (recheck_ip or \
+                        self.scan_ip_thread_num == 1 and \
+                        self.config.max_scan_ip_thread_num > 1) and \
+                        self.check_local_network.is_ok():
+                    if self.good_ip_num >= self.max_good_ip_num * 0.6 and \
+                            len(self.ip_list) >= self.max_good_ip_num * 0.9:
+                        ip = self.get_ip(to_recheck=True)
+                        if ip and self.check_local_network.is_ok(ip):
+                            self.recheck_ip(ip, first_report=False)
+                            time.sleep(self.scan_recheck_interval)
                             continue
-                        self.recheck_ip(ip, first_report=False)
-                        time.sleep(10)
-                        continue
+                    else:
+                        self.adjust_scan_thread_num()
+            except Exception as e:
+                self.logger.exception("scan_ip_worker recheck ip except:%r", e)
+            finally:
+                recheck_ip = False
 
+            try:
                 ip = self.ip_source.get_ip()
                 # self.logger.debug("check ip:%s", ip)
 
@@ -678,12 +709,27 @@ class IpManager():
                     time.sleep(5)
                     continue
 
+                if not self.check_local_network.is_ok(ip):
+                    # self.logger.debug("scan_ip:%s network is fail", ip)
+                    time.sleep(5)
                 result = self.check_ip(ip)
+
+                self.scan_thread_lock.acquire()
+                if result:
+                    self.scan_fail_count = 0
+                else:
+                    self.scan_fail_count += 1
+                    if self.scan_fail_count / self.scan_thread_count > 3:
+                        self.scan_fail_count = 0
+                        self.check_local_network.report_fail(ip)
+                        recheck_ip = True
+                self.scan_thread_lock.release()
+
                 if not result or not result.ok:
                     continue
 
                 if self.add_ip(ip, result.request_time, result.domain):
-                    #self.logger.info("add  %s  CN:%s  type:%s  time:%d  target:%d ", ip,
+                    # self.logger.info("add  %s  CN:%s  type:%s  time:%d  target:%d ", ip,
                     #     result.domain, result.server_type, result.handshake_time, len(self.ip_list))
                     self.logger.info("scan_ip add ip:%s time:%d h2:%d", ip, result.request_time, result.h2)
                     if self.scan_ip_log:
