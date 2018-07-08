@@ -98,6 +98,8 @@ AttachConsole.restype = BOOL
 
 ATTACH_PARENT_PROCESS = -1
 
+sysargv = [os.path.abspath(sys.argv[0])] + sys.argv[1:]
+
 def areAdminRightsElevated():
     '''
     Tells you whether current script already has Administrative rights.
@@ -134,8 +136,7 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
     '''
     if not areAdminRightsElevated():
         # this is host process that doesn't have administrative rights
-        params = subprocess.list2cmdline([os.path.abspath(sys.argv[0])] + sys.argv[1:] + \
-                                         [ELEVATE_MARKER])
+        params = subprocess.list2cmdline(sysargv + [ELEVATE_MARKER])
         executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None, lpVerb='runas',
                                        lpFile=sys.executable, lpParameters=params,
                                        lpDirectory=None,
@@ -172,8 +173,7 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
         # indicate we're already running with administrative rights, see docstring
         return None
 
-
-def elevateAdminRun(args=__file__, executable=sys.executable,
+def elevateAdminRun(args=sysargv, executable=sys.executable,
                     waitAndClose=False, reattachConsole=True):
     if (waitAndClose or
         reattachConsole and
@@ -182,6 +182,8 @@ def elevateAdminRun(args=__file__, executable=sys.executable,
         # TODO: some streams were redirected, we need to manually work them
         # currently just don't attached to parent process
         reattachConsole = False
+    if not isinstance(args, str):
+        args = subprocess.list2cmdline(args)
     executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None,
                                    lpVerb='' if areAdminRightsElevated() else 'runas',
                                    lpFile=executable, lpParameters=args,
