@@ -14,152 +14,128 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
 
-msgid "Global Settings"
-msgstr "全局设置"
+msgid "Version"
+msgstr "版本"
 
-msgid "Switch ON to submit setting level"
-msgstr "切换到 ON 才能提交设置级别"
+msgid "Project main page"
+msgstr "项目主页"
 
-msgid "Passive mode consumes less system resources"
-msgstr "被动模式消耗更少的系统资源"
+msgid "Bug feedback"
+msgstr "Bug反馈"
 
-msgid "Customized an adequate value for your network connection. large values will provide a larger bandwidth limit, but may result in tunnel connection unstable."
-msgstr "为你的网络连接自定义适当的数值。大的数值会提供较大的带宽上限，但是可能导致隧道连接不稳定。"
+msgid "When submitting a bug, please attach "
+msgstr "报告问题时, 请附上"
 
-msgid "Submit setting level"
-msgstr "提交设置级别"
+msgid "the status page "
+msgstr "状态页"
 
-msgid "Setting level"
-msgstr "设置级别"
+msgid "info and "
+msgstr "信息和"
 
-msgid "Passive"
-msgstr "被动"
+msgid "the log page "
+msgstr "日志页"
 
-msgid "Conservative"
-msgstr "保守"
+msgid "contents"
+msgstr "内容"
 
-msgid "Normal"
-msgstr "正常"
+msgid "Thanks to the following projects"
+msgstr "感谢以下项目"
 
-msgid "Radical"
-msgstr "积极"
+msgid "About XX-Net"
+msgstr "关于 XX-Net"
 
-msgid "Extreme"
-msgstr "极端"
+msgid "General Settings"
+msgstr "通用"
 
-msgid "Connect receive buffer size"
-msgstr "连接接收缓冲大小"
+msgid "System Version"
+msgstr "版本"
 
-msgid "Scan Settings"
-msgstr "扫描设置"
+msgid "LAN Proxy Setting"
+msgstr "前置代理"
 
-msgid "Scan Log"
-msgstr "扫描日志"
+msgid "System Configuration"
+msgstr "系统配置"
 
-msgid "Import IP"
-msgstr "导入 IP"
-
-msgid "Export IP"
-msgstr "导出 IP"
-
-msgid "Check IP"
-msgstr "检查 IP"
-
-msgid "IPv6 Tunnel"
-msgstr "IPv6 隧道"
-
-msgid "Teredo Tunnel"
-msgstr "Teredo 隧道"
-
-msgid "GAEProxy Advanced Configuration"
-msgstr "GAEProxy 高级配置"
-
-msgid "Your browser is obsolete. Partial functionality will not be available."
-msgstr "您的浏览器版本过低, 部分功能将无法使用。"
-
-msgid "The latest Chrome browser is recommended."
-msgstr "建议您使用最新版本的Chrome浏览器。"
-
-msgid "Status"
-msgstr "状态"
-
-msgid "Property"
-msgstr "属性"
-
-msgid "Value"
-msgstr "值"
-
-msgid "All IP Number"
-msgstr "总IP数"
-
-msgid "Left Number"
-msgstr "待测IP数"
-
-msgid "Good IP Number"
-msgstr "有效IP数"
-
-msgid "Run"
-msgstr "开始"
-
-msgid "No response from process: "
-msgstr "进程："
-
-# msgid "GAEProxy"
-# msgstr ""
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr "正在配置服务[%s], 页面将在%s秒后刷新。"
 
 # msgid "XX-Net"
 # msgstr ""
 
-msgid ". It might have already exited."
-msgstr " 无响应, 可能已退出。"
+# msgid "GAE Proxy"
+# msgstr "GAE 代理"
 
-msgid "Stop"
-msgstr "停止"
+# msgid "X-Tunnel"
+# msgstr "X-Tunnel"
 
-msgid "Public AppIDs used by default"
-msgstr "默认使用公共AppID，保存多个AppID请用|分割"
+# msgid "Smart Router"
+# msgstr "智能路由"
 
-msgid "The public AppIDs are disabled to access videos or download files."
-msgstr "公共AppID不能看视频、下载文件。"
+msgid "Language"
+msgstr "语言"
 
-msgid "How to apply"
-msgstr "如何申请"
+msgid "Auto-Startup"
+msgstr "开机自动启动"
 
-msgid "Attention: inaccessable before AppIDs are deployed."
-msgstr "注意：AppID部署之前无法使用。"
+msgid "Popup Status Page on Startup"
+msgstr "启动时弹出状态页"
+
+msgid "Allow Remote"
+msgstr "允许远程访问控制页"
+
+msgid "Restarting all remote, wait to refresh."
+msgstr "正在重启所有远程程序，请等待刷新。"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "Display System Tray(Restarting XX-Net Required)"
+msgstr "显示托盘图标(需要重启XX-Net)"
+
+msgid "Run as Green Software"
+msgstr "以绿色方式运行"
+
+msgid "Module management"
+msgstr "模块管理"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "LAN proxy"
+msgstr "前置代理"
+
+msgid "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this."
+msgstr "一般无需设置，只有那些需要通过内部代理访问外网的用户才需要设置。"
+
+msgid "Proxy type"
+msgstr "代理类型"
+
+msgid "Proxy IP address or domain name"
+msgstr "代理服务器"
+
+msgid "Port"
+msgstr "代理端口"
+
+msgid "User name"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
 
 msgid "Save"
 msgstr "保存"
 
-msgid "Advanced tricks:"
-msgstr "高级技巧："
-
-msgid "By the configuration file"
-msgstr "通过文件配置"
-
-msgid "GAEProxy Configuration"
-msgstr "GAEProxy 配置"
+msgid "Do you really need LAN proxy? <a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">Help</a>."
+msgstr "你似乎没有设置前置代理的需要．．．（请查看<a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">帮助</a>）"
 
 msgid "Failed reading the settings."
 msgstr "读取设置失败。"
 
-msgid "Failed reading the prefix policies."
-msgstr "读取前缀策略失败。"
-
-msgid "No teredo prefix policiy is found."
-msgstr "未发现 Teredo 前缀策略。"
-
 msgid "Checking settings ..."
-msgstr "请等待检查设置有效性..."
+msgstr "等待设置检查..."
 
 msgid "Settings saved successfully."
-msgstr "设置保存成功。"
-
-msgid "AppID invalid:"
-msgstr "无效的AppID："
-
-msgid ", deploy AppID before using."
-msgstr "，使用前请先部署。"
+msgstr "保存设置成功。"
 
 msgid "Failed saving settings: "
 msgstr "保存设置失败："
@@ -167,254 +143,191 @@ msgstr "保存设置失败："
 msgid "Failed saving settings."
 msgstr "保存设置失败。"
 
-msgid "Deploy XX-Net onto GAE"
-msgstr "部署 XX-Net 至 GAE"
+msgid "Auto-Upgrade to"
+msgstr "自动升级到"
 
-msgid "Current status: "
-msgstr "当前状态："
+msgid "Do not upgrade"
+msgstr "不升级"
 
-msgid "idle"
-msgstr "空闲"
+msgid "Notice stable version"
+msgstr "通知稳定版"
 
-msgid "unknown"
-msgstr "未知"
+msgid "Stable version"
+msgstr "稳定版"
 
-msgid "offline"
-msgstr "离线（无法连接）"
+msgid "Notice test version"
+msgstr "通知测试版"
 
-msgid "probe"
-msgstr "正在检查网络"
+msgid "Test version"
+msgstr "测试版"
 
-msgid "qualified"
-msgstr "合格（已连接）"
+msgid "Check the latest version"
+msgstr "检查最新版本"
 
-msgid "dormant"
-msgstr "休眠（未连接）"
+msgid "Current version"
+msgstr "当前版本"
 
-msgid "enabled"
-msgstr "已启用"
+msgid "Version of the test one"
+msgstr "测试版"
 
-msgid "disabled"
-msgstr "已禁用"
+msgid "Version of the stable one"
+msgstr "稳定版"
 
-msgid "Still not connected? Wait for a while, or"
-msgstr "仍然连接不上？等一会儿，或者"
+msgid "Keep old versions count"
+msgstr "保留的旧版本数"
 
-msgid "try to reduce the connection buffer size"
-msgstr "尝试降低连接缓冲数值"
+msgid "keep all"
+msgstr "保留全部"
 
-msgid "Script is running, please retry later."
-msgstr "脚本正在运行，请稍后再试。"
+msgid "Update now"
+msgstr "立即更新"
 
-msgid ", are you sure to continue?"
-msgstr "，你确定要继续吗？"
-
-msgid "working"
-msgstr "工作"
-
-msgid "Authorization"
-msgstr "授权"
-
-msgid "Log"
-msgstr "日志"
-
-msgid "Delimit multiple AppIDs with |"
-msgstr "批量部署多个AppID请用|分割；部署时不要占用8080端口"
-
-msgid "Show Debug Log"
-msgstr "显示日志"
-
-msgid "Start to deploy"
-msgstr "开始部署"
-
-msgid "Auth window will popup, make sure don't block popup in browser."
-msgstr "认证会弹出窗口，请确认浏览器不会阻止弹窗。"
-
-msgid "XX-Net was reset."
-msgstr "XX-Net已被重置。"
-
-msgid "Deployment completed."
-msgstr "部署完成。"
-
-msgid "Please go to "
-msgstr "请在"
-
-msgid "the configuration page "
-msgstr "配置页面"
-
-msgid "to set AppID to enable them."
-msgstr "中设置AppID, 方会生效。"
-
-msgid "An exception occurred."
-msgstr "发生异常。"
-
-msgid "The exception info: "
-msgstr "异常信息："
-
-msgid "deploying ..."
-msgstr "正在部署..."
-
-msgid "Terminate deploying"
-msgstr "终止部署"
-
-msgid "Deployment cancelled."
-msgstr "部署已被取消。"
-
-msgid "Your AppID is either empty or invalid."
-msgstr "您的AppID为空或无效。"
-
-msgid "Export format"
-msgstr "导出格式"
-
-msgid "IP|IP|IP (GoGo Tester/GoAgent format)"
-msgstr "IP|IP|IP (GoGo Tester/GoAgent 格式)"
-
-msgid "New line delimiter"
-msgstr "以换行分隔"
-
-msgid "IP address list"
-msgstr "IP地址列表"
-
-msgid "Succeeded exporting "
-msgstr "成功导出"
-
-msgid " IP addresses."
-msgstr "个IP。"
-
-msgid "Failed exporting the IP addresses."
-msgstr "导出IP失败。"
-
-msgid "IP list"
-msgstr "IP列表"
-
-msgid "Success import "
-msgstr "成功导入 "
-
-msgid " IP."
-msgstr "个IP。"
-
-msgid "Failed importing IP."
-msgstr "导入IP失败。"
-
-msgid "Tips"
-msgstr "提示"
-
-msgid "Enable operations usually only needs to be performed once at each device."
-msgstr "启用操作通常只需要在每台设备上执行一次。"
-
-msgid "After changing the server, it takes 10-90 seconds to successfully establish a new teredo tunnel."
-msgstr "更换服务器后，需要等待 10-90 秒钟才会成功建立新的 teredo 隧道。"
-
-msgid "To use teredo tunnel, win user must keep firewall enabled, and allow outbound."
-msgstr "Win 用户使用 teredo 必须保持防火墙开启，出站放行即可。"
-
-msgid "Non-win users can also use the test button to get the fastest server for change manually."
-msgstr "非 win 用户也可以使用测试按钮来获取响应最快的服务器，以便手动更换。"
-
-msgid "Enable"
-msgstr "启用"
-
-msgid "Disable"
-msgstr "禁用"
-
-msgid "Test teredo"
-msgstr "测试 teredo"
-
-msgid "Test teredo usability only"
-msgstr "仅测试 teredo 可用性"
-
-msgid "Test teredo server only"
-msgstr "仅测试 teredo 服务器"
-
-msgid "Change teredo server"
-msgstr "更换 teredo 服务器"
-
-msgid "Switch teredo first"
-msgstr "切换到 teredo 隧道优先"
-
-msgid "Switch origin first"
-msgstr "切换到原生 IPv6 优先"
-
-msgid "Running ..."
-msgstr "正在执行..."
-
-msgid "GAEProxy Log"
-msgstr "GAEProxy 日志"
-
-msgid "Configuration"
-msgstr "配置"
-
-msgid "Deploy Server"
-msgstr "部署服务端"
+msgid "Manually Manage"
+msgstr "手动管理"
 
 msgid "Advanced"
 msgstr "高级"
 
-msgid "Refresh"
-msgstr "刷新"
+msgid "All versions download page"
+msgstr "全部已发布版本"
 
-msgid "Failed reading the log."
-msgstr "读取日志失败。"
+msgid "Released version"
+msgstr "发布版本"
 
-msgid "Auto-adjust scan thread count"
-msgstr "自动调整扫描线程数"
+msgid "Local version"
+msgstr "本地版本"
 
-msgid "How enable"
-msgstr "如何开启"
+msgid "Released"
+msgstr "发布的"
 
-msgid "Help"
-msgstr "帮助"
+msgid "Download & Change to"
+msgstr "下载并切至"
 
-msgid "Max scan thread count"
-msgstr "最大扫描线程数"
+msgid "no hash check"
+msgstr "不校验"
 
-msgid "AUTO"
-msgstr "自动"
+msgid "Local"
+msgstr "本地的"
 
-msgid "Force-IPv4"
-msgstr "仅IPv4"
+msgid "Change to this version"
+msgstr "切至此版本"
 
-msgid "Force-IPv6"
-msgstr "仅IPv6"
+msgid "Delete"
+msgstr "删除此版本"
 
-msgid "IP range list"
-msgstr "IP段列表"
+msgid "Settings save fail:"
+msgstr "保存设置失败："
 
-msgid "Supporting formats"
-msgstr "支持格式"
+msgid "Deleted successfully."
+msgstr "删除成功。"
 
-msgid "Submit"
-msgstr "提交"
+msgid "Deleting local version fail."
+msgstr "删除本地版本失败。"
 
-msgid "Scan IP thread is larger than the max number."
-msgstr "扫描线程数超过最大值。"
+msgid "Failed getting local versions."
+msgstr "获取本地版本失败。"
 
-msgid "Unkown error occurred."
-msgstr "发生未知错误。"
+msgid "Failed getting released versions."
+msgstr "获取发布版本失败。"
 
-msgid "IPv4 Status"
-msgstr "IPv4 状态"
+msgid "(Remote Web Control Enabled)"
+msgstr "(已允许远程访问)"
 
-msgid "IPv6 Status"
-msgstr "IPv6 状态"
+msgid "Adaptive width"
+msgstr "自适应宽度"
 
-msgid "try repair"
-msgstr "尝试修复"
+msgid "Exit the program"
+msgstr "退出程序"
 
-msgid "IPv4 Number"
-msgstr "IPv4 IP数"
+msgid "Remind me later"
+msgstr "以后再提醒我"
 
-msgid "IPv6 Number"
-msgstr "IPv6 IP数"
+msgid "Do not remind me this version"
+msgstr "忽略此版本"
+
+msgid "View changes"
+msgstr "显示变动"
+
+msgid "Exited successfully."
+msgstr "退出成功。"
+
+msgid "Exitting failed."
+msgstr "退出失败。"
+
+msgid "Exitting failed. A network error occurred."
+msgstr "退出失败，遇到网络错误。"
+
+msgid "Unkown error occured. Please refresh the page and try again."
+msgstr "发生未知错误，请刷新页面重试。"
+
+msgid "Updating in progress ..."
+msgstr "更新进行中..."
+
+msgid "New "
+msgstr "新"
+
+msgid "Downloading ..."
+msgstr "下载中..."
+
+msgid "Download completed."
+msgstr "下载完成。"
+
+msgid "Hello!"
+msgstr "你好！"
+
+msgid "You seem to be on your first visit."
+msgstr "你似乎是初次到访。"
+
+msgid "new to this version?"
+msgstr "第一次使用此版本？"
+
+msgid "Learn more"
+msgstr "了解更多"
+
+msgid "System"
+msgstr "系统"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Configuration"
+msgstr "配置"
+
+msgid "About"
+msgstr "关于"
+
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr "您的浏览器版本过低, 部分功能将无法使用。"
+
+msgid "The latest Chrome browser is recommended."
+msgstr "建议您使用最新版本的Chrome浏览器。"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "Search all issues"
+msgstr "在 issue 中搜索（支持 GitHub issue 搜索参数）"
+
+msgid "Notice"
+msgstr "公告"
+
+msgid "click to view"
+msgstr "点击查看"
+
+msgid "Property"
+msgstr "属性"
+
+msgid "Value"
+msgstr "值"
+
+msgid "idle"
+msgstr "空闲"
+
+msgid "working"
+msgstr "工作"
 
 msgid "XX-Net Status"
 msgstr "XX-Net 状态"
-
-msgid "IP Quality"
-msgstr "IP延迟"
-
-msgid "Connection Pool"
-msgstr "连接池"
 
 msgid "Browser Proxy Setting"
 msgstr "浏览器代理设置"
@@ -425,41 +338,20 @@ msgstr "CA证书状态"
 msgid "Download"
 msgstr "下载"
 
-msgid "Number of IP-Scanning Threads"
-msgstr "IP扫描线程数"
-
-msgid "Settings"
-msgstr "设置"
-
 msgid "Block Status"
 msgstr "屏蔽状态"
 
-msgid "XX-Net Version"
-msgstr "XX-Net版本"
+msgid "System Proxy"
+msgstr "系统代理"
 
-msgid "System Proxy Status"
-msgstr "系统代理状态"
+msgid "Modules"
+msgstr "模块"
 
-msgid "Listening At"
-msgstr "代理监听"
-
-# msgid "PAC URL"
-# msgstr "PAC自动代理地址"
-
-msgid "IP mode"
-msgstr "IP模式"
+msgid "Launcher Web UI"
+msgstr "Web 控制页"
 
 msgid "LAN proxy"
 msgstr "前置代理"
-
-msgid "working AppIDs"
-msgstr "工作AppID"
-
-msgid "out-of-quota AppIDs"
-msgstr "超额AppID"
-
-msgid "not-exist AppIDs"
-msgstr "无效AppID"
 
 msgid "System Info"
 msgstr "系统信息"
@@ -485,8 +377,8 @@ msgstr "显示详细信息"
 msgid "Post to Github issue needs to sign in your Github account"
 msgstr "贴到GitHub问题区需要登录GitHub账号"
 
-msgid "GAE Proxy Status Info"
-msgstr "GAEProxy 状态信息"
+msgid "XX-Net Status Info"
+msgstr "XX-Net 状态信息"
 
 msgid ""
 "-----------%0AProblem Description:%0APlease describe your problem, "
@@ -507,6 +399,12 @@ msgstr "去解决。"
 
 msgid "Your local network failed, please check your network and firewall."
 msgstr "网络无法连接，请检查网络和防火墙设置。"
+
+msgid "Force-IPv4"
+msgstr "仅IPv4"
+
+msgid "Force-IPv6"
+msgstr "仅IPv6"
 
 msgid " not available, Please check."
 msgstr " 不可用，请检查。"
@@ -560,24 +458,30 @@ msgstr "您正在使用公共AppID，因为资源有限，使用上存在限制�
 msgid ", Everything is OK. Welcome to the FREE Internet."
 msgstr "，一切正常，你可以访问真正的互联网了。"
 
-msgid "You are using public AppIDs."
-msgstr "你正使用公共AppID。"
+msgid "No response from process: "
+msgstr "进程："
 
-msgid "new:"
-msgstr "新:"
+msgid ". It might have already exited."
+msgstr " 无响应, 可能已退出。"
 
-msgid "h1:"
-msgstr ""
+msgid "Global PAC Proxy set"
+msgstr "全局PAC代理"
 
-msgid "h2:"
-msgstr ""
+msgid "Global GAEProxy Proxy set"
+msgstr "全局GAEProxy代理"
 
-msgid "Auto proxy enabled at "
-msgstr "智能代理已启用："
+msgid "Global X-Tunnel Proxy set"
+msgstr "全局X-Tunnel代理"
 
-msgid "Proxy enabled at "
-msgstr "全局代理已启用："
+msgid "Global Smart-Router Proxy set"
+msgstr "全局Smart-Router代理"
 
-msgid "Proxy disabled"
-msgstr "全局代理已禁用"
+msgid "Global Proxy disabled"
+msgstr "全局代理禁用"
+
+msgid "disable"
+msgstr "禁用"
+
+msgid "Failed loading notice."
+msgstr "获取公告失败。"
 
