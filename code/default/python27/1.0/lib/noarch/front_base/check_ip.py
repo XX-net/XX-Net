@@ -86,8 +86,8 @@ class CheckIp(object):
             return False
 
         content = response.read()
-        if isinstance(content, memoryview):
-            content = content.tobytes()
+#        if isinstance(content, memoryview):
+#            content = content.tobytes()
 
         if self.config.check_ip_content not in content:
             self.logger.warn("app check content:%s", content)
