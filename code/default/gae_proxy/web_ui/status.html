@@ -26,12 +26,16 @@
                 <td id="ipv6-status"></td>
             </tr>
             <tr>
-                <td>{{ _( "IPv4 Number" ) }}</td>
-                <td id="ipv4-num"></td>
+                <td>{{ _( "Good IPv4 Number" ) }}</td>
+                <td id="good-ipv4-num"></td>
             </tr>
             <tr>
-                <td>{{ _( "IPv6 Number" ) }}</td>
-                <td id="ipv6-num"></td>
+                <td>{{ _( "Good IPv6 Number" ) }}</td>
+                <td id="good-ipv6-num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "All IP Number" ) }}</td>
+                <td id="all-ip-num"></td>
             </tr>
             <tr>
                 <td>{{ _( "XX-Net Status" ) }}</td>
@@ -222,7 +226,7 @@
 
                     'lan-proxy: ' + result['lan_proxy'],
                     'use-ipv6: ' + result['use_ipv6'],
-                    'gws-ip-num: ' + 'total:' + result['ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
+                    'gws-ip-num: ' + 'total:' + result['all_ip_num'] + ' ipv4:' + result['good_ipv4_num'] + ' ipv6:' + result['good_ipv6_num'],
                     'ipv4-status: ' + result['ipv4_state'],
                     'ipv6-status: ' + result['ipv6_state'],
                     'connected-link: ' + 'new:' + result['connected_link_new'],
@@ -333,8 +337,9 @@
 
                     'td#ipv4-status': result['ipv4_state'],
                     'td#ipv6-status': result['ipv6_state'],
-                    'td#ipv4-num': result['good_ipv4_num'],
-                    'td#ipv6-num': result['good_ipv6_num'],
+                    'td#good-ipv4-num': result['good_ipv4_num'],
+                    'td#good-ipv6-num': result['good_ipv6_num'],
+                    'td#all-ip-num': result['all_ip_num'],
                     'td#is-idle': result['is_idle'] ? '{{ _( "idle" ) }}' : '{{ _( "working" ) }}',
                     'td#connection-status': connection_status_string(result['connected_link_new'], result['worker_h1'], result['worker_h2']),
                     'td#browser-proxy-setting': test_http_proxy_setting(),
