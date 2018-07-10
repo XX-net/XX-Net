@@ -51,6 +51,7 @@ from cert_util import CertUtil
 import gae_handler
 import direct_handler
 import web_control
+import check_local_network
 from front import front
 
 
@@ -107,10 +108,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             key = key.title()
             out_list.append("%s: %s\r\n" % (key, response.headers[key]))
         out_list.append("\r\n")
-        content = response.text
-        if isinstance(content, memoryview):
-            content = content.tobytes()
-        out_list.append(content)
+        out_list.append(response.text)
 
         self.wfile.write("".join(out_list))
 
@@ -195,7 +193,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.close_connection = 0
 
     def do_METHOD(self):
-        #self.close_connection = 0
+        if not (front.config.use_ipv6 == "force_ipv6" and \
+                check_local_network.IPv6.is_ok() or \
+                front.config.use_ipv6 != "force_ipv6" and \
+                check_local_network.is_ok()):
+            self.close_connection = 1
+            return
+
         self.req_payload = None
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')

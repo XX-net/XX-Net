@@ -182,6 +182,7 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         self.set_var("target_handshake_time", 600)
 
         # ip source
+        # IPv4 is dead
         self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
         self.set_var("ipv6_scan_ratio", 90) # 0 - 100
 

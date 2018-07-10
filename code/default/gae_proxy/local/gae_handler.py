@@ -66,14 +66,13 @@ import zlib
 import traceback
 from mimetypes import guess_type
 
+import check_local_network
 from front import front
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
 def inflate(data):
-    if isinstance(data, memoryview):
-        data = data.tobytes()
     return zlib.decompress(data, -zlib.MAX_WBITS)
 
 
@@ -508,6 +507,8 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
     try:
         response = request_gae_proxy(method, url, headers, body)
+        # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
+        response.headers.pop("Transfer-Encoding", None)
         # gae代理请求
     except GAE_Exception as e:
         xlog.warn("GAE %s %s request fail:%r", method, url, e)
@@ -536,8 +537,6 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         if key in skip_response_headers:
             continue
         response_headers[key] = value
-
-    response_headers.pop("Transfer-Encoding", None)
 
     if response.status == 503 and fallback and \
             response_headers.get('Server') == 'HTTP server (unknown)' and \
@@ -574,7 +573,6 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             send_header(wfile, key, value)
             # xlog.debug("Head- %s: %s", key, value)
         wfile.write("\r\n")
-        wfile.flush()
         # 写入除body外内容
 
     def is_text_content_type(content_type):
@@ -606,9 +604,6 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
                 xlog.warn("recv body fail:%s", url)
                 return
 
-            if isinstance(data0, memoryview):
-                data0 = data0.tobytes()
-
             gzip_decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
             decoded_data0 = gzip_decompressor.decompress(data0)
 
@@ -638,10 +633,10 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
                         send_response_headers()
                         while True:
-                            wfile._sock.sendall(decoded_data0)
+                            wfile.write(decoded_data0)
                             if response.task.body_readed >= body_length:
                                 break
-                            data = response.task.read().tobytes()
+                            data = response.task.read()
                             decoded_data0 = gzip_decompressor.decompress(data)
                         xlog.info("GAE send ungziped deflate data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
                                   url, response.task.get_trace())
@@ -652,10 +647,10 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
                         send_response_headers()
                         while True:
-                            wfile._sock.sendall(decoded_data1)
+                            wfile.write(decoded_data1)
                             if response.task.body_readed >= body_length:
                                 break
-                            data = response.task.read().tobytes()
+                            data = response.task.read()
                             decoded_data0 = gzip_decompressor.decompress(data)
                             decoded_data1 = deflate_decompressor.decompress(decoded_data0)
                         xlog.info("GAE send ungziped data to browser t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method,
@@ -670,7 +665,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         send_response_headers()
 
         if data0:
-            wfile._sock.sendall(data0)
+            wfile.write(data0)
             body_sended = len(data0)
         else:
             body_sended = 0
@@ -692,11 +687,11 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         body_sended += len(data)
         try:
             # https 包装
-            ret = wfile._sock.sendall(data)
+            ret = wfile.write(data)
             if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
                 #xlog.debug("send to browser wfile.write ret:%d", ret)
                 #ret = wfile.write(data)
-                wfile._sock.sendall(data)
+                wfile.write(data)
         except Exception as e_b:
             if e_b[0] in (errno.ECONNABORTED, errno.EPIPE,
                           errno.ECONNRESET) or 'bad write retry' in repr(e_b):
@@ -802,7 +797,6 @@ class RangeFetch2(object):
                 #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
             self.wfile.write("\r\n")
-            self.wfile.flush()
         except Exception as e:
             self.keep_running = False
             xlog.info("RangeFetch send response fail:%r %s", e, self.url)
@@ -819,7 +813,12 @@ class RangeFetch2(object):
             res_begin, res_end, self.response)).start()
 
         ok = "ok"
-        while self.keep_running and self.wait_begin < self.req_end + 1:
+        while self.keep_running and \
+                (front.config.use_ipv6 == "force_ipv6" and \
+                check_local_network.IPv6.is_ok() or \
+                front.config.use_ipv6 != "force_ipv6" and \
+                check_local_network.is_ok()) and \
+                self.wait_begin < self.req_end + 1:
             with self.lock:
                 if self.wait_begin not in self.data_list:
                     self.waiter.wait()
@@ -835,11 +834,11 @@ class RangeFetch2(object):
                     self.all_data_size[self] = self.data_size
 
             try:
-                ret = self.wfile._sock.sendall(data)
+                ret = self.wfile.write(data)
                 if ret == ssl.SSL_ERROR_WANT_WRITE or ret == ssl.SSL_ERROR_WANT_READ:
                     xlog.debug(
                         "send to browser wfile.write ret:%d, retry", ret)
-                    ret = self.wfile._sock.sendall(data)
+                    ret = self.wfile.write(data)
                     xlog.debug("send to browser wfile.write ret:%d", ret)
                 del data
             except Exception as e:
