@@ -182,7 +182,7 @@ def elevateAdminRun(args=sysargv, executable=sys.executable,
         # TODO: some streams were redirected, we need to manually work them
         # currently just don't attached to parent process
         reattachConsole = False
-    if not isinstance(args, str):
+    if args is not None and not isinstance(args, str):
         args = subprocess.list2cmdline(args)
     executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None,
                                    lpVerb='' if areAdminRightsElevated() else 'runas',
