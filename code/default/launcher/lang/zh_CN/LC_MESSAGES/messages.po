@@ -92,6 +92,12 @@ msgstr "帮助"
 msgid "Display System Tray(Restarting XX-Net Required)"
 msgstr "显示托盘图标(需要重启 XX-Net)"
 
+msgid "Display Windows software compatibility suggestions"
+msgstr "显示 Windows 软件兼容性建议"
+
+msgid "Feedback"
+msgstr "反馈"
+
 msgid "Run as Green Software"
 msgstr "以绿色方式运行"
 
