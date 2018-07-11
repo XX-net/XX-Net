@@ -316,7 +316,7 @@ class Response(BaseResponse):
             data = self._read_plain(read_len, timeout)
         else:
             data = self._read_chunked(timeout)
-        return memoryview(data)
+        return data
 
     def readall(self, timeout=60):
         start_time = time.time()
@@ -495,7 +495,7 @@ class Client(object):
                 if not data:
                     break
                 else:
-                    data_buffer.append(data.tobytes())
+                    data_buffer.append(data)
 
             response.text = "".join(data_buffer)
             return response

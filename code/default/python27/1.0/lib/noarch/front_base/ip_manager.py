@@ -290,7 +290,7 @@ class IpManager():
                 last_ip_handshake_time = self._ip_rate(self.ip_dict[last_ip])
                 scan_ip_thread_num = int((last_ip_handshake_time - self.config.target_handshake_time) / 2 * \
                                           self.config.max_scan_ip_thread_num / 50 * \
-                                          self.max_good_ip_num / self.good_ip_num)
+                                          self.max_good_ip_num / max(self.good_ip_num, 1))
             except Exception as e:
                 self.logger.warn("adjust_scan_thread_num fail:%r", e)
                 return

@@ -71,27 +71,23 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
         for key, value in response_headers.items():
             send_header(wfile, key, value)
         wfile.write("\r\n")
-        wfile.flush()
 
         length = 0
         while True:
             data = response.task.read()
-            if isinstance(data, memoryview):
-                data = data.tobytes()
-
             data_len = len(data)
             length += data_len
             if 'Transfer-Encoding' in response_headers:
                 if not data_len:
-                    wfile._sock.sendall('0\r\n\r\n')
+                    wfile.write('0\r\n\r\n')
                     break
-                wfile._sock.sendall('%x\r\n' % data_len)
-                wfile._sock.sendall(data)
-                wfile._sock.sendall('\r\n')
+                wfile.write('%x\r\n' % data_len)
+                wfile.write(data)
+                wfile.write('\r\n')
             else:
                 if not data_len:
                     break
-                wfile._sock.sendall(data)
+                wfile.write(data)
 
         xlog.info("DIRECT t:%d s:%d %d %s %s",
                   (time.time()-time_request)*1000, length, response.status, host, path)

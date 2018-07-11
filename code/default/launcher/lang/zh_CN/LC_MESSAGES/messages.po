@@ -21,7 +21,7 @@ msgid "Project main page"
 msgstr "项目主页"
 
 msgid "Bug feedback"
-msgstr "Bug反馈"
+msgstr "Bug 反馈"
 
 msgid "When submitting a bug, please attach "
 msgstr "报告问题时, 请附上"
@@ -57,7 +57,7 @@ msgid "System Configuration"
 msgstr "系统配置"
 
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr "正在配置服务[%s], 页面将在%s秒后刷新。"
+msgstr "正在配置服务 [%s], 页面将在 %s 秒后刷新。"
 
 # msgid "XX-Net"
 # msgstr ""
@@ -90,7 +90,7 @@ msgid "Help"
 msgstr "帮助"
 
 msgid "Display System Tray(Restarting XX-Net Required)"
-msgstr "显示托盘图标(需要重启XX-Net)"
+msgstr "显示托盘图标(需要重启 XX-Net)"
 
 msgid "Run as Green Software"
 msgstr "以绿色方式运行"
@@ -300,7 +300,7 @@ msgid "Your browser is obsolete. Partial functionality will not be available."
 msgstr "您的浏览器版本过低, 部分功能将无法使用。"
 
 msgid "The latest Chrome browser is recommended."
-msgstr "建议您使用最新版本的Chrome浏览器。"
+msgstr "建议您使用最新版本的 Chrome 浏览器。"
 
 msgid "Search"
 msgstr "搜索"
@@ -310,6 +310,9 @@ msgstr "在 issue 中搜索（支持 GitHub issue 搜索参数）"
 
 msgid "Notice"
 msgstr "公告"
+
+msgid "click to view"
+msgstr "点击查看"
 
 msgid "Property"
 msgstr "属性"
@@ -330,7 +333,7 @@ msgid "Browser Proxy Setting"
 msgstr "浏览器代理设置"
 
 msgid "CA status"
-msgstr "CA证书状态"
+msgstr "CA 证书状态"
 
 msgid "Download"
 msgstr "下载"
@@ -360,7 +363,7 @@ msgid "Check"
 msgstr "查看"
 
 msgid "GitHub issues"
-msgstr "GitHub问题讨论区"
+msgstr "GitHub 问题讨论区"
 
 msgid "or"
 msgstr "或"
@@ -372,7 +375,7 @@ msgid "Show Details"
 msgstr "显示详细信息"
 
 msgid "Post to Github issue needs to sign in your Github account"
-msgstr "贴到GitHub问题区需要登录GitHub账号"
+msgstr "贴到 GitHub 问题区需要登录 GitHub 账号"
 
 msgid "XX-Net Status Info"
 msgstr "XX-Net 状态信息"
@@ -398,38 +401,38 @@ msgid "Your local network failed, please check your network and firewall."
 msgstr "网络无法连接，请检查网络和防火墙设置。"
 
 msgid "Force-IPv4"
-msgstr "仅IPv4"
+msgstr "仅 IPv4"
 
 msgid "Force-IPv6"
-msgstr "仅IPv6"
+msgstr "仅 IPv6"
 
 msgid " not available, Please check."
 msgstr " 不可用，请检查。"
 
 msgid "You may want to $1turn on IP scaner$2."
-msgstr "您应该考虑$1开启IP扫描器$2。"
+msgstr "您应该考虑$1开启 IP 扫描器$2。"
 
 msgid ""
 "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
 "on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>."
-msgstr "你可以尝试 <a href=\"https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6\">开启IPv6</a> 或 <a href=\"https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B\">使用X-Tunnel</a>。"
+msgstr "你可以尝试 <a href=\"https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6\">开启 IPv6</a> 或 <a href=\"https://github.com/XX-net/XX-Net/wiki/x-tunnel%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B\">使用X-Tunnel</a>。"
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
-msgstr "等待扫描IP，建议开启IPv6。"
+msgstr "等待扫描IP，建议开启 IPv6。"
 
 msgid ""
 "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own AppID</a>."
-msgstr "公共AppID配额已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署私有AppID</a>。"
+msgstr "公共 AppID 配额已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署私有 AppID</a>。"
 
 msgid ""
 "Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more AppID</a>."
-msgstr "您的AppID流量已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署更多AppID</a>。"
+msgstr "您的 AppID 流量已用完，请<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署更多 AppID</a>。"
 
 msgid "No working AppID. Please check."
-msgstr "没有可用AppID，请检查。"
+msgstr "没有可用 AppID，请检查。"
 
 msgid "System is Idle."
 msgstr "系统空闲。"
@@ -444,13 +447,13 @@ msgid "Detecting ..."
 msgstr "正在自检..."
 
 msgid "Please import certificates to your browser."
-msgstr "请导入浏览器CA证书。"
+msgstr "请导入浏览器 CA 证书。"
 
 msgid ""
 "You are using public AppIDs. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" "
 "target=\"_blank\">deploy your own AppID</a>."
-msgstr "您正在使用公共AppID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署私有AppID</a>。"
+msgstr "您正在使用公共 AppID，因为资源有限，使用上存在限制，建议<a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\">部署私有 AppID</a>。"
 
 msgid ", Everything is OK. Welcome to the FREE Internet."
 msgstr "，一切正常，你可以访问真正的互联网了。"
@@ -462,16 +465,16 @@ msgid ". It might have already exited."
 msgstr " 无响应, 可能已退出。"
 
 msgid "Global PAC Proxy set"
-msgstr "全局PAC代理"
+msgstr "全局 PAC 代理"
 
 msgid "Global GAEProxy Proxy set"
-msgstr "全局GAEProxy代理"
+msgstr "全局 GAEProxy 代理"
 
 msgid "Global X-Tunnel Proxy set"
-msgstr "全局X-Tunnel代理"
+msgstr "全局 X-Tunnel 代理"
 
 msgid "Global Smart-Router Proxy set"
-msgstr "全局Smart-Router代理"
+msgstr "全局 Smart-Router 代理"
 
 msgid "Global Proxy disabled"
 msgstr "全局代理禁用"

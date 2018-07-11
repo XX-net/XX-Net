@@ -349,7 +349,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "ipv4_state": check_local_network.IPv4.get_stat(),
             "ipv6_state": check_local_network.IPv6.get_stat(),
             #"ipv6_tunnel": ipv6_tunnel.state(),
-            "ip_num": len(front.ip_manager.ip_list),
+            "all_ip_num": len(front.ip_manager.ip_list),
             "good_ipv4_num": front.ip_manager.good_ipv4_num,
             "good_ipv6_num": front.ip_manager.good_ipv6_num,
             "connected_link_new": len(front.connect_manager.new_conn_pool.pool),
