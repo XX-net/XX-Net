@@ -5,7 +5,7 @@ https://codeload.github.com/XX-net/XX-Net/zip/3.12.2
 
 
 测试版(Test)：  
-https://codeload.github.com/XX-net/XX-Net/zip/3.12.8
+https://codeload.github.com/XX-net/XX-Net/zip/3.12.9
 
 
 Android:  
