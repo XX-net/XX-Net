@@ -204,6 +204,10 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    if sys.platform == "win32" and config.get(["show_compat_suggest"], 1):
+        import win_compat_suggest
+        win_compat_suggest.main()
+
     current_version = update_from_github.current_version()
 
     xlog.info("start XX-Net %s", current_version)

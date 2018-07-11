@@ -257,6 +257,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
                 "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
                 "system-proxy": config.get(["modules", "launcher", "proxy"], "smart_router"),
+                "show-compat-suggest": config.get(["show_compat_suggest"], 1),
                 "no_mess_system": config.get(["no_mess_system"], 0),
                 "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1),  # -1 means not set yet
                 "postUpdateStat": config.get(["update", "postUpdateStat"], "noChange"),
@@ -347,10 +348,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     config.save()
 
                     data = '{"res":"success"}'
+            elif 'show_compat_suggest' in reqs:
+                show_compat_suggest = int(reqs['show_compat_suggest'][0])
+                if show_compat_suggest != 0 and show_compat_suggest != 1:
+                    data = '{"res":"fail, show_compat_suggest:%s"}' % show_compat_suggest
+                else:
+                    config.set(["show_compat_suggest"], show_compat_suggest)
+                    config.save()
+
+                    data = '{"res":"success"}'
             elif 'no_mess_system' in reqs:
                 no_mess_system = int(reqs['no_mess_system'][0])
                 if no_mess_system != 0 and no_mess_system != 1:
-                    data = '{"res":"fail, show_systray:%s"}' % no_mess_system
+                    data = '{"res":"fail, no_mess_system:%s"}' % no_mess_system
                 else:
                     config.set(["no_mess_system"], no_mess_system)
                     config.save()
