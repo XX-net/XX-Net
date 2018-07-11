@@ -39,6 +39,12 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
+        <div class="span4">{{ _( "Display Windows software compatibility suggestions" ) }}<a href="https://github.com/XX-net/XX-Net/issues/10957" target="_blank">({{ _( "Feedback" ) }})</a></div> <!-- .span4 -->
+        <div class="span8">
+            <input id="show-compat-suggest" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid">
         <div class="span4">{{ _( "Run as Green Software" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/%E4%BB%A5%E7%BB%BF%E8%89%B2%E8%BD%AF%E4%BB%B6%E8%BF%90%E8%A1%8C" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
             <input id="no-mess-system" type="checkbox" data-toggle="switch"/>
@@ -137,6 +143,12 @@
 
                     $("#show-systray").prop('checked', true);
                 }
+                if (result['show-compat-suggest'] != 0) {
+                    $("#show-compat-suggest").parent().removeClass('switch-off');
+                    $("#show-compat-suggest").parent().addClass('switch-on');
+
+                    $("#show-compat-suggest").prop('checked', true);
+                }
                 if (result['no_mess_system'] != 0) {
                     $("#no-mess-system").parent().removeClass('switch-off');
                     $("#no-mess-system").parent().addClass('switch-on');
@@ -194,6 +206,14 @@
     $('#show-systray').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'show_systray',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+
+    $('#show-compat-suggest').change(function () {
+        var isChecked = $(this).is(':checked'),
+            key       = 'show_compat_suggest',
             value     = isChecked ? 1 : 0;
 
         setConfig(key, value);
