@@ -193,13 +193,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         self.close_connection = 0
 
     def do_METHOD(self):
-        if not (front.config.use_ipv6 == "force_ipv6" and \
-                check_local_network.IPv6.is_ok() or \
-                front.config.use_ipv6 != "force_ipv6" and \
-                check_local_network.is_ok()):
-            self.close_connection = 1
-            return
-
         self.req_payload = None
         host = self.headers.get('Host', '')
         host_ip, _, port = host.rpartition(':')
@@ -212,6 +205,13 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             # for web_ui status page
             # auto detect browser proxy setting is work
             return self.wfile.write(self.self_check_response_data)
+
+        if not (front.config.use_ipv6 == "force_ipv6" and \
+                check_local_network.IPv6.is_ok() or \
+                front.config.use_ipv6 != "force_ipv6" and \
+                check_local_network.is_ok()):
+            self.close_connection = 1
+            return
 
         if isinstance(self.connection, ssl.SSLSocket):
             schema = "https"
