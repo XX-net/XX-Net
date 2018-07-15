@@ -97,7 +97,7 @@ goto :eof
 
 :[set ipv6]
 :: Reset Group Policy Teredo
-{} {}\\win_reset_gp.py'
+"{}" "{}\\win_reset_gp.py"
 
 """.format(log_file, sys.executable, current_path) + \
 """
