@@ -42,6 +42,9 @@ class Task(object):
         return out_str
 
     def put_data(self, data):
+        # hyper H2
+        if isinstance(data, memoryview):
+            data = data.tobytes()
         self.body_queue.put(data)
         self.body_len += len(data)
 
