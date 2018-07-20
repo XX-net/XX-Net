@@ -191,6 +191,7 @@ done
 # Start Application
 if [ $os_name = 'Darwin' ] && ! [ $HANGUP = '1' ]; then
     echo "Run XX-Net in background."
+    PYTHON="/usr/bin/python2.7"
     launchWithNoHungup $ARGS
 else
     launchWithHungup $ARGS
