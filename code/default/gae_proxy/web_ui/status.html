@@ -58,7 +58,7 @@
                 <td id="ca-status"></td>
             </tr>
             <tr>
-                <td>{{ _( "Number of IP-Scanning Threads" ) }}(<a href="/?module=gae_proxy&menu=advanced#scan_ip">{{ _( "Settings" ) }}</a>)</td>
+                <td>{{ _( "Number of IP-Scanning Threads" ) }}(<a href="/?module=gae_proxy&menu=advanced#scan_setting">{{ _( "Settings" ) }}</a>)</td>
                 <td id="scan-ip-thread-num"></td>
             </tr>
         </tbody>
@@ -407,7 +407,7 @@
 
                 if (result['good_ipv4_num'] + result['good_ipv6_num'] < 1) {
                     if (result['scan_ip_thread_num'] < 1) {
-                        return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_ip\">').replace('$2', '</a>'), 'none');
+                        return updateProperty('#noob-info', '{{ _( "You may want to $1turn on IP scaner$2." ) }}'.replace('$1', '<a href=\"./?module=gae_proxy&menu=advanced#scan_setting\">').replace('$2', '</a>'), 'none');
                     } else {
                         if (result['ipv6_state'] == "Fail") {
                             return updateProperty('#noob-info', '{{ _( "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>." ) }}', 'none');
