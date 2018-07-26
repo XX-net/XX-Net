@@ -18,6 +18,7 @@ class _Reasons(Enum):
     UNSUPPORTED_SERIALIZATION = 7
     UNSUPPORTED_X509 = 8
     UNSUPPORTED_EXCHANGE_ALGORITHM = 9
+    UNSUPPORTED_DIFFIE_HELLMAN = 10
 
 
 class UnsupportedAlgorithm(Exception):

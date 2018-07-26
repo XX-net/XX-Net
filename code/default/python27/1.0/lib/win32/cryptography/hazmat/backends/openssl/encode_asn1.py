@@ -5,17 +5,17 @@
 from __future__ import absolute_import, division, print_function
 
 import calendar
-
-import idna
+import ipaddress
 
 import six
 
-from cryptography import x509
+from cryptography import utils, x509
 from cryptography.hazmat.backends.openssl.decode_asn1 import (
     _CRL_ENTRY_REASON_ENUM_TO_CODE, _DISTPOINT_TYPE_FULLNAME,
     _DISTPOINT_TYPE_RELATIVENAME
 )
-from cryptography.x509.oid import CRLEntryExtensionOID, ExtensionOID, NameOID
+from cryptography.x509.name import _ASN1Type
+from cryptography.x509.oid import CRLEntryExtensionOID, ExtensionOID
 
 
 def _encode_asn1_int(backend, x):
@@ -78,15 +78,23 @@ def _encode_inhibit_any_policy(backend, inhibit_any_policy):
     return _encode_asn1_int_gc(backend, inhibit_any_policy.skip_certs)
 
 
-def _encode_name(backend, attributes):
+def _encode_name(backend, name):
     """
     The X509_NAME created will not be gc'd. Use _encode_name_gc if needed.
     """
     subject = backend._lib.X509_NAME_new()
-    for attribute in attributes:
-        name_entry = _encode_name_entry(backend, attribute)
-        res = backend._lib.X509_NAME_add_entry(subject, name_entry, -1, 0)
-        backend.openssl_assert(res == 1)
+    for rdn in name.rdns:
+        set_flag = 0  # indicate whether to add to last RDN or create new RDN
+        for attribute in rdn:
+            name_entry = _encode_name_entry(backend, attribute)
+            # X509_NAME_add_entry dups the object so we need to gc this copy
+            name_entry = backend._ffi.gc(
+                name_entry, backend._lib.X509_NAME_ENTRY_free
+            )
+            res = backend._lib.X509_NAME_add_entry(
+                subject, name_entry, -1, set_flag)
+            backend.openssl_assert(res == 1)
+            set_flag = -1
     return subject
 
 
@@ -98,7 +106,7 @@ def _encode_name_gc(backend, attributes):
 
 def _encode_sk_name_entry(backend, attributes):
     """
-    The sk_X50_NAME_ENTRY created will not be gc'd.
+    The sk_X509_NAME_ENTRY created will not be gc'd.
     """
     stack = backend._lib.sk_X509_NAME_ENTRY_new_null()
     for attribute in attributes:
@@ -109,22 +117,21 @@ def _encode_sk_name_entry(backend, attributes):
 
 
 def _encode_name_entry(backend, attribute):
-    value = attribute.value.encode('utf8')
-    obj = _txt2obj_gc(backend, attribute.oid.dotted_string)
-    if attribute.oid == NameOID.COUNTRY_NAME:
-        # Per RFC5280 Appendix A.1 countryName should be encoded as
-        # PrintableString, not UTF8String
-        type = backend._lib.MBSTRING_ASC
+    if attribute._type is _ASN1Type.BMPString:
+        value = attribute.value.encode('utf_16_be')
     else:
-        type = backend._lib.MBSTRING_UTF8
+        value = attribute.value.encode('utf8')
+
+    obj = _txt2obj_gc(backend, attribute.oid.dotted_string)
+
     name_entry = backend._lib.X509_NAME_ENTRY_create_by_OBJ(
-        backend._ffi.NULL, obj, type, value, -1
+        backend._ffi.NULL, obj, attribute._type.value, value, len(value)
     )
     return name_entry
 
 
-def _encode_crl_number(backend, crl_number):
-    return _encode_asn1_int_gc(backend, crl_number.crl_number)
+def _encode_crl_number_delta_crl_indicator(backend, ext):
+    return _encode_asn1_int_gc(backend, ext.crl_number)
 
 
 def _encode_crl_reason(backend, crl_reason):
@@ -366,11 +373,9 @@ def _encode_general_name(backend, name):
 
         ia5 = backend._lib.ASN1_IA5STRING_new()
         backend.openssl_assert(ia5 != backend._ffi.NULL)
-
-        if name.value.startswith(u"*."):
-            value = b"*." + idna.encode(name.value[2:])
-        else:
-            value = idna.encode(name.value)
+        # ia5strings are supposed to be ITU T.50 but to allow round-tripping
+        # of broken certs that encode utf8 we'll encode utf8 here too.
+        value = name.value.encode("utf8")
 
         res = backend._lib.ASN1_STRING_set(ia5, value, len(value))
         backend.openssl_assert(res == 1)
@@ -393,9 +398,19 @@ def _encode_general_name(backend, name):
     elif isinstance(name, x509.IPAddress):
         gn = backend._lib.GENERAL_NAME_new()
         backend.openssl_assert(gn != backend._ffi.NULL)
-        ipaddr = _encode_asn1_str(
-            backend, name.value.packed, len(name.value.packed)
-        )
+        if isinstance(name.value, ipaddress.IPv4Network):
+            packed = (
+                name.value.network_address.packed +
+                utils.int_to_bytes(((1 << 32) - name.value.num_addresses), 4)
+            )
+        elif isinstance(name.value, ipaddress.IPv6Network):
+            packed = (
+                name.value.network_address.packed +
+                utils.int_to_bytes((1 << 128) - name.value.num_addresses, 16)
+            )
+        else:
+            packed = name.value.packed
+        ipaddr = _encode_asn1_str(backend, packed, len(packed))
         gn.type = backend._lib.GEN_IPADD
         gn.d.iPAddress = ipaddr
     elif isinstance(name, x509.OtherName):
@@ -424,17 +439,19 @@ def _encode_general_name(backend, name):
     elif isinstance(name, x509.RFC822Name):
         gn = backend._lib.GENERAL_NAME_new()
         backend.openssl_assert(gn != backend._ffi.NULL)
-        asn1_str = _encode_asn1_str(
-            backend, name._encoded, len(name._encoded)
-        )
+        # ia5strings are supposed to be ITU T.50 but to allow round-tripping
+        # of broken certs that encode utf8 we'll encode utf8 here too.
+        data = name.value.encode("utf8")
+        asn1_str = _encode_asn1_str(backend, data, len(data))
         gn.type = backend._lib.GEN_EMAIL
         gn.d.rfc822Name = asn1_str
     elif isinstance(name, x509.UniformResourceIdentifier):
         gn = backend._lib.GENERAL_NAME_new()
         backend.openssl_assert(gn != backend._ffi.NULL)
-        asn1_str = _encode_asn1_str(
-            backend, name._encoded, len(name._encoded)
-        )
+        # ia5strings are supposed to be ITU T.50 but to allow round-tripping
+        # of broken certs that encode utf8 we'll encode utf8 here too.
+        data = name.value.encode("utf8")
+        asn1_str = _encode_asn1_str(backend, data, len(data))
         gn.type = backend._lib.GEN_URI
         gn.d.uniformResourceIdentifier = asn1_str
     else:
@@ -468,10 +485,10 @@ _CRLREASONFLAGS = {
 }
 
 
-def _encode_crl_distribution_points(backend, crl_distribution_points):
+def _encode_cdps_freshest_crl(backend, cdps):
     cdp = backend._lib.sk_DIST_POINT_new_null()
     cdp = backend._ffi.gc(cdp, backend._lib.sk_DIST_POINT_free)
-    for point in crl_distribution_points:
+    for point in cdps:
         dp = backend._lib.DIST_POINT_new()
         backend.openssl_assert(dp != backend._ffi.NULL)
 
@@ -569,7 +586,8 @@ _EXTENSION_ENCODE_HANDLERS = {
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: (
         _encode_authority_information_access
     ),
-    ExtensionOID.CRL_DISTRIBUTION_POINTS: _encode_crl_distribution_points,
+    ExtensionOID.CRL_DISTRIBUTION_POINTS: _encode_cdps_freshest_crl,
+    ExtensionOID.FRESHEST_CRL: _encode_cdps_freshest_crl,
     ExtensionOID.INHIBIT_ANY_POLICY: _encode_inhibit_any_policy,
     ExtensionOID.OCSP_NO_CHECK: _encode_ocsp_nocheck,
     ExtensionOID.NAME_CONSTRAINTS: _encode_name_constraints,
@@ -582,7 +600,8 @@ _CRL_EXTENSION_ENCODE_HANDLERS = {
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: (
         _encode_authority_information_access
     ),
-    ExtensionOID.CRL_NUMBER: _encode_crl_number,
+    ExtensionOID.CRL_NUMBER: _encode_crl_number_delta_crl_indicator,
+    ExtensionOID.DELTA_CRL_INDICATOR: _encode_crl_number_delta_crl_indicator,
 }
 
 _CRL_ENTRY_EXTENSION_ENCODE_HANDLERS = {

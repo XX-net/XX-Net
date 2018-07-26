@@ -12,6 +12,12 @@ ffi = binding.ffi
 lib = binding.lib
 
 
+# This is a special CFFI allocator that does not bother to zero its memory
+# after allocation. This has vastly better performance on large allocations and
+# so should be used whenever we don't need the memory zeroed out.
+no_zero_allocator = ffi.new_allocator(should_clear_after_alloc=False)
+
+
 def text(charp):
     """
     Get a native string type representing of the given CFFI ``char*`` object.

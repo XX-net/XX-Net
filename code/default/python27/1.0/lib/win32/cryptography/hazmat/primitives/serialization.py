@@ -24,12 +24,20 @@ def load_pem_public_key(data, backend):
     return backend.load_pem_public_key(data)
 
 
+def load_pem_parameters(data, backend):
+    return backend.load_pem_parameters(data)
+
+
 def load_der_private_key(data, password, backend):
     return backend.load_der_private_key(data, password)
 
 
 def load_der_public_key(data, backend):
     return backend.load_der_public_key(data)
+
+
+def load_der_parameters(data, backend):
+    return backend.load_der_parameters(data)
 
 
 def load_ssh_public_key(data, backend):
@@ -59,7 +67,7 @@ def load_ssh_public_key(data, backend):
     except TypeError:
         raise ValueError('Key is not in the proper format.')
 
-    inner_key_type, rest = _read_next_string(decoded_data)
+    inner_key_type, rest = _ssh_read_next_string(decoded_data)
 
     if inner_key_type != key_type:
         raise ValueError(
@@ -70,8 +78,8 @@ def load_ssh_public_key(data, backend):
 
 
 def _load_ssh_rsa_public_key(key_type, decoded_data, backend):
-    e, rest = _read_next_mpint(decoded_data)
-    n, rest = _read_next_mpint(rest)
+    e, rest = _ssh_read_next_mpint(decoded_data)
+    n, rest = _ssh_read_next_mpint(rest)
 
     if rest:
         raise ValueError('Key body contains extra bytes.')
@@ -80,10 +88,10 @@ def _load_ssh_rsa_public_key(key_type, decoded_data, backend):
 
 
 def _load_ssh_dss_public_key(key_type, decoded_data, backend):
-    p, rest = _read_next_mpint(decoded_data)
-    q, rest = _read_next_mpint(rest)
-    g, rest = _read_next_mpint(rest)
-    y, rest = _read_next_mpint(rest)
+    p, rest = _ssh_read_next_mpint(decoded_data)
+    q, rest = _ssh_read_next_mpint(rest)
+    g, rest = _ssh_read_next_mpint(rest)
+    y, rest = _ssh_read_next_mpint(rest)
 
     if rest:
         raise ValueError('Key body contains extra bytes.')
@@ -95,8 +103,8 @@ def _load_ssh_dss_public_key(key_type, decoded_data, backend):
 
 
 def _load_ssh_ecdsa_public_key(expected_key_type, decoded_data, backend):
-    curve_name, rest = _read_next_string(decoded_data)
-    data, rest = _read_next_string(rest)
+    curve_name, rest = _ssh_read_next_string(decoded_data)
+    data, rest = _ssh_read_next_string(rest)
 
     if expected_key_type != b"ecdsa-sha2-" + curve_name:
         raise ValueError(
@@ -121,32 +129,50 @@ def _load_ssh_ecdsa_public_key(expected_key_type, decoded_data, backend):
     return numbers.public_key(backend)
 
 
-def _read_next_string(data):
+def _ssh_read_next_string(data):
     """
     Retrieves the next RFC 4251 string value from the data.
 
     While the RFC calls these strings, in Python they are bytes objects.
     """
+    if len(data) < 4:
+        raise ValueError("Key is not in the proper format")
+
     str_len, = struct.unpack('>I', data[:4])
+    if len(data) < str_len + 4:
+        raise ValueError("Key is not in the proper format")
+
     return data[4:4 + str_len], data[4 + str_len:]
 
 
-def _read_next_mpint(data):
+def _ssh_read_next_mpint(data):
     """
     Reads the next mpint from the data.
 
     Currently, all mpints are interpreted as unsigned.
     """
-    mpint_data, rest = _read_next_string(data)
+    mpint_data, rest = _ssh_read_next_string(data)
 
     return (
         utils.int_from_bytes(mpint_data, byteorder='big', signed=False), rest
     )
 
 
+def _ssh_write_string(data):
+    return struct.pack(">I", len(data)) + data
+
+
+def _ssh_write_mpint(value):
+    data = utils.int_to_bytes(value)
+    if six.indexbytes(data, 0) & 0x80:
+        data = b"\x00" + data
+    return _ssh_write_string(data)
+
+
 class Encoding(Enum):
     PEM = "PEM"
     DER = "DER"
+    OpenSSH = "OpenSSH"
 
 
 class PrivateFormat(Enum):
@@ -157,6 +183,11 @@ class PrivateFormat(Enum):
 class PublicFormat(Enum):
     SubjectPublicKeyInfo = "X.509 subjectPublicKeyInfo with PKCS#1"
     PKCS1 = "Raw PKCS#1"
+    OpenSSH = "OpenSSH"
+
+
+class ParameterFormat(Enum):
+    PKCS3 = "PKCS3"
 
 
 @six.add_metaclass(abc.ABCMeta)
