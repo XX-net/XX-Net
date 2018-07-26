@@ -311,9 +311,11 @@ class HttpServerHandler():
         self.logger.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def send_not_found(self):
+        self.close_connection = 1
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
 
     def send_error(self, code, message=None):
+        self.close_connection = 1
         self.wfile.write('HTTP/1.1 %d\r\n' % code)
         self.wfile.write('Connection: close\r\n\r\n')
         if message:
