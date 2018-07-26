@@ -6,24 +6,42 @@ from __future__ import absolute_import, division, print_function
 
 from cryptography import utils
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.backends.openssl.utils import _truncate_digest
+from cryptography.hazmat.backends.openssl.utils import (
+    _calculate_digest_and_algorithm, _check_not_prehashed,
+    _warn_sign_verify_deprecated
+)
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import (
     AsymmetricSignatureContext, AsymmetricVerificationContext, dsa
 )
 
 
-def _truncate_digest_for_dsa(dsa_cdata, digest, backend):
-    """
-    This function truncates digests that are longer than a given DS
-    key's length so they can be signed. OpenSSL does this for us in
-    1.0.0c+ and it isn't needed in 0.9.8, but that leaves us with three
-    releases (1.0.0, 1.0.0a, and 1.0.0b) where this is a problem. This
-    truncation is not required in 0.9.8 because DSA is limited to SHA-1.
-    """
+def _dsa_sig_sign(backend, private_key, data):
+    sig_buf_len = backend._lib.DSA_size(private_key._dsa_cdata)
+    sig_buf = backend._ffi.new("unsigned char[]", sig_buf_len)
+    buflen = backend._ffi.new("unsigned int *")
 
-    order_bits = backend._lib.BN_num_bits(dsa_cdata.q)
-    return _truncate_digest(digest, order_bits)
+    # The first parameter passed to DSA_sign is unused by OpenSSL but
+    # must be an integer.
+    res = backend._lib.DSA_sign(
+        0, data, len(data), sig_buf, buflen, private_key._dsa_cdata
+    )
+    backend.openssl_assert(res == 1)
+    backend.openssl_assert(buflen[0])
+
+    return backend._ffi.buffer(sig_buf)[:buflen[0]]
+
+
+def _dsa_sig_verify(backend, public_key, signature, data):
+    # The first parameter passed to DSA_verify is unused by OpenSSL but
+    # must be an integer.
+    res = backend._lib.DSA_verify(
+        0, data, len(data), signature, len(signature), public_key._dsa_cdata
+    )
+
+    if res != 1:
+        backend._consume_errors()
+        raise InvalidSignature
 
 
 @utils.register_interface(AsymmetricVerificationContext)
@@ -42,19 +60,9 @@ class _DSAVerificationContext(object):
     def verify(self):
         data_to_verify = self._hash_ctx.finalize()
 
-        data_to_verify = _truncate_digest_for_dsa(
-            self._public_key._dsa_cdata, data_to_verify, self._backend
+        _dsa_sig_verify(
+            self._backend, self._public_key, self._signature, data_to_verify
         )
-
-        # The first parameter passed to DSA_verify is unused by OpenSSL but
-        # must be an integer.
-        res = self._backend._lib.DSA_verify(
-            0, data_to_verify, len(data_to_verify), self._signature,
-            len(self._signature), self._public_key._dsa_cdata)
-
-        if res != 1:
-            self._backend._consume_errors()
-            raise InvalidSignature
 
 
 @utils.register_interface(AsymmetricSignatureContext)
@@ -70,22 +78,7 @@ class _DSASignatureContext(object):
 
     def finalize(self):
         data_to_sign = self._hash_ctx.finalize()
-        data_to_sign = _truncate_digest_for_dsa(
-            self._private_key._dsa_cdata, data_to_sign, self._backend
-        )
-        sig_buf_len = self._backend._lib.DSA_size(self._private_key._dsa_cdata)
-        sig_buf = self._backend._ffi.new("unsigned char[]", sig_buf_len)
-        buflen = self._backend._ffi.new("unsigned int *")
-
-        # The first parameter passed to DSA_sign is unused by OpenSSL but
-        # must be an integer.
-        res = self._backend._lib.DSA_sign(
-            0, data_to_sign, len(data_to_sign), sig_buf,
-            buflen, self._private_key._dsa_cdata)
-        self._backend.openssl_assert(res == 1)
-        self._backend.openssl_assert(buflen[0])
-
-        return self._backend._ffi.buffer(sig_buf)[:buflen[0]]
+        return _dsa_sig_sign(self._backend, self._private_key, data_to_sign)
 
 
 @utils.register_interface(dsa.DSAParametersWithNumbers)
@@ -95,10 +88,17 @@ class _DSAParameters(object):
         self._dsa_cdata = dsa_cdata
 
     def parameter_numbers(self):
+        p = self._backend._ffi.new("BIGNUM **")
+        q = self._backend._ffi.new("BIGNUM **")
+        g = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_pqg(self._dsa_cdata, p, q, g)
+        self._backend.openssl_assert(p[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(q[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(g[0] != self._backend._ffi.NULL)
         return dsa.DSAParameterNumbers(
-            p=self._backend._bn_to_int(self._dsa_cdata.p),
-            q=self._backend._bn_to_int(self._dsa_cdata.q),
-            g=self._backend._bn_to_int(self._dsa_cdata.g)
+            p=self._backend._bn_to_int(p[0]),
+            q=self._backend._bn_to_int(q[0]),
+            g=self._backend._bn_to_int(g[0])
         )
 
     def generate_private_key(self):
@@ -111,48 +111,71 @@ class _DSAPrivateKey(object):
         self._backend = backend
         self._dsa_cdata = dsa_cdata
         self._evp_pkey = evp_pkey
-        self._key_size = self._backend._lib.BN_num_bits(self._dsa_cdata.p)
+
+        p = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_pqg(
+            dsa_cdata, p, self._backend._ffi.NULL, self._backend._ffi.NULL
+        )
+        self._backend.openssl_assert(p[0] != backend._ffi.NULL)
+        self._key_size = self._backend._lib.BN_num_bits(p[0])
 
     key_size = utils.read_only_property("_key_size")
 
     def signer(self, signature_algorithm):
+        _warn_sign_verify_deprecated()
+        _check_not_prehashed(signature_algorithm)
         return _DSASignatureContext(self._backend, self, signature_algorithm)
 
     def private_numbers(self):
+        p = self._backend._ffi.new("BIGNUM **")
+        q = self._backend._ffi.new("BIGNUM **")
+        g = self._backend._ffi.new("BIGNUM **")
+        pub_key = self._backend._ffi.new("BIGNUM **")
+        priv_key = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_pqg(self._dsa_cdata, p, q, g)
+        self._backend.openssl_assert(p[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(q[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(g[0] != self._backend._ffi.NULL)
+        self._backend._lib.DSA_get0_key(self._dsa_cdata, pub_key, priv_key)
+        self._backend.openssl_assert(pub_key[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(priv_key[0] != self._backend._ffi.NULL)
         return dsa.DSAPrivateNumbers(
             public_numbers=dsa.DSAPublicNumbers(
                 parameter_numbers=dsa.DSAParameterNumbers(
-                    p=self._backend._bn_to_int(self._dsa_cdata.p),
-                    q=self._backend._bn_to_int(self._dsa_cdata.q),
-                    g=self._backend._bn_to_int(self._dsa_cdata.g)
+                    p=self._backend._bn_to_int(p[0]),
+                    q=self._backend._bn_to_int(q[0]),
+                    g=self._backend._bn_to_int(g[0])
                 ),
-                y=self._backend._bn_to_int(self._dsa_cdata.pub_key)
+                y=self._backend._bn_to_int(pub_key[0])
             ),
-            x=self._backend._bn_to_int(self._dsa_cdata.priv_key)
+            x=self._backend._bn_to_int(priv_key[0])
         )
 
     def public_key(self):
-        dsa_cdata = self._backend._lib.DSA_new()
+        dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
         self._backend.openssl_assert(dsa_cdata != self._backend._ffi.NULL)
         dsa_cdata = self._backend._ffi.gc(
             dsa_cdata, self._backend._lib.DSA_free
         )
-        dsa_cdata.p = self._backend._lib.BN_dup(self._dsa_cdata.p)
-        dsa_cdata.q = self._backend._lib.BN_dup(self._dsa_cdata.q)
-        dsa_cdata.g = self._backend._lib.BN_dup(self._dsa_cdata.g)
-        dsa_cdata.pub_key = self._backend._lib.BN_dup(self._dsa_cdata.pub_key)
+        pub_key = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_key(
+            self._dsa_cdata, pub_key, self._backend._ffi.NULL
+        )
+        self._backend.openssl_assert(pub_key[0] != self._backend._ffi.NULL)
+        pub_key_dup = self._backend._lib.BN_dup(pub_key[0])
+        res = self._backend._lib.DSA_set0_key(
+            dsa_cdata, pub_key_dup, self._backend._ffi.NULL
+        )
+        self._backend.openssl_assert(res == 1)
         evp_pkey = self._backend._dsa_cdata_to_evp_pkey(dsa_cdata)
         return _DSAPublicKey(self._backend, dsa_cdata, evp_pkey)
 
     def parameters(self):
-        dsa_cdata = self._backend._lib.DSA_new()
+        dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
         self._backend.openssl_assert(dsa_cdata != self._backend._ffi.NULL)
         dsa_cdata = self._backend._ffi.gc(
             dsa_cdata, self._backend._lib.DSA_free
         )
-        dsa_cdata.p = self._backend._lib.BN_dup(self._dsa_cdata.p)
-        dsa_cdata.q = self._backend._lib.BN_dup(self._dsa_cdata.q)
-        dsa_cdata.g = self._backend._lib.BN_dup(self._dsa_cdata.g)
         return _DSAParameters(self._backend, dsa_cdata)
 
     def private_bytes(self, encoding, format, encryption_algorithm):
@@ -164,6 +187,12 @@ class _DSAPrivateKey(object):
             self._dsa_cdata
         )
 
+    def sign(self, data, algorithm):
+        data, algorithm = _calculate_digest_and_algorithm(
+            self._backend, data, algorithm
+        )
+        return _dsa_sig_sign(self._backend, self, data)
+
 
 @utils.register_interface(dsa.DSAPublicKeyWithSerialization)
 class _DSAPublicKey(object):
@@ -171,37 +200,52 @@ class _DSAPublicKey(object):
         self._backend = backend
         self._dsa_cdata = dsa_cdata
         self._evp_pkey = evp_pkey
-        self._key_size = self._backend._lib.BN_num_bits(self._dsa_cdata.p)
+        p = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_pqg(
+            dsa_cdata, p, self._backend._ffi.NULL, self._backend._ffi.NULL
+        )
+        self._backend.openssl_assert(p[0] != backend._ffi.NULL)
+        self._key_size = self._backend._lib.BN_num_bits(p[0])
 
     key_size = utils.read_only_property("_key_size")
 
     def verifier(self, signature, signature_algorithm):
+        _warn_sign_verify_deprecated()
         if not isinstance(signature, bytes):
             raise TypeError("signature must be bytes.")
 
+        _check_not_prehashed(signature_algorithm)
         return _DSAVerificationContext(
             self._backend, self, signature, signature_algorithm
         )
 
     def public_numbers(self):
+        p = self._backend._ffi.new("BIGNUM **")
+        q = self._backend._ffi.new("BIGNUM **")
+        g = self._backend._ffi.new("BIGNUM **")
+        pub_key = self._backend._ffi.new("BIGNUM **")
+        self._backend._lib.DSA_get0_pqg(self._dsa_cdata, p, q, g)
+        self._backend.openssl_assert(p[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(q[0] != self._backend._ffi.NULL)
+        self._backend.openssl_assert(g[0] != self._backend._ffi.NULL)
+        self._backend._lib.DSA_get0_key(
+            self._dsa_cdata, pub_key, self._backend._ffi.NULL
+        )
+        self._backend.openssl_assert(pub_key[0] != self._backend._ffi.NULL)
         return dsa.DSAPublicNumbers(
             parameter_numbers=dsa.DSAParameterNumbers(
-                p=self._backend._bn_to_int(self._dsa_cdata.p),
-                q=self._backend._bn_to_int(self._dsa_cdata.q),
-                g=self._backend._bn_to_int(self._dsa_cdata.g)
+                p=self._backend._bn_to_int(p[0]),
+                q=self._backend._bn_to_int(q[0]),
+                g=self._backend._bn_to_int(g[0])
             ),
-            y=self._backend._bn_to_int(self._dsa_cdata.pub_key)
+            y=self._backend._bn_to_int(pub_key[0])
         )
 
     def parameters(self):
-        dsa_cdata = self._backend._lib.DSA_new()
-        self._backend.openssl_assert(dsa_cdata != self._backend._ffi.NULL)
+        dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
         dsa_cdata = self._backend._ffi.gc(
             dsa_cdata, self._backend._lib.DSA_free
         )
-        dsa_cdata.p = self._backend._lib.BN_dup(self._dsa_cdata.p)
-        dsa_cdata.q = self._backend._lib.BN_dup(self._dsa_cdata.q)
-        dsa_cdata.g = self._backend._lib.BN_dup(self._dsa_cdata.g)
         return _DSAParameters(self._backend, dsa_cdata)
 
     def public_bytes(self, encoding, format):
@@ -213,6 +257,13 @@ class _DSAPublicKey(object):
         return self._backend._public_key_bytes(
             encoding,
             format,
+            self,
             self._evp_pkey,
             None
         )
+
+    def verify(self, signature, data, algorithm):
+        data, algorithm = _calculate_digest_and_algorithm(
+            self._backend, data, algorithm
+        )
+        return _dsa_sig_verify(self._backend, self, signature, data)

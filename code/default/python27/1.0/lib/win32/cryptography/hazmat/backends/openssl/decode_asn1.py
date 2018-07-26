@@ -7,26 +7,40 @@ from __future__ import absolute_import, division, print_function
 import datetime
 import ipaddress
 
-from email.utils import parseaddr
-
-import idna
-
-import six
-
-from six.moves import urllib_parse
+from asn1crypto.core import Integer, SequenceOf
 
 from cryptography import x509
+from cryptography.x509.extensions import _TLS_FEATURE_TYPE_TO_ENUM
+from cryptography.x509.name import _ASN1_TYPE_TO_ENUM
 from cryptography.x509.oid import (
     CRLEntryExtensionOID, CertificatePoliciesOID, ExtensionOID
 )
 
 
+class _Integers(SequenceOf):
+    _child_spec = Integer
+
+
 def _obj2txt(backend, obj):
     # Set to 80 on the recommendation of
     # https://www.openssl.org/docs/crypto/OBJ_nid2ln.html#return_values
+    #
+    # But OIDs longer than this occur in real life (e.g. Active
+    # Directory makes some very long OIDs).  So we need to detect
+    # and properly handle the case where the default buffer is not
+    # big enough.
+    #
     buf_len = 80
     buf = backend._ffi.new("char[]", buf_len)
+
+    # 'res' is the number of bytes that *would* be written if the
+    # buffer is large enough.  If 'res' > buf_len - 1, we need to
+    # alloc a big-enough buffer and go again.
     res = backend._lib.OBJ_obj2txt(buf, buf_len, obj, 1)
+    if res > buf_len - 1:  # account for terminating null byte
+        buf_len = res + 1
+        buf = backend._ffi.new("char[]", buf_len)
+        res = backend._lib.OBJ_obj2txt(buf, buf_len, obj, 1)
     backend.openssl_assert(res > 0)
     return backend._ffi.buffer(buf, res)[:].decode()
 
@@ -38,18 +52,27 @@ def _decode_x509_name_entry(backend, x509_name_entry):
     backend.openssl_assert(data != backend._ffi.NULL)
     value = _asn1_string_to_utf8(backend, data)
     oid = _obj2txt(backend, obj)
+    type = _ASN1_TYPE_TO_ENUM[data.type]
 
-    return x509.NameAttribute(x509.ObjectIdentifier(oid), value)
+    return x509.NameAttribute(x509.ObjectIdentifier(oid), value, type)
 
 
 def _decode_x509_name(backend, x509_name):
     count = backend._lib.X509_NAME_entry_count(x509_name)
     attributes = []
+    prev_set_id = -1
     for x in range(count):
         entry = backend._lib.X509_NAME_get_entry(x509_name, x)
-        attributes.append(_decode_x509_name_entry(backend, entry))
+        attribute = _decode_x509_name_entry(backend, entry)
+        set_id = backend._lib.Cryptography_X509_NAME_ENTRY_set(entry)
+        if set_id != prev_set_id:
+            attributes.append(set([attribute]))
+        else:
+            # is in the same RDN a previous entry
+            attributes[-1].add(attribute)
+        prev_set_id = set_id
 
-    return x509.Name(attributes)
+    return x509.Name(x509.RelativeDistinguishedName(rdn) for rdn in attributes)
 
 
 def _decode_general_names(backend, gns):
@@ -65,48 +88,25 @@ def _decode_general_names(backend, gns):
 
 def _decode_general_name(backend, gn):
     if gn.type == backend._lib.GEN_DNS:
-        data = _asn1_string_to_bytes(backend, gn.d.dNSName)
-        if not data:
-            decoded = u""
-        elif data.startswith(b"*."):
-            # This is a wildcard name. We need to remove the leading wildcard,
-            # IDNA decode, then re-add the wildcard. Wildcard characters should
-            # always be left-most (RFC 2595 section 2.4).
-            decoded = u"*." + idna.decode(data[2:])
-        else:
-            # Not a wildcard, decode away. If the string has a * in it anywhere
-            # invalid this will raise an InvalidCodePoint
-            decoded = idna.decode(data)
-            if data.startswith(b"."):
-                # idna strips leading periods. Name constraints can have that
-                # so we need to re-add it. Sigh.
-                decoded = u"." + decoded
-
-        return x509.DNSName(decoded)
+        # Convert to bytes and then decode to utf8. We don't use
+        # asn1_string_to_utf8 here because it doesn't properly convert
+        # utf8 from ia5strings.
+        data = _asn1_string_to_bytes(backend, gn.d.dNSName).decode("utf8")
+        # We don't use the constructor for DNSName so we can bypass validation
+        # This allows us to create DNSName objects that have unicode chars
+        # when a certificate (against the RFC) contains them.
+        return x509.DNSName._init_without_validation(data)
     elif gn.type == backend._lib.GEN_URI:
-        data = _asn1_string_to_ascii(backend, gn.d.uniformResourceIdentifier)
-        parsed = urllib_parse.urlparse(data)
-        if parsed.hostname:
-            hostname = idna.decode(parsed.hostname)
-        else:
-            hostname = ""
-        if parsed.port:
-            netloc = hostname + u":" + six.text_type(parsed.port)
-        else:
-            netloc = hostname
-
-        # Note that building a URL in this fashion means it should be
-        # semantically indistinguishable from the original but is not
-        # guaranteed to be exactly the same.
-        uri = urllib_parse.urlunparse((
-            parsed.scheme,
-            netloc,
-            parsed.path,
-            parsed.params,
-            parsed.query,
-            parsed.fragment
-        ))
-        return x509.UniformResourceIdentifier(uri)
+        # Convert to bytes and then decode to utf8. We don't use
+        # asn1_string_to_utf8 here because it doesn't properly convert
+        # utf8 from ia5strings.
+        data = _asn1_string_to_bytes(
+            backend, gn.d.uniformResourceIdentifier
+        ).decode("utf8")
+        # We don't use the constructor for URI so we can bypass validation
+        # This allows us to create URI objects that have unicode chars
+        # when a certificate (against the RFC) contains them.
+        return x509.UniformResourceIdentifier._init_without_validation(data)
     elif gn.type == backend._lib.GEN_RID:
         oid = _obj2txt(backend, gn.d.registeredID)
         return x509.RegisteredID(x509.ObjectIdentifier(oid))
@@ -142,23 +142,14 @@ def _decode_general_name(backend, gn):
             _decode_x509_name(backend, gn.d.directoryName)
         )
     elif gn.type == backend._lib.GEN_EMAIL:
-        data = _asn1_string_to_ascii(backend, gn.d.rfc822Name)
-        name, address = parseaddr(data)
-        parts = address.split(u"@")
-        if name or not address:
-            # parseaddr has found a name (e.g. Name <email>) or the entire
-            # value is an empty string.
-            raise ValueError("Invalid rfc822name value")
-        elif len(parts) == 1:
-            # Single label email name. This is valid for local delivery. No
-            # IDNA decoding can be done since there is no domain component.
-            return x509.RFC822Name(address)
-        else:
-            # A normal email of the form user@domain.com. Let's attempt to
-            # decode the domain component and return the entire address.
-            return x509.RFC822Name(
-                parts[0] + u"@" + idna.decode(parts[1])
-            )
+        # Convert to bytes and then decode to utf8. We don't use
+        # asn1_string_to_utf8 here because it doesn't properly convert
+        # utf8 from ia5strings.
+        data = _asn1_string_to_bytes(backend, gn.d.rfc822Name).decode("utf8")
+        # We don't use the constructor for RFC822Name so we can bypass
+        # validation. This allows us to create RFC822Name objects that have
+        # unicode chars when a certificate (against the RFC) contains them.
+        return x509.RFC822Name._init_without_validation(data)
     elif gn.type == backend._lib.GEN_OTHERNAME:
         type_id = _obj2txt(backend, gn.d.otherName.type_id)
         value = _asn1_to_der(backend, gn.d.otherName.value)
@@ -183,12 +174,17 @@ def _decode_crl_number(backend, ext):
     return x509.CRLNumber(_asn1_integer_to_int(backend, asn1_int))
 
 
+def _decode_delta_crl_indicator(backend, ext):
+    asn1_int = backend._ffi.cast("ASN1_INTEGER *", ext)
+    asn1_int = backend._ffi.gc(asn1_int, backend._lib.ASN1_INTEGER_free)
+    return x509.DeltaCRLIndicator(_asn1_integer_to_int(backend, asn1_int))
+
+
 class _X509ExtensionParser(object):
-    def __init__(self, ext_count, get_ext, handlers, unsupported_exts=None):
+    def __init__(self, ext_count, get_ext, handlers):
         self.ext_count = ext_count
         self.get_ext = get_ext
         self.handlers = handlers
-        self.unsupported_exts = unsupported_exts
 
     def parse(self, backend, x509_obj):
         extensions = []
@@ -205,37 +201,39 @@ class _X509ExtensionParser(object):
                 raise x509.DuplicateExtension(
                     "Duplicate {0} extension found".format(oid), oid
                 )
+
+            # This OID is only supported in OpenSSL 1.1.0+ but we want
+            # to support it in all versions of OpenSSL so we decode it
+            # ourselves.
+            if oid == ExtensionOID.TLS_FEATURE:
+                data = backend._lib.X509_EXTENSION_get_data(ext)
+                parsed = _Integers.load(_asn1_string_to_bytes(backend, data))
+                value = x509.TLSFeature(
+                    [_TLS_FEATURE_TYPE_TO_ENUM[x.native] for x in parsed]
+                )
+                extensions.append(x509.Extension(oid, critical, value))
+                seen_oids.add(oid)
+                continue
+
             try:
                 handler = self.handlers[oid]
             except KeyError:
-                if critical:
-                    raise x509.UnsupportedExtension(
-                        "Critical extension {0} is not currently supported"
-                        .format(oid), oid
-                    )
-                else:
-                    # Dump the DER payload into an UnrecognizedExtension object
-                    data = backend._lib.X509_EXTENSION_get_data(ext)
-                    backend.openssl_assert(data != backend._ffi.NULL)
-                    der = backend._ffi.buffer(data.data, data.length)[:]
-                    unrecognized = x509.UnrecognizedExtension(oid, der)
-                    extensions.append(
-                        x509.Extension(oid, critical, unrecognized)
-                    )
+                # Dump the DER payload into an UnrecognizedExtension object
+                data = backend._lib.X509_EXTENSION_get_data(ext)
+                backend.openssl_assert(data != backend._ffi.NULL)
+                der = backend._ffi.buffer(data.data, data.length)[:]
+                unrecognized = x509.UnrecognizedExtension(oid, der)
+                extensions.append(
+                    x509.Extension(oid, critical, unrecognized)
+                )
             else:
-                # For extensions which are not supported by OpenSSL we pass the
-                # extension object directly to the parsing routine so it can
-                # be decoded manually.
-                if self.unsupported_exts and oid in self.unsupported_exts:
-                    ext_data = ext
-                else:
-                    ext_data = backend._lib.X509V3_EXT_d2i(ext)
-                    if ext_data == backend._ffi.NULL:
-                        backend._consume_errors()
-                        raise ValueError(
-                            "The {0} extension is invalid and can't be "
-                            "parsed".format(oid)
-                        )
+                ext_data = backend._lib.X509V3_EXT_d2i(ext)
+                if ext_data == backend._ffi.NULL:
+                    backend._consume_errors()
+                    raise ValueError(
+                        "The {0} extension is invalid and can't be "
+                        "parsed".format(oid)
+                    )
 
                 value = handler(backend, ext_data)
                 extensions.append(x509.Extension(oid, critical, value))
@@ -247,7 +245,8 @@ class _X509ExtensionParser(object):
 
 def _decode_certificate_policies(backend, cp):
     cp = backend._ffi.cast("Cryptography_STACK_OF_POLICYINFO *", cp)
-    cp = backend._ffi.gc(cp, backend._lib.sk_POLICYINFO_free)
+    cp = backend._ffi.gc(cp, backend._lib.CERTIFICATEPOLICIES_free)
+
     num = backend._lib.sk_POLICYINFO_num(cp)
     certificate_policies = []
     for i in range(num):
@@ -486,11 +485,11 @@ _DISTPOINT_TYPE_FULLNAME = 0
 _DISTPOINT_TYPE_RELATIVENAME = 1
 
 
-def _decode_crl_distribution_points(backend, cdps):
+def _decode_dist_points(backend, cdps):
     cdps = backend._ffi.cast("Cryptography_STACK_OF_DIST_POINT *", cdps)
-    cdps = backend._ffi.gc(cdps, backend._lib.sk_DIST_POINT_free)
-    num = backend._lib.sk_DIST_POINT_num(cdps)
+    cdps = backend._ffi.gc(cdps, backend._lib.CRL_DIST_POINTS_free)
 
+    num = backend._lib.sk_DIST_POINT_num(cdps)
     dist_points = []
     for i in range(num):
         full_name = None
@@ -551,21 +550,25 @@ def _decode_crl_distribution_points(backend, cdps):
                 )
             # OpenSSL code doesn't test for a specific type for
             # relativename, everything that isn't fullname is considered
-            # relativename.
+            # relativename.  Per RFC 5280:
+            #
+            # DistributionPointName ::= CHOICE {
+            #      fullName                [0]      GeneralNames,
+            #      nameRelativeToCRLIssuer [1]      RelativeDistinguishedName }
             else:
                 rns = cdp.distpoint.name.relativename
                 rnum = backend._lib.sk_X509_NAME_ENTRY_num(rns)
-                attributes = []
+                attributes = set()
                 for i in range(rnum):
                     rn = backend._lib.sk_X509_NAME_ENTRY_value(
                         rns, i
                     )
                     backend.openssl_assert(rn != backend._ffi.NULL)
-                    attributes.append(
+                    attributes.add(
                         _decode_x509_name_entry(backend, rn)
                     )
 
-                relative_name = x509.Name(attributes)
+                relative_name = x509.RelativeDistinguishedName(attributes)
 
         dist_points.append(
             x509.DistributionPoint(
@@ -573,7 +576,17 @@ def _decode_crl_distribution_points(backend, cdps):
             )
         )
 
+    return dist_points
+
+
+def _decode_crl_distribution_points(backend, cdps):
+    dist_points = _decode_dist_points(backend, cdps)
     return x509.CRLDistributionPoints(dist_points)
+
+
+def _decode_freshest_crl(backend, cdps):
+    dist_points = _decode_dist_points(backend, cdps)
+    return x509.FreshestCRL(dist_points)
 
 
 def _decode_inhibit_any_policy(backend, asn1_int):
@@ -581,6 +594,21 @@ def _decode_inhibit_any_policy(backend, asn1_int):
     asn1_int = backend._ffi.gc(asn1_int, backend._lib.ASN1_INTEGER_free)
     skip_certs = _asn1_integer_to_int(backend, asn1_int)
     return x509.InhibitAnyPolicy(skip_certs)
+
+
+def _decode_precert_signed_certificate_timestamps(backend, asn1_scts):
+    from cryptography.hazmat.backends.openssl.x509 import (
+        _SignedCertificateTimestamp
+    )
+    asn1_scts = backend._ffi.cast("Cryptography_STACK_OF_SCT *", asn1_scts)
+    asn1_scts = backend._ffi.gc(asn1_scts, backend._lib.SCT_LIST_free)
+
+    scts = []
+    for i in range(backend._lib.sk_SCT_num(asn1_scts)):
+        sct = backend._lib.sk_SCT_value(asn1_scts, i)
+
+        scts.append(_SignedCertificateTimestamp(backend, asn1_scts, sct))
+    return x509.PrecertificateSignedCertificateTimestamps(scts)
 
 
 #    CRLReason ::= ENUMERATED {
@@ -646,31 +674,11 @@ def _decode_invalidity_date(backend, inv_date):
     )
 
 
-def _decode_cert_issuer(backend, ext):
-    """
-    This handler decodes the CertificateIssuer entry extension directly
-    from the X509_EXTENSION object. This is necessary because this entry
-    extension is not directly supported by OpenSSL 0.9.8.
-    """
-
-    data_ptr_ptr = backend._ffi.new("const unsigned char **")
-    value = backend._lib.X509_EXTENSION_get_data(ext)
-    data_ptr_ptr[0] = value.data
-    gns = backend._lib.d2i_GENERAL_NAMES(
-        backend._ffi.NULL, data_ptr_ptr, value.length
-    )
-
-    # Check the result of d2i_GENERAL_NAMES() is valid. Usually this is covered
-    # in _X509ExtensionParser but since we are responsible for decoding this
-    # entry extension ourselves, we have to this here.
-    if gns == backend._ffi.NULL:
-        backend._consume_errors()
-        raise ValueError(
-            "The {0} extension is corrupted and can't be parsed".format(
-                CRLEntryExtensionOID.CERTIFICATE_ISSUER))
-
+def _decode_cert_issuer(backend, gns):
+    gns = backend._ffi.cast("GENERAL_NAMES *", gns)
     gns = backend._ffi.gc(gns, backend._lib.GENERAL_NAMES_free)
-    return x509.CertificateIssuer(_decode_general_names(backend, gns))
+    general_names = _decode_general_names(backend, gns)
+    return x509.CertificateIssuer(general_names)
 
 
 def _asn1_to_der(backend, asn1_type):
@@ -726,7 +734,13 @@ def _parse_asn1_time(backend, asn1_time):
     generalized_time = backend._lib.ASN1_TIME_to_generalizedtime(
         asn1_time, backend._ffi.NULL
     )
-    backend.openssl_assert(generalized_time != backend._ffi.NULL)
+    if generalized_time == backend._ffi.NULL:
+        raise ValueError(
+            "Couldn't parse ASN.1 time as generalizedtime {!r}".format(
+                _asn1_string_to_bytes(backend, asn1_time)
+            )
+        )
+
     generalized_time = backend._ffi.gc(
         generalized_time, backend._lib.ASN1_GENERALIZEDTIME_free
     )
@@ -740,7 +754,7 @@ def _parse_asn1_generalized_time(backend, generalized_time):
     return datetime.datetime.strptime(time, "%Y%m%d%H%M%SZ")
 
 
-_EXTENSION_HANDLERS = {
+_EXTENSION_HANDLERS_NO_SCT = {
     ExtensionOID.BASIC_CONSTRAINTS: _decode_basic_constraints,
     ExtensionOID.SUBJECT_KEY_IDENTIFIER: _decode_subject_key_identifier,
     ExtensionOID.KEY_USAGE: _decode_key_usage,
@@ -752,12 +766,18 @@ _EXTENSION_HANDLERS = {
     ),
     ExtensionOID.CERTIFICATE_POLICIES: _decode_certificate_policies,
     ExtensionOID.CRL_DISTRIBUTION_POINTS: _decode_crl_distribution_points,
+    ExtensionOID.FRESHEST_CRL: _decode_freshest_crl,
     ExtensionOID.OCSP_NO_CHECK: _decode_ocsp_no_check,
     ExtensionOID.INHIBIT_ANY_POLICY: _decode_inhibit_any_policy,
     ExtensionOID.ISSUER_ALTERNATIVE_NAME: _decode_issuer_alt_name,
     ExtensionOID.NAME_CONSTRAINTS: _decode_name_constraints,
     ExtensionOID.POLICY_CONSTRAINTS: _decode_policy_constraints,
 }
+_EXTENSION_HANDLERS = _EXTENSION_HANDLERS_NO_SCT.copy()
+_EXTENSION_HANDLERS[
+    ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
+] = _decode_precert_signed_certificate_timestamps
+
 
 _REVOKED_EXTENSION_HANDLERS = {
     CRLEntryExtensionOID.CRL_REASON: _decode_crl_reason,
@@ -765,18 +785,21 @@ _REVOKED_EXTENSION_HANDLERS = {
     CRLEntryExtensionOID.CERTIFICATE_ISSUER: _decode_cert_issuer,
 }
 
-_REVOKED_UNSUPPORTED_EXTENSIONS = set([
-    CRLEntryExtensionOID.CERTIFICATE_ISSUER,
-])
-
 _CRL_EXTENSION_HANDLERS = {
     ExtensionOID.CRL_NUMBER: _decode_crl_number,
+    ExtensionOID.DELTA_CRL_INDICATOR: _decode_delta_crl_indicator,
     ExtensionOID.AUTHORITY_KEY_IDENTIFIER: _decode_authority_key_identifier,
     ExtensionOID.ISSUER_ALTERNATIVE_NAME: _decode_issuer_alt_name,
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: (
         _decode_authority_information_access
     ),
 }
+
+_CERTIFICATE_EXTENSION_PARSER_NO_SCT = _X509ExtensionParser(
+    ext_count=lambda backend, x: backend._lib.X509_get_ext_count(x),
+    get_ext=lambda backend, x, i: backend._lib.X509_get_ext(x, i),
+    handlers=_EXTENSION_HANDLERS_NO_SCT
+)
 
 _CERTIFICATE_EXTENSION_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.X509_get_ext_count(x),
@@ -794,7 +817,6 @@ _REVOKED_CERTIFICATE_EXTENSION_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.X509_REVOKED_get_ext_count(x),
     get_ext=lambda backend, x, i: backend._lib.X509_REVOKED_get_ext(x, i),
     handlers=_REVOKED_EXTENSION_HANDLERS,
-    unsupported_exts=_REVOKED_UNSUPPORTED_EXTENSIONS
 )
 
 _CRL_EXTENSION_PARSER = _X509ExtensionParser(

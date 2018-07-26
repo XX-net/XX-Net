@@ -9,10 +9,10 @@ from cryptography.exceptions import (
     AlreadyFinalized, UnsupportedAlgorithm, _Reasons
 )
 from cryptography.hazmat.backends.interfaces import HMACBackend
-from cryptography.hazmat.primitives import hashes, interfaces
+from cryptography.hazmat.primitives import hashes, mac
 
 
-@utils.register_interface(interfaces.MACContext)
+@utils.register_interface(mac.MACContext)
 @utils.register_interface(hashes.HashContext)
 class HMAC(object):
     def __init__(self, key, algorithm, backend, ctx=None):

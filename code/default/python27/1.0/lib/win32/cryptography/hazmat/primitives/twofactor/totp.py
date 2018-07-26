@@ -15,7 +15,8 @@ from cryptography.hazmat.primitives.twofactor.utils import _generate_uri
 
 
 class TOTP(object):
-    def __init__(self, key, length, algorithm, time_step, backend):
+    def __init__(self, key, length, algorithm, time_step, backend,
+                 enforce_key_length=True):
         if not isinstance(backend, HMACBackend):
             raise UnsupportedAlgorithm(
                 "Backend object does not implement HMACBackend.",
@@ -23,7 +24,7 @@ class TOTP(object):
             )
 
         self._time_step = time_step
-        self._hotp = HOTP(key, length, algorithm, backend)
+        self._hotp = HOTP(key, length, algorithm, backend, enforce_key_length)
 
     def generate(self, time):
         counter = int(time / self._time_step)

@@ -9,10 +9,10 @@ from cryptography.exceptions import (
     AlreadyFinalized, UnsupportedAlgorithm, _Reasons
 )
 from cryptography.hazmat.backends.interfaces import CMACBackend
-from cryptography.hazmat.primitives import ciphers, interfaces
+from cryptography.hazmat.primitives import ciphers, mac
 
 
-@utils.register_interface(interfaces.MACContext)
+@utils.register_interface(mac.MACContext)
 class CMAC(object):
     def __init__(self, algorithm, backend, ctx=None):
         if not isinstance(backend, CMACBackend):

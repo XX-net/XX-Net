@@ -5,7 +5,11 @@
 from __future__ import absolute_import, division, print_function
 
 import abc
-from fractions import gcd
+try:
+    # Only available in math in 3.5+
+    from math import gcd
+except ImportError:
+    from fractions import gcd
 
 import six
 
@@ -38,6 +42,12 @@ class RSAPrivateKey(object):
     def public_key(self):
         """
         The RSAPublicKey associated with this private key.
+        """
+
+    @abc.abstractmethod
+    def sign(self, data, padding, algorithm):
+        """
+        Signs the data.
         """
 
 
@@ -86,6 +96,12 @@ class RSAPublicKey(object):
     def public_bytes(self, encoding, format):
         """
         Returns the key serialized as bytes.
+        """
+
+    @abc.abstractmethod
+    def verify(self, signature, data, padding, algorithm):
+        """
+        Verifies the signature of the data.
         """
 
 
@@ -187,7 +203,7 @@ def rsa_crt_iqmp(p, q):
 def rsa_crt_dmp1(private_exponent, p):
     """
     Compute the CRT private_exponent % (p - 1) value from the RSA
-    private_exponent and p.
+    private_exponent (d) and p.
     """
     return private_exponent % (p - 1)
 
@@ -195,7 +211,7 @@ def rsa_crt_dmp1(private_exponent, p):
 def rsa_crt_dmq1(private_exponent, q):
     """
     Compute the CRT private_exponent % (q - 1) value from the RSA
-    private_exponent and q.
+    private_exponent (d) and q.
     """
     return private_exponent % (q - 1)
 
@@ -245,7 +261,7 @@ def rsa_recover_prime_factors(n, e, d):
     # Found !
     q, r = divmod(n, p)
     assert r == 0
-
+    p, q = sorted((p, q), reverse=True)
     return (p, q)
 
 

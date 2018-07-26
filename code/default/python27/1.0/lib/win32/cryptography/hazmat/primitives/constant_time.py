@@ -5,7 +5,9 @@
 from __future__ import absolute_import, division, print_function
 
 import hmac
+import warnings
 
+from cryptography import utils
 from cryptography.hazmat.bindings._constant_time import lib
 
 
@@ -17,6 +19,13 @@ if hasattr(hmac, "compare_digest"):
         return hmac.compare_digest(a, b)
 
 else:
+    warnings.warn(
+        "Support for your Python version is deprecated. The next version of "
+        "cryptography will remove support. Please upgrade to a 2.7.x "
+        "release that supports hmac.compare_digest as soon as possible.",
+        utils.DeprecatedIn23,
+    )
+
     def bytes_eq(a, b):
         if not isinstance(a, bytes) or not isinstance(b, bytes):
             raise TypeError("a and b must be bytes.")
