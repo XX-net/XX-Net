@@ -9,7 +9,7 @@
 | Module        | GAE_proxy   | X-Tunnel  |  
 | ------------- |:-------------:| :-----:| 
 | Connectivity | Rely on IPv6 | More channel |
-| Speed | Smooth | Download fast,but slight delay | 
+| Speed | Smooth | High speed download,but slight delay | 
 | Safety| Google able to see communication content | Fully support HTTP Secure  |  
 | Usability | Required to start Ipv6, deploy server and import SSL | Easy  |
 | Compatibility| Some website unsupported | Stable |
@@ -23,7 +23,7 @@
 
 ### Newest Status：
  2018-06-23
-* Google have updated SSL，please update SSL to version 3.12.2 or above。
+* Google have updated server certificates，please update server certificates to version 3.12.2 or above。
 
 * Recently feedback domestic security software / QQ will affect the use of proxy tool, try to close the security software or QQ
   
