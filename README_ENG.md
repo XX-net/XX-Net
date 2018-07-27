@@ -25,7 +25,7 @@
  2018-06-23
 * Google have updated SSL，please update SSL to version 3.12.2 or above。
 
-* Recently feedback domestic security software / QQ will affect the use, please try to close the security software or QQ
+* Recently feedback domestic security software / QQ will affect the use of proxy tool, try to close the security software or QQ
   
 
 * GAE_Proxy please run IPv6，reference:  
