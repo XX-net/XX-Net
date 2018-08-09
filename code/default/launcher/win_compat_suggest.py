@@ -60,12 +60,6 @@ _blacklist = {
         "XLServicePlatform",
         "XLGameBoot",
         "XMPBoot",
-        "XMPBoot",
-        "XMPBoot",
-        "XMPBoot",
-        "XMPBoot",
-        "XMPBoot",
-        "XMPBoot",
     ],
     (u"百毒", "Baidu"): [
         "BaiduSdSvc",
