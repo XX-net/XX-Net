@@ -9,18 +9,21 @@ def set_proxy(args):
     direct_front.set_proxy(args)
 
 
+def _count_conn_num():
+    return len(front.connect_manager.new_conn_pool.pool) +\
+           front.http_dispatcher.h1_num + \
+           front.http_dispatcher.h2_num
+
+
 def is_workable():
-    if front.http_dispatcher.is_idle():
-        return True
+    #if front.http_dispatcher.is_idle():
+    #    return True
 
-    num = len(front.connect_manager.new_conn_pool.pool) +\
-          front.http_dispatcher.h1_num + \
-          front.http_dispatcher.h2_num
-
-    if num > 0:
+    if _count_conn_num() > 0:
         return True
     else:
-        return False
+        front.http_dispatcher.get_worker()
+        return _count_conn_num() > 0
 
 
 def set_bind_ip(args):
