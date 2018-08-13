@@ -114,7 +114,7 @@ class Logger():
 
     def log(self, level, console_color, html_color, fmt, *args, **kwargs):
         now = datetime.now()
-        time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
+        time_str = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:23]
         string = '%s - [%s] %s\n' % (time_str, level, fmt % args)
         self.buffer_lock.acquire()
         try:
