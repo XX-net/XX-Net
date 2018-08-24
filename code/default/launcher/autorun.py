@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""A simple crossplatform autostart helper"""
+"""Paco Peng A simple crossplatform autostart helper"""
 from __future__ import with_statement
 
 import os
