@@ -237,7 +237,7 @@ class DnsClient(object):
 
                         self.sock.sendto(req_pack, (server, 53))
 
-                        d = DNSRecord()
+                        d = DNSRecord(DNSHeader(id))
                         d.add_question(DNSQuestion(ip, QTYPE.AAAA))
                         req_pack = d.pack()
 
@@ -252,7 +252,8 @@ class DnsClient(object):
 
                 if len(ips):
                     g.domain_cache.set_ips(org_domain, ips)
-                que.notify_all()
+                #que.notify_all()
+                que.put(id)
             except Exception as e:
                 xlog.exception("dns recv_worker except:%r", e)
 
@@ -265,7 +266,7 @@ class DnsClient(object):
             d.add_question(DNSQuestion(domain, QTYPE.A))
             req4_pack = d.pack()
 
-            d = DNSRecord()
+            d = DNSRecord(DNSHeader(id))
             d.add_question(DNSQuestion(domain, QTYPE.AAAA))
             req6_pack = d.pack()
 
@@ -294,13 +295,16 @@ class DnsClient(object):
             server_list = self.dns_server.public_list
 
         for ip in server_list:
-            if time.time() > end_time:
+            new_time = time.time()
+            if new_time > end_time:
                 break
 
             self.send_request(id, domain, ip)
 
             self.waiters[id] = que
-            que.wait(time.time() + 1)
+            #que.wait(new_time + 1)
+            que.get(1)
+            que.get(new_time + 1 - time.time())
             ips = g.domain_cache.get_ips(domain)
             if len(ips):
                 break
