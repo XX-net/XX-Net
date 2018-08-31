@@ -535,7 +535,7 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
             not host.endswith(g.gae_proxy.config.config.GOOGLE_ENDSWITH):
         ips = g.dns_srv.query(host)
         if have_ipv6(ips):
-            rule_list = ["direct6", "gae", "socks", "redirect_https"]
+            rule_list = ["direct6", "direct", "gae", "socks", "redirect_https"]
     if not rule_list:
         if g.gfwlist.check(host):
             rule_list = ["gae", "socks", "redirect_https", "direct"]

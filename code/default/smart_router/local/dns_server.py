@@ -250,10 +250,10 @@ class DnsClient(object):
                         cn = "XX"
                     ips.append(ip+"|"+cn)
 
-                if len(ips):
-                    g.domain_cache.set_ips(org_domain, ips)
+                #if len(ips):
+                #    ips = g.domain_cache.get_ips(org_domain)
                 #que.notify_all()
-                que.put(id)
+                que.put(ips)
             except Exception as e:
                 xlog.exception("dns recv_worker except:%r", e)
 
@@ -303,9 +303,9 @@ class DnsClient(object):
 
             self.waiters[id] = que
             #que.wait(new_time + 1)
-            que.get(1)
-            que.get(new_time + 1 - time.time())
-            ips = g.domain_cache.get_ips(domain)
+            ips += que.get(1) or []
+            ips += que.get(new_time + 1 - time.time()) or []
+            g.domain_cache.set_ips(domain, ips)
             if len(ips):
                 break
 
