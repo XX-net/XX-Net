@@ -51,6 +51,7 @@ class ConnectManager(object):
         self.connect_threads = connect_threads
 
         self.running = True
+        threading.Thread(target=self.check_thread).start()
 
     def stop(self):
         self.running = False
