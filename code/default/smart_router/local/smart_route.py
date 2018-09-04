@@ -366,12 +366,16 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     continue
 
                 ips = g.dns_srv.query(host)
+                if not g.gae_proxy.check_local_network.IPv6.is_ok():
+                    ips = [ip for ip in ips if "." in ip]
                 do_redirect_https(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d redirect_https", scense, host, port)
                 return
 
             elif rule == "direct":
                 ips = g.dns_srv.query(host)
+                if not g.gae_proxy.check_local_network.IPv6.is_ok():
+                    ips = [ip for ip in ips if "." in ip]
                 do_direct(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d direct", scense, host, port)
                 return

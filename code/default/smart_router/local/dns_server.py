@@ -251,7 +251,7 @@ class DnsClient(object):
                     ips.append(ip+"|"+cn)
 
                 #if len(ips):
-                #    ips = g.domain_cache.get_ips(org_domain)
+                #    g.domain_cache.set_ips(org_domain, ips)
                 #que.notify_all()
                 que.put(ips)
             except Exception as e:
@@ -305,8 +305,8 @@ class DnsClient(object):
             #que.wait(new_time + 1)
             ips += que.get(1) or []
             ips += que.get(new_time + 1 - time.time()) or []
-            g.domain_cache.set_ips(domain, ips)
             if len(ips):
+                g.domain_cache.set_ips(domain, ips)
                 break
 
         if id in self.waiters:
