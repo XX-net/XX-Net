@@ -305,6 +305,23 @@ def request_gae_server(headers, body, url, timeout):
         raise GAE_Exception(
             response.status, "fetch gae fail:%d" % response.status)
 
+    appid = response.ssl_sock.host.split(".")[0]
+    if response.status == 404:
+        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+        front.appid_manager.report_not_exist(
+            appid, response.ssl_sock.ip)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
+        response.worker.close("appid not exist:%s" % appid)
+        raise GAE_Exception(603, "appid not exist %s" % appid)
+
+    if response.status == 503:
+        xlog.warning('APPID %r out of Quota, remove it. %s',
+                     appid, response.ssl_sock.ip)
+        front.appid_manager.report_out_of_quota(appid)
+        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
+        response.worker.close("appid out of quota:%s" % appid)
+        raise GAE_Exception(604, "appid out of quota:%s" % appid)
+
     server_type = response.getheader("server", "")
     # content_type = response.getheaders("content-type", "")
     if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
@@ -321,24 +338,6 @@ def request_gae_server(headers, body, url, timeout):
         raise GAE_Exception(602, "ip not support GAE")
 
     response.gps = response.getheader("x-server", "")
-
-    appid = response.ssl_sock.host.split(".")[0]
-
-    if response.status == 404:
-        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-        front.appid_manager.report_not_exist(
-            appid, response.ssl_sock.ip)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
-        response.worker.close("appid not exist:%s" % appid)
-        raise GAE_Exception(603, "appid not exist %s" % appid)
-
-    if response.status == 503:
-        xlog.warning('APPID %r out of Quota, remove it. %s',
-                     appid, response.ssl_sock.ip)
-        front.appid_manager.report_out_of_quota(appid)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
-        response.worker.close("appid out of quota:%s" % appid)
-        raise GAE_Exception(604, "appid out of quota:%s" % appid)
 
     if response.status > 300:
         raise GAE_Exception(605, "status:%d" % response.status)
