@@ -134,8 +134,12 @@ class PipeSocks(object):
 
         while self.running:
             if not self.error_set:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
+
+            for s in self.error_set:
+                if s not in self.read_set and s not in self.write_set:
+                    self.close(s, "miss")
 
             try:
                 r, w, e = select.select(self.read_set, self.write_set, self.error_set, 0.1)
@@ -245,6 +249,8 @@ class PipeSocks(object):
                         s2 = self.sock_dict[s1]
                         if s2 not in self.read_set and s2 in self.sock_dict:
                             self.read_set.append(s2)
+                        elif s1.buf_size == 0 and s2.is_closed():
+                            self.close(s1, "n")
 
                 for s1 in list(e):
                     self.close(s1, "e")
