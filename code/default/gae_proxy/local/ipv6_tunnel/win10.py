@@ -7,7 +7,7 @@ import time
 import socket
 import platform
 from .common import *
-import win32elevate
+from . import win32runas
 from .pteredor import local_ip_startswith
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -152,7 +152,7 @@ netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
 """
 
-has_admin = win32elevate.areAdminRightsElevated()
+has_admin = win32runas.is_admin()
 
 # Use this if need admin
 # Don't hide the console window
@@ -168,7 +168,7 @@ def elevate(script_path, clear_log=True):
                 xlog.warn("remove %s fail:%r", log_file, e)
 
         try:
-            win32elevate.elevateAdminRun(None, script_path, True, False)
+            win32runas.runas(None, script_path)
             return True
         except Exception as e:
             xlog.warning('elevate e:%r', e)

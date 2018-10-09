@@ -15,7 +15,7 @@ __version__ = '0.1.0'
 
 import sys
 
-if sys.platform == "win32" and sys.version_info[0] < 3:
+if sys.platform == 'win32' and sys.version_info[0] < 3:
     import win_inet_pton
 
 import os
@@ -150,6 +150,9 @@ def get_sock(port):
             sock.bind(('0.0.0.0', _port))
             return sock
         except socket.error as e:
+            if port:
+                print('bind local port %d fail: %r' % (_port, e))
+                return
             if e.args[0] == errno.EADDRINUSE:
                 pass
 
@@ -169,6 +172,12 @@ def resolve(host):
 
 def ip2int(ip):
     return struct.unpack('>I', socket.inet_aton(ip))[0]
+
+def int2ip(int):
+    return socket.inet_ntoa(struct.pack('>I', int))
+
+def get_second_server_ip(ip):
+    return int2ip(ip2int(ip) + 1)
 
 def remove_same_server(server_ip_list):
     logger.debug('input ip: %s' % server_ip_list)
@@ -222,7 +231,8 @@ class teredo_prober(object):
     timeout = teredo_timeout
     teredo_port = teredo_port
 
-    def __init__(self, server_list=teredo_server_list, local_port=None, remote_port=None, probe_nat=True):
+    def __init__(self, server_list=teredo_server_list, local_port=None,
+                 remote_port=None, probe_nat=True):
         self.teredo_sock = get_sock(local_port)
         if remote_port:
             self.teredo_port = remote_port
@@ -240,12 +250,13 @@ class teredo_prober(object):
                     self.ip2server[ip].append(server)
                 server_ip_list += ip_list
         self.server_ip_list = remove_same_server(server_ip_list)
-        if len(self.server_ip_list) < 2:
-            print('Need input more teredo servers, now is %d.' % len(self.server_ip_list))
         if len(self.server_ip_list) < 1:
             msg = 'Servers could not be resolved, %r.' % server_list
             print(msg)
             raise Exception(msg)
+        elif len(self.server_ip_list) < 2:
+            print('Need input more teredo servers, now is %d.'
+                  % len(self.server_ip_list))
         thread.start_new_thread(self.receive_loop, ())
         if probe_nat:
             self.nat_type = self.nat_type_probe()
@@ -264,7 +275,7 @@ class teredo_prober(object):
 
     def receive_ra_packet(self):
         data, addr = self.teredo_sock.recvfrom(10240)
-        ip, port = addr
+        received_ip, port = addr
         if port != self.teredo_port or len(data) < 40:
             logger.debug('ipv6_pkt ;1 drop:\n%s' % str2hex(data))
             return
@@ -285,12 +296,15 @@ class teredo_prober(object):
             logger.debug('ipv6_pkt ;2 drop:\n%s' % str2hex(data))
             return
         server_ip, ra_cone_flag = self.handle_ra_packet(ipv6_pkt)
-        logger.debug('server ip: %s ; received ip: %s' % (server_ip, ip))
-        if auth_pkt[4:12] != self.prober_dict[server_ip]['rs_packet'].nonce:
+        logger.debug('server ip: %s ; received ip: %s' % (server_ip, received_ip))
+        if (received_ip != server_ip and
+            received_ip != get_second_server_ip(server_ip) or
+            auth_pkt[4:12] != self.prober_dict[server_ip]['rs_packet'].nonce
+            ):
             logger.debug('ipv6_pkt ;3 drop:\n%s' % str2hex(data))
             return
         qualified = ra_cone_flag, indicate_pkt
-        self.prober_dict[server_ip]['ra_packets'].put(qualified)
+        self.prober_dict[received_ip]['ra_packets'].put(qualified)
 
     def receive_loop(self):
         while not self._stoped:
@@ -307,10 +321,11 @@ class teredo_prober(object):
         logger.debug('send ; RS_cone = %s\n%s' % (self.rs_cone_flag, str2hex(rs_packet)))
         self.teredo_sock.sendto(rs_packet, (dst_ip, self.teredo_port))
 
-    def qualify(self, dst_ip):
-        rs_packet = self.prober_dict[dst_ip]['rs_packet']
+    def qualify(self, server_ip, second_server_ip=None):
+        rs_packet = self.prober_dict[server_ip]['rs_packet']
         if rs_packet is None:
-            self.prober_dict[dst_ip]['rs_packet'] = rs_packet = teredo_rs_packet()
+            self.prober_dict[server_ip]['rs_packet'] = rs_packet = teredo_rs_packet()
+        dst_ip = second_server_ip or server_ip
         self.send_rs_packet(rs_packet, dst_ip)
 
         begin_recv = time.time()
@@ -320,10 +335,15 @@ class teredo_prober(object):
                 return qualified
             time.sleep(0.01)
 
-    def qualify_loop(self, dst_ip):
+    def qualify_loop(self, server_ip, second_server=None):
+        if second_server:
+            self.rs_cone_flag = 0
+            second_server_ip = get_second_server_ip(server_ip) 
+        else:
+            second_server_ip = None
         for i in range(3):
             try:
-                return self.qualify(dst_ip)
+                return self.qualify(server_ip, second_server_ip)
             except Exception as e:
                 logger.exception('qualify procedure fail once: %r', e)
 
@@ -351,10 +371,7 @@ class teredo_prober(object):
             self.qualified = True
             return 'cone'
         qualified = None
-        for server_ip in  server_ip_list:
-            qualified = self.qualify_loop(server_ip)
-            if qualified:
-                break
+        qualified = self.qualify_loop(server_ip, second_server=True)
         if qualified is None:
             self.last_server_ip = server_ip
             self.qualified = True
@@ -381,7 +398,8 @@ class teredo_prober(object):
         while self.nat_type is 'probing':
             time.sleep(0.1)
         if not self.qualified:
-            print('This device can not use teredo tunnel, the NAT type is %s!' % prober.nat_type)
+            print('This device can not use teredo tunnel, the NAT type is %s!'
+                  % prober.nat_type)
             return []
         print('Starting evaluate servers...')
         self.clear()
@@ -402,21 +420,9 @@ class teredo_prober(object):
 
     def clear(self):
         for server_ip in self.server_ip_list:
+            second_server_ip = get_second_server_ip(server_ip)
             self.prober_dict.pop(server_ip, None)
-
-runas_vbs = '''
-Dim objShell
-Set objShell = CreateObject("Shell.Application")
-objShell.ShellExecute "%s", "%s", "", "runas", 1
-Set objShell = NoThing
-
-Dim fso
-Set fso = CreateObject("scripting.FileSystemObject")
-fso.DeleteFile WScript.ScriptFullName
-Set fso = NoThing
-
-WScript.quit
-'''
+            self.prober_dict.pop(second_server_ip, None)
 
 local_ip_startswith = tuple(
     ['192.168', '10.'] +
@@ -433,7 +439,10 @@ except:
     if sys.platform == "darwin":
         try:
             oot = os.pipe()
-            p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
+            p = subprocess.Popen(['/usr/bin/defaults',
+                                  'read',
+                                  'NSGlobalDomain',
+                                  'AppleLanguages'], stdout=oot[1])
             p.communicate()
             zh_locale = b'zh' in os.read(oot[0], 10000)
         except:
@@ -487,17 +496,15 @@ pteredor [-p <port>] [-P <port>] [-h] [<server1> [<server2> [...]]]
     nat_type_result = 'The NAT type is %s.'
 
 if os.name == 'nt':
-    try:
-        socket.socket(socket.AF_INET, socket.SOCK_RAW)
+    import win32runas
+    if win32runas.is_admin():
         runas = os.system
-    except:
+    else:
         def runas(cmd):
             cmd = tuple(cmd.split(None, 1))
-            temp = str(int(random.random() * 10 ** 8)) + '.vbs'
-            with open(temp, 'w') as f:
-                f.write(runas_vbs % cmd)
-            os.system(temp)
-        
+            if len(cmd) == 1:
+                cmd += None,
+            win32runas.runas(cmd[1], cmd[0])
 
 def main(local_port=None, remote_port=None, *args):
     server_list = [] + teredo_server_list
@@ -518,7 +525,7 @@ def main(local_port=None, remote_port=None, *args):
             prober.qualified = True
     elif prober.nat_type is 'unknown':
         print(warn_4)
-        recommend = prober.last_server_ip
+        recommend = prober.ip2server[prober.last_server_ip]
     else:
         print(nat_type_result % prober.nat_type)
         need_probe = True
@@ -559,7 +566,7 @@ def test():
     raw_input(confirm_over)
     sys.exit(0)
 
-if '__main__' == __name__:    
+if '__main__' == __name__:
 #    test()
     args = sys.argv[1:]
     if '-h' in args:
@@ -593,9 +600,9 @@ if '__main__' == __name__:
     done_disabled = False
     if os.name == 'nt':
         if raw_input(confirm_stop).lower() == 'y':
-            runas('netsh interface teredo set state disable')
-            time.sleep(1)
-            done_disabled = True
+            if runas('netsh interface teredo set state disable'):
+                done_disabled = True
+        win32runas.runas("win_reset_gp.py")
         print(os.system('netsh interface teredo show state'))
     recommend, nat_type = main(*args, local_port=local_port, remote_port=remote_port)
     print(result_info % recommend)
@@ -608,8 +615,8 @@ if '__main__' == __name__:
             client_ext = 'natawareclient' if platform.version()[0] > '6' else 'enterpriseclient'
             client = client_ext if ip.startswith(local_ip_startswith) else 'client'
     if recommend:
-        if (os.name == 'nt' and
-                raw_input(confirm_set).lower() == 'y'):
+        if os.name == 'nt' and \
+                raw_input(confirm_set).lower() == 'y':
             cmd = 'netsh interface teredo set state type=%s servername=%s.'
             if raw_input(confirm_reset).lower() == 'y':
                 cmd += ' refreshinterval=default'
@@ -621,6 +628,6 @@ if '__main__' == __name__:
             print(os.system('netsh interface teredo show state'))
             done_disabled = False
     if done_disabled:
-        runas('netsh interface teredo set state type=%s' % client)
-        print(resume_info)
+        if runas('netsh interface teredo set state type=%s' % client):
+            print(resume_info)
     raw_input(confirm_over)
