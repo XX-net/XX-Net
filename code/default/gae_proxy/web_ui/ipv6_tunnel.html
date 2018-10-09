@@ -23,23 +23,24 @@
         </ol>
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span3">
+        <div class="span4">
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_enable" type="submit">{{ _( "Enable" ) }}</button>
             <button class="btn btn-primary btn-block" id="switch_ipv6_tunnel_disable" type="submit">{{ _( "Disable" ) }}</button>
-        </div> <!-- .span3 -->
-        <div class="span3">
+        </div> <!-- .span4 -->
+        <div class="span4">
             <button class="btn btn-primary btn-block" id="teredo_tunnel_change_server" type="submit">{{ _( "Change teredo server" ) }}</button>
             <button class="btn btn-primary btn-block" id="teredo_tunnel_test" type="submit">{{ _( "Test teredo" ) }}</button>
-        </div> <!-- .span3 -->
-        <div class="span3">
+        </div> <!-- .span4 -->
+        <div class="span4">
             <button class="btn btn-primary btn-block" id="teredo_tunnel_test_usability" type="submit">{{ _( "Test teredo usability only" ) }}</button>
             <button class="btn btn-primary btn-block" id="teredo_tunnel_test_server" type="submit">{{ _( "Test teredo server only" ) }}</button>
-        </div> <!-- .span3 -->
+        </div> <!-- .span4 -->
+        <!--
         <div class="span3">
-            <!-- The command of these two buttons are the same, only the display is different. -->
             <button class="btn btn-block" id="priority_teredo_first" type="submit" disabled="disabled">{{ _( "Switch teredo first" ) }}</button>
             <button class="btn btn-block" id="priority_origin_first" type="submit" disabled="disabled">{{ _( "Switch origin first" ) }}</button>
-        </div> <!-- .span3 -->
+        </div>
+        -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
         <div class="span12">
@@ -64,7 +65,7 @@
             button.removeClass('btn-primary');
         }
     }
-    function getPriority() {
+    /*function getPriority() {
         $.ajax({
             type: 'GET',
             url: '/module/gae_proxy/control/ipv6_tunnel?cmd=get_priority',
@@ -92,7 +93,7 @@
     }
     $(function () {
         getPriority();
-    });
+    });*/
 </script>
 <script type="text/javascript">
     function updateStatus(selector, content) {
@@ -132,10 +133,10 @@
             cmd = "test_teredo_server";
         } else if (id == 'teredo_tunnel_change_server') {
             cmd = "set_best_server";
-        } else if (id == 'priority_teredo_first') {
+        /*} else if (id == 'priority_teredo_first') {
             cmd = "switch_pp";
         } else if (id == 'priority_origin_first') {
-            cmd = "switch_pp";
+            cmd = "switch_pp";*/
         } else {
             return;
         }
@@ -163,18 +164,18 @@
                 scriptIsRunning = false;
                 tip(result['res'], 'info');
                 updateProcess();
-                if (cmd == "switch_pp") {
+                /*if (cmd == "switch_pp") {
                     getPriority();
-                }
+                }*/
             },
             error: function (result) {
                 window.timer.stop();
                 scriptIsRunning = false;
                 tip('{{ _("No response from process: ")}}{{ _("GAEProxy")}}{{ _(". It might have already exited.")}}', 'warning', false);
                 updateProcess();
-                if (cmd == "switch_pp") {
+                /*if (cmd == "switch_pp") {
                     getPriority();
-                }
+                }*/
             }
         });
     });

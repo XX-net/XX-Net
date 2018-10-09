@@ -38,7 +38,6 @@ if __name__ == "__main__":
 enable_ipv6_temp = os.path.join(current_path, 'enable_ipv6_temp.bat')
 disable_ipv6_temp = os.path.join(current_path, 'disable_ipv6_temp.bat')
 set_best_server_temp = os.path.join(current_path, 'set_best_server_temp.bat')
-switch_pp_temp = os.path.join(current_path, 'switch_pp_temp.bat')
 
 enable_cmds = """
 @echo Starting...
@@ -104,15 +103,13 @@ goto :eof
 netsh interface teredo set state type={} servername={}.
 
 :: Set IPv6 prefixpolicies
-:: 2001::/16 Aggregate global unicast address; not default
+:: See https://tools.ietf.org/html/rfc3484
 :: 2002::/16 6to4 tunnel
-:: 2001::/32 teredo tunnel
+:: 2001::/32 teredo tunnel; not default
 netsh interface ipv6 add prefixpolicy ::1/128 50 0
 netsh interface ipv6 set prefixpolicy ::1/128 50 0
 netsh interface ipv6 add prefixpolicy ::/0 40 1
 netsh interface ipv6 set prefixpolicy ::/0 40 1
-netsh interface ipv6 add prefixpolicy 2001::/16 35 6
-netsh interface ipv6 set prefixpolicy 2001::/16 35 6
 netsh interface ipv6 add prefixpolicy 2002::/16 30 2
 netsh interface ipv6 set prefixpolicy 2002::/16 30 2
 netsh interface ipv6 add prefixpolicy 2001::/32 25 5
@@ -214,50 +211,13 @@ def state():
 
     return last_state
 
-pp = {}
 
 def state_pp():
-    r = run("netsh interface ipv6 show prefixpolicies")
-    rls = r.split("\r\n")
-    pp.clear()
-    if len(rls) > 4:
-        for i in range(4, len(rls)):
-            if rls[i]:
-                priority , lable, prefix = rls[i].split()
-                pp[prefix] = int(priority), int(lable)
-
-    teredo = pp.get("2001::/32")
-    if teredo:
-        orig = pp.get("2001::/16", (teredo[0] - 2, len(pp) + 2))
-        return "origin" if orig[0] > teredo[0] else "teredo"
+    return "Developing"
 
 
 def switch_pp():
-    teredo = pp.get("2001::/32")
-    if teredo is None:
-        state_pp()
-        teredo = pp.get("2001::/32")
-        if teredo is None:
-            return "Switch prefix policies fail, no teredo prefix policiy is found."
-
-    orig = pp.get("2001::/16", (teredo[0] - 2, len(pp) + 2))
-
-    cmds = [":output"]
-    cmds.append("netsh interface ipv6 set prefixpolicy %s %d %d" % ("2001::/32", orig[0], teredo[1]))
-    if "2001::/16" in pp:
-        cmds.append("netsh interface ipv6 set prefixpolicy %s %d %d" % ("2001::/16", teredo[0], orig[1]))
-    else:
-        cmds.append("netsh interface ipv6 add prefixpolicy %s %d %d" % ("2001::/16", teredo[0], orig[1]))
-    cmds.append("@call :output>" + log_file)
-
-    with open(switch_pp_temp, 'w') as fp:
-        fp.write("\n".join(cmds))
-    done = elevate(switch_pp_temp)
-
-    if done:
-        return "Switch prefix policies is complete."
-    else:
-        return "Switch prefix policies fail, you must authorized as admin."
+    return "Developing"
 
 
 def enable(is_local=False):
