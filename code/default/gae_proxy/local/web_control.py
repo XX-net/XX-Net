@@ -337,7 +337,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             "python_version": platform.python_version(),
             "openssl_version": get_openssl_version(),
 
-            "proxy_listen": config.listen_ip + ":" + str(config.listen_port),
+            "proxy_listen": str(config.listen_ip) + ":" + str(config.listen_port),
             "use_ipv6": config.use_ipv6,
             "lan_proxy": lan_proxy,
 
