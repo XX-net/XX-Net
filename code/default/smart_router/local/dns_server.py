@@ -331,7 +331,7 @@ class DnsServer(object):
             self.bing_linsten(ip)
 
     def bing_linsten(self, bind_ip):
-        if ":" in addr[0]:
+        if ":" in bind_ip:
             sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
