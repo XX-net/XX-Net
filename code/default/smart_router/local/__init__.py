@@ -134,7 +134,7 @@ def run(args):
     g.proxy_server.start()
     xlog.info("Proxy server listen:%s:%d.", listen_ip, g.config.proxy_port)
 
-    listen_ips = front.config.dns_bind_ip
+    listen_ips = g.config.dns_bind_ip
     if isinstance(listen_ips, basestring):
         listen_ips = [listen_ips]
     else:
