@@ -696,7 +696,7 @@ def start(allow_remote=0):
     if allow_remote:
         xlog.info("allow remote access WebUI")
 
-    if isinstance(host_ip, str):
+    if isinstance(host_ip, basestring):
         listen_ips = [host_ip]
     else:
         listen_ips = list(host_ip)
