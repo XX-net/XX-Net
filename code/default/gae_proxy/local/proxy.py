@@ -120,7 +120,7 @@ def main(args):
     allow_remote = args.get("allow_remote", 0)
 
     listen_ips = front.config.listen_ip
-    if isinstance(listen_ips, str):
+    if isinstance(listen_ips, basestring):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
