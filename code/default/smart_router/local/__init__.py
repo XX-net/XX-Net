@@ -121,7 +121,7 @@ def run(args):
     allow_remote = args.get("allow_remote", 0)
 
     listen_ips = g.config.proxy_bind_ip
-    if isinstance(listen_ip, str):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
@@ -135,7 +135,7 @@ def run(args):
     xlog.info("Proxy server listen:%s:%d.", listen_ip, g.config.proxy_port)
 
     listen_ips = front.config.dns_bind_ip
-    if isinstance(listen_ip, str):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
