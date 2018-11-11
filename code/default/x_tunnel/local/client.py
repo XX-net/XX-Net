@@ -164,12 +164,17 @@ def main(args):
     g.session = proxy_session.ProxySession()
 
     allow_remote = args.get("allow_remote", 0)
-    if allow_remote:
-        listen_ip = "0.0.0.0"
-    else:
-        listen_ip = g.config.socks_host
 
-    g.socks5_server = simple_http_server.HTTPServer((listen_ip, g.config.socks_port), Socks5Server, logger=xlog)
+    listen_ips = g.config.socks_host
+    if isinstance(listen_ips, basestring):
+        listen_ips = [listen_ips]
+    else:
+        listen_ips = list(listen_ips)
+    if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
+        listen_ips.append("0.0.0.0")
+    addresses = [(listen_ip, g.config.socks_port) for listen_ip in listen_ips]
+
+    g.socks5_server = simple_http_server.HTTPServer(addresses, Socks5Server, logger=xlog)
     xlog.info("Socks5 server listen:%s:%d.", g.config.socks_host, g.config.socks_port)
 
     ready = True

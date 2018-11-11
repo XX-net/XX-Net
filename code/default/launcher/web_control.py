@@ -690,17 +690,23 @@ def start(allow_remote=0):
     # should use config.yaml to bind ip
     if not allow_remote:
         allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
+    host_ip = config.get(["modules", "launcher", "control_ip"], "127.0.0.1")
     host_port = config.get(["modules", "launcher", "control_port"], 8085)
 
     if allow_remote:
-        host_addr = "0.0.0.0"
         xlog.info("allow remote access WebUI")
+
+    if isinstance(host_ip, basestring):
+        listen_ips = [host_ip]
     else:
-        host_addr = "127.0.0.1"
+        listen_ips = list(host_ip)
+    if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
+        listen_ips.append("0.0.0.0")
+    addresses = [(listen_ip, host_port) for listen_ip in listen_ips]
 
     xlog.info("begin to start web control")
 
-    server = simple_http_server.HTTPServer((host_addr, host_port), Http_Handler, logger=xlog)
+    server = simple_http_server.HTTPServer(addresses, Http_Handler, logger=xlog)
     server.start()
 
     xlog.info("launcher web control started.")

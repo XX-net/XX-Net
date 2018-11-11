@@ -118,16 +118,21 @@ def main(args):
     CertUtil.init_ca()
 
     allow_remote = args.get("allow_remote", 0)
-    if allow_remote:
-        listen_ip = "0.0.0.0"
+
+    listen_ips = front.config.listen_ip
+    if isinstance(listen_ips, basestring):
+        listen_ips = [listen_ips]
     else:
-        listen_ip = front.config.listen_ip
+        listen_ips = list(listen_ips)
+    if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
+        listen_ips.append("0.0.0.0")
+    addresses = [(listen_ip, front.config.listen_port) for listen_ip in listen_ips]
 
     front.start()
     direct_front.start()
 
     proxy_server = simple_http_server.HTTPServer(
-        (listen_ip, front.config.listen_port), proxy_handler.GAEProxyHandler, logger=xlog)
+        addresses, proxy_handler.GAEProxyHandler, logger=xlog)
 
     ready = True  # checked by launcher.module_init
     

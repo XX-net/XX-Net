@@ -119,22 +119,31 @@ def run(args):
     g.dns_client = dns_server.DnsClient()
 
     allow_remote = args.get("allow_remote", 0)
-    if allow_remote:
-        listen_ip = "0.0.0.0"
+
+    listen_ips = g.config.proxy_bind_ip
+    if isinstance(listen_ips, basestring):
+        listen_ips = [listen_ips]
     else:
-        listen_ip = g.config.proxy_bind_ip
-    g.proxy_server = simple_http_server.HTTPServer((listen_ip, g.config.proxy_port),
+        listen_ips = list(listen_ips)
+    if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
+        listen_ips.append("0.0.0.0")
+    addresses = [(listen_ip, g.config.proxy_port) for listen_ip in listen_ips]
+
+    g.proxy_server = simple_http_server.HTTPServer(addresses,
                                                    proxy_handler.ProxyServer, logger=xlog)
     g.proxy_server.start()
     xlog.info("Proxy server listen:%s:%d.", listen_ip, g.config.proxy_port)
 
-    allow_remote = args.get("allow_remote", 0)
-    if allow_remote:
-        listen_ip = "0.0.0.0"
+    listen_ips = g.config.dns_bind_ip
+    if isinstance(listen_ips, basestring):
+        listen_ips = [listen_ips]
     else:
-        listen_ip = g.config.dns_bind_ip
+        listen_ips = list(listen_ips)
+    if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
+        listen_ips.append("0.0.0.0")
+
     g.dns_srv = dns_server.DnsServer(
-        bind_ip=listen_ip, port=g.config.dns_port,
+        bind_ip=listen_ips, port=g.config.dns_port,
         backup_port=g.config.dns_backup_port,
         ttl=g.config.dns_ttl)
     ready = True
