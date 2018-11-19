@@ -53,8 +53,11 @@ msgstr "PAC 策略"
 msgid "Auto-Try Direct"
 msgstr "自动尝试直连"
 
+msgid "Use IPv6 preferentially when Auto-Try Direct"
+msgstr "自动尝试直连时优先使用 IPv6"
+
 msgid "Auto-Try GAEProxy"
-msgstr "自动尝试GAEProxy"
+msgstr "自动尝试 GAEProxy"
 
 msgid "Black->GAEProxy"
 msgstr "黑名单->GAEProxy"
@@ -72,13 +75,13 @@ msgid "Direct List"
 msgstr "直连"
 
 msgid "GAEProxy List"
-msgstr "走GAEProxy"
+msgstr "走 GAEProxy"
 
 msgid "SOCKS List"
-msgstr "走SOCKS"
+msgstr "走 SOCKS"
 
 msgid "Redirect HTTPS"
-msgstr "重定向HTTPS"
+msgstr "重定向到 HTTPS"
 
 msgid "Black List"
 msgstr "黑名单"
