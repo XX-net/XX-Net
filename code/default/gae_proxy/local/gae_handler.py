@@ -288,7 +288,6 @@ def unpack_response(response):
         return response
     except Exception as e:
         response.worker.close("unpack protocol error")
-        front.ip_manager.recheck_ip(response.ssl_sock.ip)
         raise GAE_Exception(600, "unpack protocol:%r at:%s" % (e, traceback.format_exc()))
 
 
@@ -297,56 +296,60 @@ def request_gae_server(headers, body, url, timeout):
     # process status code return by http server
     # raise error, let up layer retry.
 
-    response = front.request("POST", None, "/_gh/", headers, body, timeout)
-    if not response:
-        raise GAE_Exception(600, "fetch gae fail")
+    try:
+        response = front.request("POST", None, "/_gh/", headers, body, timeout)
+        if not response:
+            raise GAE_Exception(600, "fetch gae fail")
 
-    if response.status >= 600:
-        raise GAE_Exception(
-            response.status, "fetch gae fail:%d" % response.status)
+        if response.status >= 600:
+            raise GAE_Exception(
+                response.status, "fetch gae fail:%d" % response.status)
 
-    appid = response.ssl_sock.host.split(".")[0]
-    if response.status == 404:
-        # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-        front.appid_manager.report_not_exist(
-            appid, response.ssl_sock.ip)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
-        response.worker.close("appid not exist:%s" % appid)
-        raise GAE_Exception(603, "appid not exist %s" % appid)
+        appid = response.ssl_sock.host.split(".")[0]
+        if response.status == 404:
+            # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+            front.appid_manager.report_not_exist(
+                appid, response.ssl_sock.ip)
+            # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
+            response.worker.close("appid not exist:%s" % appid)
+            raise GAE_Exception(603, "appid not exist %s" % appid)
 
-    if response.status == 503:
-        xlog.warning('APPID %r out of Quota, remove it. %s',
-                     appid, response.ssl_sock.ip)
-        front.appid_manager.report_out_of_quota(appid)
-        # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
-        response.worker.close("appid out of quota:%s" % appid)
-        raise GAE_Exception(604, "appid out of quota:%s" % appid)
+        if response.status == 503:
+            xlog.warning('APPID %r out of Quota, remove it. %s',
+                         appid, response.ssl_sock.ip)
+            front.appid_manager.report_out_of_quota(appid)
+            # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
+            response.worker.close("appid out of quota:%s" % appid)
+            raise GAE_Exception(604, "appid out of quota:%s" % appid)
 
-    server_type = response.getheader("server", "")
-    # content_type = response.getheaders("content-type", "")
-    if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
-            response.status == 403 or response.status == 405:
+        server_type = response.getheader("server", "")
+        # content_type = response.getheaders("content-type", "")
+        if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
+                response.status == 403 or response.status == 405:
 
-        # some ip can connect, and server type can be gws
-        # but can't use as GAE server
-        # so we need remove it immediately
+            # some ip can connect, and server type can be gws
+            # but can't use as GAE server
+            # so we need remove it immediately
 
-        xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
-                  response.status)
-        front.ip_manager.recheck_ip(response.ssl_sock.ip)
-        response.worker.close("ip not support GAE")
-        raise GAE_Exception(602, "ip not support GAE")
+            xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
+                      response.status)
+            response.worker.close("ip not support GAE")
+            raise GAE_Exception(602, "ip not support GAE")
 
-    response.gps = response.getheader("x-server", "")
+        response.gps = response.getheader("x-server", "")
 
-    if response.status > 300:
-        raise GAE_Exception(605, "status:%d" % response.status)
+        if response.status > 300:
+            raise GAE_Exception(605, "status:%d" % response.status)
 
-    if response.status != 200:
-        xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip,
-                  appid, response.status)
+        if response.status != 200:
+            xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip,
+                      appid, response.status)
 
-    return response
+        return response
+    except GAE_Exception as e:
+        if e.error_code not in (600, 603, 604):
+            front.ip_manager.recheck_ip(response.ssl_sock.ip, first_report=False)
+        raise e
 
 
 def request_gae_proxy(method, url, headers, body, timeout=None):
@@ -511,6 +514,10 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         # gae代理请求
     except GAE_Exception as e:
         xlog.warn("GAE %s %s request fail:%r", method, url, e)
+
+        if fallback and host.endswith(front.config.GOOGLE_ENDSWITH):
+            return fallback()
+
         send_response(wfile, e.error_code, body=e.message)
         return_fail_message(wfile)
         return "ok"
@@ -536,11 +543,6 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         if key in skip_response_headers:
             continue
         response_headers[key] = value
-
-    if response.status == 503 and fallback and \
-            response_headers.get('Server') == 'HTTP server (unknown)' and \
-            host.endswith(front.config.GOOGLE_ENDSWITH):
-        return fallback()
 
     response_headers["Persist"] = ""
     response_headers["Connection"] = "Persist"
