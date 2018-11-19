@@ -35,6 +35,13 @@
     </div> <!-- .row-fluid -->
 
     <div class="row-fluid">
+        <div class="span4">{{ _( "Use IPv6 preferentially when Auto-Try Direct" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="auto-direct6" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+    <div class="row-fluid">
         <div class="span4">{{ _( "Auto-Try GAEProxy" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="auto-gae" type="checkbox" data-toggle="switch"/>
@@ -73,6 +80,12 @@
                     $("#auto-direct").parent().addClass('switch-on');
 
                     $("#auto-direct").prop('checked', true);
+                }
+                if (result['auto_direct6'] != 0) {
+                    $("#auto-direct6").parent().removeClass('switch-off');
+                    $("#auto-direct6").parent().addClass('switch-on');
+
+                    $("#auto-direct6").prop('checked', true);
                 }
 
                 if (result['auto_gae'] != 0) {
@@ -140,6 +153,10 @@
 
     $('#auto-direct').change(function () {
         setSmartRouterConfig("auto_direct", $(this).is(':checked') ? 1 : 0);
+    });
+
+    $('#auto-direct6').change(function () {
+        setSmartRouterConfig("auto_direct6", $(this).is(':checked') ? 1 : 0);
     });
 
     $('#auto-gae').change(function () {
