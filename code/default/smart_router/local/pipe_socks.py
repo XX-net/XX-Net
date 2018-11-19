@@ -241,9 +241,6 @@ class PipeSocks(object):
                             s1.restore_dat(dat[sended:])
                             break
 
-                    #if s1.buf_size == 0:
-                    #    self.try_remove(self.write_set, s1)
-
                     if s1.buf_size < self.buf_size:
                         if s1 not in self.sock_dict:
                             continue
