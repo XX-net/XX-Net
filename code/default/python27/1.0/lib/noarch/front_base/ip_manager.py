@@ -665,10 +665,10 @@ class IpManager():
                     # connect max fail 3 times.
                     # do nothing
                     return
-            else:
-                time.sleep(5)
-                self.recheck_ip(ip)
-                return
+                else:
+                    time.sleep(5)
+                    self.recheck_ip(ip)
+                    return
 
         if not result or not result.ok:
             self.report_connect_fail(ip, force_remove=True)
