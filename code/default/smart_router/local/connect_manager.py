@@ -17,7 +17,6 @@ if __name__ == '__main__':
 from socket_wrap import SocketWrap
 import simple_queue
 import socks
-import select
 import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
