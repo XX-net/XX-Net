@@ -345,11 +345,13 @@ def do_gae(sock, host, port, client_address, left_buf=""):
 
 def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
     if not g.config.auto_direct:
-        for rule in ["direct", "direct6", "redirect_https"]:
+        for rule in ["direct", "redirect_https"]:
             try:
                 rule_list.remove(rule)
             except:
                 pass
+    elif g.config.auto_direct6 and "direct" in rule_list:
+        rule_list.insert(rule_list.index("direct"), "direct6")
 
     if not g.config.enable_fake_ca and port == 443 or not g.config.auto_gae:
         try:
@@ -382,6 +384,8 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
 
             elif rule == "direct6":
                 ips = [ip for ip in g.dns_srv.query(host) if ":" in ip]
+                if not ips:
+                    continue
                 do_direct(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d direct6", scense, host, port)
                 return
@@ -472,21 +476,19 @@ def handle_ip_proxy(sock, ip, port, client_address):
     except SniNotExist as e:
         xlog.debug("ip:%s:%d get sni fail", ip, port)
 
-    rule_list = []
-    if g.config.auto_direct:
-        if g.ip_region.check_ip(ip):
-            rule_list = ["direct", "socks", "redirect_https"]
-        elif ":" in ip:
-            rule_list = ["direct6", "gae", "socks", "redirect_https"]
-    if not rule_list:
-        record = g.ip_cache.get(ip)
+    record = g.ip_cache.get(ip)
+    if record and record["r"] != "unknown":
         rule = record["r"]
         if rule == "gae":
-            rule_list = ["gae", "socks", "redirect_https", "direct"]
+            rule_list = ["gae", "socks", "direct"]
         elif rule == "socks":
-            rule_list = ["socks", "gae", "redirect_https", "direct"]
+            rule_list = ["socks", "gae", "direct"]
         else:
-            rule_list = ["direct", "gae", "socks", "redirect_https"]
+            rule_list = ["direct", "gae", "socks"]
+    elif g.ip_region.check_ip(ip):
+        rule_list = ["direct", "socks"]
+    else:
+        rule_list = ["direct", "gae", "socks"]
 
     try_loop("ip", rule_list, sock, ip, port, client_address)
 
@@ -520,7 +522,6 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     #    rule_list = ["direct", "gae", "socks", "redirect_https"]
     # gae is more faster then direct.
 
-    rule_list = []
     record = g.domain_cache.get(host)
     if record and record["r"] != "unknown":
         rule = record["r"]
@@ -535,19 +536,13 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
             rule_list.remove("gae")
     elif g.gfwlist.is_white(host):
         rule_list = ["direct", "gae", "socks", "redirect_https"]
-    elif g.gae_proxy.check_local_network.IPv6.is_ok() and \
-            not host.endswith(g.gae_proxy.config.config.GOOGLE_ENDSWITH):
+    elif g.gfwlist.check(host):
+        rule_list = ["gae", "socks", "redirect_https", "direct"]
+    else:
         ips = g.dns_srv.query(host)
-        if have_ipv6(ips):
-            rule_list = ["direct6", "direct", "gae", "socks", "redirect_https"]
-    if not rule_list:
-        if g.gfwlist.check(host):
-            rule_list = ["gae", "socks", "redirect_https", "direct"]
+        if g.ip_region.check_ips(ips):
+            rule_list = ["direct", "socks", "redirect_https"]
         else:
-            ips = g.dns_srv.query(host)
-            if g.ip_region.check_ips(ips):
-                rule_list = ["direct", "socks", "redirect_https"]
-            else:
-                rule_list = ["direct", "gae", "socks", "redirect_https"]
+            rule_list = ["direct", "gae", "socks", "redirect_https"]
 
     try_loop("domain", rule_list, sock, host, port, client_address, left_buf)
