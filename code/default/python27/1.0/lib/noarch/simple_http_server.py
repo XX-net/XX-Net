@@ -418,7 +418,14 @@ class HTTPServer():
         self.http_thread.start()
 
     def init_socket(self):
-        for addr in self.server_address:
+        server_address = set(self.server_address)
+        listen_all_v4 = "0.0.0.0" in server_address
+        listen_all_v6 = "::" in server_address
+        for addr in server_address:
+            if addr not in ("0.0.0.0", "::") and \
+                    listen_all_v4 and '.' in addr or \
+                    listen_all_v6 and ':' in addr:
+                continue
             self.add_listen(addr)
 
     def add_listen(self, addr):
