@@ -419,14 +419,15 @@ class HTTPServer():
 
     def init_socket(self):
         server_address = set(self.server_address)
-        listen_all_v4 = "0.0.0.0" in server_address
-        listen_all_v6 = "::" in server_address
-        for addr in server_address:
-            if addr not in ("0.0.0.0", "::") and \
-                    listen_all_v4 and '.' in addr or \
-                    listen_all_v6 and ':' in addr:
+        ips = [ip for ip, _ in server_address]
+        listen_all_v4 = "0.0.0.0" in ips
+        listen_all_v6 = "::" in ips
+        for ip, port in server_address:
+            if ip not in ("0.0.0.0", "::") and \
+                    listen_all_v4 and '.' in ip or \
+                    listen_all_v6 and ':' in ip:
                 continue
-            self.add_listen(addr)
+            self.add_listen((ip, port))
 
     def add_listen(self, addr):
         if ":" in addr[0]:
