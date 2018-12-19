@@ -51,6 +51,7 @@ class ConnectManager(object):
         self.connect_threads = connect_threads
 
         self.running = True
+        threading.Thread(target=self.check_thread).start()
 
     def stop(self):
         self.running = False
@@ -59,12 +60,15 @@ class ConnectManager(object):
         while self.running:
             time_now = time.time()
             with self.lock:
-                for host_port in self.cache:
-                    cache = self.cache[host_port]
-                    for cc in list(cache):
-                        if time_now - cc["create_time"] > self.connection_timeout:
-                            cache.remove(cc)
-                            cc["conn"].close()
+                for host_port in list(self.cache.keys()):
+                    try:
+                        cache = self.cache[host_port]
+                        for cc in list(cache):
+                            if time_now - cc["create_time"] > self.connection_timeout:
+                                cache.remove(cc)
+                                cc["conn"].close()
+                    except:
+                        pass
 
             time.sleep(1)
 

@@ -134,8 +134,14 @@ class PipeSocks(object):
 
         while self.running:
             if not self.error_set:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
+
+            for s1 in self.error_set:
+                s2 = self.sock_dict[s1]
+                if s2 not in self.sock_dict and \
+                        s1 not in self.read_set and s1 not in self.write_set:
+                    self.close(s1, "miss")
 
             try:
                 r, w, e = select.select(self.read_set, self.write_set, self.error_set, 0.1)
@@ -219,7 +225,7 @@ class PipeSocks(object):
                         self.try_remove(self.write_set, s1)
                         continue
 
-                    while True:
+                    while s1.buf_num:
                         dat = s1.get_dat()
                         if not dat:
                             self.close(s1, "n")
@@ -235,9 +241,6 @@ class PipeSocks(object):
                             s1.restore_dat(dat[sended:])
                             break
 
-                    if s1.buf_size == 0:
-                        self.try_remove(self.write_set, s1)
-
                     if s1.buf_size < self.buf_size:
                         if s1 not in self.sock_dict:
                             continue
@@ -245,6 +248,8 @@ class PipeSocks(object):
                         s2 = self.sock_dict[s1]
                         if s2 not in self.read_set and s2 in self.sock_dict:
                             self.read_set.append(s2)
+                        elif s1.buf_size == 0 and s2.is_closed():
+                            self.close(s1, "n")
 
                 for s1 in list(e):
                     self.close(s1, "e")

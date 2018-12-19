@@ -114,6 +114,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "pac_policy": g.config.pac_policy,
                 "country": g.config.country_code,
                 "auto_direct":g.config.auto_direct,
+                "auto_direct6":g.config.auto_direct6,
                 "auto_gae": g.config.auto_gae,
                 "enable_fake_ca": g.config.enable_fake_ca,
                 "block_advertisement": g.config.block_advertisement
@@ -130,6 +131,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 g.config.country_code = reqs["country"][0]
             if "auto_direct" in reqs:
                 g.config.auto_direct = bool(int(reqs["auto_direct"][0]))
+            if "auto_direct6" in reqs:
+                g.config.auto_direct6 = bool(int(reqs["auto_direct6"][0]))
             if "auto_gae" in reqs:
                 g.config.auto_gae = bool(int(reqs["auto_gae"][0]))
             if "enable_fake_ca" in reqs:

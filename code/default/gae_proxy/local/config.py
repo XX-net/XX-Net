@@ -41,13 +41,15 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
+            "docs.google.com",
             "play.google.com",
             "scholar.google.com",
             "scholar.google.com.hk",
             "appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
-            ".appspot.com",
+            ".gvt1.com",
+            ".appspot.com"
         ])
 
         self.set_var("hosts_gae", [
@@ -182,7 +184,6 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
         self.set_var("target_handshake_time", 600)
 
         # ip source
-        # IPv4 is dead
         self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
         self.set_var("ipv6_scan_ratio", 90) # 0 - 100
 
@@ -207,6 +208,9 @@ hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
 
         self.br_sites = tuple(self.BR_SITES)
         self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
+
+        # for test ver.
+        self.max_scan_ip_thread_num = min(self.max_scan_ip_thread_num, 100)
 
         if need_save:
             self.save()
