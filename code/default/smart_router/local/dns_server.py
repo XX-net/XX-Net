@@ -329,7 +329,14 @@ class DnsServer(object):
         self.init_socket()
 
     def init_socket(self):
-        for ip in self.bind_ip:
+        ips = set(self.bind_ip)
+        listen_all_v4 = "0.0.0.0" in ips
+        listen_all_v6 = "::" in ips
+        for ip in ips:
+            if ip not in ("0.0.0.0", "::") and \
+                    listen_all_v4 and '.' in ip or \
+                    listen_all_v6 and ':' in ip:
+                continue
             self.bing_linsten(ip)
 
     def bing_linsten(self, bind_ip):
