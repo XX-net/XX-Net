@@ -16,6 +16,8 @@ class SniManager(object):
         self.slice = RandomGetSlice(fn, 20, '|')
 
     def get(self):
+        return None
+
         n = random.randint(2, 3)
         ws = []
         for i in range(0, n):
