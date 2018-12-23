@@ -42,9 +42,9 @@ class Config(ConfigBase):
         # host rules
         self.set_var("hosts_direct", [
             "docs.google.com",
-            "play.google.com",
-            "scholar.google.com",
-            "scholar.google.com.hk",
+            #"play.google.com",
+            #"scholar.google.com",
+            #"scholar.google.com.hk",
             "appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [

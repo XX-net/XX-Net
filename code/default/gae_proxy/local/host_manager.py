@@ -28,10 +28,5 @@ class HostManager(HostManagerBase):
         sni = self.sni_manager.get()
         host = self.get_host()
 
-        #if not host:
-        #    sni = self.sni_manager.get()
-        #else:
-        #    sni = host
-
         return sni, host
 

@@ -122,28 +122,29 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
-    default_ip = "141.101.120.131"
-
+    ip = "141.101.120.131"
     host = "xx-net.net"
     sni = host
-    if len(sys.argv) > 1:
-        ip = sys.argv[1]
-        if not utils.check_ip_valid(ip):
-            ip = default_ip
-            sni = sys.argv[1]
-    else:
-        ip = default_ip
-        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+
+    args = list(sys.argv[1:])
+
+    if len(args):
+        if utils.check_ip_valid(args[0]):
+            ip = args.pop(0)
+
+    if len(args):
+        host = args.pop(0)
+        sni = host
+
+    if len(args):
+        sni = args.pop(0)
+
+    # print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     xlog.info("test ip:%s", ip)
-
-    if len(sys.argv) > 2:
-        host = sys.argv[2]
     xlog.info("host:%s", host)
+    xlog.info("sni:%s", sni)
 
-    if len(sys.argv) > 3:
-        wait_time = int(sys.argv[3])
-    else:
-        wait_time = 0
+    wait_time = 0
 
     config_path = os.path.join(module_data_path, "cloudflare_front.json")
     config = Config(config_path)
