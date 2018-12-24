@@ -139,7 +139,7 @@ def _subst_vars(s, local_vars):
     except KeyError:
         try:
             return s.format(**os.environ)
-        except KeyError, var:
+        except KeyError as var:
             raise AttributeError('{%s}' % var)
 
 def _extend_dict(target_dict, other_dict):
@@ -290,7 +290,7 @@ def _generate_posix_vars():
     makefile = get_makefile_filename()
     try:
         _parse_makefile(makefile, vars)
-    except IOError, e:
+    except IOError as e:
         msg = "invalid Python installation: unable to open %s" % makefile
         if hasattr(e, "strerror"):
             msg = msg + " (%s)" % e.strerror
@@ -301,7 +301,7 @@ def _generate_posix_vars():
     try:
         with open(config_h) as f:
             parse_config_h(f, vars)
-    except IOError, e:
+    except IOError as e:
         msg = "invalid Python installation: unable to open %s" % config_h
         if hasattr(e, "strerror"):
             msg = msg + " (%s)" % e.strerror

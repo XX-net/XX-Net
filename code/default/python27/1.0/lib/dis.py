@@ -36,7 +36,7 @@ def dis(x=None):
                 print "Disassembly of %s:" % name
                 try:
                     dis(x1)
-                except TypeError, msg:
+                except TypeError as msg:
                     print "Sorry:", msg
                 print
     elif hasattr(x, 'co_code'):
@@ -44,9 +44,8 @@ def dis(x=None):
     elif isinstance(x, str):
         disassemble_string(x)
     else:
-        raise TypeError, \
-              "don't know how to disassemble %s objects" % \
-              type(x).__name__
+        raise TypeError("don't know how to disassemble %s objects" % \
+              type(x).__name__)
 
 def distb(tb=None):
     """Disassemble a traceback (default: last traceback)."""
@@ -54,7 +53,7 @@ def distb(tb=None):
         try:
             tb = sys.last_traceback
         except AttributeError:
-            raise RuntimeError, "no last traceback to disassemble"
+            raise RuntimeError("no last traceback to disassemble")
         while tb.tb_next: tb = tb.tb_next
     disassemble(tb.tb_frame.f_code, tb.tb_lasti)
 

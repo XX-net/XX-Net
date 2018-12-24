@@ -257,7 +257,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -406,7 +406,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -502,7 +502,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -585,7 +585,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -627,7 +627,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -673,7 +673,7 @@ class GrocParser(Parser):
                 retval.stop = self.input.LT(-1)
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -731,7 +731,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -772,7 +772,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -876,7 +876,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -918,7 +918,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -982,7 +982,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1040,7 +1040,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1080,7 +1080,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1149,7 +1149,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1207,7 +1207,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1251,7 +1251,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:
@@ -1307,7 +1307,7 @@ class GrocParser(Parser):
 
 
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
         finally:

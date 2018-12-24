@@ -232,7 +232,7 @@ def _make_async_call(rpc, method, request, response,
 def _get_result_hook(rpc):
   try:
     rpc.check_success()
-  except apiproxy_errors.ApplicationError, err:
+  except apiproxy_errors.ApplicationError as err:
     raise _ToBlobstoreError(err)
   hook = rpc.user_data
   return hook(rpc)

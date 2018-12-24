@@ -347,7 +347,7 @@ def subscribe(document_class,
   response = prospective_search_pb.SubscribeResponse()
   try:
     _make_sync_call('matcher', 'Subscribe', request, response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if e.application_error is error_pb.Error.BAD_REQUEST:
       raise QuerySyntaxError(sub_id, topic, query, e.error_detail)
     raise e

@@ -1424,7 +1424,7 @@ class Scanner(object):
             self.forward(2)
         try:
             value = unicode(''.join(bytes), 'utf-8')
-        except UnicodeDecodeError, exc:
+        except UnicodeDecodeError as exc:
             raise ScannerError("while scanning a %s" % name, start_mark, str(exc), mark)
         return value
 

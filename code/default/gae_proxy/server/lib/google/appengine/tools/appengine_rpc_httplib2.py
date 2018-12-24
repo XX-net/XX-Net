@@ -245,7 +245,7 @@ class HttpRpcServerHttpLib2(object):
       try:
         response_info, response = self.http.request(
             url, method=method, body=payload, headers=headers)
-      except client.AccessTokenRefreshError, e:
+      except client.AccessTokenRefreshError as e:
 
         logger.info('Got access token error', exc_info=1)
         response_info = httplib2.Response({'status': 401})

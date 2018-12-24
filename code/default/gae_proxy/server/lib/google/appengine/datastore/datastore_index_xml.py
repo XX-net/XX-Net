@@ -101,7 +101,7 @@ class IndexesXmlParser(object):
         raise ValidationError('\n'.join(self.errors))
 
       return IndexDefinitions(indexes=self.indexes)
-    except ElementTree.ParseError, e:
+    except ElementTree.ParseError as e:
       raise ValidationError('Bad input -- not valid XML: %s' % e)
 
   def ProcessIndexNode(self, node):

@@ -213,18 +213,18 @@ class URLopener:
                 return getattr(self, name)(url)
             else:
                 return getattr(self, name)(url, data)
-        except socket.error, msg:
+        except socket.error as msg:
             raise IOError, ('socket error', msg), sys.exc_info()[2]
 
     def open_unknown(self, fullurl, data=None):
         """Overridable interface to open unknown URL type."""
         type, url = splittype(fullurl)
-        raise IOError, ('url error', 'unknown url type', type)
+        raise IOError('url error', 'unknown url type', type)
 
     def open_unknown_proxy(self, proxy, fullurl, data=None):
         """Overridable interface to open unknown URL type."""
         type, url = splittype(fullurl)
-        raise IOError, ('url error', 'invalid proxy for %s' % type, proxy)
+        raise IOError('url error', 'invalid proxy for %s' % type, proxy)
 
     # External interface
     def retrieve(self, url, filename=None, reporthook=None, data=None):
@@ -323,7 +323,7 @@ class URLopener:
                     host = realhost
 
             #print "proxy via http:", host, selector
-        if not host: raise IOError, ('http error', 'no host given')
+        if not host: raise IOError('http error', 'no host given')
 
         if proxy_passwd:
             proxy_passwd = unquote(proxy_passwd)
@@ -353,7 +353,7 @@ class URLopener:
         if errcode == -1:
             if fp: fp.close()
             # something went wrong with the HTTP status line
-            raise IOError, ('http protocol error', 0,
+            raise IOError('http protocol error', 0,
                             'got a bad status line', None)
         # According to RFC 2616, "2xx" code indicates that the client's
         # request was successfully received, understood, and accepted.
@@ -383,7 +383,7 @@ class URLopener:
     def http_error_default(self, url, fp, errcode, errmsg, headers):
         """Default error handler: close the connection and raise IOError."""
         fp.close()
-        raise IOError, ('http error', errcode, errmsg, headers)
+        raise IOError('http error', errcode, errmsg, headers)
 
     if _have_ssl:
         def open_https(self, url, data=None):
@@ -414,7 +414,7 @@ class URLopener:
                     if user_passwd:
                         selector = "%s://%s%s" % (urltype, realhost, rest)
                 #print "proxy via https:", host, selector
-            if not host: raise IOError, ('https error', 'no host given')
+            if not host: raise IOError('https error', 'no host given')
             if proxy_passwd:
                 proxy_passwd = unquote(proxy_passwd)
                 proxy_auth = base64.b64encode(proxy_passwd).strip()
@@ -446,7 +446,7 @@ class URLopener:
             if errcode == -1:
                 if fp: fp.close()
                 # something went wrong with the HTTP status line
-                raise IOError, ('http protocol error', 0,
+                raise IOError('http protocol error', 0,
                                 'got a bad status line', None)
             # According to RFC 2616, "2xx" code indicates that the client's
             # request was successfully received, understood, and accepted.
@@ -462,7 +462,7 @@ class URLopener:
     def open_file(self, url):
         """Use local file or FTP depending on form of URL."""
         if not isinstance(url, str):
-            raise IOError, ('file error', 'proxy support for file protocol currently not implemented')
+            raise IOError('file error', 'proxy support for file protocol currently not implemented')
         if url[:2] == '//' and url[2:3] != '/' and url[2:12].lower() != 'localhost/':
             return self.open_ftp(url)
         else:
@@ -479,7 +479,7 @@ class URLopener:
         localname = url2pathname(file)
         try:
             stats = os.stat(localname)
-        except OSError, e:
+        except OSError as e:
             raise IOError(e.errno, e.strerror, e.filename)
         size = stats.st_size
         modified = email.utils.formatdate(stats.st_mtime, usegmt=True)
@@ -503,19 +503,19 @@ class URLopener:
                 urlfile = 'file://' + file
             return addinfourl(open(localname, 'rb'),
                               headers, urlfile)
-        raise IOError, ('local file error', 'not on local host')
+        raise IOError('local file error', 'not on local host')
 
     def open_ftp(self, url):
         """Use FTP protocol."""
         if not isinstance(url, str):
-            raise IOError, ('ftp error', 'proxy support for ftp protocol currently not implemented')
+            raise IOError('ftp error', 'proxy support for ftp protocol currently not implemented')
         import mimetypes, mimetools
         try:
             from cStringIO import StringIO
         except ImportError:
             from StringIO import StringIO
         host, path = splithost(url)
-        if not host: raise IOError, ('ftp error', 'no host given')
+        if not host: raise IOError('ftp error', 'no host given')
         host, port = splitport(host)
         user, host = splituser(host)
         if user: user, passwd = splitpasswd(user)
@@ -564,13 +564,13 @@ class URLopener:
                 headers += "Content-Length: %d\n" % retrlen
             headers = mimetools.Message(StringIO(headers))
             return addinfourl(fp, headers, "ftp:" + url)
-        except ftperrors(), msg:
+        except ftperrors() as msg:
             raise IOError, ('ftp error', msg), sys.exc_info()[2]
 
     def open_data(self, url, data=None):
         """Use "data" URL."""
         if not isinstance(url, str):
-            raise IOError, ('data error', 'proxy support for data protocol currently not implemented')
+            raise IOError('data error', 'proxy support for data protocol currently not implemented')
         # ignore POSTed data
         #
         # syntax of data URLs:
@@ -586,7 +586,7 @@ class URLopener:
         try:
             [type, data] = url.split(',', 1)
         except ValueError:
-            raise IOError, ('data error', 'bad data URL')
+            raise IOError('data error', 'bad data URL')
         if not type:
             type = 'text/plain;charset=US-ASCII'
         semi = type.rfind(';')
@@ -904,7 +904,7 @@ class ftpwrapper:
             try:
                 cmd = 'RETR ' + file
                 conn, retrlen = self.ftp.ntransfercmd(cmd)
-            except ftplib.error_perm, reason:
+            except ftplib.error_perm as reason:
                 if str(reason)[:3] != '550':
                     raise IOError, ('ftp error', reason), sys.exc_info()[2]
         if not conn:
@@ -916,7 +916,7 @@ class ftpwrapper:
                 try:
                     try:
                         self.ftp.cwd(file)
-                    except ftplib.error_perm, reason:
+                    except ftplib.error_perm as reason:
                         raise IOError, ('ftp error', reason), sys.exc_info()[2]
                 finally:
                     self.ftp.cwd(pwd)

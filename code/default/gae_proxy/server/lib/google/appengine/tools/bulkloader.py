@@ -580,7 +580,7 @@ class CSVGenerator(object):
 
       for record in reader:
         yield record
-    except csv.Error, e:
+    except csv.Error as e:
       if e.args and e.args[0].startswith('field larger than field limit'):
         raise FieldSizeLimitError(csv.field_size_limit())
       else:
@@ -766,11 +766,11 @@ class _WorkItem(adaptive_thread_pool.WorkItem):
               db.TransactionFailedError,
               apiproxy_errors.OverQuotaError,
               apiproxy_errors.DeadlineExceededError,
-              apiproxy_errors.ApplicationError), e:
+              apiproxy_errors.ApplicationError) as e:
 
         status = adaptive_thread_pool.WorkItem.RETRY
         logger.exception('Retrying on non-fatal datastore error: %s', e)
-      except urllib2.HTTPError, e:
+      except urllib2.HTTPError as e:
         http_status = e.code
         if http_status >= 500 and http_status < 600:
 
@@ -780,7 +780,7 @@ class _WorkItem(adaptive_thread_pool.WorkItem):
         else:
           self.SetError()
           status = adaptive_thread_pool.WorkItem.FAILURE
-      except urllib2.URLError, e:
+      except urllib2.URLError as e:
         if IsURLErrorFatal(e):
           self.SetError()
           status = adaptive_thread_pool.WorkItem.FAILURE
@@ -1414,7 +1414,7 @@ class RequestManager(object):
         results += result_pb.result_list()
 
       return results
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise datastore._ToDatastoreError(e)
 
   def GetEntities(
@@ -1755,7 +1755,7 @@ class _Database(object):
 
     try:
       self.primary_conn.execute(create_table)
-    except sqlite3.OperationalError, e:
+    except sqlite3.OperationalError as e:
 
       if 'already exists' not in e.message:
         raise
@@ -1763,7 +1763,7 @@ class _Database(object):
     if index:
       try:
         self.primary_conn.execute(index)
-      except sqlite3.OperationalError, e:
+      except sqlite3.OperationalError as e:
 
         if 'already exists' not in e.message:
           raise
@@ -1779,7 +1779,7 @@ class _Database(object):
       self.primary_conn.cursor().execute(
           'insert into %s (value) values (?)' % _Database.SIGNATURE_TABLE_NAME,
           (signature,))
-    except sqlite3.OperationalError, e:
+    except sqlite3.OperationalError as e:
       if 'already exists' not in e.message:
         logger.exception('Exception creating table:')
         raise
@@ -3410,7 +3410,7 @@ class BulkTransporterApp(object):
 
 
       self.request_manager.Authenticate()
-    except Exception, e:
+    except Exception as e:
       self.error = True
 
 
@@ -3834,7 +3834,7 @@ def LoadConfig(config_file_name, exit_fn=sys.exit):
         for cls in bulkloader_config.mappers:
           Mapper.RegisterMapper(cls())
 
-    except NameError, e:
+    except NameError as e:
 
 
       m = re.search(r"[^']*'([^']*)'.*", str(e))
@@ -3862,7 +3862,7 @@ to have access to.
         exit_fn(1)
       else:
         raise
-    except Exception, e:
+    except Exception as e:
 
 
 
@@ -3999,7 +3999,7 @@ def ProcessArguments(arg_dict,
   if namespace:
     try:
       namespace_manager.validate_namespace(namespace)
-    except namespace_manager.BadValueError, msg:
+    except namespace_manager.BadValueError as msg:
       errors.append('namespace parameter %s' % msg)
 
 

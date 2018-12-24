@@ -487,7 +487,7 @@ class Client(object):
             while True:
                 try:
                     data = response.read(8192, timeout=self.timeout)
-                except httplib.IncompleteRead, e:
+                except httplib.IncompleteRead as e:
                     data = e.partial
                 except Exception as e:
                     raise e

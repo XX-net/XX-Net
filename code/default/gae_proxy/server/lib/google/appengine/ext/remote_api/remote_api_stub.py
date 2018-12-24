@@ -716,14 +716,14 @@ def ConfigureRemoteApiForOAuth(
   try:
 
     from oauth2client import client
-  except ImportError, e:
+  except ImportError as e:
     raise ImportError('Use of OAuth credentials requires the '
                       'oauth2client module: %s' % e)
 
   try:
 
     from google.appengine.tools import appengine_rpc_httplib2
-  except ImportError, e:
+  except ImportError as e:
     raise ImportError('Use of OAuth credentials requires the '
                       'appengine_rpc_httplib2 module. %s' % e)
 

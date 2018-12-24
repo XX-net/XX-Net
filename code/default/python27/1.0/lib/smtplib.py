@@ -308,7 +308,7 @@ class SMTP:
                 try:
                     port = int(port)
                 except ValueError:
-                    raise socket.error, "nonnumeric port"
+                    raise socket.error("nonnumeric port")
         if not port:
             port = self.default_port
         if self.debuglevel > 0:

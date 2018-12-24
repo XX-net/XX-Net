@@ -315,7 +315,7 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
                 format_regex = _TimeRE_cache.compile(format)
             # KeyError raised when a bad format is found; can be specified as
             # \\, in which case it was a stray % but with a space after it
-            except KeyError, err:
+            except KeyError as err:
                 bad_directive = err.args[0]
                 if bad_directive == "\\":
                     bad_directive = "%"

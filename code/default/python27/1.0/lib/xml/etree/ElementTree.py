@@ -1649,7 +1649,7 @@ class XMLParser(object):
     def feed(self, data):
         try:
             self._parser.Parse(data, 0)
-        except self._error, v:
+        except self._error as v:
             self._raiseerror(v)
 
     ##
@@ -1661,7 +1661,7 @@ class XMLParser(object):
     def close(self):
         try:
             self._parser.Parse("", 1) # end of data
-        except self._error, v:
+        except self._error as v:
             self._raiseerror(v)
         tree = self.target.close()
         del self.target, self._parser # get rid of circular references

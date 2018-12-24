@@ -862,7 +862,7 @@ class Unpickler:
             while 1:
                 key = read(1)
                 dispatch[key](self)
-        except _Stop, stopinst:
+        except _Stop as stopinst:
             return stopinst.value
 
     # Return largest index k such that self.stack[k] is self.mark.
@@ -889,7 +889,7 @@ class Unpickler:
     def load_proto(self):
         proto = ord(self.read(1))
         if not 0 <= proto <= 2:
-            raise ValueError, "unsupported pickle protocol: %d" % proto
+            raise ValueError("unsupported pickle protocol: %d" % proto)
     dispatch[PROTO] = load_proto
 
     def load_persid(self):
@@ -969,11 +969,11 @@ class Unpickler:
         for q in "\"'": # double or single quote
             if rep.startswith(q):
                 if len(rep) < 2 or not rep.endswith(q):
-                    raise ValueError, "insecure string pickle"
+                    raise ValueError("insecure string pickle")
                 rep = rep[len(q):-len(q)]
                 break
         else:
-            raise ValueError, "insecure string pickle"
+            raise ValueError("insecure string pickle")
         self.append(rep.decode("string-escape"))
     dispatch[STRING] = load_string
 
@@ -1064,7 +1064,7 @@ class Unpickler:
         if not instantiated:
             try:
                 value = klass(*args)
-            except TypeError, err:
+            except TypeError as err:
                 raise TypeError, "in constructor for %s: %s" % (
                     klass.__name__, str(err)), sys.exc_info()[2]
         self.append(value)

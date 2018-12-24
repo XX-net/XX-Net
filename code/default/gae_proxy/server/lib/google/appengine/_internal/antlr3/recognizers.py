@@ -1127,11 +1127,11 @@ class Lexer(BaseRecognizer, TokenSource):
 
                 return self._state.token
 
-            except NoViableAltException, re:
+            except NoViableAltException as re:
                 self.reportError(re)
                 self.recover(re) # throw out current char and try again
 
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 # match() routine has already called recover()
 

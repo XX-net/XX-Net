@@ -249,7 +249,7 @@ def create_login_url(dest_url=None, _auth_domain=None,
 
   try:
     apiproxy_stub_map.MakeSyncCall('user', 'CreateLoginURL', req, resp)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         user_service_pb.UserServiceError.REDIRECT_URL_TOO_LONG):
       raise RedirectTooLongError
@@ -284,7 +284,7 @@ def create_logout_url(dest_url, _auth_domain=None):
 
   try:
     apiproxy_stub_map.MakeSyncCall('user', 'CreateLogoutURL', req, resp)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         user_service_pb.UserServiceError.REDIRECT_URL_TOO_LONG):
       raise RedirectTooLongError

@@ -376,10 +376,10 @@ def _get_fetch_result(rpc):
 
   try:
     rpc.check_success()
-  except apiproxy_errors.RequestTooLargeError, err:
+  except apiproxy_errors.RequestTooLargeError as err:
     raise InvalidURLError(
         'Request body too large fetching URL: ' + url)
-  except apiproxy_errors.ApplicationError, err:
+  except apiproxy_errors.ApplicationError as err:
     error_detail = ''
     if err.error_detail:
       error_detail = ' Error: ' + err.error_detail

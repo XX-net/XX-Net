@@ -374,10 +374,10 @@ class Key(object):
 
         self._str = self._str.rstrip('=')
 
-      except (AssertionError, TypeError), e:
+      except (AssertionError, TypeError) as e:
         raise datastore_errors.BadKeyError(
           'Invalid string key %s. Details: %s' % (encoded, e))
-      except Exception, e:
+      except Exception as e:
 
 
 
@@ -1547,7 +1547,7 @@ def ValidateProperty(name, values, read_only=False):
           'Unsupported type for property %s: %s' % (name, v.__class__))
       prop_validator(name, v)
 
-  except (KeyError, ValueError, TypeError, IndexError, AttributeError), msg:
+  except (KeyError, ValueError, TypeError, IndexError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error type checking values for property %s: %s' % (name, msg))
 
@@ -1901,7 +1901,7 @@ def FromPropertyPb(pb):
     if pb.has_meaning() and meaning in _PROPERTY_CONVERSIONS:
       conversion = _PROPERTY_CONVERSIONS[meaning]
       value = conversion(value)
-  except (KeyError, ValueError, IndexError, TypeError, AttributeError), msg:
+  except (KeyError, ValueError, IndexError, TypeError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error converting pb: %s\nException was: %s' % (pb, msg))
 
@@ -1959,7 +1959,7 @@ def RestoreFromIndexValue(index_value, data_type):
 
   try:
     value = conv(index_value)
-  except (KeyError, ValueError, IndexError, TypeError, AttributeError), msg:
+  except (KeyError, ValueError, IndexError, TypeError, AttributeError) as msg:
     raise datastore_errors.BadValueError(
       'Error converting value: %r\nException was: %s' % (index_value, msg))
   return value

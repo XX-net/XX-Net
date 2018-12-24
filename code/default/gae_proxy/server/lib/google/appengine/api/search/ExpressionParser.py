@@ -217,7 +217,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -299,7 +299,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -387,7 +387,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -482,7 +482,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -571,7 +571,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -653,7 +653,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -715,7 +715,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -803,7 +803,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -865,7 +865,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -953,7 +953,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1015,7 +1015,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1129,7 +1129,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1274,7 +1274,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1381,7 +1381,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1467,7 +1467,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1797,7 +1797,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1859,7 +1859,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -1915,7 +1915,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -2054,7 +2054,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:
@@ -2116,7 +2116,7 @@ class ExpressionParser(Parser):
 
 
 
-            except RecognitionException, e:
+            except RecognitionException as e:
               self.reportError(e)
               raise e
         finally:

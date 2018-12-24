@@ -113,7 +113,7 @@ def _compile(code, pattern, flags):
                 emit(OPCODES[ANY])
         elif op in REPEATING_CODES:
             if flags & SRE_FLAG_TEMPLATE:
-                raise error, "internal: unsupported template operator"
+                raise error("internal: unsupported template operator")
                 emit(OPCODES[REPEAT])
                 skip = _len(code); emit(0)
                 emit(av[0])
@@ -162,7 +162,7 @@ def _compile(code, pattern, flags):
             else:
                 lo, hi = av[1].getwidth()
                 if lo != hi:
-                    raise error, "look-behind requires fixed-width pattern"
+                    raise error("look-behind requires fixed-width pattern")
                 emit(lo) # look behind
             _compile(code, av[1], flags)
             emit(OPCODES[SUCCESS])
@@ -223,7 +223,7 @@ def _compile(code, pattern, flags):
             else:
                 code[skipyes] = _len(code) - skipyes + 1
         else:
-            raise ValueError, ("unsupported operand type", op)
+            raise ValueError("unsupported operand type", op)
 
 def _compile_charset(charset, flags, code, fixup=None, fixes=None):
     # compile charset subprogram
@@ -250,7 +250,7 @@ def _compile_charset(charset, flags, code, fixup=None, fixes=None):
             else:
                 emit(CHCODES[av])
         else:
-            raise error, "internal: unsupported set operator"
+            raise error("internal: unsupported set operator")
     emit(OPCODES[FAILURE])
 
 def _optimize_charset(charset, fixup, fixes, isunicode):

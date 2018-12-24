@@ -241,7 +241,7 @@ class SDKUpdateChecker(object):
             timestamp=version['timestamp'],
             api_versions=version['api_versions'],
             runtime=runtime))
-    except (urllib2.URLError, socket.error, ssl.SSLError), e:
+    except (urllib2.URLError, socket.error, ssl.SSLError) as e:
       logging.info('Update check failed: %s', e)
       return
 
@@ -339,7 +339,7 @@ class SDKUpdateChecker(object):
         fh.write(nag.ToYAML())
       finally:
         fh.close()
-    except (OSError, IOError), e:
+    except (OSError, IOError) as e:
       logging.error('Could not write nag file to %s. Error: %s', nagfilename, e)
 
   def _Nag(self, msg, latest, version, force=False):

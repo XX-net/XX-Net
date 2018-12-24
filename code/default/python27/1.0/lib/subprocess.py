@@ -638,7 +638,7 @@ class Popen(object):
                                          env,
                                          cwd,
                                          startupinfo)
-            except pywintypes.error, e:
+            except pywintypes.error as e:
                 # Translate pywintypes.error to WindowsError, which is
                 # a subclass of OSError.  FIXME: We should really
                 # translate errno using _sys_errlist (or similar), but
@@ -1150,7 +1150,7 @@ class Popen(object):
             while fd2file:
                 try:
                     ready = poller.poll()
-                except select.error, e:
+                except select.error as e:
                     if e.args[0] == errno.EINTR:
                         continue
                     raise
@@ -1199,7 +1199,7 @@ class Popen(object):
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
-                except select.error, e:
+                except select.error as e:
                     if e.args[0] == errno.EINTR:
                         continue
                     raise
@@ -1283,7 +1283,7 @@ def _demo_posix():
     print "Trying a weird file..."
     try:
         print Popen(["/this/path/does/not/exist"]).communicate()
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.ENOENT:
             print "The file didn't exist.  I thought so..."
             print "Child traceback:"

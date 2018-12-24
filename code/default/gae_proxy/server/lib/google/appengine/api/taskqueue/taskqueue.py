@@ -901,7 +901,7 @@ class Task(object):
       default_url = False
       try:
         relative_url, query = _parse_relative_url(relative_url)
-      except _RelativeUrlError, e:
+      except _RelativeUrlError as e:
         raise InvalidUrlError(e)
 
     if len(relative_url) > MAX_URL_LENGTH:
@@ -1358,7 +1358,7 @@ class QueueStatistics(object):
       """Process the TaskQueueFetchQueueStatsResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert len(queues) == rpc.response.queuestats_size(), (
@@ -1440,7 +1440,7 @@ class Queue(object):
                                      'PurgeQueue',
                                      request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _TranslateError(e.application_error, e.error_detail)
 
   def delete_tasks_by_name_async(self, task_name, rpc=None):
@@ -1563,7 +1563,7 @@ class Queue(object):
       """Process the TaskQueueDeleteResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert rpc.response.result_size() == len(tasks), (
@@ -1654,7 +1654,7 @@ class Queue(object):
       """Process the TaskQueueQueryAndOwnTasksResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       tasks = []
@@ -1946,7 +1946,7 @@ class Queue(object):
       """Process the TaskQueueBulkAddResponse."""
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _TranslateError(e.application_error, e.error_detail)
 
       assert rpc.response.taskresult_size() == len(tasks), (
@@ -2168,7 +2168,7 @@ class Queue(object):
                                      'ModifyTaskLease',
                                      request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _TranslateError(e.application_error, e.error_detail)
 
     task._Task__eta_posix = response.updated_eta_usec() * 1e-6

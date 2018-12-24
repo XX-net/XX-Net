@@ -50,7 +50,7 @@ class Dialect:
     def _validate(self):
         try:
             _Dialect(self)
-        except TypeError, e:
+        except TypeError as e:
             # We do this for compatibility with py2.3
             raise Error(str(e))
 
@@ -130,8 +130,7 @@ class DictWriter:
         self.fieldnames = fieldnames    # list of keys for the dict
         self.restval = restval          # for writing short dicts
         if extrasaction.lower() not in ("raise", "ignore"):
-            raise ValueError, \
-                  ("extrasaction (%s) must be 'raise' or 'ignore'" %
+            raise ValueError("extrasaction (%s) must be 'raise' or 'ignore'" %
                    extrasaction)
         self.extrasaction = extrasaction
         self.writer = writer(f, dialect, *args, **kwds)
@@ -185,7 +184,7 @@ class Sniffer:
                                                                 delimiters)
 
         if not delimiter:
-            raise Error, "Could not determine delimiter"
+            raise Error("Could not determine delimiter")
 
         class dialect(Dialect):
             _name = "sniffed"

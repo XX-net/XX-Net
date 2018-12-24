@@ -83,7 +83,7 @@ class EvaluatedCallable(validation.Validator):
       self.value = value
       try:
         self.method = eval(value, _global_temp_globals)
-      except Exception, err:
+      except Exception as err:
         raise bulkloader_errors.InvalidCodeInConfiguration(
             'Invalid code for %s. Code: "%s". Details: %s' % (key, value, err))
       if not callable(self.method):

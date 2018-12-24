@@ -295,12 +295,12 @@ class AttributesImpl:
 
     def getNameByQName(self, name):
         if not name in self._attrs:
-            raise KeyError, name
+            raise KeyError(name)
         return name
 
     def getQNameByName(self, name):
         if not name in self._attrs:
-            raise KeyError, name
+            raise KeyError(name)
         return name
 
     def getNames(self):
@@ -353,14 +353,14 @@ class AttributesNSImpl(AttributesImpl):
             if qname == name:
                 return self._attrs[nsname]
 
-        raise KeyError, name
+        raise KeyError(name)
 
     def getNameByQName(self, name):
         for (nsname, qname) in self._qnames.items():
             if qname == name:
                 return nsname
 
-        raise KeyError, name
+        raise KeyError(name)
 
     def getQNameByName(self, name):
         return self._qnames[name]

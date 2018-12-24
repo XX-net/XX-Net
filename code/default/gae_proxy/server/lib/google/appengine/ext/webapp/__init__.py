@@ -181,7 +181,7 @@ def _django_setup():
 
 
     getattr(django.conf.settings, 'FAKE_ATTR', None)
-  except (ImportError, EnvironmentError), e:
+  except (ImportError, EnvironmentError) as e:
 
 
 

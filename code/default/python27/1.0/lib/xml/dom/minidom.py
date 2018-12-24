@@ -533,7 +533,7 @@ class NamedNodeMap(object):
             node.value = value
         else:
             if not isinstance(value, Attr):
-                raise TypeError, "value must be a string or Attr object"
+                raise TypeError("value must be a string or Attr object")
             node = value
             self.setNamedItem(node)
 
@@ -1180,7 +1180,7 @@ class ReadOnlySequentialNamedNodeMap(object):
         else:
             node = self.getNamedItem(name_or_tuple)
         if node is None:
-            raise KeyError, name_or_tuple
+            raise KeyError(name_or_tuple)
         return node
 
     def item(self, index):
@@ -1608,7 +1608,7 @@ class Document(Node, DocumentLS):
 
     def createTextNode(self, data):
         if not isinstance(data, StringTypes):
-            raise TypeError, "node contents must be a string"
+            raise TypeError("node contents must be a string")
         t = Text()
         t.data = data
         t.ownerDocument = self
@@ -1616,7 +1616,7 @@ class Document(Node, DocumentLS):
 
     def createCDATASection(self, data):
         if not isinstance(data, StringTypes):
-            raise TypeError, "node contents must be a string"
+            raise TypeError("node contents must be a string")
         c = CDATASection()
         c.data = data
         c.ownerDocument = self

@@ -237,7 +237,7 @@ class AbstractRpcServer(object):
         self.extra_headers["Cookie"] = (
             'SID=%s; Path=/;' % response_dict["SID"])
       return response_dict["Auth"]
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
       if e.code == 403:
         body = e.read()
         response_dict = dict(x.split("=", 1) for x in body.split("\n") if x)
@@ -264,7 +264,7 @@ class AbstractRpcServer(object):
                                urllib.urlencode(args)))
     try:
       response = self.opener.open(req)
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
       response = e
     if (response.code != 302 or
         response.info()["location"] != continue_location):
@@ -293,7 +293,7 @@ class AbstractRpcServer(object):
         auth_token = self._GetAuthToken(credentials[0], credentials[1])
         if os.getenv("APPENGINE_RPC_USE_SID", "0") == "1":
           return
-      except ClientLoginError, e:
+      except ClientLoginError as e:
 
 
         if e.reason == "CaptchaRequired":
@@ -395,7 +395,7 @@ class AbstractRpcServer(object):
           f.close()
 
           return response
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
           logger.debug("Got http error, this is try #%s", tries)
 
 
@@ -584,7 +584,7 @@ To learn more, see https://developers.google.com/appengine/kb/general#rpcssl""")
           self.authenticated = True
           logger.debug("Loaded authentication cookies from %s",
                        self.cookie_jar.filename)
-        except (OSError, IOError, cookielib.LoadError), e:
+        except (OSError, IOError, cookielib.LoadError) as e:
 
           logger.debug("Could not load authentication cookies; %s: %s",
                        e.__class__.__name__, e)
@@ -595,7 +595,7 @@ To learn more, see https://developers.google.com/appengine/kb/general#rpcssl""")
         try:
           fd = os.open(self.cookie_jar.filename, os.O_CREAT, 0600)
           os.close(fd)
-        except (OSError, IOError), e:
+        except (OSError, IOError) as e:
 
           logger.debug("Could not create authentication cookies file; %s: %s",
                        e.__class__.__name__, e)

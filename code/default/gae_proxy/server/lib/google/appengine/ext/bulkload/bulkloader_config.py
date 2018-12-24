@@ -286,7 +286,7 @@ class DictConvertor(object):
               value, bulkload_state=bulkload_state)
         else:
           transformed_value = transform.export_transform(value)
-      except Exception, err:
+      except Exception as err:
         raise bulkloader_errors.ErrorOnTransform(
             'Error on transform. '
             'Property: %s External Name: %s. Code: %s Details: %s' %

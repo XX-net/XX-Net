@@ -109,7 +109,7 @@ class ReQueue(object):
         try:
           result = action()
           success = True
-        except Exception, e:
+        except Exception as e:
 
           if not isinstance(e, exc):
             raise e

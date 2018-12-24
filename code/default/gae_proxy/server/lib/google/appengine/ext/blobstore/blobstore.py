@@ -473,7 +473,7 @@ def _parse_upload_info(field_storage, error_class):
 
   try:
     creation = blobstore._parse_creation(creation_string, field_name)
-  except blobstore._CreationFormatError, err:
+  except blobstore._CreationFormatError as err:
     raise error_class(str(err))
 
   return {'blob_key': blob_key,

@@ -392,7 +392,7 @@ class _LogsDequeBuffer(object):
 
       records_to_be_flushed.reverse()
       self._buffer.extendleft(records_to_be_flushed)
-    except Exception, e:
+    except Exception as e:
       records_to_be_flushed.reverse()
       self._buffer.extendleft(records_to_be_flushed)
       line = '-' * 80
@@ -558,7 +558,7 @@ class _LogQueryResult(object):
     try:
       apiproxy_stub_map.MakeSyncCall('logservice', 'Read', self._request,
                                      response)
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       if e.application_error == log_service_pb.LogServiceError.INVALID_REQUEST:
         raise InvalidArgumentError(e.error_detail)
       raise Error(e.error_detail)

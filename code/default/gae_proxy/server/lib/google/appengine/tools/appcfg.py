@@ -453,7 +453,7 @@ def _GetRemoteResourceLimits(logging_context):
   try:
     yaml_data = logging_context.Send('/api/appversion/getresourcelimits')
 
-  except urllib2.HTTPError, err:
+  except urllib2.HTTPError as err:
 
 
 
@@ -1074,7 +1074,7 @@ class LogsRequester(object):
       else:
         try:
           of = open(self.output_file, self.write_mode)
-        except IOError, err:
+        except IOError as err:
           StatusUpdate('Can\'t write %r: %s.' % (self.output_file, err))
           sys.exit(1)
       try:
@@ -1306,7 +1306,7 @@ def FindSentinel(filename, blocksize=2**16, error_fh=sys.stderr):
     sys.exit(2)
   try:
     fp = open(filename, 'rb')
-  except IOError, err:
+  except IOError as err:
     StatusUpdate('Append mode disabled: can\'t read %r: %s.' % (filename, err),
                  error_fh)
     return None
@@ -1412,7 +1412,7 @@ class UploadBatcher(object):
       return
     try:
       self.SendBatch()
-    except urllib2.HTTPError, err:
+    except urllib2.HTTPError as err:
       if err.code != 404:
         raise
 
@@ -1516,7 +1516,7 @@ def EnsureDir(path):
   """
   try:
     os.makedirs(path)
-  except OSError, exc:
+  except OSError as exc:
 
 
     if not (exc.errno == errno.EEXIST and os.path.isdir(path)):
@@ -1593,7 +1593,7 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
         contents = rpcserver.Send('/api/files/get', app_id=app_id,
                                   version=full_version, id=file_id)
         return True, contents
-      except urllib2.HTTPError, exc:
+      except urllib2.HTTPError as exc:
 
 
         if exc.code == 503:
@@ -1627,14 +1627,14 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
     full_dir = os.path.dirname(full_path)
     try:
       EnsureDir(full_dir)
-    except OSError, exc:
+    except OSError as exc:
       logging.error('Couldn\'t create directory "%s": %s', full_dir, exc)
       num_errors += 1
       continue
 
     try:
       out_file = open(full_path, 'wb')
-    except IOError, exc:
+    except IOError as exc:
       logging.error('Couldn\'t open file "%s": %s', full_path, exc)
       num_errors += 1
       continue
@@ -1642,7 +1642,7 @@ def DoDownloadApp(rpcserver, out_dir, app_id, module, app_version,
     try:
       try:
         out_file.write(contents)
-      except IOError, exc:
+      except IOError as exc:
         logging.error('Couldn\'t write to file "%s": %s', full_path, exc)
         num_errors += 1
         continue
@@ -1697,7 +1697,7 @@ class _ClientDeployLoggingContext(object):
       self._RegisterReqestForLogging(url, 200, start_time_usec,
                                      request_size_bytes)
       return result
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
       self._RegisterReqestForLogging(url, e.code, start_time_usec,
                                      request_size_bytes)
       raise e
@@ -1743,7 +1743,7 @@ class _ClientDeployLoggingContext(object):
           success=success,
           sdk_version=self.GetSdkVersion())
       self.Send('/api/logclientdeploy', info.ToYAML())
-    except BaseException, e:
+    except BaseException as e:
       logging.debug('Exception logging deploy info continuing - %s', e)
 
 
@@ -2388,7 +2388,7 @@ class AppVersionUpload(object):
     except KeyboardInterrupt:
       logging.info('User interrupted. Aborting.')
       raise
-    except EnvironmentError, e:
+    except EnvironmentError as e:
       if self._IsExceptionClientDeployLoggable(e):
         self.logging_context.LogClientDeploy(self.config.runtime,
                                              start_time_usec, False)
@@ -2405,7 +2405,7 @@ class AppVersionUpload(object):
           appinfo.PYTHON_PRECOMPILED in self.config.derived_file_type):
         try:
           self.Precompile()
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
           ErrorUpdate('Error %d: --- begin server output ---\n'
                       '%s\n--- end server output ---' %
                       (e.code, e.read().rstrip('\n')))
@@ -2427,7 +2427,7 @@ class AppVersionUpload(object):
       StatusUpdate('Completed update of %s' % self.Describe(), self.error_fh)
       self.logging_context.LogClientDeploy(self.config.runtime, start_time_usec,
                                            True)
-    except BaseException, e:
+    except BaseException as e:
       try:
         self._LogDoUploadException(e)
         self.Rollback()
@@ -2949,7 +2949,7 @@ class AppCfgApp(object):
     """
     try:
       self.action(self)
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
       body = e.read()
       if self.wrap_server_error_message:
         error_format = ('Error %d: --- begin server output ---\n'
@@ -2959,7 +2959,7 @@ class AppCfgApp(object):
 
       print >>self.error_fh, (error_format % (e.code, body.rstrip('\n')))
       return 1
-    except yaml_errors.EventListenerError, e:
+    except yaml_errors.EventListenerError as e:
       print >>self.error_fh, ('Error parsing yaml file:\n%s' % e)
       return 1
     except CannotStartServingError:
@@ -2989,7 +2989,7 @@ class AppCfgApp(object):
       """Validates the source reference string and appends it to the list."""
       try:
         appinfo.ValidateSourceReference(value)
-      except validation.ValidationError, e:
+      except validation.ValidationError as e:
         raise optparse.OptionValueError('option %s: %s' % (opt_str, e.message))
       getattr(parser.values, option.dest).append(value)
 
@@ -3259,7 +3259,7 @@ class AppCfgApp(object):
       url = '%s/%s/scopes' % (METADATA_BASE, SERVICE_ACCOUNT_BASE)
       try:
         vm_scopes_string = self.read_url_contents(url)
-      except urllib2.URLError, e:
+      except urllib2.URLError as e:
         raise RuntimeError('Could not obtain scope list from metadata service: '
                            '%s: %s. This may be because we are not running in '
                            'a Google Compute Engine VM.' % (url, e))
@@ -3311,7 +3311,7 @@ class AppCfgApp(object):
     """
     try:
       appyaml = self._ParseYamlFile(basepath, basename, appinfo_includes.Parse)
-    except yaml_errors.EventListenerError, e:
+    except yaml_errors.EventListenerError as e:
       self.parser.error('Error parsing %s.yaml: %s.' % (
           os.path.join(basepath, basename), e))
     if not appyaml:
@@ -3351,7 +3351,7 @@ class AppCfgApp(object):
         if appyaml.beta_settings is None:
           appyaml.beta_settings = appinfo.BetaSettings()
         appyaml.beta_settings['source_reference'] = combined_refs
-      except validation.ValidationError, e:
+      except validation.ValidationError as e:
         self.parser.error(e.message)
 
     if not appyaml.application:
@@ -3692,7 +3692,7 @@ class AppCfgApp(object):
           p = subprocess.Popen(gab_argv, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, env=env)
           (stdout, stderr) = p.communicate()
-        except Exception, e:
+        except Exception as e:
           raise RuntimeError('failed running go-app-builder', e)
         if p.returncode != 0:
           raise RuntimeError(stderr)
@@ -3851,7 +3851,7 @@ class AppCfgApp(object):
       index_upload = IndexDefinitionUpload(rpcserver, index_defs, self.error_fh)
       try:
         index_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib2.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
@@ -3864,7 +3864,7 @@ class AppCfgApp(object):
       cron_upload = CronEntryUpload(rpcserver, cron_yaml, self.error_fh)
       try:
         cron_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib2.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
@@ -3877,7 +3877,7 @@ class AppCfgApp(object):
       queue_upload = QueueEntryUpload(rpcserver, queue_yaml, self.error_fh)
       try:
         queue_upload.DoUpload()
-      except urllib2.HTTPError, e:
+      except urllib2.HTTPError as e:
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))

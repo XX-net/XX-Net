@@ -37,7 +37,7 @@ __all__ = ["StringIO"]
 
 def _complain_ifclosed(closed):
     if closed:
-        raise ValueError, "I/O operation on closed file"
+        raise ValueError("I/O operation on closed file")
 
 class StringIO:
     """class StringIO([buffer])
@@ -288,7 +288,7 @@ def test():
         f.write(line)
     f.writelines(lines[-2:])
     if f.getvalue() != text:
-        raise RuntimeError, 'write failed'
+        raise RuntimeError('write failed')
     length = f.tell()
     print 'File length =', length
     f.seek(len(lines[0]))
@@ -301,23 +301,23 @@ def test():
     f.seek(-len(line), 1)
     line2 = f.read(len(line))
     if line != line2:
-        raise RuntimeError, 'bad result after seek back'
+        raise RuntimeError('bad result after seek back')
     f.seek(len(line2), 1)
     list = f.readlines()
     line = list[-1]
     f.seek(f.tell() - len(line))
     line2 = f.read()
     if line != line2:
-        raise RuntimeError, 'bad result after seek back from EOF'
+        raise RuntimeError('bad result after seek back from EOF')
     print 'Read', len(list), 'more lines'
     print 'File length =', f.tell()
     if f.tell() != length:
-        raise RuntimeError, 'bad length'
+        raise RuntimeError('bad length')
     f.truncate(length/2)
     f.seek(0, 2)
     print 'Truncated length =', f.tell()
     if f.tell() != length/2:
-        raise RuntimeError, 'truncate did not adjust length'
+        raise RuntimeError('truncate did not adjust length')
     f.close()
 
 if __name__ == '__main__':

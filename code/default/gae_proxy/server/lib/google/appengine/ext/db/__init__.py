@@ -1269,7 +1269,7 @@ class Model(object):
     """
     try:
       parent = _coerce_to_key(parent)
-    except BadKeyError, e:
+    except BadKeyError as e:
 
       raise BadArgumentError(str(e))
 
@@ -2800,7 +2800,7 @@ class UnindexedProperty(Property):
     if value is not None and not isinstance(value, self.data_type):
       try:
         value = self.data_type(value)
-      except TypeError, err:
+      except TypeError as err:
 
 
 
@@ -2963,7 +2963,7 @@ class ByteStringProperty(Property):
     if value is not None and not isinstance(value, ByteString):
       try:
         value = ByteString(value)
-      except TypeError, err:
+      except TypeError as err:
         raise BadValueError('Property %s must be convertible '
                             'to a ByteString instance (%s)' % (self.name, err))
     value = super(ByteStringProperty, self).validate(value)

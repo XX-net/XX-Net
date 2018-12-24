@@ -271,7 +271,7 @@ class GQL(object):
           backwards_compatibility_mode)
       try:
         self.__Select()
-      except datastore_errors.BadQueryError, error:
+      except datastore_errors.BadQueryError as error:
         logging.log(LOG_LEVEL, initial_error)
         if not initial_error:
           initial_error = error
@@ -499,7 +499,7 @@ class GQL(object):
       if isinstance(value, str):
         try:
           time_tuple = time.strptime(value, '%Y-%m-%d')[0:6]
-        except ValueError, err:
+        except ValueError as err:
           self.__CastError('DATE', values, err)
       else:
         self.__CastError('DATE', values, 'Single input value not a string')
@@ -514,7 +514,7 @@ class GQL(object):
 
     try:
       return datetime.datetime(*time_tuple)
-    except ValueError, err:
+    except ValueError as err:
       self.__CastError('DATE', values, err)
 
   def __CastTime(self, values):
@@ -539,7 +539,7 @@ class GQL(object):
       if isinstance(value, str):
         try:
           time_tuple = time.strptime(value, '%H:%M:%S')
-        except ValueError, err:
+        except ValueError as err:
           self.__CastError('TIME', values, err)
         time_tuple = (1970, 1, 1) + time_tuple[3:]
         time_tuple = time_tuple[0:6]
@@ -559,7 +559,7 @@ class GQL(object):
 
     try:
       return datetime.datetime(*time_tuple)
-    except ValueError, err:
+    except ValueError as err:
       self.__CastError('TIME', values, err)
 
   def __CastDatetime(self, values):
@@ -582,7 +582,7 @@ class GQL(object):
       if isinstance(value, str):
         try:
           time_tuple = time.strptime(str(value), '%Y-%m-%d %H:%M:%S')[0:6]
-        except ValueError, err:
+        except ValueError as err:
           self.__CastError('DATETIME', values, err)
       else:
         self.__CastError('DATETIME', values, 'Single input value not a string')
@@ -591,7 +591,7 @@ class GQL(object):
 
     try:
       return datetime.datetime(*time_tuple)
-    except ValueError, err:
+    except ValueError as err:
 
       self.__CastError('DATETIME', values, err)
 

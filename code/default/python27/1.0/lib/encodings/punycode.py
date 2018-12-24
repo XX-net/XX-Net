@@ -137,7 +137,7 @@ def decode_generalized_number(extended, extpos, bias, errors):
             char = ord(extended[extpos])
         except IndexError:
             if errors == "strict":
-                raise UnicodeError, "incomplete punicode string"
+                raise UnicodeError("incomplete punicode string")
             return extpos + 1, None
         extpos += 1
         if 0x41 <= char <= 0x5A: # A-Z
@@ -174,7 +174,7 @@ def insertion_sort(base, extended, errors):
         char += pos // (len(base) + 1)
         if char > 0x10FFFF:
             if errors == "strict":
-                raise UnicodeError, ("Invalid character U+%x" % char)
+                raise UnicodeError("Invalid character U+%x" % char)
             char = ord('?')
         pos = pos % (len(base) + 1)
         base = base[:pos] + unichr(char) + base[pos:]
@@ -204,7 +204,7 @@ class Codec(codecs.Codec):
 
     def decode(self,input,errors='strict'):
         if errors not in ('strict', 'replace', 'ignore'):
-            raise UnicodeError, "Unsupported error handling "+errors
+            raise UnicodeError("Unsupported error handling "+errors)
         res = punycode_decode(input, errors)
         return res, len(input)
 
@@ -215,7 +215,7 @@ class IncrementalEncoder(codecs.IncrementalEncoder):
 class IncrementalDecoder(codecs.IncrementalDecoder):
     def decode(self, input, final=False):
         if self.errors not in ('strict', 'replace', 'ignore'):
-            raise UnicodeError, "Unsupported error handling "+self.errors
+            raise UnicodeError("Unsupported error handling "+self.errors)
         return punycode_decode(input, self.errors)
 
 class StreamWriter(Codec,codecs.StreamWriter):

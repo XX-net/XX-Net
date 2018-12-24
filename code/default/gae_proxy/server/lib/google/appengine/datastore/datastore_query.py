@@ -1647,7 +1647,7 @@ class Cursor(_BaseComponent):
 
       decoded_bytes = base64.b64decode(
           str(cursor).replace('-', '+').replace('_', '/'))
-    except (ValueError, TypeError), e:
+    except (ValueError, TypeError) as e:
       raise datastore_errors.BadValueError(
           'Invalid cursor %s. Details: %s' % (cursor, e))
     return decoded_bytes
@@ -2904,7 +2904,7 @@ class Batch(object):
     """Internal method used as get_result_hook for RunQuery/Next operation."""
     try:
       self._batch_shared.conn.check_rpc_success(rpc)
-    except datastore_errors.NeedIndexError, exc:
+    except datastore_errors.NeedIndexError as exc:
 
       if isinstance(rpc.request, datastore_pb.Query):
         _, kind, ancestor, props = datastore_index.CompositeIndexForQuery(

@@ -28,7 +28,7 @@ def main():
     with infile:
         try:
             obj = json.load(infile)
-        except ValueError, e:
+        except ValueError as e:
             raise SystemExit(e)
     with outfile:
         json.dump(obj, outfile, sort_keys=True,

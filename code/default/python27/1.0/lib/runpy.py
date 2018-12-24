@@ -112,7 +112,7 @@ def _get_module_details(mod_name, error=ImportError):
         try:
             pkg_main_name = mod_name + ".__main__"
             return _get_module_details(pkg_main_name)
-        except ImportError, e:
+        except ImportError as e:
             raise error(("%s; %r is a package and cannot " +
                                "be directly executed") %(e, mod_name))
     try:

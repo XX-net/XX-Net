@@ -78,14 +78,14 @@ class Encoder(ProtocolBuffer.Encoder):
 
   def put16(self, value):
     if value < 0 or value >= (1<<16):
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'u16 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('u16 too big')
     self.buf.append((value >> 8) & 0xff)
     self.buf.append((value >> 0) & 0xff)
     return
 
   def put32(self, value):
     if value < 0 or value >= (1L<<32):
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'u32 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('u32 too big')
     self.buf.append((value >> 24) & 0xff)
     self.buf.append((value >> 16) & 0xff)
     self.buf.append((value >> 8) & 0xff)
@@ -94,7 +94,7 @@ class Encoder(ProtocolBuffer.Encoder):
 
   def put64(self, value):
     if value < 0 or value >= (1L<<64):
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'u64 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('u64 too big')
     self.buf.append((value >> 56) & 0xff)
     self.buf.append((value >> 48) & 0xff)
     self.buf.append((value >> 40) & 0xff)
@@ -143,17 +143,17 @@ class Encoder(ProtocolBuffer.Encoder):
 
   def putVarInt32(self, value):
     if value >= 0x80000000 or value < -0x80000000:
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'int32 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('int32 too big')
     self._PutVarInt(value)
 
   def putVarInt64(self, value):
     if value >= 0x8000000000000000 or value < -0x8000000000000000:
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'int64 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('int64 too big')
     self._PutVarInt(value)
 
   def putVarUint64(self, value):
     if value < 0 or value >= 0x10000000000000000:
-      raise ProtocolBuffer.ProtocolBufferEncodeError, 'uint64 too big'
+      raise ProtocolBuffer.ProtocolBufferEncodeError('uint64 too big')
     self._PutVarInt(value)
 
   def _isFloatNegative(self, value, encoded):
@@ -210,7 +210,7 @@ class Decoder(ProtocolBuffer.Decoder):
 
   def get16(self):
     if self.idx + 2 > self.limit:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'truncated'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('truncated')
     c = self.buf[self.idx]
     d = self.buf[self.idx + 1]
     self.idx += 2
@@ -218,7 +218,7 @@ class Decoder(ProtocolBuffer.Decoder):
 
   def get32(self):
     if self.idx + 4 > self.limit:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'truncated'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('truncated')
     c = long(self.buf[self.idx])
     d = self.buf[self.idx + 1]
     e = self.buf[self.idx + 2]
@@ -228,7 +228,7 @@ class Decoder(ProtocolBuffer.Decoder):
 
   def get64(self):
     if self.idx + 8 > self.limit:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'truncated'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('truncated')
     c = long(self.buf[self.idx])
     d = long(self.buf[self.idx + 1])
     e = long(self.buf[self.idx + 2])
@@ -270,18 +270,18 @@ class Decoder(ProtocolBuffer.Decoder):
   def getVarInt32(self):
     result = self.getVarInt64()
     if result >= 0x80000000L or result < -0x80000000L:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'corrupted'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('corrupted')
     return result
 
   def getVarUint64(self):
     result = self.getVarInt64()
     if result < 0:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'corrupted'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('corrupted')
     return result
 
   def getFloat(self):
     if self.idx + 4 > self.limit:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'truncated'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('truncated')
     a = self.buf[self.idx:self.idx+4]
     self.idx += 4
     if a[0] & 0x80:
@@ -294,7 +294,7 @@ class Decoder(ProtocolBuffer.Decoder):
 
   def getDouble(self):
     if self.idx + 8 > self.limit:
-      raise ProtocolBuffer.ProtocolBufferDecodeError, 'truncated'
+      raise ProtocolBuffer.ProtocolBufferDecodeError('truncated')
     a = self.buf[self.idx:self.idx+8]
     self.idx += 8
     if a[0] & 0x80:

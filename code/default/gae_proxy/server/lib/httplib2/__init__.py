@@ -897,7 +897,7 @@ class HTTPConnectionWithTimeout(httplib.HTTPConnection):
                         print "proxy: %s ************" % str((proxy_host, proxy_port, proxy_rdns, proxy_user, proxy_pass))
 
                 self.sock.connect((self.host, self.port) + sa[2:])
-            except socket.error, msg:
+            except socket.error as msg:
                 if self.debuglevel > 0:
                     print "connect fail: (%s, %s)" % (self.host, self.port)
                     if use_proxy:
@@ -908,7 +908,7 @@ class HTTPConnectionWithTimeout(httplib.HTTPConnection):
                 continue
             break
         if not self.sock:
-            raise socket.error, msg
+            raise socket.error(msg)
 
 class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
     """
@@ -1048,7 +1048,7 @@ class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
                     raise
             except (socket.timeout, socket.gaierror):
               raise
-            except socket.error, msg:
+            except socket.error as msg:
               if self.debuglevel > 0:
                   print "connect fail: (%s, %s)" % (self.host, self.port)
                   if use_proxy:
@@ -1059,7 +1059,7 @@ class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
               continue
             break
         if not self.sock:
-          raise socket.error, msg
+          raise socket.error(msg)
 
 SCHEME_TO_CONNECTION = {
     'http': HTTPConnectionWithTimeout,
@@ -1284,7 +1284,7 @@ and more.
             except ssl_SSLError:
                 conn.close()
                 raise
-            except socket.error, e:
+            except socket.error as e:
                 err = 0
                 if hasattr(e, 'args'):
                     err = getattr(e, 'args')[0]
@@ -1591,7 +1591,7 @@ a string that contains the response entity body.
                     content = ""
                 else:
                     (response, content) = self._request(conn, authority, uri, request_uri, method, body, headers, redirections, cachekey)
-        except Exception, e:
+        except Exception as e:
             if self.force_exception_to_status_code:
                 if isinstance(e, HttpLib2ErrorWithResponse):
                     response = e.response
@@ -1677,4 +1677,4 @@ class Response(dict):
         if name == 'dict':
             return self
         else:
-            raise AttributeError, name
+            raise AttributeError(name)

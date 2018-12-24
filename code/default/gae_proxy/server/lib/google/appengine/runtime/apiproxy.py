@@ -224,7 +224,7 @@ class RPC(apiproxy_rpc.RPC):
     else:
       try:
         self.response.ParseFromString(self._result_dict['result_string'])
-      except Exception, e:
+      except Exception as e:
         self._exception = e
     self._Callback()
 

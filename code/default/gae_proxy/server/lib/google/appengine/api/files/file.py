@@ -252,7 +252,7 @@ def _make_call(method, request, response,
   rpc.wait()
   try:
     rpc.check_success()
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     _raise_app_error(e)
 
 
@@ -711,7 +711,7 @@ def delete(*filenames):
 
   try:
     blobstore.delete(blobkeys)
-  except Exception, e:
+  except Exception as e:
     raise IOError('Blobstore failure.', e)
 
 

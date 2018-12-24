@@ -74,7 +74,7 @@ class GrocValidator(validation.Validator):
       raise TypeError('schedule must be a string, not \'%r\''%type(value))
     try:
       groctimespecification.GrocTimeSpecification(value)
-    except groc.GrocException, e:
+    except groc.GrocException as e:
       raise validation.ValidationError('schedule \'%s\' failed to parse: %s'%(
           value, e.args[0]))
     return value

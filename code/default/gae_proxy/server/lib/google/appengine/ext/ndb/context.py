@@ -904,7 +904,7 @@ class Context(object):
           mfut.putq(val)
       except GeneratorExit:
         raise
-      except Exception, err:
+      except Exception as err:
         _, _, tb = sys.exc_info()
         mfut.set_exception(err, tb)
         raise

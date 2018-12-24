@@ -105,7 +105,7 @@ elif os.name == "posix":
         finally:
             try:
                 temp.close()
-            except OSError, e:
+            except OSError as e:
                 # ENOENT is raised if the file was already removed, which is
                 # the normal behaviour of GCC if linking fails
                 if e.errno != errno.ENOENT:

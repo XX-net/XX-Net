@@ -883,7 +883,7 @@ class Image(object):
       """
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _ToImagesError(e, self._blob_key)
       self._image_data = rpc.response.image().content()
       self._blob_key = None
@@ -982,7 +982,7 @@ class Image(object):
       """
       try:
         rpc.check_success()
-      except apiproxy_errors.ApplicationError, e:
+      except apiproxy_errors.ApplicationError as e:
         raise _ToImagesError(e, self._blob_key)
 
       histogram = rpc.response.histogram()
@@ -1674,7 +1674,7 @@ def composite_async(inputs, width, height, color=0, output_encoding=PNG,
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e)
     return rpc.response.image().content()
 
@@ -1888,7 +1888,7 @@ def get_serving_url_async(blob_key,
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e, readable_blob_key)
 
     url = rpc.response.url()
@@ -1960,7 +1960,7 @@ def delete_serving_url_async(blob_key, rpc=None):
     """
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, e:
+    except apiproxy_errors.ApplicationError as e:
       raise _ToImagesError(e, blob_key)
 
   return _make_async_call(rpc,

@@ -1399,7 +1399,7 @@ class Query(object):
       try:
         q_options['projection'] = self._to_property_names(
             q_options['projection'])
-      except TypeError, e:
+      except TypeError as e:
         raise datastore_errors.BadArgumentError(e)
       self._check_properties(q_options['projection'])
     options = QueryOptions(**q_options)
@@ -1667,11 +1667,11 @@ class QueryIterator(object):
     after_cursor = None
     try:
       before_cursor = batch.cursor(index)
-    except BaseException, e:
+    except BaseException as e:
       before_cursor = e
     try:
       after_cursor = batch.cursor(index + 1)
-    except BaseException, e:
+    except BaseException as e:
       after_cursor = e
     return (ent, before_cursor, after_cursor, more_results)
 

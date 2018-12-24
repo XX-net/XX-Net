@@ -173,7 +173,7 @@ class EventListener(object):
     for event in events:
       try:
         self.HandleEvent(*event)
-      except Exception, e:
+      except Exception as e:
         event_object, loader = event
         raise yaml_errors.EventError(e, event_object)
 
@@ -209,7 +209,7 @@ class EventListener(object):
       loader = loader_class(stream)
       while loader.check_event():
         yield (loader.get_event(), loader)
-    except yaml.error.YAMLError, e:
+    except yaml.error.YAMLError as e:
       raise yaml_errors.EventListenerYAMLError(e)
 
   def Parse(self, stream, loader_class=yaml.loader.SafeLoader):

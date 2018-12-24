@@ -335,7 +335,7 @@ class Validated(ValidatedBase):
     for key in self.ATTRIBUTES.iterkeys():
       try:
         self.GetValidator(key)(getattr(self, key))
-      except MissingAttribute, e:
+      except MissingAttribute as e:
         e.message = "Missing required value '%s'." % key
         raise e
 
@@ -687,11 +687,11 @@ class Type(Validator):
       if self.convert:
         try:
           return self.expected_type(value)
-        except ValueError, e:
+        except ValueError as e:
           raise ValidationError(
               'Value %r for %s could not be converted to type %s.' % (
                   value, key, self.expected_type.__name__), e)
-        except TypeError, e:
+        except TypeError as e:
           raise ValidationError(
               'Value %r for %s is not of the expected type %s' % (
                   value, key, self.expected_type.__name__), e)
@@ -999,7 +999,7 @@ class _RegexStrValue(object):
     regex = self.__BuildRegex()
     try:
       return re.compile(regex)
-    except re.error, e:
+    except re.error as e:
       raise ValidationError('Value \'%s\' for %s does not compile: %s' %
                             (regex, self.__key, e), e)
 

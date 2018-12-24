@@ -409,7 +409,7 @@ class BaseConfiguration(object):
       if value is not None:
         try:
           config_option = obj._options[key]
-        except KeyError, err:
+        except KeyError as err:
           raise TypeError('Unknown configuration option (%s)' % err)
         value = config_option.validator(value)
         if value is not None:
@@ -1369,7 +1369,7 @@ class BaseConnection(object):
       self._remove_pending(rpc)
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       raise _ToDatastoreError(err)
 
 
@@ -2616,7 +2616,7 @@ class TransactionalConnection(BaseConnection):
     """Internal method used as get_result_hook for Commit."""
     try:
       rpc.check_success()
-    except apiproxy_errors.ApplicationError, err:
+    except apiproxy_errors.ApplicationError as err:
       if err.application_error == datastore_pb.Error.CONCURRENT_TRANSACTION:
         return False
       else:

@@ -192,7 +192,7 @@ def get_presence(jid, from_jid=None, get_show=False):
                                    "BulkGetPresence",
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         xmpp_service_pb.XmppServiceError.INVALID_JID):
 
@@ -261,7 +261,7 @@ def send_invite(jid, from_jid=None):
                                    "SendInvite",
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         xmpp_service_pb.XmppServiceError.INVALID_JID):
       raise InvalidJidError()
@@ -340,7 +340,7 @@ def send_message(jids, body, from_jid=None, message_type=MESSAGE_TYPE_CHAT,
                                    "SendMessage",
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         xmpp_service_pb.XmppServiceError.INVALID_JID):
       raise InvalidJidError()
@@ -422,7 +422,7 @@ def send_presence(jid, status=None, from_jid=None,
                                    "SendPresence",
                                    request,
                                    response)
-  except apiproxy_errors.ApplicationError, e:
+  except apiproxy_errors.ApplicationError as e:
     if (e.application_error ==
         xmpp_service_pb.XmppServiceError.INVALID_JID):
       raise InvalidJidError()
@@ -451,7 +451,7 @@ class Message(object):
       self.__sender = vars["from"]
       self.__to = vars["to"]
       self.__body = vars["body"]
-    except KeyError, e:
+    except KeyError as e:
       raise InvalidMessageError(e[0])
     self.__command = None
     self.__arg = None

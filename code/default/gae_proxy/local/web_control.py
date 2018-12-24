@@ -271,7 +271,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             config = yaml.load(file(data_path, 'r'))
             return config["modules"]["launcher"]["current_version"]
             #print yaml.dump(config)
-        except yaml.YAMLError, exc:
+        except yaml.YAMLError as exc:
             print "Error in configuration file:", exc
             return "unknown"
 
