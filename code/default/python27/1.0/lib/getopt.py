@@ -13,6 +13,7 @@ to be intermixed.
 GetoptError -- exception (class) raised with 'opt' attribute, which is the
 option involved with the exception.
 """
+from __future__ import print_function
 
 # Long option support added by Lars Wirzenius <liw@iki.fi>.
 #
@@ -207,4 +208,4 @@ def short_has_arg(opt, shortopts):
 
 if __name__ == '__main__':
     import sys
-    print getopt(sys.argv[1:], "a:b", ["alpha=", "beta"])
+    print(getopt(sys.argv[1:], "a:b", ["alpha=", "beta"]))

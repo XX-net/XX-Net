@@ -9,6 +9,7 @@ list, set, and tuple.
 * defaultdict  dict subclass that calls a factory function to supply missing values
 
 '''
+from __future__ import print_function
 
 __all__ = ['Counter', 'deque', 'defaultdict', 'namedtuple', 'OrderedDict']
 # For bootstrapping reasons, the collection ABCs are defined in _abcoll.py.
@@ -376,7 +377,7 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
                                for index, name in enumerate(field_names))
     )
     if verbose:
-        print class_definition
+        print(class_definition)
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
@@ -723,7 +724,7 @@ if __name__ == '__main__':
             return 'Point: x=%6.3f  y=%6.3f  hypot=%6.3f' % (self.x, self.y, self.hypot)
 
     for p in Point(3, 4), Point(14, 5/7.):
-        print p
+        print(p)
 
     class Point(namedtuple('Point', 'x y')):
         'Point class with optimized _make() and _replace() without error-checking'
@@ -732,11 +733,11 @@ if __name__ == '__main__':
         def _replace(self, _map=map, **kwds):
             return self._make(_map(kwds.get, ('x', 'y'), self))
 
-    print Point(11, 22)._replace(x=100)
+    print(Point(11, 22)._replace(x=100))
 
     Point3D = namedtuple('Point3D', Point._fields + ('z',))
-    print Point3D.__doc__
+    print(Point3D.__doc__)
 
     import doctest
     TestResults = namedtuple('TestResults', 'failed attempted')
-    print TestResults(*doctest.testmod())
+    print(TestResults(*doctest.testmod()))

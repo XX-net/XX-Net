@@ -2,6 +2,7 @@
 # coding:utf-8
 
 
+from __future__ import print_function
 import platform
 import urlparse
 import json
@@ -272,7 +273,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return config["modules"]["launcher"]["current_version"]
             #print yaml.dump(config)
         except yaml.YAMLError, exc:
-            print "Error in configuration file:", exc
+            print("Error in configuration file:", exc)
             return "unknown"
 
     @staticmethod

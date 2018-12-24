@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Interfaces for launching and remotely controlling Web browsers."""
+from __future__ import print_function
 # Maintained by Georg Brandl.
 
 import os
@@ -685,21 +686,21 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'ntd')
     except getopt.error, msg:
-        print >>sys.stderr, msg
-        print >>sys.stderr, usage
+        print(msg, file=sys.stderr)
+        print(usage, file=sys.stderr)
         sys.exit(1)
     new_win = 0
     for o, a in opts:
         if o == '-n': new_win = 1
         elif o == '-t': new_win = 2
     if len(args) != 1:
-        print >>sys.stderr, usage
+        print(usage, file=sys.stderr)
         sys.exit(1)
 
     url = args[0]
     open(url, new_win)
 
-    print "\a"
+    print("\a")
 
 if __name__ == "__main__":
     main()

@@ -10,6 +10,7 @@ On Windows, the msvcrt module will be used.
 On the Mac EasyDialogs.AskPassword is used, if available.
 
 """
+from __future__ import print_function
 
 # Authors: Piers Lauder (original)
 #          Guido van Rossum (Windows support and cleanup)
@@ -114,7 +115,7 @@ def fallback_getpass(prompt='Password: ', stream=None):
                   stacklevel=2)
     if not stream:
         stream = sys.stderr
-    print >>stream, "Warning: Password input may be echoed."
+    print("Warning: Password input may be echoed.", file=stream)
     return _raw_input(prompt, stream)
 
 

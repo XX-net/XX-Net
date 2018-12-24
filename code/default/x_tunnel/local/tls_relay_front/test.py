@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # coding:utf-8
 
+from __future__ import print_function
 import os
 import sys
 #import tracemalloc
@@ -38,12 +39,12 @@ xlog = getLogger("tls_relay")
 
 def t1():
     content, status, response = front.request("GET", "scan1.xx-net.net", timeout=1000)
-    print status
+    print(status)
 
     del response
 
     content, status, response = front.request("GET", "scan1.xx-net.net", timeout=1000)
-    print status
+    print(status)
 
     front.stop()
 

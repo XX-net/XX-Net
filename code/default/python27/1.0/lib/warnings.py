@@ -1,4 +1,5 @@
 """Python part of the warnings subsystem."""
+from __future__ import print_function
 
 # Note: function level imports should *not* be used
 # in this module as it may cause import lock deadlock.
@@ -127,7 +128,7 @@ def _processoptions(args):
         try:
             _setoption(arg)
         except _OptionError, msg:
-            print >>sys.stderr, "Invalid -W option ignored:", msg
+            print("Invalid -W option ignored:", msg, file=sys.stderr)
 
 # Helper for _processoptions()
 def _setoption(arg):

@@ -16,6 +16,7 @@
 #
 """Appcfg logic specific to Java apps."""
 from __future__ import with_statement
+from __future__ import print_function
 
 import collections
 import os.path
@@ -176,8 +177,8 @@ class JavaAppUpdate(object):
         sdk_dir, 'java', 'lib', 'impl', 'libxmlvalidator.jar')
     if not os.path.exists(xml_validator_jar):
 
-      print >>sys.stderr, ('Not validating XML files because %s does not '
-                           'exist' % xml_validator_jar)
+      print(('Not validating XML files because %s does not '
+                           'exist' % xml_validator_jar), file=sys.stderr)
       return
     validator_args = []
     schema_dir = os.path.join(sdk_dir, 'java', 'docs')

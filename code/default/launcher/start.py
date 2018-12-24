@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+from __future__ import print_function
 import atexit
 import os
 import sys
@@ -62,7 +63,7 @@ def uncaughtExceptionHandler(type_, value, traceback):
         module_init.stop_all()
         os._exit(0)
 
-    print("uncaught Exception:", type_, value, traceback)
+    print(("uncaught Exception:", type_, value, traceback))
     with open(os.path.join(data_launcher_path, "error.log"), "a") as fd:
         now = datetime.now()
         time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]

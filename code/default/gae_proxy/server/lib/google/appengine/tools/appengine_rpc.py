@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 """Tool for performing authenticated RPCs against App Engine."""
+from __future__ import print_function
 
 
 
@@ -297,29 +298,29 @@ class AbstractRpcServer(object):
 
 
         if e.reason == "CaptchaRequired":
-          print >>sys.stderr, (
+          print((
               "Please go to\n"
               "https://www.google.com/accounts/DisplayUnlockCaptcha\n"
-              "and verify you are a human.  Then try again.")
+              "and verify you are a human.  Then try again."), file=sys.stderr)
           break
         if e.reason == "NotVerified":
-          print >>sys.stderr, "Account not verified."
+          print("Account not verified.", file=sys.stderr)
           break
         if e.reason == "TermsNotAgreed":
-          print >>sys.stderr, "User has not agreed to TOS."
+          print("User has not agreed to TOS.", file=sys.stderr)
           break
         if e.reason == "AccountDeleted":
-          print >>sys.stderr, "The user account has been deleted."
+          print("The user account has been deleted.", file=sys.stderr)
           break
         if e.reason == "AccountDisabled":
-          print >>sys.stderr, "The user account has been disabled."
+          print("The user account has been disabled.", file=sys.stderr)
           break
         if e.reason == "ServiceDisabled":
-          print >>sys.stderr, ("The user's access to the service has been "
-                               "disabled.")
+          print(("The user's access to the service has been "
+                               "disabled."), file=sys.stderr)
           break
         if e.reason == "ServiceUnavailable":
-          print >>sys.stderr, "The service is not available; try again later."
+          print("The service is not available; try again later.", file=sys.stderr)
           break
         raise
       self._GetAuthCookie(auth_token)
@@ -539,7 +540,7 @@ class HttpRpcServer(AbstractRpcServer):
       if cookie.domain == self.host and not cookie.is_expired(min_expire):
         break
     else:
-      print >>sys.stderr, "\nError: Machine system clock is incorrect.\n"
+      print("\nError: Machine system clock is incorrect.\n", file=sys.stderr)
 
 
   def _Authenticate(self):

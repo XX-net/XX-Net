@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 
+from __future__ import print_function
 def run_cipher(cipher, decipher):
     from os import urandom
     import random

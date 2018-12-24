@@ -21,6 +21,7 @@ The info() method returns a mimetools.Message object which can be
 used to query various info about the object, if available.
 (mimetools.Message objects are queried with the getheader() method.)
 """
+from __future__ import print_function
 
 import string
 import socket
@@ -808,7 +809,7 @@ class FancyURLopener(URLopener):
                 (user, realm, host))
             return user, passwd
         except KeyboardInterrupt:
-            print
+            print()
             return None, None
 
 
@@ -1656,14 +1657,14 @@ def test1():
     uqs = unquote(qs)
     t1 = time.time()
     if uqs != s:
-        print 'Wrong!'
-    print repr(s)
-    print repr(qs)
-    print repr(uqs)
-    print round(t1 - t0, 3), 'sec'
+        print('Wrong!')
+    print(repr(s))
+    print(repr(qs))
+    print(repr(uqs))
+    print(round(t1 - t0, 3), 'sec')
 
 
 def reporthook(blocknum, blocksize, totalsize):
     # Report during remote transfers
-    print "Block number: %d, Block size: %d, Total size: %d" % (
-        blocknum, blocksize, totalsize)
+    print("Block number: %d, Block size: %d, Total size: %d" % (
+        blocknum, blocksize, totalsize))

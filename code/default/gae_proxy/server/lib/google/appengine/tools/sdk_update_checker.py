@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 """Checks for SDK updates."""
+from __future__ import print_function
 
 import datetime
 import logging
@@ -368,18 +369,18 @@ class SDKUpdateChecker(object):
     nag.timestamp = time.time()
     self._WriteNagFile(nag)
 
-    print '****************************************************************'
-    print msg
-    print '-----------'
-    print 'Latest SDK:'
-    print yaml.dump(latest)
-    print '-----------'
-    print 'Your SDK:'
-    print yaml.dump(version)
-    print '-----------'
-    print 'Please visit https://developers.google.com/appengine/downloads'
-    print 'for the latest SDK'
-    print '****************************************************************'
+    print('****************************************************************')
+    print(msg)
+    print('-----------')
+    print('Latest SDK:')
+    print(yaml.dump(latest))
+    print('-----------')
+    print('Your SDK:')
+    print(yaml.dump(version))
+    print('-----------')
+    print('Please visit https://developers.google.com/appengine/downloads')
+    print('for the latest SDK')
+    print('****************************************************************')
 
   def AllowedToCheckForUpdates(self, input_fn=raw_input):
     """Determines if the user wants to check for updates.

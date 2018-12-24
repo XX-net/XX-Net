@@ -51,6 +51,7 @@ Modifications made by Anorov (https://github.com/Anorov)
 -Added clarification that the HTTP proxy connection method only supports CONNECT-style tunneling HTTP proxies
 -Various small bug fixes
 """
+from __future__ import print_function
 
 __version__ = "1.5.1"
 
@@ -776,4 +777,4 @@ def check_ip_valid(ip):
 if __name__ == "__main__":
     name = "abc"
     name2 = name.encode('idna')
-    print name2
+    print(name2)

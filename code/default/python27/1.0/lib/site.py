@@ -57,6 +57,7 @@ site-specific customizations.  If this import fails with an
 ImportError exception, it is silently ignored.
 
 """
+from __future__ import print_function
 
 import sys
 import os
@@ -157,12 +158,12 @@ def addpackage(sitedir, name, known_paths):
                     sys.path.append(dir)
                     known_paths.add(dircase)
             except Exception as err:
-                print >>sys.stderr, "Error processing line {:d} of {}:\n".format(
-                    n+1, fullname)
+                print("Error processing line {:d} of {}:\n".format(
+                    n+1, fullname), file=sys.stderr)
                 for record in traceback.format_exception(*sys.exc_info()):
                     for line in record.splitlines():
-                        print >>sys.stderr, '  '+line
-                print >>sys.stderr, "\nRemainder of file ignored"
+                        print('  '+line, file=sys.stderr)
+                print("\nRemainder of file ignored", file=sys.stderr)
                 break
     if reset:
         known_paths = None
@@ -401,7 +402,7 @@ class _Printer(object):
         while 1:
             try:
                 for i in range(lineno, lineno + self.MAXLINES):
-                    print self.__lines[i]
+                    print(self.__lines[i])
             except IndexError:
                 break
             else:
@@ -493,8 +494,7 @@ def execsitecustomize():
         if sys.flags.verbose:
             sys.excepthook(*sys.exc_info())
         else:
-            print >>sys.stderr, \
-                "'import sitecustomize' failed; use -v for traceback"
+            print("'import sitecustomize' failed; use -v for traceback", file=sys.stderr)
 
 
 def execusercustomize():
@@ -507,8 +507,7 @@ def execusercustomize():
         if sys.flags.verbose:
             sys.excepthook(*sys.exc_info())
         else:
-            print>>sys.stderr, \
-                "'import usercustomize' failed; use -v for traceback"
+            print("'import usercustomize' failed; use -v for traceback", file=sys.stderr)
 
 
 def main():
@@ -555,15 +554,15 @@ def _script():
     """
     args = sys.argv[1:]
     if not args:
-        print "sys.path = ["
+        print("sys.path = [")
         for dir in sys.path:
-            print "    %r," % (dir,)
-        print "]"
-        print "USER_BASE: %r (%s)" % (USER_BASE,
-            "exists" if os.path.isdir(USER_BASE) else "doesn't exist")
-        print "USER_SITE: %r (%s)" % (USER_SITE,
-            "exists" if os.path.isdir(USER_SITE) else "doesn't exist")
-        print "ENABLE_USER_SITE: %r" %  ENABLE_USER_SITE
+            print("    %r," % (dir,))
+        print("]")
+        print("USER_BASE: %r (%s)" % (USER_BASE,
+            "exists" if os.path.isdir(USER_BASE) else "doesn't exist"))
+        print("USER_SITE: %r (%s)" % (USER_SITE,
+            "exists" if os.path.isdir(USER_SITE) else "doesn't exist"))
+        print("ENABLE_USER_SITE: %r" %  ENABLE_USER_SITE)
         sys.exit(0)
 
     buffer = []
@@ -573,7 +572,7 @@ def _script():
         buffer.append(USER_SITE)
 
     if buffer:
-        print os.pathsep.join(buffer)
+        print(os.pathsep.join(buffer))
         if ENABLE_USER_SITE:
             sys.exit(0)
         elif ENABLE_USER_SITE is False:
@@ -584,7 +583,7 @@ def _script():
             sys.exit(3)
     else:
         import textwrap
-        print textwrap.dedent(help % (sys.argv[0], os.pathsep))
+        print(textwrap.dedent(help % (sys.argv[0], os.pathsep)))
         sys.exit(10)
 
 if __name__ == '__main__':

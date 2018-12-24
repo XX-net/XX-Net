@@ -1,3 +1,4 @@
 #!/usr/bin/env python
 
-print "setup ok!"
+from __future__ import print_function
+print("setup ok!")

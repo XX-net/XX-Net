@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import os
 import sys
@@ -60,7 +61,7 @@ class Logger():
         elif level == "FATAL":
             self.min_level = FATAL
         else:
-            print("log level not support:%s", level)
+            print(("log level not support:%s", level))
     
     def set_color(self):
         self.err_color = None

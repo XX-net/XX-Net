@@ -1,6 +1,7 @@
 # coding:utf-8
 # run as admin in Windows
 
+from __future__ import print_function
 import os
 import sys
 import ctypes

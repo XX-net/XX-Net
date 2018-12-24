@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import yaml
 from xlog import getLogger
@@ -23,7 +24,7 @@ def load():
             config = {}
         # print(yaml.dump(config))
     except Exception as exc:
-        print("Error in configuration file:", exc)
+        print(("Error in configuration file:", exc))
 
 
 def save():

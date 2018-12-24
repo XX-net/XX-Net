@@ -9,6 +9,7 @@
 #
 
 """Internal support module for sre"""
+from __future__ import print_function
 
 # XXX: show string offset and offending character for all errors
 
@@ -98,40 +99,40 @@ class SubPattern:
     def dump(self, level=0):
         seqtypes = (tuple, list)
         for op, av in self.data:
-            print level*"  " + op,
+            print(level*"  " + op, end=' ')
             if op == IN:
                 # member sublanguage
-                print
+                print()
                 for op, a in av:
-                    print (level+1)*"  " + op, a
+                    print((level+1)*"  " + op, a)
             elif op == BRANCH:
-                print
+                print()
                 for i, a in enumerate(av[1]):
                     if i:
-                        print level*"  " + "or"
+                        print(level*"  " + "or")
                     a.dump(level+1)
             elif op == GROUPREF_EXISTS:
                 condgroup, item_yes, item_no = av
-                print condgroup
+                print(condgroup)
                 item_yes.dump(level+1)
                 if item_no:
-                    print level*"  " + "else"
+                    print(level*"  " + "else")
                     item_no.dump(level+1)
             elif isinstance(av, seqtypes):
                 nl = 0
                 for a in av:
                     if isinstance(a, SubPattern):
                         if not nl:
-                            print
+                            print()
                         a.dump(level+1)
                         nl = 1
                     else:
-                        print a,
+                        print(a, end=' ')
                         nl = 0
                 if not nl:
-                    print
+                    print()
             else:
-                print av
+                print(av)
     def __repr__(self):
         return repr(self.data)
     def __len__(self):

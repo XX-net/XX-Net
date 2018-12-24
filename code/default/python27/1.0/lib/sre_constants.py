@@ -10,6 +10,7 @@
 #
 
 """Internal support module for sre"""
+from __future__ import print_function
 
 # update when constants are added or removed
 
@@ -260,4 +261,4 @@ if __name__ == "__main__":
     f.write("#define SRE_INFO_CHARSET %d\n" % SRE_INFO_CHARSET)
 
     f.close()
-    print "done"
+    print("done")

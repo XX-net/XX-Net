@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+from __future__ import print_function
 import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))

@@ -34,6 +34,7 @@ What GAE mode:
 
     look gae_hander.py for more detail.
 """
+from __future__ import print_function
 
 import errno
 import socket
@@ -154,7 +155,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     or s.startswith('10.') \
                     or s.startswith('169.254.') \
                     or s in self.local_names:
-                print s
+                print(s)
                 return True
 
         return False

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 """Conversions to/from quoted-printable transport encoding as per RFC 1521."""
+from __future__ import print_function
 
 # (Dec 1991 version).
 
@@ -196,10 +197,10 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], 'td')
     except getopt.error, msg:
         sys.stdout = sys.stderr
-        print msg
-        print "usage: quopri [-t | -d] [file] ..."
-        print "-t: quote tabs"
-        print "-d: decode; default encode"
+        print(msg)
+        print("usage: quopri [-t | -d] [file] ...")
+        print("-t: quote tabs")
+        print("-d: decode; default encode")
         sys.exit(2)
     deco = 0
     tabs = 0
@@ -208,7 +209,7 @@ def main():
         if o == '-d': deco = 1
     if tabs and deco:
         sys.stdout = sys.stderr
-        print "-t and -d are mutually exclusive"
+        print("-t and -d are mutually exclusive")
         sys.exit(2)
     if not args: args = ['-']
     sts = 0

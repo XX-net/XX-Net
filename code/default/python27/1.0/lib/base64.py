@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 """RFC 3548: Base16, Base32, Base64 Data Encodings"""
+from __future__ import print_function
 
 # Modified 04-Oct-1995 by Jack Jansen to use binascii module
 # Modified 30-Dec-2003 by Barry Warsaw to add full RFC 3548 support
@@ -337,11 +338,11 @@ def test():
         opts, args = getopt.getopt(sys.argv[1:], 'deut')
     except getopt.error, msg:
         sys.stdout = sys.stderr
-        print msg
-        print """usage: %s [-d|-e|-u|-t] [file|-]
+        print(msg)
+        print("""usage: %s [-d|-e|-u|-t] [file|-]
         -d, -u: decode
         -e: encode (default)
-        -t: encode and decode string 'Aladdin:open sesame'"""%sys.argv[0]
+        -t: encode and decode string 'Aladdin:open sesame'"""%sys.argv[0])
         sys.exit(2)
     func = encode
     for o, a in opts:
@@ -360,7 +361,7 @@ def test1():
     s0 = "Aladdin:open sesame"
     s1 = encodestring(s0)
     s2 = decodestring(s1)
-    print s0, repr(s1), s2
+    print(s0, repr(s1), s2)
 
 
 if __name__ == '__main__':

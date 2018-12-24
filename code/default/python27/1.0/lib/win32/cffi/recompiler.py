@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, sys, io
 from . import ffiplatform, model
 from .cffi_opcode import *

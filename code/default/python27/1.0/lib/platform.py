@@ -8,6 +8,7 @@
     format is useable as part of a filename.
 
 """
+from __future__ import print_function
 #    This module is maintained by Marc-Andre Lemburg <mal@egenix.com>.
 #    If you find problems, please submit bug reports/patches via the
 #    Python bug tracker (http://bugs.python.org) and assign them to "lemburg".
@@ -1613,5 +1614,5 @@ if __name__ == '__main__':
     # Default is to print the aliased verbose platform string
     terse = ('terse' in sys.argv or '--terse' in sys.argv)
     aliased = (not 'nonaliased' in sys.argv and not '--nonaliased' in sys.argv)
-    print platform(aliased,terse)
+    print(platform(aliased,terse))
     sys.exit(0)

@@ -8,6 +8,7 @@ of the interfaces.
 
 $Id$
 """
+from __future__ import print_function
 
 version = '2.0beta'
 
@@ -39,7 +40,7 @@ class ErrorHandler:
 
     def warning(self, exception):
         "Handle a warning."
-        print exception
+        print(exception)
 
 
 # ===== CONTENTHANDLER =====

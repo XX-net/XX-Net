@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import sys
 import os
@@ -188,4 +189,4 @@ def is_ok(ip=None):
 
 
 if __name__ == "__main__":
-    print IPv6._test_host("http://[2804:10:4068::202:82]")
+    print(IPv6._test_host("http://[2804:10:4068::202:82]"))

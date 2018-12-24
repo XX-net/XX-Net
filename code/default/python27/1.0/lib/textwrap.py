@@ -1,5 +1,6 @@
 """Text wrapping and filling.
 """
+from __future__ import print_function
 
 # Copyright (C) 1999-2001 Gregory P. Ward.
 # Copyright (C) 2002, 2003 Python Software Foundation.
@@ -426,4 +427,4 @@ def dedent(text):
 if __name__ == "__main__":
     #print dedent("\tfoo\n\tbar")
     #print dedent("  \thello there\n  \t  how are you?")
-    print dedent("Hello there.\n  This is indented.")
+    print(dedent("Hello there.\n  This is indented."))

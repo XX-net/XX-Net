@@ -71,6 +71,7 @@ Example library use:
   def add_middleware(app):
     return config_handle.add_middleware(app)
 """
+from __future__ import print_function
 
 
 
@@ -222,12 +223,12 @@ class LibConfigRegistry(object):
     self._lock.acquire()
     try:
       if not hasattr(self._module, '__dict__'):
-        print 'Module %s.py does not exist.' % self._modname
+        print('Module %s.py does not exist.' % self._modname)
       elif not self._registrations:
-        print 'No registrations for %s.py.' % self._modname
+        print('No registrations for %s.py.' % self._modname)
       else:
-        print 'Registrations in %s.py:' % self._modname
-        print '-'*40
+        print('Registrations in %s.py:' % self._modname)
+        print('-'*40)
         handles = self._registrations.items()
     finally:
       self._lock.release()
@@ -315,20 +316,20 @@ class ConfigHandle(object):
     """Print info about this set of registrations to stdout."""
     self._lock.acquire()
     try:
-      print 'Prefix %s:' % self._prefix
+      print('Prefix %s:' % self._prefix)
       if self._overrides:
-        print '  Overrides:'
+        print('  Overrides:')
         for key in sorted(self._overrides):
-          print '    %s = %r' % (key, self._overrides[key])
+          print('    %s = %r' % (key, self._overrides[key]))
       else:
-        print '  No overrides'
+        print('  No overrides')
       if self._defaults:
-        print '  Defaults:'
+        print('  Defaults:')
         for key in sorted(self._defaults):
-          print '    %s = %r' % (key, self._defaults[key])
+          print('    %s = %r' % (key, self._defaults[key]))
       else:
-        print '  No defaults'
-      print '-'*40
+        print('  No defaults')
+      print('-'*40)
     finally:
       self._lock.release()
 
@@ -397,16 +398,16 @@ def main():
     from google.appengine.api import users
     if not users.is_current_user_admin():
       if users.get_current_user() is None:
-        print 'Status: 302'
-        print 'Location:', users.create_login_url(os.getenv('PATH_INFO', ''))
+        print('Status: 302')
+        print('Location:', users.create_login_url(os.getenv('PATH_INFO', '')))
       else:
-        print 'Status: 403'
-        print
-        print 'Forbidden'
+        print('Status: 403')
+        print()
+        print('Forbidden')
       return
 
-  print 'Content-type: text/plain'
-  print
+  print('Content-type: text/plain')
+  print()
   _default_registry._dump()
 
 

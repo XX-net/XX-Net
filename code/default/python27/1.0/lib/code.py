@@ -1,6 +1,7 @@
 """Utilities needed to emulate Python's interactive interpreter.
 
 """
+from __future__ import print_function
 
 # Inspired by similar code by Jeff Epler and Fredrik Lundh.
 
@@ -107,7 +108,7 @@ class InteractiveInterpreter:
             self.showtraceback()
         else:
             if softspace(sys.stdout, 0):
-                print
+                print()
 
     def showsyntaxerror(self, filename=None):
         """Display the syntax error that just occurred.

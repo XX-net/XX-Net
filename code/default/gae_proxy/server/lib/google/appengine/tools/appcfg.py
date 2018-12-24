@@ -27,6 +27,7 @@ methods to add to the list of files, fetch a list of modified files, upload
 files, and commit or rollback the transaction.
 """
 from __future__ import with_statement
+from __future__ import print_function
 
 
 
@@ -198,7 +199,7 @@ def PrintUpdate(msg, error_fh=sys.stderr):
   """
   if verbosity > 0:
     timestamp = datetime.datetime.now()
-    print >>error_fh, '%s %s' % (timestamp.strftime('%I:%M %p'), msg)
+    print('%s %s' % (timestamp.strftime('%I:%M %p'), msg), file=error_fh)
 
 
 def StatusUpdate(msg, error_fh=sys.stderr):
@@ -394,8 +395,8 @@ class FileClassification(object):
   def __MimeType(self, filename, default='application/octet-stream'):
     guess = mimetypes.guess_type(filename)[0]
     if guess is None:
-      print >>self.__error_fh, ('Could not guess mimetype for %s.  Using %s.'
-                                % (filename, default))
+      print(('Could not guess mimetype for %s.  Using %s.'
+                                % (filename, default)), file=self.__error_fh)
       return default
     return guess
 
@@ -895,10 +896,10 @@ class VacuumIndexesOperation(IndexOperation):
     """
     while True:
 
-      print 'This index is no longer defined in your index.yaml file.'
-      print
-      print index.ToYAML()
-      print
+      print('This index is no longer defined in your index.yaml file.')
+      print()
+      print(index.ToYAML())
+      print()
 
 
       confirmation = self.confirmation_fn(
@@ -914,7 +915,7 @@ class VacuumIndexesOperation(IndexOperation):
         self.force = True
         return True
       else:
-        print 'Did not understand your response.'
+        print('Did not understand your response.')
 
   def DoVacuum(self, definitions):
     """Vacuum indexes in datastore.
@@ -2417,10 +2418,10 @@ class AppVersionUpload(object):
 
 
             raise
-          print >>self.error_fh, (
+          print((
               'Precompilation failed. Your app can still serve but may '
               'have reduced startup performance. You can retry the update '
-              'later to retry the precompilation step.')
+              'later to retry the precompilation step.'), file=self.error_fh)
 
 
       app_summary = self.Commit()
@@ -2584,7 +2585,7 @@ class DoLockAction(object):
     state = yaml.safe_load(yaml_data)
     done = state['state'] != 'PENDING'
     if done:
-      print >> self.file_handle, state['message']
+      print(state['message'], file=self.file_handle)
     return (done, state['message'])
 
   def PrintRetryMessage(self, msg, delay):
@@ -2599,7 +2600,7 @@ class DoLockAction(object):
       kwargs['instance'] = self.instance
 
     response = self.rpcserver.Send(self.url, **kwargs)
-    print >> self.file_handle, response
+    print(response, file=self.file_handle)
     RetryWithBackoff(self.GetState, self.PrintRetryMessage, 1, 2, 5, 20)
 
 
@@ -2851,8 +2852,8 @@ class AppCfgApp(object):
             '|'.join(appinfo.GetAllRuntimes()))
 
     if self.options.redundant_oauth2:
-      print >>sys.stderr, (
-          '\nNote: the --oauth2 flag is now the default and can be omitted.\n')
+      print((
+          '\nNote: the --oauth2 flag is now the default and can be omitted.\n'), file=sys.stderr)
 
     action = self.args.pop(0)
 
@@ -2957,13 +2958,13 @@ class AppCfgApp(object):
       else:
         error_format = 'Error %d: %s'
 
-      print >>self.error_fh, (error_format % (e.code, body.rstrip('\n')))
+      print((error_format % (e.code, body.rstrip('\n'))), file=self.error_fh)
       return 1
     except yaml_errors.EventListenerError, e:
-      print >>self.error_fh, ('Error parsing yaml file:\n%s' % e)
+      print(('Error parsing yaml file:\n%s' % e), file=self.error_fh)
       return 1
     except CannotStartServingError:
-      print >>self.error_fh, 'Could not start serving the given version.'
+      print('Could not start serving the given version.', file=self.error_fh)
       return 1
     return 0
 
@@ -3855,9 +3856,9 @@ class AppCfgApp(object):
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'indexes. Please retry later with appcfg.py update_indexes.')
+            'indexes. Please retry later with appcfg.py update_indexes.'), file=self.error_fh)
 
 
     if cron_yaml:
@@ -3868,9 +3869,9 @@ class AppCfgApp(object):
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'cron tasks. Please retry later with appcfg.py update_cron.')
+            'cron tasks. Please retry later with appcfg.py update_cron.'), file=self.error_fh)
 
 
     if queue_yaml:
@@ -3881,9 +3882,9 @@ class AppCfgApp(object):
         ErrorUpdate('Error %d: --- begin server output ---\n'
                     '%s\n--- end server output ---' %
                     (e.code, e.read().rstrip('\n')))
-        print >> self.error_fh, (
+        print((
             'Your app was updated, but there was an error updating your '
-            'queues. Please retry later with appcfg.py update_queues.')
+            'queues. Please retry later with appcfg.py update_queues.'), file=self.error_fh)
 
 
     if dos_yaml:
@@ -3954,8 +3955,8 @@ class AppCfgApp(object):
       cron_upload = CronEntryUpload(rpcserver, cron_yaml, self.error_fh)
       cron_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find cron configuration. No action taken.')
+      print((
+          'Could not find cron configuration. No action taken.'), file=self.error_fh)
 
   def UpdateIndexes(self):
     """Updates indexes."""
@@ -3970,8 +3971,8 @@ class AppCfgApp(object):
       index_upload = IndexDefinitionUpload(rpcserver, index_defs, self.error_fh)
       index_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find index configuration. No action taken.')
+      print((
+          'Could not find index configuration. No action taken.'), file=self.error_fh)
 
   def UpdateQueues(self):
     """Updates any new or changed task queue definitions."""
@@ -3985,8 +3986,8 @@ class AppCfgApp(object):
       queue_upload = QueueEntryUpload(rpcserver, queue_yaml, self.error_fh)
       queue_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find queue configuration. No action taken.')
+      print((
+          'Could not find queue configuration. No action taken.'), file=self.error_fh)
 
   def UpdateDispatch(self):
     """Updates new or changed dispatch definitions."""
@@ -4003,8 +4004,8 @@ class AppCfgApp(object):
                                             self.error_fh)
       dispatch_upload.DoUpload()
     else:
-      print >>self.error_fh, ('Could not find dispatch configuration. No action'
-                              ' taken.')
+      print(('Could not find dispatch configuration. No action'
+                              ' taken.'), file=self.error_fh)
 
   def UpdateDos(self):
     """Updates any new or changed dos definitions."""
@@ -4018,8 +4019,8 @@ class AppCfgApp(object):
       dos_upload = DosEntryUpload(rpcserver, dos_yaml, self.error_fh)
       dos_upload.DoUpload()
     else:
-      print >>self.error_fh, (
-          'Could not find dos configuration. No action taken.')
+      print((
+          'Could not find dos configuration. No action taken.'), file=self.error_fh)
 
   def BackendsAction(self):
     """Placeholder; we never expect this action to be invoked."""
@@ -4116,7 +4117,7 @@ class AppCfgApp(object):
     BackendsStatusUpdate(appyaml.runtime, self.error_fh)
     rpcserver = self._GetRpcServer()
     response = rpcserver.Send('/api/backends/list', app_id=appyaml.application)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsRollback(self):
     """Does a rollback of an existing transaction on this backend."""
@@ -4138,7 +4139,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/start',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsStop(self):
     """Stops a backend."""
@@ -4152,7 +4153,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/stop',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsDelete(self):
     """Deletes a backend."""
@@ -4166,7 +4167,7 @@ class AppCfgApp(object):
     response = rpcserver.Send('/api/backends/delete',
                               app_id=appyaml.application,
                               backend=backend)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def BackendsConfigure(self):
     """Changes the configuration of an existing backend."""
@@ -4183,7 +4184,7 @@ class AppCfgApp(object):
                               app_id=appyaml.application,
                               backend=backend,
                               payload=backends_yaml.ToYAML())
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def ListVersions(self):
     """Lists all versions for an app."""
@@ -4204,9 +4205,9 @@ class AppCfgApp(object):
 
     parsed_response = yaml.safe_load(response)
     if not parsed_response:
-      print >> self.out_fh, ('No versions uploaded for app: %s.' % app_id)
+      print(('No versions uploaded for app: %s.' % app_id), file=self.out_fh)
     else:
-      print >> self.out_fh, response
+      print(response, file=self.out_fh)
 
   def DeleteVersion(self):
     """Deletes the specified version for an app."""
@@ -4224,7 +4225,7 @@ class AppCfgApp(object):
                               version_match=self.options.version,
                               module=module)
 
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def _LockingAction(self, url):
     """Changes the locking state for a given version."""
@@ -4283,7 +4284,7 @@ class AppCfgApp(object):
     rpcserver = self._GetRpcServer()
     response = rpcserver.Send('/api/vms/prepare',
                               app_id=self.options.app_id)
-    print >> self.out_fh, response
+    print(response, file=self.out_fh)
 
   def _ParseAndValidateModuleYamls(self, yaml_paths):
     """Validates given yaml paths and returns the parsed yaml objects.
@@ -4382,7 +4383,7 @@ class AppCfgApp(object):
                                 app_id=app_id,
                                 module=module,
                                 version=version)
-      print >> self.out_fh, response
+      print(response, file=self.out_fh)
 
   def StartModuleVersion(self):
     """Starts one or more versions."""
@@ -4645,19 +4646,19 @@ class AppCfgApp(object):
         if not entry.timezone:
           entry.timezone = 'UTC'
 
-        print >>output, '\n%s:\nURL: %s\nSchedule: %s (%s)' % (description,
+        print('\n%s:\nURL: %s\nSchedule: %s (%s)' % (description,
                                                                entry.url,
                                                                entry.schedule,
-                                                               entry.timezone)
+                                                               entry.timezone), file=output)
         if entry.timezone != 'UTC':
-          print >>output, ('Note: Schedules with timezones won\'t be calculated'
-                           ' correctly here')
+          print(('Note: Schedules with timezones won\'t be calculated'
+                           ' correctly here'), file=output)
         schedule = groctimespecification.GrocTimeSpecification(entry.schedule)
 
         matches = schedule.GetMatches(now, self.options.num_runs)
         for match in matches:
-          print >>output, '%s, %s from now' % (
-              match.strftime('%Y-%m-%d %H:%M:%SZ'), match - now)
+          print('%s, %s from now' % (
+              match.strftime('%Y-%m-%d %H:%M:%SZ'), match - now), file=output)
 
   def _CronInfoOptions(self, parser):
     """Adds cron_info-specific options to 'parser'.
@@ -4990,7 +4991,7 @@ class AppCfgApp(object):
 
 
     for attr_name in sorted(resource_limits):
-      print >>output, '%s: %s' % (attr_name, resource_limits[attr_name])
+      print('%s: %s' % (attr_name, resource_limits[attr_name]), file=output)
 
   class Action(object):
     """Contains information about a command line action.

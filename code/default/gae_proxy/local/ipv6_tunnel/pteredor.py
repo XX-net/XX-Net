@@ -11,6 +11,7 @@
 #   https://tools.ietf.org/html/rfc2460 8.1
 #   https://github.com/XndroidDev/Xndroid/blob/master/fqrouter/manager/teredo.py
 
+from __future__ import print_function
 __version__ = '0.1.0'
 
 import sys
@@ -146,7 +147,7 @@ def get_sock(port):
     while True:
         try:
             _port = port or random.randint(1025, 5000)
-            print('try bind local port:', _port)
+            print(('try bind local port:', _port))
             sock.bind(('0.0.0.0', _port))
             return sock
         except socket.error as e:

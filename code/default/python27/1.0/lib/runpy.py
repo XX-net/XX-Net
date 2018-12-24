@@ -6,6 +6,7 @@ module namespace instead of the native filesystem.
 This allows Python code to play nicely with non-filesystem based PEP 302
 importers when locating support scripts as well as when importing modules.
 """
+from __future__ import print_function
 # Written by Nick Coghlan <ncoghlan at gmail.com>
 #    to implement PEP 338 (Executing Modules as Scripts)
 
@@ -284,7 +285,7 @@ def run_path(path_name, init_globals=None, run_name=None):
 if __name__ == "__main__":
     # Run the module specified as the next command line argument
     if len(sys.argv) < 2:
-        print >> sys.stderr, "No module specified for execution"
+        print("No module specified for execution", file=sys.stderr)
     else:
         del sys.argv[0] # Make the requested module sys.argv[0]
         _run_module_as_main(sys.argv[0])

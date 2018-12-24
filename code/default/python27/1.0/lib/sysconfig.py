@@ -1,6 +1,7 @@
 """Provide access to Python's configuration information.
 
 """
+from __future__ import print_function
 import sys
 import os
 from os.path import pardir, realpath
@@ -618,8 +619,8 @@ def get_python_version():
 def _print_dict(title, data):
     for index, (key, value) in enumerate(sorted(data.items())):
         if index == 0:
-            print '%s: ' % (title)
-        print '\t%s = "%s"' % (key, value)
+            print('%s: ' % (title))
+        print('\t%s = "%s"' % (key, value))
 
 
 def _main():
@@ -627,12 +628,12 @@ def _main():
     if '--generate-posix-vars' in sys.argv:
         _generate_posix_vars()
         return
-    print 'Platform: "%s"' % get_platform()
-    print 'Python version: "%s"' % get_python_version()
-    print 'Current installation scheme: "%s"' % _get_default_scheme()
-    print
+    print('Platform: "%s"' % get_platform())
+    print('Python version: "%s"' % get_python_version())
+    print('Current installation scheme: "%s"' % _get_default_scheme())
+    print()
     _print_dict('Paths', get_paths())
-    print
+    print()
     _print_dict('Variables', get_config_vars())
 
 

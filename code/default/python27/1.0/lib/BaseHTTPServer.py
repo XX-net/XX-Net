@@ -16,6 +16,7 @@ XXX To do:
 - log user-agent header and other interesting goodies
 - send error log to separate file
 """
+from __future__ import print_function
 
 
 # See also:
@@ -606,7 +607,7 @@ def test(HandlerClass = BaseHTTPRequestHandler,
     httpd = ServerClass(server_address, HandlerClass)
 
     sa = httpd.socket.getsockname()
-    print "Serving HTTP on", sa[0], "port", sa[1], "..."
+    print("Serving HTTP on", sa[0], "port", sa[1], "...")
     httpd.serve_forever()
 
 

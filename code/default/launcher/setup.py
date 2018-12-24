@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import config
 import os
 import re
@@ -87,7 +88,7 @@ def get_new_new_config():
         new_config = yaml.load(open(data_path, 'r'))
         return new_config
     except yaml.YAMLError as exc:
-        print("Error in configuration file:", exc)
+        print(("Error in configuration file:", exc))
 
 
 def process_data_files():

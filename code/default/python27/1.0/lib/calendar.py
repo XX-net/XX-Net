@@ -4,6 +4,7 @@ Note when comparing these calendars to the ones printed by cal(1): By
 default, these calendars have Monday as the first day of the week, and
 Sunday as the last (the European convention). Use setfirstweekday() to
 set the first day of the week (0=Monday, 6=Sunday)."""
+from __future__ import print_function
 
 import sys
 import datetime
@@ -267,7 +268,7 @@ class TextCalendar(Calendar):
         """
         Print a single week (no newline).
         """
-        print self.formatweek(theweek, width),
+        print(self.formatweek(theweek, width), end=' ')
 
     def formatday(self, day, weekday, width):
         """
@@ -314,7 +315,7 @@ class TextCalendar(Calendar):
         """
         Print a month's calendar.
         """
-        print self.formatmonth(theyear, themonth, w, l),
+        print(self.formatmonth(theyear, themonth, w, l), end=' ')
 
     def formatmonth(self, theyear, themonth, w=0, l=0):
         """
@@ -371,7 +372,7 @@ class TextCalendar(Calendar):
 
     def pryear(self, theyear, w=0, l=0, c=6, m=3):
         """Print a year's calendar."""
-        print self.formatyear(theyear, w, l, c, m)
+        print(self.formatyear(theyear, w, l, c, m))
 
 
 class HTMLCalendar(Calendar):
@@ -595,7 +596,7 @@ _spacing = 6                # Number of spaces between columns
 
 def format(cols, colwidth=_colwidth, spacing=_spacing):
     """Prints multi-column formatting for year calendars"""
-    print formatstring(cols, colwidth, spacing)
+    print(formatstring(cols, colwidth, spacing))
 
 
 def formatstring(cols, colwidth=_colwidth, spacing=_spacing):
@@ -681,9 +682,9 @@ def main(args):
             encoding = sys.getdefaultencoding()
         optdict = dict(encoding=encoding, css=options.css)
         if len(args) == 1:
-            print cal.formatyearpage(datetime.date.today().year, **optdict)
+            print(cal.formatyearpage(datetime.date.today().year, **optdict))
         elif len(args) == 2:
-            print cal.formatyearpage(int(args[1]), **optdict)
+            print(cal.formatyearpage(int(args[1]), **optdict))
         else:
             parser.error("incorrect number of arguments")
             sys.exit(1)
@@ -707,7 +708,7 @@ def main(args):
             sys.exit(1)
         if options.encoding:
             result = result.encode(options.encoding)
-        print result
+        print(result)
 
 
 if __name__ == "__main__":

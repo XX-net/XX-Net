@@ -31,6 +31,7 @@ Example:
   (250, "Somebody OverHere <somebody@here.my.org>")
   >>> s.quit()
 '''
+from __future__ import print_function
 
 # Author: The Dragon De Monsyne <dragondm@integral.org>
 # ESMTP support, test code and doc fixes added by
@@ -287,7 +288,7 @@ class SMTP:
         # This makes it simpler for SMTP_SSL to use the SMTP connect code
         # and just alter the socket connection bit.
         if self.debuglevel > 0:
-            print>>stderr, 'connect:', (host, port)
+            print('connect:', (host, port), file=stderr)
         return socket.create_connection((host, port), timeout)
 
     def connect(self, host='localhost', port=0):
@@ -312,17 +313,17 @@ class SMTP:
         if not port:
             port = self.default_port
         if self.debuglevel > 0:
-            print>>stderr, 'connect:', (host, port)
+            print('connect:', (host, port), file=stderr)
         self.sock = self._get_socket(host, port, self.timeout)
         (code, msg) = self.getreply()
         if self.debuglevel > 0:
-            print>>stderr, "connect:", msg
+            print("connect:", msg, file=stderr)
         return (code, msg)
 
     def send(self, str):
         """Send `str' to the server."""
         if self.debuglevel > 0:
-            print>>stderr, 'send:', repr(str)
+            print('send:', repr(str), file=stderr)
         if hasattr(self, 'sock') and self.sock:
             try:
                 self.sock.sendall(str)
@@ -367,7 +368,7 @@ class SMTP:
                 self.close()
                 raise SMTPServerDisconnected("Connection unexpectedly closed")
             if self.debuglevel > 0:
-                print>>stderr, 'reply:', repr(line)
+                print('reply:', repr(line), file=stderr)
             if len(line) > _MAXLINE:
                 raise SMTPResponseException(500, "Line too long.")
             resp.append(line[4:].strip())
@@ -385,7 +386,7 @@ class SMTP:
 
         errmsg = "\n".join(resp)
         if self.debuglevel > 0:
-            print>>stderr, 'reply: retcode (%s); Msg: %s' % (errcode, errmsg)
+            print('reply: retcode (%s); Msg: %s' % (errcode, errmsg), file=stderr)
         return errcode, errmsg
 
     def docmd(self, cmd, args=""):
@@ -499,7 +500,7 @@ class SMTP:
         self.putcmd("data")
         (code, repl) = self.getreply()
         if self.debuglevel > 0:
-            print>>stderr, "data:", (code, repl)
+            print("data:", (code, repl), file=stderr)
         if code != 354:
             raise SMTPDataError(code, repl)
         else:
@@ -510,7 +511,7 @@ class SMTP:
             self.send(q)
             (code, msg) = self.getreply()
             if self.debuglevel > 0:
-                print>>stderr, "data:", (code, msg)
+                print("data:", (code, msg), file=stderr)
             return (code, msg)
 
     def verify(self, address):
@@ -802,7 +803,7 @@ if _have_ssl:
 
         def _get_socket(self, host, port, timeout):
             if self.debuglevel > 0:
-                print>>stderr, 'connect:', (host, port)
+                print('connect:', (host, port), file=stderr)
             new_socket = socket.create_connection((host, port), timeout)
             new_socket = ssl.wrap_socket(new_socket, self.keyfile, self.certfile)
             self.file = SSLFakeFile(new_socket)
@@ -846,14 +847,14 @@ class LMTP(SMTP):
             self.sock.connect(host)
         except socket.error:
             if self.debuglevel > 0:
-                print>>stderr, 'connect fail:', host
+                print('connect fail:', host, file=stderr)
             if self.sock:
                 self.sock.close()
             self.sock = None
             raise
         (code, msg) = self.getreply()
         if self.debuglevel > 0:
-            print>>stderr, "connect:", msg
+            print("connect:", msg, file=stderr)
         return (code, msg)
 
 
@@ -868,14 +869,14 @@ if __name__ == '__main__':
 
     fromaddr = prompt("From")
     toaddrs = prompt("To").split(',')
-    print "Enter message, end with ^D:"
+    print("Enter message, end with ^D:")
     msg = ''
     while 1:
         line = sys.stdin.readline()
         if not line:
             break
         msg = msg + line
-    print "Message length is %d" % len(msg)
+    print("Message length is %d" % len(msg))
 
     server = SMTP('localhost')
     server.set_debuglevel(1)

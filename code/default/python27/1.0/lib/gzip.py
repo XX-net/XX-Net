@@ -2,6 +2,7 @@
 
 The user of the file doesn't have to worry about the compression,
 but random access is not allowed."""
+from __future__ import print_function
 
 # based on Andrew Kuchling's minigzip.py distributed with the zlib module
 
@@ -502,7 +503,7 @@ def _test():
                 g = sys.stdout
             else:
                 if arg[-3:] != ".gz":
-                    print "filename doesn't end in .gz:", repr(arg)
+                    print("filename doesn't end in .gz:", repr(arg))
                     continue
                 f = open(arg, "rb")
                 g = __builtin__.open(arg[:-3], "wb")

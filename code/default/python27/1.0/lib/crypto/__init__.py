@@ -8,6 +8,7 @@ Package implementing cryptography related functionality.
 """
 
 from __future__ import unicode_literals
+from __future__ import print_function
 
 import random
 import base64
@@ -325,13 +326,13 @@ if __name__ == "__main__":
     cpw = "SomeSecret"
 
     cipher, ok = pwEncrypt(cpw)
-    print(ok, cipher)
+    print((ok, cipher))
     plain, ok = pwDecrypt(cipher)
-    print(ok, plain)
+    print((ok, plain))
 
     cipher, ok = pwEncrypt(cpw, mpw)
-    print(ok, cipher)
+    print((ok, cipher))
     plain, ok = pwDecrypt(cipher, mpw)
-    print(ok, plain)
+    print((ok, plain))
 
     sys.exit(0)

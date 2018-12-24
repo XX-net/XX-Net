@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import platform
 import shutil
@@ -61,4 +62,4 @@ if __name__ == "__main__":
     check_setup()
     t2 = time.time()
     t_c = (t2 - t1) * 1000
-    print("cost time:", t_c)
+    print(("cost time:", t_c))

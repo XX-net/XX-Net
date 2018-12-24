@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from __future__ import print_function
 import os
 import struct
 import sys
@@ -246,8 +247,8 @@ class UpdateIpRange(object):
         try:
             data = subprocess.check_output(['wget', url, '-O-'])
         except (OSError, AttributeError):
-            print >> sys.stderr, "Fetching data from apnic.net, " \
-                                 "it might take a few minutes, please wait..."
+            print("Fetching data from apnic.net, " \
+                                 "it might take a few minutes, please wait...", file=sys.stderr)
             data = urllib2.urlopen(url).read()
 
         with open(fn, "w") as f:
