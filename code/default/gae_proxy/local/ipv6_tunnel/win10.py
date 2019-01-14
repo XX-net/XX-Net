@@ -96,6 +96,8 @@ goto :eof
 
 :[set ipv6]
 :: Reset Group Policy Teredo
+SET PYTHONPATH=
+SET PYTHONHOME=
 "{}" "{}\\win_reset_gp.py"
 
 """.format(log_file, sys.executable, current_path) + \
