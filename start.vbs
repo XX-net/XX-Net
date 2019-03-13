@@ -61,4 +61,6 @@ strArgs = strExecutable & " " & quo & strCurrentPath & "\code\" & strVersion & "
 'WScript.Echo strArgs
 
 Set oShell = CreateObject ("Wscript.Shell")
+oShell.Environment("Process")("PYTHONPATH")=""
+oShell.Environment("Process")("PYTHONHOME")=""
 oShell.Run strArgs, isConsole(), false
