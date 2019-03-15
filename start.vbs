@@ -1,29 +1,36 @@
-Function CurrentPath( fso )
+
+
+
+Function CurrentPath()
     strPath = Wscript.ScriptFullName
-    Set objFile = fso.GetFile(strPath)
-    CurrentPath = fso.GetParentFolderName(objFile)
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFile = objFSO.GetFile(strPath)
+    CurrentPath = objFSO.GetParentFolderName(objFile)
 End Function
 
-Function CurrentVersion( fso, strCurrentPath )
+Function CurrentVersion()
+    strCurrentPath = CurrentPath()
     strVersionFile = strCurrentPath & "/code/version.txt"
 
+    Set fso = CreateObject("Scripting.FileSystemObject")
     If (fso.FileExists(strVersionFile)) Then
 
-        Set objFileToRead = fso.OpenTextFile(strVersionFile, 1)
-        CurrentVersion = objFileToRead.ReadLine() ' 读取文本中记录的版本号
+        Set objFileToRead = CreateObject("Scripting.FileSystemObject").OpenTextFile(strVersionFile,1)
+        CurrentVersion = objFileToRead.ReadLine()
 
         version_path = strCurrentPath & "/code/" & CurrentVersion & "/launcher/start.py"
-
-        If( Not fso.FileExists(version_path) ) Then ' 确认读取的版本路径是否存在
+        If( Not fso.FileExists(version_path) ) Then
             CurrentVersion = "default"
         End If
 
         objFileToRead.Close
         Set objFileToRead = Nothing
     Else
-        CurrentVersion = "default"
+       CurrentVersion = "default"
     End If
+
 End Function
+
 
 Function isConsole()
     Set objArgs = Wscript.Arguments
@@ -37,9 +44,9 @@ Function isConsole()
     End If
 End Function
 
-Set fso = CreateObject("Scripting.FileSystemObject")
-strCurrentPath = CurrentPath( fso )
-strCurrentVersion = CurrentVersion( fso, strCurrentPath )
+
+strCurrentPath = CurrentPath()
+strVersion = CurrentVersion()
 Dim strArgs
 quo = """"
 
@@ -49,9 +56,9 @@ Else
     python_cmd = "pythonw.exe"
 End If
 
-strExecutable = quo & strCurrentPath & "\code\" & strCurrentVersion & "\python27\1.0\" & python_cmd & quo
-strArgs = strExecutable & " " & quo & strCurrentPath & "\code\" & strCurrentVersion & "\launcher\start.py" & quo
-' WScript.Echo strArgs
+strExecutable = quo & strCurrentPath & "\code\" & strVersion & "\python27\1.0\" & python_cmd & quo
+strArgs = strExecutable & " " & quo & strCurrentPath & "\code\" & strVersion & "\launcher\start.py" & quo
+'WScript.Echo strArgs
 
 Set oShell = CreateObject ("Wscript.Shell")
 oShell.Run strArgs, isConsole(), false
