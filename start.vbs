@@ -1,4 +1,15 @@
-
+If Msgbox("是否帮助你修改teredo参数以稳定teredo隧道",vbYesNo)=vbYes Then
+Set exeGO = CreateObject("Shell.Application")
+exeGO.ShellExecute "netsh.exe","interface teredo set state type=enterpriseclient servername=195.140.195.140 clientport=65123 ","","runas",0
+exeGO.ShellExecute "netsh.exe","interface ipv6 set interface interface="&Chr(34)&"Teredo Tunneling Pseudo-Interface"&Chr(34)&" weakhostsend=enabled weakhostreceive=enabled dadtransmits=1 retransmittime=1 metric=1 store=persistent","","runas",0
+exeGO.ShellExecute "netsh.exe","interface ipv6 set subinterface interface="&Chr(34)&"Teredo Tunneling Pseudo-Interface"&Chr(34)&" mtu=1280 store=persistent","","runas",0
+exeGO.ShellExecute "ipconfig.exe","/flushdns","","runas",0
+Msgbox "接下来将通过不断ping保持隧道的唤醒状态，请不要关闭那个窗口。",vbApplicationModal
+exeGO.ShellExecute "cmd.exe","/k start "&Chr(34)&"请不要关闭这个窗口！请不要关闭这个窗口！请不要关闭这个窗口！"&Chr(34)&" ping -6 ipv6.test-ipv6.com -t -l 0","","runas",0
+exeGO.ShellExecute "taskkill.exe","/im cmd.exe /f","","runas",0
+Wscript.Sleep 3000
+Msgbox "teredo接口参数已修改"
+end If
 
 
 Function CurrentPath()
