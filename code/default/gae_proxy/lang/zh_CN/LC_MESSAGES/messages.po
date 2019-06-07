@@ -441,7 +441,7 @@ msgid "System Proxy Status"
 msgstr "系统代理状态"
 
 msgid "Listening At"
-msgstr "代理监听"
+msgstr "HTTP代理监听"
 
 # msgid "PAC URL"
 # msgstr "PAC 自动代理地址"
