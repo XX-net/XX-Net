@@ -1,8 +1,10 @@
+* X-Tunnel 支付相关问题请直接向 xxnet.dev@gmail.com 发邮件，并附上帐号、交易单号等详细信息。
 
-* 是否试过最新的版本 (https://github.com/XX-net/XX-Net/releases )？
+
+* 是否试过[最新的版本](https://github.com/XX-net/XX-Net/releases )？
 
 
-* 是否查看过 Wiki (https://github.com/XX-net/XX-Net/wiki )？
+* 是否查看过 [Wiki](https://github.com/XX-net/XX-Net/wiki )？
 
 
 * 是否以相关关键词搜索过类似 issues？
