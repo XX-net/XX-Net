@@ -7,6 +7,7 @@ import sys
 import time
 import platform
 import shutil
+import traceback
 from datetime import datetime
 
 # reduce resource request for threading
@@ -56,18 +57,19 @@ log_file = os.path.join(data_launcher_path, "launcher.log")
 xlog = getLogger("launcher", file_name=log_file)
 
 
-def uncaughtExceptionHandler(type_, value, traceback):
-    if type == KeyboardInterrupt:  # Ctrl + C on console
+def uncaughtExceptionHandler(etype, value, tb):
+    if etype == KeyboardInterrupt:  # Ctrl + C on console
         xlog.warn("KeyboardInterrupt, exiting...")
         module_init.stop_all()
         os._exit(0)
 
-    print("uncaught Exception:", type_, value, traceback)
+    exc_info = ''.join(traceback.format_exception(etype, value, tb))
+    print("uncaught Exception:\n" + exc_info)
     with open(os.path.join(data_launcher_path, "error.log"), "a") as fd:
         now = datetime.now()
         time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
-        fd.write("%s type:%s value=%s traceback:%s" % (time_str, type_, value, traceback))
-    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", type_, value, traceback)
+        fd.write("%s type:%s value=%s traceback:%s" % (time_str, etype, value, exc_info))
+    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", etype, value, exc_info)
     # sys.exit(1)
 
 
