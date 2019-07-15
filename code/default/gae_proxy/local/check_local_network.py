@@ -2,9 +2,7 @@
 import sys
 import os
 
-import httplib
 import time
-import socket
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -22,173 +20,172 @@ if __name__ == "__main__":
         linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
         sys.path.append(linux_lib)
 
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
 
-import socks
+#try:
+#    from code.default.gae_proxy.local.config import config
+#except:
+#    from code.default.gae_proxy.local.config import config
 from config import config
 
+import simple_http_client
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 
 max_timeout = 5
 
-default_socket = socket.socket
 
+class CheckNetwork(object):
+    def __init__(self, type="IPv4"):
+        self.type = type
+        self.urls = []
+        self._checking_lock = threading.Lock()
+        self._checking_num = 0
+        self.network_stat = "unknown"
+        self.last_check_time = 0
+        self.continue_fail_count = 0
 
-def load_proxy_config():
-    global default_socket
-    if config.PROXY_ENABLE:
-
-        if config.PROXY_TYPE == "HTTP":
-            proxy_type = socks.HTTP
-        elif config.PROXY_TYPE == "SOCKS4":
-            proxy_type = socks.SOCKS4
-        elif config.PROXY_TYPE == "SOCKS5":
-            proxy_type = socks.SOCKS5
+        if config.PROXY_ENABLE:
+            if config.PROXY_USER:
+                self.proxy = "%s://%s:%s@%s:%d" % \
+                    (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST, config.PROXY_PORT)
+            else:
+                self.proxy = "%s://%s:%d" % \
+                    (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
         else:
-            xlog.error("proxy type %s unknown, disable proxy", config.PROXY_TYPE)
-            raise
+            self.proxy = None
 
-        socks.set_default_proxy(proxy_type, config.PROXY_HOST, config.PROXY_PORT, config.PROXY_USER, config.PROXY_PASSWD)
-load_proxy_config()
+        self.http_client = simple_http_client.Client(self.proxy, timeout=10)
 
-#####################################
-#  Checking network ok
+    def report_ok(self):
+        self.network_stat = "OK"
+        self.last_check_time = time.time()
+        self.continue_fail_count = 0
 
-_checking_lock = threading.Lock()
-_checking_num = 0
-network_stat = "unknown"
-last_check_time = 0
-continue_fail_count = 0
+    def report_fail(self):
+        self.continue_fail_count += 1
+        # don't record last_check_time here, it's not a real check
+        # last_check_time = time.time()
 
+        if self.continue_fail_count > 10:
+            # don't set network_stat to "unknown", wait for check
+            # network_stat = "unknown"
+            xlog.debug("report_connect_fail %s continue_fail_count:%d",
+                       self.type, self.continue_fail_count)
+            self.triger_check_network(True)
 
-def report_network_ok():
-    global network_stat, last_check_time, continue_fail_count
-    network_stat = "OK"
-    last_check_time = time.time()
-    continue_fail_count = 0
+    def get_stat(self):
+        return self.network_stat
 
+    def is_ok(self):
+        return self.network_stat == "OK"
 
-def report_network_fail():
-    global network_stat, continue_fail_count
-    continue_fail_count += 1
-    # don't record last_check_time here, it's not a real check
-    # last_check_time = time.time()
+    def _test_host(self, url):
+        try:
+            header = {
+                "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "accept-encoding": "gzip, deflate, sdch",
+                "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
+                "connection": "keep-alive"
+                }
+            response = self.http_client.request("HEAD", url, header, "", read_payload=False)
+            if response:
+                return True
+        except Exception as e:
+            if __name__ == "__main__":
+                xlog.exception("test %s e:%r", url, e)
 
-    if continue_fail_count > 10:
-        # don't set network_stat to "unknown", wait for check
-        # network_stat = "unknown"
-        xlog.debug("report_connect_fail continue_fail_count:%d", continue_fail_count)
-        triger_check_network(True)
-
-
-def is_ok():
-    global network_stat
-    return network_stat == "OK"
-
-
-def _check_one_host(host):
-    try:
-        conn = httplib.HTTPSConnection(host, 443, timeout=30)
-        header = {
-            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-            "accept": "application/json, text/javascript, */*; q=0.01",
-            "accept-encoding": "gzip, deflate, sdch",
-            "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-            "connection": "keep-alive"
-            }
-        conn.request("HEAD", "/", headers=header)
-        response = conn.getresponse()
-        if response.status:
-            return True
-    except Exception as e:
         return False
 
+    def _simple_check_worker(self):
+        time_now = time.time()
 
-def _simple_check_worker():
-    global _checking_lock, _checking_num, network_stat, last_check_time
-    time_now = time.time()
-    if config.PROXY_ENABLE:
-        socket.socket = socks.socksocket
-        xlog.debug("patch socks")
+        self._checking_lock.acquire()
+        self._checking_num += 1
+        self._checking_lock.release()
 
-    _checking_lock.acquire()
-    _checking_num += 1
-    _checking_lock.release()
+        network_ok = False
+        for url in self.urls:
+            if self._test_host(url):
+                network_ok = True
+                break
+            else:
+                if __name__ == "__main__":
+                    xlog.warn("test %s fail", url)
+                time.sleep(1)
 
-    network_ok = False
-    for host in ["www.microsoft.com", "www.apple.com", "code.jquery.com", "cdn.bootcss.com", "cdnjs.cloudflare.com"]:
-        if _check_one_host(host):
-            network_ok = True
-            break
+        if network_ok:
+            self.last_check_time = time.time()
+            self.report_ok()
+            xlog.debug("network %s is ok, cost:%d ms", self.type, 1000 * (time.time() - time_now))
+        else:
+            xlog.warn("network %s fail", self.type)
+            self.network_stat = "Fail"
+            self.last_check_time = time.time()
 
-    if network_ok:
-        last_check_time = time.time()
-        report_network_ok()
-        xlog.debug("network is ok, cost:%d ms", 1000 * (time.time() - time_now))
+        self._checking_lock.acquire()
+        self._checking_num -= 1
+        self._checking_lock.release()
+
+    def triger_check_network(self, fail=False, force=False):
+        time_now = time.time()
+        if not force:
+            if self._checking_num > 0:
+                return
+
+            if fail or self.network_stat != "OK":
+                # Fail or unknown
+                if time_now - self.last_check_time < 3:
+                    return
+            else:
+                if time_now - self.last_check_time < 10:
+                    return
+
+        self.last_check_time = time_now
+        threading.Thread(target=self._simple_check_worker).start()
+
+
+IPv4 = CheckNetwork("IPv4")
+IPv4.urls = [
+            "https://www.microsoft.com",
+            "https://www.apple.com",
+            "https://code.jquery.com",
+            "https://cdn.bootcss.com",
+            "https://cdnjs.cloudflare.com"]
+IPv4.triger_check_network()
+
+IPv6 = CheckNetwork("IPv6")
+IPv6.urls = ["http://[2001:41d0:8:e8ad::1]",
+             "http://[2001:260:401:372::5f]",
+             "http://[2a02:188:3e00::32]",
+             "http://[2804:10:4068::202:82]"
+             ]
+IPv6.triger_check_network()
+
+
+def report_ok(ip):
+    if "." in ip:
+        IPv4.report_ok()
     else:
-        xlog.warn("network fail")
-        network_stat = "Fail"
-        last_check_time = time.time()
-
-    _checking_lock.acquire()
-    _checking_num -= 1
-    _checking_lock.release()
-
-    if config.PROXY_ENABLE:
-        socket.socket = default_socket
-        xlog.debug("restore socket")
+        IPv6.report_ok()
 
 
-def triger_check_network(fail=False, force=False):
-    global _checking_lock, _checking_num, network_stat, last_check_time
-    time_now = time.time()
-    if not force:
-        if _checking_num > 0:
-            return
-
-        if fail or network_stat != "OK":
-            # Fail or unknown
-            if time_now - last_check_time < 3:
-                return
-        else:
-            if time_now - last_check_time < 10:
-                return
-
-    last_check_time = time_now
-    th = threading.Thread(target=_simple_check_worker)
-    th.start()
+def report_fail(ip):
+    if "." in ip:
+        IPv4.report_fail()
+    else:
+        IPv6.report_fail()
 
 
-triger_check_network()
-
-#===========================================
-
-
-def _check_ipv6_host(host):
-    try:
-        conn = httplib.HTTPConnection(host, 80, timeout=5)
-        header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
-                  "accept":"application/json, text/javascript, */*; q=0.01",
-                  "accept-encoding":"gzip, deflate, sdch",
-                  "accept-language":'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
-                  "connection":"keep-alive"
-                  }
-        conn.request("HEAD", "/", headers=header)
-        response = conn.getresponse()
-        if response.status:
-            return True
-        else:
-            return False
-    except Exception as e:
-        return False
+def is_ok(ip=None):
+    if not ip:
+        return IPv4.is_ok() or IPv6.is_ok()
+    elif "." in ip:
+        return IPv4.is_ok()
+    else:
+        return IPv6.is_ok()
 
 
-def check_ipv6():
-    hosts = ["bt.neu6.edu.cn", "v6.ipv6-test.com", "ipv6.test-ipv6.jp"]
-    for host in hosts:
-        if _check_ipv6_host(host):
-            return True
-    return False
+if __name__ == "__main__":
+    print IPv6._test_host("http://[2804:10:4068::202:82]")

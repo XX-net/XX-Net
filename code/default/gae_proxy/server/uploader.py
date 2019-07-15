@@ -38,12 +38,14 @@ sys.path.insert(0, lib_path)
 noarch_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, "python27", "1.0", "lib", "noarch"))
 sys.path.append(noarch_path)
 
+data_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, os.path.pardir, os.path.pardir, "data", "gae_proxy"))
+cookie_file = os.path.join(data_path, ".appcfg_oauth2_tokens")
+
 import mimetypes
 mimetypes._winreg = None
 
 
 from google.appengine.tools import appengine_rpc, appcfg
-
 
 
 def upload(appid):
@@ -67,10 +69,10 @@ def upload(appid):
         for i in range(3):
             try:
                 #"--noauth_local_webserver"
-                result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname ]).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'rollback', '--oauth2_credential_file', cookie_file, dirname]).Run()
                 if result != 0:
                     continue
-                result = appcfg.AppCfgApp(['appcfg', 'update', dirname]).Run()
+                result = appcfg.AppCfgApp(['appcfg', 'update', '--oauth2_credential_file', cookie_file, dirname]).Run()
                 if result != 0:
                     continue
                 return True
@@ -114,12 +116,11 @@ def appid_is_valid(appid):
 
 
 def clean_cookie_file():
-    cookie_file = "~/.appcfg_oauth2_tokens"
-    cookie_file = os.path.expanduser(cookie_file)
-    try:
-        os.remove(cookie_file)
-    except OSError:
-        pass
+    if os.path.exists(cookie_file):
+        try:
+            os.remove(cookie_file)
+        except OSError:
+            logging.info(u'令牌删除失败，请手动删除 %s 。', cookie_file)
 
 
 def update_rc4_password(rc4_password):

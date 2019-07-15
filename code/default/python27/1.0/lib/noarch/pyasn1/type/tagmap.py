@@ -1,52 +1,96 @@
+#
+# This file is part of pyasn1 software.
+#
+# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
+#
 from pyasn1 import error
 
-class TagMap:
-    def __init__(self, posMap={}, negMap={}, defType=None):
-        self.__posMap = posMap.copy()
-        self.__negMap = negMap.copy()
-        self.__defType = defType
+__all__ = ['TagMap']
+
+
+class TagMap(object):
+    """Map *TagSet* objects to ASN.1 types
+
+    Create an object mapping *TagSet* object to ASN.1 type.
+
+    *TagMap* objects are immutable and duck-type read-only Python
+    :class:`dict` objects holding *TagSet* objects as keys and ASN.1
+    type objects as values.
+
+    Parameters
+    ----------
+    presentTypes: :py:class:`dict`
+        Map of :class:`~pyasn1.type.tag.TagSet` to ASN.1 objects considered
+        as being unconditionally present in the *TagMap*.
+
+    skipTypes: :py:class:`dict`
+        A collection of :class:`~pyasn1.type.tag.TagSet` objects considered
+        as absent in the *TagMap* even when *defaultType* is present.
+
+    defaultType: ASN.1 type object
+        An ASN.1 type object callee *TagMap* returns for any *TagSet* key not present
+        in *presentTypes* (unless given key is present in *skipTypes*).
+    """
+    def __init__(self, presentTypes=None, skipTypes=None, defaultType=None):
+        self.__presentTypes = presentTypes or {}
+        self.__skipTypes = skipTypes or {}
+        self.__defaultType = defaultType
 
     def __contains__(self, tagSet):
-        return tagSet in self.__posMap or \
-               self.__defType is not None and tagSet not in self.__negMap
+        return (tagSet in self.__presentTypes or
+                self.__defaultType is not None and tagSet not in self.__skipTypes)
 
     def __getitem__(self, tagSet):
-        if tagSet in self.__posMap:
-            return self.__posMap[tagSet]
-        elif tagSet in self.__negMap:
-            raise error.PyAsn1Error('Key in negative map')
-        elif self.__defType is not None:
-            return self.__defType
-        else:
-            raise KeyError()
+        try:
+            return self.__presentTypes[tagSet]
+        except KeyError:
+            if self.__defaultType is None:
+                raise KeyError()
+            elif tagSet in self.__skipTypes:
+                raise error.PyAsn1Error('Key in negative map')
+            else:
+                return self.__defaultType
+
+    def __iter__(self):
+        return iter(self.__presentTypes)
 
     def __repr__(self):
-        s = '%r/%r' % (self.__posMap, self.__negMap)
-        if self.__defType is not None:
-            s = s + '/%r' % (self.__defType,)
-        return s
+        representation = '%s object at 0x%x' % (self.__class__.__name__, id(self))
 
-    def clone(self, parentType, tagMap, uniq=False):
-        if self.__defType is not None and tagMap.getDef() is not None:
-            raise error.PyAsn1Error('Duplicate default value at %s' % (self,))
-        if tagMap.getDef() is not None:
-            defType = tagMap.getDef()
-        else:
-            defType = self.__defType
+        if self.__presentTypes:
+            representation += ' present %s' % repr(self.__presentTypes)
 
-        posMap = self.__posMap.copy()
-        for k in tagMap.getPosMap():
-            if uniq and k in posMap:
-                raise error.PyAsn1Error('Duplicate positive key %s' % (k,))
-            posMap[k] = parentType
+        if self.__skipTypes:
+            representation += ' skip %s' % repr(self.__skipTypes)
 
-        negMap = self.__negMap.copy()
-        negMap.update(tagMap.getNegMap())
+        if self.__defaultType is not None:
+            representation += ' default %s' % repr(self.__defaultType)
 
-        return self.__class__(
-            posMap, negMap, defType,
-            )
+        return '<%s>' % representation
 
-    def getPosMap(self): return self.__posMap.copy()
-    def getNegMap(self): return self.__negMap.copy()
-    def getDef(self): return self.__defType
+    @property
+    def presentTypes(self):
+        """Return *TagSet* to ASN.1 type map present in callee *TagMap*"""
+        return self.__presentTypes
+
+    @property
+    def skipTypes(self):
+        """Return *TagSet* collection unconditionally absent in callee *TagMap*"""
+        return self.__skipTypes
+
+    @property
+    def defaultType(self):
+        """Return default ASN.1 type being returned for any missing *TagSet*"""
+        return self.__defaultType
+
+    # Backward compatibility
+
+    def getPosMap(self):
+        return self.presentTypes
+
+    def getNegMap(self):
+        return self.skipTypes
+
+    def getDef(self):
+        return self.defaultType

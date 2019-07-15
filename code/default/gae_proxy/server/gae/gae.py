@@ -17,7 +17,7 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.1'
+__version__ = '3.3.5'
 __password__ = ''
 __hostsdeny__ = ()
 #__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
@@ -34,6 +34,7 @@ import httplib
 import io
 import string
 import traceback
+from mimetypes import guess_type
 
 from google.appengine.api import urlfetch
 from google.appengine.api.taskqueue.taskqueue import MAX_URL_LENGTH
@@ -130,6 +131,34 @@ def format_response(status, headers, content):
     return struct.pack('!h', len(data)) + data
 
 
+def is_text_content_type(content_type):
+    mct, _, sct = content_type.partition('/')
+    if mct == 'text':
+        return True
+    if mct == 'application':
+        sct = sct.split(';', 1)[0]
+        if (sct in ('json', 'javascript', 'x-www-form-urlencoded') or
+                sct.endswith(('xml', 'script')) or
+                sct.startswith(('xml', 'rss', 'atom'))):
+            return True
+    return False
+
+
+def is_deflate(data):
+    if len(data) > 1:
+        CMF, FLG = bytearray(data[:2])
+        if CMF & 0x0F == 8 and CMF & 0x80 == 0 and ((CMF << 8) + FLG) % 31 == 0:
+            return True
+    if len(data) > 0:
+        try:
+            decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+            decompressor.decompress(data[:1024])
+            return decompressor.unused_data == ''
+        except:
+            return False
+    return False
+
+
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET' and 'HTTP_X_URLFETCH_PS1' not in environ:
         # xxnet 自用
@@ -145,7 +174,7 @@ def application(environ, start_response):
             yield 'Password: %s%s%s' % (__password__[0], '*' * (len(__password__) - 2), __password__[-1])
         raise StopIteration
 
-    start_response('200 OK', [('Content-Type', 'image/gif')])
+    start_response('200 OK', [('Content-Type', 'image/gif'), ('X-Server', 'GPS ' + __version__)])
 
     if environ['REQUEST_METHOD'] == 'HEAD':
         raise StopIteration
@@ -323,7 +352,6 @@ def application(environ, start_response):
                 url,
                 response)
 
-            allow_truncated = True
             m = re.search(r'=\s*(\d+)-', headers.get('Range')
                           or headers.get('range') or '')
             if m is None:
@@ -366,6 +394,7 @@ def application(environ, start_response):
     #    v = response_headers[k]
     #    logging.debug("Head:%s: %s", k, v)
     content_type = response_headers.get('content-type', '')
+    content_encoding = response_headers.get('content-encoding', '')
     # 也是分片合并之类的细节
     if status_code == 200 and maxsize and len(data) > maxsize and response_headers.get(
             'accept-ranges', '').lower() == 'bytes' and int(response_headers.get('content-length', 0)):
@@ -374,8 +403,24 @@ def application(environ, start_response):
         response_headers['Content-Range'] = 'bytes 0-%d/%d' % (
             maxsize - 1, len(data))
         data = data[:maxsize]
-    if status_code == 200 and 'content-encoding' not in response_headers and 512 < len(
-            data) < URLFETCH_DEFLATE_MAXSIZE and content_type.startswith(('text/', 'application/json', 'application/javascript')):
+    if 'gzip' in accept_encoding:
+        if (data and status_code == 200 and
+                content_encoding == '' and
+                is_text_content_type(content_type) and
+                is_deflate(data)):
+            # ignore wrong "Content-Type"
+            type = guess_type(url)[0]
+            if type is None or is_text_content_type(type):
+                if 'deflate' in accept_encoding:
+                    response_headers['Content-Encoding'] = content_encoding = 'deflate'
+                else:
+                    data = inflate(data)
+    else:
+        if content_encoding in ('gzip', 'deflate', 'br'):
+            del response_headers['Content-Encoding']
+            content_encoding = ''
+    if status_code == 200 and content_encoding == '' and 512 < len(
+            data) < URLFETCH_DEFLATE_MAXSIZE and is_text_content_type(content_type):
         if 'gzip' in accept_encoding:
             response_headers['Content-Encoding'] = 'gzip'
             compressobj = zlib.compressobj(

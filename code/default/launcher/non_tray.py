@@ -3,6 +3,7 @@
 
 import time
 
+
 class None_tray():
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         pass
@@ -14,6 +15,7 @@ class None_tray():
         while True:
             time.sleep(100)
 
+
 sys_tray = None_tray()
 
 def main():
@@ -21,4 +23,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

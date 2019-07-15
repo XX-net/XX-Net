@@ -232,6 +232,24 @@ class BufferedSocket(object):
 
         return data
 
+    def recv_into(self, buf, nbytes):
+        if self._bytes_in_buffer >= nbytes:
+            buf[:] = self._buffer_view[self._index:self._index+nbytes]
+            self._index += nbytes
+            self._bytes_in_buffer -= nbytes
+            return nbytes
+
+        if self._bytes_in_buffer:
+            buf[:self._bytes_in_buffer] = self._buffer_view[self._index:self._index+self._bytes_in_buffer]
+            p = self._bytes_in_buffer
+            nbytes -= self._bytes_in_buffer
+            self._index = 0
+            self._bytes_in_buffer = 0
+        else:
+            p = 0
+
+        return self._sck.recv_into(buf[p:], nbytes)
+
     def fill(self):
         """
         Attempts to fill the buffer as much as possible. It will block for at
@@ -247,7 +265,6 @@ class BufferedSocket(object):
         self._bytes_in_buffer += count
 
         return
-
 
     def readline(self):
         """

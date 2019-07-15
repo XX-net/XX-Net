@@ -1,81 +1,121 @@
-import time
 import os
-import threading
-from xlog import getLogger
-xlog = getLogger("cloudflare_front")
-xlog.set_buffer(500)
-import simple_http_client
-from config import config
 
-import http_dispatcher
-import connect_control
-import check_ip
+import xlog
+logger = xlog.getLogger("cloudflare_front")
+logger.set_buffer(500)
+
+from config import Config
+import host_manager
+from front_base.openssl_wrap import SSLContext
+from front_base.connect_creator import ConnectCreator
+from front_base.ip_manager import IpManager
+from front_base.ip_source import Ipv4RangeSource
+from front_base.http_dispatcher import HttpsDispatcher
+from front_base.connect_manager import ConnectManager
+from front_base.check_ip import CheckIp
+from http2_connection import CloudflareHttp2Worker
+from gae_proxy.local import check_local_network
+
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 class Front(object):
+    name = "cloudflare_front"
+
     def __init__(self):
+        self.running = True
+        self.last_host = "center.xx-net.net"
+
+        self.logger = logger
+        config_path = os.path.join(module_data_path, "cloudflare_front.json")
+        self.config = Config(config_path)
+
+        ca_certs = os.path.join(current_path, "cacert.pem")
+        default_domain_fn = os.path.join(current_path, "front_domains.json")
+        domain_fn = os.path.join(module_data_path, "cloudflare_domains.json")
+        self.host_manager = host_manager.HostManager(self.config, logger, default_domain_fn, domain_fn, self)
+
+        openssl_context = SSLContext(logger, ca_certs=ca_certs)
+        self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
+        self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
+
+        ip_source = Ipv4RangeSource(
+            logger, self.config,
+            os.path.join(current_path, "ip_range.txt"),
+            os.path.join(module_data_path, "cloudflare_ip_range.txt")
+        )
+        self.ip_manager = IpManager(
+            logger, self.config, ip_source, check_local_network,
+            self.check_ip.check_ip,
+            os.path.join(current_path, "good_ip.txt"),
+            os.path.join(module_data_path, "cloudflare_ip_list.txt"),
+            scan_ip_log=None)
+
+        self.connect_manager = ConnectManager(
+            logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
+
         self.dispatchs = {}
-        threading.Thread(target=self.update_front_domains).start()
 
-    @staticmethod
-    def update_front_domains():
-        next_update_time = time.time()
-        while connect_control.keep_running:
-            if time.time() < next_update_time:
-                time.sleep(4)
-                continue
+    def get_dispatcher(self, host=None):
+        if host is None:
+            host = self.last_host
+        else:
+            self.last_host = host
 
-            try:
-                client = simple_http_client.HTTP_client("raw.githubusercontent.com", use_https=True)
-                path = "/XX-net/XX-Net/master/code/default/x_tunnel/local/cloudflare_front/front_domains.json"
-                content, status, response = client.request("GET", path)
-                if status != 200:
-                    xlog.warn("update front domains fail:%d", status)
-                    raise Exception("status:%r", status)
-
-                front_domains_fn = os.path.join(config.DATA_PATH, "front_domains.json")
-                if os.path.exists(front_domains_fn):
-                    with open(front_domains_fn, "r") as fd:
-                        old_content = fd.read()
-                        if content != old_content:
-                            with open(front_domains_fn, "w") as fd:
-                                fd.write(content)
-                            check_ip.update_front_domains()
-
-                next_update_time = time.time() + (4 * 3600)
-                xlog.info("updated cloudflare front domains from github.")
-            except Exception as e:
-                next_update_time = time.time() + (1800)
-                xlog.debug("updated cloudflare front domains from github fail:%r", e)
-
-    def __del__(self):
-        connect_control.keep_running = False
-
-    def request(self, method, host, path="/", header={}, data="", timeout=120):
         if host not in self.dispatchs:
-            self.dispatchs[host] = http_dispatcher.HttpsDispatcher(host)
+            http_dispatcher = HttpsDispatcher(
+                logger, self.config, self.ip_manager, self.connect_manager,
+                http2worker=CloudflareHttp2Worker)
+            self.dispatchs[host] = http_dispatcher
 
         dispatcher = self.dispatchs[host]
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            try:
-                response = dispatcher.request(method, host, path, header, data, timeout=timeout)
-                status = response.status
-                if status not in [200, 405]:
-                    xlog.warn("front request %s %s%s fail, status:%d", method, host, path, status)
-                    continue
+        return dispatcher
 
-                content = response.task.read_all()
-                xlog.debug("%s %s%s trace:%s", method, response.ssl_sock.host, path, response.task.get_trace())
-                return content, status, response
-            except Exception as e:
-                xlog.warn("front request %s %s%s fail:%r", method, host, path, e)
-                continue
+    def request(self, method, host, path="/", headers={}, data="", timeout=120):
+        dispatcher = self.get_dispatcher(host)
+        response = dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
+        if not response:
+            self.logger.warn("req %s get response timeout", path)
+            return "", 602, {}
 
-        return "", 500, {}
+        status = response.status
+        content = response.task.read_all()
+        if status == 200:
+            self.logger.debug("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,
+                       response.task.get_trace())
+        else:
+            self.logger.warn("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,
+                       response.task.get_trace())
+        return content, status, response
 
     def stop(self):
-        connect_control.keep_running = False
+        logger.info("terminate")
+        self.connect_manager.set_ssl_created_cb(None)
+        for host in self.dispatchs:
+            dispatcher = self.dispatchs[host]
+            dispatcher.stop()
+        self.connect_manager.stop()
+        self.ip_manager.stop()
+
+        self.running = False
+
+    def set_proxy(self, args):
+        logger.info("set_proxy:%s", args)
+
+        self.config.PROXY_ENABLE = args["enable"]
+        self.config.PROXY_TYPE = args["type"]
+        self.config.PROXY_HOST = args["host"]
+        self.config.PROXY_PORT = args["port"]
+        self.config.PROXY_USER = args["user"]
+        self.config.PROXY_PASSWD = args["passwd"]
+
+        self.config.save()
+
+        self.connect_creator.update_config()
 
 
 front = Front()

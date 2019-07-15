@@ -4,8 +4,7 @@ import subprocess
 import sys
 
 
-class SimpleI18N():
-
+class SimpleI18N:
     def __init__(self, lang=None):
         if lang:
             self.lang = lang
@@ -48,7 +47,7 @@ class SimpleI18N():
             return 'zh_CN'
         elif 'en' in lang_code:
             return 'en_US'
-        elif 'en' in lang_code:
+        elif 'fa' in lang_code:
             return 'fa_IR'
         else:
             return 'Unknown'

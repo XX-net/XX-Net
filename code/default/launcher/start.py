@@ -7,6 +7,7 @@ import sys
 import time
 import platform
 import shutil
+import traceback
 from datetime import datetime
 
 # reduce resource request for threading
@@ -14,6 +15,12 @@ from datetime import datetime
 import threading
 try:
     threading.stack_size(128 * 1024)
+except:
+    pass
+
+try:
+    import tracemalloc
+    tracemalloc.start(10)
 except:
     pass
 
@@ -42,21 +49,28 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
-
 create_data_path()
 
 
-from instances import xlog
+from xlog import getLogger
+log_file = os.path.join(data_launcher_path, "launcher.log")
+xlog = getLogger("launcher", file_name=log_file)
 
 
-def uncaughtExceptionHandler(type_, value, traceback):
-    print("uncaught Exception:", type_, value, traceback)
+def uncaughtExceptionHandler(etype, value, tb):
+    if etype == KeyboardInterrupt:  # Ctrl + C on console
+        xlog.warn("KeyboardInterrupt, exiting...")
+        module_init.stop_all()
+        os._exit(0)
+
+    exc_info = ''.join(traceback.format_exception(etype, value, tb))
+    print("uncaught Exception:\n" + exc_info)
     with open(os.path.join(data_launcher_path, "error.log"), "a") as fd:
         now = datetime.now()
         time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
-        fd.write("%s type:%s value=%s traceback:%s" % (time_str, type_, value, traceback))
-    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", type_, value, traceback)
-    # sys.exit(1)#出现异常时程序是否退出
+        fd.write("%s type:%s value=%s traceback:%s" % (time_str, etype, value, exc_info))
+    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", etype, value, exc_info)
+    # sys.exit(1)
 
 
 sys.excepthook = uncaughtExceptionHandler
@@ -64,8 +78,8 @@ sys.excepthook = uncaughtExceptionHandler
 
 has_desktop = True
 
-if "arm" in platform.machine():
-    xlog.info("This is Android or IOS.")
+if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine():
+    xlog.info("This is Android or IOS or router.")
     has_desktop = False
 
     # check remove linux lib
@@ -75,13 +89,10 @@ if "arm" in platform.machine():
     shutil.rmtree(linux_lib, ignore_errors=True)
     from non_tray import sys_tray
 
+    platform_lib = ""
 elif sys.platform.startswith("linux"):
     def X_is_running():
         try:
-            import pygtk
-            pygtk.require('2.0')
-            import gtk
-
             from subprocess import Popen, PIPE
             p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
             p.communicate()
@@ -89,7 +100,25 @@ elif sys.platform.startswith("linux"):
         except:
             return False
 
-    if X_is_running():
+    def has_gi():
+        try:
+            import gi
+            gi.require_version('Gtk', '3.0')
+            from gi.repository import Gtk as gtk
+            return True
+        except:
+            return False
+
+    def has_pygtk():
+        try:
+            import pygtk
+            pygtk.require('2.0')
+            import gtk
+            return True
+        except:
+            return False
+
+    if X_is_running() and (has_pygtk() or has_gi()):
         from gtk_tray import sys_tray
     else:
         from non_tray import sys_tray
@@ -166,7 +195,6 @@ def exit_handler():
     module_init.stop_all()
     web_control.stop()
 
-
 atexit.register(exit_handler)
 
 
@@ -178,40 +206,46 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    if sys.platform == "win32" and config.get(["show_compat_suggest"], 1):
+        import win_compat_suggest
+        win_compat_suggest.main()
+
     current_version = update_from_github.current_version()
 
     xlog.info("start XX-Net %s", current_version)
 
-    web_control.confirm_xxnet_exit()
+    web_control.confirm_xxnet_not_running()
 
     setup_win_python.check_setup()
 
-    last_run_version = config.get(["modules", "launcher", "last_run_version"], "0.0.0")
-    if last_run_version != current_version:
-        import post_update
-        post_update.run(last_run_version)
-        config.set(["modules", "launcher", "last_run_version"], current_version)
-        config.save()
+    import post_update
+    post_update.check()
+
+    allow_remote = 0
+    if len(sys.argv) > 1:
+        for s in sys.argv[1:]:
+            xlog.info("command args:%s", s)
+            if s == "-allow_remote":
+                allow_remote = 1
+                module_init.xargs["allow_remote"] = 1
 
     module_init.start_all_auto()
-
-    web_control.start()
+    web_control.start(allow_remote)
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         import webbrowser
-        webbrowser.open("http://127.0.0.1:%s/" % host_port)
+        webbrowser.open("http://localhost:%s/" % host_port)
 
     update.start()
+
+    update_from_github.cleanup()
 
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
     else:
         while True:
-            time.sleep(100)
-
-    module_init.stop_all()
-    sys.exit()
+            time.sleep(1)
 
 
 if __name__ == '__main__':
@@ -220,6 +254,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:  # Ctrl + C on console
         module_init.stop_all()
         os._exit(0)
+        sys.exit()
     except Exception as e:
         xlog.exception("launcher except:%r", e)
         raw_input("Press Enter to continue...")
