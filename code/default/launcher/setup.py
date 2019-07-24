@@ -18,12 +18,10 @@ python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', 
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-
 opener = urllib2.build_opener()
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir,
-                                             'data', 'downloads'))
+download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
 
 xxnet_unzip_path = ""
 
@@ -147,7 +145,6 @@ def update_environment():
 
 
 def wait_xxnet_exit():
-
     def http_request(url, method="GET"):
         proxy_handler = urllib2.ProxyHandler({})
         opener = urllib2.build_opener(proxy_handler)

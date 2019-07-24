@@ -1,7 +1,7 @@
 import threading
 import time
 import socket
-import struct
+import xstruct as struct
 import select
 
 import utils
@@ -67,7 +67,7 @@ class ReadBuffer(object):
             raise Exception("ReadBuffer buf_len:%d, start:%d len:%d" % (buf_len, begin, size))
 
         self.size = size
-        self.buf = buf
+        self.buf = memoryview(buf)
         self.begin = begin
 
     def __len__(self):
@@ -128,75 +128,21 @@ class AckPool():
         return out_string
 
 
-class BlockSendPool():
-    def __init__(self, max_payload, send_delay):
-        self.mutex = threading.Lock()
-        self.wake_thread = None
-        self.max_payload = max_payload
-        self.send_delay = send_delay
-        self.start()
-
-    def start(self):
-        with self.mutex:
-            self.head_sn = 1
-            self.tail_sn = 1
-            self.block_list = {}
-            self.last_block = WriteBuffer()
-            self.waiters = []  # (end_time, Lock())
-            self.last_notify_time = 0
+class WaitQueue():
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.waiters = []
+        # (end_time, Lock())
 
         self.running = True
-        if self.send_delay:
-            self.wake_thread = threading.Thread(target=self.wake_worker)
-            self.wake_thread.daemon = True
-            self.wake_thread.start()
-        else:
-            self.wake_thread = None
 
     def stop(self):
-        # xlog.info("Block_send_pool stop")
         self.running = False
-        with self.mutex:
-            for end_time, lock in self.waiters:
-                lock.release()
-            self.waiters = []
-
-        if self.wake_thread:
-            # xlog.debug("join wake_thread")
-            self.wake_thread.join()
-            self.wake_thread = None
-            # xlog.info("Block_send_pool stop finished")
-
-    def wake_worker(self):
-        wake_interval = self.send_delay / 1000.0
-        while self.running:
-
-            with self.mutex:
-                if len(self.waiters):
-                    end_time, lock = self.waiters[0]
-                    if end_time < time.time() or len(self.last_block):
-                        lock.release()
-                        del self.waiters[0]
-                        self.last_notify_time = time.time()
-
-            time.sleep(wake_interval)
-            # xlog.debug("wake_worker exit")
-
-    def put(self, data, no_delay=False):
-        if len(data) == 0:
-            with self.mutex:
-                self.notify()
-            return
-
-        # xlog.debug("send_pool put len:%d no_deay:%r", len(data), no_delay)
-        with self.mutex:
-            self.last_block.append(data)
-
-            if len(self.last_block) > self.max_payload or self.send_delay == 0 or no_delay:
-                self.block_list[self.head_sn] = self.last_block
-                self.last_block = WriteBuffer()
-                self.head_sn += 1
-                self.notify()
+        xlog.info("WaitQueue stop")
+        for end_time, lock in self.waiters:
+            lock.release()
+        self.waiters = []
+        xlog.info("WaitQueue stop finished")
 
     def notify(self):
         # xlog.debug("notify")
@@ -204,84 +150,119 @@ class BlockSendPool():
             # xlog.debug("notify none.")
             return
 
-        end_time, lock = self.waiters.pop(0)
-        lock.release()
-        self.last_notify_time = time.time()
+        try:
+            end_time, lock = self.waiters.pop(0)
+            lock.release()
+        except:
+            pass
 
     def wait(self, end_time):
-        lock = threading.Lock()
-        lock.acquire()
+        with self.lock:
+            lock = threading.Lock()
+            lock.acquire()
 
-        if len(self.waiters) == 0:
-            self.waiters.append((end_time, lock))
-        else:
-            is_max = True
-            for i in range(0, len(self.waiters)):
-                iend_time, ilock = self.waiters[i]
-                if iend_time > end_time:
-                    is_max = False
-                    break
-
-            if is_max:
+            if len(self.waiters) == 0:
                 self.waiters.append((end_time, lock))
             else:
-                self.waiters.insert(i, (end_time, lock))
+                is_max = True
+                for i in range(0, len(self.waiters)):
+                    try:
+                        iend_time, ilock = self.waiters[i]
+                        if iend_time > end_time:
+                            is_max = False
+                            break
+                    except Exception as e:
+                        if i >= len(self.waiters):
+                            break
+                        xlog.warn("get %d from size:%d fail.", i, len(self.waiters))
+                        continue
 
-        self.mutex.release()
+                if is_max:
+                    self.waiters.append((end_time, lock))
+                else:
+                    self.waiters.insert(i, (end_time, lock))
+
         lock.acquire()
-        self.mutex.acquire()
-
-    def get(self, timeout=24 * 3600):
-        # xlog.debug("send_pool get")
-        data = WriteBuffer()
-        sn = 0
-        begin_time = time.time()
-        end_time = begin_time + timeout
-
-        with self.mutex:
-            for wait_i in range(0, 2):
-                if self.tail_sn < self.head_sn:
-                    data = self.block_list[self.tail_sn]
-                    del self.block_list[self.tail_sn]
-                    sn = self.tail_sn
-                    self.tail_sn += 1
-
-                    break
-
-                time_now = time.time()
-                if time_now > end_time or len(self.last_block):
-                    if len(self.last_block) > 0:
-                        data = self.last_block
-                        sn = self.tail_sn
-                        self.last_block = WriteBuffer()
-                        self.head_sn += 1
-                        self.tail_sn += 1
-
-                    break
-
-                # xlog.debug("send_pool get wait when no data, sn:%d tail:%d", sn, self.tail_sn)
-                self.wait(end_time)
-                if not self.running:
-                    break
-                    # xlog.debug("send_pool get wake after no data, sn:%d tail:%d", sn, self.tail_sn)
-
-        # xlog.debug("send_pool get, sn:%r len:%d t:%d", sn, len(data), (time.time() - begin_time)*1000)
-        # xlog.debug("Get:%s", utils.str2hex(data))
-        return data, sn
 
     def status(self):
-        out_string = "Block_send_pool:<br>\n"
-        out_string += " head_sn:%d<br>\n" % self.head_sn
-        out_string += " tail_sn:%d<br>\n" % self.tail_sn
-        out_string += " block_list: %d<br>\n" % len(self.block_list)
-        for sn in sorted(self.block_list.iterkeys()):
-            data = self.block_list[sn]
-            out_string += "  [%d] len:%d<br>\r\n" % (sn, len(data))
-
-        out_string += " waiters: %d<br>\n" % len(self.waiters)
+        out_string = "waiters[%d]:<br>\n" % len(self.waiters)
         for i in range(0, len(self.waiters)):
             end_time, lock = self.waiters[i]
-            out_string += "  %d<br>\r\n" % ((end_time - time.time()))
+            out_string += "%d<br>\r\n" % ((end_time - time.time()))
+
+        return out_string
+
+
+class SendBuffer():
+    def __init__(self, max_payload):
+        self.mutex = threading.Lock()
+        self.max_payload = max_payload
+        self.reset()
+
+    def reset(self):
+        self.pool_size = 0
+        self.last_put_time = time.time()
+        with self.mutex:
+            self.head_sn = 1
+            self.tail_sn = 1
+            self.block_list = {}
+            self.last_block = WriteBuffer()
+
+    def put(self, data):
+        dlen = len(data)
+        if dlen == 0:
+            xlog.warn("SendBuffer put 0")
+            return
+
+        # xlog.debug("SendBuffer put len:%d", len(data))
+        self.last_put_time = time.time()
+        with self.mutex:
+            self.pool_size += dlen
+            self.last_block.append(data)
+
+            if len(self.last_block) > self.max_payload:
+                self.block_list[self.head_sn] = self.last_block
+                self.last_block = WriteBuffer()
+                self.head_sn += 1
+                return True
+
+    def get(self):
+        with self.mutex:
+            if self.tail_sn < self.head_sn:
+                data = self.block_list[self.tail_sn]
+                del self.block_list[self.tail_sn]
+                sn = self.tail_sn
+                self.tail_sn += 1
+
+                self.pool_size -= len(data)
+                # xlog.debug("send_pool get, sn:%r len:%d ", sn, len(data))
+                return data, sn
+
+            if len(self.last_block) > 0:
+                data = self.last_block
+                sn = self.tail_sn
+                self.last_block = WriteBuffer()
+                self.head_sn += 1
+                self.tail_sn += 1
+
+                self.pool_size -= len(data)
+                # xlog.debug("send_pool get, sn:%r len:%d ", sn, len(data))
+                return data, sn
+
+        #xlog.debug("Get:%s", utils.str2hex(data))
+        # xlog.debug("SendBuffer get wake after no data, tail:%d", self.tail_sn)
+        return "", 0
+
+    def status(self):
+        out_string = "SendBuffer:<br>\n"
+        out_string += " size:%d<br>\n" % self.pool_size
+        out_string += " last_put_time:%f<br>\n" % (time.time() - self.last_put_time)
+        out_string += " head_sn:%d<br>\n" % self.head_sn
+        out_string += " tail_sn:%d<br>\n" % self.tail_sn
+        out_string += "block_list:[%d]<br>\n" % len(self.block_list)
+        for sn in sorted(self.block_list.iterkeys()):
+            data = self.block_list[sn]
+            out_string += "[%d] len:%d<br>\r\n" % (sn, len(data))
 
         return out_string
 
@@ -441,7 +422,7 @@ class Conn(object):
             if ':' in host:
                 # IPV6
                 ip = host
-            elif utils.check_ip_valid(host):
+            elif utils.check_ip_valid4(host):
                 # IPV4
                 ip = host
             else:
@@ -451,8 +432,8 @@ class Conn(object):
             sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
             # set reuseaddr option to avoid 10048 socket error
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # resize socket recv buffer 8K->32K to improve browser releated application performance
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
+            # resize socket recv buffer ->256K to improve browser releated application performance
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 262144)
             # disable negal algorithm to send http request quickly.
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             # set a short timeout to trigger timeout retry more quickly.
@@ -522,7 +503,10 @@ class Conn(object):
                     self.recv_notice.release()
 
             elif cmd_id == 2:  # Closed
-                self.xlog.info("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, data.get())
+                dat = data.get()
+                if isinstance(dat, memoryview):
+                    dat = dat.tobytes()
+                self.xlog.debug("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, dat)
                 if self.is_client:
                     self.transfer_peer_close("finish")
                 self.stop("peer close")

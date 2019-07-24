@@ -18,10 +18,6 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ _( "Server listen address" ) }}</td>
-                <td class="socks_addr"></td>
-            </tr>
-            <tr>
                 <td>{{ _( "Handle num" ) }}</td>
                 <td class="handle_num"></td>
             </tr>
@@ -38,6 +34,10 @@
                 <td class="slow_roundtrip"></td>
             </tr>
             <tr>
+                <td>{{ _( "Resend" ) }}</td>
+                <td class="resend"></td>
+            </tr>
+            <tr>
                 <td>{{ _( "Timeout roundtrip" ) }}</td>
                 <td class="timeout_roundtrip"></td>
             </tr>
@@ -52,7 +52,7 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "GAE front" ) }}</h4>
+    <h4>{{ _( "GAE" ) }} {{ _( "Front" ) }}</h4>
     <table id="gae_front" class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -84,7 +84,7 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "Cloudflare front" ) }}</h4>
+    <h4>{{ _( "Cloudflare" ) }} {{ _( "Front" ) }}</h4>
     <table id="cloudflare_front" class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -116,8 +116,72 @@
         </tbody>
     </table>
 
-    <h4>{{ _( "Heroku front" ) }}</h4>
+    <h4>{{ _( "Cloudfront" ) }} {{ _( "Front" ) }}</h4>
+    <table id="cloudfront_front" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th width="25%">{{ _( "Property" ) }}</th>
+                <th>{{ _( "Value" ) }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ _( "Score" ) }}</td>
+                <td class="score"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Success num" ) }}</td>
+                <td class="success_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Fail num" ) }}</td>
+                <td class="fail_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Worker num" ) }}</td>
+                <td class="worker_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>{{ _( "Heroku" ) }} {{ _( "Front" ) }}</h4>
     <table id="heroku_front" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th width="25%">{{ _( "Property" ) }}</th>
+                <th>{{ _( "Value" ) }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ _( "Score" ) }}</td>
+                <td class="score"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Success num" ) }}</td>
+                <td class="success_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Fail num" ) }}</td>
+                <td class="fail_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Worker num" ) }}</td>
+                <td class="worker_num"></td>
+            </tr>
+            <tr>
+                <td>{{ _( "Total use" ) }}</td>
+                <td class="total_traffics"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>{{ _( "TLS_Relay" ) }} {{ _( "Front" ) }}</h4>
+    <table id="tls_relay_front" class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th width="25%">{{ _( "Property" ) }}</th>
@@ -154,9 +218,9 @@
     title('{{ _( "X-Tunnel Status Info" ) }}');
 </script>
 <script type="text/javascript">
-    documentReadyToRun.push(function(){
-        var timer = $.timer(function() {
-            if ( $("#details").is(":visible")){
+    documentReadyToRun.push(function () {
+        var timer = $.timer(function () {
+            if ($("#details").is(":visible")) {
                 updateDetailStatus();
             }
         });
@@ -172,8 +236,7 @@
 </script>
 <script type="text/javascript">
     function updateProperty(table, key, value) {
-        var item = $('#'+table).find('.'+key);
-
+        var item = $('#' + table).find('.' + key);
         var previousContent = item.html();
         if (String(previousContent) != String(value)) {
             item.html(value);
@@ -185,29 +248,27 @@
             type: 'GET',
             url: '/module/x_tunnel/control/status',
             dataType: 'JSON',
-            success: function(result) {
+            success: function (result) {
                 for (var front in result["status"]) {
-                    for( key in result["status"][front] ) {
+                    for (key in result["status"][front]) {
                         value = result["status"][front][key];
                         updateProperty(front, key, value);
                     }
                 }
             },
-            error: function(result) {
+            error: function (result) {
                 var formValue = $('#sys-platform').html();
 
-                if ( tipHasClose() ) {
+                if (tipHasClose()) {
                     $('html, body').animate({
                         scrollTop: 0
                     }, 'slow');
                 }
 
-                if ( formValue == '' ) {
-                    tip('{{ _("The status page is empty. Highly likely that X-Tunnel failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide ")}}</a>{{ _("to troubleshoot.")}}<br>', 'warning', false);
+                if (formValue == '') {
+                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("X-Tunnel")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
         });
     }
-
 </script>
-

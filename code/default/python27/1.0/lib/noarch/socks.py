@@ -55,12 +55,6 @@ Modifications made by Anorov (https://github.com/Anorov)
 __version__ = "1.5.1"
 
 import os, sys
-current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
-if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
-    sys.path.append(win32_lib)
-
 from base64 import b64encode
 import socket
 import struct
@@ -68,6 +62,19 @@ from errno import EOPNOTSUPP, EINVAL, EAGAIN
 from io import BytesIO, SEEK_CUR
 from collections import Callable
 import encodings.idna
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+if sys.platform == "win32":
+    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    sys.path.append(win32_lib)
+    import win_inet_pton
+    inet_pton = win_inet_pton.inet_pton
+    inet_ntop = win_inet_pton.inet_ntop
+else:
+    inet_pton = socket.inet_pton
+    inet_ntop = socket.inet_ntop
+
 
 PROXY_TYPE_SOCKS4 = SOCKS4 = 1
 PROXY_TYPE_SOCKS5 = SOCKS5 = 2
@@ -234,6 +241,7 @@ class socksocket(_BaseSocket):
             raise ValueError(msg.format(type))
 
         self._proxyconn = None  # TCP connection to keep UDP relay alive
+        self.resolve_dest = True
 
         if self.default_proxy:
             self.proxy = self.default_proxy
@@ -286,7 +294,11 @@ class socksocket(_BaseSocket):
             proxy_type = proxy_type.lower()
             if "http" in proxy_type:
                 proxy_type = PROXY_TYPE_HTTP
+                self.resolve_dest = False
             elif "socks5" in proxy_type:
+                if proxy_type == "socks5h":
+                    self.resolve_dest = False
+                    rdns = True
                 proxy_type = PROXY_TYPE_SOCKS5
             elif "socks4" in proxy_type:
                 proxy_type = PROXY_TYPE_SOCKS4
@@ -513,10 +525,10 @@ class socksocket(_BaseSocket):
         proxy_type, _, _, rdns, username, password = self.proxy
 
         if ":" in host:
-            addr_bytes = socket.inet_pton(socket.AF_INET6, host)
+            addr_bytes = inet_pton(socket.AF_INET6, host)
             file.write(b"\x04" + addr_bytes)
         elif check_ip_valid(host):
-            addr_bytes = socket.inet_pton(socket.AF_INET, host)
+            addr_bytes = socket.inet_aton(host)
             file.write(b"\x01" + addr_bytes)
         else:
             if rdns:
@@ -540,7 +552,7 @@ class socksocket(_BaseSocket):
             length = self._readall(file, 1)
             addr = self._readall(file, ord(length))
         elif atyp == b"\x04":
-            addr = socket.inet_ntop(socket.AF_INET6, self._readall(file, 16))
+            addr = inet_ntop(socket.AF_INET6, self._readall(file, 16))
         else:
             raise GeneralProxyError("SOCKS5 proxy server sent invalid data")
 
@@ -689,7 +701,8 @@ class socksocket(_BaseSocket):
         if self.type == socket.SOCK_DGRAM:
             if not self._proxyconn:
                 self.bind(("", 0))
-            dest_addr = socket.gethostbyname(dest_addr)
+            if self.resolve_dest:
+                dest_addr = socket.gethostbyname(dest_addr)
 
             # If the host address is INADDR_ANY or similar, reset the peer
             # address so that packets are received from any peer
@@ -699,7 +712,7 @@ class socksocket(_BaseSocket):
                 self.proxy_peername = (dest_addr, dest_port)
             return
 
-        proxy_type, proxy_addr, proxy_port, rdns, username, password = self.proxy
+        proxy_type, proxy_host, proxy_port, rdns, username, password = self.proxy
 
         # Do a minimal input check first
         if not dest_addr or not isinstance(dest_port, int):
@@ -711,17 +724,19 @@ class socksocket(_BaseSocket):
             _BaseSocket.connect(self, (dest_addr, dest_port))
             return
 
-        proxy_addr = self._proxy_addr()
+        proxy_port = proxy_port or DEFAULT_PORTS.get(proxy_type)
+        if not proxy_port:
+            raise GeneralProxyError("Invalid proxy port")
 
         try:
             # Initial connection to proxy server
-            _BaseSocket.connect(self, proxy_addr)
+            proxy_ip = socket.gethostbyname(proxy_host)
+            _BaseSocket.connect(self, (proxy_ip, proxy_port))
 
         except socket.error as error:
             # Error while connecting to proxy
             self.close()
-            proxy_addr, proxy_port = proxy_addr
-            proxy_server = "{0}:{1}".format(proxy_addr, proxy_port)
+            proxy_server = "{0}:{1}".format(proxy_host, proxy_port)
             printable_type = PRINTABLE_PROXY_TYPES[proxy_type]
 
             msg = "Error connecting to {0} proxy {1}".format(printable_type,
@@ -742,16 +757,6 @@ class socksocket(_BaseSocket):
                 # Protocol error while negotiating with proxy
                 self.close()
                 raise
-
-    def _proxy_addr(self):
-        """
-        Return proxy address to connect to as tuple object
-        """
-        proxy_type, proxy_addr, proxy_port, rdns, username, password = self.proxy
-        proxy_port = proxy_port or DEFAULT_PORTS.get(proxy_type)
-        if not proxy_port:
-            raise GeneralProxyError("Invalid proxy type")
-        return proxy_addr, proxy_port
 
 
 import re

@@ -98,6 +98,8 @@ AttachConsole.restype = BOOL
 
 ATTACH_PARENT_PROCESS = -1
 
+sysargv = [os.path.abspath(sys.argv[0])] + sys.argv[1:]
+
 def areAdminRightsElevated():
     '''
     Tells you whether current script already has Administrative rights.
@@ -134,15 +136,14 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
     '''
     if not areAdminRightsElevated():
         # this is host process that doesn't have administrative rights
-        params = subprocess.list2cmdline([os.path.abspath(sys.argv[0])] + sys.argv[1:] + \
-                                         [ELEVATE_MARKER])
+        params = subprocess.list2cmdline(sysargv + [ELEVATE_MARKER])
         executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None, lpVerb='runas',
                                        lpFile=sys.executable, lpParameters=params,
                                        lpDirectory=None,
                                        nShow=SW_HIDE if reattachConsole else SW_SHOW)
         if reattachConsole and not all(stream.isatty() for stream in (sys.stdin, sys.stdout,
                                                                       sys.stderr)):
-            #TODO: some streams were redirected, we need to manually work them
+            # TODO: some streams were redirected, we need to manually work them
             # currently just raise an exception
             raise NotImplementedError("win32elevate doesn't support elevating scripts with "
                                       "redirected input or output")
@@ -172,17 +173,29 @@ def elevateAdminRights(waitAndClose=True, reattachConsole=True):
         # indicate we're already running with administrative rights, see docstring
         return None
 
+def elevateAdminRun(args=sysargv, executable=sys.executable,
+                    waitAndClose=False, reattachConsole=True):
+    if (waitAndClose or
+        reattachConsole and
+        not all(stream.isatty() for stream in (sys.stdin, sys.stdout,sys.stderr))):
+        # Don't attached to parent process when waitAndClose is "True"
+        # TODO: some streams were redirected, we need to manually work them
+        # currently just don't attached to parent process
+        reattachConsole = False
+    if args is not None and not isinstance(args, str):
+        args = subprocess.list2cmdline(args)
+    executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None,
+                                   lpVerb='' if areAdminRightsElevated() else 'runas',
+                                   lpFile=executable, lpParameters=args,
+                                   lpDirectory=None,
+                                   nShow=SW_HIDE if reattachConsole else SW_SHOW)
 
-def elevateAdminRun(script_path=__file__):
-    if not areAdminRightsElevated():
-        # this is host process that doesn't have administrative rights
-        executeInfo = ShellExecuteInfo(fMask=SEE_MASK_NOCLOSEPROCESS, hwnd=None, lpVerb='runas',
-                                       lpFile=sys.executable, lpParameters=script_path,
-                                       lpDirectory=None,
-                                       nShow=SW_HIDE)
-
-        if not ShellExecuteEx(ctypes.byref(executeInfo)):
-            raise ctypes.WinError()
+    if not ShellExecuteEx(ctypes.byref(executeInfo)):
+        raise ctypes.WinError()
+    if waitAndClose:
+        waitAndCloseHandle(executeInfo.hProcess)
+    else:
+        return executeInfo.hProcess
 
 if __name__ == '__main__':
     elevateAdminRights(reattachConsole=False)

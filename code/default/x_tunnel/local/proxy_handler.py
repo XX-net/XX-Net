@@ -2,6 +2,7 @@ import time
 import socket
 import struct
 import urlparse
+import select
 
 import utils
 from xlog import getLogger
@@ -22,8 +23,6 @@ def netloc_to_host_port(netloc, default_port=80):
 
 
 class Socks5Server():
-    read_buffer = ""
-    buffer_start = 0
     handle_num = 0
 
     def __init__(self, sock, client, args):
@@ -31,14 +30,18 @@ class Socks5Server():
         self.rfile = socket._fileobject(self.connection, "rb", -1)
         self.wfile = socket._fileobject(self.connection, "wb", 0)
         self.client_address = client
+        self.read_buffer = ""
+        self.buffer_start = 0
         self.args = args
 
     def handle(self):
         self.__class__.handle_num += 1
         try:
-            # xlog.debug('Connected from %r', self.client_address)
-
+            r, w, e = select.select([self.connection], [], [])
             socks_version = self.read_bytes(1)
+            if not socks_version:
+                return
+
             if socks_version == "\x04":
                 self.socks4_handler()
             elif socks_version == "\x05":
@@ -53,24 +56,57 @@ class Socks5Server():
                 return
 
         except socket.error as e:
-            xlog.warn('socks handler read error %r', e)
+            xlog.debug('socks handler read error %r', e)
+            return
         except Exception as e:
             xlog.exception("any err:%r", e)
 
-    def read_line(self):
+    def read_null_end_line(self):
         sock = self.connection
         sock.setblocking(0)
         try:
             while True:
                 n1 = self.read_buffer.find("\x00", self.buffer_start)
-                if n1 == -1:
-                    n1 = self.read_buffer.find("\r", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
                     return line
-                time.sleep(0.001)
-                data = sock.recv(256)
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
+                self.read_buffer += data
+        finally:
+            sock.setblocking(1)
+
+    def read_crlf_line(self):
+        sock = self.connection
+        sock.setblocking(0)
+        try:
+            while True:
+                n1 = self.read_buffer.find("\r\n", self.buffer_start)
+                if n1 > -1:
+                    line = self.read_buffer[self.buffer_start:n1]
+                    self.buffer_start = n1 + 2
+                    return line
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -80,13 +116,26 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
+                if self.read_buffer[self.buffer_start:] == "\r\n":
+                    self.buffer_start += 2
+                    return ""
+
                 n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
                 if n1 > -1:
                     block = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 1
+                    self.buffer_start = n1 + 4
                     return block
-                time.sleep(0.001)
-                data = sock.recv(256)
+
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 self.read_buffer += data
         finally:
             sock.setblocking(1)
@@ -101,7 +150,17 @@ class Socks5Server():
                     break
 
                 need = size - left
-                data = sock.recv(need)
+
+                try:
+                    data = sock.recv(need)
+                except socket.error as e:
+                    # logging.exception("e:%r", e)
+                    if e.errno in [2, 11, 10035]:
+                        time.sleep(0.01)
+                        continue
+                    else:
+                        raise e
+
                 if len(data):
                     self.read_buffer += data
                 else:
@@ -130,12 +189,12 @@ class Socks5Server():
             ip = socket.inet_ntoa(addr_pack)
             domain_mode = False
 
-        user_id = self.read_line()
+        user_id = self.read_null_end_line()
         if len(user_id):
             xlog.debug("Socks4 user_id:%s", user_id)
 
         if domain_mode:
-            addr = self.read_line()
+            addr = self.read_null_end_line()
         else:
             addr = ip
 
@@ -165,7 +224,7 @@ class Socks5Server():
             data = self.read_bytes(4)
         except Exception as e:
             xlog.debug("socks5 auth num:%d, list:%s", auth_mode_num, utils.str2hex(data))
-            xlog.exception("socks5 protocol error:%r", e)
+            xlog.warn("socks5 protocol error:%r", e)
             return
 
         socks_version = ord(data[0])
@@ -217,7 +276,7 @@ class Socks5Server():
         g.session.conn_list[conn_id].start(block=True)
 
     def https_handler(self):
-        line = self.read_line()
+        line = self.read_crlf_line()
         line = line.decode('iso-8859-1')
         words = line.split()
         if len(words) == 3:
@@ -237,6 +296,8 @@ class Socks5Server():
         host = host.encode()
         port = int(port)
 
+        header_block = self.read_headers()
+
         sock = self.connection
         conn_id = proxy_session.create_conn(sock, host, port)
         if not conn_id:
@@ -250,10 +311,13 @@ class Socks5Server():
         except:
             xlog.warn("https %r connect to %s:%d conn_id:%d closed.", self.client_address, host, port, conn_id)
 
+        if (len(self.read_buffer) - self.buffer_start) > 0:
+            g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
+
         g.session.conn_list[conn_id].start(block=True)
 
     def http_handler(self, first_char):
-        req_line = self.read_line()
+        req_line = self.read_crlf_line()
         words = req_line.split()
         if len(words) == 3:
             method, url, http_version = words
@@ -261,14 +325,14 @@ class Socks5Server():
             method, url = words
             http_version = "HTTP/1.1"
         else:
-            xlog.warn("https req line fail:%s", req_line)
+            xlog.warn("http req line fail:%s", req_line)
             return
 
         method = first_char + method
         # if method not in ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH"]:
         #    xlog.warn("https req method not known:%s", method)
 
-        if url.startswith("http://"):
+        if url.startswith("http://") or url.startswith("HTTP://"):
             o = urlparse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
@@ -306,3 +370,4 @@ class Socks5Server():
         g.session.conn_list[conn_id].transfer_received_data(left_buf)
 
         g.session.conn_list[conn_id].start(block=True)
+

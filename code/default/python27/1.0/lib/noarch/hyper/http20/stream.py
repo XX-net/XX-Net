@@ -224,7 +224,7 @@ class Stream(object):
             increment = self._in_window_manager._handle_frame(size)
 
             # Append the data to the buffer.
-            self.data.append(frame.data)
+            self.data.append(frame.data.tobytes())
 
             if increment and not self._remote_closed:
                 w = WindowUpdateFrame(self.stream_id)
@@ -252,7 +252,10 @@ class Stream(object):
         if 'END_HEADERS' in frame.flags:
             # Begin by decoding the header block. If this fails, we need to
             # tear down the entire connection. TODO: actually do that.
-            headers = self._decoder.decode(b''.join(self.header_data))
+            if len(self.header_data) == 1:
+                headers = self._decoder.decode(self.header_data[0])
+            else:
+                headers = self._decoder.decode(b''.join(self.header_data.tobytes()))
 
             # If we're involved in a PUSH_PROMISE sequence, this header block
             # is the proposed request headers. Save it off. Otherwise, handle

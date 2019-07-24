@@ -15,7 +15,23 @@ import struct
 
 
 import xlog
-logging = xlog.getLogger("simple_http_server")
+
+
+class GetReqTimeout(Exception):
+    pass
+
+
+class ParseReqFail(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        # for %s
+        return repr(self.message)
+
+    def __repr__(self):
+        # for %r
+        return repr(self.message)
 
 
 class HttpServerHandler():
@@ -25,14 +41,19 @@ class HttpServerHandler():
     rbufsize = -1
     wbufsize = 0
 
-    def __init__(self, sock, client, args, logger=logging):
+    def __init__(self, sock, client, args, logger=None):
         self.connection = sock
-        sock.settimeout(300)
+        sock.setblocking(1)
+        sock.settimeout(60)
         self.rfile = socket._fileobject(self.connection, "rb", self.rbufsize, close=True)
         self.wfile = socket._fileobject(self.connection, "wb", self.wbufsize, close=True)
         self.client_address = client
         self.args = args
-        self.logger = logger
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = xlog.getLogger("simple_http_server")
+        #self.logger.debug("new connect from:%s", self.address_string())
 
         self.setup()
 
@@ -64,6 +85,20 @@ class HttpServerHandler():
         return '%s:%s' % self.client_address[:2]
 
     def parse_request(self):
+        try:
+            self.raw_requestline = self.rfile.readline(65537)
+        except:
+            raise GetReqTimeout()
+
+        if not self.raw_requestline:
+            raise GetReqTimeout()
+
+        if len(self.raw_requestline) > 65536:
+            raise ParseReqFail("Recv command line too large")
+
+        if self.raw_requestline[0] == '\x16':
+            raise socket.error
+
         self.command = None  # set in case of error on the first line
         self.request_version = version = self.default_request_version
 
@@ -74,8 +109,8 @@ class HttpServerHandler():
         if len(words) == 3:
             command, path, version = words
             if version[:5] != 'HTTP/':
-                self.send_error(400, "Bad request version (%r)" % version)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
+
             try:
                 base_version_number = version.split('/', 1)[1]
                 version_number = base_version_number.split(".")
@@ -86,34 +121,29 @@ class HttpServerHandler():
                 #      turn is lower than HTTP/12.3;
                 #   - Leading zeros MUST be ignored by recipients.
                 if len(version_number) != 2:
-                    raise ValueError
+                    raise ParseReqFail("Req command format fail:%s" % requestline)
                 version_number = int(version_number[0]), int(version_number[1])
             except (ValueError, IndexError):
-                self.send_error(400, "Bad request version (%r)" % version)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
             if version_number >= (1, 1):
                 self.close_connection = 0
             if version_number >= (2, 0):
-                self.send_error(505,
-                          "Invalid HTTP Version (%s)" % base_version_number)
-                return False
+                raise ParseReqFail("Req command format fail:%s" % requestline)
         elif len(words) == 2:
             command, path = words
             self.close_connection = 1
             if command != 'GET':
-                self.send_error(400,
-                                "Bad HTTP/0.9 request type (%r)" % command)
-                return False
+                raise ParseReqFail("Req command format HTTP/0.9 line:%s" % requestline)
         elif not words:
-            return False
+            raise ParseReqFail("Req command format fail:%s" % requestline)
         else:
-            self.send_error(400, "Bad request syntax (%r)" % requestline)
-            return False
+            raise ParseReqFail("Req command format fail:%s" % requestline)
         self.command, self.path, self.request_version = command, path, version
 
         # Examine the headers and look for a Connection directive
         self.headers = self.MessageClass(self.rfile, 0)
 
+        self.host = self.headers.get('Host', "")
         conntype = self.headers.get('Connection', "")
         if conntype.lower() == 'close':
             self.close_connection = 1
@@ -126,20 +156,8 @@ class HttpServerHandler():
 
     def handle_one_request(self):
         try:
-            try:
-                self.raw_requestline = self.rfile.readline(65537)
-            except Exception as e:
-                #self.logger.warn("simple server handle except %r", e)
-                return
-
-            if len(self.raw_requestline) > 65536:
-                #self.logger.warn("recv command line too large")
-                return
-            if not self.raw_requestline:
-                #self.logger.warn("closed")
-                return
-
             self.parse_request()
+
             self.close_connection = 0
 
             if self.upgrade == "websocket":
@@ -176,6 +194,8 @@ class HttpServerHandler():
                 pass
         #except OpenSSL.SSL.SysCallError as e:
         #    self.logger.warn("socket error:%r", e)
+            self.close_connection = 1
+        except GetReqTimeout:
             self.close_connection = 1
         except Exception as e:
             self.logger.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
@@ -263,7 +283,10 @@ class HttpServerHandler():
 
     def WebSocket_on_connect(self):
         # Define the function and return True to accept
-        self.logger.warn("unhandler WebSocket from %s", self.address_string())
+        self.logger.warn("unhandled WebSocket from %s", self.address_string())
+        self.send_error(501, "Not supported")
+        self.close_connection = 1
+
         return False
 
     def do_GET(self):
@@ -288,9 +311,11 @@ class HttpServerHandler():
         self.logger.warn("unhandler cmd:%s from:%s", self.command, self.address_string())
 
     def send_not_found(self):
+        self.close_connection = 1
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
 
     def send_error(self, code, message=None):
+        self.close_connection = 1
         self.wfile.write('HTTP/1.1 %d\r\n' % code)
         self.wfile.write('Connection: close\r\n\r\n')
         if message:
@@ -320,6 +345,24 @@ class HttpServerHandler():
             self.wfile.write(data_str)
             if len(content):
                 self.wfile.write(content)
+
+    def send_redirect(self, url, headers={}, content="", status=307, text="Temporary Redirect"):
+        headers["Location"] = url
+        data = []
+        data.append('HTTP/1.1 %d\r\n' % status)
+        data.append('Content-Length: %s\r\n' % len(content))
+
+        if len(headers):
+            if isinstance(headers, dict):
+                for key in headers:
+                    data.append("%s: %s\r\n" % (key, headers[key]))
+            elif isinstance(headers, basestring):
+                data.append(headers)
+        data.append("\r\n")
+
+        data.append(content)
+        data_str = "".join(data)
+        self.wfile.write(data_str)
 
     def send_response_nc(self, mimetype="", content="", headers="", status=200):
         no_cache_headers = "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n"
@@ -353,7 +396,7 @@ class HttpServerHandler():
 
 
 class HTTPServer():
-    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=logging):
+    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog):
         self.sockets = []
         self.running = True
         if isinstance(address, tuple):
@@ -375,8 +418,16 @@ class HTTPServer():
         self.http_thread.start()
 
     def init_socket(self):
-        for addr in self.server_address:
-            self.add_listen(addr)
+        server_address = set(self.server_address)
+        ips = [ip for ip, _ in server_address]
+        listen_all_v4 = "0.0.0.0" in ips
+        listen_all_v6 = "::" in ips
+        for ip, port in server_address:
+            if ip not in ("0.0.0.0", "::") and (
+                    listen_all_v4 and '.' in ip or
+                    listen_all_v6 and ':' in ip):
+                continue
+            self.add_listen((ip, port))
 
     def add_listen(self, addr):
         if ":" in addr[0]:
@@ -411,6 +462,14 @@ class HTTPServer():
         self.sockets.append(sock)
         self.logger.info("server %s:%d started.", addr[0], addr[1])
 
+    def dopoll(self, poller):
+        while True:
+            try:
+                return poller.poll()
+            except IOError as e:
+                if e.errno != 4:  # EINTR:
+                    raise
+
     def serve_forever(self):
         if hasattr(select, 'epoll'):
 
@@ -423,7 +482,15 @@ class HTTPServer():
                 fn_map[fn] = sock
 
             while self.running:
-                events = p.poll(timeout=1)
+                try:
+                    events = p.poll(timeout=1)
+                except IOError as e:
+                    if e.errno != 4:  # EINTR:
+                        raise
+                    else:
+                        time.sleep(1)
+                        continue
+
                 for fn, event in events:
                     if fn not in fn_map:
                         self.logger.error("p.poll get fn:%d", fn)
@@ -439,6 +506,11 @@ class HTTPServer():
                             # It means "I don't have answer for you right now and
                             # you have told me not to wait,
                             # so here I am returning without answer."
+                            continue
+
+                        if e.args[0] == 24:
+                            self.logger.warn("max file opened when sock.accept")
+                            time.sleep(30)
                             continue
 
                         self.logger.warn("socket accept fail(errno: %s).", e.args[0])
@@ -459,10 +531,12 @@ class HTTPServer():
                         self.logger.warn("socket accept fail(errno: %s).", e.args[0])
                         if e.args[0] == 10022:
                             self.logger.info("restart socket server.")
+                            self.close_all_socket()
                             self.init_socket()
                         break
 
                     self.process_connect(sock, address)
+        self.server_close()
 
     def process_connect(self, sock, address):
         #self.logger.debug("connect from %s:%d", address[0], address[1])
@@ -472,6 +546,7 @@ class HTTPServer():
 
     def shutdown(self):
         self.running = False
+        self.server_close()
 
     def server_close(self):
         for sock in self.sockets:

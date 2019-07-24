@@ -1,6 +1,10 @@
 import os
 import shlex
 import subprocess
+from .pteredor import teredo_prober
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -16,22 +20,84 @@ if os.path.isfile(log_file):
 
 class Log(object):
     def __init__(self):
-        self.fd = open(log_file, "w")
+        self.fd = open(log_file, "a")
 
     def write(self, content):
-        self.fd.write(content + "\r\n")
+        self.fd.write(content + "\n")
         self.fd.flush()
 
+    def close(self):
+        self.fd.close()
 
-def best_server():
-    # TODO: find and use the best server
-    # teredo.remlab.net / teredo - debian.remlab.net(Germany)
-    # teredo.ngix.ne.kr(South Korea)
-    # teredo.managemydedi.com(USA, Chicago)
-    # teredo.trex.fi(Finland)
-    # win8.ipv6.microsoft.com(The Teredo server hidden in Windows RT 8.1) of which Windows 7 has no knowledge.
-    # win10.ipv6.microsoft.com
-    return "teredo.remlab.net"
+
+pteredor_is_running = False
+
+
+def new_pteredor(probe_nat=True):
+    if os.path.isfile(log_file):
+        try:
+            os.remove(log_file)
+        except Exception as e:
+            xlog.warn("remove %s fail:%r", log_file, e)
+
+    global pteredor_is_running, usable
+    pteredor_is_running = probe_nat
+    prober = teredo_prober(probe_nat=probe_nat)
+
+    if prober.nat_type in ('cone', 'restricted'):
+        usable = 'usable'
+    elif prober.nat_type == 'offline':
+        usable = 'unusable'
+    else:
+        usable = 'unknown'
+
+    if probe_nat:
+        pteredor_is_running = False
+        log = Log()
+        log.write('qualified: %s\nNAT type: %s' % (prober.qualified, prober.nat_type))
+        log.close()
+    return prober
+
+
+def test_teredo(probe_nat=True, probe_server=True):
+    if pteredor_is_running:
+        return "Script is running, please retry later."
+
+    server = ''
+    if probe_server:
+        server = ' and the best server is %s.' % best_server(probe_nat=probe_nat)
+    else:
+        new_pteredor()
+
+    return 'teredor test result is %s.%s' % (usable, server)
+
+
+def best_server(probe_nat=False):
+    best_server = None
+    prober = new_pteredor(probe_nat=probe_nat)
+    prober.qualified = True
+    if not probe_nat:
+        prober.nat_type = 'unknown'
+        prober.rs_cone_flag = 0
+
+    global pteredor_is_running
+    pteredor_is_running = True
+    server_list = prober.eval_servers()
+    pteredor_is_running = False
+
+    for qualified, server, _, _ in server_list:
+        if qualified:
+            best_server = server[0]
+            break
+    log = Log()
+    if best_server:
+        log.write('best server is: %s.' % best_server)
+    else:
+        xlog.warning('no server detected, return default: teredo.remlab.net.')
+        log.write('no server detected, return default: teredo.remlab.net.')
+        best_server = "teredo.remlab.net"
+    log.close()
+    return best_server
 
 
 def run(cmd):
@@ -43,7 +109,12 @@ def run(cmd):
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        out = subprocess.check_output(cmd, startupinfo=startupinfo)
+        #out = subprocess.check_output(cmd, startupinfo=startupinfo)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, startupinfo=startupinfo)
+        out, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            return out + "\n retcode:%s\n unused_err:%s\n" % (retcode, unused_err)
     except Exception as e:
         out = "Exception:%r" % e
 
@@ -66,6 +137,7 @@ def run_cmds(cmds):
         out = run(cmd)
         log.write(out)
         outs.append(out)
+    log.close()
     return "\r\n".join(outs)
 
 
