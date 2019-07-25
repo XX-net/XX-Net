@@ -17,19 +17,21 @@ whether the nghttp2 bindings are installed, and if they are it wraps them in
 a hpack-compatible API and uses them instead of its own. If not, it falls back
 to the built-in Python bindings.
 """
+import logging
 from .hpack import _to_bytes
 
+log = logging.getLogger(__name__)
 
 # Attempt to import nghttp2.
 try:
     import nghttp2
     USE_NGHTTP2 = True
-    # log.debug("Using nghttp2's HPACK implementation.")
+    log.debug("Using nghttp2's HPACK implementation.")
 except ImportError:
     USE_NGHTTP2 = False
-    # log.debug("Using our pure-Python HPACK implementation.")
+    log.debug("Using our pure-Python HPACK implementation.")
 
-if USE_NGHTTP2:
+if USE_NGHTTP2:  # noqa
     class Encoder(object):
         """
         An HPACK encoder object. This object takes HTTP headers and emits
@@ -48,7 +50,7 @@ if USE_NGHTTP2:
 
         @header_table_size.setter
         def header_table_size(self, value):
-            # log.debug("Setting header table size to %d", value)
+            log.debug("Setting header table size to %d", value)
             self._e.change_table_size(value)
 
         def encode(self, headers, huffman=True):
@@ -56,7 +58,7 @@ if USE_NGHTTP2:
             Encode the headers. The huffman parameter has no effect, it is
             simply present for compatibility.
             """
-            # log.debug("HPACK encoding %s", headers)
+            log.debug("HPACK encoding %s", headers)
 
             # Turn the headers into a list of tuples if possible. This is the
             # natural way to interact with them in HPACK.
@@ -88,7 +90,7 @@ if USE_NGHTTP2:
 
         @header_table_size.setter
         def header_table_size(self, value):
-            # log.debug("Setting header table size to %d", value)
+            log.debug("Setting header table size to %d", value)
             self._d.change_table_size(value)
 
         def decode(self, data):
@@ -96,10 +98,10 @@ if USE_NGHTTP2:
             Takes an HPACK-encoded header block and decodes it into a header
             set.
             """
-            # log.debug("Decoding %s", data)
+            log.debug("Decoding %s", data)
 
             headers = self._d.inflate(data)
             return [(n.decode('utf-8'), v.decode('utf-8')) for n, v in headers]
 else:
     # Grab the built-in encoder and decoder.
-    from .hpack import Encoder, Decoder
+    from .hpack import Encoder, Decoder  # noqa

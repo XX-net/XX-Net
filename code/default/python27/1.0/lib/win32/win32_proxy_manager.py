@@ -19,7 +19,7 @@ PROXY_TYPE_PROXY = 2
 PROXY_TYPE_AUTO_PROXY_URL = 4
 
 CONN_PATH = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings\Connections'
-CONNECTIONS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, CONN_PATH, 0, winreg.KEY_ALL_ACCESS)
+CONNECTIONS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, CONN_PATH, 0, winreg.KEY_QUERY_VALUE)
 
 class INTERNET_PER_CONN_OPTION(Structure):
     class Value(Union):

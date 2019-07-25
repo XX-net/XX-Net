@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-30 14:57+0800\n"
+"POT-Creation-Date: 2017-11-15 08:26+0800\n"
 "PO-Revision-Date: 2015-12-06 09:14+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -12,7 +12,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
+"Generated-By: Babel 2.3.4\n"
 
 msgid "Scan Settings"
 msgstr "تنظیمات اسکن"
@@ -28,6 +28,9 @@ msgstr "صادرات IP"
 
 msgid "Check IP"
 msgstr "بررسی IP"
+
+msgid "IPv6 Tunnel"
+msgstr ""
 
 msgid "Advanced"
 msgstr "پیشرفته"
@@ -82,9 +85,6 @@ msgstr "توجه: غیر قابل دسترس قبل از appids مستقر هس�
 msgid "Advanced options"
 msgstr "گزینه های پیشرفته"
 
-msgid "Enable IPv6(If it's available)"
-msgstr "فعال کردن IPv6 را (سرنت تنها)"
-
 msgid "LAN proxy(Generally not needed)"
 msgstr "پروکسی LAN (به طور کلی مورد نیاز نیست)"
 
@@ -132,11 +132,6 @@ msgstr "_AppID_ نامعتبر است:"
 
 msgid ", deploy appid before using."
 msgstr "، استقرار APPID قبل از استفاده."
-
-msgid "Enable IPv6 failed. Be sure your network support IPv6."
-msgstr ""
-"فعال کردن IPv6 را شکست خورده است. مطمئن باشید که از IPv6 پشتیبانی از شبکه"
-" خود را."
 
 msgid "Failed saving settings"
 msgstr "خواندن تنظیمات انجام نشد."
@@ -225,6 +220,15 @@ msgstr "صادرات آدرس IP شکست خورده است."
 msgid "IP list"
 msgstr "لیست IP"
 
+msgid "Enable"
+msgstr ""
+
+msgid "Disable"
+msgstr ""
+
+msgid "Running ..."
+msgstr ""
+
 msgid "GAEProxy Log"
 msgstr "GAEProxy ورود"
 
@@ -246,6 +250,18 @@ msgstr "خودکار تنظیم تعداد موضوع اسکن"
 msgid "Max scan thread count"
 msgstr "حداکثر تعداد موضوع اسکن"
 
+msgid "Enable IPv6(If it's available)"
+msgstr "فعال کردن IPv6 را (سرنت تنها)"
+
+msgid "AUTO"
+msgstr ""
+
+msgid "Force IPv4"
+msgstr ""
+
+msgid "Force IPv6"
+msgstr ""
+
 msgid "IP range list"
 msgstr "لیست محدوده IP"
 
@@ -261,11 +277,17 @@ msgstr "خواندن تنظیمات انجام نشد"
 msgid "Unkown error occurred"
 msgstr "خطای ناشناخته رخ داده"
 
-msgid "Local Network Status"
-msgstr "شبکه محلی ما شکست خورده است."
+msgid "IPv4 Status"
+msgstr ""
 
-msgid "IP Number"
-msgstr "IP شماره"
+msgid "IPv6 Status"
+msgstr ""
+
+msgid "IPv4 Number"
+msgstr ""
+
+msgid "IPv6 Number"
+msgstr ""
 
 msgid "Is Idle"
 msgstr "آماده به کار"
@@ -306,6 +328,9 @@ msgstr "گوش دادن پروکسی"
 msgid "PAC URL"
 msgstr ""
 
+msgid "USE IPv6"
+msgstr ""
+
 msgid "Working AppIDs"
 msgstr "بدون APPID کارگر. لطفا بررسی کنید. "
 
@@ -344,12 +369,6 @@ msgid ""
 "running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
 msgstr ""
 
-msgid "Disabled"
-msgstr "غیر فعال"
-
-msgid "Enabled"
-msgstr "فعال"
-
 msgid ""
 "The status page is empty. Highly likely that GAEProxy failed getting "
 "started. Please follow "
@@ -367,6 +386,12 @@ msgid "Your local network failed. Please check your network and firewall. "
 msgstr "شبکه محلی شما را شکست خورده است. لطفا شبکه و فایروال خود را چک کنید."
 
 msgid "You may want to $1turn on IP scaner$2."
+msgstr ""
+
+msgid ""
+"You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
+"on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>"
 msgstr ""
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
@@ -440,6 +465,7 @@ msgstr "پروکسی را فعال کنید در "
 
 msgid "Proxy disabled"
 msgstr "پروکسی غیرفعال"
+
 
 
 

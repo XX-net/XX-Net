@@ -1,10 +1,10 @@
 import locale
 import os
-import sys
 import subprocess
+import sys
 
-class SimpleI18N():
 
+class SimpleI18N:
     def __init__(self, lang=None):
         if lang:
             self.lang = lang
@@ -17,11 +17,11 @@ class SimpleI18N():
     def get_os_language(self):
         try:
             lang_code, code_page = locale.getdefaultlocale()
-            #('en_GB', 'cp1252'), en_US,
+            # ('en_GB', 'cp1252'), en_US,
             self.lang_code = lang_code
             return lang_code
         except:
-            #Mac fail to run this
+            # Mac fail to run this
             pass
 
         if sys.platform == "darwin":
@@ -43,11 +43,11 @@ class SimpleI18N():
         return ['en_US', 'fa_IR', 'zh_CN']
 
     def get_default_language_code_for_mac(self, lang_code):
-        if lang_code.find('zh') != -1:
+        if 'zh' in lang_code:
             return 'zh_CN'
-        elif lang_code.find('en') != -1:
+        elif 'en' in lang_code:
             return 'en_US'
-        elif lang_code.find('fa') != -1:
+        elif 'fa' in lang_code:
             return 'fa_IR'
         else:
             return 'Unknown'
@@ -113,31 +113,31 @@ class SimpleI18N():
 
             ep = content.find("}}", bp)
             if ep == -1:
-                print content[bp:]
+                print(content[bp:])
                 break
 
             b1p = content.find("_(", bp, ep)
             if b1p == -1:
-                print content[bp:]
+                print(content[bp:])
                 continue
-            b2p = content.find("\"", b1p+2, b1p + 4)
+            b2p = content.find("\"", b1p + 2, b1p + 4)
             if b2p == -1:
-                print content[bp:]
+                print(content[bp:])
                 continue
 
             e1p = content.find(")", ep - 2, ep)
             if e1p == -1:
-                print content[bp:]
+                print(content[bp:])
                 continue
 
             e2p = content.find("\"", e1p - 2, e1p)
             if e2p == -1:
-                print content[bp:]
+                print(content[bp:])
                 continue
 
             out_arr.append(content[cp:bp])
-            key = content[b2p+1:e2p]
-            if key not in po_dict or po_dict[key] == "":
+            key = content[b2p + 1:e2p]
+            if po_dict.get(key, "") == "":
                 out_arr.append(key)
             else:
                 out_arr.append(po_dict[key])

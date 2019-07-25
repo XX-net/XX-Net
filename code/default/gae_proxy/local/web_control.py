@@ -3,189 +3,106 @@
 
 
 import platform
-import env_info
 import urlparse
 import json
 import os
 import re
 import subprocess
 import cgi
-import urllib2
 import sys
 import datetime
 import locale
 import time
 import hashlib
+import OpenSSL
+import httplib
 
+import yaml
+import simple_http_server
+import env_info
+import utils
+
+import front_base.openssl_wrap as openssl_wrap
 
 from xlog import getLogger
-
-
 xlog = getLogger("gae_proxy")
-from config import config
-from appids_manager import appid_manager
-from google_ip import google_ip
-from google_ip_range import ip_range
-from connect_manager import https_manager
-from scan_ip_log import scan_ip_log
-import ConfigParser
-import connect_control
-import ip_utils
+from config import config, direct_config
 import check_local_network
-import check_ip
 import cert_util
-import simple_http_server
-import test_appid
-from http_dispatcher import http_dispatch
-import openssl_wrap
+import ipv6_tunnel
+from front import front, direct_front
 
-
-os.environ['HTTPS_PROXY'] = ''
 current_path = os.path.dirname(os.path.abspath(__file__))
+
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
+data_path = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy'))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 
-import yaml
+def get_fake_host():
+    return "deja.com"
 
 
-class User_special(object):
-    def __init__(self):
-        self.appid = ''
-        self.password = ''
+def test_appid_exist(ssl_sock, appid):
+    request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
+    ssl_sock.send(request_data.encode())
+    response = httplib.HTTPResponse(ssl_sock, buffering=True)
 
-        self.proxy_enable = "0"
-        self.proxy_type = "HTTP"
-        self.proxy_host = ""
-        self.proxy_port = ""
-        self.proxy_user = ""
-        self.proxy_passwd = ""
+    response.begin()
+    if response.status == 404:
+        # xlog.warn("app check %s status:%d", appid, response.status)
+        return False
 
-        self.host_appengine_mode = "gae"
-        self.auto_adjust_scan_ip_thread_num = 1
-        self.scan_ip_thread_num = 0
-        self.use_ipv6 = 0
+    if response.status == 503:
+        # out of quota
+        return True
 
-class User_config(object):
-    user_special = User_special()
+    if response.status != 200:
+        xlog.warn("test appid %s status:%d", appid, response.status)
 
-    def __init__(self):
-        self.load()
+    content = response.read()
+    if "GoAgent" not in content:
+        # xlog.warn("app check %s content:%s", appid, content)
+        return False
 
-    def load(self):
-        ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-
-        self.DEFAULT_CONFIG = ConfigParser.ConfigParser()
-        DEFAULT_CONFIG_FILENAME = os.path.abspath( os.path.join(current_path, 'proxy.ini'))
+    return True
 
 
-        self.USER_CONFIG = ConfigParser.ConfigParser()
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
+def test_appid(appid):
+    for i in range(0, 3):
+        ssl_sock = direct_front.connect_manager.get_ssl_connection()
+        if not ssl_sock:
+            continue
 
         try:
-            if os.path.isfile(DEFAULT_CONFIG_FILENAME):
-                self.DEFAULT_CONFIG.read(DEFAULT_CONFIG_FILENAME)
-                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-            else:
-                return
-
-            if os.path.isfile(CONFIG_USER_FILENAME):
-                self.USER_CONFIG.read(CONFIG_USER_FILENAME)
-            else:
-                return
-
-            try:
-                self.user_special.appid = self.USER_CONFIG.get('gae', 'appid')
-                self.user_special.password = self.USER_CONFIG.get('gae', 'password')
-            except:
-                pass
-
-            try:
-                self.user_special.host_appengine_mode = self.USER_CONFIG.get('hosts', 'appengine.google.com')
-            except:
-                pass
-
-            try:
-                self.user_special.scan_ip_thread_num = config.CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-            except:
-                self.user_special.scan_ip_thread_num = self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num')
-
-            try:
-                self.user_special.auto_adjust_scan_ip_thread_num = config.CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num')
-            except:
-                pass
-
-            try:
-                self.user_special.use_ipv6 = config.CONFIG.getint('google_ip', 'use_ipv6')
-            except:
-                pass
-
-            self.user_special.proxy_enable = self.USER_CONFIG.get('proxy', 'enable')
-            self.user_special.proxy_type = self.USER_CONFIG.get('proxy', 'type')
-            self.user_special.proxy_host = self.USER_CONFIG.get('proxy', 'host')
-            self.user_special.proxy_port = self.USER_CONFIG.get('proxy', 'port')
-            self.user_special.proxy_user = self.USER_CONFIG.get('proxy', 'user')
-            self.user_special.proxy_passwd = self.USER_CONFIG.get('proxy', 'passwd')
-
+            return test_appid_exist(ssl_sock, appid)
         except Exception as e:
-            xlog.warn("User_config.load except:%s", e)
+            xlog.warn("check_appid %s %r", appid, e)
+            continue
 
-    def save(self):
-        CONFIG_USER_FILENAME = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy', 'config.ini'))
-        try:
-            f = open(CONFIG_USER_FILENAME, 'w')
-            if self.user_special.appid != "":
-                f.write("[gae]\n")
-                f.write("appid = %s\n" % self.user_special.appid)
-                f.write("password = %s\n\n" % self.user_special.password)
-
-            f.write("[proxy]\n")
-            f.write("enable = %s\n" % self.user_special.proxy_enable)
-            f.write("type = %s\n" % self.user_special.proxy_type)
-            f.write("host = %s\n" % self.user_special.proxy_host)
-            f.write("port = %s\n" % self.user_special.proxy_port)
-            f.write("user = %s\n" % self.user_special.proxy_user)
-            f.write("passwd = %s\n\n" % self.user_special.proxy_passwd)
-
-            """
-            if self.user_special.host_appengine_mode != "gae":
-                f.write("[hosts]\n")
-                f.write("appengine.google.com = %s\n" % self.user_special.host_appengine_mode)
-                f.write("www.google.com = %s\n\n" % self.user_special.host_appengine_mode)
-            """
-
-            f.write("[google_ip]\n")
-
-            if int(self.user_special.auto_adjust_scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'auto_adjust_scan_ip_thread_num'):
-                f.write("auto_adjust_scan_ip_thread_num = %d\n\n" % int(self.user_special.auto_adjust_scan_ip_thread_num))
-            if int(self.user_special.scan_ip_thread_num) != self.DEFAULT_CONFIG.getint('google_ip', 'max_scan_ip_thread_num'):
-                f.write("max_scan_ip_thread_num = %d\n\n" % int(self.user_special.scan_ip_thread_num))
-
-            if int(self.user_special.use_ipv6) != self.DEFAULT_CONFIG.getint('google_ip', 'use_ipv6'):
-                f.write("use_ipv6 = %d\n\n" % int(self.user_special.use_ipv6))
-
-            f.close()
-        except:
-            xlog.warn("launcher.config save user config fail:%s", CONFIG_USER_FILENAME)
+    return False
 
 
-user_config = User_config()
+def test_appids(appids):
+    appid_list = appids.split("|")
+    fail_appid_list = []
+    for appid in appid_list:
+        if not test_appid(appid):
+            fail_appid_list.append(appid)
+        else:
+            # return success if one appid is work
+            # just reduce wait time
+            # here can be more ui friendly.
+            return []
+    return fail_appid_list
 
 
 def get_openssl_version():
-    return "%s %s h2:%s" % (openssl_wrap.openssl_version,
-                           openssl_wrap.ssl_version,
-                           openssl_wrap.support_alpn_npn)
+    return "%s %s h2:%s" % (OpenSSL.version.__version__,
+                            front.openssl_context.ssl_version,
+                            front.openssl_context.support_alpn_npn)
 
-def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
-    try:
-        req = opener.open(url)
-    except Exception as e:
-        xlog.exception("web_control http_request:%s fail:%s", url, e)
-    return
 
 deploy_proc = None
 
@@ -232,8 +149,13 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_test_ip_handler()
         elif path == "/check_ip":
             return self.req_check_ip_handler()
+        elif path == "/debug":
+            return self.req_debug_handler()
+        elif path.startswith("/ipv6_tunnel"):
+            return self.req_ipv6_tunnel_handler()
         elif path == "/quit":
-            connect_control.keep_running = False
+            front.stop()
+            direct_front.stop()
             data = "Quit"
             self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
             self.wfile.write(data)
@@ -330,23 +252,15 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         cmd = "get_last"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        if cmd == "set_buffer_size" :
-            if not reqs["buffer_size"]:
-                data = '{"res":"fail", "reason":"size not set"}'
-                mimetype = 'text/plain'
-                self.send_response_nc(mimetype, data)
-                return
 
-            buffer_size = reqs["buffer_size"][0]
-            xlog.set_buffer_size(buffer_size)
-        elif cmd == "get_last":
+        if cmd == "get_last":
             max_line = int(reqs["max_line"][0])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
             last_no = int(reqs["last_no"][0])
             data = xlog.get_new_lines(last_no)
         else:
-            xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+            xlog.error('WebUI log from:%s unknown cmd:%s path:%s ', self.address_string(), self.command, self.path)
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
@@ -405,49 +319,49 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         else:
             user_agent = ""
 
-        good_ip_num = google_ip.good_ip_num
-        if good_ip_num > len(google_ip.gws_ip_list):
-            good_ip_num = len(google_ip.gws_ip_list)
+        if config.PROXY_ENABLE:
+            lan_proxy = "%s://%s:%s" % (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+        else:
+            lan_proxy = "Disable"
 
         res_arr = {
-                   "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
-                   "os_system": platform.system(),
-                   "os_version": platform.version(),
-                   "os_release": platform.release(),
-                   "architecture": platform.architecture(),
-                   "os_detail": env_info.os_detail(),
-                   "language": self.get_os_language(),
-                   "browser": user_agent,
-                   "xxnet_version": self.xxnet_version(),
-                   "python_version": platform.python_version(),
-                   "openssl_version": get_openssl_version(),
+            "sys_platform": "%s, %s" % (platform.machine(), platform.platform()),
+            "os_system": platform.system(),
+            "os_version": platform.version(),
+            "os_release": platform.release(),
+            "architecture": platform.architecture(),
+            "os_detail": env_info.os_detail(),
+            "language": self.get_os_language(),
+            "browser": user_agent,
+            "xxnet_version": self.xxnet_version(),
+            "python_version": platform.python_version(),
+            "openssl_version": get_openssl_version(),
 
-                   "proxy_listen": config.LISTEN_IP + ":" + str(config.LISTEN_PORT),
-                   "pac_url": config.pac_url,
-                   "use_ipv6": config.CONFIG.getint("google_ip", "use_ipv6"),
+            "proxy_listen": str(config.listen_ip) + ":" + str(config.listen_port),
+            "use_ipv6": config.use_ipv6,
+            "lan_proxy": lan_proxy,
 
-                   "gae_appid": "|".join(config.GAE_APPIDS),
-                   "working_appid": "|".join(appid_manager.working_appid_list),
-                   "out_of_quota_appids": "|".join(appid_manager.out_of_quota_appids),
-                   "not_exist_appids": "|".join(appid_manager.not_exist_appids),
+            "gae_appid": "|".join(config.GAE_APPIDS),
+            "working_appid": "|".join(front.appid_manager.working_appid_list),
+            "out_of_quota_appids": "|".join(front.appid_manager.out_of_quota_appids),
+            "not_exist_appids": "|".join(front.appid_manager.not_exist_appids),
 
-                   "network_state": check_local_network.network_stat,
-                   "ip_num": len(google_ip.gws_ip_list),
-                   "good_ip_num": good_ip_num,
-                   "connected_link_new": len(https_manager.new_conn_pool.pool),
-                   "connected_link_used": len(https_manager.gae_conn_pool.pool),
-                   "worker_h1": http_dispatch.h1_num,
-                   "worker_h2": http_dispatch.h2_num,
-                   "is_idle": int(http_dispatch.is_idle()),
-                   "scan_ip_thread_num": google_ip.scan_thread_count,
-                   "ip_quality": google_ip.ip_quality(),
-                   "block_stat": connect_control.block_stat(),
+            "ipv4_state": check_local_network.IPv4.get_stat(),
+            "ipv6_state": check_local_network.IPv6.get_stat(),
+            #"ipv6_tunnel": ipv6_tunnel.state(),
+            "all_ip_num": len(front.ip_manager.ip_list),
+            "good_ipv4_num": front.ip_manager.good_ipv4_num,
+            "good_ipv6_num": front.ip_manager.good_ipv6_num,
+            "connected_link_new": len(front.connect_manager.new_conn_pool.pool),
+            "connection_pool_min": config.https_connection_pool_min,
+            "worker_h1": front.http_dispatcher.h1_num,
+            "worker_h2": front.http_dispatcher.h2_num,
+            "is_idle": int(front.http_dispatcher.is_idle()),
+            "scan_ip_thread_num": front.ip_manager.scan_thread_count,
+            "ip_quality": front.ip_manager.ip_quality(),
 
-                   "high_prior_connecting_num": connect_control.high_prior_connecting_num,
-                   "low_prior_connecting_num": connect_control.low_prior_connecting_num,
-                   "high_prior_lock": len(connect_control.high_prior_lock),
-                   "low_prior_lock": len(connect_control.low_prior_lock),
-                   }
+            "fake_host": get_fake_host()
+        }
         data = json.dumps(res_arr, indent=0, sort_keys=True)
         self.send_response_nc('text/html', data)
 
@@ -460,63 +374,75 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         try:
             if reqs['cmd'] == ['get_config']:
-                data = json.dumps(user_config.user_special, default=lambda o: o.__dict__)
+                ret_config = {
+                    "appid": "|".join(config.GAE_APPIDS),
+                    "auto_adjust_scan_ip_thread_num": config.auto_adjust_scan_ip_thread_num,
+                    "scan_ip_thread_num": config.max_scan_ip_thread_num,
+                    "use_ipv6": config.use_ipv6,
+                    "setting_level": config.setting_level,
+                    "connect_receive_buffer": config.connect_receive_buffer,
+                }
+                data = json.dumps(ret_config, default=lambda o: o.__dict__)
             elif reqs['cmd'] == ['set_config']:
                 appids = self.postvars['appid'][0]
-                if appids != user_config.user_special.appid:
-                    if appids and google_ip.good_ip_num:
-                        fail_appid_list = test_appid.test_appids(appids)
+                if appids != "|".join(config.GAE_APPIDS):
+                    if appids and (front.ip_manager.good_ipv4_num + front.ip_manager.good_ipv6_num):
+                        fail_appid_list = test_appids(appids)
                         if len(fail_appid_list):
                             fail_appid = "|".join(fail_appid_list)
-                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"appid fail:%s"}' % fail_appid)
+                            data = json.dumps({"res": "fail",
+                                               "reason": "appid fail:" + fail_appid
+                                               })
+                            return
 
                     appid_updated = True
-                    user_config.user_special.appid = appids
+                    if appids:
+                        xlog.info("set appids:%s", appids)
+                        config.GAE_APPIDS = appids.split("|")
+                    else:
+                        config.GAE_APPIDS = []
 
-                user_config.user_special.proxy_enable = self.postvars['proxy_enable'][0]
-                user_config.user_special.proxy_type = self.postvars['proxy_type'][0]
-                user_config.user_special.proxy_host = self.postvars['proxy_host'][0]
-                user_config.user_special.proxy_port = self.postvars['proxy_port'][0]
-                try:
-                    user_config.user_special.proxy_port = int(user_config.user_special.proxy_port)
-                except:
-                    user_config.user_special.proxy_port = 0
-
-                user_config.user_special.proxy_user = self.postvars['proxy_user'][0]
-                user_config.user_special.proxy_passwd = self.postvars['proxy_passwd'][0]
-                user_config.user_special.host_appengine_mode = self.postvars['host_appengine_mode'][0]
-
-                use_ipv6 = int(self.postvars['use_ipv6'][0])
-                if user_config.user_special.use_ipv6 != use_ipv6:
-                    if use_ipv6:
-                        if not check_local_network.check_ipv6():
-                            xlog.warn("IPv6 was enabled, but check failed.")
-                            return self.send_response_nc('text/html', '{"res":"fail", "reason":"IPv6 fail"}')
-
-                    user_config.user_special.use_ipv6 = use_ipv6
-
-                user_config.save()
+                config.save()
 
                 config.load()
-                appid_manager.reset_appid()
-                import connect_manager
-                connect_manager.load_proxy_config()
-                connect_manager.https_manager.load_config()
+                front.appid_manager.reset_appid()
                 if appid_updated:
-                    http_dispatch.close_all_worker()
+                    front.http_dispatcher.close_all_worker()
 
-                google_ip.reset()
-                check_ip.load_proxy_config()
+                front.ip_manager.reset()
 
                 data = '{"res":"success"}'
-                self.send_response_nc('text/html', data)
                 #http_request("http://127.0.0.1:8085/init_module?module=gae_proxy&cmd=restart")
-                return
+            elif reqs['cmd'] == ['set_config_level']:
+                setting_level = self.postvars['setting_level'][0]
+                if setting_level:
+                    xlog.info("set globa config level to %s", setting_level)
+                    config.set_level(setting_level)
+                    direct_config.set_level(setting_level)
+                    front.ip_manager.load_config()
+                    front.ip_manager.adjust_scan_thread_num()
+                    front.ip_manager.remove_slowest_ip()
+                    front.ip_manager.search_more_ip()
+
+                connect_receive_buffer = int(self.postvars['connect_receive_buffer'][0])
+                if 8192 <= connect_receive_buffer <= 2097152 and connect_receive_buffer != config.connect_receive_buffer:
+                    xlog.info("set connect receive buffer to %dKB", connect_receive_buffer // 1024)
+                    config.connect_receive_buffer = connect_receive_buffer
+                    config.save()
+                    config.load()
+
+                    front.connect_manager.new_conn_pool.clear()
+                    direct_front.connect_manager.new_conn_pool.clear()
+                    front.http_dispatcher.close_all_worker()
+                    for _, http_dispatcher in direct_front.dispatchs.items():
+                        http_dispatcher.close_all_worker()
+
+                data = '{"res":"success"}'
         except Exception as e:
             xlog.exception("req_config_handler except:%s", e)
             data = '{"res":"fail", "except":"%s"}' % e
-        self.send_response_nc('text/html', data)
-
+        finally:
+            self.send_response_nc('text/html', data)
 
     def req_deploy_handler(self):
         global deploy_proc
@@ -584,19 +510,22 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         if reqs['cmd'] == ['importip']:
             count = 0
             ip_list = self.postvars['ipList'][0]
-            addresses = ip_list.split('|')
-            for ip in addresses:
-                if not ip_utils.check_ip_valid(ip):
-                    continue
-                if google_ip.add_ip(ip, 100, "google.com", "gws"):
-                    count += 1
+            lines = ip_list.split("\n")
+            for line in lines:
+                addresses = line.split('|')
+                for ip in addresses:
+                    ip = ip.strip()
+                    if not utils.check_ip_valid(ip):
+                        continue
+                    if front.ip_manager.add_ip(ip, 100, "google.com", "gws"):
+                        count += 1
             data = '{"res":"%s"}' % count
-            google_ip.save_ip_list(force=True)
+            front.ip_manager.save(force=True)
 
         elif reqs['cmd'] == ['exportip']:
             data = '{"res":"'
-            for ip in google_ip.gws_ip_list:
-                if google_ip.ip_dict[ip]['fail_times'] > 0:
+            for ip in front.ip_manager.ip_list:
+                if front.ip_manager.ip_dict[ip]['fail_times'] > 0:
                     continue
                 data += "%s|" % ip
             data = data[0: len(data) - 1]
@@ -609,8 +538,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
 
         ip = reqs['ip'][0]
-        result = check_ip.test_gae_ip2(ip)
-        if not result or not result.support_gae:
+        result = front.check_ip.check_ip(ip)
+        if not result or not result.ok:
             data = "{'res':'fail'}"
         else:
             data = json.dumps("{'ip':'%s', 'handshake':'%s', 'server':'%s', 'domain':'%s'}" %
@@ -621,43 +550,43 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def req_ip_list_handler(self):
         time_now = time.time()
         data = "<html><body><div  style='float: left; white-space:nowrap;font-family: monospace;'>"
-        data += "time:%d  pointer:%d<br>\r\n" % (time_now, google_ip.gws_ip_pointer)
+        data += "time:%d  pointer:%d<br>\r\n" % (time_now, front.ip_manager.ip_pointer)
         data += "<table><tr><th>N</th><th>IP</th><th>HS</th><th>Fails</th>"
         data += "<th>down_fail</th><th>links</th>"
         data += "<th>get_time</th><th>success_time</th><th>fail_time</th><th>down_fail_time</th>"
         data += "<th>data_active</th><th>transfered_data</th><th>Trans</th>"
         data += "<th>history</th></tr>\n"
         i = 1
-        for ip in google_ip.gws_ip_list:
-            handshake_time = google_ip.ip_dict[ip]["handshake_time"]
+        for ip in front.ip_manager.gws_ip_list:
+            handshake_time = front.ip_manager.ip_dict[ip]["handshake_time"]
 
-            fail_times = google_ip.ip_dict[ip]["fail_times"]
-            down_fail = google_ip.ip_dict[ip]["down_fail"]
-            links = google_ip.ip_dict[ip]["links"]
+            fail_times = front.ip_manager.ip_dict[ip]["fail_times"]
+            down_fail = front.ip_manager.ip_dict[ip]["down_fail"]
+            links = front.ip_manager.ip_dict[ip]["links"]
 
-            get_time = google_ip.ip_dict[ip]["get_time"]
+            get_time = front.ip_manager.ip_dict[ip]["get_time"]
             if get_time:
                 get_time = time_now - get_time
 
-            success_time = google_ip.ip_dict[ip]["success_time"]
+            success_time = front.ip_manager.ip_dict[ip]["success_time"]
             if success_time:
                 success_time = time_now - success_time
 
-            fail_time = google_ip.ip_dict[ip]["fail_time"]
+            fail_time = front.ip_manager.ip_dict[ip]["fail_time"]
             if fail_time:
                 fail_time = time_now - fail_time
 
-            down_fail_time = google_ip.ip_dict[ip]["down_fail_time"]
+            down_fail_time = front.ip_manager.ip_dict[ip]["down_fail_time"]
             if down_fail_time:
                 down_fail_time = time_now - down_fail_time
 
-            data_active = google_ip.ip_dict[ip]["data_active"]
+            data_active = front.ip_manager.ip_dict[ip]["data_active"]
             if data_active:
                 active_time = time_now - data_active
             else:
                 active_time = 0
 
-            history = google_ip.ip_dict[ip]["history"]
+            history = front.ip_manager.ip_dict[ip]["history"]
             t0 = 0
             str_out = ''
             for item in history:
@@ -683,67 +612,62 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_range']:
-            data = ip_range.load_range_content()
-
+            data = front.ipv4_source.load_range_content()
         elif reqs['cmd'] == ['update']:
             #update ip_range if needed
             content = self.postvars['ip_range'][0]
 
             #check ip_range checksums, update if needed
-            default_digest = hashlib.md5(ip_range.load_range_content(default=True)).hexdigest()
-            old_digest = hashlib.md5(ip_range.load_range_content()).hexdigest()
+            default_digest = hashlib.md5(front.ipv4_source.load_range_content(default=True)).hexdigest()
+            old_digest = hashlib.md5(front.ipv4_source.load_range_content()).hexdigest()
             new_digest = hashlib.md5(content).hexdigest()
 
             if new_digest == default_digest:
-                ip_range.remove_user_range()
+                front.ipv4_source.remove_user_range()
 
             else:
                 if old_digest != new_digest:
-                    ip_range.update_range_content(content)
+                    front.ipv4_source.update_range_content(content)
 
             if old_digest != new_digest:
-                ip_range.load_ip_range()
+                front.ipv4_source.load_ip_range()
 
             #update auto_adjust_scan_ip and scan_ip_thread_num
             should_auto_adjust_scan_ip = int(self.postvars['auto_adjust_scan_ip_thread_num'][0])
             thread_num_for_scan_ip = int(self.postvars['scan_ip_thread_num'][0])
 
+            use_ipv6 = self.postvars['use_ipv6'][0]
+            if config.use_ipv6 != use_ipv6:
+                xlog.debug("use_ipv6 change to %s", use_ipv6)
+                config.use_ipv6 = use_ipv6
+
             #update user config settings
-            user_config.user_special.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
-            user_config.user_special.scan_ip_thread_num = thread_num_for_scan_ip
-            user_config.save()
+            config.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
+            config.max_scan_ip_thread_num = thread_num_for_scan_ip
+            config.save()
+            config.load()
 
-            #update google_ip settings
-            google_ip.auto_adjust_scan_ip_thread_num = should_auto_adjust_scan_ip
-
-            if google_ip.max_scan_ip_thread_num != thread_num_for_scan_ip:
-                google_ip.adjust_scan_thread_num(thread_num_for_scan_ip)
+            front.ip_manager.adjust_scan_thread_num()
 
             #reponse 
             data='{"res":"success"}'
-
-        elif reqs['cmd'] == ['get_scan_ip_log']:
-            data = scan_ip_log.get_log_content()
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
 
     def req_ssl_pool_handler(self):
         data = "New conn:\n"
-        data += https_manager.new_conn_pool.to_string()
+        data += front.connect_manager.new_conn_pool.to_string()
 
-        data += "\nGAE conn:\n"
-        data += https_manager.gae_conn_pool.to_string()
-
-        for host in https_manager.host_conn_pool:
+        for host in front.connect_manager.host_conn_pool:
             data += "\nHost:%s\n" % host
-            data += https_manager.host_conn_pool[host].to_string()
+            data += front.connect_manager.host_conn_pool[host].to_string()
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
 
     def req_workers_handler(self):
-        data = http_dispatch.to_string()
+        data = front.http_dispatcher.to_string()
 
         mimetype = 'text/plain'
         self.send_response_nc(mimetype, data)
@@ -768,24 +692,97 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_process']:
-            all_ip_num = len(google_ip.ip_dict)
-            left_num = google_ip.scan_exist_ip_queue.qsize()
-            good_num = google_ip.good_ip_num
+            all_ip_num = len(front.ip_manager.ip_dict)
+            left_num = front.ip_manager.scan_exist_ip_queue.qsize()
+            good_num = (front.ip_manager.good_ipv4_num + front.ip_manager.good_ipv6_num)
             data = json.dumps(dict(all_ip_num=all_ip_num, left_num=left_num, good_num=good_num))
             self.send_response_nc('text/plain', data)
         elif reqs['cmd'] == ['start']:
-            left_num = google_ip.scan_exist_ip_queue.qsize()
+            left_num = front.ip_manager.scan_exist_ip_queue.qsize()
             if left_num:
                 self.send_response_nc('text/plain', '{"res":"fail", "reason":"running"}')
             else:
-                google_ip.start_scan_all_exist_ip()
+                front.ip_manager.start_scan_all_exist_ip()
                 self.send_response_nc('text/plain', '{"res":"success"}')
         elif reqs['cmd'] == ['stop']:
-            left_num = google_ip.scan_exist_ip_queue.qsize()
+            left_num = front.ip_manager.scan_exist_ip_queue.qsize()
             if not left_num:
                 self.send_response_nc('text/plain', '{"res":"fail", "reason":"not running"}')
             else:
-                google_ip.stop_scan_all_exist_ip()
+                front.ip_manager.stop_scan_all_exist_ip()
                 self.send_response_nc('text/plain', '{"res":"success"}')
         else:
             return self.send_not_exist()
+
+    def req_debug_handler(self):
+        data = "ssl_socket num:%d \n" % openssl_wrap.socks_num
+        for obj in [front.connect_manager, front.http_dispatcher]:
+            data += "%s\r\n" % obj.__class__
+            for attr in dir(obj):
+                if attr.startswith("__"):
+                    continue
+                data += "    %s = %s\r\n" % (attr, getattr(obj, attr))
+
+        mimetype = 'text/plain'
+        self.send_response_nc(mimetype, data)
+
+    def req_ipv6_tunnel_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        log_path = os.path.join(data_path, "ipv6_tunnel.log")
+        time_now = datetime.datetime.today().strftime('%H:%M:%S-%a/%d/%b/%Y')
+
+        client_ip = self.client_address[0]
+        is_local = client_ip.endswith("127.0.0.1") or client_ip == "::1"
+
+        if reqs['cmd'] in [['enable'],
+                           ['disable'],
+                           ['test_teredo'],
+                           ['test_teredo_usability'],
+                           ['test_teredo_server'],
+                           ['set_best_server']]:
+            cmd = reqs['cmd'][0]
+            xlog.info("ipv6_tunnel switch %s", cmd)
+
+            # Don't remove log file at here.
+
+            if cmd == "enable":
+                result = ipv6_tunnel.enable(is_local)
+            elif cmd == "disable":
+                result = ipv6_tunnel.disable(is_local)
+            elif cmd == "test_teredo":
+                result = ipv6_tunnel.test_teredo()
+            elif cmd == "test_teredo_usability":
+                result = ipv6_tunnel.test_teredo(probe_server=False)
+            elif cmd == "test_teredo_server":
+                result = ipv6_tunnel.test_teredo(probe_nat=False)
+            elif cmd == "set_best_server":
+                result = ipv6_tunnel.set_best_server(is_local)
+            else:
+                xlog.warn("unknown cmd:%s", cmd)
+
+            xlog.info("ipv6_tunnel switch %s, result: %s", cmd, result)
+
+            data = json.dumps({'res': result, 'time': time_now})
+
+        elif reqs['cmd'] == ['get_log']:
+            if os.path.isfile(log_path):
+                with open(log_path, "r") as f:
+                    content = f.read()
+            else:
+                content = ""
+
+            status = ipv6_tunnel.state()
+
+            data = json.dumps({'status': status, 'log': content.decode("GBK"), 'time': time_now})
+
+        elif reqs['cmd'] == ['get_priority']:
+            data = json.dumps({'res': ipv6_tunnel.state_pp(), 'time': time_now})
+
+        elif reqs['cmd'] == ['switch_pp']:
+            data = json.dumps({'res': ipv6_tunnel.switch_pp(), 'time': time_now})
+
+        self.send_response_nc('text/html', data)
+

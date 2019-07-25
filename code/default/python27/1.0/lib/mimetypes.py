@@ -382,6 +382,7 @@ def _default_mime_types():
     global common_types
 
     suffix_map = {
+        '.svgz': '.svg.gz',
         '.tgz': '.tar.gz',
         '.taz': '.tar.gz',
         '.tz': '.tar.gz',
@@ -420,6 +421,7 @@ def _default_mime_types():
         '.cpio'   : 'application/x-cpio',
         '.csh'    : 'application/x-csh',
         '.css'    : 'text/css',
+        '.csv'    : 'text/csv',
         '.dll'    : 'application/octet-stream',
         '.doc'    : 'application/msword',
         '.dot'    : 'application/msword',
@@ -499,6 +501,7 @@ def _default_mime_types():
         '.src'    : 'application/x-wais-source',
         '.sv4cpio': 'application/x-sv4cpio',
         '.sv4crc' : 'application/x-sv4crc',
+        '.svg'    : 'image/svg+xml',
         '.swf'    : 'application/x-shockwave-flash',
         '.t'      : 'application/x-troff',
         '.tar'    : 'application/x-tar',
@@ -514,6 +517,7 @@ def _default_mime_types():
         '.ustar'  : 'application/x-ustar',
         '.vcf'    : 'text/x-vcard',
         '.wav'    : 'audio/x-wav',
+        '.webm'   : 'video/webm',
         '.wiz'    : 'application/msword',
         '.wsdl'   : 'application/xml',
         '.xbm'    : 'image/x-xbitmap',
