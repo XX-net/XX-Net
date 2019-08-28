@@ -70,7 +70,7 @@ teredo_server_list = [
     'teredo2.remlab.net',
     'teredo-debian.remlab.net',
     'teredo.trex.fi',
-    'teredo.iks-jena.de',
+    'teredo.iks-jena.de'
     #'win10.ipv6.microsoft.com',
     #'win1710.ipv6.microsoft.com',
     #'win1711.ipv6.microsoft.com'
