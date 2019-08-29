@@ -208,7 +208,7 @@ lwIDAQAB
 -----END PUBLIC KEY-----
 '''
         ])
-        self.set_var("check_commonname", "Google")
+        #self.set_var("check_commonname", "Google")
         self.set_var("min_intermediate_CA", 2)
         self.set_var("support_http2", 1)
 
