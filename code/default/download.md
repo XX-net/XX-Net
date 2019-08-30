@@ -1,11 +1,11 @@
 
 ## 下载(Download)：
 稳定版(Stable)：  
-https://github.com/XX-net/XX-Net/releases/download/3.13.1/XX-Net-3.13.1.7z
+https://github.com/XX-net/XX-Net/releases/download/3.13.2/XX-Net-3.13.2.7z
 
 
 测试版(Test)：  
-https://github.com/XX-net/XX-Net/releases/download/3.13.1/XX-Net-3.13.1.7z
+https://github.com/XX-net/XX-Net/releases/download/3.13.2/XX-Net-3.13.2.7z
 
 
 Android:  
