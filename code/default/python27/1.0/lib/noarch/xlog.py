@@ -118,14 +118,15 @@ class Logger():
         string = '%s - [%s] %s\n' % (time_str, level, fmt % args)
         self.buffer_lock.acquire()
         try:
-            self.set_console_color(console_color)
-            try:
-                console_string = '%s [%s][%s] %s\n' % (time_str, self.name, level, fmt % args)
-                sys.stderr.write(console_string)
-            except:
-                pass
-            self.set_console_color(self.reset_color)
-    
+            if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
+                self.set_console_color(console_color)
+                try:
+                    console_string = '%s [%s][%s] %s\n' % (time_str, self.name, level, fmt % args)
+                    sys.stderr.write(console_string)
+                except:
+                    pass
+                self.set_console_color(self.reset_color)
+
             if self.log_fd:
                 self.log_fd.write(string)
                 try:
