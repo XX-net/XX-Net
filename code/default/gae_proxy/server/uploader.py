@@ -191,7 +191,8 @@ def main():
         exit()
 
     appids = sys.argv[1]
-    rc4_password = "";
+    rc4_password = ""
+    skip_proxy = False
 
     if len(sys.argv) > 2:
         i = 2
@@ -204,13 +205,19 @@ def main():
                 if i < len(sys.argv):
                     rc4_password = sys.argv[i]
                 logging.info("use rc4_password: %s" % rc4_password)
+            elif sys.argv[i] == "-skipproxy":
+                skip_proxy = True
+                logging.info("skip use proxy when uploading")
             else:
                 logging.info("unknow argv: %s" % sys.argv[i])
 
             i += 1
 
-    os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
-    logging.info("set proxy to http://127.0.0.1:8087")
+    if skip_proxy == False:
+        os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8087'
+        logging.info("set proxy to http://127.0.0.1:8087")
+
+
 
     uploads(appids, rc4_password)
 
