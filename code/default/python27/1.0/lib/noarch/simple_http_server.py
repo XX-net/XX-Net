@@ -418,7 +418,7 @@ class HTTPServer():
         self.http_thread.start()
 
     def init_socket(self):
-        server_address = set(self.server_address)
+        server_address = self.server_address
         ips = [ip for ip, _ in server_address]
         listen_all_v4 = "0.0.0.0" in ips
         listen_all_v6 = "::" in ips
