@@ -423,9 +423,9 @@ class HTTPServer():
         listen_all_v4 = "0.0.0.0" in ips
         listen_all_v6 = "::" in ips
         for ip, port in server_address:
-            if ip not in ("0.0.0.0", "::") and \
-                    listen_all_v4 and '.' in ip or \
-                    listen_all_v6 and ':' in ip:
+            if ip not in ("0.0.0.0", "::") and (
+                    listen_all_v4 and '.' in ip or
+                    listen_all_v6 and ':' in ip):
                 continue
             self.add_listen((ip, port))
 

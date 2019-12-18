@@ -1,14 +1,15 @@
+* X-Tunnel 支付后流量未及时到帐请直接向 xxnet.dev@gmail.com 发邮件，并附上帐号、交易单号等详细信息。
 
-* 是否试过最新的版本 (https://github.com/XX-net/XX-Net/releases )？
+* 是否试过[最新的版本](https://github.com/XX-net/XX-Net/releases )？
 
-
-* 是否查看过 Wiki (https://github.com/XX-net/XX-Net/wiki )？
-
+* 是否查看过 [Wiki](https://github.com/XX-net/XX-Net/wiki )？
 
 * 是否以相关关键词搜索过类似 issues？
 
-
 * 描述遇到的问题，贴出所有能帮助分析问题的状态页和日志，如包含大量文本时，请上传为 txt 文件：
 
-
 * 如果问题得到解决，请务必回复相关情况，谢谢。
+
+* 即使最终无法解决你遇到的问题，这也是正常的，因为系统和网络环境千差万别。最终结果也能帮助到后来者，请保持正常交流，再寻它法。
+
+* 请不要只写标题，不写内容，不遵守规则的提问会被自动关闭。
