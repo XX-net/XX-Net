@@ -218,7 +218,7 @@ lwIDAQAB
         self.set_var("target_handshake_time", 600)
 
         # ip source
-        self.set_var("use_ipv6", "force_ipv6") #force_ipv4/force_ipv6/auto
+        self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6/auto
         self.set_var("ipv6_scan_ratio", 90) # 0 - 100
 
         self.load()
