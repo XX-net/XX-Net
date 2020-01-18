@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     default_ip = "54.192.37.196"
 
-    sni = "afdsfafa.cloudfront.net"
+    sni = "www.binance.com"
     host = "scan1.xx-net.net"
     if len(sys.argv) > 1:
         ip = sys.argv[1]

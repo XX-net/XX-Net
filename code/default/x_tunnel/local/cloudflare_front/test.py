@@ -4,7 +4,6 @@
 import os
 import sys
 import time
-import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
