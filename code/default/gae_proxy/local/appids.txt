@@ -7721,7 +7721,6 @@ xxnet-twogen3
 xxnet-tycomputer
 xxnet-tyreal
 xxnet-u639
-xxnet-update
 xxnet-ut001
 xxnet-uwgwo
 xxnet-v001
