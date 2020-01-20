@@ -94,12 +94,10 @@ def in_checksum(data):
     return socket.ntohs(s)
 
 class teredo_rs_packet(object):
-
-    rs_src = socket.inet_pton(socket.AF_INET6, link_local_addr)
-    rs_dst = socket.inet_pton(socket.AF_INET6, all_router_multicast)
-    _icmpv6_rs_msg = creat_ipv6_rs_msg()
-
     def __init__(self, nonce=None):
+        self.rs_src = socket.inet_pton(socket.AF_INET6, link_local_addr)
+        self.rs_dst = socket.inet_pton(socket.AF_INET6, all_router_multicast)
+        self._icmpv6_rs_msg = creat_ipv6_rs_msg()
         self.nonce = nonce or creat_rs_nonce()
         self.rs_src = bytearray(self.rs_src)
         self.teredo_header = self.creat_teredo_header()
