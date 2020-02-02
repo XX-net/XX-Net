@@ -42,7 +42,7 @@ def get():
 
     time_cost = time.time() - start_time
     xlog.info("GET cost:%f", time_cost)
-    xlog.info("status:%d content:%s", status, content.tobytes())
+    xlog.info("status:%d content:%s", status, content)
     front.stop()
 
 

@@ -154,7 +154,8 @@ if __name__ == "__main__":
     config_path = os.path.join(module_data_path, "cloudflare_front.json")
     config = Config(config_path)
 
-    openssl_context = SSLContext(logger)
+    ca_certs = os.path.join(current_path, "cacert.pem")
+    openssl_context = SSLContext(logger, ca_certs=ca_certs)
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager, debug=True)
     check_ip = CheckIp(logger, config, connect_creator)
