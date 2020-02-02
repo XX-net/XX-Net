@@ -4,8 +4,8 @@
 https://github.com/XX-net/XX-Net/releases/download/3.13.3/XX-Net-3.13.3.7z
 
 
-测试版(Test)：  
-https://github.com/XX-net/XX-Net/releases/download/3.14.0/XX-Net-3.14.0.7z
+测试版(Test)：
+https://github.com/XX-net/XX-Net/archive/3.14.0.zip
 
 
 Android:  
