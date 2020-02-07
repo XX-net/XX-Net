@@ -84,10 +84,10 @@ def filterwarnings(action, message="", category=Warning, module="", lineno=0,
            "category must be a class"
     assert issubclass(category, Warning), "category must be a Warning subclass"
     assert isinstance(module, basestring), "module must be a string"
-    assert isinstance(lineno, int) and lineno >= 0, \
+    assert isinstance(lineno, (int, long)) and lineno >= 0, \
            "lineno must be an int >= 0"
     item = (action, re.compile(message, re.I), category,
-            re.compile(module), lineno)
+            re.compile(module), int(lineno))
     if append:
         filters.append(item)
     else:
@@ -105,9 +105,9 @@ def simplefilter(action, category=Warning, lineno=0, append=0):
     """
     assert action in ("error", "ignore", "always", "default", "module",
                       "once"), "invalid action: %r" % (action,)
-    assert isinstance(lineno, int) and lineno >= 0, \
+    assert isinstance(lineno, (int, long)) and lineno >= 0, \
            "lineno must be an int >= 0"
-    item = (action, None, category, None, lineno)
+    item = (action, None, category, None, int(lineno))
     if append:
         filters.append(item)
     else:
@@ -309,9 +309,12 @@ class WarningMessage(object):
 
     def __init__(self, message, category, filename, lineno, file=None,
                     line=None):
-        local_values = locals()
-        for attr in self._WARNING_DETAILS:
-            setattr(self, attr, local_values[attr])
+        self.message = message
+        self.category = category
+        self.filename = filename
+        self.lineno = lineno
+        self.file = file
+        self.line = line
         self._category_name = category.__name__ if category else None
 
     def __str__(self):

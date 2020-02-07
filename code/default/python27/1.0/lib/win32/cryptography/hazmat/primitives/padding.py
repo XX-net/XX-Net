@@ -29,8 +29,8 @@ class PaddingContext(object):
 
 
 def _byte_padding_check(block_size):
-    if not (0 <= block_size < 256):
-        raise ValueError("block_size must be in range(0, 256).")
+    if not (0 <= block_size <= 2040):
+        raise ValueError("block_size must be in range(0, 2041).")
 
     if block_size % 8 != 0:
         raise ValueError("block_size must be a multiple of 8.")
@@ -40,8 +40,7 @@ def _byte_padding_update(buffer_, data, block_size):
     if buffer_ is None:
         raise AlreadyFinalized("Context was already finalized.")
 
-    if not isinstance(data, bytes):
-        raise TypeError("data must be bytes.")
+    utils._check_bytes("data", data)
 
     buffer_ += data
 
@@ -65,8 +64,7 @@ def _byte_unpadding_update(buffer_, data, block_size):
     if buffer_ is None:
         raise AlreadyFinalized("Context was already finalized.")
 
-    if not isinstance(data, bytes):
-        raise TypeError("data must be bytes.")
+    utils._check_bytes("data", data)
 
     buffer_ += data
 

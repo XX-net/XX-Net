@@ -71,6 +71,10 @@ if mswindows:
 else:
     import select
     _has_poll = hasattr(select, 'poll')
+    try:
+        import threading
+    except ImportError:
+        threading = None
     import fcntl
     import pickle
 
@@ -507,7 +511,7 @@ class Popen(object):
                     p2cread, _ = _subprocess.CreatePipe(None, 0)
             elif stdin == PIPE:
                 p2cread, p2cwrite = _subprocess.CreatePipe(None, 0)
-            elif isinstance(stdin, int):
+            elif isinstance(stdin, (int, long)):
                 p2cread = msvcrt.get_osfhandle(stdin)
             else:
                 # Assuming file-like object
@@ -524,7 +528,7 @@ class Popen(object):
                     _, c2pwrite = _subprocess.CreatePipe(None, 0)
             elif stdout == PIPE:
                 c2pread, c2pwrite = _subprocess.CreatePipe(None, 0)
-            elif isinstance(stdout, int):
+            elif isinstance(stdout, (int, long)):
                 c2pwrite = msvcrt.get_osfhandle(stdout)
             else:
                 # Assuming file-like object
@@ -543,7 +547,7 @@ class Popen(object):
                 errread, errwrite = _subprocess.CreatePipe(None, 0)
             elif stderr == STDOUT:
                 errwrite = c2pwrite
-            elif isinstance(stderr, int):
+            elif isinstance(stderr, (int, long)):
                 errwrite = msvcrt.get_osfhandle(stderr)
             else:
                 # Assuming file-like object
@@ -720,10 +724,11 @@ class Popen(object):
                         if e.errno == errno.EPIPE:
                             # communicate() should ignore broken pipe error
                             pass
-                        elif (e.errno == errno.EINVAL
-                              and self.poll() is not None):
-                            # Issue #19612: stdin.write() fails with EINVAL
-                            # if the process already exited before the write
+                        elif e.errno == errno.EINVAL:
+                            # bpo-19612, bpo-30418: On Windows, stdin.write()
+                            # fails with EINVAL if the child process exited or
+                            # if the child process is still running but closed
+                            # the pipe.
                             pass
                         else:
                             raise
@@ -800,7 +805,7 @@ class Popen(object):
             elif stdin == PIPE:
                 p2cread, p2cwrite = self.pipe_cloexec()
                 to_close.update((p2cread, p2cwrite))
-            elif isinstance(stdin, int):
+            elif isinstance(stdin, (int, long)):
                 p2cread = stdin
             else:
                 # Assuming file-like object
@@ -811,7 +816,7 @@ class Popen(object):
             elif stdout == PIPE:
                 c2pread, c2pwrite = self.pipe_cloexec()
                 to_close.update((c2pread, c2pwrite))
-            elif isinstance(stdout, int):
+            elif isinstance(stdout, (int, long)):
                 c2pwrite = stdout
             else:
                 # Assuming file-like object
@@ -827,7 +832,7 @@ class Popen(object):
                     errwrite = c2pwrite
                 else: # child's stdout is not set, use parent's stdout
                     errwrite = sys.__stdout__.fileno()
-            elif isinstance(stderr, int):
+            elif isinstance(stderr, (int, long)):
                 errwrite = stderr
             else:
                 # Assuming file-like object
@@ -877,6 +882,21 @@ class Popen(object):
                         pass
 
 
+        # Used as a bandaid workaround for https://bugs.python.org/issue27448
+        # to prevent multiple simultaneous subprocess launches from interfering
+        # with one another and leaving gc disabled.
+        if threading:
+            _disabling_gc_lock = threading.Lock()
+        else:
+            class _noop_context_manager(object):
+                # A dummy context manager that does nothing for the rare
+                # user of a --without-threads build.
+                def __enter__(self): pass
+                def __exit__(self, *args): pass
+
+            _disabling_gc_lock = _noop_context_manager()
+
+
         def _execute_child(self, args, executable, preexec_fn, close_fds,
                            cwd, env, universal_newlines,
                            startupinfo, creationflags, shell, to_close,
@@ -908,10 +928,12 @@ class Popen(object):
             errpipe_read, errpipe_write = self.pipe_cloexec()
             try:
                 try:
-                    gc_was_enabled = gc.isenabled()
-                    # Disable gc to avoid bug where gc -> file_dealloc ->
-                    # write to stderr -> hang.  http://bugs.python.org/issue1336
-                    gc.disable()
+                    with self._disabling_gc_lock:
+                        gc_was_enabled = gc.isenabled()
+                        # Disable gc to avoid bug where gc -> file_dealloc ->
+                        # write to stderr -> hang.
+                        # https://bugs.python.org/issue1336
+                        gc.disable()
                     try:
                         self.pid = os.fork()
                     except:
@@ -985,9 +1007,10 @@ class Popen(object):
                             exc_value.child_traceback = ''.join(exc_lines)
                             os.write(errpipe_write, pickle.dumps(exc_value))
 
-                        # This exitcode won't be reported to applications, so it
-                        # really doesn't matter what we return.
-                        os._exit(255)
+                        finally:
+                            # This exitcode won't be reported to applications, so it
+                            # really doesn't matter what we return.
+                            os._exit(255)
 
                     # Parent
                     if gc_was_enabled:
@@ -1026,13 +1049,16 @@ class Popen(object):
 
         def _handle_exitstatus(self, sts, _WIFSIGNALED=os.WIFSIGNALED,
                 _WTERMSIG=os.WTERMSIG, _WIFEXITED=os.WIFEXITED,
-                _WEXITSTATUS=os.WEXITSTATUS):
+                _WEXITSTATUS=os.WEXITSTATUS, _WIFSTOPPED=os.WIFSTOPPED,
+                _WSTOPSIG=os.WSTOPSIG):
             # This method is called (indirectly) by __del__, so it cannot
             # refer to anything outside of its local scope.
             if _WIFSIGNALED(sts):
                 self.returncode = -_WTERMSIG(sts)
             elif _WIFEXITED(sts):
                 self.returncode = _WEXITSTATUS(sts)
+            elif _WIFSTOPPED(sts):
+                self.returncode = -_WSTOPSIG(sts)
             else:
                 # Should never happen
                 raise RuntimeError("Unknown child exit status!")

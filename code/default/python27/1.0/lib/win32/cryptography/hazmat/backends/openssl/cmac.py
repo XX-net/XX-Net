@@ -9,11 +9,10 @@ from cryptography import utils
 from cryptography.exceptions import (
     InvalidSignature, UnsupportedAlgorithm, _Reasons
 )
-from cryptography.hazmat.primitives import constant_time, interfaces
+from cryptography.hazmat.primitives import constant_time
 from cryptography.hazmat.primitives.ciphers.modes import CBC
 
 
-@utils.register_interface(interfaces.MACContext)
 class _CMACContext(object):
     def __init__(self, backend, algorithm, ctx=None):
         if not backend.cmac_algorithm_supported(algorithm):
@@ -36,10 +35,12 @@ class _CMACContext(object):
             self._backend.openssl_assert(ctx != self._backend._ffi.NULL)
             ctx = self._backend._ffi.gc(ctx, self._backend._lib.CMAC_CTX_free)
 
-            self._backend._lib.CMAC_Init(
-                ctx, self._key, len(self._key),
+            key_ptr = self._backend._ffi.from_buffer(self._key)
+            res = self._backend._lib.CMAC_Init(
+                ctx, key_ptr, len(self._key),
                 evp_cipher, self._backend._ffi.NULL
             )
+            self._backend.openssl_assert(res == 1)
 
         self._ctx = ctx
 

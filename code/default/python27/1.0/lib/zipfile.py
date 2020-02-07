@@ -131,6 +131,29 @@ _CD64_NUMBER_ENTRIES_TOTAL = 7
 _CD64_DIRECTORY_SIZE = 8
 _CD64_OFFSET_START_CENTDIR = 9
 
+_DD_SIGNATURE = 0x08074b50
+
+_EXTRA_FIELD_STRUCT = struct.Struct('<HH')
+
+def _strip_extra(extra, xids):
+    # Remove Extra Fields with specified IDs.
+    unpack = _EXTRA_FIELD_STRUCT.unpack
+    modified = False
+    buffer = []
+    start = i = 0
+    while i + 4 <= len(extra):
+        xid, xlen = unpack(extra[i : i + 4])
+        j = i + 4 + xlen
+        if xid in xids:
+            if i != start:
+                buffer.append(extra[start : i])
+            start = j
+            modified = True
+        i = j
+    if not modified:
+        return extra
+    return b''.join(buffer)
+
 def _check_zipfile(fp):
     try:
         if _EndRecData(fp):
@@ -772,7 +795,6 @@ class ZipFile(object):
                 # set the modified flag so central directory gets written
                 # even if no files are added to the archive
                 self._didModify = True
-                self._start_disk = self.fp.tell()
             elif key == 'a':
                 try:
                     # See if file is a zip file
@@ -786,7 +808,6 @@ class ZipFile(object):
                     # set the modified flag so central directory gets written
                     # even if no files are added to the archive
                     self._didModify = True
-                    self._start_disk = self.fp.tell()
             else:
                 raise RuntimeError('Mode must be "r", "w" or "a"')
         except:
@@ -817,18 +838,17 @@ class ZipFile(object):
         offset_cd = endrec[_ECD_OFFSET]         # offset of central directory
         self._comment = endrec[_ECD_COMMENT]    # archive comment
 
-        # self._start_disk:  Position of the start of ZIP archive
-        # It is zero, unless ZIP was concatenated to another file
-        self._start_disk = endrec[_ECD_LOCATION] - size_cd - offset_cd
+        # "concat" is zero, unless zip was concatenated to another file
+        concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
         if endrec[_ECD_SIGNATURE] == stringEndArchive64:
             # If Zip64 extension structures are present, account for them
-            self._start_disk -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
+            concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
 
         if self.debug > 2:
-            inferred = self._start_disk + offset_cd
-            print "given, inferred, offset", offset_cd, inferred, self._start_disk
+            inferred = concat + offset_cd
+            print "given, inferred, offset", offset_cd, inferred, concat
         # self.start_dir:  Position of start of central directory
-        self.start_dir = offset_cd + self._start_disk
+        self.start_dir = offset_cd + concat
         fp.seek(self.start_dir, 0)
         data = fp.read(size_cd)
         fp = cStringIO.StringIO(data)
@@ -858,7 +878,7 @@ class ZipFile(object):
                                      t>>11, (t>>5)&0x3F, (t&0x1F) * 2 )
 
             x._decodeExtra()
-            x.header_offset = x.header_offset + self._start_disk
+            x.header_offset = x.header_offset + concat
             x.filename = x._decodeFilename()
             self.filelist.append(x)
             self.NameToInfo[x.filename] = x
@@ -1201,7 +1221,7 @@ class ZipFile(object):
                 raise RuntimeError('Compressed size larger than uncompressed size')
         # Seek backwards and write file header (which will now include
         # correct CRC and file sizes)
-        position = self.fp.tell() # Preserve current position in file
+        position = self.fp.tell()       # Preserve current position in file
         self.fp.seek(zinfo.header_offset, 0)
         self.fp.write(zinfo.FileHeader(zip64))
         self.fp.seek(position, 0)
@@ -1252,9 +1272,9 @@ class ZipFile(object):
         self.fp.write(bytes)
         if zinfo.flag_bits & 0x08:
             # Write CRC and file sizes after the file data
-            fmt = '<LQQ' if zip64 else '<LLL'
-            self.fp.write(struct.pack(fmt, zinfo.CRC, zinfo.compress_size,
-                  zinfo.file_size))
+            fmt = '<LLQQ' if zip64 else '<LLLL'
+            self.fp.write(struct.pack(fmt, _DD_SIGNATURE, zinfo.CRC,
+                  zinfo.compress_size, zinfo.file_size))
         self.fp.flush()
         self.filelist.append(zinfo)
         self.NameToInfo[zinfo.filename] = zinfo
@@ -1287,14 +1307,16 @@ class ZipFile(object):
                         file_size = zinfo.file_size
                         compress_size = zinfo.compress_size
 
-                    header_offset = zinfo.header_offset - self._start_disk
-                    if header_offset > ZIP64_LIMIT:
-                        extra.append(header_offset)
+                    if zinfo.header_offset > ZIP64_LIMIT:
+                        extra.append(zinfo.header_offset)
                         header_offset = 0xffffffffL
+                    else:
+                        header_offset = zinfo.header_offset
 
                     extra_data = zinfo.extra
                     if extra:
                         # Append a ZIP64 field to the extra's
+                        extra_data = _strip_extra(extra_data, (1,))
                         extra_data = struct.pack(
                                 '<HH' + 'Q'*len(extra),
                                 1, 8*len(extra), *extra) + extra_data
@@ -1334,7 +1356,7 @@ class ZipFile(object):
                 # Write end-of-zip-archive record
                 centDirCount = len(self.filelist)
                 centDirSize = pos2 - pos1
-                centDirOffset = pos1 - self._start_disk
+                centDirOffset = pos1
                 requires_zip64 = None
                 if centDirCount > ZIP_FILECOUNT_LIMIT:
                     requires_zip64 = "Files count"

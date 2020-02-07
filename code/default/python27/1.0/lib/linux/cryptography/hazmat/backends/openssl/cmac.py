@@ -9,11 +9,11 @@ from cryptography import utils
 from cryptography.exceptions import (
     InvalidSignature, UnsupportedAlgorithm, _Reasons
 )
-from cryptography.hazmat.primitives import constant_time, interfaces
+from cryptography.hazmat.primitives import constant_time, mac
 from cryptography.hazmat.primitives.ciphers.modes import CBC
 
 
-@utils.register_interface(interfaces.MACContext)
+@utils.register_interface(mac.MACContext)
 class _CMACContext(object):
     def __init__(self, backend, algorithm, ctx=None):
         if not backend.cmac_algorithm_supported(algorithm):
@@ -33,13 +33,15 @@ class _CMACContext(object):
 
             ctx = self._backend._lib.CMAC_CTX_new()
 
-            assert ctx != self._backend._ffi.NULL
+            self._backend.openssl_assert(ctx != self._backend._ffi.NULL)
             ctx = self._backend._ffi.gc(ctx, self._backend._lib.CMAC_CTX_free)
 
-            self._backend._lib.CMAC_Init(
-                ctx, self._key, len(self._key),
+            key_ptr = self._backend._ffi.from_buffer(self._key)
+            res = self._backend._lib.CMAC_Init(
+                ctx, key_ptr, len(self._key),
                 evp_cipher, self._backend._ffi.NULL
             )
+            self._backend.openssl_assert(res == 1)
 
         self._ctx = ctx
 
@@ -47,7 +49,7 @@ class _CMACContext(object):
 
     def update(self, data):
         res = self._backend._lib.CMAC_Update(self._ctx, data, len(data))
-        assert res == 1
+        self._backend.openssl_assert(res == 1)
 
     def finalize(self):
         buf = self._backend._ffi.new("unsigned char[]", self._output_length)
@@ -55,7 +57,7 @@ class _CMACContext(object):
         res = self._backend._lib.CMAC_Final(
             self._ctx, buf, length
         )
-        assert res == 1
+        self._backend.openssl_assert(res == 1)
 
         self._ctx = None
 
@@ -69,7 +71,7 @@ class _CMACContext(object):
         res = self._backend._lib.CMAC_CTX_copy(
             copied_ctx, self._ctx
         )
-        assert res == 1
+        self._backend.openssl_assert(res == 1)
         return _CMACContext(
             self._backend, self._algorithm, ctx=copied_ctx
         )

@@ -4,351 +4,78 @@
 
 from __future__ import absolute_import, division, print_function
 
-# This is a temporary copy of all the CONDITIONAL_NAMES from _cffi_src so
-# we can loop over them and delete them at runtime. It will be removed when
-# cffi supports #if in cdef
 
-CONDITIONAL_NAMES = {
-    "Cryptography_HAS_AES_WRAP": [
-        "AES_wrap_key",
-        "AES_unwrap_key",
-    ],
-    "Cryptography_HAS_CMAC": [
-        "CMAC_CTX_new",
-        "CMAC_Init",
-        "CMAC_Update",
-        "CMAC_Final",
-        "CMAC_CTX_copy",
-        "CMAC_CTX_free",
-    ],
-    "Cryptography_HAS_CMS": [
-        "BIO_new_CMS",
-        "i2d_CMS_bio_stream",
-        "PEM_write_bio_CMS_stream",
-        "CMS_final",
-        "CMS_sign",
-        "CMS_verify",
-        "CMS_encrypt",
-        "CMS_decrypt",
-        "CMS_add1_signer",
-        "CMS_TEXT",
-        "CMS_NOCERTS",
-        "CMS_NO_CONTENT_VERIFY",
-        "CMS_NO_ATTR_VERIFY",
-        "CMS_NOSIGS",
-        "CMS_NOINTERN",
-        "CMS_NO_SIGNER_CERT_VERIFY",
-        "CMS_NOVERIFY",
-        "CMS_DETACHED",
-        "CMS_BINARY",
-        "CMS_NOATTR",
-        "CMS_NOSMIMECAP",
-        "CMS_NOOLDMIMETYPE",
-        "CMS_CRLFEOL",
-        "CMS_STREAM",
-        "CMS_NOCRL",
-        "CMS_PARTIAL",
-        "CMS_REUSE_DIGEST",
-        "CMS_USE_KEYID",
-        "CMS_DEBUG_DECRYPT",
-    ],
-    "Cryptography_HAS_CMS_BIO_FUNCTIONS": [
-        "BIO_new_CMS",
-        "i2d_CMS_bio_stream",
-        "PEM_write_bio_CMS_stream",
-    ],
-    "Cryptography_HAS_EC": [
-        "OPENSSL_EC_NAMED_CURVE",
-        "EC_GROUP_new",
-        "EC_GROUP_free",
-        "EC_GROUP_clear_free",
-        "EC_GROUP_new_curve_GFp",
-        "EC_GROUP_new_by_curve_name",
-        "EC_GROUP_set_curve_GFp",
-        "EC_GROUP_get_curve_GFp",
-        "EC_GROUP_method_of",
-        "EC_GROUP_get0_generator",
-        "EC_GROUP_get_curve_name",
-        "EC_GROUP_get_degree",
-        "EC_GROUP_set_asn1_flag",
-        "EC_GROUP_set_point_conversion_form",
-        "EC_KEY_new",
-        "EC_KEY_free",
-        "EC_get_builtin_curves",
-        "EC_KEY_new_by_curve_name",
-        "EC_KEY_copy",
-        "EC_KEY_dup",
-        "EC_KEY_up_ref",
-        "EC_KEY_set_group",
-        "EC_KEY_get0_private_key",
-        "EC_KEY_set_private_key",
-        "EC_KEY_set_public_key",
-        "EC_KEY_get_enc_flags",
-        "EC_KEY_set_enc_flags",
-        "EC_KEY_set_conv_form",
-        "EC_KEY_set_asn1_flag",
-        "EC_KEY_precompute_mult",
-        "EC_KEY_generate_key",
-        "EC_KEY_check_key",
-        "EC_POINT_new",
-        "EC_POINT_free",
-        "EC_POINT_clear_free",
-        "EC_POINT_copy",
-        "EC_POINT_dup",
-        "EC_POINT_method_of",
-        "EC_POINT_set_to_infinity",
-        "EC_POINT_set_Jprojective_coordinates_GFp",
-        "EC_POINT_get_Jprojective_coordinates_GFp",
-        "EC_POINT_set_affine_coordinates_GFp",
-        "EC_POINT_get_affine_coordinates_GFp",
-        "EC_POINT_set_compressed_coordinates_GFp",
-        "EC_POINT_point2oct",
-        "EC_POINT_oct2point",
-        "EC_POINT_point2bn",
-        "EC_POINT_bn2point",
-        "EC_POINT_point2hex",
-        "EC_POINT_hex2point",
-        "EC_POINT_add",
-        "EC_POINT_dbl",
-        "EC_POINT_invert",
-        "EC_POINT_is_at_infinity",
-        "EC_POINT_is_on_curve",
-        "EC_POINT_cmp",
-        "EC_POINT_make_affine",
-        "EC_POINTs_make_affine",
-        "EC_POINTs_mul",
-        "EC_POINT_mul",
-        "EC_GROUP_precompute_mult",
-        "EC_GROUP_have_precompute_mult",
-        "EC_GFp_simple_method",
-        "EC_GFp_mont_method",
-        "EC_GFp_nist_method",
-        "EC_METHOD_get_field_type",
-        "EVP_PKEY_assign_EC_KEY",
-        "EVP_PKEY_get1_EC_KEY",
-        "EVP_PKEY_set1_EC_KEY",
-        "PEM_write_bio_ECPrivateKey",
-        "i2d_EC_PUBKEY",
-        "d2i_EC_PUBKEY",
-        "d2i_EC_PUBKEY_bio",
-        "i2d_EC_PUBKEY_bio",
-        "d2i_ECPrivateKey",
-        "d2i_ECPrivateKey_bio",
-        "i2d_ECPrivateKey",
-        "i2d_ECPrivateKey_bio",
-        "i2o_ECPublicKey",
-        "o2i_ECPublicKey",
-        "SSL_CTX_set_tmp_ecdh",
-        "POINT_CONVERSION_COMPRESSED",
-        "POINT_CONVERSION_UNCOMPRESSED",
-        "POINT_CONVERSION_HYBRID",
-    ],
-
-    "Cryptography_HAS_EC_1_0_1": [
-        "EC_KEY_get_flags",
-        "EC_KEY_set_flags",
-        "EC_KEY_clear_flags",
-        "EC_KEY_set_public_key_affine_coordinates",
-    ],
-
-    "Cryptography_HAS_EC2M": [
-        "EC_GF2m_simple_method",
+def cryptography_has_ec2m():
+    return [
         "EC_POINT_set_affine_coordinates_GF2m",
         "EC_POINT_get_affine_coordinates_GF2m",
         "EC_POINT_set_compressed_coordinates_GF2m",
-        "EC_GROUP_set_curve_GF2m",
-        "EC_GROUP_get_curve_GF2m",
-        "EC_GROUP_new_curve_GF2m",
-    ],
+    ]
 
-    "Cryptography_HAS_EC_1_0_2": [
+
+def cryptography_has_ec_1_0_2():
+    return [
         "EC_curve_nid2nist",
-    ],
-    "Cryptography_HAS_ECDH": [
-        "ECDH_compute_key",
-    ],
-    "Cryptography_HAS_ECDSA": [
-        "ECDSA_SIG_new",
-        "ECDSA_SIG_free",
-        "i2d_ECDSA_SIG",
-        "d2i_ECDSA_SIG",
-        "ECDSA_do_sign",
-        "ECDSA_do_sign_ex",
-        "ECDSA_do_verify",
-        "ECDSA_sign_setup",
-        "ECDSA_sign",
-        "ECDSA_sign_ex",
-        "ECDSA_verify",
-        "ECDSA_size",
-    ],
-    "Cryptography_HAS_ENGINE_CRYPTODEV": [
-        "ENGINE_load_cryptodev"
-    ],
-    "Cryptography_HAS_REMOVE_THREAD_STATE": [
-        "ERR_remove_thread_state"
-    ],
-    "Cryptography_HAS_098H_ERROR_CODES": [
-        "ASN1_F_B64_READ_ASN1",
-        "ASN1_F_B64_WRITE_ASN1",
-        "ASN1_F_SMIME_READ_ASN1",
-        "ASN1_F_SMIME_TEXT",
-        "ASN1_R_NO_CONTENT_TYPE",
-        "ASN1_R_NO_MULTIPART_BODY_FAILURE",
-        "ASN1_R_NO_MULTIPART_BOUNDARY",
-    ],
-    "Cryptography_HAS_098C_CAMELLIA_CODES": [
-        "EVP_F_CAMELLIA_INIT_KEY",
-        "EVP_R_CAMELLIA_KEY_SETUP_FAILED"
-    ],
-    "Cryptography_HAS_EC_CODES": [
-        "EC_R_UNKNOWN_GROUP",
-        "EC_F_EC_GROUP_NEW_BY_CURVE_NAME"
-    ],
-    "Cryptography_HAS_RSA_R_PKCS_DECODING_ERROR": [
+    ]
+
+
+def cryptography_has_set_ecdh_auto():
+    return [
+        "SSL_CTX_set_ecdh_auto",
+    ]
+
+
+def cryptography_has_rsa_r_pkcs_decoding_error():
+    return [
         "RSA_R_PKCS_DECODING_ERROR"
-    ],
-    "Cryptography_HAS_GCM": [
-        "EVP_CTRL_GCM_GET_TAG",
-        "EVP_CTRL_GCM_SET_TAG",
-        "EVP_CTRL_GCM_SET_IVLEN",
-    ],
-    "Cryptography_HAS_PBKDF2_HMAC": [
-        "PKCS5_PBKDF2_HMAC"
-    ],
-    "Cryptography_HAS_PKEY_CTX": [
-        "EVP_PKEY_CTX_new",
-        "EVP_PKEY_CTX_new_id",
-        "EVP_PKEY_CTX_dup",
-        "EVP_PKEY_CTX_free",
-        "EVP_PKEY_sign",
-        "EVP_PKEY_sign_init",
-        "EVP_PKEY_verify",
-        "EVP_PKEY_verify_init",
-        "Cryptography_EVP_PKEY_encrypt",
-        "EVP_PKEY_encrypt_init",
-        "Cryptography_EVP_PKEY_decrypt",
-        "EVP_PKEY_decrypt_init",
-        "EVP_PKEY_CTX_set_signature_md",
-        "EVP_PKEY_id",
-        "EVP_PKEY_CTX_set_rsa_padding",
-        "EVP_PKEY_CTX_set_rsa_pss_saltlen",
-    ],
-    "Cryptography_HAS_ECDSA_SHA2_NIDS": [
-        "NID_ecdsa_with_SHA224",
-        "NID_ecdsa_with_SHA256",
-        "NID_ecdsa_with_SHA384",
-        "NID_ecdsa_with_SHA512",
-    ],
-    "Cryptography_HAS_EGD": [
-        "RAND_egd",
-        "RAND_egd_bytes",
-        "RAND_query_egd_bytes",
-    ],
-    "Cryptography_HAS_PSS_PADDING": [
-        "RSA_PKCS1_PSS_PADDING",
-    ],
-    "Cryptography_HAS_MGF1_MD": [
-        "EVP_PKEY_CTX_set_rsa_mgf1_md",
-    ],
-    "Cryptography_HAS_TLSv1_1": [
-        "SSL_OP_NO_TLSv1_1",
-        "TLSv1_1_method",
-        "TLSv1_1_server_method",
-        "TLSv1_1_client_method",
-    ],
+    ]
 
-    "Cryptography_HAS_TLSv1_2": [
-        "SSL_OP_NO_TLSv1_2",
-        "TLSv1_2_method",
-        "TLSv1_2_server_method",
-        "TLSv1_2_client_method",
-    ],
 
-    "Cryptography_HAS_SSL3_METHOD": [
+def cryptography_has_rsa_oaep_md():
+    return [
+        "EVP_PKEY_CTX_set_rsa_oaep_md",
+    ]
+
+
+def cryptography_has_rsa_oaep_label():
+    return [
+        "EVP_PKEY_CTX_set0_rsa_oaep_label",
+    ]
+
+
+def cryptography_has_ssl3_method():
+    return [
         "SSLv3_method",
         "SSLv3_client_method",
         "SSLv3_server_method",
-    ],
+    ]
 
-    "Cryptography_HAS_TLSEXT_HOSTNAME": [
-        "SSL_set_tlsext_host_name",
-        "SSL_get_servername",
-        "SSL_CTX_set_tlsext_servername_callback",
-    ],
 
-    "Cryptography_HAS_TLSEXT_STATUS_REQ_CB": [
-        "SSL_CTX_set_tlsext_status_cb",
-        "SSL_CTX_set_tlsext_status_arg"
-    ],
-
-    "Cryptography_HAS_STATUS_REQ_OCSP_RESP": [
-        "SSL_set_tlsext_status_ocsp_resp",
-        "SSL_get_tlsext_status_ocsp_resp",
-    ],
-
-    "Cryptography_HAS_TLSEXT_STATUS_REQ_TYPE": [
-        "SSL_set_tlsext_status_type",
-    ],
-
-    "Cryptography_HAS_RELEASE_BUFFERS": [
-        "SSL_MODE_RELEASE_BUFFERS",
-    ],
-
-    "Cryptography_HAS_OP_NO_COMPRESSION": [
-        "SSL_OP_NO_COMPRESSION",
-    ],
-
-    "Cryptography_HAS_SSL_OP_MSIE_SSLV2_RSA_PADDING": [
-        "SSL_OP_MSIE_SSLV2_RSA_PADDING",
-    ],
-
-    "Cryptography_HAS_SSL_OP_NO_TICKET": [
-        "SSL_OP_NO_TICKET",
-    ],
-
-    "Cryptography_HAS_SSL_SET_SSL_CTX": [
-        "SSL_set_SSL_CTX",
-        "TLSEXT_NAMETYPE_host_name",
-    ],
-
-    "Cryptography_HAS_NETBSD_D1_METH": [
-        "DTLSv1_method",
-    ],
-
-    "Cryptography_HAS_NEXTPROTONEG": [
-        "SSL_CTX_set_next_protos_advertised_cb",
-        "SSL_CTX_set_next_proto_select_cb",
-        "SSL_select_next_proto",
-        "SSL_get0_next_proto_negotiated",
-    ],
-
-    "Cryptography_HAS_SECURE_RENEGOTIATION": [
-        "SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION",
-        "SSL_OP_LEGACY_SERVER_CONNECT",
-        "SSL_get_secure_renegotiation_support",
-    ],
-
-    "Cryptography_HAS_ALPN": [
+def cryptography_has_alpn():
+    return [
         "SSL_CTX_set_alpn_protos",
         "SSL_set_alpn_protos",
         "SSL_CTX_set_alpn_select_cb",
         "SSL_get0_alpn_selected",
-    ],
+    ]
 
-    "Cryptography_HAS_COMPRESSION": [
+
+def cryptography_has_compression():
+    return [
         "SSL_get_current_compression",
         "SSL_get_current_expansion",
         "SSL_COMP_get_name",
-    ],
+    ]
 
-    "Cryptography_HAS_GET_SERVER_TMP_KEY": [
+
+def cryptography_has_get_server_tmp_key():
+    return [
         "SSL_get_server_tmp_key",
-    ],
+    ]
 
-    "Cryptography_HAS_SSL_CTX_SET_CLIENT_CERT_ENGINE": [
-        "SSL_CTX_set_client_cert_engine",
-    ],
-    "Cryptography_HAS_102_VERIFICATION_ERROR_CODES": [
+
+def cryptography_has_102_verification_error_codes():
+    return [
         'X509_V_ERR_SUITE_B_INVALID_VERSION',
         'X509_V_ERR_SUITE_B_INVALID_ALGORITHM',
         'X509_V_ERR_SUITE_B_INVALID_CURVE',
@@ -358,8 +85,11 @@ CONDITIONAL_NAMES = {
         'X509_V_ERR_HOSTNAME_MISMATCH',
         'X509_V_ERR_EMAIL_MISMATCH',
         'X509_V_ERR_IP_ADDRESS_MISMATCH'
-    ],
-    "Cryptography_HAS_102_VERIFICATION_PARAMS": [
+    ]
+
+
+def cryptography_has_102_verification_params():
+    return [
         "X509_V_FLAG_SUITEB_128_LOS_ONLY",
         "X509_V_FLAG_SUITEB_192_LOS",
         "X509_V_FLAG_SUITEB_128_LOS",
@@ -368,55 +98,344 @@ CONDITIONAL_NAMES = {
         "X509_VERIFY_PARAM_set1_ip",
         "X509_VERIFY_PARAM_set1_ip_asc",
         "X509_VERIFY_PARAM_set_hostflags",
-    ],
-    "Cryptography_HAS_X509_V_FLAG_TRUSTED_FIRST": [
+        "SSL_get0_param",
+        "X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT",
+        "X509_CHECK_FLAG_NO_WILDCARDS",
+        "X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS",
+        "X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS",
+        "X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS"
+    ]
+
+
+def cryptography_has_110_verification_params():
+    return [
+        "X509_CHECK_FLAG_NEVER_CHECK_SUBJECT"
+    ]
+
+
+def cryptography_has_x509_v_flag_trusted_first():
+    return [
         "X509_V_FLAG_TRUSTED_FIRST",
-    ],
-    "Cryptography_HAS_X509_V_FLAG_PARTIAL_CHAIN": [
+    ]
+
+
+def cryptography_has_x509_v_flag_partial_chain():
+    return [
         "X509_V_FLAG_PARTIAL_CHAIN",
-    ],
-    "Cryptography_HAS_100_VERIFICATION_ERROR_CODES": [
-        'X509_V_ERR_DIFFERENT_CRL_SCOPE',
-        'X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE',
-        'X509_V_ERR_UNNESTED_RESOURCE',
-        'X509_V_ERR_PERMITTED_VIOLATION',
-        'X509_V_ERR_EXCLUDED_VIOLATION',
-        'X509_V_ERR_SUBTREE_MINMAX',
-        'X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE',
-        'X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX',
-        'X509_V_ERR_UNSUPPORTED_NAME_SYNTAX',
-        'X509_V_ERR_CRL_PATH_VALIDATION_ERROR',
-    ],
-    "Cryptography_HAS_100_VERIFICATION_PARAMS": [
-        "Cryptography_HAS_100_VERIFICATION_PARAMS",
-        "X509_V_FLAG_EXTENDED_CRL_SUPPORT",
-        "X509_V_FLAG_USE_DELTAS",
-    ],
-    "Cryptography_HAS_X509_V_FLAG_CHECK_SS_SIGNATURE": [
-        "X509_V_FLAG_CHECK_SS_SIGNATURE",
-    ],
-    "Cryptography_HAS_SET_CERT_CB": [
+    ]
+
+
+def cryptography_has_set_cert_cb():
+    return [
         "SSL_CTX_set_cert_cb",
         "SSL_set_cert_cb",
-    ],
-    "Cryptography_HAS_AES_CTR128_ENCRYPT": [
-        "AES_ctr128_encrypt",
-    ],
-    "Cryptography_HAS_SSL_ST": [
+    ]
+
+
+def cryptography_has_ssl_st():
+    return [
         "SSL_ST_BEFORE",
         "SSL_ST_OK",
         "SSL_ST_INIT",
         "SSL_ST_RENEGOTIATE",
-    ],
-    "Cryptography_HAS_TLS_ST": [
+    ]
+
+
+def cryptography_has_tls_st():
+    return [
         "TLS_ST_BEFORE",
         "TLS_ST_OK",
-    ],
-    "Cryptography_HAS_LOCKING_CALLBACKS": [
-        "CRYPTO_LOCK",
-        "CRYPTO_UNLOCK",
-        "CRYPTO_READ",
-        "CRYPTO_LOCK_SSL",
-        "CRYPTO_lock",
     ]
+
+
+def cryptography_has_locking_callbacks():
+    return [
+        "Cryptography_setup_ssl_threads",
+    ]
+
+
+def cryptography_has_scrypt():
+    return [
+        "EVP_PBE_scrypt",
+    ]
+
+
+def cryptography_has_generic_dtls_method():
+    return [
+        "DTLS_method",
+        "DTLS_server_method",
+        "DTLS_client_method",
+        "SSL_OP_NO_DTLSv1",
+        "SSL_OP_NO_DTLSv1_2",
+        "DTLS_set_link_mtu",
+        "DTLS_get_link_min_mtu",
+    ]
+
+
+def cryptography_has_evp_pkey_dhx():
+    return [
+        "EVP_PKEY_DHX",
+    ]
+
+
+def cryptography_has_mem_functions():
+    return [
+        "Cryptography_CRYPTO_set_mem_functions",
+    ]
+
+
+def cryptography_has_sct():
+    return [
+        "SCT_get_version",
+        "SCT_get_log_entry_type",
+        "SCT_get0_log_id",
+        "SCT_get0_signature",
+        "SCT_get_timestamp",
+        "SCT_set_source",
+        "sk_SCT_num",
+        "sk_SCT_value",
+        "SCT_LIST_free",
+        "sk_SCT_push",
+        "sk_SCT_new_null",
+        "SCT_new",
+        "SCT_set1_log_id",
+        "SCT_set_timestamp",
+        "SCT_set_version",
+        "SCT_set_log_entry_type",
+    ]
+
+
+def cryptography_has_x509_store_ctx_get_issuer():
+    return [
+        "X509_STORE_get_get_issuer",
+        "X509_STORE_set_get_issuer",
+    ]
+
+
+def cryptography_has_x25519():
+    return [
+        "EVP_PKEY_X25519",
+        "NID_X25519",
+    ]
+
+
+def cryptography_has_x448():
+    return [
+        "EVP_PKEY_X448",
+        "NID_X448",
+    ]
+
+
+def cryptography_has_ed448():
+    return [
+        "EVP_PKEY_ED448",
+        "NID_ED448",
+    ]
+
+
+def cryptography_has_ed25519():
+    return [
+        "NID_ED25519",
+        "EVP_PKEY_ED25519",
+    ]
+
+
+def cryptography_has_poly1305():
+    return [
+        "NID_poly1305",
+        "EVP_PKEY_POLY1305",
+    ]
+
+
+def cryptography_has_oneshot_evp_digest_sign_verify():
+    return [
+        "EVP_DigestSign",
+        "EVP_DigestVerify",
+    ]
+
+
+def cryptography_has_evp_digestfinal_xof():
+    return [
+        "EVP_DigestFinalXOF",
+    ]
+
+
+def cryptography_has_evp_pkey_get_set_tls_encodedpoint():
+    return [
+        "EVP_PKEY_get1_tls_encodedpoint",
+        "EVP_PKEY_set1_tls_encodedpoint",
+    ]
+
+
+def cryptography_has_fips():
+    return [
+        "FIPS_mode_set",
+        "FIPS_mode",
+    ]
+
+
+def cryptography_has_ssl_sigalgs():
+    return [
+        "SSL_CTX_set1_sigalgs_list",
+        "SSL_get_sigalgs",
+    ]
+
+
+def cryptography_has_psk():
+    return [
+        "SSL_CTX_use_psk_identity_hint",
+        "SSL_CTX_set_psk_server_callback",
+        "SSL_CTX_set_psk_client_callback",
+    ]
+
+
+def cryptography_has_custom_ext():
+    return [
+        "SSL_CTX_add_client_custom_ext",
+        "SSL_CTX_add_server_custom_ext",
+        "SSL_extension_supported",
+    ]
+
+
+def cryptography_has_openssl_cleanup():
+    return [
+        "OPENSSL_cleanup",
+    ]
+
+
+def cryptography_has_cipher_details():
+    return [
+        "SSL_CIPHER_is_aead",
+        "SSL_CIPHER_get_cipher_nid",
+        "SSL_CIPHER_get_digest_nid",
+        "SSL_CIPHER_get_kx_nid",
+        "SSL_CIPHER_get_auth_nid",
+    ]
+
+
+def cryptography_has_tlsv13():
+    return [
+        "SSL_OP_NO_TLSv1_3",
+        "SSL_VERIFY_POST_HANDSHAKE",
+        "SSL_CTX_set_ciphersuites",
+        "SSL_verify_client_post_handshake",
+        "SSL_CTX_set_post_handshake_auth",
+        "SSL_set_post_handshake_auth",
+        "SSL_SESSION_get_max_early_data",
+        "SSL_write_early_data",
+        "SSL_read_early_data",
+        "SSL_CTX_set_max_early_data",
+    ]
+
+
+def cryptography_has_raw_key():
+    return [
+        "EVP_PKEY_new_raw_private_key",
+        "EVP_PKEY_new_raw_public_key",
+        "EVP_PKEY_get_raw_private_key",
+        "EVP_PKEY_get_raw_public_key",
+    ]
+
+
+def cryptography_has_evp_r_memory_limit_exceeded():
+    return [
+        "EVP_R_MEMORY_LIMIT_EXCEEDED",
+    ]
+
+
+def cryptography_has_engine():
+    return [
+        "ENGINE_by_id",
+        "ENGINE_init",
+        "ENGINE_finish",
+        "ENGINE_get_default_RAND",
+        "ENGINE_set_default_RAND",
+        "ENGINE_unregister_RAND",
+        "ENGINE_ctrl_cmd",
+        "ENGINE_free",
+        "ENGINE_get_name",
+        "Cryptography_add_osrandom_engine",
+    ]
+
+
+def cryptography_has_verified_chain():
+    return [
+        "SSL_get0_verified_chain",
+    ]
+
+
+# This is a mapping of
+# {condition: function-returning-names-dependent-on-that-condition} so we can
+# loop over them and delete unsupported names at runtime. It will be removed
+# when cffi supports #if in cdef. We use functions instead of just a dict of
+# lists so we can use coverage to measure which are used.
+CONDITIONAL_NAMES = {
+    "Cryptography_HAS_EC2M": cryptography_has_ec2m,
+    "Cryptography_HAS_EC_1_0_2": cryptography_has_ec_1_0_2,
+    "Cryptography_HAS_SET_ECDH_AUTO": cryptography_has_set_ecdh_auto,
+    "Cryptography_HAS_RSA_R_PKCS_DECODING_ERROR": (
+        cryptography_has_rsa_r_pkcs_decoding_error
+    ),
+    "Cryptography_HAS_RSA_OAEP_MD": cryptography_has_rsa_oaep_md,
+    "Cryptography_HAS_RSA_OAEP_LABEL": cryptography_has_rsa_oaep_label,
+    "Cryptography_HAS_SSL3_METHOD": cryptography_has_ssl3_method,
+    "Cryptography_HAS_ALPN": cryptography_has_alpn,
+    "Cryptography_HAS_COMPRESSION": cryptography_has_compression,
+    "Cryptography_HAS_GET_SERVER_TMP_KEY": cryptography_has_get_server_tmp_key,
+    "Cryptography_HAS_102_VERIFICATION_ERROR_CODES": (
+        cryptography_has_102_verification_error_codes
+    ),
+    "Cryptography_HAS_102_VERIFICATION_PARAMS": (
+        cryptography_has_102_verification_params
+    ),
+    "Cryptography_HAS_110_VERIFICATION_PARAMS": (
+        cryptography_has_110_verification_params
+    ),
+    "Cryptography_HAS_X509_V_FLAG_TRUSTED_FIRST": (
+        cryptography_has_x509_v_flag_trusted_first
+    ),
+    "Cryptography_HAS_X509_V_FLAG_PARTIAL_CHAIN": (
+        cryptography_has_x509_v_flag_partial_chain
+    ),
+    "Cryptography_HAS_SET_CERT_CB": cryptography_has_set_cert_cb,
+    "Cryptography_HAS_SSL_ST": cryptography_has_ssl_st,
+    "Cryptography_HAS_TLS_ST": cryptography_has_tls_st,
+    "Cryptography_HAS_LOCKING_CALLBACKS": cryptography_has_locking_callbacks,
+    "Cryptography_HAS_SCRYPT": cryptography_has_scrypt,
+    "Cryptography_HAS_GENERIC_DTLS_METHOD": (
+        cryptography_has_generic_dtls_method
+    ),
+    "Cryptography_HAS_EVP_PKEY_DHX": cryptography_has_evp_pkey_dhx,
+    "Cryptography_HAS_MEM_FUNCTIONS": cryptography_has_mem_functions,
+    "Cryptography_HAS_SCT": cryptography_has_sct,
+    "Cryptography_HAS_X509_STORE_CTX_GET_ISSUER": (
+        cryptography_has_x509_store_ctx_get_issuer
+    ),
+    "Cryptography_HAS_X25519": cryptography_has_x25519,
+    "Cryptography_HAS_X448": cryptography_has_x448,
+    "Cryptography_HAS_ED448": cryptography_has_ed448,
+    "Cryptography_HAS_ED25519": cryptography_has_ed25519,
+    "Cryptography_HAS_POLY1305": cryptography_has_poly1305,
+    "Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY": (
+        cryptography_has_oneshot_evp_digest_sign_verify
+    ),
+    "Cryptography_HAS_EVP_PKEY_get_set_tls_encodedpoint": (
+        cryptography_has_evp_pkey_get_set_tls_encodedpoint
+    ),
+    "Cryptography_HAS_FIPS": cryptography_has_fips,
+    "Cryptography_HAS_SIGALGS": cryptography_has_ssl_sigalgs,
+    "Cryptography_HAS_PSK": cryptography_has_psk,
+    "Cryptography_HAS_CUSTOM_EXT": cryptography_has_custom_ext,
+    "Cryptography_HAS_OPENSSL_CLEANUP": cryptography_has_openssl_cleanup,
+    "Cryptography_HAS_CIPHER_DETAILS": cryptography_has_cipher_details,
+    "Cryptography_HAS_TLSv1_3": cryptography_has_tlsv13,
+    "Cryptography_HAS_RAW_KEY": cryptography_has_raw_key,
+    "Cryptography_HAS_EVP_DIGESTFINAL_XOF": (
+        cryptography_has_evp_digestfinal_xof
+    ),
+    "Cryptography_HAS_EVP_R_MEMORY_LIMIT_EXCEEDED": (
+        cryptography_has_evp_r_memory_limit_exceeded
+    ),
+    "Cryptography_HAS_ENGINE": cryptography_has_engine,
+    "Cryptography_HAS_VERIFIED_CHAIN": cryptography_has_verified_chain,
 }

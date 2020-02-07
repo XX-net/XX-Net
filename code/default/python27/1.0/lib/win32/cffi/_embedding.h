@@ -1,7 +1,12 @@
 
 /***** Support code for embedding *****/
 
-#if defined(_MSC_VER)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#if defined(_WIN32)
 #  define CFFI_DLLEXPORT  __declspec(dllexport)
 #elif defined(__GNUC__)
 #  define CFFI_DLLEXPORT  __attribute__((visibility("default")))
@@ -109,6 +114,8 @@ static void _cffi_release_reentrant_mutex(void)
 /**********  CPython-specific section  **********/
 #ifndef PYPY_VERSION
 
+#include "_cffi_errors.h"
+
 
 #define _cffi_call_python_org  _cffi_exports[_CFFI_CPIDX]
 
@@ -138,33 +145,8 @@ static int _cffi_initialize_python(void)
     int result;
     PyGILState_STATE state;
     PyObject *pycode=NULL, *global_dict=NULL, *x;
+    PyObject *builtins;
 
-#if PY_MAJOR_VERSION >= 3
-    /* see comments in _cffi_carefully_make_gil() about the
-       Python2/Python3 difference 
-    */
-#else
-    /* Acquire the GIL.  We have no threadstate here.  If Python is 
-       already initialized, it is possible that there is already one
-       existing for this thread, but it is not made current now.
-    */
-    PyEval_AcquireLock();
-
-    _cffi_py_initialize();
-
-    /* The Py_InitializeEx() sometimes made a threadstate for us, but
-       not always.  Indeed Py_InitializeEx() could be called and do
-       nothing.  So do we have a threadstate, or not?  We don't know,
-       but we can replace it with NULL in all cases.
-    */
-    (void)PyThreadState_Swap(NULL);
-
-    /* Now we can release the GIL and re-acquire immediately using the
-       logic of PyGILState(), which handles making or installing the
-       correct threadstate.
-    */
-    PyEval_ReleaseLock();
-#endif
     state = PyGILState_Ensure();
 
     /* Call the initxxx() function from the present module.  It will
@@ -188,8 +170,10 @@ static int _cffi_initialize_python(void)
     global_dict = PyDict_New();
     if (global_dict == NULL)
         goto error;
-    if (PyDict_SetItemString(global_dict, "__builtins__",
-                             PyThreadState_GET()->interp->builtins) < 0)
+    builtins = PyEval_GetBuiltins();
+    if (builtins == NULL)
+        goto error;
+    if (PyDict_SetItemString(global_dict, "__builtins__", builtins) < 0)
         goto error;
     x = PyEval_EvalCode(
 #if PY_MAJOR_VERSION < 3
@@ -220,8 +204,16 @@ static int _cffi_initialize_python(void)
         /* Print as much information as potentially useful.
            Debugging load-time failures with embedding is not fun
         */
+        PyObject *ecap;
         PyObject *exception, *v, *tb, *f, *modules, *mod;
         PyErr_Fetch(&exception, &v, &tb);
+        ecap = _cffi_start_error_capture();
+        f = PySys_GetObject((char *)"stderr");
+        if (f != NULL && f != Py_None) {
+            PyFile_WriteString(
+                "Failed to initialize the Python-CFFI embedding logic:\n\n", f);
+        }
+
         if (exception != NULL) {
             PyErr_NormalizeException(&exception, &v, &tb);
             PyErr_Display(exception, v, tb);
@@ -230,10 +222,9 @@ static int _cffi_initialize_python(void)
         Py_XDECREF(v);
         Py_XDECREF(tb);
 
-        f = PySys_GetObject((char *)"stderr");
         if (f != NULL && f != Py_None) {
             PyFile_WriteString("\nFrom: " _CFFI_MODULE_NAME
-                               "\ncompiled with cffi version: 1.6.0"
+                               "\ncompiled with cffi version: 1.13.2"
                                "\n_cffi_backend module: ", f);
             modules = PyImport_GetModuleDict();
             mod = PyDict_GetItemString(modules, "_cffi_backend");
@@ -249,6 +240,7 @@ static int _cffi_initialize_python(void)
             PyFile_WriteObject(PySys_GetObject((char *)"path"), f, 0);
             PyFile_WriteString("\n\n", f);
         }
+        _cffi_stop_error_capture(ecap);
     }
     result = -1;
     goto done;
@@ -263,48 +255,44 @@ static int _cffi_carefully_make_gil(void)
        that we don't hold the GIL before (if it exists), and we don't
        hold it afterwards.
 
-       What it really does is completely different in Python 2 and 
-       Python 3.
+       (What it really does used to be completely different in Python 2
+       and Python 3, with the Python 2 solution avoiding the spin-lock
+       around the Py_InitializeEx() call.  However, after recent changes
+       to CPython 2.7 (issue #358) it no longer works.  So we use the
+       Python 3 solution everywhere.)
 
-    Python 2
-    ========
-
-       Initialize the GIL, without initializing the rest of Python,
-       by calling PyEval_InitThreads().
-
-       PyEval_InitThreads() must not be called concurrently at all.
+       This initializes Python by calling Py_InitializeEx().
+       Important: this must not be called concurrently at all.
        So we use a global variable as a simple spin lock.  This global
        variable must be from 'libpythonX.Y.so', not from this
        cffi-based extension module, because it must be shared from
-       different cffi-based extension modules.  We choose
+       different cffi-based extension modules.
+
+       In Python < 3.8, we choose
        _PyParser_TokenNames[0] as a completely arbitrary pointer value
        that is never written to.  The default is to point to the
        string "ENDMARKER".  We change it temporarily to point to the
        next character in that string.  (Yes, I know it's REALLY
        obscure.)
 
-    Python 3
-    ========
-
-       In Python 3, PyEval_InitThreads() cannot be called before
-       Py_InitializeEx() any more.  So this function calls
-       Py_InitializeEx() first.  It uses the same obscure logic to
-       make sure we never call it concurrently.
-
-       Arguably, this is less good on the spinlock, because
-       Py_InitializeEx() takes much longer to run than
-       PyEval_InitThreads().  But I didn't find a way around it.
+       In Python >= 3.8, this string array is no longer writable, so
+       instead we pick PyCapsuleType.tp_version_tag.  We can't change
+       Python < 3.8 because someone might use a mixture of cffi
+       embedded modules, some of which were compiled before this file
+       changed.
     */
 
 #ifdef WITH_THREAD
+# if PY_VERSION_HEX < 0x03080000
     char *volatile *lock = (char *volatile *)_PyParser_TokenNames;
-    char *old_value;
+    char *old_value, *locked_value;
 
     while (1) {    /* spin loop */
         old_value = *lock;
+        locked_value = old_value + 1;
         if (old_value[0] == 'E') {
             assert(old_value[1] == 'N');
-            if (cffi_compare_and_swap(lock, old_value, old_value + 1))
+            if (cffi_compare_and_swap(lock, old_value, locked_value))
                 break;
         }
         else {
@@ -315,35 +303,46 @@ static int _cffi_carefully_make_gil(void)
                this is only run at start-up anyway. */
         }
     }
-#endif
+# else
+    int volatile *lock = (int volatile *)&PyCapsule_Type.tp_version_tag;
+    int old_value, locked_value;
+    assert(!(PyCapsule_Type.tp_flags & Py_TPFLAGS_HAVE_VERSION_TAG));
 
-#if PY_MAJOR_VERSION >= 3
-    /* Python 3: call Py_InitializeEx() */
-    {
-        PyGILState_STATE state = PyGILState_UNLOCKED;
-        if (!Py_IsInitialized())
-            _cffi_py_initialize();
-        else
-            state = PyGILState_Ensure();
-
-        PyEval_InitThreads();
-        PyGILState_Release(state);
+    while (1) {    /* spin loop */
+        old_value = *lock;
+        locked_value = -42;
+        if (old_value == 0) {
+            if (cffi_compare_and_swap(lock, old_value, locked_value))
+                break;
+        }
+        else {
+            assert(old_value == locked_value);
+            /* should ideally do a spin loop instruction here, but
+               hard to do it portably and doesn't really matter I
+               think: PyEval_InitThreads() should be very fast, and
+               this is only run at start-up anyway. */
+        }
     }
-#else
-    /* Python 2: call PyEval_InitThreads() */
-# ifdef WITH_THREAD
-    if (!PyEval_ThreadsInitialized()) {
-        PyEval_InitThreads();    /* makes the GIL */
-        PyEval_ReleaseLock();    /* then release it */
-    }
-    /* else: there is already a GIL, but we still needed to do the
-       spinlock dance to make sure that we see it as fully ready */
 # endif
 #endif
 
+    /* call Py_InitializeEx() */
+    if (!Py_IsInitialized()) {
+        _cffi_py_initialize();
+        PyEval_InitThreads();
+        PyEval_SaveThread();  /* release the GIL */
+        /* the returned tstate must be the one that has been stored into the
+           autoTLSkey by _PyGILState_Init() called from Py_Initialize(). */
+    }
+    else {
+        PyGILState_STATE state = PyGILState_Ensure();
+        PyEval_InitThreads();
+        PyGILState_Release(state);
+    }
+
 #ifdef WITH_THREAD
     /* release the lock */
-    while (!cffi_compare_and_swap(lock, old_value + 1, old_value))
+    while (!cffi_compare_and_swap(lock, locked_value, old_value))
         ;
 #endif
 
@@ -366,7 +365,7 @@ static struct _cffi_pypy_init_s {
     const char *code;
 } _cffi_pypy_init = {
     _CFFI_MODULE_NAME,
-    _CFFI_PYTHON_STARTUP_FUNC,
+    (void(*)(const void *[]))_CFFI_PYTHON_STARTUP_FUNC,
     _CFFI_PYTHON_STARTUP_CODE,
 };
 
@@ -515,3 +514,7 @@ static int cffi_start_python(void)
 #undef cffi_compare_and_swap
 #undef cffi_write_barrier
 #undef cffi_read_barrier
+
+#ifdef __cplusplus
+}
+#endif

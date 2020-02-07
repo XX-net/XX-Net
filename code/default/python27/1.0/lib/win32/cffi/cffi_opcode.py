@@ -1,3 +1,4 @@
+from .error import VerificationError
 
 class CffiOp(object):
     def __init__(self, op, arg):
@@ -19,7 +20,6 @@ class CffiOp(object):
                                     % (self.arg,))
             return format_four_bytes(value)
         if isinstance(self.arg, str):
-            from .ffiplatform import VerificationError
             raise VerificationError("cannot emit to Python: %r" % (self.arg,))
         return format_four_bytes((self.arg << 8) | self.op)
 
@@ -105,8 +105,12 @@ PRIM_INT_FAST64    = 44
 PRIM_UINT_FAST64   = 45
 PRIM_INTMAX        = 46
 PRIM_UINTMAX       = 47
+PRIM_FLOATCOMPLEX  = 48
+PRIM_DOUBLECOMPLEX = 49
+PRIM_CHAR16        = 50
+PRIM_CHAR32        = 51
 
-_NUM_PRIM          = 48
+_NUM_PRIM          = 52
 _UNKNOWN_PRIM          = -1
 _UNKNOWN_FLOAT_PRIM    = -2
 _UNKNOWN_LONG_DOUBLE   = -3
@@ -128,8 +132,12 @@ PRIMITIVE_TO_INDEX = {
     'float':              PRIM_FLOAT,
     'double':             PRIM_DOUBLE,
     'long double':        PRIM_LONGDOUBLE,
+    'float _Complex':     PRIM_FLOATCOMPLEX,
+    'double _Complex':    PRIM_DOUBLECOMPLEX,
     '_Bool':              PRIM_BOOL,
     'wchar_t':            PRIM_WCHAR,
+    'char16_t':           PRIM_CHAR16,
+    'char32_t':           PRIM_CHAR32,
     'int8_t':             PRIM_INT8,
     'uint8_t':            PRIM_UINT8,
     'int16_t':            PRIM_INT16,

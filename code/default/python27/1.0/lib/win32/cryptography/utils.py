@@ -7,15 +7,35 @@ from __future__ import absolute_import, division, print_function
 import abc
 import binascii
 import inspect
-import struct
 import sys
 import warnings
 
 
-# the functions deprecated in 1.0 are on an arbitrarily extended deprecation
-# cycle and should not be removed until we agree on when that cycle ends.
-DeprecatedIn10 = DeprecationWarning
-DeprecatedIn12 = DeprecationWarning
+# We use a UserWarning subclass, instead of DeprecationWarning, because CPython
+# decided deprecation warnings should be invisble by default.
+class CryptographyDeprecationWarning(UserWarning):
+    pass
+
+
+# Several APIs were deprecated with no specific end-of-life date because of the
+# ubiquity of their use. They should not be removed until we agree on when that
+# cycle ends.
+PersistentlyDeprecated2017 = CryptographyDeprecationWarning
+PersistentlyDeprecated2018 = CryptographyDeprecationWarning
+DeprecatedIn25 = CryptographyDeprecationWarning
+DeprecatedIn27 = CryptographyDeprecationWarning
+
+
+def _check_bytes(name, value):
+    if not isinstance(value, bytes):
+        raise TypeError("{} must be bytes".format(name))
+
+
+def _check_byteslike(name, value):
+    try:
+        memoryview(value)
+    except TypeError:
+        raise TypeError("{} must be bytes-like".format(name))
 
 
 def read_only_property(name):
@@ -30,6 +50,15 @@ def register_interface(iface):
     return register_decorator
 
 
+def register_interface_if(predicate, iface):
+    def register_decorator(klass):
+        if predicate:
+            verify_interface(iface, klass)
+            iface.register(klass)
+        return klass
+    return register_decorator
+
+
 if hasattr(int, "from_bytes"):
     int_from_bytes = int.from_bytes
 else:
@@ -37,27 +66,22 @@ else:
         assert byteorder == 'big'
         assert not signed
 
-        if len(data) % 4 != 0:
-            data = (b'\x00' * (4 - (len(data) % 4))) + data
-
-        result = 0
-
-        while len(data) > 0:
-            digit, = struct.unpack('>I', data[:4])
-            result = (result << 32) + digit
-            # TODO: this is quadratic in the length of data
-            data = data[4:]
-
-        return result
+        return int(binascii.hexlify(data), 16)
 
 
-def int_to_bytes(integer, length=None):
-    hex_string = '%x' % integer
-    if length is None:
-        n = len(hex_string)
-    else:
-        n = length * 2
-    return binascii.unhexlify(hex_string.zfill(n + (n & 1)))
+if hasattr(int, "to_bytes"):
+    def int_to_bytes(integer, length=None):
+        return integer.to_bytes(
+            length or (integer.bit_length() + 7) // 8 or 1, 'big'
+        )
+else:
+    def int_to_bytes(integer, length=None):
+        hex_string = '%x' % integer
+        if length is None:
+            n = len(hex_string)
+        else:
+            n = length * 2
+        return binascii.unhexlify(hex_string.zfill(n + (n & 1)))
 
 
 class InterfaceNotImplemented(Exception):
@@ -74,7 +98,7 @@ def verify_interface(iface, klass):
     for method in iface.__abstractmethods__:
         if not hasattr(klass, method):
             raise InterfaceNotImplemented(
-                "{0} is missing a {1!r} method".format(klass, method)
+                "{} is missing a {!r} method".format(klass, method)
             )
         if isinstance(getattr(iface, method), abc.abstractproperty):
             # Can't properly verify these yet.
@@ -83,19 +107,17 @@ def verify_interface(iface, klass):
         actual = signature(getattr(klass, method))
         if sig != actual:
             raise InterfaceNotImplemented(
-                "{0}.{1}'s signature differs from the expected. Expected: "
-                "{2!r}. Received: {3!r}".format(
+                "{}.{}'s signature differs from the expected. Expected: "
+                "{!r}. Received: {!r}".format(
                     klass, method, sig, actual
                 )
             )
 
 
-if sys.version_info >= (2, 7):
-    def bit_length(x):
-        return x.bit_length()
-else:
-    def bit_length(x):
-        return len(bin(x)) - (2 + (x <= 0))
+# No longer needed as of 2.2, but retained because we have external consumers
+# who use it.
+def bit_length(x):
+    return x.bit_length()
 
 
 class _DeprecatedValue(object):
@@ -133,5 +155,19 @@ class _ModuleWithDeprecations(object):
 def deprecated(value, module_name, message, warning_class):
     module = sys.modules[module_name]
     if not isinstance(module, _ModuleWithDeprecations):
-        sys.modules[module_name] = module = _ModuleWithDeprecations(module)
+        sys.modules[module_name] = _ModuleWithDeprecations(module)
     return _DeprecatedValue(value, message, warning_class)
+
+
+def cached_property(func):
+    cached_name = "_cached_{}".format(func)
+    sentinel = object()
+
+    def inner(instance):
+        cache = getattr(instance, cached_name, sentinel)
+        if cache is not sentinel:
+            return cache
+        result = func(instance)
+        setattr(instance, cached_name, result)
+        return result
+    return property(inner)

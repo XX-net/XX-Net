@@ -55,6 +55,12 @@ class DSAPrivateKey(object):
         Returns an AsymmetricSignatureContext used for signing data.
         """
 
+    @abc.abstractmethod
+    def sign(self, data, algorithm):
+        """
+        Signs the data
+        """
+
 
 @six.add_metaclass(abc.ABCMeta)
 class DSAPrivateKeyWithSerialization(DSAPrivateKey):
@@ -69,17 +75,6 @@ class DSAPrivateKeyWithSerialization(DSAPrivateKey):
         """
         Returns the key serialized as bytes.
         """
-
-
-DSAPrivateKeyWithNumbers = utils.deprecated(
-    DSAPrivateKeyWithSerialization,
-    __name__,
-    (
-        "The DSAPrivateKeyWithNumbers interface has been renamed to "
-        "DSAPrivateKeyWithSerialization"
-    ),
-    utils.DeprecatedIn08
-)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -102,9 +97,6 @@ class DSAPublicKey(object):
         Returns an AsymmetricVerificationContext used for signing data.
         """
 
-
-@six.add_metaclass(abc.ABCMeta)
-class DSAPublicKeyWithSerialization(DSAPublicKey):
     @abc.abstractmethod
     def public_numbers(self):
         """
@@ -117,16 +109,14 @@ class DSAPublicKeyWithSerialization(DSAPublicKey):
         Returns the key serialized as bytes.
         """
 
+    @abc.abstractmethod
+    def verify(self, signature, data, algorithm):
+        """
+        Verifies the signature of the data.
+        """
 
-DSAPublicKeyWithNumbers = utils.deprecated(
-    DSAPublicKeyWithSerialization,
-    __name__,
-    (
-        "The DSAPublicKeyWithNumbers interface has been renamed to "
-        "DSAPublicKeyWithSerialization"
-    ),
-    utils.DeprecatedIn08
-)
+
+DSAPublicKeyWithSerialization = DSAPublicKey
 
 
 def generate_parameters(key_size, backend):
@@ -138,10 +128,10 @@ def generate_private_key(key_size, backend):
 
 
 def _check_dsa_parameters(parameters):
-    if utils.bit_length(parameters.p) not in [1024, 2048, 3072]:
+    if parameters.p.bit_length() not in [1024, 2048, 3072]:
         raise ValueError("p must be exactly 1024, 2048, or 3072 bits long")
-    if utils.bit_length(parameters.q) not in [160, 256]:
-        raise ValueError("q must be exactly 160 or 256 bits long")
+    if parameters.q.bit_length() not in [160, 224, 256]:
+        raise ValueError("q must be exactly 160, 224, or 256 bits long")
 
     if not (1 < parameters.g < parameters.p):
         raise ValueError("g, p don't satisfy 1 < g < p.")
@@ -188,6 +178,13 @@ class DSAParameterNumbers(object):
     def __ne__(self, other):
         return not self == other
 
+    def __repr__(self):
+        return (
+            "<DSAParameterNumbers(p={self.p}, q={self.q}, g={self.g})>".format(
+                self=self
+            )
+        )
+
 
 class DSAPublicNumbers(object):
     def __init__(self, y, parameter_numbers):
@@ -219,6 +216,12 @@ class DSAPublicNumbers(object):
 
     def __ne__(self, other):
         return not self == other
+
+    def __repr__(self):
+        return (
+            "<DSAPublicNumbers(y={self.y}, "
+            "parameter_numbers={self.parameter_numbers})>".format(self=self)
+        )
 
 
 class DSAPrivateNumbers(object):

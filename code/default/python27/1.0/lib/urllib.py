@@ -203,7 +203,9 @@ class URLopener:
         name = 'open_' + urltype
         self.type = urltype
         name = name.replace('-', '_')
-        if not hasattr(self, name):
+
+        # bpo-35907: disallow the file reading with the type not allowed
+        if not hasattr(self, name) or name == 'open_local_file':
             if proxy:
                 return self.open_unknown_proxy(proxy, fullurl, data)
             else:
@@ -1093,8 +1095,7 @@ def splithost(url):
     """splithost('//host[:port]/path') --> 'host[:port]', '/path'."""
     global _hostprog
     if _hostprog is None:
-        import re
-        _hostprog = re.compile('^//([^/?]*)(.*)$')
+        _hostprog = re.compile('//([^/#?]*)(.*)', re.DOTALL)
 
     match = _hostprog.match(url)
     if match:
@@ -1427,6 +1428,7 @@ def proxy_bypass_environment(host, proxies=None):
     no_proxy_list = [proxy.strip() for proxy in no_proxy.split(',')]
     for name in no_proxy_list:
         if name:
+            name = name.lstrip('.')  # ignore leading dots
             name = re.escape(name)
             pattern = r'(.+\.)?%s$' % name
             if (re.match(pattern, hostonly, re.I)

@@ -1,5 +1,6 @@
-from . import api, model
+from . import model
 from .commontypes import COMMON_TYPES, resolve_common_type
+from .error import FFIError, CDefError
 try:
     from . import _pycparser as pycparser
 except ImportError:
@@ -15,6 +16,14 @@ try:
 except ImportError:
     lock = None
 
+def _workaround_for_static_import_finders():
+    # Issue #392: packaging tools like cx_Freeze can not find these
+    # because pycparser uses exec dynamic import.  This is an obscure
+    # workaround.  This function is never called.
+    import pycparser.yacctab
+    import pycparser.lextab
+
+CDEF_SOURCE_STRING = "<cdef source string>"
 _r_comment = re.compile(r"/\*.*?\*/|//([^\n\\]|\\.)*?$",
                         re.DOTALL | re.MULTILINE)
 _r_define  = re.compile(r"^\s*#\s*define\s+([A-Za-z_][A-Za-z_0-9]*)"
@@ -33,6 +42,9 @@ _r_extern_python = re.compile(r'\bextern\s*"'
                               r'(Python|Python\s*\+\s*C|C\s*\+\s*Python)"\s*.')
 _r_star_const_space = re.compile(       # matches "* const "
     r"[*]\s*((const|volatile|restrict)\b\s*)+")
+_r_int_dotdotdot = re.compile(r"(\b(int|long|short|signed|unsigned|char)\s*)+"
+                              r"\.\.\.")
+_r_float_dotdotdot = re.compile(r"\b(double|float)\s*\.\.\.")
 
 def _get_parser():
     global _parser_cache
@@ -113,7 +125,7 @@ def _preprocess_extern_python(csource):
             # grouping variant
             closing = csource.find('}', endpos)
             if closing < 0:
-                raise api.CDefError("'extern \"Python\" {': no '}' found")
+                raise CDefError("'extern \"Python\" {': no '}' found")
             if csource.find('{', endpos + 1, closing) >= 0:
                 raise NotImplementedError("cannot use { } inside a block "
                                           "'extern \"Python\" { ... }'")
@@ -123,7 +135,7 @@ def _preprocess_extern_python(csource):
             # non-grouping variant
             semicolon = csource.find(';', endpos)
             if semicolon < 0:
-                raise api.CDefError("'extern \"Python\": no ';' found")
+                raise CDefError("'extern \"Python\": no ';' found")
             parts.append(csource[endpos:semicolon+1])
             csource = csource[semicolon+1:]
         parts.append(' void __cffi_extern_python_stop;')
@@ -131,6 +143,25 @@ def _preprocess_extern_python(csource):
         #print
     parts.append(csource)
     return ''.join(parts)
+
+def _warn_for_string_literal(csource):
+    if '"' not in csource:
+        return
+    for line in csource.splitlines():
+        if '"' in line and not line.lstrip().startswith('#'):
+            import warnings
+            warnings.warn("String literal found in cdef() or type source. "
+                          "String literals are ignored here, but you should "
+                          "remove them anyway because some character sequences "
+                          "confuse pre-parsing.")
+            break
+
+def _warn_for_non_extern_non_static_global_variable(decl):
+    if not decl.storage:
+        import warnings
+        warnings.warn("Global variable '%s' in cdef(): for consistency "
+                      "with C it should have a storage class specifier "
+                      "(usually 'extern')" % (decl.name,))
 
 def _preprocess(csource):
     # Remove comments.  NOTE: this only work because the cdef() section
@@ -159,6 +190,9 @@ def _preprocess(csource):
     # Replace `extern "Python"` with start/end markers
     csource = _preprocess_extern_python(csource)
     #
+    # Now there should not be any string literal left; warn if we get one
+    _warn_for_string_literal(csource)
+    #
     # Replace "[...]" with "[__dotdotdotarray__]"
     csource = _r_partial_array.sub('[__dotdotdotarray__]', csource)
     #
@@ -179,6 +213,10 @@ def _preprocess(csource):
             assert csource[p:p+3] == '...'
             csource = '%s __dotdotdot%d__ %s' % (csource[:p], number,
                                                  csource[p+3:])
+    # Replace "int ..." or "unsigned long int..." with "__dotdotdotint__"
+    csource = _r_int_dotdotdot.sub(' __dotdotdotint__ ', csource)
+    # Replace "float ..." or "double..." with "__dotdotdotfloat__"
+    csource = _r_float_dotdotdot.sub(' __dotdotdotfloat__ ', csource)
     # Replace all remaining "..." with the same name, "__dotdotdot__",
     # which is declared with a typedef for the purpose of C parsing.
     return csource.replace('...', ' __dotdotdot__ '), macros
@@ -250,14 +288,21 @@ class Parser(object):
                 ctn.discard(name)
         typenames += sorted(ctn)
         #
-        csourcelines = ['typedef int %s;' % typename for typename in typenames]
-        csourcelines.append('typedef int __dotdotdot__;')
+        csourcelines = []
+        csourcelines.append('# 1 "<cdef automatic initialization code>"')
+        for typename in typenames:
+            csourcelines.append('typedef int %s;' % typename)
+        csourcelines.append('typedef int __dotdotdotint__, __dotdotdotfloat__,'
+                            ' __dotdotdot__;')
+        # this forces pycparser to consider the following in the file
+        # called <cdef source string> from line 1
+        csourcelines.append('# 1 "%s"' % (CDEF_SOURCE_STRING,))
         csourcelines.append(csource)
-        csource = '\n'.join(csourcelines)
+        fullcsource = '\n'.join(csourcelines)
         if lock is not None:
             lock.acquire()     # pycparser is not thread-safe...
         try:
-            ast = _get_parser().parse(csource)
+            ast = _get_parser().parse(fullcsource)
         except pycparser.c_parser.ParseError as e:
             self.convert_pycparser_error(e, csource)
         finally:
@@ -267,17 +312,17 @@ class Parser(object):
         return ast, macros, csource
 
     def _convert_pycparser_error(self, e, csource):
-        # xxx look for ":NUM:" at the start of str(e) and try to interpret
-        # it as a line number
+        # xxx look for "<cdef source string>:NUM:" at the start of str(e)
+        # and interpret that as a line number.  This will not work if
+        # the user gives explicit ``# NUM "FILE"`` directives.
         line = None
         msg = str(e)
-        if msg.startswith(':') and ':' in msg[1:]:
-            linenum = msg[1:msg.find(':',1)]
-            if linenum.isdigit():
-                linenum = int(linenum, 10)
-                csourcelines = csource.splitlines()
-                if 1 <= linenum <= len(csourcelines):
-                    line = csourcelines[linenum-1]
+        match = re.match(r"%s:(\d+):" % (CDEF_SOURCE_STRING,), msg)
+        if match:
+            linenum = int(match.group(1), 10)
+            csourcelines = csource.splitlines()
+            if 1 <= linenum <= len(csourcelines):
+                line = csourcelines[linenum-1]
         return line
 
     def convert_pycparser_error(self, e, csource):
@@ -288,13 +333,27 @@ class Parser(object):
             msg = 'cannot parse "%s"\n%s' % (line.strip(), msg)
         else:
             msg = 'parse error\n%s' % (msg,)
-        raise api.CDefError(msg)
+        raise CDefError(msg)
 
-    def parse(self, csource, override=False, packed=False, dllexport=False):
+    def parse(self, csource, override=False, packed=False, pack=None,
+                    dllexport=False):
+        if packed:
+            if packed != True:
+                raise ValueError("'packed' should be False or True; use "
+                                 "'pack' to give another value")
+            if pack:
+                raise ValueError("cannot give both 'pack' and 'packed'")
+            pack = 1
+        elif pack:
+            if pack & (pack - 1):
+                raise ValueError("'pack' must be a power of two, not %r" %
+                    (pack,))
+        else:
+            pack = 0
         prev_options = self._options
         try:
             self._options = {'override': override,
-                             'packed': packed,
+                             'packed': pack,
                              'dllexport': dllexport}
             self._internal_parse(csource)
         finally:
@@ -310,33 +369,45 @@ class Parser(object):
         for decl in iterator:
             if decl.name == '__dotdotdot__':
                 break
+        else:
+            assert 0
+        current_decl = None
         #
         try:
             self._inside_extern_python = '__cffi_extern_python_stop'
             for decl in iterator:
+                current_decl = decl
                 if isinstance(decl, pycparser.c_ast.Decl):
                     self._parse_decl(decl)
                 elif isinstance(decl, pycparser.c_ast.Typedef):
                     if not decl.name:
-                        raise api.CDefError("typedef does not declare any name",
-                                            decl)
+                        raise CDefError("typedef does not declare any name",
+                                        decl)
                     quals = 0
-                    if (isinstance(decl.type.type, pycparser.c_ast.IdentifierType)
-                            and decl.type.type.names[-1] == '__dotdotdot__'):
+                    if (isinstance(decl.type.type, pycparser.c_ast.IdentifierType) and
+                            decl.type.type.names[-1].startswith('__dotdotdot')):
                         realtype = self._get_unknown_type(decl)
                     elif (isinstance(decl.type, pycparser.c_ast.PtrDecl) and
                           isinstance(decl.type.type, pycparser.c_ast.TypeDecl) and
                           isinstance(decl.type.type.type,
                                      pycparser.c_ast.IdentifierType) and
-                          decl.type.type.type.names == ['__dotdotdot__']):
-                        realtype = model.unknown_ptr_type(decl.name)
+                          decl.type.type.type.names[-1].startswith('__dotdotdot')):
+                        realtype = self._get_unknown_ptr_type(decl)
                     else:
                         realtype, quals = self._get_type_and_quals(
-                            decl.type, name=decl.name)
+                            decl.type, name=decl.name, partial_length_ok=True)
                     self._declare('typedef ' + decl.name, realtype, quals=quals)
+                elif decl.__class__.__name__ == 'Pragma':
+                    pass    # skip pragma, only in pycparser 2.15
                 else:
-                    raise api.CDefError("unrecognized construct", decl)
-        except api.FFIError as e:
+                    raise CDefError("unexpected <%s>: this construct is valid "
+                                    "C but not valid in cdef()" %
+                                    decl.__class__.__name__, decl)
+        except CDefError as e:
+            if len(e.args) == 1:
+                e.args = e.args + (current_decl,)
+            raise
+        except FFIError as e:
             msg = self._convert_pycparser_error(e, csource)
             if msg:
                 e.args = (e.args[0] + "\n    *** Err: %s" % msg,)
@@ -346,7 +417,7 @@ class Parser(object):
         if key in self._int_constants:
             if self._int_constants[key] == val:
                 return     # ignore identical double declarations
-            raise api.FFIError(
+            raise FFIError(
                 "multiple declarations of constant: %s" % (key,))
         self._int_constants[key] = val
 
@@ -373,7 +444,7 @@ class Parser(object):
             elif value == '...':
                 self._declare('macro ' + key, value)
             else:
-                raise api.CDefError(
+                raise CDefError(
                     'only supports one of the following syntax:\n'
                     '  #define %s ...     (literally dot-dot-dot)\n'
                     '  #define %s NUMBER  (with NUMBER an integer'
@@ -408,8 +479,8 @@ class Parser(object):
             elif isinstance(node, pycparser.c_ast.Enum):
                 self._get_struct_union_enum_type('enum', node)
             elif not decl.name:
-                raise api.CDefError("construct does not declare any variable",
-                                    decl)
+                raise CDefError("construct does not declare any variable",
+                                decl)
             #
             if decl.name:
                 tp, quals = self._get_type_and_quals(node,
@@ -436,12 +507,13 @@ class Parser(object):
                     self._inside_extern_python = decl.name
                 else:
                     if self._inside_extern_python !='__cffi_extern_python_stop':
-                        raise api.CDefError(
+                        raise CDefError(
                             "cannot declare constants or "
                             "variables with 'extern \"Python\"'")
                     if (quals & model.Q_CONST) and not tp.is_array_type:
                         self._declare('constant ' + decl.name, tp, quals=quals)
                     else:
+                        _warn_for_non_extern_non_static_global_variable(decl)
                         self._declare('variable ' + decl.name, tp, quals=quals)
 
     def parse_type(self, cdecl):
@@ -452,7 +524,7 @@ class Parser(object):
         assert not macros
         exprnode = ast.ext[-1].type.args.params[0]
         if isinstance(exprnode, pycparser.c_ast.ID):
-            raise api.CDefError("unknown identifier '%s'" % (exprnode.name,))
+            raise CDefError("unknown identifier '%s'" % (exprnode.name,))
         return self._get_type_and_quals(exprnode.type)
 
     def _declare(self, name, obj, included=False, quals=0):
@@ -461,7 +533,7 @@ class Parser(object):
             if prevobj is obj and prevquals == quals:
                 return
             if not self._options.get('override'):
-                raise api.FFIError(
+                raise FFIError(
                     "multiple declarations of %s (for interactive usage, "
                     "try cdef(xx, override=True))" % (name,))
         assert '__dotdotdot__' not in name.split()
@@ -549,7 +621,7 @@ class Parser(object):
                 if ident == 'void':
                     return model.void_type, quals
                 if ident == '__dotdotdot__':
-                    raise api.FFIError(':%d: bad usage of "..."' %
+                    raise FFIError(':%d: bad usage of "..."' %
                             typenode.coord.line)
                 tp0, quals0 = resolve_common_type(self, ident)
                 return tp0, (quals | quals0)
@@ -581,14 +653,14 @@ class Parser(object):
             return self._get_struct_union_enum_type('union', typenode, name,
                                                     nested=True), 0
         #
-        raise api.FFIError(":%d: bad or unsupported type declaration" %
+        raise FFIError(":%d: bad or unsupported type declaration" %
                 typenode.coord.line)
 
     def _parse_function_type(self, typenode, funcname=None):
         params = list(getattr(typenode.args, 'params', []))
         for i, arg in enumerate(params):
             if not hasattr(arg, 'type'):
-                raise api.CDefError("%s arg %d: unknown type '%s'"
+                raise CDefError("%s arg %d: unknown type '%s'"
                     " (if you meant to use the old C syntax of giving"
                     " untyped arguments, it is not supported)"
                     % (funcname or 'in expression', i + 1,
@@ -602,7 +674,7 @@ class Parser(object):
         if ellipsis:
             params.pop()
             if not params:
-                raise api.CDefError(
+                raise CDefError(
                     "%s: a function with only '(...)' as argument"
                     " is not correct C" % (funcname or 'in expression'))
         args = [self._as_func_arg(*self._get_type_and_quals(argdeclnode.type))
@@ -703,7 +775,7 @@ class Parser(object):
             return tp
         #
         if tp.fldnames is not None:
-            raise api.CDefError("duplicate declaration of struct %s" % name)
+            raise CDefError("duplicate declaration of struct %s" % name)
         fldnames = []
         fldtypes = []
         fldbitsize = []
@@ -747,7 +819,7 @@ class Parser(object):
 
     def _make_partial(self, tp, nested):
         if not isinstance(tp, model.StructOrUnion):
-            raise api.CDefError("%s cannot be partial" % (tp,))
+            raise CDefError("%s cannot be partial" % (tp,))
         if not tp.has_c_name() and not nested:
             raise NotImplementedError("%s is partial but has no C name" %(tp,))
         tp.partial = True
@@ -757,17 +829,25 @@ class Parser(object):
         # or positive/negative number
         if isinstance(exprnode, pycparser.c_ast.Constant):
             s = exprnode.value
-            if s.startswith('0'):
-                if s.startswith('0x') or s.startswith('0X'):
-                    return int(s, 16)
-                return int(s, 8)
-            elif '1' <= s[0] <= '9':
-                return int(s, 10)
+            if '0' <= s[0] <= '9':
+                s = s.rstrip('uUlL')
+                try:
+                    if s.startswith('0'):
+                        return int(s, 8)
+                    else:
+                        return int(s, 10)
+                except ValueError:
+                    if len(s) > 1:
+                        if s.lower()[0:2] == '0x':
+                            return int(s, 16)
+                        elif s.lower()[0:2] == '0b':
+                            return int(s, 2)
+                raise CDefError("invalid constant %r" % (s,))
             elif s[0] == "'" and s[-1] == "'" and (
                     len(s) == 3 or (len(s) == 4 and s[1] == "\\")):
                 return ord(s[-2])
             else:
-                raise api.CDefError("invalid constant %r" % (s,))
+                raise CDefError("invalid constant %r" % (s,))
         #
         if (isinstance(exprnode, pycparser.c_ast.UnaryOp) and
                 exprnode.op == '+'):
@@ -781,14 +861,47 @@ class Parser(object):
                 exprnode.name in self._int_constants):
             return self._int_constants[exprnode.name]
         #
-        if partial_length_ok:
-            if (isinstance(exprnode, pycparser.c_ast.ID) and
+        if (isinstance(exprnode, pycparser.c_ast.ID) and
                     exprnode.name == '__dotdotdotarray__'):
+            if partial_length_ok:
                 self._partial_length = True
                 return '...'
+            raise FFIError(":%d: unsupported '[...]' here, cannot derive "
+                           "the actual array length in this context"
+                           % exprnode.coord.line)
         #
-        raise api.FFIError(":%d: unsupported expression: expected a "
-                           "simple numeric constant" % exprnode.coord.line)
+        if isinstance(exprnode, pycparser.c_ast.BinaryOp):
+            left = self._parse_constant(exprnode.left)
+            right = self._parse_constant(exprnode.right)
+            if exprnode.op == '+':
+                return left + right
+            elif exprnode.op == '-':
+                return left - right
+            elif exprnode.op == '*':
+                return left * right
+            elif exprnode.op == '/':
+                return self._c_div(left, right)
+            elif exprnode.op == '%':
+                return left - self._c_div(left, right) * right
+            elif exprnode.op == '<<':
+                return left << right
+            elif exprnode.op == '>>':
+                return left >> right
+            elif exprnode.op == '&':
+                return left & right
+            elif exprnode.op == '|':
+                return left | right
+            elif exprnode.op == '^':
+                return left ^ right
+        #
+        raise FFIError(":%d: unsupported expression: expected a "
+                       "simple numeric constant" % exprnode.coord.line)
+
+    def _c_div(self, a, b):
+        result = a // b
+        if ((a < 0) ^ (b < 0)) and (a % b) != 0:
+            result += 1
+        return result
 
     def _build_enum_type(self, explicit_name, decls):
         if decls is not None:
@@ -826,24 +939,25 @@ class Parser(object):
 
     def _get_unknown_type(self, decl):
         typenames = decl.type.type.names
-        assert typenames[-1] == '__dotdotdot__'
-        if len(typenames) == 1:
+        if typenames == ['__dotdotdot__']:
             return model.unknown_type(decl.name)
 
-        if (typenames[:-1] == ['float'] or
-            typenames[:-1] == ['double']):
-            # not for 'long double' so far
-            result = model.UnknownFloatType(decl.name)
-        else:
-            for t in typenames[:-1]:
-                if t not in ['int', 'short', 'long', 'signed',
-                             'unsigned', 'char']:
-                    raise api.FFIError(':%d: bad usage of "..."' %
-                                       decl.coord.line)
-            result = model.UnknownIntegerType(decl.name)
+        if typenames == ['__dotdotdotint__']:
+            if self._uses_new_feature is None:
+                self._uses_new_feature = "'typedef int... %s'" % decl.name
+            return model.UnknownIntegerType(decl.name)
 
-        if self._uses_new_feature is None:
-            self._uses_new_feature = "'typedef %s... %s'" % (
-                ' '.join(typenames[:-1]), decl.name)
+        if typenames == ['__dotdotdotfloat__']:
+            # note: not for 'long double' so far
+            if self._uses_new_feature is None:
+                self._uses_new_feature = "'typedef float... %s'" % decl.name
+            return model.UnknownFloatType(decl.name)
 
-        return result
+        raise FFIError(':%d: unsupported usage of "..." in typedef'
+                       % decl.coord.line)
+
+    def _get_unknown_ptr_type(self, decl):
+        if decl.type.type.type.names == ['__dotdotdot__']:
+            return model.unknown_ptr_type(decl.name)
+        raise FFIError(':%d: unsupported usage of "..." in typedef'
+                       % decl.coord.line)

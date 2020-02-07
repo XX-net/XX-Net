@@ -4,6 +4,7 @@
 import sys, os, binascii, shutil, io
 from . import __version_verifier_modules__
 from . import ffiplatform
+from .error import VerificationError
 
 if sys.version_info >= (3, 3):
     import importlib.machinery
@@ -25,16 +26,6 @@ else:
                 s = s.encode('ascii')
             super(NativeIO, self).write(s)
 
-def _hack_at_distutils():
-    # Windows-only workaround for some configurations: see
-    # https://bugs.python.org/issue23246 (Python 2.7 with 
-    # a specific MS compiler suite download)
-    if sys.platform == "win32":
-        try:
-            import setuptools    # for side-effects, patches distutils
-        except ImportError:
-            pass
-
 
 class Verifier(object):
 
@@ -42,7 +33,7 @@ class Verifier(object):
                  ext_package=None, tag='', force_generic_engine=False,
                  source_extension='.c', flags=None, relative_to=None, **kwds):
         if ffi._parser._uses_new_feature:
-            raise ffiplatform.VerificationError(
+            raise VerificationError(
                 "feature not supported with ffi.verify(), but only "
                 "with ffi.set_source(): %s" % (ffi._parser._uses_new_feature,))
         self.ffi = ffi
@@ -83,7 +74,7 @@ class Verifier(object):
         which can be tweaked beforehand."""
         with self.ffi._lock:
             if self._has_source and file is None:
-                raise ffiplatform.VerificationError(
+                raise VerificationError(
                     "source code already written")
             self._write_source(file)
 
@@ -92,7 +83,7 @@ class Verifier(object):
         This produces a dynamic link library in 'self.modulefilename'."""
         with self.ffi._lock:
             if self._has_module:
-                raise ffiplatform.VerificationError("module already compiled")
+                raise VerificationError("module already compiled")
             if not self._has_source:
                 self._write_source()
             self._compile_module()
@@ -125,7 +116,7 @@ class Verifier(object):
         return basename
 
     def get_extension(self):
-        _hack_at_distutils() # backward compatibility hack
+        ffiplatform._hack_at_distutils() # backward compatibility hack
         if not self._has_source:
             with self.ffi._lock:
                 if not self._has_source:
@@ -310,7 +301,6 @@ def _get_so_suffixes():
     return suffixes
 
 def _ensure_dir(filename):
-    try:
-        os.makedirs(os.path.dirname(filename))
-    except OSError:
-        pass
+    dirname = os.path.dirname(filename)
+    if dirname and not os.path.isdir(dirname):
+        os.makedirs(dirname)

@@ -1,5 +1,7 @@
 import sys, types
 from .lock import allocate_lock
+from .error import CDefError
+from . import model
 
 try:
     callable
@@ -14,17 +16,8 @@ except NameError:
     # Python 3.x
     basestring = str
 
+_unspecified = object()
 
-class FFIError(Exception):
-    pass
-
-class CDefError(Exception):
-    def __str__(self):
-        try:
-            line = 'line %d: ' % (self.args[1].coord.line,)
-        except (AttributeError, TypeError, IndexError):
-            line = ''
-        return '%s%s' % (line, self.args[0])
 
 
 class FFI(object):
@@ -49,18 +42,27 @@ class FFI(object):
         """Create an FFI instance.  The 'backend' argument is used to
         select a non-default backend, mostly for tests.
         """
-        from . import cparser, model
         if backend is None:
             # You need PyPy (>= 2.0 beta), or a CPython (>= 2.6) with
             # _cffi_backend.so compiled.
             import _cffi_backend as backend
             from . import __version__
-            assert backend.__version__ == __version__, \
-               "version mismatch, %s != %s" % (backend.__version__, __version__)
+            if backend.__version__ != __version__:
+                # bad version!  Try to be as explicit as possible.
+                if hasattr(backend, '__file__'):
+                    # CPython
+                    raise Exception("Version mismatch: this is the 'cffi' package version %s, located in %r.  When we import the top-level '_cffi_backend' extension module, we get version %s, located in %r.  The two versions should be equal; check your installation." % (
+                        __version__, __file__,
+                        backend.__version__, backend.__file__))
+                else:
+                    # PyPy
+                    raise Exception("Version mismatch: this is the 'cffi' package version %s, located in %r.  This interpreter comes with a built-in '_cffi_backend' module, which is version %s.  The two versions should be equal; check your installation." % (
+                        __version__, __file__, backend.__version__))
             # (If you insist you can also try to pass the option
             # 'backend=backend_ctypes.CTypesBackend()', but don't
             # rely on it!  It's probably not going to work well.)
 
+        from . import cparser
         self._backend = backend
         self._lock = allocate_lock()
         self._parser = cparser.Parser()
@@ -75,9 +77,10 @@ class FFI(object):
         self._init_once_cache = {}
         self._cdef_version = None
         self._embedding = None
+        self._typecache = model.get_typecache(backend)
         if hasattr(backend, 'set_ffi'):
             backend.set_ffi(self)
-        for name in backend.__dict__:
+        for name in list(backend.__dict__):
             if name.startswith('RTLD_'):
                 setattr(self, name, getattr(backend, name))
         #
@@ -93,19 +96,23 @@ class FFI(object):
             # ctypes backend: attach these constants to the instance
             self.NULL = self.cast(self.BVoidP, 0)
             self.CData, self.CType = backend._get_types()
+        self.buffer = backend.buffer
 
-    def cdef(self, csource, override=False, packed=False):
+    def cdef(self, csource, override=False, packed=False, pack=None):
         """Parse the given C source.  This registers all declared functions,
         types, and global variables.  The functions and global variables can
         then be accessed via either 'ffi.dlopen()' or 'ffi.verify()'.
         The types can be used in 'ffi.new()' and other functions.
         If 'packed' is specified as True, all structs declared inside this
         cdef are packed, i.e. laid out without any field alignment at all.
+        Alternatively, 'pack' can be a small integer, and requests for
+        alignment greater than that are ignored (pack=1 is equivalent to
+        packed=True).
         """
-        self._cdef(csource, override=override, packed=packed)
+        self._cdef(csource, override=override, packed=packed, pack=pack)
 
-    def embedding_api(self, csource, packed=False):
-        self._cdef(csource, packed=packed, dllexport=True)
+    def embedding_api(self, csource, packed=False, pack=None):
+        self._cdef(csource, packed=packed, pack=pack, dllexport=True)
         if self._embedding is None:
             self._embedding = ''
 
@@ -140,6 +147,13 @@ class FFI(object):
             self._function_caches.append(function_cache)
             self._libraries.append(lib)
         return lib
+
+    def dlclose(self, lib):
+        """Close a library obtained with ffi.dlopen().  After this call,
+        access to functions or variables from the library will fail
+        (possibly with a segmentation fault).
+        """
+        type(lib).__cffi_close__(lib)
 
     def _typeof_locked(self, cdecl):
         # call me with the lock!
@@ -212,7 +226,7 @@ class FFI(object):
 
     def offsetof(self, cdecl, *fields_or_indexes):
         """Return the offset of the named field inside the given
-        structure or array, which must be given as a C type name.  
+        structure or array, which must be given as a C type name.
         You can give several field names in case of nested structures.
         You can also give numeric values which correspond to array
         items, in case of an array type.
@@ -300,7 +314,7 @@ class FFI(object):
         return self._backend.string(cdata, maxlen)
 
     def unpack(self, cdata, length):
-        """Unpack an array of C data of the given length, 
+        """Unpack an array of C data of the given length,
         returning a Python string/unicode/list.
 
         If 'cdata' is a pointer to 'char', returns a byte string.
@@ -316,28 +330,36 @@ class FFI(object):
         """
         return self._backend.unpack(cdata, length)
 
-    def buffer(self, cdata, size=-1):
-        """Return a read-write buffer object that references the raw C data
-        pointed to by the given 'cdata'.  The 'cdata' must be a pointer or
-        an array.  Can be passed to functions expecting a buffer, or directly
-        manipulated with:
+   #def buffer(self, cdata, size=-1):
+   #    """Return a read-write buffer object that references the raw C data
+   #    pointed to by the given 'cdata'.  The 'cdata' must be a pointer or
+   #    an array.  Can be passed to functions expecting a buffer, or directly
+   #    manipulated with:
+   #
+   #        buf[:]          get a copy of it in a regular string, or
+   #        buf[idx]        as a single character
+   #        buf[:] = ...
+   #        buf[idx] = ...  change the content
+   #    """
+   #    note that 'buffer' is a type, set on this instance by __init__
 
-            buf[:]          get a copy of it in a regular string, or
-            buf[idx]        as a single character
-            buf[:] = ...
-            buf[idx] = ...  change the content
-        """
-        return self._backend.buffer(cdata, size)
-
-    def from_buffer(self, python_buffer):
-        """Return a <cdata 'char[]'> that points to the data of the
+    def from_buffer(self, cdecl, python_buffer=_unspecified,
+                    require_writable=False):
+        """Return a cdata of the given type pointing to the data of the
         given Python object, which must support the buffer interface.
-        Note that this is not meant to be used on the built-in types str,
-        unicode, or bytearray (you can build 'char[]' arrays explicitly)
+        Note that this is not meant to be used on the built-in types
+        str or unicode (you can build 'char[]' arrays explicitly)
         but only on objects containing large quantities of raw data
         in some other format, like 'array.array' or numpy arrays.
+
+        The first argument is optional and default to 'char[]'.
         """
-        return self._backend.from_buffer(self.BCharA, python_buffer)
+        if python_buffer is _unspecified:
+            cdecl, python_buffer = self.BCharA, cdecl
+        elif isinstance(cdecl, basestring):
+            cdecl = self._typeof(cdecl)
+        return self._backend.from_buffer(cdecl, python_buffer,
+                                         require_writable)
 
     def memmove(self, dest, src, n):
         """ffi.memmove(dest, src, n) copies n bytes of memory from src to dest.
@@ -392,25 +414,17 @@ class FFI(object):
             replace_with = ' ' + replace_with
         return self._backend.getcname(cdecl, replace_with)
 
-    def gc(self, cdata, destructor):
+    def gc(self, cdata, destructor, size=0):
         """Return a new cdata object that points to the same
         data.  Later, when this new cdata object is garbage-collected,
         'destructor(old_cdata_object)' will be called.
+
+        The optional 'size' gives an estimate of the size, used to
+        trigger the garbage collection more eagerly.  So far only used
+        on PyPy.  It tells the GC that the returned object keeps alive
+        roughly 'size' bytes of external memory.
         """
-        try:
-            gcp = self._backend.gcp
-        except AttributeError:
-            pass
-        else:
-            return gcp(cdata, destructor)
-        #
-        with self._lock:
-            try:
-                gc_weakrefs = self.gc_weakrefs
-            except AttributeError:
-                from .gc_weakref import GcWeakrefs
-                gc_weakrefs = self.gc_weakrefs = GcWeakrefs(self)
-            return gc_weakrefs.build(cdata, destructor)
+        return self._backend.gcp(cdata, destructor, size)
 
     def _get_cached_btype(self, type):
         assert self._lock.acquire(False) is False
@@ -465,7 +479,6 @@ class FFI(object):
         return self._backend.getwinerror(code)
 
     def _pointer_to(self, ctype):
-        from . import model
         with self._lock:
             return model.pointer_cache(self, ctype)
 
@@ -475,7 +488,12 @@ class FFI(object):
         field or array item in the structure or array, recursively in
         case of nested structures.
         """
-        ctype = self._backend.typeof(cdata)
+        try:
+            ctype = self._backend.typeof(cdata)
+        except TypeError:
+            if '__addressof__' in type(cdata).__dict__:
+                return type(cdata).__addressof__(cdata, *fields_or_indexes)
+            raise
         if fields_or_indexes:
             ctype, offset = self._typeoffsetof(ctype, *fields_or_indexes)
         else:
@@ -520,6 +538,9 @@ class FFI(object):
 
     def from_handle(self, x):
         return self._backend.from_handle(x)
+
+    def release(self, x):
+        self._backend.release(x)
 
     def set_unicode(self, enabled_flag):
         """Windows: if 'enabled_flag' is True, enable the UNICODE and
@@ -571,14 +592,17 @@ class FFI(object):
             if sys.platform == "win32":
                 # we need 'libpypy-c.lib'.  Current distributions of
                 # pypy (>= 4.1) contain it as 'libs/python27.lib'.
-                pythonlib = "python27"
+                pythonlib = "python{0[0]}{0[1]}".format(sys.version_info)
                 if hasattr(sys, 'prefix'):
                     ensure('library_dirs', os.path.join(sys.prefix, 'libs'))
             else:
                 # we need 'libpypy-c.{so,dylib}', which should be by
                 # default located in 'sys.prefix/bin' for installed
                 # systems.
-                pythonlib = "pypy-c"
+                if sys.version_info < (3,):
+                    pythonlib = "pypy-c"
+                else:
+                    pythonlib = "pypy3-c"
                 if hasattr(sys, 'prefix'):
                     ensure('library_dirs', os.path.join(sys.prefix, 'bin'))
             # On uninstalled pypy's, the libpypy-c is typically found in
@@ -607,13 +631,27 @@ class FFI(object):
             ensure('extra_link_args', '/MANIFEST')
 
     def set_source(self, module_name, source, source_extension='.c', **kwds):
+        import os
         if hasattr(self, '_assigned_source'):
             raise ValueError("set_source() cannot be called several times "
                              "per ffi object")
         if not isinstance(module_name, basestring):
             raise TypeError("'module_name' must be a string")
+        if os.sep in module_name or (os.altsep and os.altsep in module_name):
+            raise ValueError("'module_name' must not contain '/': use a dotted "
+                             "name to make a 'package.module' location")
         self._assigned_source = (str(module_name), source,
                                  source_extension, kwds)
+
+    def set_source_pkgconfig(self, module_name, pkgconfig_libs, source,
+                             source_extension='.c', **kwds):
+        from . import pkgconfig
+        if not isinstance(pkgconfig_libs, list):
+            raise TypeError("the pkgconfig_libs argument must be a list "
+                            "of package names")
+        kwds2 = pkgconfig.flags_from_pkgconfig(pkgconfig_libs)
+        pkgconfig.merge_flags(kwds, kwds2)
+        self.set_source(module_name, source, source_extension, **kwds)
 
     def distutils_extension(self, tmpdir='build', verbose=True):
         from distutils.dir_util import mkpath
@@ -665,7 +703,7 @@ class FFI(object):
         recompile(self, module_name, source,
                   c_file=filename, call_c_compiler=False, **kwds)
 
-    def compile(self, tmpdir='.', verbose=0, target=None):
+    def compile(self, tmpdir='.', verbose=0, target=None, debug=None):
         """The 'target' argument gives the final file name of the
         compiled DLL.  Use '*' to force distutils' choice, suitable for
         regular CPython C API modules.  Use a file name ending in '.*'
@@ -682,7 +720,7 @@ class FFI(object):
         module_name, source, source_extension, kwds = self._assigned_source
         return recompile(self, module_name, source, tmpdir=tmpdir,
                          target=target, source_extension=source_extension,
-                         compiler_verbose=verbose, **kwds)
+                         compiler_verbose=verbose, debug=debug, **kwds)
 
     def init_once(self, func, tag):
         # Read _init_once_cache[tag], which is either (False, lock) if
@@ -760,24 +798,32 @@ class FFI(object):
 
 
 def _load_backend_lib(backend, name, flags):
+    import os
     if name is None:
         if sys.platform != "win32":
             return backend.load_library(None, flags)
         name = "c"    # Windows: load_library(None) fails, but this works
-                      # (backward compatibility hack only)
-    try:
-        if '.' not in name and '/' not in name:
-            raise OSError("library not found: %r" % (name,))
-        return backend.load_library(name, flags)
-    except OSError:
-        import ctypes.util
-        path = ctypes.util.find_library(name)
-        if path is None:
-            raise     # propagate the original OSError
-        return backend.load_library(path, flags)
+                      # on Python 2 (backward compatibility hack only)
+    first_error = None
+    if '.' in name or '/' in name or os.sep in name:
+        try:
+            return backend.load_library(name, flags)
+        except OSError as e:
+            first_error = e
+    import ctypes.util
+    path = ctypes.util.find_library(name)
+    if path is None:
+        if name == "c" and sys.platform == "win32" and sys.version_info >= (3,):
+            raise OSError("dlopen(None) cannot work on Windows for Python 3 "
+                          "(see http://bugs.python.org/issue23606)")
+        msg = ("ctypes.util.find_library() did not manage "
+               "to locate a library called %r" % (name,))
+        if first_error is not None:
+            msg = "%s.  Additionally, %s" % (first_error, msg)
+        raise OSError(msg)
+    return backend.load_library(path, flags)
 
 def _make_ffi_library(ffi, libname, flags):
-    import os
     backend = ffi._backend
     backendlib = _load_backend_lib(backend, libname, flags)
     #
@@ -785,10 +831,7 @@ def _make_ffi_library(ffi, libname, flags):
         key = 'function ' + name
         tp, _ = ffi._parser._declarations[key]
         BType = ffi._get_cached_btype(tp)
-        try:
-            value = backendlib.load_function(BType, name)
-        except KeyError as e:
-            raise AttributeError('%s: %s' % (name, e))
+        value = backendlib.load_function(BType, name)
         library.__dict__[name] = value
     #
     def accessor_variable(name):
@@ -801,6 +844,21 @@ def _make_ffi_library(ffi, libname, flags):
             lambda self: read_variable(BType, name),
             lambda self, value: write_variable(BType, name, value)))
     #
+    def addressof_var(name):
+        try:
+            return addr_variables[name]
+        except KeyError:
+            with ffi._lock:
+                if name not in addr_variables:
+                    key = 'variable ' + name
+                    tp, _ = ffi._parser._declarations[key]
+                    BType = ffi._get_cached_btype(tp)
+                    if BType.kind != 'array':
+                        BType = model.pointer_cache(ffi, BType)
+                    p = backendlib.load_function(BType, name)
+                    addr_variables[name] = p
+            return addr_variables[name]
+    #
     def accessor_constant(name):
         raise NotImplementedError("non-integer constant '%s' cannot be "
                                   "accessed from a dlopen() library" % (name,))
@@ -810,12 +868,12 @@ def _make_ffi_library(ffi, libname, flags):
     #
     accessors = {}
     accessors_version = [False]
+    addr_variables = {}
     #
     def update_accessors():
         if accessors_version[0] is ffi._cdef_version:
             return
         #
-        from . import model
         for key, (tp, _) in ffi._parser._declarations.items():
             if not isinstance(tp, model.EnumType):
                 tag, name = key.split(' ', 1)
@@ -861,6 +919,21 @@ def _make_ffi_library(ffi, libname, flags):
             with ffi._lock:
                 update_accessors()
                 return accessors.keys()
+        def __addressof__(self, name):
+            if name in library.__dict__:
+                return library.__dict__[name]
+            if name in FFILibrary.__dict__:
+                return addressof_var(name)
+            make_accessor(name)
+            if name in library.__dict__:
+                return library.__dict__[name]
+            if name in FFILibrary.__dict__:
+                return addressof_var(name)
+            raise AttributeError("cffi library has no function or "
+                                 "global variable named '%s'" % (name,))
+        def __cffi_close__(self):
+            backendlib.close_lib()
+            self.__dict__.clear()
     #
     if libname is not None:
         try:

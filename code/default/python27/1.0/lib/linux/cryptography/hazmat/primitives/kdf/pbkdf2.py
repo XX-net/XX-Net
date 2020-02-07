@@ -24,15 +24,14 @@ class PBKDF2HMAC(object):
 
         if not backend.pbkdf2_hmac_supported(algorithm):
             raise UnsupportedAlgorithm(
-                "{0} is not supported for PBKDF2 by this backend.".format(
+                "{} is not supported for PBKDF2 by this backend.".format(
                     algorithm.name),
                 _Reasons.UNSUPPORTED_HASH
             )
         self._used = False
         self._algorithm = algorithm
         self._length = length
-        if not isinstance(salt, bytes):
-            raise TypeError("salt must be bytes.")
+        utils._check_bytes("salt", salt)
         self._salt = salt
         self._iterations = iterations
         self._backend = backend
@@ -42,8 +41,7 @@ class PBKDF2HMAC(object):
             raise AlreadyFinalized("PBKDF2 instances can only be used once.")
         self._used = True
 
-        if not isinstance(key_material, bytes):
-            raise TypeError("key_material must be bytes.")
+        utils._check_byteslike("key_material", key_material)
         return self._backend.derive_pbkdf2_hmac(
             self._algorithm,
             self._length,

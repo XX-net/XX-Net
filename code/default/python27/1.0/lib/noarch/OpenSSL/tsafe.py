@@ -1,6 +1,13 @@
+import warnings
 from threading import RLock as _RLock
 
 from OpenSSL import SSL as _ssl
+
+
+warnings.warn(
+    "OpenSSL.tsafe is deprecated and will be removed",
+    DeprecationWarning, stacklevel=3
+)
 
 
 class Connection:

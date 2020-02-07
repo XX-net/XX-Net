@@ -465,7 +465,15 @@ class Formatter(object):
         record.message = record.getMessage()
         if self.usesTime():
             record.asctime = self.formatTime(record, self.datefmt)
-        s = self._fmt % record.__dict__
+        try:
+            s = self._fmt % record.__dict__
+        except UnicodeDecodeError as e:
+            # Issue 25664. The logger name may be Unicode. Try again ...
+            try:
+                record.name = record.name.decode('utf-8')
+                s = self._fmt % record.__dict__
+            except UnicodeDecodeError:
+                raise e
         if record.exc_info:
             # Cache the traceback text to avoid converting it multiple times
             # (it's constant anyway)
@@ -628,12 +636,19 @@ def _removeHandlerRef(wr):
     # to prevent race conditions and failures during interpreter shutdown.
     acquire, release, handlers = _acquireLock, _releaseLock, _handlerList
     if acquire and release and handlers:
-        acquire()
         try:
-            if wr in handlers:
-                handlers.remove(wr)
-        finally:
-            release()
+            acquire()
+            try:
+                if wr in handlers:
+                    handlers.remove(wr)
+            finally:
+                release()
+        except TypeError:
+            # https://bugs.python.org/issue21149 - If the RLock object behind
+            # acquire() and release() has been partially finalized you may see
+            # an error about NoneType not being callable.  Absolutely nothing
+            # we can do in this GC during process shutdown situation.  Eat it.
+            pass
 
 def _addHandlerRef(handler):
     """
@@ -1214,7 +1229,7 @@ class Logger(Filterer):
 
         logger.log(level, "We have a %s", "mysterious problem", exc_info=1)
         """
-        if not isinstance(level, int):
+        if not isinstance(level, (int, long)):
             if raiseExceptions:
                 raise TypeError("level must be an integer")
             else:

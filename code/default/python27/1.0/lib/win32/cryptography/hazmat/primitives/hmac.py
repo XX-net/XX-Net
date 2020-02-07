@@ -9,10 +9,9 @@ from cryptography.exceptions import (
     AlreadyFinalized, UnsupportedAlgorithm, _Reasons
 )
 from cryptography.hazmat.backends.interfaces import HMACBackend
-from cryptography.hazmat.primitives import hashes, interfaces
+from cryptography.hazmat.primitives import hashes
 
 
-@utils.register_interface(interfaces.MACContext)
 @utils.register_interface(hashes.HashContext)
 class HMAC(object):
     def __init__(self, key, algorithm, backend, ctx=None):
@@ -38,8 +37,7 @@ class HMAC(object):
     def update(self, data):
         if self._ctx is None:
             raise AlreadyFinalized("Context was already finalized.")
-        if not isinstance(data, bytes):
-            raise TypeError("data must be bytes.")
+        utils._check_byteslike("data", data)
         self._ctx.update(data)
 
     def copy(self):
@@ -60,8 +58,7 @@ class HMAC(object):
         return digest
 
     def verify(self, signature):
-        if not isinstance(signature, bytes):
-            raise TypeError("signature must be bytes.")
+        utils._check_bytes("signature", signature)
         if self._ctx is None:
             raise AlreadyFinalized("Context was already finalized.")
 

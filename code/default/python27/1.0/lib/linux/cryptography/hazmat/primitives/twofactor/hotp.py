@@ -9,22 +9,25 @@ import struct
 import six
 
 from cryptography.exceptions import (
-    InvalidToken, UnsupportedAlgorithm, _Reasons
+    UnsupportedAlgorithm, _Reasons
 )
 from cryptography.hazmat.backends.interfaces import HMACBackend
 from cryptography.hazmat.primitives import constant_time, hmac
 from cryptography.hazmat.primitives.hashes import SHA1, SHA256, SHA512
+from cryptography.hazmat.primitives.twofactor import InvalidToken
+from cryptography.hazmat.primitives.twofactor.utils import _generate_uri
 
 
 class HOTP(object):
-    def __init__(self, key, length, algorithm, backend):
+    def __init__(self, key, length, algorithm, backend,
+                 enforce_key_length=True):
         if not isinstance(backend, HMACBackend):
             raise UnsupportedAlgorithm(
                 "Backend object does not implement HMACBackend.",
                 _Reasons.BACKEND_MISSING_INTERFACE
             )
 
-        if len(key) < 16:
+        if len(key) < 16 and enforce_key_length is True:
             raise ValueError("Key length has to be at least 128 bits.")
 
         if not isinstance(length, six.integer_types):
@@ -58,3 +61,8 @@ class HOTP(object):
         offset = six.indexbytes(hmac_value, len(hmac_value) - 1) & 0b1111
         p = hmac_value[offset:offset + 4]
         return struct.unpack(">I", p)[0] & 0x7fffffff
+
+    def get_provisioning_uri(self, account_name, counter, issuer):
+        return _generate_uri(self, "hotp", account_name, issuer, [
+            ("counter", int(counter)),
+        ])
