@@ -9,10 +9,10 @@ from cryptography.exceptions import (
     AlreadyFinalized, UnsupportedAlgorithm, _Reasons
 )
 from cryptography.hazmat.backends.interfaces import CMACBackend
-from cryptography.hazmat.primitives import ciphers, mac
+from cryptography.hazmat.primitives import ciphers, interfaces
 
 
-@utils.register_interface(mac.MACContext)
+@utils.register_interface(interfaces.MACContext)
 class CMAC(object):
     def __init__(self, algorithm, backend, ctx=None):
         if not isinstance(backend, CMACBackend):
@@ -36,8 +36,8 @@ class CMAC(object):
     def update(self, data):
         if self._ctx is None:
             raise AlreadyFinalized("Context was already finalized.")
-
-        utils._check_bytes("data", data)
+        if not isinstance(data, bytes):
+            raise TypeError("data must be bytes.")
         self._ctx.update(data)
 
     def finalize(self):
@@ -48,7 +48,8 @@ class CMAC(object):
         return digest
 
     def verify(self, signature):
-        utils._check_bytes("signature", signature)
+        if not isinstance(signature, bytes):
+            raise TypeError("signature must be bytes.")
         if self._ctx is None:
             raise AlreadyFinalized("Context was already finalized.")
 

@@ -26,10 +26,11 @@ class HKDF(object):
 
         self._algorithm = algorithm
 
+        if not isinstance(salt, bytes) and salt is not None:
+            raise TypeError("salt must be bytes.")
+
         if salt is None:
-            salt = b"\x00" * self._algorithm.digest_size
-        else:
-            utils._check_bytes("salt", salt)
+            salt = b"\x00" * (self._algorithm.digest_size // 8)
 
         self._salt = salt
 
@@ -43,7 +44,9 @@ class HKDF(object):
         return h.finalize()
 
     def derive(self, key_material):
-        utils._check_byteslike("key_material", key_material)
+        if not isinstance(key_material, bytes):
+            raise TypeError("key_material must be bytes.")
+
         return self._hkdf_expand.derive(self._extract(key_material))
 
     def verify(self, key_material, expected_key):
@@ -64,20 +67,21 @@ class HKDFExpand(object):
 
         self._backend = backend
 
-        max_length = 255 * algorithm.digest_size
+        max_length = 255 * (algorithm.digest_size // 8)
 
         if length > max_length:
             raise ValueError(
-                "Can not derive keys larger than {} octets.".format(
+                "Can not derive keys larger than {0} octets.".format(
                     max_length
                 ))
 
         self._length = length
 
+        if not isinstance(info, bytes) and info is not None:
+            raise TypeError("info must be bytes.")
+
         if info is None:
             info = b""
-        else:
-            utils._check_bytes("info", info)
 
         self._info = info
 
@@ -87,7 +91,7 @@ class HKDFExpand(object):
         output = [b""]
         counter = 1
 
-        while self._algorithm.digest_size * (len(output) - 1) < self._length:
+        while (self._algorithm.digest_size // 8) * len(output) < self._length:
             h = hmac.HMAC(key_material, self._algorithm, backend=self._backend)
             h.update(output[-1])
             h.update(self._info)
@@ -98,7 +102,9 @@ class HKDFExpand(object):
         return b"".join(output)[:self._length]
 
     def derive(self, key_material):
-        utils._check_byteslike("key_material", key_material)
+        if not isinstance(key_material, bytes):
+            raise TypeError("key_material must be bytes.")
+
         if self._used:
             raise AlreadyFinalized
 

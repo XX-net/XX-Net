@@ -17,8 +17,6 @@ class _Reasons(Enum):
     UNSUPPORTED_ELLIPTIC_CURVE = 6
     UNSUPPORTED_SERIALIZATION = 7
     UNSUPPORTED_X509 = 8
-    UNSUPPORTED_EXCHANGE_ALGORITHM = 9
-    UNSUPPORTED_DIFFIE_HELLMAN = 10
 
 
 class UnsupportedAlgorithm(Exception):
@@ -48,10 +46,12 @@ class InvalidSignature(Exception):
 
 
 class InternalError(Exception):
-    def __init__(self, msg, err_code):
-        super(InternalError, self).__init__(msg)
-        self.err_code = err_code
+    pass
 
 
 class InvalidKey(Exception):
+    pass
+
+
+class InvalidToken(Exception):
     pass

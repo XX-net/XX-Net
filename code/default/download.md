@@ -4,8 +4,8 @@
 https://github.com/XX-net/XX-Net/archive/3.14.0.zip
 
 
-测试版(Test)：
-https://github.com/XX-net/XX-Net/archive/3.14.1.zip
+测试版(Test)：  
+https://github.com/XX-net/XX-Net/archive/3.14.2.zip
 
 
 Android:  

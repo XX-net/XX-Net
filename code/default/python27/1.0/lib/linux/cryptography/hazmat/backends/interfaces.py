@@ -212,19 +212,7 @@ class EllipticCurveBackend(object):
     @abc.abstractmethod
     def load_elliptic_curve_private_numbers(self, numbers):
         """
-        Return an EllipticCurvePrivateKey provider using the given numbers.
-        """
-
-    @abc.abstractmethod
-    def elliptic_curve_exchange_algorithm_supported(self, algorithm, curve):
-        """
-        Returns whether the exchange algorithm is supported by this backend.
-        """
-
-    @abc.abstractmethod
-    def derive_elliptic_curve_private_key(self, private_value, curve):
-        """
-        Compute the private key given the private value and curve.
+        Return an EllipticCurvePublicKey provider using the given numbers.
         """
 
 
@@ -243,12 +231,6 @@ class PEMSerializationBackend(object):
         Loads a public key from PEM encoded data.
         """
 
-    @abc.abstractmethod
-    def load_pem_parameters(self, data):
-        """
-        Load encryption parameters from PEM encoded data.
-        """
-
 
 @six.add_metaclass(abc.ABCMeta)
 class DERSerializationBackend(object):
@@ -265,12 +247,6 @@ class DERSerializationBackend(object):
         Loads a public key from DER encoded data.
         """
 
-    @abc.abstractmethod
-    def load_der_parameters(self, data):
-        """
-        Load encryption parameters from DER encoded data.
-        """
-
 
 @six.add_metaclass(abc.ABCMeta)
 class X509Backend(object):
@@ -284,112 +260,4 @@ class X509Backend(object):
     def load_der_x509_certificate(self, data):
         """
         Load an X.509 certificate from DER encoded data.
-        """
-
-    @abc.abstractmethod
-    def load_der_x509_csr(self, data):
-        """
-        Load an X.509 CSR from DER encoded data.
-        """
-
-    @abc.abstractmethod
-    def load_pem_x509_csr(self, data):
-        """
-        Load an X.509 CSR from PEM encoded data.
-        """
-
-    @abc.abstractmethod
-    def create_x509_csr(self, builder, private_key, algorithm):
-        """
-        Create and sign an X.509 CSR from a CSR builder object.
-        """
-
-    @abc.abstractmethod
-    def create_x509_certificate(self, builder, private_key, algorithm):
-        """
-        Create and sign an X.509 certificate from a CertificateBuilder object.
-        """
-
-    @abc.abstractmethod
-    def create_x509_crl(self, builder, private_key, algorithm):
-        """
-        Create and sign an X.509 CertificateRevocationList from a
-        CertificateRevocationListBuilder object.
-        """
-
-    @abc.abstractmethod
-    def create_x509_revoked_certificate(self, builder):
-        """
-        Create a RevokedCertificate object from a RevokedCertificateBuilder
-        object.
-        """
-
-    @abc.abstractmethod
-    def x509_name_bytes(self, name):
-        """
-        Compute the DER encoded bytes of an X509 Name object.
-        """
-
-
-@six.add_metaclass(abc.ABCMeta)
-class DHBackend(object):
-    @abc.abstractmethod
-    def generate_dh_parameters(self, generator, key_size):
-        """
-        Generate a DHParameters instance with a modulus of key_size bits.
-        Using the given generator. Often 2 or 5.
-        """
-
-    @abc.abstractmethod
-    def generate_dh_private_key(self, parameters):
-        """
-        Generate a DHPrivateKey instance with parameters as a DHParameters
-        object.
-        """
-
-    @abc.abstractmethod
-    def generate_dh_private_key_and_parameters(self, generator, key_size):
-        """
-        Generate a DHPrivateKey instance using key size only.
-        Using the given generator. Often 2 or 5.
-        """
-
-    @abc.abstractmethod
-    def load_dh_private_numbers(self, numbers):
-        """
-        Load a DHPrivateKey from DHPrivateNumbers
-        """
-
-    @abc.abstractmethod
-    def load_dh_public_numbers(self, numbers):
-        """
-        Load a DHPublicKey from DHPublicNumbers.
-        """
-
-    @abc.abstractmethod
-    def load_dh_parameter_numbers(self, numbers):
-        """
-        Load DHParameters from DHParameterNumbers.
-        """
-
-    @abc.abstractmethod
-    def dh_parameters_supported(self, p, g, q=None):
-        """
-        Returns whether the backend supports DH with these parameter values.
-        """
-
-    @abc.abstractmethod
-    def dh_x942_serialization_supported(self):
-        """
-        Returns True if the backend supports the serialization of DH objects
-        with subgroup order (q).
-        """
-
-
-@six.add_metaclass(abc.ABCMeta)
-class ScryptBackend(object):
-    @abc.abstractmethod
-    def derive_scrypt(self, key_material, salt, length, n, r, p):
-        """
-        Return bytes derived from provided Scrypt parameters.
         """

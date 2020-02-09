@@ -12,7 +12,6 @@ import time
 
 import six
 
-from cryptography import utils
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, padding
@@ -52,7 +51,8 @@ class Fernet(object):
         return self._encrypt_from_parts(data, current_time, iv)
 
     def _encrypt_from_parts(self, data, current_time, iv):
-        utils._check_bytes("data", data)
+        if not isinstance(data, bytes):
+            raise TypeError("data must be bytes.")
 
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(data) + padder.finalize()
@@ -71,18 +71,11 @@ class Fernet(object):
         return base64.urlsafe_b64encode(basic_parts + hmac)
 
     def decrypt(self, token, ttl=None):
-        timestamp, data = Fernet._get_unverified_token_data(token)
-        return self._decrypt_data(data, timestamp, ttl)
+        if not isinstance(token, bytes):
+            raise TypeError("token must be bytes.")
 
-    def extract_timestamp(self, token):
-        timestamp, data = Fernet._get_unverified_token_data(token)
-        # Verify the token was not tampered with.
-        self._verify_signature(data)
-        return timestamp
+        current_time = int(time.time())
 
-    @staticmethod
-    def _get_unverified_token_data(token):
-        utils._check_bytes("token", token)
         try:
             data = base64.urlsafe_b64decode(token)
         except (TypeError, binascii.Error):
@@ -95,26 +88,17 @@ class Fernet(object):
             timestamp, = struct.unpack(">Q", data[1:9])
         except struct.error:
             raise InvalidToken
-        return timestamp, data
-
-    def _verify_signature(self, data):
+        if ttl is not None:
+            if timestamp + ttl < current_time:
+                raise InvalidToken
+        if current_time + _MAX_CLOCK_SKEW < timestamp:
+            raise InvalidToken
         h = HMAC(self._signing_key, hashes.SHA256(), backend=self._backend)
         h.update(data[:-32])
         try:
             h.verify(data[-32:])
         except InvalidSignature:
             raise InvalidToken
-
-    def _decrypt_data(self, data, timestamp, ttl):
-        current_time = int(time.time())
-        if ttl is not None:
-            if timestamp + ttl < current_time:
-                raise InvalidToken
-
-            if current_time + _MAX_CLOCK_SKEW < timestamp:
-                raise InvalidToken
-
-        self._verify_signature(data)
 
         iv = data[9:25]
         ciphertext = data[25:-32]
@@ -147,20 +131,6 @@ class MultiFernet(object):
 
     def encrypt(self, msg):
         return self._fernets[0].encrypt(msg)
-
-    def rotate(self, msg):
-        timestamp, data = Fernet._get_unverified_token_data(msg)
-        for f in self._fernets:
-            try:
-                p = f._decrypt_data(data, timestamp, None)
-                break
-            except InvalidToken:
-                pass
-        else:
-            raise InvalidToken
-
-        iv = os.urandom(16)
-        return self._fernets[0]._encrypt_from_parts(p, timestamp, iv)
 
     def decrypt(self, msg, ttl=None):
         for f in self._fernets:

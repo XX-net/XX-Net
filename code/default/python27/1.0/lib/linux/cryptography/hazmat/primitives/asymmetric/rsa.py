@@ -5,11 +5,7 @@
 from __future__ import absolute_import, division, print_function
 
 import abc
-try:
-    # Only available in math in 3.5+
-    from math import gcd
-except ImportError:
-    from fractions import gcd
+from fractions import gcd
 
 import six
 
@@ -44,12 +40,6 @@ class RSAPrivateKey(object):
         The RSAPublicKey associated with this private key.
         """
 
-    @abc.abstractmethod
-    def sign(self, data, padding, algorithm):
-        """
-        Signs the data.
-        """
-
 
 @six.add_metaclass(abc.ABCMeta)
 class RSAPrivateKeyWithSerialization(RSAPrivateKey):
@@ -64,6 +54,17 @@ class RSAPrivateKeyWithSerialization(RSAPrivateKey):
         """
         Returns the key serialized as bytes.
         """
+
+
+RSAPrivateKeyWithNumbers = utils.deprecated(
+    RSAPrivateKeyWithSerialization,
+    __name__,
+    (
+        "The RSAPrivateKeyWithNumbers interface has been renamed to "
+        "RSAPrivateKeyWithSerialization"
+    ),
+    utils.DeprecatedIn08
+)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -86,6 +87,9 @@ class RSAPublicKey(object):
         The bit length of the public modulus.
         """
 
+
+@six.add_metaclass(abc.ABCMeta)
+class RSAPublicKeyWithSerialization(RSAPublicKey):
     @abc.abstractmethod
     def public_numbers(self):
         """
@@ -98,14 +102,16 @@ class RSAPublicKey(object):
         Returns the key serialized as bytes.
         """
 
-    @abc.abstractmethod
-    def verify(self, signature, data, padding, algorithm):
-        """
-        Verifies the signature of the data.
-        """
 
-
-RSAPublicKeyWithSerialization = RSAPublicKey
+RSAPublicKeyWithNumbers = utils.deprecated(
+    RSAPublicKeyWithSerialization,
+    __name__,
+    (
+        "The RSAPublicKeyWithNumbers interface has been renamed to "
+        "RSAPublicKeyWithSerialization"
+    ),
+    utils.DeprecatedIn08
+)
 
 
 def generate_private_key(public_exponent, key_size, backend):
@@ -203,7 +209,7 @@ def rsa_crt_iqmp(p, q):
 def rsa_crt_dmp1(private_exponent, p):
     """
     Compute the CRT private_exponent % (p - 1) value from the RSA
-    private_exponent (d) and p.
+    private_exponent and p.
     """
     return private_exponent % (p - 1)
 
@@ -211,7 +217,7 @@ def rsa_crt_dmp1(private_exponent, p):
 def rsa_crt_dmq1(private_exponent, q):
     """
     Compute the CRT private_exponent % (q - 1) value from the RSA
-    private_exponent (d) and q.
+    private_exponent and q.
     """
     return private_exponent % (q - 1)
 
@@ -261,7 +267,7 @@ def rsa_recover_prime_factors(n, e, d):
     # Found !
     q, r = divmod(n, p)
     assert r == 0
-    p, q = sorted((p, q), reverse=True)
+
     return (p, q)
 
 
@@ -323,17 +329,6 @@ class RSAPrivateNumbers(object):
     def __ne__(self, other):
         return not self == other
 
-    def __hash__(self):
-        return hash((
-            self.p,
-            self.q,
-            self.d,
-            self.dmp1,
-            self.dmq1,
-            self.iqmp,
-            self.public_numbers,
-        ))
-
 
 class RSAPublicNumbers(object):
     def __init__(self, e, n):
@@ -353,7 +348,7 @@ class RSAPublicNumbers(object):
         return backend.load_rsa_public_numbers(self)
 
     def __repr__(self):
-        return "<RSAPublicNumbers(e={0.e}, n={0.n})>".format(self)
+        return "<RSAPublicNumbers(e={0}, n={1})>".format(self._e, self._n)
 
     def __eq__(self, other):
         if not isinstance(other, RSAPublicNumbers):
@@ -363,6 +358,3 @@ class RSAPublicNumbers(object):
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return hash((self.e, self.n))
