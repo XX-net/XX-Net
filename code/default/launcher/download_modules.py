@@ -12,15 +12,20 @@ top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
 
 def download_file(url, filename):
+    org_url = url
     if os.path.isfile(filename):
         return True
 
-    for i in range(0, 2):
+    for i in range(0, 4):
         try:
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             req = request(url, i, timeout=120)
             if not req:
                 time.sleep(1)
+                continue
+
+            if req.status == 302:
+                url = req.headers["Location"]
                 continue
 
             start_time = time.time()
@@ -63,13 +68,15 @@ def download_file(url, filename):
 
             if downloaded != file_size:
                 xlog.warn("download size:%d, need size:%d, download fail.", downloaded, file_size)
+                os.remove(filename)
                 continue
             else:
+                xlog.info("download %s to %s success.", org_url, filename)
                 return True
         except Exception as e:
-            xlog.warn("download %s to %s fail:%r", url, filename, e)
+            xlog.warn("download %s to %s fail:%r", org_url, filename, e)
             continue
-    xlog.warn("download %s fail", url)
+    xlog.warn("download %s fail", org_url)
 
 
 def download_unzip(url, extract_path):
@@ -93,10 +100,12 @@ def download_unzip(url, extract_path):
         with zipfile.ZipFile(dfn, "r") as dz:
             dz.extractall(extract_path)
             dz.close()
+        xlog.info("Extract %s to %s success.", fn, extract_path)
     except Exception as e:
         xlog.warn("unzip %s fail:%r", dfn, e)
         shutil.rmtree(extract_path)
         raise e
+    os.remove(dfn)
 
 
 def download_worker():
