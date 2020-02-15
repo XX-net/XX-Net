@@ -83,14 +83,19 @@ def download_unzip(url, extract_path):
 
     fn = url.split("/")[-1]
     dfn = os.path.join(download_path, fn)
-    download_file(url, dfn)
+
+    if not download_file(url, dfn):
+        xlog.warn("download file %s fail.", url)
+        return
 
     try:
+        os.mkdir(extract_path)
         with zipfile.ZipFile(dfn, "r") as dz:
             dz.extractall(extract_path)
             dz.close()
     except Exception as e:
         xlog.warn("unzip %s fail:%r", dfn, e)
+        shutil.rmtree(extract_path)
         raise e
 
 
