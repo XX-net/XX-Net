@@ -188,6 +188,7 @@ import module_init
 import update
 import setup_win_python
 import update_from_github
+import download_modules
 
 
 def exit_handler():
@@ -220,6 +221,7 @@ def main():
 
     import post_update
     post_update.check()
+    download_modules.start_download()
 
     allow_remote = 0
     if len(sys.argv) > 1:
