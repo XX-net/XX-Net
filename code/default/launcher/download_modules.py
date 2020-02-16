@@ -3,6 +3,7 @@ import threading
 import time
 import zipfile
 import shutil
+import platform
 
 from update_from_github import request, xlog
 
@@ -21,7 +22,7 @@ def download_file(url, filename):
             xlog.info("download %s to %s, retry:%d", url, filename, i)
             req = request(url, i, timeout=120)
             if not req:
-                time.sleep(1)
+                time.sleep(60)
                 continue
 
             if req.status == 302:
@@ -109,16 +110,15 @@ def download_unzip(url, extract_path):
 
 
 def download_worker():
-    switchyomega_path = os.path.join(top_path, "SwitchyOmega")
-
-    download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/SwitchyOmega.crx", os.path.join(switchyomega_path, "SwitchyOmega.crx"))
-    download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/AutoProxy.xpi", os.path.join(switchyomega_path, "AutoProxy.xpi"))
-
-    lib_path = os.path.abspath(os.path.join(current_path, os.pardir, "gae_proxy", "server", "lib"))
-    download_unzip("https://github.com/XX-net/XX-Net/releases/download/3.15.0/lib.zip", lib_path)
+    if not ("arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine()):
+        # If not Andorid/IOS/Router, download browser plugin
+        switchyomega_path = os.path.join(top_path, "SwitchyOmega")
+        download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/SwitchyOmega.crx", os.path.join(switchyomega_path, "SwitchyOmega.crx"))
+        download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/AutoProxy.xpi", os.path.join(switchyomega_path, "AutoProxy.xpi"))
 
 
 def start_download():
+    time.sleep(10)
     th = threading.Thread(target=download_worker)
     th.start()
     return True
