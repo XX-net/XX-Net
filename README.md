@@ -22,13 +22,10 @@
 
 
 ### 最新状态：
- 2020-2-9
+ 2020-2-16
 * 更新python2.7.17
 * 请更新到3.14.2 及以上。
 
-
-* GAE_Proxy 请开启IPv6，参考:  
-  [如何开启IPv6](https://github.com/XX-net/XX-Net/wiki/%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AFIPv6)
 
     
   
