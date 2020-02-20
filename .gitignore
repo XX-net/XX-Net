@@ -5,6 +5,12 @@ data
 *.swp
 *.pot
 *.mo
+*pybabel_update.sh
 
 .DS_Store
 desktop.ini
+/python27/
+/SwitchyOmega/AutoProxy.xpi
+/SwitchyOmega/SwitchyOmega.crx
+/code/default/gae_proxy/server/lib/
+

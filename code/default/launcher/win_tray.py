@@ -167,9 +167,9 @@ class Win_tray():
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
-        proxy_setting = config.get(["modules", "launcher", "proxy"], "disable")
-        if proxy_setting != "disable":
+        if self.get_proxy_state() != "unknown":
             win32_proxy_manager.disable_proxy()
+
         module_init.stop_all()
         nid = win32_adapter.NotifyData(self.systray._hwnd, 0)
         win32_adapter.Shell_NotifyIcon(2, ctypes.byref(nid))

@@ -37,6 +37,7 @@ python_path = os.path.join(root_path, 'python27', '1.0')
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
+running_file = os.path.join(data_launcher_path, "Running.Lck")
 
 def create_data_path():
     if not os.path.isdir(data_path):
@@ -221,7 +222,6 @@ def main():
 
     import post_update
     post_update.check()
-    download_modules.start_download()
 
     allow_remote = 0
     if len(sys.argv) > 1:
@@ -231,16 +231,21 @@ def main():
                 allow_remote = 1
                 module_init.xargs["allow_remote"] = 1
 
+    if os.path.isfile(running_file):
+        restart_from_except = True
+    else:
+        restart_from_except = False
+
     module_init.start_all_auto()
     web_control.start(allow_remote)
 
-    if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
+    if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1 and not restart_from_except:
         host_port = config.get(["modules", "launcher", "control_port"], 8085)
         import webbrowser
         webbrowser.open("http://localhost:%s/" % host_port)
 
     update.start()
-
+    download_modules.start_download()
     update_from_github.cleanup()
 
     if config.get(["modules", "launcher", "show_systray"], 1):
