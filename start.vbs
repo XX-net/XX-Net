@@ -9,12 +9,21 @@ Sub includeFile (fSpec)
     set fileSys = nothing
 End Sub
 
+
 Set fso=CreateObject("Scripting.FileSystemObject")
 pythonDir = "python27\2.0\"
 If Not DirIsExist(pythonDir) then
-    includeFile "code\default\launcher\download.vbs"
-    includeFile "code\default\launcher\unzip.vbs"
+    call ChangeCurrentPathToRoot()
+    strCurrentPath = CurrentPath()
+    includeFile strCurrentPath & "\code\default\launcher\download.vbs"
+    includeFile strCurrentPath & "\code\default\launcher\unzip.vbs"
 End If
+
+Sub ChangeCurrentPathToRoot()
+    strCurrentPath = CurrentPath()
+    Dim oShell : Set oShell = CreateObject("WScript.Shell")
+    oShell.CurrentDirectory = strCurrentPath
+End Sub
 
 Function PreparePython()
     ' Check if python have installed.
