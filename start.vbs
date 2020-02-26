@@ -1,3 +1,5 @@
+On Error Resume Next
+
 Sub includeFile (fSpec)
     dim fileSys, file, fileData
     set fileSys = createObject ("Scripting.FileSystemObject")
@@ -11,18 +13,21 @@ End Sub
 
 
 Set fso=CreateObject("Scripting.FileSystemObject")
+
+strCurrentPath = CurrentPath()
+strVersion = CurrentVersion()
+Dim oShell : Set oShell = CreateObject("WScript.Shell")
+oShell.CurrentDirectory = strCurrentPath
+
 pythonDir = "python27\2.0\"
 If Not DirIsExist(pythonDir) then
-    call ChangeCurrentPathToRoot()
-    strCurrentPath = CurrentPath()
-    includeFile strCurrentPath & "\code\default\launcher\download.vbs"
-    includeFile strCurrentPath & "\code\default\launcher\unzip.vbs"
+    includeFile strCurrentPath & "\code\" & strVersion & "\launcher\download.vbs"
+    includeFile strCurrentPath & "\code\" & strVersion & "\launcher\unzip.vbs"
 End If
 
 Sub ChangeCurrentPathToRoot()
     strCurrentPath = CurrentPath()
-    Dim oShell : Set oShell = CreateObject("WScript.Shell")
-    oShell.CurrentDirectory = strCurrentPath
+
 End Sub
 
 Function PreparePython()
@@ -76,8 +81,13 @@ Function GetFileSize(strPath)
 End Function
 
 Function DownloadAndCheckSize(url, path, size)
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
     For i = 1 to 3
-        call DownloadFile(url, path)
+        call DownloadFile1(url, path)
+        If( Not fso.FileExists(path) ) Then
+            call DownloadFile2(url, path)
+        End If
         fs = GetFileSize(path)
         if fs = size then
             DownloadAndCheckSize = True
@@ -166,8 +176,6 @@ Function isConsole()
 End Function
 
 
-strCurrentPath = CurrentPath()
-strVersion = CurrentVersion()
 Dim strArgs
 quo = """"
 
