@@ -30,7 +30,7 @@ Sub ChangeCurrentPathToRoot()
 
 End Sub
 
-Function PreparePython()
+Function PreparePython(download_id)
     ' Check if python have installed.
     pythonDir = "python27\2.0\"
     If DirIsExist(pythonDir) then
@@ -41,10 +41,20 @@ Function PreparePython()
     CreateDir("data")
     CreateDir("data\download")
 
-    If not DownloadAndCheckSize("https://raw.githubusercontent.com/XX-net/XX-Net-dev/master/download/py27.zip", "data\download\py27.zip", 6594715) then
+    url = "https://raw.githubusercontent.com/XX-net/XX-Net-dev/master/download/py27.zip"
+    fp = "data\download\py27.zip"
+    fsize = 6594715
+    If download_id = 1 then
+        call DownloadFile1(url, fp)
+    Elseif download_id = 2 then
+        call DownloadFile2(url, fp)
+    End If
+
+    fs = GetFileSize(fp)
+    if not fs = fsize then
         PreparePython = False
         Exit Function
-    End If
+    end if
 
     call UnzipFiles("data\download\py27.zip", "data\download\py27")
 
@@ -80,23 +90,6 @@ Function GetFileSize(strPath)
     GetFileSize = filesys.GetFile(strPath).Size
 End Function
 
-Function DownloadAndCheckSize(url, path, size)
-    Set fso = CreateObject("Scripting.FileSystemObject")
-
-    For i = 1 to 3
-        call DownloadFile1(url, path)
-        If( Not fso.FileExists(path) ) Then
-            call DownloadFile2(url, path)
-        End If
-        fs = GetFileSize(path)
-        if fs = size then
-            DownloadAndCheckSize = True
-            Exit Function
-        end if
-    Next
-    DownloadAndCheckSize = False
-End Function
-
 Function GetAbslutePath(path)
     Dim fso
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -125,7 +118,11 @@ Sub RemoveDir(strFolderPath)
 End Sub
 
 
-python_is_ready = PreparePython()
+python_is_ready = PreparePython(1)
+If not python_is_ready then
+    python_is_ready = PreparePython(2)
+End If
+
 If not python_is_ready then
     WScript.Echo "XX-Net Download Python Environment fail!"
     Wscript.Quit
