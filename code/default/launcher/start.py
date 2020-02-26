@@ -163,6 +163,9 @@ def unload(module):
         pass
 
 
+import first_run
+first_run.exec_check()
+
 try:
     sys.path.insert(0, noarch_lib)
     import OpenSSL as oss_test
