@@ -10,7 +10,7 @@ xlog = getLogger("launcher")
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.join(root_path, 'data')
 python27_path = os.path.join(root_path, "python27")
 python27_2_path = os.path.join(root_path, "python27", "2.0")
