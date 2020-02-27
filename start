@@ -101,6 +101,7 @@ if [ $os_name = 'Linux' ]; then
             echo "install python"
             opkg --dest usb install python
         fi
+        pip install pyopenssl
     fi
 fi
 
