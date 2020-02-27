@@ -5,6 +5,7 @@ data
 *.swp
 *.pot
 *.mo
+*.xpi
 *pybabel_update.sh
 
 .DS_Store
