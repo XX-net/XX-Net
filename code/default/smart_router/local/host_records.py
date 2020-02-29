@@ -48,7 +48,7 @@ class DomainRecords(object):
     def get(self, domain):
         with self.lock:
             try:
-                record = self.cache.pop(domain)
+                record = self.cache[domain]
 
                 time_now = time.time()
                 if time_now - record["update"] > self.ttl:
@@ -58,7 +58,7 @@ class DomainRecords(object):
 
             if not record:
                 record = {"r": "unknown", "ip": {}, "g": 1, "query_count": 0}
-            self.cache[domain] = record
+            #self.cache[domain] = record
             return record
 
     def set(self, domain, record):
@@ -69,6 +69,7 @@ class DomainRecords(object):
                 if len(self.cache) >= self.capacity:
                     self.cache.popitem(last=False)
 
+            record["update"] = time.time()
             self.cache[domain] = record
             self.need_save = True
             self.last_update_time = time.time()

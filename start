@@ -68,9 +68,10 @@ openwrt_setup_env()
  #TODO: Setup
  # check mount usb disk
  # install python, python-openssl, ipset to usb device
+ # opkg --dest usb install python python-pyopenssl
  # setup dns
  # set auto start
- echo "It is openwrt."
+ # echo "It is openwrt."
 }
 
 # Install Packages
@@ -99,7 +100,7 @@ if [ $os_name = 'Linux' ]; then
         elif has_command opkg; then
             # OpenWrt
             echo "install python"
-            opkg --dest usb install python
+            opkg --dest usb install python python-pyopenssl
         fi
         pip install pyopenssl
     fi
@@ -175,6 +176,9 @@ while [ -n "$1" ]; do
 case $1 in
 
 -h) help;shift 1;;
+-help) help;shift 1;;
+--help) help;shift 1;;
+-?) help;shift 1;;
 
 -allow_remote)shift 1;;
 

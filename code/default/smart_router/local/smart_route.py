@@ -58,6 +58,13 @@ def is_gae_workable():
     return g.gae_proxy.apis.is_workable()
 
 
+def is_ipv6_ok():
+    if not g.gae_proxy:
+        return False
+
+    return g.gae_proxy.check_local_network.IPv6.is_ok()
+
+
 def is_x_tunnel_workable():
     if not g.x_tunnel:
         return False
@@ -185,7 +192,7 @@ def get_sni(sock, left_buf=""):
         if key.lower() == "host":
             host, port = netloc_to_host_port(value)
             break
-    if host is None:
+    if host is None or host == "":
         raise SniNotExist
 
     return host
@@ -374,7 +381,12 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 return
 
             elif rule == "direct":
-                ips = g.dns_srv.query(host)
+                if is_ipv6_ok():
+                    query_type = None
+                else:
+                    query_type = 1
+                ips = g.dns_srv.query(host, query_type)
+
                 if not g.gae_proxy.check_local_network.IPv6.is_ok():
                     ips = [ip for ip in ips if "." in ip]
                 do_direct(sock, host, ips, port, client_address, left_buf)
@@ -382,6 +394,9 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 return
 
             elif rule == "direct6":
+                if not is_ipv6_ok():
+                    continue
+
                 ips = [ip for ip in g.dns_srv.query(host) if ":" in ip]
                 if not ips:
                     continue
@@ -392,6 +407,9 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
             elif rule == "gae":
                 if not is_gae_workable() and host != fake_host:
                     xlog.debug("%s gae host:%s:%d, but gae not work", scense, host, port)
+                    continue
+
+                if not g.domain_cache.accept_gae(host):
                     continue
 
                 try:

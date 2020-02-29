@@ -9,7 +9,6 @@ import socket
 import time
 import re
 import select
-import collections
 import random
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -34,11 +33,13 @@ def remote_query_dns(domain, type=None):
     if not g.x_tunnel:
         return []
 
+    t0 = time.time()
     content, status, response = g.x_tunnel.front_dispatcher.request(
         "GET", "dns.xx-net.net", path="/query?domain=%s" % (domain), timeout=5)
+    t1 = time.time()
 
     if status != 200:
-        xlog.warn("remote_query_dns fail status:%d", status)
+        xlog.warn("remote_query_dns fail status:%d, cost=%f", status, t1-t0)
         return []
 
     if isinstance(content, memoryview):
@@ -48,6 +49,9 @@ def remote_query_dns(domain, type=None):
         rs = json.loads(content)
         ips = rs["ip"]
         g.domain_cache.set_ips(domain, ips)
+        xlog.debug("remote_query_dns %s cost:%f return:%s", domain, t1-t0, ips)
+        if type == 1:
+            ips = [ip for ip in ips if "." in ip ]
         return ips
     except Exception as e:
         xlog.warn("remote_query_dns json:%s parse fail:%s", content, e)
@@ -189,8 +193,8 @@ class DnsClient(object):
                     self.dns_server.update_public_server(server_ip, t1-t0)
                     p = DNSRecord.parse(a_pkt)
                     if len(p.rr) == 0:
-                        xlog.warn("query_over_tcp for %s type:%d server:%s return none",
-                                  domain, t, server_ip)
+                        xlog.warn("query_over_tcp for %s type:%d server:%s return none, cost:%f",
+                                  domain, t, server_ip, t1-t0)
                         continue
 
                     for r in p.rr:
@@ -200,6 +204,10 @@ class DnsClient(object):
                                 cn = g.ip_region.cn
                             else:
                                 cn = "XX"
+
+                            if type ==1 and "." not in ip:
+                                continue
+
                             ips.append(ip + "|" + cn)
                         else:
                             # It is domain, loop search it.
@@ -318,7 +326,8 @@ class DnsClient(object):
             xlog.warn("send_request except:%r", e)
 
     def query(self, domain, timeout=3, use_local=False):
-        end_time = time.time() + timeout
+        t0 = time.time()
+        end_time = t0 + timeout
         while True:
             id = random.randint(0, 65535)
             if id not in self.waiters:
@@ -350,6 +359,9 @@ class DnsClient(object):
 
         if id in self.waiters:
             del self.waiters[id]
+
+        t1 = time.time()
+        xlog.debug("query by udp, %s cost:%f, return:%s", domain, t1-t0, ips)
 
         return ips
 

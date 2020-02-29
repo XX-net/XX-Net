@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: xxnet.dev@gmail.com\n"
-"POT-Creation-Date: 2017-12-24 12:00+0800\n"
+"POT-Creation-Date: 2020-02-28 21:54-0500\n"
 "PO-Revision-Date: 2017-12-29 12:00+0800\n"
 "Last-Translator: Emphasia@github\n"
 "Language: zh_Hans_CN\n"
@@ -12,7 +12,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.3.4\n"
+"Generated-By: Babel 2.8.0\n"
 
 msgid "General"
 msgstr "通用"
@@ -50,15 +50,6 @@ msgstr "其他"
 msgid "PAC Policy"
 msgstr "PAC 策略"
 
-msgid "Auto-Try Direct"
-msgstr "自动尝试直连"
-
-msgid "Use IPv6 preferentially when Auto-Try Direct"
-msgstr "自动尝试直连时优先使用 IPv6"
-
-msgid "Auto-Try GAEProxy"
-msgstr "自动尝试 GAEProxy"
-
 msgid "Black->GAEProxy"
 msgstr "黑名单->GAEProxy"
 
@@ -68,32 +59,53 @@ msgstr "黑名单->X-Tunnel"
 msgid "All Smart-Router"
 msgstr "全部->Smart-Router"
 
+msgid "Auto-Try Direct"
+msgstr "自动尝试直连"
+
+msgid "Use IPv6 preferentially when Auto-Try Direct"
+msgstr "自动尝试直连时优先使用 IPv6"
+
+msgid "Auto-Try GAEProxy"
+msgstr "自动尝试 GAEProxy"
+
+msgid "Enable Fake CA"
+msgstr "允许替换证书"
+
+msgid "Block Advertisement"
+msgstr "阻止广告"
+
 msgid "Settings saved successfully."
 msgstr "设置保存成功。"
+
+msgid "https://github.com/XX-net/XX-Net/wiki/SmartRouter_rules_en"
+msgstr "https://github.com/XX-net/XX-Net/wiki/SmartRouter_rules_cn"
+
+msgid "Help documents"
+msgstr "帮助文档"
 
 msgid "Direct List"
 msgstr "直连"
 
 msgid "GAEProxy List"
-msgstr "走 GAEProxy"
+msgstr "走 GAE代理"
 
-msgid "SOCKS List"
-msgstr "走 SOCKS"
+msgid "X-Tunnel List"
+msgstr "走X-Tunnel"
 
 msgid "Redirect HTTPS"
 msgstr "重定向到 HTTPS"
 
-msgid "Black List"
-msgstr "黑名单"
+msgid "Advertisement Black List"
+msgstr "广告黑名单"
 
 msgid "Submit"
 msgstr "提交"
 
 msgid "Smart Router Log"
-msgstr "Smart Router 日志"
+msgstr "智能路由日志"
 
-# msgid "Smart Router"
-# msgstr "智能路由"
+msgid "Smart Router"
+msgstr "智能路由"
 
 msgid "Configuration"
 msgstr "配置"

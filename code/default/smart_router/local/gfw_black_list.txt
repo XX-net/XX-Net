@@ -83,7 +83,7 @@
 5isotoi5.org
 5maodang.com
 63i.com
-64memo
+64memo.com
 64museum.org
 64tianwang.com
 64wiki.com
@@ -117,7 +117,6 @@ a-normal-day.com
 a.hao123.com
 a248.e.akamai.net
 a5.com.ru
-aHR0cHM6Ly95ZWNsLm5ldA
 aa-usa.org
 aamacau.com
 abc.com
@@ -1315,7 +1314,6 @@ emuparadise.me
 en.favotter.net
 en.hao123.com
 enanyang.my
-ends
 enewstree.com
 enfal.de
 engagedaily.org
@@ -1602,7 +1600,6 @@ freeman2.com
 freemoren.com
 freemorenews.com
 freemuse.org
-freenet
 freenet-china.org
 freenetproject.org
 freenewscn.com
@@ -2716,8 +2713,6 @@ lushstories.com
 luxebc.com
 lvhai.org
 lvv2.com
-ly
-lyfhk.ne
 lyfhk.net
 lzmtnews.org
 m-sport.co.uk
@@ -3492,7 +3487,6 @@ premeforwindows7.com
 presentationzen.com
 presidentlee.tw
 prestige-av.com
-prisoner-state-secret-journal-premier
 prisoneralert.com
 pritunl.com
 privacybox.de
@@ -4576,8 +4570,7 @@ ukcdp.co.uk
 ukliferadio.co.uk
 ulike.net
 ulop.net
-ultrareach
-ultrasurf
+ultrasurf.us
 ultravpn.fr
 ultraxs.com
 umich.edu
@@ -5192,7 +5185,7 @@ zhanlve.org
 zhao.1984.city
 zhao.jinhai.de
 zhenghui.org
-zhengjian
+zhengjian.org
 zhengwunet.org
 zhenlibu.info
 zhenlibu1984.com
