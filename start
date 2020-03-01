@@ -23,9 +23,9 @@ goto_script_path() {
 }
 
 goto_script_path
-
-
-if python -V 2>&1| grep -q "Python 3" ;then
+if ! type python ; then
+    PYTHON="python2"
+elif python -V 2>&1| grep -q "Python 3" ;then
     PYTHON="python2"
 else
     PYTHON="python"
@@ -59,7 +59,7 @@ launchWithHungup() {
 
 # check command avalibility
 has_command() {
-    "$1" -v $1 > /dev/null 2>&1
+    type $1 > /dev/null 2>&1
 }
 
 openwrt_setup_env()
@@ -96,7 +96,7 @@ if [ $os_name = 'Linux' ]; then
             sudo yum install -y pyOpenSSL
         elif has_command pacman; then
             # ArchLinux
-            sudo pacman -S --noconfirm openssl python2-pyopenssl
+            sudo pacman -S --noconfirm python2-pyopenssl
         elif has_command opkg; then
             # OpenWrt
             echo "install python"
