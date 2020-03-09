@@ -55,7 +55,7 @@ sc start iphlpsvc
 netsh interface ipv6 reset
 
 :: Reset Group Policy Teredo
-..\..\..\python27\1.0\pythonw.exe win_reset_gp.py
+..\..\..\..\..\python27\2.0\pythonw.exe win_reset_gp.py
 
 netsh interface teredo set state type=enterpriseclient servername=teredo.remlab.net.
 
