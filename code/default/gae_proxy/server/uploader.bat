@@ -1,1 +1,1 @@
-..\..\python27\1.0\python.exe uploader.py %*
+..\..\..\..\python27\2.0\python.exe uploader.py %*

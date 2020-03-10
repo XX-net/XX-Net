@@ -16,8 +16,15 @@ class RandomGetSlice(object):
     def get(self):
         with self.lock:
             position = random.randint(0, self.fsize - (self.line_max_size*2))
-            self.fd.seek(position)
-            slice = self.fd.read(self.line_max_size * 2)
+            try:
+                self.fd.seek(position)
+                slice = self.fd.read(self.line_max_size * 2)
+            except Exception as e:
+                # xlog.warn("RandomGetSlice.get fail, fn:%s e:%r", self.fn, e)
+                self.fd.close()
+                self.fd = open(self.fn, "r")
+                self.fd.seek(position)
+                slice = self.fd.read(self.line_max_size * 2)
 
             if slice is None:
                 raise Exception("random read line fail:%s" % slice)
