@@ -95,4 +95,4 @@ class HostManager(HostManagerBase):
                 next_update_time = time.time() + (4 * 3600)
             except Exception as e:
                 next_update_time = time.time() + (1800)
-                self.logger.exception("updated cloudflare front domains from github fail:%r", e)
+                self.logger.warn("updated cloudflare front domains from github fail:%r", e)

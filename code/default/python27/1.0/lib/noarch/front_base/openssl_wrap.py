@@ -3,10 +3,10 @@
 # but OpenSSL is different then ssl, so need a wrapper
 
 # this wrap has a close callback.
-# Which is used by google ip manager(google_ip.py)
-# google ip manager keep a connection number counter for every ip.
+# Which is used by  ip manager
+#  ip manager keep a connection number counter for every ip.
 
-# the wrap is used to keep some attribute like ip/appid for ssl
+# the wrap is used to keep some attribute like ip_str/appid for ssl
 
 # __iowait and makefile is used for gevent but not use now.
 import sys
@@ -132,10 +132,10 @@ class SSLCert:
 
 class SSLConnection(object):
 
-    def __init__(self, context, sock, ip=None, on_close=None):
+    def __init__(self, context, sock, ip_str=None, on_close=None):
         self._context = context
         self._sock = sock
-        self.ip = ip
+        self.ip_str = ip_str
         self._connection = OpenSSL.SSL.Connection(context, sock)
         self._makefile_refs = 0
         self.on_close = on_close
@@ -151,7 +151,7 @@ class SSLConnection(object):
             socket.socket.close(self._sock)
             self.socket_closed = True
             if self.on_close:
-                self.on_close(self.ip)
+                self.on_close(self.ip_str)
                 
         global socks_num
         socks_num -= 1
@@ -301,7 +301,7 @@ class SSLConnection(object):
                 socket.socket.close(self._sock)
                 self.socket_closed = True
                 if self.on_close:
-                    self.on_close(self.ip)
+                    self.on_close(self.ip_str)
         else:
             self._makefile_refs -= 1
 

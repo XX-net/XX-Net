@@ -183,7 +183,7 @@ class HttpWorker(object):
         self.init_rtt = ssl_sock.handshake_time / 3
         self.rtt = self.init_rtt
         self.speed = 1
-        self.ip = ssl_sock.ip
+        self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
@@ -206,8 +206,8 @@ class HttpWorker(object):
         self.keep_running = False
         self.ssl_sock.close()
         if reason not in ["idle timeout"]:
-            self.logger.debug("%s worker close:%s", self.ip, reason)
-        self.ip_manager.report_connect_closed(self.ssl_sock.ip, reason)
+            self.logger.debug("%s worker close:%s", self.ip_str, reason)
+        self.ip_manager.report_connect_closed(self.ssl_sock.ip_str, reason)
         self.close_cb(self)
 
     def get_score(self):

@@ -205,6 +205,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "login_account": "%s" % (g.config.login_account),
                 "promote_code": g.promote_code,
                 "promoter": g.promoter,
+                "plans": g.plans,
                 "balance": "%f" % (g.balance),
                 "quota": "%d" % (g.quota),
                 "quota_list": g.quota_list,
@@ -352,7 +353,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             })
 
         plan = self.postvars['plan'][0]
-        if plan not in ["quarterly", "yearly"]:
+        if plan not in g.plans:
             xlog.warn("x_tunnel order plan %s not support", plan)
             return self.response_json({
                 "res": "fail",

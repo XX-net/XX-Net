@@ -133,7 +133,8 @@ class HttpsDispatcher(object):
 
             try:
                 self.on_ssl_created_cb(ssl_sock, check_free_work=False)
-            except:
+            except Exception as e:
+                #self.logger.exception("on_ssl_created_cb except:%r", e)
                 time.sleep(10)
 
             idle_num = 0
@@ -317,7 +318,7 @@ class HttpsDispatcher(object):
 
             get_worker_time = time.time()
             get_cost = get_worker_time - get_time
-            task.set_state("get_worker(%d):%s" % (get_cost, worker.ip))
+            task.set_state("get_worker(%d):%s" % (get_cost, worker.ip_str))
             task.worker = worker
             try:
                 worker.request(task)
@@ -428,7 +429,7 @@ class HttpsDispatcher(object):
         out_str = 'thread num:%d\r\n' % threading.activeCount()
         for w, r in w_r:
             out_str += "%s score:%d rtt:%d running:%d accept:%d live:%d inactive:%d processed:%d" % \
-                       (w.ip, w.get_score(), w.rtt, w.keep_running,  w.accept_task,
+                       (w.ip_str, w.get_score(), w.rtt, w.keep_running,  w.accept_task,
                         (now-w.ssl_sock.create_time), (now-w.last_recv_time), w.processed_tasks)
             if w.version == "2":
                 out_str += " continue_timeout:%d streams:%d ping_on_way:%d remote_win:%d send_queue:%d\r\n" % \

@@ -483,7 +483,7 @@ class DnsServer(object):
                 return
             except:
                 if time.time() - start_time > 5:
-                    xlog.warn("direct_query %s timeout", request)
+                    xlog.warn("direct_query %s to:%s timeout", server_ip, request)
                     break
 
     def on_udp_query(self, rsock, req_data, addr):

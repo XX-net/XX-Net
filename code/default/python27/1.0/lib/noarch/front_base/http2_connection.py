@@ -158,11 +158,11 @@ class Http2Worker(HttpWorker):
             # http/2 client use odd stream_id
             self.next_stream_id += 2
 
-            stream = Stream(self.logger, self.config, self, self.ip, stream_id, task,
-                        self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
-                        FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
-                        self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
-                        self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
+            stream = Stream(self.logger, self.config, self, self.ip_str, stream_id, task,
+                            self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
+                            FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
+                            self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],
+                            self.remote_settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE])
             self.streams[stream_id] = stream
             stream.start_request()
 
@@ -174,7 +174,7 @@ class Http2Worker(HttpWorker):
                 break
 
             if self.config.http2_show_debug:
-                self.logger.debug("%s Send:%s", self.ip, str(frame))
+                self.logger.debug("%s Send:%s", self.ip_str, str(frame))
             data = frame.serialize()
             try:
                 self._sock.send(data, flush=False)
@@ -193,13 +193,13 @@ class Http2Worker(HttpWorker):
                 self.last_send_time = time.time()
             except socket.error as e:
                 if e.errno not in (errno.EPIPE, errno.ECONNRESET):
-                    self.logger.warn("%s http2 send fail:%r", self.ip, e)
+                    self.logger.warn("%s http2 send fail:%r", self.ip_str, e)
                 else:
                     self.logger.exception("send error:%r", e)
 
                 self.close("send fail:%r" % e)
             except Exception as e:
-                self.logger.debug("http2 %s send error:%r", self.ip, e)
+                self.logger.debug("http2 %s send error:%r", self.ip_str, e)
                 self.close("send fail:%r" % e)
 
     def recv_loop(self):
@@ -306,7 +306,7 @@ class Http2Worker(HttpWorker):
         try:
             header = self._sock.recv(9)
         except Exception as e:
-            self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip, e, time.time() - self.last_recv_time)
+            self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e, time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)
             return
         self.last_recv_time = time.time()
@@ -316,7 +316,7 @@ class Http2Worker(HttpWorker):
 
         if length > FRAME_MAX_ALLOWED_LEN:
             self.logger.error("%s Frame size exceeded on stream %d (received: %d, max: %d)",
-                self.ip, frame.stream_id, length, FRAME_MAX_LEN)
+                              self.ip_str, frame.stream_id, length, FRAME_MAX_LEN)
             # self._send_rst_frame(frame.stream_id, 6) # 6 = FRAME_SIZE_ERROR
 
         try:
@@ -353,7 +353,7 @@ class Http2Worker(HttpWorker):
         frame.parse_body(data)
 
         if self.config.http2_show_debug:
-            self.logger.debug("%s Recv:%s", self.ip, str(frame))
+            self.logger.debug("%s Recv:%s", self.ip_str, str(frame))
 
         # Maintain our flow control window. We do this by delegating to the
         # chosen WindowManager.
@@ -371,7 +371,7 @@ class Http2Worker(HttpWorker):
                 self._send_cb(w)
 
         elif frame.type == PushPromiseFrame.type:
-            self.logger.error("%s receive push frame", self.ip,)
+            self.logger.error("%s receive push frame", self.ip_str, )
 
         # Work out to whom this frame should go.
         if frame.stream_id != 0:
@@ -381,7 +381,7 @@ class Http2Worker(HttpWorker):
             except KeyError as e:
                 if frame.type not in [WindowUpdateFrame.type]:
                     self.logger.exception("%s Unexpected stream identifier %d, frame.type:%s e:%r",
-                                   self.ip, frame.stream_id, frame, e)
+                                          self.ip_str, frame.stream_id, frame, e)
         else:
             self.receive_frame(frame)
 
@@ -436,15 +436,15 @@ class Http2Worker(HttpWorker):
             self.close("GoAway:%s inactive time:%d" % (error_string, time_cost))
 
         elif frame.type == BlockedFrame.type:
-            self.logger.warn("%s get BlockedFrame", self.ip)
+            self.logger.warn("%s get BlockedFrame", self.ip_str)
         elif frame.type in FRAMES:
             # This frame isn't valid at this point.
             #raise ValueError("Unexpected frame %s." % frame)
-            self.logger.error("%s Unexpected frame %s.", self.ip, frame)
+            self.logger.error("%s Unexpected frame %s.", self.ip_str, frame)
         else:  # pragma: no cover
             # Unexpected frames belong to extensions. Just drop it on the
             # floor, but log so that users know that something happened.
-            self.logger.error("%s Received unknown frame, type %d", self.ip, frame.type)
+            self.logger.error("%s Received unknown frame, type %d", self.ip_str, frame.type)
 
     def _update_settings(self, frame):
         if SettingsFrame.HEADER_TABLE_SIZE in frame.settings:
@@ -466,7 +466,7 @@ class Http2Worker(HttpWorker):
         if SettingsFrame.SETTINGS_MAX_FRAME_SIZE in frame.settings:
             new_size = frame.settings[SettingsFrame.SETTINGS_MAX_FRAME_SIZE]
             if not (FRAME_MAX_LEN <= new_size <= FRAME_MAX_ALLOWED_LEN):
-                self.logger.error("%s Frame size %d is outside of allowed range", self.ip, new_size)
+                self.logger.error("%s Frame size %d is outside of allowed range", self.ip_str, new_size)
 
                 # Tear the connection down with error code PROTOCOL_ERROR
                 self.close("bad max frame size")

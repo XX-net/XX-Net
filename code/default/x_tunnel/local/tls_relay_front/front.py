@@ -6,8 +6,8 @@ logger.set_buffer(500)
 
 from config import Config
 import host_manager
+import connect_creator
 from front_base.openssl_wrap import SSLContext
-from front_base.connect_creator import ConnectCreator
 from front_base.ip_manager import IpManager
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
@@ -19,6 +19,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
+tls_certs_path = os.path.join(module_data_path, "tls_certs")
 
 
 class Front(object):
@@ -36,10 +37,13 @@ class Front(object):
         if os.path.isfile(self.ca_cert_fn):
             self.openssl_context.set_ca(self.ca_cert_fn)
 
+        if not os.path.isdir(tls_certs_path):
+            os.mkdir(tls_certs_path)
+
         host_fn = os.path.join(module_data_path, "tls_host.json")
         self.host_manager = host_manager.HostManager(host_fn)
 
-        self.connect_creator = ConnectCreator(logger, self.config, self.openssl_context, self.host_manager)
+        self.connect_creator = connect_creator.ConnectCreator(logger, self.config, self.openssl_context, self.host_manager)
         self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
         ip_source = IpSimpleSource(self.config.ip_source_ips)
@@ -71,15 +75,28 @@ class Front(object):
         host_info = {}
         ca_certs = []
         ipss = []
-        for ip in ips:
-            dat = ips[ip]
+        for ip_str in ips:
+            dat = ips[ip_str]
             ca_cert = dat["ca_crt"]
             sni = dat["sni"]
 
-            host_info[ip] = {"sni":sni, "ca_crt":ca_cert}
+            host_info[ip_str] = {
+                "sni":sni,
+                "ca_crt":ca_cert,
+                "client_ca": dat["client_ca"],
+                "client_ca_fn": str(os.path.join(tls_certs_path, ip_str + ".ca")),
+                "client_key": dat["client_key"],
+                "client_key_fn": str(os.path.join(tls_certs_path, ip_str + ".key"))
+            }
             if ca_cert not in ca_certs:
                 ca_certs.append(ca_cert)
-            ipss.append(ip)
+            ipss.append(ip_str)
+
+            with open(host_info[ip_str]["client_ca_fn"], "w") as ca_fd:
+                ca_fd.write(dat["client_ca"])
+
+            with open(host_info[ip_str]["client_key_fn"], "w") as key_fd:
+                key_fd.write(dat["client_key"])
 
         self.ip_manager.update_ips(ipss)
         self.ip_manager.save(True)

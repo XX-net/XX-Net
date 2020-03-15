@@ -94,7 +94,7 @@ class Http1Worker(HttpWorker):
 
             if task == "ping":
                 if not self.head_request():
-                    self.ip_manager.recheck_ip(self.ssl_sock.ip)
+                    self.ip_manager.recheck_ip(self.ssl_sock.ip_str)
                     self.close("keep alive")
                     return
 
@@ -151,8 +151,8 @@ class Http1Worker(HttpWorker):
 
         except Exception as e:
             self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
-                             self.ip, e, time.time() - self.last_recv_time, task.timeout)
-            self.logger.warn('%s trace:%s', self.ip, self.get_trace())
+                             self.ip_str, e, time.time() - self.last_recv_time, task.timeout)
+            self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
 
             self.retry_task_cb(task)
             self.task = None
@@ -186,8 +186,8 @@ class Http1Worker(HttpWorker):
                     break
             except Exception as e:
                 self.logger.warn("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
-                               self.ip, response.chunked, task.url, task.timeout, e)
-                self.logger.warn('%s trace:%s', self.ip, self.get_trace())
+                                 self.ip_str, response.chunked, task.url, task.timeout, e)
+                self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
                 self.close("down fail")
                 return
 
@@ -199,8 +199,8 @@ class Http1Worker(HttpWorker):
 
         if read_target > data_len:
             self.logger.warn("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
-                           self.ip, response.chunked, task.url, task.timeout, e)
-            self.ip_manager.recheck_ip(self.ssl_sock.ip)
+                             self.ip_str, response.chunked, task.url, task.timeout, e)
+            self.ip_manager.recheck_ip(self.ssl_sock.ip_str)
             self.close("down fail")
 
         task.finish()
@@ -235,15 +235,15 @@ class Http1Worker(HttpWorker):
             data = request_data.encode()
             ret = self.ssl_sock.send(data)
             if ret != len(data):
-                self.logger.warn("h1 head send len:%r %d %s", ret, len(data), self.ip)
-                self.logger.warn('%s trace:%s', self.ip, self.get_trace())
+                self.logger.warn("h1 head send len:%r %d %s", ret, len(data), self.ip_str)
+                self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
                 return False
             response = simple_http_client.Response(self.ssl_sock)
             response.begin(timeout=5)
 
             status = response.status
             if status != 200:
-                self.logger.warn("%s host:%s head fail status:%d", self.ip, self.ssl_sock.host, status)
+                self.logger.warn("%s host:%s head fail status:%d", self.ip_str, self.ssl_sock.host, status)
                 return False
 
             content = response.readall(timeout=5)
@@ -252,8 +252,8 @@ class Http1Worker(HttpWorker):
             #self.ip_manager.update_ip(self.ip, self.rtt)
             return True
         except Exception as e:
-            self.logger.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip, e)
-            self.logger.warn('%s trace:%s', self.ip, self.get_trace())
+            self.logger.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip_str, e)
+            self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
             self.close("down fail")
         finally:
             self.request_onway = False

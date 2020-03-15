@@ -132,55 +132,8 @@
         <div class="section">
             <h4>{{ _("Plans and Pricing") }}</h4>
             <div class="row-fluid">
-                <ul class="thumbnails">
-                    <li class="span4">
-                        <div class="thumbnail">
-                            <div class="caption">
-                                <h1 class="price"><sup>$</sup> 4.5</h1>
-                                <ul class="details">
-                                    <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">300</div> <!-- .span4 -->
-                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
-                                    </li>
-                                    <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">3</div> <!-- .span4 -->
-                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
-                                    </li>
-                                </ul>
-                                <p>
-                                    <a href="javascript:void(0);" id="quarterly-plan-trigger" class="btn btn-primary btn-block">{{ _("Buy Now") }}</a>
-                                </p>
-                            </div> <!-- .caption -->
-                        </div> <!-- .thumbnail -->
-                    </li>
-                    <li class="span4">
-                        <div class="thumbnail">
-                            <div class="caption">
-                                <h1 class="price"><sup>$</sup> 15</h1>
-                                <ul class="details">
-                                    <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">1200</div> <!-- .span4 -->
-                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
-                                    </li>
-                                    <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">12</div> <!-- .span4 -->
-                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
-                                    </li>
-                                </ul>
-                                <p>
-                                    <a href="javascript:void(0);" id="yearly-plan-trigger" class="btn btn-primary btn-block">{{ _("Buy Now") }}</a>
-                                </p>
-                            </div> <!-- .caption -->
-                        </div> <!-- .thumbnail -->
-                    </li>
+                <ul class="thumbnails" id="plan-list">
+
                 </ul>
             </div> <!-- .row-fluid -->
         </div> <!-- .section -->
@@ -265,8 +218,6 @@
         <input type="hidden" name="on0" value="Plan">
         <label for="charge-plan">{{ _("Plan") }}:</label>
         <select id="charge-plan" name="os0">
-            <option value="Quarterly">{{ _("Quarterly") }} $4.50</option>
-            <option value="Yearly">{{ _("Yearly") }} $15.00</option>
         </select>
         <!-- Account Field -->
         <input type="hidden" name="on1" value="account">
@@ -331,6 +282,12 @@
     title('{{ _( "X-Tunnel Configuration" ) }}');
 </script>
 <script type="text/javascript">
+
+    $('a[href="#plans"]').click(function () {
+        window.refresh_timer.stop();
+        AdvSettingInit();
+    });
+
     $(function () {
         window.refresh_timer = $.timer(function () {
             getUserInfo(0);
@@ -451,6 +408,8 @@
                 $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
 
                 getAvailableBandwidth(result['quota_list']);
+
+                updatePlans(result['plans']);
             }
         });
     }
@@ -471,7 +430,66 @@
         $('#no-bandwidth').addClass('hide');
         $('#available-bandwidth').removeClass('hide');
     }
+
 </script>
+<script type="text/javascript">
+    function plan_compare(a, b){
+        if (a["cost"] > b["cost"]) return 1;
+        if (b["cost"] > a["cost"]) return -1;
+        return 0;
+    }
+
+    function updatePlans(plans) {
+        $('#plan-list').empty();
+        $('#charge-plan').empty();
+
+        var unordered_plans = [];
+        for ( var plan in plans ) {
+            var pe = plans[plan];
+            pe["plan"] = plan;
+            unordered_plans.push(pe);
+        }
+
+        var ordered_plans = unordered_plans.sort(plan_compare);
+
+        //for ( var plan_info in ordered_plans ) {
+        ordered_plans.forEach( function( plan_info ) {
+            var plan = plan_info["plan"];
+            var title = plan_info["title"];
+            var cost = plan_info["cost"];
+            var quota_G = plan_info["quota_G"];
+            var time_limit_month = plan_info["time_limit_month"];
+
+            var text = `<li class="span4">
+                        <div class="thumbnail">
+                            <div class="caption">
+                                <h1 class="price"><sup>$</sup> %s</h1><ul class="details">
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">%s</div> <!-- .span4 -->
+                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                    <li>
+                                        <div class="row-fluid">
+                                            <div class="span4 text-right">%s</div> <!-- .span4 -->
+                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
+                                        </div> <!-- .row-fluid -->
+                                    </li>
+                                </ul>
+                                <p>
+                                    <a href="javascript:void(0);" id="%s" title="%s" class="btn btn-primary btn-block plan-trigger">{{ _("Buy Now") }}</a>
+                                </p>
+                            </div> <!-- .caption -->
+                        </div> <!-- .thumbnail -->
+                    </li>`.format(cost, quota_G, time_limit_month, plan, title);
+            $('#plan-list').append(text);
+            $('#charge-plan').append('<option value="%s">{{ _("%s") }} $%s</option>'.format(title, title, cost));
+
+        });
+    }
+</script>
+
 <script type="text/javascript">
     function displayBandwidth(bandwidthRecord) {
         var expireTime          = bandwidthRecord['end_time'],
@@ -914,13 +932,12 @@
 </script>
 <!-- Plans -->
 <script type="text/javascript">
-    $('#quarterly-plan-trigger').click(function () {
-        orderPlan('Quarterly', 'quarterly');
+    $('body').on('click', '.plan-trigger', function() {
+        var title = $(this).attr('title');
+        var plan = $(this).attr('id');
+        orderPlan(title, plan);
     });
 
-    $('#yearly-plan-trigger').click(function () {
-        orderPlan('Yearly', "yearly");
-    });
 </script>
 <script type="text/javascript">
     function orderPlan(planName, planValue) {

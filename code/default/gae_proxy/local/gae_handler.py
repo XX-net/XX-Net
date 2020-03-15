@@ -309,16 +309,16 @@ def request_gae_server(headers, body, url, timeout):
         if response.status == 404:
             # xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
             front.appid_manager.report_not_exist(
-                appid, response.ssl_sock.ip)
-            # google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
+                appid, response.ssl_sock.ip_str)
+            # google_ip.report_connect_closed(response.ssl_sock.ip_str, "appid not exist")
             response.worker.close("appid not exist:%s" % appid)
             raise GAE_Exception(603, "appid not exist %s" % appid)
 
         if response.status == 503:
             xlog.warning('APPID %r out of Quota, remove it. %s',
-                         appid, response.ssl_sock.ip)
+                         appid, response.ssl_sock.ip_str)
             front.appid_manager.report_out_of_quota(appid)
-            # google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
+            # google_ip.report_connect_closed(response.ssl_sock.ip_str, "out of quota")
             response.worker.close("appid out of quota:%s" % appid)
             raise GAE_Exception(604, "appid out of quota:%s" % appid)
 
@@ -331,7 +331,7 @@ def request_gae_server(headers, body, url, timeout):
             # but can't use as GAE server
             # so we need remove it immediately
 
-            xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip, response.headers,
+            xlog.warn("IP:%s not support GAE, headers:%s status:%d", response.ssl_sock.ip_str, response.headers,
                       response.status)
             response.worker.close("ip not support GAE")
             raise GAE_Exception(602, "ip not support GAE")
@@ -342,13 +342,13 @@ def request_gae_server(headers, body, url, timeout):
             raise GAE_Exception(605, "status:%d" % response.status)
 
         if response.status != 200:
-            xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip,
+            xlog.warn("GAE %s appid:%s status:%d", response.ssl_sock.ip_str,
                       appid, response.status)
 
         return response
     except GAE_Exception as e:
         if e.error_code not in (600, 603, 604):
-            front.ip_manager.recheck_ip(response.ssl_sock.ip, first_report=False)
+            front.ip_manager.recheck_ip(response.ssl_sock.ip_str, first_report=False)
         raise e
 
 
@@ -935,14 +935,14 @@ class RangeFetch2(object):
                     percent = begin * 100 / self.req_end
 
                     xlog.debug('RangeFetch [%s] %d%% length:%s range:%s %s %s',
-                               response.ssl_sock.ip, percent,
+                               response.ssl_sock.ip_str, percent,
                                content_length, content_range, self.url, response.task.get_trace())
                     break
 
                 data = response.task.read()
                 if not data:
                     xlog.warn("RangeFetch [%s] get body fail, begin:%d %s",
-                              response.ssl_sock.ip, begin, self.url)
+                              response.ssl_sock.ip_str, begin, self.url)
                     break
 
                 data_len = len(data)

@@ -75,10 +75,22 @@ class CheckNetwork(object):
             self.triger_check_network(True)
 
     def get_stat(self):
-        return self.network_stat
+        if config.check_local_network_rules == "force_fail":
+            return "Fail"
+        elif config.check_local_network_rules == "force_ok":
+            return "OK"
+        else:
+            return self.network_stat
 
     def is_ok(self):
-        return self.network_stat == "OK"
+        if config.check_local_network_rules == "normal":
+            return self.network_stat == "OK"
+        elif config.check_local_network_rules == "force_fail":
+            return False
+        elif config.check_local_network_rules == "force_ok":
+            return True
+        else:
+            return self.network_stat == "OK"
 
     def _test_host(self, url):
         try:

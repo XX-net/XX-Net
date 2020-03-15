@@ -12,7 +12,7 @@ class CheckIp(object):
         self.connect_creator = connect_creator
 
     def check_http1(self, ssl_sock, host):
-        self.logger.info("ip:%s use http/1.1", ssl_sock.ip)
+        self.logger.info("ip:%s use http/1.1", ssl_sock.ip_str)
 
         try:
             request_data = 'GET %s HTTP/1.1\r\nHost: %s\r\n\r\n' % (self.config.check_ip_path, host)
@@ -22,13 +22,13 @@ class CheckIp(object):
             response.begin(timeout=5)
             return response
         except Exception as e:
-            self.logger.debug("check ip %s http1 e:%r", ssl_sock.ip, e)
+            self.logger.debug("check ip %s http1 e:%r", ssl_sock.ip_str, e)
             return False
 
     def check_http2(self, ssl_sock, host):
-        self.logger.debug("ip:%s use http/2", ssl_sock.ip)
+        self.logger.debug("ip:%s use http/2", ssl_sock.ip_str)
         try:
-            conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ssl_sock.ip, port=443)
+            conn = hyper.HTTP20Connection(ssl_sock, host=host, ip=ssl_sock.ip_str, port=443)
             conn.request('GET', self.config.check_ip_path)
             response = conn.get_response()
             return response

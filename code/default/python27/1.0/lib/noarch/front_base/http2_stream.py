@@ -51,7 +51,7 @@ class Stream(object):
                  logger,
                  config,
                  connection,
-                 ip,
+                 ip_str,
                  stream_id,
                  task,
                  send_cb,
@@ -65,7 +65,7 @@ class Stream(object):
         self.logger = logger
         self.config = config
         self.connection = connection
-        self.ip = ip
+        self.ip_str = ip_str
         self.stream_id = stream_id
         self.task = task
         self.state = STATE_IDLE
@@ -217,7 +217,7 @@ class Stream(object):
             #self.response_header_datas = [frame.data]
             self.response_header_datas.append(frame.data)
         elif frame.type == PushPromiseFrame.type:
-            self.logger.error("%s receive PushPromiseFrame:%d", self.ip, frame.stream_id)
+            self.logger.error("%s receive PushPromiseFrame:%d", self.ip_str, frame.stream_id)
         elif frame.type == ContinuationFrame.type:
             # Continue a header block begun with either HEADERS or PUSH_PROMISE.
             self.response_header_datas.append(frame.data)
@@ -253,16 +253,16 @@ class Stream(object):
             # Rest Frame send from server is not define in RFC
             inactive_time = time.time() - self.connection.last_recv_time
             self.logger.debug("%s Stream %d Rest by server, inactive:%d. error code:%d",
-                       self.ip, self.stream_id, inactive_time, frame.error_code)
+                       self.ip_str, self.stream_id, inactive_time, frame.error_code)
             self.connection.close("RESET")
         elif frame.type in FRAMES:
             # This frame isn't valid at this point.
             #raise ValueError("Unexpected frame %s." % frame)
-            self.logger.error("%s Unexpected frame %s.", self.ip, frame)
+            self.logger.error("%s Unexpected frame %s.", self.ip_str, frame)
         else:  # pragma: no cover
             # Unknown frames belong to extensions. Just drop it on the
             # floor, but log so that users know that something happened.
-            self.logger.error("%s Received unknown frame, type %d", self.ip, frame.type)
+            self.logger.error("%s Received unknown frame, type %d", self.ip_str, frame.type)
             pass
 
         if 'END_HEADERS' in frame.flags:
@@ -371,7 +371,7 @@ class Stream(object):
             return
 
         self.logger.warn("h2 timeout %s task_trace:%s worker_trace:%s",
-                  self.connection.ssl_sock.ip,
+                  self.connection.ssl_sock.ip_str,
                   self.task.get_trace(),
                   self.connection.get_trace())
         self.task.set_state("timeout")

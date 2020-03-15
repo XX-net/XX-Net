@@ -131,7 +131,7 @@ class ConnectPool():
             i = 0
             for item in pool:
                 sock,t = item
-                out_str += "%d \t %s handshake:%d not_active_time:%d \r\n" % (i, sock.ip, t, time.time() - sock.last_use_time)
+                out_str += "%d \t %s handshake:%d not_active_time:%d \r\n" % (i, sock.ip_str, t, time.time() - sock.last_use_time)
                 i += 1
         finally:
             self.pool_lock.release()
@@ -193,7 +193,7 @@ class ConnectManager(object):
             for ssl_sock in to_keep_live_list:
                 inactive_time = time.time() - ssl_sock.last_use_time
                 if inactive_time > self.config.https_keep_alive or not self.ssl_timeout_cb:
-                    self.ip_manager.report_connect_closed(ssl_sock.ip, "alive_timeout")
+                    self.ip_manager.report_connect_closed(ssl_sock.ip_str, "alive_timeout")
                     ssl_sock.close()
                 else:
                     # put ssl to worker
@@ -273,32 +273,32 @@ class ConnectManager(object):
         except Exception as e:
             self.logger.exception("connect_process except:%r", e)
 
-    def _create_ssl_connection(self, ip):
-        if not self.check_local_network.is_ok(ip):
-            self.logger.debug("connect %s blocked: network fail", ip)
-            self.ip_manager.ssl_closed(ip, "network fail")
+    def _create_ssl_connection(self, ip_str):
+        if not self.check_local_network.is_ok(ip_str):
+            self.logger.debug("connect %s blocked: network fail", ip_str)
+            self.ip_manager.ssl_closed(ip_str, "network fail")
             time.sleep(10)
             return
 
         ssl_sock = None
 
         try:
-            ssl_sock = self.connect_creator.connect_ssl(ip, port=443,
-                                            close_cb=self.ip_manager.ssl_closed)
+            ssl_sock = self.connect_creator.connect_ssl(ip_str,
+                                                        close_cb=self.ip_manager.ssl_closed)
 
-            self.ip_manager.update_ip(ip, ssl_sock.handshake_time)
+            self.ip_manager.update_ip(ip_str, ssl_sock.handshake_time)
             self.logger.debug("create_ssl update ip:%s time:%d h2:%d sni:%s, host:%s",
-                              ip, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.host)
+                              ip_str, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.host)
 
             return ssl_sock
         except Exception as e:
-            self.ip_manager.report_connect_fail(ip, str(e))
+            self.ip_manager.report_connect_fail(ip_str, str(e))
 
-            if not self.check_local_network.is_ok(ip):
-                self.logger.debug("connect %s network fail", ip)
+            if not self.check_local_network.is_ok(ip_str):
+                self.logger.debug("connect %s network fail", ip_str)
                 time.sleep(10)
             else:
-                self.logger.debug("connect %s fail:%r", ip, e)
+                self.logger.debug("connect %s fail:%r", ip_str, e)
                 time.sleep(1)
 
             if ssl_sock:
@@ -320,7 +320,7 @@ class ConnectManager(object):
                         return ssl_sock
                     else:
                         # self.logger.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
-                        self.ip_manager.report_connect_closed(ssl_sock.ip, "get_timeout")
+                        self.ip_manager.report_connect_closed(ssl_sock.ip_str, "get_timeout")
                         ssl_sock.close()
                         continue
                 else:

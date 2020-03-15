@@ -61,6 +61,34 @@ def check_ip_valid(ip):
         return check_ip_valid4(ip)
 
 
+def get_ip_port(ip_str, port=443):
+    if "." in ip_str:
+        # ipv4
+        if ":" in ip_str:
+            # format is ip:port
+            ps = ip_str.split(":")
+            ip = ps[0]
+            port = ps[1]
+        else:
+            # format is ip
+            ip = ip_str
+    else:
+        #ipv6
+        if "[" in ip_str:
+            # format: [ab01:12:23:34::1]
+            # format: [ab01:12:23:34::1]:23
+
+            p1 = ip_str.find("[")
+            p2 = ip_str.find("]")
+            ip = ip_str[p1+1:p2]
+            port_str = ip_str[p2+1:]
+            if len(port_str) > 0:
+                port = port_str[1:]
+        else:
+            ip = ip_str
+
+    return ip, int(port)
+
 domain_allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
 
 
@@ -227,4 +255,8 @@ def get_printable(s):
 
 
 if __name__ == '__main__':
-    print(is_private_ip("fa00::1"))
+    #print(get_ip_port("1.2.3.4", 443))
+    #print(get_ip_port("1.2.3.4:8443", 443))
+    print(get_ip_port("[face:ab1:11::0]", 443))
+    print(get_ip_port("ab01::1", 443))
+    print(get_ip_port("[ab01:55::1]:8444", 443))

@@ -34,5 +34,11 @@ class HostManager(HostManagerBase):
 
         return self.info[ip]["sni"], ""
 
+    def get_info(self, ip):
+        if ip not in self.info:
+            raise Exception
+
+        return self.info[ip]
+
     def reset(self):
         self.info = {}

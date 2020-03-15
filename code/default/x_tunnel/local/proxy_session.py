@@ -825,6 +825,7 @@ def request_balance(account=None, password=None, is_register=False, update_serve
 
         g.quota_list = info["quota_list"]
         g.quota = calculate_quota_left(g.quota_list)
+        g.plans = info["plans"]
         if g.quota <= 0:
             xlog.warn("no quota")
 

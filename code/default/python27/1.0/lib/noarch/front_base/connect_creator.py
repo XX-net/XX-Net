@@ -8,6 +8,7 @@ SSLError = OpenSSL.SSL.WantReadError
 
 from pyasn1.codec.der import decoder as der_decoder
 import socks
+import utils
 from subj_alt_name import SubjectAltName
 import openssl_wrap
 
@@ -84,14 +85,15 @@ class ConnectCreator(object):
         ssl_cert = openssl_wrap.SSLCert(cert)
         ssl_sock.domain = ssl_cert.cn
 
-    def connect_ssl(self, ip, port=443, sni="", close_cb=None):
+    def connect_ssl(self, ip_str, sni="", close_cb=None):
         if sni:
             host = sni
         else:
-            sni, host = self.host_manager.get_sni_host(ip)
+            sni, host = self.host_manager.get_sni_host(ip_str)
 
         host = str(host)
         sni = str(sni)
+        ip, port = utils.get_ip_port(ip_str)
 
         if int(self.config.PROXY_ENABLE):
             sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
@@ -105,7 +107,7 @@ class ConnectCreator(object):
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 
-        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip, on_close=close_cb)
+        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip_str, on_close=close_cb)
         ssl_sock.set_connect_state()
 
         if sni:
@@ -153,7 +155,8 @@ class ConnectCreator(object):
         connect_time = int((time_connected - time_begin) * 1000)
         handshake_time = int((time_handshaked - time_begin) * 1000)
         # sometimes, we want to use raw tcp socket directly(select/epoll), so setattr it to ssl socket.
-        ssl_sock.ip = ip
+        ssl_sock.ip_str = ip_str
+        #ssl_sock.ip = ip
         ssl_sock._sock = sock
         ssl_sock.fd = sock.fileno()
         ssl_sock.create_time = time_begin
