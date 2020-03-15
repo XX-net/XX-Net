@@ -247,7 +247,7 @@ lwIDAQAB
         self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
 
         # there are only hundreds of GAE IPs, we don't need a large threads num
-        self.max_scan_ip_thread_num = min(self.max_scan_ip_thread_num, 30)
+        self.max_scan_ip_thread_num = min(self.max_scan_ip_thread_num, 200)
 
         if need_save:
             self.save()
