@@ -18,6 +18,7 @@ promote_code = ""
 promoter = ""
 quota_list = {}
 quota = 0
+paypal_button_id = ""
 plans = {}
 
 server_host = ""

@@ -205,6 +205,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "login_account": "%s" % (g.config.login_account),
                 "promote_code": g.promote_code,
                 "promoter": g.promoter,
+                "paypal_button_id": g.paypal_button_id,
                 "plans": g.plans,
                 "balance": "%f" % (g.balance),
                 "quota": "%d" % (g.quota),

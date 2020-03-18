@@ -225,7 +225,7 @@
     </div> <!-- .modal-body -->
     <div class="modal-footer">
         <input type="hidden" name="cmd" value="_s-xclick">
-        <input type="hidden" name="hosted_button_id" value="WBX5H8PS54N22">
+        <input type="hidden" name="hosted_button_id" value="">
         <input type="hidden" name="currency_code" value="USD">
         <a href="javascript:void(0);" class="btn" data-dismiss="modal">{{ _("Close") }}</a>
         <button class="btn btn-primary">{{ _("Buy Now") }}</button>
@@ -409,6 +409,7 @@
 
                 getAvailableBandwidth(result['quota_list']);
 
+                update_paypal_button_id(result['paypal_button_id']);
                 updatePlans(result['plans']);
             }
         });
@@ -433,6 +434,10 @@
 
 </script>
 <script type="text/javascript">
+    function update_paypal_button_id(id){
+        $('input[name$="hosted_button_id"]').val(id);
+    }
+
     function plan_compare(a, b){
         if (a["cost"] > b["cost"]) return 1;
         if (b["cost"] > a["cost"]) return -1;

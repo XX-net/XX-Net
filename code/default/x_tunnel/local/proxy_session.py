@@ -564,7 +564,7 @@ class ProxySession():
             pack_type = 2
 
             if self.on_road_num > g.config.concurent_thread_num * 0.6:
-                server_timeout = 0
+                server_timeout = 1
             else:
                 server_timeout = g.config.roundtrip_timeout
 
@@ -589,8 +589,8 @@ class ProxySession():
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
 
-            #xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-            #           transfer_no, send_data_len, send_ack_len, server_timeout)
+            xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+                       transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                   path="/data?tid=%d" % transfer_no,
@@ -679,8 +679,8 @@ class ProxySession():
                 continue
 
             time_cost, server_send_pool_size, data_len, ack_len = struct.unpack("<IIIH", payload.get(14))
-            xlog.debug("roundtrip time:%d cost:%d transfer_no:%d send:%d rcv:%d ",
-                roundtrip_time, time_cost, transfer_no, send_data_len, len(content))
+            xlog.debug("roundtrip time:%d cost:%d transfer_no:%d send:%d rcv:%d server_send_pool_size:%d",
+                roundtrip_time, time_cost, transfer_no, send_data_len, len(content), server_send_pool_size)
 
             self.trigger_more(server_send_pool_size)
 
@@ -825,6 +825,7 @@ def request_balance(account=None, password=None, is_register=False, update_serve
 
         g.quota_list = info["quota_list"]
         g.quota = calculate_quota_left(g.quota_list)
+        g.paypal_button_id = info["paypal_button_id"]
         g.plans = info["plans"]
         if g.quota <= 0:
             xlog.warn("no quota")
