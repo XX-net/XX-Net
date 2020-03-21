@@ -22,7 +22,7 @@ class HostManager(HostManagerBase):
         
     def load(self):
         for fn in [self.fn, self.default_fn]:
-            if not os.path.isfile(self.fn):
+            if not os.path.isfile(fn):
                 continue
 
             lns = []
