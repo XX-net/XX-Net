@@ -1,6 +1,6 @@
 
-import global_var as g
-import connect_manager
+from . import global_var as g
+from . import connect_manager
 from xlog import getLogger
 xlog = getLogger("smart_router")
 

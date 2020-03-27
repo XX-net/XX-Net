@@ -22,7 +22,7 @@ class HostManager(HostManagerBase):
         
     def load(self):
         for fn in [self.fn, self.default_fn]:
-            if not os.path.isfile(self.fn):
+            if not os.path.isfile(fn):
                 continue
 
             lns = []
@@ -87,7 +87,7 @@ class HostManager(HostManagerBase):
 
                 if need_update:
                     with open(front_domains_fn, "w") as fd:
-                        fd.write(content)
+                        fd.write(content.decode("utf-8"))
                     self.load()
 
                     self.logger.info("updated cloudflare front domains from github.")
@@ -95,4 +95,4 @@ class HostManager(HostManagerBase):
                 next_update_time = time.time() + (4 * 3600)
             except Exception as e:
                 next_update_time = time.time() + (1800)
-                self.logger.warn("updated cloudflare front domains from github fail:%r", e)
+                self.logger.exception("updated cloudflare front domains from github fail:%r", e)

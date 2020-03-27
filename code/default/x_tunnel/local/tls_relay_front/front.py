@@ -4,9 +4,9 @@ import xlog
 logger = xlog.getLogger("tls_relay")
 logger.set_buffer(500)
 
-from config import Config
-import host_manager
-import connect_creator
+from .config import Config
+from . import host_manager
+from . import connect_creator
 from front_base.openssl_wrap import SSLContext
 from front_base.ip_manager import IpManager
 from front_base.http_dispatcher import HttpsDispatcher
@@ -36,6 +36,9 @@ class Front(object):
         self.openssl_context = SSLContext(logger)
         if os.path.isfile(self.ca_cert_fn):
             self.openssl_context.set_ca(self.ca_cert_fn)
+
+        if not os.path.isdir(module_data_path):
+            os.mkdir(module_data_path)
 
         if not os.path.isdir(tls_certs_path):
             os.mkdir(tls_certs_path)

@@ -1,14 +1,14 @@
 import time
 import socket
 import struct
-import urlparse
+import urllib.parse
 import select
 
-import pac_server
-import global_var as g
-from socket_wrap import SocketWrap
+from . import pac_server
+from . import global_var as g
+from .socket_wrap import SocketWrap
 import utils
-from smart_route import handle_ip_proxy, handle_domain_proxy, netloc_to_host_port
+from .smart_route import handle_ip_proxy, handle_domain_proxy, netloc_to_host_port
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -20,11 +20,11 @@ class ProxyServer():
 
     def __init__(self, sock, client, args):
         self.conn = sock
-        self.rfile = socket._fileobject(self.conn, "rb", -1)
-        self.wfile = socket._fileobject(self.conn, "wb", 0)
+        self.rfile = self.conn.makefile("rb", 0)
+        self.wfile = self.conn.makefile("wb", 0)
         self.client_address = client
 
-        self.read_buffer = ""
+        self.read_buffer = b""
         self.buffer_start = 0
         self.support_redirect = True
 
@@ -65,13 +65,13 @@ class ProxyServer():
             if not socks_version:
                 return
 
-            if socks_version == "\x04":
+            if socks_version == b"\x04":
                 self.socks4_handler()
-            elif socks_version == "\x05":
+            elif socks_version == b"\x05":
                 self.socks5_handler()
-            elif socks_version == "C":
+            elif socks_version == b"C":
                 self.https_handler()
-            elif socks_version in ["G", "P", "D", "O", "H", "T"]:
+            elif socks_version in [b"G", b"P", b"D", b"O", b"H", b"T"]:
                 self.http_handler()
             else:
                 xlog.warn("socks version:%s[%s] not supported", socks_version, utils.str2hex(socks_version))
@@ -87,7 +87,7 @@ class ProxyServer():
         sock.setblocking(0)
         try:
             while True:
-                n1 = self.read_buffer.find("\x00", self.buffer_start)
+                n1 = self.read_buffer.find(b"\x00", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
@@ -112,7 +112,7 @@ class ProxyServer():
         sock.setblocking(0)
         try:
             while True:
-                n1 = self.read_buffer.find("\r\n", self.buffer_start)
+                n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 2
@@ -137,11 +137,11 @@ class ProxyServer():
         sock.setblocking(0)
         try:
             while True:
-                if self.read_buffer[self.buffer_start:] == "\r\n":
+                if self.read_buffer[self.buffer_start:] == b"\r\n":
                     self.buffer_start += 2
                     return ""
 
-                n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
+                n1 = self.read_buffer.find(b"\r\n\r\n", self.buffer_start)
                 if n1 > -1:
                     block = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 4
@@ -205,7 +205,7 @@ class ProxyServer():
         data = self.read_bytes(6)
         port = struct.unpack(">H", data[0:2])[0]
         addr_pack = data[2:6]
-        if addr_pack[0:3] == '\x00\x00\x00' and addr_pack[3] != '\x00':
+        if addr_pack[0:3] == b'\x00\x00\x00' and addr_pack[3:4] != b'\x00':
             domain_mode = True
         else:
             ip = socket.inet_ntoa(addr_pack)
@@ -240,24 +240,24 @@ class ProxyServer():
             xlog.warn("socks5 protocol error:%r", e)
             return
 
-        socks_version = ord(data[0])
+        socks_version = ord(data[0:1])
         if socks_version != 5:
             xlog.warn("request version:%d error", socks_version)
             return
 
-        command = ord(data[1])
+        command = ord(data[1:2])
         if command != 1:  # 1. Tcp connect
             xlog.warn("request not supported command mode:%d", command)
             sock.send(b"\x05\x07\x00\x01")  # Command not supported
             return
 
-        addrtype_pack = data[3]
+        addrtype_pack = data[3:4]
         addrtype = ord(addrtype_pack)
         if addrtype == 1:  # IPv4
             addr_pack = self.read_bytes(4)
             addr = socket.inet_ntoa(addr_pack)
         elif addrtype == 3:  # Domain name
-            domain_len_pack = self.read_bytes(1)[0]
+            domain_len_pack = self.read_bytes(1)[0:1]
             domain_len = ord(domain_len_pack)
             domain = self.read_bytes(domain_len)
             addr_pack = domain_len_pack + domain
@@ -283,23 +283,22 @@ class ProxyServer():
 
     def https_handler(self):
         line = self.read_crlf_line()
-        line = line.decode('iso-8859-1')
+        line = line
         words = line.split()
         if len(words) == 3:
             command, path, version = words
         elif len(words) == 2:
             command, path = words
-            version = "HTTP/1.1"
+            version = b"HTTP/1.1"
         else:
             xlog.warn("https req line fail:%s", line)
             return
 
-        if command != "CONNECT":
+        if command != b"CONNECT":
             xlog.warn("https req line fail:%s", line)
             return
 
-        host, _, port = path.rpartition(':')
-        host = host.encode()
+        host, _, port = path.rpartition(b':')
         port = int(port)
 
         header_block = self.read_headers()
@@ -312,7 +311,7 @@ class ProxyServer():
 
     def http_handler(self):
         req_data = self.conn.recv(65537, socket.MSG_PEEK)
-        rp = req_data.split("\r\n")
+        rp = req_data.split(b"\r\n")
         req_line = rp[0]
 
         words = req_line.split()
@@ -320,30 +319,27 @@ class ProxyServer():
             method, url, http_version = words
         elif len(words) == 2:
             method, url = words
-            http_version = "HTTP/1.1"
+            http_version = b"HTTP/1.1"
         else:
             xlog.warn("http req line fail:%s", req_line)
             return
 
-        if url.lower().startswith("http://"):
-            o = urlparse.urlparse(url)
+        if url.lower().startswith(b"http://"):
+            o = urllib.parse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
-            url_prex_len = url[7:].find("/")
+            url_prex_len = url[7:].find(b"/")
             if url_prex_len >= 0:
                 url_prex_len += 7
                 path = url[url_prex_len:]
             else:
                 url_prex_len = len(url)
-                path = "/"
+                path = b"/"
         else:
             # not proxy request, should be PAC
             xlog.debug("PAC %s %s from:%s", method, url, self.client_address)
             handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
             return handler.handle()
-
-        #req_d = self.conn.recv(len(req_line))
-        #req_d = req_d.replace(url, path)
 
         sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
         sock.replace_pattern = [url[:url_prex_len], ""]

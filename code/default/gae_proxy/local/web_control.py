@@ -3,22 +3,20 @@
 
 
 import platform
-import urlparse
+import urllib.parse
 import json
 import os
 import re
 import subprocess
-import cgi
 import sys
 import datetime
 import locale
 import time
 import hashlib
 import OpenSSL
-import httplib
 
-import yaml
 import simple_http_server
+import simple_http_client
 import env_info
 import utils
 
@@ -26,12 +24,12 @@ import front_base.openssl_wrap as openssl_wrap
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
-from config import config, direct_config
-import check_local_network
-import cert_util
-import ipv6_tunnel
-from front import front, direct_front
-import download_gae_lib
+from .config import config, direct_config
+from . import check_local_network
+from . import cert_util
+from . import ipv6_tunnel
+from .front import front, direct_front
+from . import download_gae_lib
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -48,7 +46,7 @@ def get_fake_host():
 def test_appid_exist(ssl_sock, appid):
     request_data = 'GET /_gh/ HTTP/1.1\r\nHost: %s.appspot.com\r\n\r\n' % appid
     ssl_sock.send(request_data.encode())
-    response = httplib.HTTPResponse(ssl_sock, buffering=True)
+    response = simple_http_client.Response(ssl_sock)
 
     response.begin()
     if response.status == 404:
@@ -63,7 +61,7 @@ def test_appid_exist(ssl_sock, appid):
         xlog.warn("test appid %s status:%d", appid, response.status)
 
     content = response.read()
-    if "GoAgent" not in content:
+    if b"GoAgent" not in content:
         # xlog.warn("app check %s content:%s", appid, content)
         return False
 
@@ -121,7 +119,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile.write(b'HTTP/1.1 403\r\nConnection: close\r\n\r\n')
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/status":
@@ -157,8 +155,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         elif path == "/quit":
             front.stop()
             direct_front.stop()
-            data = "Quit"
-            self.wfile.write(('HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % ('text/plain', len(data))).encode())
+            data = b"Quit"
+            self.wfile.write((b'HTTP/1.1 200\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (b'text/plain', len(data))).encode())
             self.wfile.write(data)
             #sys.exit(0)
             #quit()
@@ -212,7 +210,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def do_POST(self):
         try:
             refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
+            netloc = urllib.parse.urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 xlog.warn("web control ref:%s refuse", netloc)
                 return
@@ -220,19 +218,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             pass
 
         xlog.debug ('GAEProxy web_control %s %s %s ', self.address_string(), self.command, self.path)
-        try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-            if ctype == 'multipart/form-data':
-                self.postvars = cgi.parse_multipart(self.rfile, pdict)
-            elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
-                self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
-            else:
-                self.postvars = {}
-        except:
-            self.postvars = {}
 
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == '/deploy':
             return self.req_deploy_handler()
         elif path == "/config":
@@ -246,8 +233,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         cmd = "get_last"
@@ -267,14 +254,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def get_launcher_version(self):
-        data_path = os.path.abspath( os.path.join(top_path, 'data', 'launcher', 'config.yaml'))
-        try:
-            config = yaml.load(file(data_path, 'r'))
-            return config["modules"]["launcher"]["current_version"]
-            #print yaml.dump(config)
-        except yaml.YAMLError, exc:
-            print "Error in configuration file:", exc
-            return "unknown"
+        return "unknown"
 
     @staticmethod
     def xxnet_version():
@@ -315,8 +295,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         return lang_code
 
     def req_status_handler(self):
-        if "user-agent" in self.headers.dict:
-            user_agent = self.headers.dict["user-agent"]
+        if "User-Agent" in self.headers:
+            user_agent = self.headers["User-Agent"]
         else:
             user_agent = ""
 
@@ -367,8 +347,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc('text/html', data)
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         appid_updated = False
@@ -435,7 +415,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     front.connect_manager.new_conn_pool.clear()
                     direct_front.connect_manager.new_conn_pool.clear()
                     front.http_dispatcher.close_all_worker()
-                    for _, http_dispatcher in direct_front.dispatchs.items():
+                    for _, http_dispatcher in list(direct_front.dispatchs.items()):
                         http_dispatcher.close_all_worker()
 
                 data = '{"res":"success"}'
@@ -447,8 +427,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_deploy_handler(self):
         global deploy_proc
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         log_path = os.path.abspath(os.path.join(current_path, os.pardir, "server", 'upload.log'))
@@ -506,8 +486,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc('text/html', data)
 
     def req_importip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['importip']:
@@ -537,8 +517,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc('text/html', data)
 
     def req_test_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         ip = reqs['ip'][0]
         result = front.check_ip.check_ip(ip)
@@ -602,7 +582,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 str_out += "%d(%s) " % (time_per, v)
             data += "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>" \
                     "<td>%d</td><td>%d</td><td>%s</td></tr>\n" % \
-                    (i, ip, handshake_time, fail_times, down_fail, links, get_time, success_time, fail_time, down_fail_time, \
+                    (i, ip, handshake_time, fail_times, down_fail, links, get_time, success_time, fail_time, down_fail_time,
                     active_time, str_out)
             i += 1
 
@@ -611,8 +591,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_scan_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_range']:
             data = front.ipv4_source.load_range_content()
@@ -621,9 +601,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             content = self.postvars['ip_range'][0]
 
             #check ip_range checksums, update if needed
-            default_digest = hashlib.md5(front.ipv4_source.load_range_content(default=True)).hexdigest()
-            old_digest = hashlib.md5(front.ipv4_source.load_range_content()).hexdigest()
-            new_digest = hashlib.md5(content).hexdigest()
+            default_digest = hashlib.md5(utils.to_bytes(front.ipv4_source.load_range_content(default=True))).hexdigest()
+            old_digest = hashlib.md5(utils.to_bytes(front.ipv4_source.load_range_content())).hexdigest()
+            new_digest = hashlib.md5(utils.to_bytes(content)).hexdigest()
 
             if new_digest == default_digest:
                 front.ipv4_source.remove_user_range()
@@ -691,8 +671,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_check_ip_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ""
         if reqs['cmd'] == ['get_process']:
             all_ip_num = len(front.ip_manager.ip_dict)
@@ -730,8 +710,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_ipv6_tunnel_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         log_path = os.path.join(data_path, "ipv6_tunnel.log")
@@ -779,7 +759,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
             status = ipv6_tunnel.state()
 
-            data = json.dumps({'status': status, 'log': content.decode("GBK"), 'time': time_now})
+            data = json.dumps({'status': status, 'log': content, 'time': time_now})
 
         elif reqs['cmd'] == ['get_priority']:
             data = json.dumps({'res': ipv6_tunnel.state_pp(), 'time': time_now})

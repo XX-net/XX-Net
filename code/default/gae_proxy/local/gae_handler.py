@@ -60,14 +60,15 @@ import xstruct as struct
 import re
 import string
 import ssl
-import urlparse
+import urllib.parse
 import threading
 import zlib
 import traceback
 from mimetypes import guess_type
 
-import check_local_network
-from front import front
+from . import check_local_network
+from .front import front
+import utils
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -139,116 +140,127 @@ def spawn_later(seconds, target, *args, **kwargs):
 
 
 skip_request_headers = frozenset([
-                          'Vary',
-                          'Via',
-                          'Proxy-Authorization',
-                          'Proxy-Connection',
-                          'Upgrade',
-                          'X-Google-Cache-Control',
-                          'X-Forwarded-For',
-                          'X-Chrome-Variations',
+                          b'Vary',
+                          b'Via',
+                          b'Proxy-Authorization',
+                          b'Proxy-Connection',
+                          b'Upgrade',
+                          b'X-Google-Cache-Control',
+                          b'X-Forwarded-For',
+                          b'X-Chrome-Variations',
                           ])
 skip_response_headers = frozenset([
                           # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
-                          'Connection',
-                          'Upgrade',
-                          'Alt-Svc',
-                          'Alternate-Protocol',
-                          'X-Head-Content-Length',
-                          'X-Google-Cache-Control',
-                          'X-Chrome-Variations',
+                          b'Connection',
+                          b'Upgrade',
+                          b'Alt-Svc',
+                          b'Alternate-Protocol',
+                          b'X-Head-Content-Length',
+                          b'X-Google-Cache-Control',
+                          b'X-Chrome-Variations',
                           ])
 
 
 def send_header(wfile, keyword, value):
     keyword = keyword.title()
-    if keyword == 'Set-Cookie':
+    if keyword == b'Set-Cookie':
         # https://cloud.google.com/appengine/docs/python/urlfetch/responseobjects
-        for cookie in re.split(r', (?=[^ =]+(?:=|$))', value):
-            wfile.write("%s: %s\r\n" % (keyword, cookie))
+        for cookie in re.split(br', (?=[^ =]+(?:=|$))', value):
+            wfile.write(b"%s: %s\r\n" % (keyword, cookie))
             #xlog.debug("Head1 %s: %s", keyword, cookie)
-    elif keyword == 'Content-Disposition' and '"' not in value:
-        value = re.sub(r'filename=([^"\']+)', 'filename="\\1"', value)
-        wfile.write("%s: %s\r\n" % (keyword, value))
+    elif keyword == b'Content-Disposition' and b'"' not in value:
+        value = re.sub(br'filename=([^"\']+)', b'filename="\\1"', value)
+        wfile.write(b"%s: %s\r\n" % (keyword, value))
         #xlog.debug("Head1 %s: %s", keyword, value)
     elif keyword in skip_response_headers:
         return
     else:
-        wfile.write("%s: %s\r\n" % (keyword, value))
+        if isinstance(value, int):
+            wfile.write(b"%s: %d\r\n" % (keyword, value))
+        else:
+            wfile.write(b"%s: %s\r\n" % (keyword, value))
         #xlog.debug("Head1 %s: %s", keyword, value)
 
 
-def send_response(wfile, status=404, headers={}, body=''):
-    headers = dict((k.title(), v) for k, v in headers.items())
-    if 'Transfer-Encoding' in headers:
-        del headers['Transfer-Encoding']
-    if 'Content-Length' not in headers:
-        headers['Content-Length'] = len(body)
-    if 'Connection' not in headers:
-        headers['Connection'] = 'close'
+def send_response(wfile, status=404, headers={}, body=b''):
+    headers = dict((k.title(), v) for k, v in list(headers.items()))
+    if b'Transfer-Encoding' in headers:
+        del headers[b'Transfer-Encoding']
+    if b'Content-Length' not in headers:
+        headers[b'Content-Length'] = len(body)
+    if b'Connection' not in headers:
+        headers[b'Connection'] = b'close'
 
     try:
-        wfile.write("HTTP/1.1 %d\r\n" % status)
-        for key, value in headers.items():
-            #wfile.write("%s: %s\r\n" % (key, value))
+        wfile.write(b"HTTP/1.1 %d\r\n" % status)
+        for key, value in list(headers.items()):
             send_header(wfile, key, value)
-        wfile.write("\r\n")
-        wfile.write(body)
-    except:
-        xlog.warn("send response fail")
+        wfile.write(b"\r\n")
+        wfile.write(utils.to_bytes(body))
+    except ConnectionResetError as e:
+        xlog.warn("gae send response fail.")
+        return
+    except BrokenPipeError as e:
+        xlog.warn("send response fail.")
+        return
+    except Exception as e:
+        xlog.exception("send response fail %r", e)
 
 
 def return_fail_message(wfile):
     html = generate_message_html(
-        '504 GAEProxy Proxy Time out', u'连接超时，先休息一会再来！')
+        '504 GAEProxy Proxy Time out', '连接超时，先休息一会再来！')
     send_response(wfile, 504, body=html.encode('utf-8'))
     return
 
 
 def pack_request(method, url, headers, body, timeout):
     headers = dict(headers)
-    if isinstance(body, basestring) and body:
-        if len(body) < 10 * 1024 * 1024 and 'Content-Encoding' not in headers:
+    if isinstance(body, str) and body:
+        if len(body) < 10 * 1024 * 1024 and b'Content-Encoding' not in headers:
             # 可以压缩
             zbody = deflate(body)
             if len(zbody) < len(body):
                 body = zbody
-                headers['Content-Encoding'] = 'deflate'
+                headers[b'Content-Encoding'] = b'deflate'
         if len(body) > 10 * 1024 * 1024:
             xlog.warn("body len:%d %s %s", len(body), method, url)
-        headers['Content-Length'] = str(len(body))
+        headers[b'Content-Length'] = str(len(body))
 
     # GAE don't allow set `Host` header
-    if 'Host' in headers:
-        del headers['Host']
+    if b'Host' in headers:
+        del headers[b'Host']
 
     kwargs = {}
     # gae 用的参数
     if front.config.GAE_PASSWORD:
-        kwargs['password'] = front.config.GAE_PASSWORD
+        kwargs[b'password'] = front.config.GAE_PASSWORD
 
     # kwargs['options'] =
-    kwargs['validate'] = front.config.GAE_VALIDATE
-    if url.endswith(".js"):
-        kwargs['maxsize'] = front.config.JS_MAXSIZE
+    kwargs[b'validate'] = front.config.GAE_VALIDATE
+    if url.endswith(b".js"):
+        kwargs[b'maxsize'] = front.config.JS_MAXSIZE
     else:
-        kwargs['maxsize'] = front.config.AUTORANGE_MAXSIZE
-    kwargs['timeout'] = str(timeout)
+        kwargs[b'maxsize'] = front.config.AUTORANGE_MAXSIZE
+    kwargs[b'timeout'] = str(timeout)
     # gae 用的参数　ｅｎｄ
 
-    payload = '%s %s HTTP/1.1\r\n' % (method, url)
-    payload += ''.join('%s: %s\r\n' % (k, v)
-                       for k, v in headers.items() if k not in skip_request_headers)
+    payload = b'%s %s HTTP/1.1\r\n' % (method, url)
+    payload += b''.join(b'%s: %s\r\n' % (k, v)
+                       for k, v in list(headers.items()) if k not in skip_request_headers)
     # for k, v in headers.items():
     #    xlog.debug("Send %s: %s", k, v)
-    payload += ''.join('X-URLFETCH-%s: %s\r\n' % (k, v)
-                       for k, v in kwargs.items() if v)
+    for k, v in kwargs.items():
+        if isinstance(v, int):
+            payload += b'X-URLFETCH-%s: %d\r\n' % (k, v)
+        else:
+            payload += b'X-URLFETCH-%s: %s\r\n' % (k, utils.to_bytes(v))
 
     payload = deflate(payload)
 
-    body = '%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
+    body = b'%s%s%s' % (struct.pack('!h', len(payload)), payload, body)
     request_headers = {}
-    request_headers['Content-Length'] = str(len(body))
+    request_headers[b'Content-Length'] = str(len(body))
     # request_headers 只有上面一项
 
     return request_headers, body
@@ -269,18 +281,18 @@ def unpack_response(response):
             raise GAE_Exception(600,
                 "get protocol head fail, len:%d" % headers_length)
 
-        raw_response_line, headers_data = inflate(data).split('\r\n', 1)
+        raw_response_line, headers_data = inflate(data).split(b'\r\n', 1)
         _, status, reason = raw_response_line.split(None, 2)
         response.app_status = int(status)
         response.app_reason = reason.strip()
 
-        headers_block, app_msg = headers_data.split('\r\n\r\n')
-        headers_pairs = headers_block.split('\r\n')
+        headers_block, app_msg = headers_data.split(b'\r\n\r\n')
+        headers_pairs = headers_block.split(b'\r\n')
         response.headers = {}
         for pair in headers_pairs:
             if not pair:
                 break
-            k, v = pair.split(': ', 1)
+            k, v = pair.split(b': ', 1)
             response.headers[k] = v
 
         response.app_msg = app_msg
@@ -297,7 +309,7 @@ def request_gae_server(headers, body, url, timeout):
     # raise error, let up layer retry.
 
     try:
-        response = front.request("POST", None, "/_gh/", headers, body, timeout)
+        response = front.request(b"POST", b"", b"/_gh/", headers, body, timeout)
         if not response:
             raise GAE_Exception(600, "fetch gae fail")
 
@@ -322,9 +334,9 @@ def request_gae_server(headers, body, url, timeout):
             response.worker.close("appid out of quota:%s" % appid)
             raise GAE_Exception(604, "appid out of quota:%s" % appid)
 
-        server_type = response.getheader("server", "")
+        server_type = response.getheader(b"Server", b"")
         # content_type = response.getheaders("content-type", "")
-        if ("gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type) or \
+        if (b"gws" not in server_type and b"Google Frontend" not in server_type and b"GFE" not in server_type) or \
                 response.status == 403 or response.status == 405:
 
             # some ip can connect, and server type can be gws
@@ -336,7 +348,7 @@ def request_gae_server(headers, body, url, timeout):
             response.worker.close("ip not support GAE")
             raise GAE_Exception(602, "ip not support GAE")
 
-        response.gps = response.getheader("x-server", "")
+        response.gps = response.getheader(b"x-server", b"")
 
         if response.status > 300:
             raise GAE_Exception(605, "status:%d" % response.status)
@@ -347,7 +359,7 @@ def request_gae_server(headers, body, url, timeout):
 
         return response
     except GAE_Exception as e:
-        if e.error_code not in (600, 603, 604):
+        if e.error_code not in (600, 603, 604) and hasattr(response, "ssl_sock"):
             front.ip_manager.recheck_ip(response.ssl_sock.ip_str, first_report=False)
         raise e
 
@@ -358,37 +370,37 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
     time_request = time.time()
 
     # GAE urlfetch will not decode br if Accept-Encoding include gzip
-    accept_encoding = headers.get("Accept-Encoding", "")
-    if "br" in accept_encoding:
+    accept_encoding = headers.get(b"Accept-Encoding", b"")
+    if b"br" in accept_encoding:
         accept_br_encoding = True
         # xlog.debug("accept_br_encoding for %s", url)
     else:
         accept_br_encoding = False
 
-    host = headers.get("Host", "")
+    host = headers.get(b"Host", b"")
     if not host:
-        parsed_url = urlparse.urlparse(url)
+        parsed_url = urllib.parse.urlparse(url)
         host = parsed_url.hostname
 
-    accept_codes = accept_encoding.replace(" ", "").split(",")
+    accept_codes = accept_encoding.replace(b" ", b"").split(b",")
     try:
-        accept_codes.remove("")
+        accept_codes.remove(b"")
     except:
         pass
 
     if not accept_br_encoding:
-        if "gzip" in accept_encoding:
+        if b"gzip" in accept_encoding:
             if host in front.config.br_sites or host.endswith(front.config.br_endswith):
-                accept_codes.remove("gzip")
+                accept_codes.remove(b"gzip")
 
-    if "br" not in accept_codes:
-        accept_codes.append("br")
+    if b"br" not in accept_codes:
+        accept_codes.append(b"br")
 
-    accept_code_str = ",".join(accept_codes)
+    accept_code_str = b",".join(accept_codes)
     if accept_code_str:
-        headers["Accept-Encoding"] = accept_code_str
+        headers[b"Accept-Encoding"] = accept_code_str
     else:
-        del headers["Accept-Encoding"]
+        del headers[b"Accept-Encoding"]
 
     error_msg = []
 
@@ -412,9 +424,9 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
             if not accept_br_encoding:
                 # if gzip in Accept-Encoding, br will not decode in urlfetch
                 # else, urlfetch in GAE will auto decode br, but return br in Content-Encoding
-                if response.headers.get("Content-Encoding", "") == "br":
+                if response.headers.get(b"Content-Encoding", b"") == b"br":
                     # GAE urlfetch always return br in content-encoding even have decoded it.
-                    del response.headers["Content-Encoding"]
+                    del response.headers[b"Content-Encoding"]
                     # xlog.debug("remove br from Content-Encoding, %s", url)
                     if host not in front.config.br_sites:
                         front.config.BR_SITES.append(host)
@@ -431,7 +443,7 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
                 if response.app_status == 510:
                     # reach 80% of traffic today
                     # disable for get big file.
-                    appid = response.ssl_sock.host.split(".")[0]
+                    appid = response.ssl_sock.host.split(b".")[0]
                     front.appid_manager.report_out_of_quota(appid)
                     response.worker.close(
                         "appid out of quota:%s" % appid)
@@ -449,11 +461,11 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
             error_msg.append(err_msg)
             xlog.exception('gae_handler.handler %r %s , retry...', e, url)
 
-    raise GAE_Exception(600, b"".join(error_msg))
+    raise GAE_Exception(600, "".join(error_msg))
 
 
 def handler(method, host, url, headers, body, wfile, fallback=None):
-    if not url.startswith("http") and not url.startswith("HTTP"):
+    if not url.startswith(b"http") and not url.startswith(b"HTTP"):
         xlog.error("gae:%s", url)
         return
 
@@ -461,17 +473,17 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
     org_headers = dict(headers)
     remove_list = []
-    req_range_begin = ""
-    req_range_end = ""
-    req_range = ""
-    for k, v in headers.items():
+    req_range_begin = b""
+    req_range_end = b""
+    req_range = b""
+    for k, v in list(headers.items()):
         if v == "":
             remove_list.append(k)
             continue
-        if k.lower() == "range":
+        if k.lower() == b"range":
             req_range = v
             req_range_begin, req_range_end = tuple(
-                x for x in re.search(r'bytes=(\d*)-(\d*)', v).group(1, 2))
+                x for x in re.search(br'bytes=(\d*)-(\d*)', v).group(1, 2))
 
     # fix bug for android market app: Mobogenie
     # GAE url_fetch refuse empty value in header.
@@ -480,24 +492,24 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
     # force to get content range
     # reduce wait time
-    if method == "GET":
+    if method == b"GET":
         if req_range_begin and not req_range_end:
             # don't known how many bytes to get, but get from begin position
             req_range_begin = int(req_range_begin)
-            headers["Range"] = "bytes=%d-%d" % (
+            headers[b"Range"] = b"bytes=%d-%d" % (
                 req_range_begin, req_range_begin + front.config.AUTORANGE_MAXSIZE - 1)
             xlog.debug("change Range %s => %s %s",
-                       req_range, headers["Range"], url)
+                       req_range, headers[b"Range"], url)
         elif req_range_begin and req_range_end:
             req_range_begin = int(req_range_begin)
             req_range_end = int(req_range_end)
             if req_range_end - req_range_begin + 1 > front.config.AUTORANGE_MAXSIZE:
-                headers["Range"] = "bytes=%d-%d" % (
+                headers[b"Range"] = b"bytes=%d-%d" % (
                     req_range_begin, req_range_begin + front.config.AUTORANGE_MAXSIZE - 1)
                 # remove wait time for GAE server to get knowledge that content
                 # size exceed the max size per fetch
                 xlog.debug("change Range %s => %s %s",
-                           req_range, headers["Range"], url)
+                           req_range, headers[b"Range"], url)
         elif not req_range_begin and req_range_end:
             # get the last n bytes of content
             pass
@@ -510,7 +522,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
     try:
         response = request_gae_proxy(method, url, headers, body)
         # http://en.wikipedia.org/wiki/Chunked_transfer_encoding
-        response.headers.pop("Transfer-Encoding", None)
+        response.headers.pop(b"Transfer-Encoding", None)
         # gae代理请求
     except GAE_Exception as e:
         xlog.warn("GAE %s %s request fail:%r", method, url, e)
@@ -538,62 +550,62 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
     response_headers = {}
     #　初始化给客户端的headers
-    for key, value in response.headers.items():
+    for key, value in list(response.headers.items()):
         key = key.title()
         if key in skip_response_headers:
             continue
         response_headers[key] = value
 
-    response_headers["Persist"] = ""
-    response_headers["Connection"] = "Persist"
+    response_headers[b"Persist"] = b""
+    response_headers[b"Connection"] = b"Persist"
 
-    if 'X-Head-Content-Length' in response_headers:
-        if method == "HEAD":
-            response_headers['Content-Length'] = response_headers['X-Head-Content-Length']
-        del response_headers['X-Head-Content-Length']
+    if b'X-Head-Content-Length' in response_headers:
+        if method == b"HEAD":
+            response_headers[b'Content-Length'] = response_headers[b'X-Head-Content-Length']
+        del response_headers[b'X-Head-Content-Length']
         # 只是获取头
 
-    content_length = int(response.headers.get('Content-Length', 0))
-    content_range = response.headers.get('Content-Range', '')
+    content_length = int(response.headers.get(b'Content-Length', 0))
+    content_range = response.headers.get(b'Content-Range', '')
     # content_range 分片时合并用到
-    if content_range and 'bytes */' not in content_range:
+    if content_range and b'bytes */' not in content_range:
         start, end, length = tuple(int(x) for x in re.search(
-            r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
+            br'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
     else:
         start, end, length = 0, content_length - 1, content_length
         # 未分片
 
-    if method == "HEAD":
+    if method == b"HEAD":
         body_length = 0
     else:
         body_length = end - start + 1
 
     def send_response_headers():
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
-        for key, value in response_headers.items():
+        wfile.write(b"HTTP/1.1 %d %s\r\n" % (response.status, utils.to_bytes(response.reason)))
+        for key, value in list(response_headers.items()):
             send_header(wfile, key, value)
             # xlog.debug("Head- %s: %s", key, value)
-        wfile.write("\r\n")
+        wfile.write(b"\r\n")
         # 写入除body外内容
 
     def is_text_content_type(content_type):
-        mct, _, sct = content_type.partition('/')
-        if mct == 'text':
+        mct, _, sct = content_type.partition(b'/')
+        if mct == b'text':
             return True
-        if mct == 'application':
+        if mct == b'application':
             sct = sct.split(';', 1)[0]
-            if (sct in ('json', 'javascript', 'x-www-form-urlencoded') or
-                    sct.endswith(('xml', 'script')) or
-                    sct.startswith(('xml', 'rss', 'atom'))):
+            if (sct in (b'json', b'javascript', b'x-www-form-urlencoded') or
+                    sct.endswith((b'xml', b'script')) or
+                    sct.startswith((b'xml', b'rss', b'atom'))):
                 return True
         return False
 
-    data0 = ""
-    content_type = response_headers.get("Content-Type", "")
-    content_encoding = response_headers.get("Content-Encoding", "")
+    data0 = b""
+    content_type = response_headers.get(b"Content-Type", b"")
+    content_encoding = response_headers.get(b"Content-Encoding", b"")
     if body_length and \
-            content_encoding == "gzip" and \
-            response.gps < "GPS 3.3.2" and \
+            content_encoding == b"gzip" and \
+            response.gps < b"GPS 3.3.2" and \
             is_text_content_type(content_type):
         url_guess_type = guess_type(url)[0]
         if url_guess_type is None or is_text_content_type(url_guess_type):
@@ -626,11 +638,11 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
             if decoded_data1:
                 try:
-                    response_headers.pop("Content-Length", None)
+                    response_headers.pop(b"Content-Length", None)
 
-                    if "deflate" in headers.get("Accept-Encoding", ""):
+                    if b"deflate" in headers.get(b"Accept-Encoding", b""):
                         # return deflate data if accept deflate
-                        response_headers["Content-Encoding"] = "deflate"
+                        response_headers[b"Content-Encoding"] = b"deflate"
 
                         send_response_headers()
                         while True:
@@ -644,7 +656,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
                     else:
                         # inflate data and send
-                        del response_headers["Content-Encoding"]
+                        del response_headers[b"Content-Encoding"]
 
                         send_response_headers()
                         while True:
@@ -659,7 +671,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
 
                     return
                 except Exception as e:
-                    xlog.info("gae_handler.handler try decode and send response fail. e:%r %s", e, url)
+                    xlog.exception("gae_handler.handler try decode and send response fail. e:%r %s", e, url)
                     return
 
     try:
@@ -670,8 +682,12 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             body_sended = len(data0)
         else:
             body_sended = 0
+    except BrokenPipeError as e:
+        return
+    except ConnectionAbortedError as e:
+        return
     except Exception as e:
-        xlog.info("gae_handler.handler send response fail. e:%r %s", e, url)
+        xlog.exception("gae_handler.handler send response fail. e:%r %s", e, url)
         return
 
     while True:
@@ -693,8 +709,12 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
                 #xlog.debug("send to browser wfile.write ret:%d", ret)
                 #ret = wfile.write(data)
                 wfile.write(data)
+        except BrokenPipeError as e:
+            return
+        except ConnectionAbortedError as e:
+            return
         except Exception as e_b:
-            if e_b[0] in (errno.ECONNABORTED, errno.EPIPE,
+            if e_b.args[0] in (errno.ECONNABORTED, errno.EPIPE,
                           errno.ECONNRESET) or 'bad write retry' in repr(e_b):
                 xlog.info('gae_handler send to browser return %r %r, len:%d, sended:%d', e_b, url, body_length, body_sended)
             else:
@@ -734,7 +754,7 @@ class RangeFetch2(object):
         self.wait_begin = 0
 
     def get_all_buffer_size(self):
-        return sum(v for k, v in self.all_data_size.items())
+        return sum(v for k, v in list(self.all_data_size.items()))
 
     def put_data(self, range_begin, payload):
         with self.lock:
@@ -752,18 +772,18 @@ class RangeFetch2(object):
     def run(self):
         req_range_begin = None
         req_range_end = None
-        for k, v in self.headers.items():
+        for k, v in list(self.headers.items()):
             # xlog.debug("range req head:%s => %s", k, v)
-            if k.lower() == "range":
+            if k.lower() == b"range":
                 req_range_begin, req_range_end = tuple(
                     x for x in re.search(r'bytes=(\d*)-(\d*)', v).group(1, 2))
                 # break
 
         response_headers = dict((k.title(), v)
-                                for k, v in self.response.headers.items())
-        content_range = response_headers['Content-Range']
+                                for k, v in list(self.response.headers.items()))
+        content_range = response_headers[b'Content-Range']
         res_begin, res_end, res_length = tuple(int(x) for x in re.search(
-            r'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
+            br'bytes (\d+)-(\d+)/(\d+)', content_range).group(1, 2, 3))
 
         self.req_begin = res_end + 1
         if req_range_begin and req_range_end:
@@ -773,41 +793,41 @@ class RangeFetch2(object):
         self.wait_begin = res_begin
 
         if self.wait_begin == 0 and self.req_end == res_length - 1:
-            response_headers['Content-Length'] = str(res_length)
-            del response_headers['Content-Range']
+            response_headers[b'Content-Length'] = bytes(str(res_length), encoding='ascii')
+            del response_headers[b'Content-Range']
             state_code = 200
         else:
-            response_headers['Content-Range'] = 'bytes %s-%s/%s' % (
+            response_headers[b'Content-Range'] = b'bytes %s-%s/%s' % (
                 res_begin, self.req_end, res_length)
-            response_headers['Content-Length'] = str(
-                self.req_end - res_begin + 1)
+            response_headers[b'Content-Length'] = bytes(str(
+                self.req_end - res_begin + 1), encoding='ascii')
             state_code = 206
 
-        response_headers["Persist"] = ""
-        response_headers["Connection"] = "Persist"
+        response_headers[b"Persist"] = b""
+        response_headers[b"Connection"] = b"Persist"
 
         xlog.info('RangeFetch %d-%d started(%r) ',
                   res_begin, self.req_end, self.url)
 
         try:
-            self.wfile.write("HTTP/1.1 %d OK\r\n" % state_code)
+            self.wfile.write(b"HTTP/1.1 %d OK\r\n" % state_code)
             for key in response_headers:
                 if key in skip_response_headers:
                     continue
                 value = response_headers[key]
                 #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
-            self.wfile.write("\r\n")
+            self.wfile.write(b"\r\n")
         except Exception as e:
             self.keep_running = False
-            xlog.info("RangeFetch send response fail:%r %s", e, self.url)
+            xlog.exception("RangeFetch send response fail:%r %s", e, self.url)
             return
 
         data_left_to_fetch = self.req_end - self.req_begin + 1
         fetch_times = int(
             (data_left_to_fetch + front.config.AUTORANGE_MAXSIZE - 1) / front.config.AUTORANGE_MAXSIZE)
         thread_num = min(front.config.AUTORANGE_THREADS, fetch_times)
-        for i in xrange(0, thread_num):
+        for i in range(0, thread_num):
             threading.Thread(target=self.fetch_worker).start()
 
         threading.Thread(target=self.fetch, args=(
@@ -877,7 +897,7 @@ class RangeFetch2(object):
             self.fetch(begin, end, None)
 
     def fetch(self, begin, end, first_response):
-        headers = dict((k.title(), v) for k, v in self.headers.items())
+        headers = dict((k.title(), v) for k, v in list(self.headers.items()))
         retry_num = 0
         while self.keep_running:
             retry_num += 1
@@ -887,7 +907,7 @@ class RangeFetch2(object):
                 break
 
             expect_len = end - begin + 1
-            headers['Range'] = 'bytes=%d-%d' % (begin, end)
+            headers[b'Range'] = b'bytes=%d-%d' % (begin, end)
 
             if first_response:
                 response = first_response
@@ -906,9 +926,9 @@ class RangeFetch2(object):
                 continue
 
             response.status = response.app_status
-            if response.headers.get('Location', None):
-                self.url = urlparse.urljoin(
-                    self.url, response.headers.get('Location'))
+            if response.headers.get(b'Location', None):
+                self.url = urllib.parse.urljoin(
+                    self.url, response.headers.get(b'Location'))
                 xlog.warn('RangeFetch Redirect(%r) status:%s',
                           self.url, response.status)
                 continue
@@ -918,7 +938,7 @@ class RangeFetch2(object):
                 response.worker.close("range status:%s" % response.status)
                 continue
 
-            content_range = response.headers.get('Content-Range', "")
+            content_range = response.headers.get(b'Content-Range', b"")
             if not content_range:
                 xlog.warning('RangeFetch "%s %s" return headers=%r, retry %s-%s',
                              self.method, self.url, response.headers, begin, end)
@@ -927,7 +947,7 @@ class RangeFetch2(object):
                 # response.worker.close("no range")
                 continue
 
-            content_length = int(response.headers.get('Content-Length', 0))
+            content_length = int(response.headers.get(b'Content-Length', 0))
 
             data_readed = 0
             while True:

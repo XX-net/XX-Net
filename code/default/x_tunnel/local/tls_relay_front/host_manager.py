@@ -3,6 +3,12 @@ import json
 
 from front_base.host_manager import HostManagerBase
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'x_tunnel')
+tls_certs_path = os.path.join(module_data_path, "tls_certs")
+
 
 class HostManager(HostManagerBase):
     def __init__(self, config_fn):
@@ -34,11 +40,15 @@ class HostManager(HostManagerBase):
 
         return self.info[ip]["sni"], ""
 
-    def get_info(self, ip):
-        if ip not in self.info:
+    def get_info(self, ip_str):
+        if ip_str not in self.info:
             raise Exception
 
-        return self.info[ip]
+        info = self.info[ip_str]
+        info["client_key_fn"] = str(os.path.join(tls_certs_path, ip_str + ".key"))
+        info["client_ca_fn"] = str(os.path.join(tls_certs_path, ip_str + ".ca"))
+
+        return info
 
     def reset(self):
         self.info = {}

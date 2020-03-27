@@ -4,19 +4,19 @@ import xlog
 logger = xlog.getLogger("gae_proxy")
 logger.set_buffer(500)
 
-import check_local_network
+from . import check_local_network
 
-from config import config, direct_config
-import host_manager
+from .config import config, direct_config
+from . import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.ip_manager import IpManager
 from front_base.ip_source import Ipv4RangeSource, Ipv6PoolSource, IpCombineSource
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
-from check_ip import CheckIp
+from .check_ip import CheckIp
 
-from appid_manager import AppidManager
+from .appid_manager import AppidManager
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -37,8 +37,8 @@ class Front(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
             logger, ca_certs=ca_certs, support_http2=config.support_http2,
-            cipher_suites=['ALL', "!RC4-SHA","!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
-                           "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
+            cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+                           b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
 
         self.appid_manager = AppidManager(self.config, logger)
@@ -89,7 +89,7 @@ class Front(object):
     def get_dispatcher(self):
         return self.http_dispatcher
 
-    def request(self, method, host, path="/", headers={}, data="", timeout=120):
+    def request(self, method, host, path=b"/", headers={}, data="", timeout=120):
         response = self.http_dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
 
         return response
@@ -135,8 +135,8 @@ class DirectFront(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
             logger, ca_certs=ca_certs, support_http2=False,
-            cipher_suites=['ALL', "!RC4-SHA", "!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
-                           "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
+            cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+                           b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
 
         self.connect_creator = ConnectCreator(

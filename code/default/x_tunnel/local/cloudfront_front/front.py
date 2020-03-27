@@ -11,9 +11,9 @@ from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 
-from connect_creator import ConnectCreator
-from config import Config
-import host_manager
+from .connect_creator import ConnectCreator
+from .config import Config
+from . import host_manager
 from gae_proxy.local import check_local_network
 
 

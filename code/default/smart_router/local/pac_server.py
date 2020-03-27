@@ -2,15 +2,15 @@
 # coding:utf-8
 
 import os
-import urlparse
+import urllib.parse
 
 
 import simple_http_server
 
-import global_var as g
+from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
-
+import utils
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,7 +33,7 @@ def get_serving_pacfile():
     else:
         serving_pacfile = user_pacfile
 
-    with open(serving_pacfile, 'rb') as fp:
+    with open(serving_pacfile, 'r') as fp:
         content = fp.read()
 
     return content
@@ -55,23 +55,26 @@ class PacHandler(simple_http_server.HttpServerHandler):
         proxy = host + ":" + str(port)
         content = content.replace(self.PROXY_LISTEN, proxy)
 
-        black = '",\n"'.join(g.gfwlist.gfw_black_list
+        black = b'",\n"'.join(g.gfwlist.gfw_black_list
                              + g.user_rules.rule_lists["gae"]
                              + g.user_rules.rule_lists["socks"]
                              )
-        white = '",\n"'.join(g.gfwlist.gfw_white_list + g.user_rules.rule_lists["direct"])
+        white = b'",\n"'.join(g.gfwlist.gfw_white_list + g.user_rules.rule_lists["direct"])
 
-        content = content.replace("BLACK_LIST", black).replace("WHITE_LIST", white)
+        content = content.replace("BLACK_LIST", utils.to_str(black)).replace("WHITE_LIST", utils.to_str(white))
         return content
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path # '/proxy.pac'
+        path = urllib.parse.urlparse(self.path).path # '/proxy.pac'
+        path = utils.to_str(path)
+        self.headers = utils.to_str(self.headers)
+
         filename = os.path.normpath('./' + path)
         if filename != 'proxy.pac':
             xlog.warn("pac_server GET %s fail", self.path)
             return self.send_not_found()
 
-        host = self.headers.getheader('Host')
+        host = self.headers.get('Host')
         host, _, port = host.rpartition(":")
 
         if g.config.pac_policy == "black_GAE":

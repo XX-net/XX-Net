@@ -17,8 +17,8 @@ import struct
 import zlib
 import base64
 import logging
-import httplib
-import urlparse
+import http.client
+import urllib.parse
 import errno
 import string
 
@@ -27,7 +27,7 @@ import string
 try:
     from io import BytesIO
 except ImportError:
-    from cStringIO import StringIO as BytesIO
+    from io import StringIO as BytesIO
 try:
     from google.appengine.api import urlfetch
     from google.appengine.runtime import apiproxy_errors
@@ -94,7 +94,7 @@ except ImportError:
     class _Crypto_Cipher_ARC4_new(object):
         def __init__(self, key):
             x = 0
-            box = range(256)
+            box = list(range(256))
             for i, y in enumerate(box):
                 x = (x + y + ord(key[i % len(key)])) & 0xff
                 box[i], box[x] = box[x], y
@@ -141,9 +141,9 @@ def gae_application(environ, start_response):
             start_response('204 No Content', [])
             yield ''
         else:
-            timestamp = long(os.environ['CURRENT_VERSION_ID'].split('.')[1])/2**28
+            timestamp = int(os.environ['CURRENT_VERSION_ID'].split('.')[1])/2**28
             ctime = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(timestamp+8*3600))
-            html = u'GoAgent Python Server %s \u5df2\u7ecf\u5728\u5de5\u4f5c\u4e86\uff0c\u90e8\u7f72\u65f6\u95f4 %s\n' % (__version__, ctime)
+            html = 'GoAgent Python Server %s \u5df2\u7ecf\u5728\u5de5\u4f5c\u4e86\uff0c\u90e8\u7f72\u65f6\u95f4 %s\n' % (__version__, ctime)
             start_response('200 OK', [('Content-Type', 'text/plain; charset=utf-8')])
             yield html.encode('utf8')
         raise StopIteration
@@ -176,7 +176,7 @@ def gae_application(environ, start_response):
         raise StopIteration
 
     kwargs = {}
-    any(kwargs.__setitem__(x[2:].lower(), headers.pop(x)) for x in headers.keys() if x.startswith('G-'))
+    any(kwargs.__setitem__(x[2:].lower(), headers.pop(x)) for x in list(headers.keys()) if x.startswith('G-'))
 
     if 'Content-Encoding' in headers:
         if headers['Content-Encoding'] == 'deflate':
@@ -192,7 +192,7 @@ def gae_application(environ, start_response):
         yield message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''), 'GoAgent proxy.ini password is wrong!')
         raise StopIteration
 
-    netloc = urlparse.urlparse(url).netloc
+    netloc = urllib.parse.urlparse(url).netloc
 
     if __hostsdeny__ and netloc.endswith(__hostsdeny__):
         start_response('403 Forbidden', [('Content-Type', 'text/html')])
@@ -215,7 +215,7 @@ def gae_application(environ, start_response):
     validate_certificate = bool(int(kwargs.get('validate', 0)))
     accept_encoding = headers.get('Accept-Encoding', '')
     errors = []
-    for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
+    for i in range(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
             response = urlfetch.fetch(url, payload, fetchmethod, headers, allow_truncated=False, follow_redirects=False, deadline=deadline, validate_certificate=validate_certificate)
             break
@@ -272,14 +272,14 @@ def gae_application(environ, start_response):
             dataio.write('\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff')
             dataio.write(compressobj.compress(data))
             dataio.write(compressobj.flush())
-            dataio.write(struct.pack('<LL', zlib.crc32(data) & 0xFFFFFFFFL, len(data) & 0xFFFFFFFFL))
+            dataio.write(struct.pack('<LL', zlib.crc32(data) & 0xFFFFFFFF, len(data) & 0xFFFFFFFF))
             data = dataio.getvalue()
         elif 'deflate' in accept_encoding:
             response_headers['Content-Encoding'] = 'deflate'
             data = zlib.compress(data)[2:-4]
     if data:
          response_headers['Content-Length'] = str(len(data))
-    response_headers_data = zlib.compress('\n'.join('%s:%s' % (k.title(), v) for k, v in response_headers.items() if not k.startswith('x-google-')))[2:-4]
+    response_headers_data = zlib.compress('\n'.join('%s:%s' % (k.title(), v) for k, v in list(response_headers.items()) if not k.startswith('x-google-')))[2:-4]
     if 'rc4' not in options:
         start_response('200 OK', [('Content-Type', __content_type__)])
         yield struct.pack('!hh', int(response.status_code), len(response_headers_data))+response_headers_data

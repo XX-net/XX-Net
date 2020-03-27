@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # coding:utf-8
 import sys
 import os
@@ -7,13 +7,15 @@ import json
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+local_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = root_path
 
 
 if __name__ == "__main__":
     sys.path.append(root_path)
+    sys.path.append(local_path)
 
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
@@ -42,7 +44,8 @@ from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 from front_base.host_manager import HostManagerBase
 
-from config import Config
+from cloudflare_front.config import Config
+from cloudflare_front import front
 
 
 def check_all_domain(check_ip):
@@ -128,7 +131,7 @@ if __name__ == "__main__":
     # case 5: domain sni
 
     ip = "141.101.120.131"
-    host = "xx-net.net"
+    host = "tangg.tk"
     sni = host
 
     args = list(sys.argv[1:])
@@ -155,14 +158,13 @@ if __name__ == "__main__":
     config = Config(config_path)
 
     ca_certs = os.path.join(current_path, "cacert.pem")
-    openssl_context = SSLContext(logger, ca_certs=ca_certs)
+    openssl_context = SSLContext(logger, ca_certs=ca_certs, support_http2=True)
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager, debug=True)
     check_ip = CheckIp(logger, config, connect_creator)
 
     #check_all_domain(check_ip)
     #check_all_ip(check_ip)
-    #exit(0)
 
     res = check_ip.check_ip(ip, sni=sni, host=host, wait_time=wait_time)
     if not res:
@@ -171,3 +173,7 @@ if __name__ == "__main__":
         xlog.info("success, domain:%s handshake:%d", res.host, res.handshake_time)
     else:
         xlog.warn("not support")
+
+    front.stop()
+    sys.exit(0)
+    exit(0)

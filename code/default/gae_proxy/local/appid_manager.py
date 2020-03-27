@@ -53,7 +53,7 @@ class AppidManager(object):
             appid = random.choice(self.working_appid_list)
             return str(appid)
         else:
-            for _ in xrange(0, 10):
+            for _ in range(0, 10):
                 appid = self.public_appid.get()
                 if appid in self.out_of_quota_appids or appid in self.not_exist_appids:
                     continue

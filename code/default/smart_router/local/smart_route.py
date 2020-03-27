@@ -1,14 +1,14 @@
 import time
 import socket
 import struct
-import urlparse
+import urllib.parse
 import io
 import ssl
 
 import utils
 import simple_http_server
-from socket_wrap import SocketWrap
-import global_var as g
+from .socket_wrap import SocketWrap
+from . import global_var as g
 import socks
 
 from xlog import getLogger
@@ -75,7 +75,7 @@ def is_x_tunnel_workable():
 def is_clienthello(data):
     if len(data) < 20:
         return False
-    if data.startswith('\x16\x03'):
+    if data.startswith(b'\x16\x03'):
         # TLSv12/TLSv11/TLSv1/SSLv3
         length, = struct.unpack('>h', data[3:5])
         return len(data) == 5 + length
@@ -128,15 +128,15 @@ def netloc_to_host_port(netloc, default_port=80):
     return host, port
 
 
-def get_sni(sock, left_buf=""):
+def get_sni(sock, left_buf=b""):
     if left_buf:
         leadbyte = left_buf[0]
     else:
         leadbyte = sock.recv(1, socket.MSG_PEEK)
 
-    if leadbyte in ('\x80', '\x16'):
-        if leadbyte == '\x16':
-            for _ in xrange(2):
+    if leadbyte in (b'\x80', b'\x16'):
+        if leadbyte == b'\x16':
+            for _ in range(2):
                 leaddata = left_buf + sock.recv(1024, socket.MSG_PEEK)
                 if is_clienthello(leaddata):
                     try:
@@ -147,11 +147,11 @@ def get_sni(sock, left_buf=""):
 
         raise SniNotExist
 
-    elif leadbyte not in ["G", "P", "D", "O", "H", "T"]:
+    elif leadbyte not in [b"G", b"P", b"D", b"O", b"H", b"T"]:
         raise SniNotExist
 
-    leaddata = ""
-    for _ in xrange(2):
+    leaddata = b""
+    for _ in range(2):
         leaddata = left_buf + sock.recv(65535, socket.MSG_PEEK)
         if leaddata:
             break
@@ -161,7 +161,7 @@ def get_sni(sock, left_buf=""):
     if not leaddata:
         raise SniNotExist
 
-    n1 = leaddata.find("\r\n")
+    n1 = leaddata.find(b"\r\n")
     if n1 <= -1:
         raise SniNotExist
 
@@ -171,34 +171,34 @@ def get_sni(sock, left_buf=""):
         method, url, http_version = words
     elif len(words) == 2:
         method, url = words
-        http_version = "HTTP/1.1"
+        http_version = b"HTTP/1.1"
     else:
         raise SniNotExist
 
-    if method not in ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH"]:
+    if method not in g.gae_proxy.proxy_handler.GAEProxyHandler.gae_support_methods:
         raise SniNotExist
 
-    n2 = leaddata.find("\r\n\r\n", n1)
+    n2 = leaddata.find(b"\r\n\r\n", n1)
     if n2 <= -1:
         raise SniNotExist
     header_block = leaddata[n1+2:n2]
 
-    lines = header_block.split("\r\n")
+    lines = header_block.split(b"\r\n")
     # path = url
     host = None
     for line in lines:
-        key, _, value = line.rpartition(":")
+        key, _, value = line.rpartition(b":")
         value = value.strip()
-        if key.lower() == "host":
+        if key.lower() == b"host":
             host, port = netloc_to_host_port(value)
             break
-    if host is None or host == "":
+    if host is None or host == b"":
         raise SniNotExist
 
     return host
 
 
-def do_direct(sock, host, ips, port, client_address, left_buf=""):
+def do_direct(sock, host, ips, port, client_address, left_buf=b""):
     if not g.config.auto_direct:
         raise ConnectFail()
 
@@ -212,7 +212,7 @@ def do_direct(sock, host, ips, port, client_address, left_buf=""):
     g.pipe_socks.add_socks(sock, remote_sock)
 
 
-def do_redirect_https(sock, host, ips, port, client_address, left_buf=""):
+def do_redirect_https(sock, host, ips, port, client_address, left_buf=b""):
     if not g.config.auto_direct:
         raise ConnectFail()
 
@@ -234,7 +234,7 @@ def do_redirect_https(sock, host, ips, port, client_address, left_buf=""):
     g.pipe_socks.add_socks(sock, sw)
 
 
-def do_socks(sock, host, port, client_address, left_buf=""):
+def do_socks(sock, host, port, client_address, left_buf=b""):
     if not g.x_tunnel:
         raise XTunnelNotRunning()
 
@@ -254,7 +254,7 @@ def do_socks(sock, host, port, client_address, left_buf=""):
     g.x_tunnel.global_var.session.conn_list[conn_id].start(block=True)
 
 
-def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
+def do_unwrap_socks(sock, host, port, client_address, req, left_buf=b""):
     if not g.x_tunnel:
         return
 
@@ -296,10 +296,10 @@ def do_unwrap_socks(sock, host, port, client_address, req, left_buf=""):
 def do_gae(sock, host, port, client_address, left_buf=""):
     sock.setblocking(1)
     if left_buf:
-        schema = "http"
+        schema = b"http"
     else:
         leadbyte = sock.recv(1, socket.MSG_PEEK)
-        if leadbyte in ('\x80', '\x16'):
+        if leadbyte in (b'\x80', b'\x16'):
             if host != fake_host and not g.config.enable_fake_ca:
                 raise DontFakeCA()
 
@@ -308,24 +308,24 @@ def do_gae(sock, host, port, client_address, left_buf=""):
             except Exception as e:
                 raise SslWrapFail()
 
-            schema = "https"
+            schema = b"https"
         else:
-            schema = "http"
+            schema = b"http"
 
     sock.setblocking(1)
     xlog.debug("host:%s:%d do gae", host, port)
     req = g.gae_proxy.proxy_handler.GAEProxyHandler(sock._sock, client_address, None, xlog)
     req.parse_request()
 
-    if req.path[0] == '/':
-        url = '%s://%s%s' % (schema, req.headers['Host'], req.path)
+    if req.path[0] == b'/':
+        url = b'%s://%s%s' % (schema, req.headers[b'Host'], req.path)
     else:
         url = req.path
 
-    if url in ["http://www.twitter.com/xxnet",
-                    "https://www.twitter.com/xxnet",
-                    "http://www.deja.com/xxnet",
-                    "https://www.deja.com/xxnet"
+    if url in [b"http://www.twitter.com/xxnet",
+                    b"https://www.twitter.com/xxnet",
+                    b"http://www.deja.com/xxnet",
+                    b"https://www.deja.com/xxnet"
                     ]:
         # for web_ui status page
         # auto detect browser proxy setting is work
@@ -333,7 +333,7 @@ def do_gae(sock, host, port, client_address, left_buf=""):
         req.wfile.write(req.self_check_response_data)
         return
 
-    if req.upgrade == "websocket":
+    if req.upgrade == b"websocket":
         xlog.debug("gae %s not support WebSocket", req.path)
         raise NotSupported(req, sock)
 
@@ -341,11 +341,11 @@ def do_gae(sock, host, port, client_address, left_buf=""):
         xlog.debug("gae %s path len exceed 1024 limit", req.path)
         raise NotSupported(req, sock)
 
-    if req.command not in ["GET", "PUT", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
+    if req.command not in req.gae_support_methods:
         xlog.debug("gae %s %s, method not supported", req.command, req.path)
         raise NotSupported(req, sock)
 
-    req.parsed_url = urlparse.urlparse(req.path)
+    req.parsed_url = urllib.parse.urlparse(req.path)
     req.do_METHOD()
 
 
@@ -424,9 +424,9 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     left_bufs = [req.raw_requestline]
                     for k in req.headers:
                         v = req.headers[k]
-                        left_bufs.append("%s: %s\r\n" % (k, v))
-                    left_bufs.append("\r\n")
-                    left_buf = "".join(left_bufs)
+                        left_bufs.append(b"%s: %s\r\n" % (k, v))
+                    left_bufs.append(b"\r\n")
+                    left_buf = b"".join(left_bufs)
 
                     return do_unwrap_socks(e.sock, host, port, client_address, req, left_buf=left_buf)
                 except SniNotExist:

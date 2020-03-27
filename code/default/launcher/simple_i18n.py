@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 
+import utils
 
 class SimpleI18N:
     def __init__(self, lang=None):
@@ -54,7 +55,7 @@ class SimpleI18N:
 
     def po_loader(self, file):
         po_dict = {}
-        fp = open(file, "r")
+        fp = open(file, "br")
         while True:
             line = fp.readline()
             if not line:
@@ -63,20 +64,20 @@ class SimpleI18N:
             if len(line) < 2:
                 continue
 
-            if line.startswith("#"):
+            if line.startswith(b"#"):
                 continue
 
-            if line.startswith("msgid "):
+            if line.startswith(b"msgid "):
                 key = line[7:-2]
-                value = ""
+                value = b""
                 while True:
                     line = fp.readline()
                     if not line:
                         break
 
-                    if line.startswith("\""):
+                    if line.startswith(b"\""):
                         key += line[1:-2]
-                    elif line.startswith("msgstr "):
+                    elif line.startswith(b"msgstr "):
                         value += line[8:-2]
                         break
                     else:
@@ -87,12 +88,12 @@ class SimpleI18N:
                     if not line:
                         break
 
-                    if line.startswith("\""):
+                    if line.startswith(b"\""):
                         value += line[1:-2]
                     else:
                         break
 
-                if key == "":
+                if key == b"":
                     continue
 
                 po_dict[key] = value
@@ -100,44 +101,44 @@ class SimpleI18N:
         return po_dict
 
     def _render(self, po_dict, file):
-        fp = open(file, "r")
+        fp = open(file, "br")
         content = fp.read()
 
         out_arr = []
 
         cp = 0
         while True:
-            bp = content.find("{{", cp)
+            bp = content.find(b"{{", cp)
             if bp == -1:
                 break
 
-            ep = content.find("}}", bp)
+            ep = content.find(b"}}", bp)
             if ep == -1:
-                print(content[bp:])
+                print((content[bp:]))
                 break
 
-            b1p = content.find("_(", bp, ep)
+            b1p = content.find(b"_(", bp, ep)
             if b1p == -1:
-                print(content[bp:])
+                print((content[bp:]))
                 continue
-            b2p = content.find("\"", b1p + 2, b1p + 4)
+            b2p = content.find(b"\"", b1p + 2, b1p + 4)
             if b2p == -1:
-                print(content[bp:])
+                print((content[bp:]))
                 continue
 
-            e1p = content.find(")", ep - 2, ep)
+            e1p = content.find(b")", ep - 2, ep)
             if e1p == -1:
-                print(content[bp:])
+                print((content[bp:]))
                 continue
 
-            e2p = content.find("\"", e1p - 2, e1p)
+            e2p = content.find(b"\"", e1p - 2, e1p)
             if e2p == -1:
-                print(content[bp:])
+                print((content[bp:]))
                 continue
 
             out_arr.append(content[cp:bp])
             key = content[b2p + 1:e2p]
-            if po_dict.get(key, "") == "":
+            if po_dict.get(key, b"") == b"":
                 out_arr.append(key)
             else:
                 out_arr.append(po_dict[key])
@@ -146,7 +147,7 @@ class SimpleI18N:
 
         out_arr.append(content[cp:])
 
-        return "".join(out_arr)
+        return b"".join(out_arr)
 
     def render(self, lang_path, template_file):
         po_file = os.path.join(lang_path, self.lang, "LC_MESSAGES", "messages.po")

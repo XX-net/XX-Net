@@ -5,36 +5,37 @@ import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
-    python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir))
     noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
 import re
 import socket, ssl
-import urlparse
-import urllib2
+import urllib.parse
+import urllib.request, urllib.error, urllib.parse
 import time
 import threading
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
-import yaml
 import json
+import cgi
 
 from xlog import getLogger
 xlog = getLogger("launcher")
 import module_init
-import config
+from config import config
 import autorun
 import update
 import update_from_github
 import simple_http_client
 import simple_http_server
+import utils
 from simple_i18n import SimpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-i18n_translator = SimpleI18N(config.get(['language'], None))
+i18n_translator = SimpleI18N(config.language)
 
 
 module_menus = {}
@@ -44,35 +45,50 @@ class Http_Handler(simple_http_server.HttpServerHandler):
     def load_module_menus(self):
         global module_menus
         new_module_menus = {}
-        #config.load()
-        modules = config.get(['modules'], None)
+
+        modules = config.all_modules
         for module in modules:
-            values = modules[module]
-            if module != "launcher" and config.get(["modules", module, "auto_start"], 0) != 1:  # skip php_proxy module
+            if getattr(config, "enable_" + module) != 1:
                 continue
 
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")  # launcher & gae_proxy modules
+            menu_path = os.path.join(root_path, module, "web_ui", "menu.json")  # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
 
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
             stream = i18n_translator.render(locale_dir, menu_path)
-            module_menu = yaml.load(stream)
+            module_menu = json.loads(stream)
             new_module_menus[module] = module_menu
 
-        module_menus = sorted(new_module_menus.iteritems(), key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
+        module_menus = sorted(iter(new_module_menus.items()), key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
-        refer = self.headers.getheader('Referer')
+        self.headers = utils.to_str(self.headers)
+        self.path = utils.to_str(self.path)
+
+        refer = self.headers.get('Referer')
         if refer:
-            refer_loc = urlparse.urlparse(refer).netloc
-            host = self.headers.getheader('host')
+            refer_loc = urllib.parse.urlparse(refer).netloc
+            host = self.headers.get('Host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
+
+        try:
+            ctype, pdict = cgi.parse_header(self.headers.get('Content-Type', ""))
+            if ctype == 'multipart/form-data':
+                self.postvars = cgi.parse_multipart(self.rfile, pdict)
+            elif ctype == 'application/x-www-form-urlencoded':
+                length = int(self.headers.get('Content-Length'))
+                self.postvars = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=True)
+            else:
+                self.postvars = {}
+        except Exception as e:
+            xlog.exception("do_POST %s except:%r", self.path, e)
+            self.postvars = {}
 
         #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
@@ -85,16 +101,20 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                 path = '/' + '/'.join(url_path_list[4:])
                 controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler.postvars = utils.to_str(self.postvars)
                 return controler.do_POST()
 
         self.send_not_found()
         xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_GET(self):
-        refer = self.headers.getheader('Referer')
+        self.headers = utils.to_str(self.headers)
+        self.path = utils.to_str(self.path)
+
+        refer = self.headers.get('Referer')
         if refer:
-            refer_loc = urlparse.urlparse(refer).netloc
-            host = self.headers.getheader('host')
+            refer_loc = urllib.parse.urlparse(refer).netloc
+            host = self.headers.get('Host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
@@ -105,7 +125,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path)
             return
 
-        url_path = urlparse.urlparse(self.path).path
+        url_path = urllib.parse.urlparse(self.path).path
         if url_path == '/':
             return self.req_index_handler()
 
@@ -178,20 +198,20 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         try:
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            if config.get(['modules', 'x_tunnel', 'auto_start'], 0) == 1:
+            if config.enable_x_tunnel:
                 target_module = 'x_tunnel'
                 target_menu = 'config'
             # elif config.get(['modules', 'smart_router', 'auto_start'], 0) == 1:
             #     target_module = 'smart_router'
             #     target_menu = 'config'
-            elif config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
+            elif config.enable_gae_proxy:
                 target_module = 'gae_proxy'
                 target_menu = 'status'
             else:
@@ -205,20 +225,20 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
         index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
 
-        current_version = update_from_github.current_version()
-        menu_content = ''
+        current_version = utils.to_bytes(update_from_github.current_version())
+        menu_content = b''
         for module, v in module_menus:
             #xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
-            menu_content += '<li class="nav-header">%s</li>\n' % title
+            menu_content += b'<li class="nav-header">%s</li>\n' % utils.to_bytes(title)
             for sub_id in v['sub_menus']:
                 sub_title = v['sub_menus'][sub_id]['title']
                 sub_url = v['sub_menus'][sub_id]['url']
                 if target_module == module and target_menu == sub_url:
-                    active = 'class="active"'
+                    active = b'class="active"'
                 else:
-                    active = ''
-                menu_content += '<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % (active, module, sub_url, sub_title)
+                    active = b''
+                menu_content += b'<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % utils.to_bytes( (active, module, sub_url, sub_title) )
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
@@ -226,41 +246,40 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
             right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
         else:
-            right_content = ""
+            right_content = b""
 
-        data = (index_content.decode('utf-8') % (current_version, current_version, menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = index_content % (current_version, current_version, menu_content, right_content )
         self.send_response('text/html', data)
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_config']:
-            config.load()
 
             if module_init.xargs.get("allow_remote", 0):
                 allow_remote_connect = 1
             else:
-                allow_remote_connect = config.get(["modules", "launcher", "allow_remote_connect"], 0)
+                allow_remote_connect = config.allow_remote_connect
 
             dat = {
-                "check_update": config.get(["update", "check_update"], "notice-stable"),
-                "language": config.get(["language"], i18n_translator.lang),
-                "popup_webui": config.get(["modules", "launcher", "popup_webui"], 1),
+                "check_update": config.check_update,
+                "language": config.language or i18n_translator.lang,
+                "popup_webui": config.popup_webui,
                 "allow_remote_connect": allow_remote_connect,
-                "allow_remote_switch": config.get(["modules", "launcher", "allow_remote_connect"], 0),
-                "show_systray": config.get(["modules", "launcher", "show_systray"], 1),
-                "auto_start": config.get(["modules", "launcher", "auto_start"], 0),
-                "show_detail": config.get(["modules", "gae_proxy", "show_detail"], 0),
-                "gae_proxy_enable": config.get(["modules", "gae_proxy", "auto_start"], 0),
-                "x_tunnel_enable": config.get(["modules", "x_tunnel", "auto_start"], 0),
-                "smart_router_enable": config.get(["modules", "smart_router", "auto_start"], 0),
-                "system-proxy": config.get(["modules", "launcher", "proxy"], "smart_router"),
-                "show-compat-suggest": config.get(["show_compat_suggest"], 1),
-                "no_mess_system": config.get(["no_mess_system"], 0),
-                "keep_old_ver_num": config.get(["modules", "launcher", "keep_old_ver_num"], -1),  # -1 means not set yet
-                "postUpdateStat": config.get(["update", "postUpdateStat"], "noChange"),
+                "allow_remote_switch": config.allow_remote_connect,
+                "show_systray": config.show_systray,
+                "auto_start": config.auto_start,
+                "show_detail": config.gae_show_detail,
+                "gae_proxy_enable": config.enable_gae_proxy,
+                "x_tunnel_enable": config.enable_x_tunnel,
+                "smart_router_enable": config.enable_smart_router,
+                "system-proxy": config.os_proxy_mode,
+                "show-compat-suggest": config.show_compat_suggest,
+                "no_mess_system": config.no_mess_system,
+                "keep_old_ver_num": config.keep_old_ver_num,
+                "postUpdateStat": config.postUpdateStat,
             }
             data = json.dumps(dat)
         elif reqs['cmd'] == ['set_config']:
@@ -270,7 +289,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if skip_version_type not in ["stable", "test"]:
                     data = '{"res":"fail"}'
                 else:
-                    config.set(["update", "skip_%s_version" % skip_version_type], skip_version)
+                    setattr(config, "skip_%s_version" % skip_version_type, skip_version)
                     config.save()
                     if skip_version in update_from_github.update_info:
                         update_from_github.update_info = ''
@@ -280,9 +299,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if check_update not in ["dont-check", "stable", "notice-stable", "test", "notice-test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
-                    if config.get(["update", "check_update"]) != check_update:
+                    if config.check_update != check_update:
                         update_from_github.init_update_info(check_update)
-                        config.set(["update", "check_update"], check_update)
+                        config.check_update = check_update
                         config.save()
 
                     data = '{"res":"success"}'
@@ -292,7 +311,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if language not in i18n_translator.get_valid_languages():
                     data = '{"res":"fail, language:%s"}' % language
                 else:
-                    config.set(["language"], language)
+                    config.language = language
                     config.save()
 
                     i18n_translator.lang = language
@@ -304,7 +323,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if popup_webui != 0 and popup_webui != 1:
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
                 else:
-                    config.set(["modules", "launcher", "popup_webui"], popup_webui)
+                    config.popup_webui = popup_webui
                     config.save()
 
                     data = '{"res":"success"}'
@@ -313,7 +332,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if allow_remote_switch != 0 and allow_remote_switch != 1:
                     data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_switch
                 else:
-                    config.set(["modules", "launcher", "allow_remote_connect"], allow_remote_switch)
+                    config.allow_remote_connect = allow_remote_switch
                     config.save()
 
                     try:
@@ -344,7 +363,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if show_systray != 0 and show_systray != 1:
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
-                    config.set(["modules", "launcher", "show_systray"], show_systray)
+                    config.show_systray = show_systray
                     config.save()
 
                     data = '{"res":"success"}'
@@ -353,7 +372,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if show_compat_suggest != 0 and show_compat_suggest != 1:
                     data = '{"res":"fail, show_compat_suggest:%s"}' % show_compat_suggest
                 else:
-                    config.set(["show_compat_suggest"], show_compat_suggest)
+                    config.show_compat_suggest = show_compat_suggest
                     config.save()
 
                     data = '{"res":"success"}'
@@ -362,7 +381,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if no_mess_system != 0 and no_mess_system != 1:
                     data = '{"res":"fail, no_mess_system:%s"}' % no_mess_system
                 else:
-                    config.set(["no_mess_system"], no_mess_system)
+                    config.no_mess_system = no_mess_system
                     config.save()
 
                     data = '{"res":"success"}'
@@ -371,7 +390,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if keep_old_ver_num < 0 or keep_old_ver_num > 99:
                     data = '{"res":"fail, keep_old_ver_num:%s not in range 0 to 99"}' % keep_old_ver_num
                 else:
-                    config.set(["modules", "launcher", "keep_old_ver_num"], keep_old_ver_num)
+                    config.keep_old_ver_num = keep_old_ver_num
                     config.save()
 
                     data = '{"res":"success"}'
@@ -385,7 +404,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     else:
                         autorun.disable()
 
-                    config.set(["modules", "launcher", "auto_start"], auto_start)
+                    config.auto_start = auto_start
                     config.save()
 
                     data = '{"res":"success"}'
@@ -394,7 +413,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if show_detail != 0 and show_detail != 1:
                     data = '{"res":"fail, show_detail:%s"}' % show_detail
                 else:
-                    config.set(["modules", "gae_proxy", "show_detail"], show_detail)
+                    config.gae_show_detail = show_detail
                     config.save()
 
                     data = '{"res":"success"}'
@@ -403,7 +422,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:
                     data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
                 else:
-                    config.set(["modules", "gae_proxy", "auto_start"], gae_proxy_enable)
+                    config.enable_gae_proxy = gae_proxy_enable
                     config.save()
                     if gae_proxy_enable:
                         module_init.start("gae_proxy")
@@ -416,7 +435,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if x_tunnel_enable != 0 and x_tunnel_enable != 1:
                     data = '{"res":"fail, x_tunnel_enable:%s"}' % x_tunnel_enable
                 else:
-                    config.set(["modules", "x_tunnel", "auto_start"], x_tunnel_enable)
+                    config.enable_x_tunnel = x_tunnel_enable
                     config.save()
                     if x_tunnel_enable:
                         module_init.start("x_tunnel")
@@ -429,7 +448,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if smart_router_enable != 0 and smart_router_enable != 1:
                     data = '{"res":"fail, smart_router_enable:%s"}' % smart_router_enable
                 else:
-                    config.set(["modules", "smart_router", "auto_start"], smart_router_enable)
+                    config.enable_smart_router =  smart_router_enable
                     config.save()
                     if smart_router_enable:
                         module_init.start("smart_router")
@@ -442,7 +461,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if postUpdateStat not in ["noChange", "isNew", "isPostUpdate"]:
                     data = '{"res":"fail, postUpdateStat:%s"}' % postUpdateStat
                 else:
-                    config.set(["update", "postUpdateStat"], postUpdateStat)
+                    config.postUpdateStat = postUpdateStat
                     config.save()
                     data = '{"res":"success"}'
             else:
@@ -454,8 +473,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_update_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_info']:
@@ -510,18 +529,18 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_config_proxy_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_config']:
             data = {
-                "enable": config.get(["proxy", "enable"], 0),
-                "type": config.get(["proxy", "type"], "HTTP"),
-                "host": config.get(["proxy", "host"], ""),
-                "port": config.get(["proxy", "port"], 8080),
-                "user": config.get(["proxy", "user"], ""),
-                "passwd": config.get(["proxy", "passwd"], ""),
+                "enable": config.global_proxy_enable,
+                "type": config.global_proxy_type,
+                "host": config.global_proxy_host,
+                "port": config.global_proxy_port,
+                "user": config.global_proxy_username,
+                "passwd": config.global_proxy_password,
             }
             data = json.dumps(data)
         elif reqs['cmd'] == ['set_config']:
@@ -535,12 +554,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if int(enable) and not test_proxy(type, host, port, user, passwd):
                 return self.send_response('text/html', '{"res":"fail", "reason": "test proxy fail"}')
 
-            config.set(["proxy", "enable"], enable)
-            config.set(["proxy", "type"], type)
-            config.set(["proxy", "host"], host)
-            config.set(["proxy", "port"], port)
-            config.set(["proxy", "user"], user)
-            config.set(["proxy", "passwd"], passwd)
+            config.global_proxy_enable = enable
+            config.global_proxy_type = type
+            config.global_proxy_host = host
+            config.global_proxy_port = port
+            config.global_proxy_username = user
+            config.global_proxy_password = passwd
             config.save()
 
             module_init.call_each_module("set_proxy", {
@@ -556,8 +575,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         try:
@@ -581,8 +600,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def req_debug_handler(self):
         global mem_stat
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
 
         try:
             import tracemalloc
@@ -603,12 +622,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
             dat = ""
             for stat in top_stats[:100]:
-                print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
+                print(("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024)))
                 lines = stat.traceback.format()
                 ll = "\n".join(lines)
                 ln = len(lines)
                 pl = ""
-                for i in xrange(ln, 0, -1):
+                for i in range(ln, 0, -1):
                     line = lines[i - 1]
                     print(line)
                     if line[8:].startswith(python_lib):
@@ -656,7 +675,7 @@ def test_proxy(type, host, port, user, passwd):
         "port": int(port),
         "user": user if len(user) else None,
         "pass": passwd if len(passwd) else None
-    }, timeout=5)
+    }, timeout=3)
 
     urls = [
         "https://www.microsoft.com",
@@ -689,14 +708,14 @@ def start(allow_remote=0):
     global server
     # should use config.yaml to bind ip
     if not allow_remote:
-        allow_remote = config.get(["modules", "launcher", "allow_remote_connect"], 0)
-    host_ip = config.get(["modules", "launcher", "control_ip"], "127.0.0.1")
-    host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        allow_remote = config.allow_remote_connect
+    host_ip = config.control_ip
+    host_port = config.control_port
 
     if allow_remote:
         xlog.info("allow remote access WebUI")
 
-    if isinstance(host_ip, basestring):
+    if isinstance(host_ip, str):
         listen_ips = [host_ip]
     else:
         listen_ips = list(host_ip)
@@ -720,8 +739,8 @@ def stop():
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(proxy_handler)
     try:
         req = opener.open(url, timeout=30)
         return req
@@ -736,7 +755,7 @@ def confirm_xxnet_not_running():
     xlog.debug("start confirm_xxnet_exit")
 
     for i in range(30):
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)  # web_control(default port:8085)
+        host_port = config.control_port = 8085  # web_control(default port:8085)
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) == False:
             xlog.debug("good, xxnet:%s clear!" % host_port)

@@ -19,7 +19,8 @@ strVersion = CurrentVersion()
 Dim oShell : Set oShell = CreateObject("WScript.Shell")
 oShell.CurrentDirectory = strCurrentPath
 
-pythonDir = "python27\2.0\"
+python_version = "3.8.2"
+pythonDir = "python" & python_version & "\"
 If Not DirIsExist(pythonDir) then
     includeFile strCurrentPath & "\code\" & strVersion & "\launcher\download.vbs"
     includeFile strCurrentPath & "\code\" & strVersion & "\launcher\unzip.vbs"
@@ -32,7 +33,6 @@ End Sub
 
 Function PreparePython(download_id)
     ' Check if python have installed.
-    pythonDir = "python27\2.0\"
     If DirIsExist(pythonDir) then
         PreparePython = True
         Exit Function
@@ -41,8 +41,9 @@ Function PreparePython(download_id)
     CreateDir("data")
     CreateDir("data\download")
 
-    url = "https://raw.githubusercontent.com/XX-net/XX-Net-dev/master/download/py27.zip"
-    fp = "data\download\py27.zip"
+    py_fn = "py" & python_version & ".zip"
+    url = "https://raw.githubusercontent.com/XX-net/XX-Net-dev/master/download/" & py_fn
+    fp = "data\download\" & py_fn
     fsize = 6594715
     If download_id = 1 then
         call DownloadFile1(url, fp)
@@ -56,10 +57,10 @@ Function PreparePython(download_id)
         Exit Function
     end if
 
-    call UnzipFiles("data\download\py27.zip", "data\download\py27")
+    call UnzipFiles(fp, "data\download\py" & python_version)
 
     CreateDir("python27")
-    call MoveDir("data\download\py27\py27", "python27\2.0")
+    call MoveDir("data\download\py" & python_version, pythonDir)
 
     call RemoveDir("data\download")
     PreparePython = True
@@ -124,7 +125,7 @@ If not python_is_ready then
 End If
 
 If not python_is_ready then
-    WScript.Echo "XX-Net Download Python Environment fail!"
+    WScript.Echo "XX-Net Download Python Environment fail, Please download Windows version."
     Wscript.Quit
 End if
 
@@ -182,7 +183,7 @@ Else
     python_cmd = "pythonw.exe"
 End If
 
-strExecutable = quo & strCurrentPath & "\python27\2.0\" & python_cmd & quo
+strExecutable = quo & strCurrentPath & "\" & pythonDir & python_cmd & quo
 strArgs = strExecutable & " " & quo & strCurrentPath & "\code\" & strVersion & "\launcher\start.py" & quo
 RunningLockFn = strCurrentPath & "\data\launcher\Running.Lck"
 'WScript.Echo strArgs

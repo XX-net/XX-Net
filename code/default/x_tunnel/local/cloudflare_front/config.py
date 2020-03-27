@@ -26,7 +26,7 @@ class Config(ConfigBase):
         self.set_var("https_new_connect_num", 0)
 
         # check_ip
-        self.set_var("check_ip_content", "OK")
+        self.set_var("check_ip_content", b"OK")
 
         # connect_creator
         self.set_var("check_sni", 1)

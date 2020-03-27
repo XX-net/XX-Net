@@ -9,15 +9,15 @@ import struct
 if __name__ == '__main__':
     current_path = os.path.dirname(os.path.abspath(__file__))
     root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    python_path = os.path.join(root_path, 'python27', '1.0')
+    python_path = root_path
     noarch_lib = os.path.join(python_path, 'lib', 'noarch')
     sys.path.append(noarch_lib)
 
 
-from socket_wrap import SocketWrap
+from .socket_wrap import SocketWrap
 import simple_queue
 import socks
-import global_var as g
+from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -144,7 +144,7 @@ class ConnectManager(object):
         if not ip_rate:
             return None
 
-        ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
+        ip_time = sorted(list(ip_rate.items()), key=operator.itemgetter(1))
         ordered_ips = [ip for ip, rate in ip_time]
 
         wait_queue = simple_queue.Queue()

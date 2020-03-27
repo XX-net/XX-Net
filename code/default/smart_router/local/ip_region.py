@@ -15,7 +15,7 @@ top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 data_path = os.path.join(top_path, 'data', "smart_router")
 
 if __name__ == '__main__':
-    python_path = os.path.join(root_path, 'python27', '1.0')
+    python_path = root_path
     noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
@@ -63,7 +63,7 @@ class IpRegion(object):
         nip = socket.inet_aton(ip)
         #确定索引范围
         index = self.index
-        fip = ord(nip[0])
+        fip = ord(nip[0:1])
         #从 224 开始都属于保留地址
         if fip >= 224:
             return True
@@ -189,7 +189,7 @@ class IpRegion(object):
                 buffer[offset:] = lastip_s = int2bytes4(lastip_s)
                 buffer[offset + 4:] = int2bytes4(lastip_e)
                 # 一个索引分为开始和结束
-                fip = ord(lastip_s[0]) * 2
+                fip = ord(lastip_s[0:1]) * 2
                 if fip != index_fip:
                     # 前一个索引结束，序数多 1
                     # 避免无法搜索从当前索引结尾地址到下个索引开始地址
@@ -204,7 +204,7 @@ class IpRegion(object):
         # 添加最后一段范围
         buffer[offset:] = lastip_s = int2bytes4(lastip_s)
         buffer[offset + 4:] = int2bytes4(lastip_e)
-        fip = ord(lastip_s[0]) * 2
+        fip = ord(lastip_s[0:1]) * 2
         if fip != index_fip:
             index[index_fip + 1] = index_b = int2bytes2(index_n)
             index[fip] = index_b
@@ -215,14 +215,14 @@ class IpRegion(object):
         # 写入文件
         fd = open(self.cn_ipdb, 'wb', buffering)
         fd.write(int2bytes4(offset))
-        for i in xrange(224 * 2):
+        for i in range(224 * 2):
             fd.write(index.get(i, padding))
         fd.write(buffer[:offset])
-        fd.write('endCN IP from ')
-        fd.write(update.encode(u'ascii'))
+        fd.write(b'endCN IP from ')
+        fd.write(update.encode('ascii'))
 
         count = int(index_n // 2)
-        fd.write(', range count: %d' % count)
+        fd.write(b', range count: %d' % count)
         fd.close()
 
         xlog.debug('include IP range number：%s' % count)
@@ -241,14 +241,14 @@ class UpdateIpRange(object):
     def download_apnic(self, fn):
         import subprocess
         import sys
-        import urllib2
+        import urllib.request, urllib.error, urllib.parse
         url = 'https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
         try:
             data = subprocess.check_output(['wget', url, '-O-'])
         except (OSError, AttributeError):
-            print >> sys.stderr, "Fetching data from apnic.net, " \
-                                 "it might take a few minutes, please wait..."
-            data = urllib2.urlopen(url).read()
+            print("Fetching data from apnic.net, " \
+                                 "it might take a few minutes, please wait...", file=sys.stderr)
+            data = urllib.request.urlopen(url).read()
 
         with open(fn, "w") as f:
             f.write(data)
@@ -271,5 +271,5 @@ class UpdateIpRange(object):
 if __name__ == '__main__':
     #up = UpdateIpRange()
     ipr = IpRegion()
-    print(ipr.check_ip("8.8.8.8"))
-    print(ipr.check_ip("114.111.114.114"))
+    print((ipr.check_ip("8.8.8.8")))
+    print((ipr.check_ip("114.111.114.114")))

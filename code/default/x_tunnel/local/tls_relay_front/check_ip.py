@@ -9,7 +9,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = root_path
 
 sys.path.append(root_path)
 
@@ -38,8 +38,8 @@ from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
+from x_tunnel.local.tls_relay_front.config import Config
 
-from config import Config
 
 
 if __name__ == "__main__":
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     else:
         ip = "207.246.89.177"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
-    print("test ip:%s" % ip)
+    print(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
@@ -76,6 +76,6 @@ if __name__ == "__main__":
     if not res:
         print("connect fail")
     elif res.ok:
-        print("success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time))
+        print(("success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time)))
     else:
         print("not support")

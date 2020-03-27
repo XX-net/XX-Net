@@ -8,15 +8,16 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
 
+import utils
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
 
 class GfwList(object):
     def __init__(self):
-        self.gfw_black_list = self.load("gfw_black_list.txt")
-        self.gfw_white_list = self.load("gfw_white_list.txt")
-        self.advertisement_list = self.load("advertisement_list.txt")
+        self.gfw_black_list = utils.to_bytes(self.load("gfw_black_list.txt"))
+        self.gfw_white_list = utils.to_bytes(self.load("gfw_white_list.txt"))
+        self.advertisement_list = utils.to_bytes(self.load("advertisement_list.txt"))
 
     def load(self, name):
         user_file = os.path.join(data_path, name)
@@ -47,9 +48,9 @@ class GfwList(object):
             return False
 
         # check avoid wrong match like xgoogle.com
-        dpl = host.split(".")
+        dpl = host.split(b".")
         for i in range(0, len(dpl)):
-            h = ".".join(dpl[i:])
+            h = b".".join(dpl[i:])
             if h in self.gfw_black_list:
                 return True
 

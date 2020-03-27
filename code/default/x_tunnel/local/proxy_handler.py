@@ -1,20 +1,23 @@
 import time
 import socket
 import struct
-import urlparse
+import urllib.parse
 import select
 
 import utils
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
-import global_var as g
-import proxy_session
+from . import global_var as g
+from . import proxy_session
 
 
 def netloc_to_host_port(netloc, default_port=80):
-    if ":" in netloc:
-        host, _, port = netloc.rpartition(':')
+    if isinstance(netloc, str):
+        netloc = netloc.encode("ascii")
+
+    if b":" in netloc:
+        host, _, port = netloc.rpartition(b':')
         port = int(port)
     else:
         host = netloc
@@ -27,10 +30,10 @@ class Socks5Server():
 
     def __init__(self, sock, client, args):
         self.connection = sock
-        self.rfile = socket._fileobject(self.connection, "rb", -1)
-        self.wfile = socket._fileobject(self.connection, "wb", 0)
+        self.rfile = self.connection.makefile("rb", -1)
+        self.wfile = self.connection.makefile("wb", 0)
         self.client_address = client
-        self.read_buffer = ""
+        self.read_buffer = b""
         self.buffer_start = 0
         self.args = args
 
@@ -42,13 +45,13 @@ class Socks5Server():
             if not socks_version:
                 return
 
-            if socks_version == "\x04":
+            if socks_version == b"\x04":
                 self.socks4_handler()
-            elif socks_version == "\x05":
+            elif socks_version == b"\x05":
                 self.socks5_handler()
-            elif socks_version == "C":
+            elif socks_version == b"C":
                 self.https_handler()
-            elif socks_version in ["G", "P", "D", "O", "H", "T"]:
+            elif socks_version in [b"G", b"P", b"D", b"O", b"H", b"T"]:
                 self.http_handler(socks_version)
                 return
             else:
@@ -66,7 +69,7 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
-                n1 = self.read_buffer.find("\x00", self.buffer_start)
+                n1 = self.read_buffer.find(b"\x00", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 1
@@ -91,7 +94,7 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
-                n1 = self.read_buffer.find("\r\n", self.buffer_start)
+                n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
                 if n1 > -1:
                     line = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 2
@@ -116,11 +119,11 @@ class Socks5Server():
         sock.setblocking(0)
         try:
             while True:
-                if self.read_buffer[self.buffer_start:] == "\r\n":
+                if self.read_buffer[self.buffer_start:] == b"\r\n":
                     self.buffer_start += 2
-                    return ""
+                    return b""
 
-                n1 = self.read_buffer.find("\r\n\r\n", self.buffer_start)
+                n1 = self.read_buffer.find(b"\r\n\r\n", self.buffer_start)
                 if n1 > -1:
                     block = self.read_buffer[self.buffer_start:n1]
                     self.buffer_start = n1 + 4
@@ -183,7 +186,7 @@ class Socks5Server():
         data = self.read_bytes(6)
         port = struct.unpack(">H", data[0:2])[0]
         addr_pack = data[2:6]
-        if addr_pack[0:3] == '\x00\x00\x00' and addr_pack[3] != '\x00':
+        if addr_pack[0:3] == b'\x00\x00\x00' and addr_pack[3] != b'\x00':
             domain_mode = True
         else:
             ip = socket.inet_ntoa(addr_pack)
@@ -227,24 +230,24 @@ class Socks5Server():
             xlog.warn("socks5 protocol error:%r", e)
             return
 
-        socks_version = ord(data[0])
+        socks_version = data[0]
         if socks_version != 5:
             xlog.warn("request version:%d error", socks_version)
             return
 
-        command = ord(data[1])
+        command = data[1]
         if command != 1:  # 1. Tcp connect
             xlog.warn("request not supported command mode:%d", command)
             sock.send(b"\x05\x07\x00\x01")  # Command not supported
             return
 
-        addrtype_pack = data[3]
+        addrtype_pack = data[3:4]
         addrtype = ord(addrtype_pack)
         if addrtype == 1:  # IPv4
             addr_pack = self.read_bytes(4)
             addr = socket.inet_ntoa(addr_pack)
         elif addrtype == 3:  # Domain name
-            domain_len_pack = self.read_bytes(1)[0]
+            domain_len_pack = self.read_bytes(1)[0:1]
             domain_len = ord(domain_len_pack)
             domain = self.read_bytes(domain_len)
             addr_pack = domain_len_pack + domain
@@ -283,7 +286,7 @@ class Socks5Server():
             command, path, version = words
         elif len(words) == 2:
             command, path = words
-            version = "HTTP/1.1"
+            version = b"HTTP/1.1"
         else:
             xlog.warn("https req line fail:%s", line)
             return
@@ -323,7 +326,7 @@ class Socks5Server():
             method, url, http_version = words
         elif len(words) == 2:
             method, url = words
-            http_version = "HTTP/1.1"
+            http_version = b"HTTP/1.1"
         else:
             xlog.warn("http req line fail:%s", req_line)
             return
@@ -332,23 +335,23 @@ class Socks5Server():
         # if method not in ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH"]:
         #    xlog.warn("https req method not known:%s", method)
 
-        if url.startswith("http://") or url.startswith("HTTP://"):
-            o = urlparse.urlparse(url)
+        if url.startswith(b"http://") or url.startswith(b"HTTP://"):
+            o = urllib.parse.urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
-            p = url[7:].find("/")
+            p = url[7:].find(b"/")
             if p >= 0:
                 path = url[7+p:]
             else:
-                path = "/"
+                path = b"/"
         else:
             header_block = self.read_headers()
-            lines = header_block.split("\r\n")
+            lines = header_block.split(b"\r\n")
             path = url
             host = None
             for line in lines:
-                key, _, value = line.rpartition(":")
-                if key.lower == "host":
+                key, _, value = line.rpartition(b":")
+                if key.lower == b"host":
                     host, port = netloc_to_host_port(value)
                     break
             if host is None:
@@ -365,7 +368,7 @@ class Socks5Server():
 
         xlog.info("http %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
 
-        new_req_line = "%s %s %s" % (method, path, http_version)
+        new_req_line = b"%s %s %s" % (method, path, http_version)
         left_buf = new_req_line + self.read_buffer[(len(req_line) + 1):]
         g.session.conn_list[conn_id].transfer_received_data(left_buf)
 

@@ -11,7 +11,7 @@ from . import win32runas
 from .pteredor import local_ip_startswith
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "gae_proxy"))
 if not os.path.isdir(data_path):

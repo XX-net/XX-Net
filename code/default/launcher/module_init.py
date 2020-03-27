@@ -2,7 +2,7 @@ import subprocess
 import threading
 import os
 import sys
-import config
+from config import config
 
 from xlog import getLogger
 xlog = getLogger("launcher")
@@ -28,7 +28,7 @@ def start(module):
         return
 
     try:
-        if module not in config.config["modules"]:
+        if module not in config.all_modules:
             xlog.error("module not exist %s", module)
             raise Exception()
 
@@ -41,15 +41,15 @@ def start(module):
 
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
             if "imp" not in proc_handler[module]:
-                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], -1)
+                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local'], 0)
 
-            _start = proc_handler[module]["imp"].start
-            p = threading.Thread(target=_start.main, args=([xargs]))
+            _local = proc_handler[module]["imp"].local
+            p = threading.Thread(target=_local.start, args=([xargs]))
             p.daemon = True
             p.start()
             proc_handler[module]["proc"] = p
 
-            while not _start.client.ready:
+            while not _local.is_ready():
                 time.sleep(0.1)
         else:
             script_path = os.path.join(root_path, module, 'start.py')
@@ -75,11 +75,11 @@ def stop(module):
 
         if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
 
-            _start = proc_handler[module]["imp"].start
+            _local = proc_handler[module]["imp"].local
             xlog.debug("start to terminate %s module", module)
-            _start.client.terminate()
+            _local.stop()
             xlog.debug("module %s stopping", module)
-            while _start.client.ready:
+            while _local.is_ready():
                 time.sleep(0.1)
         else:
             proc_handler[module]["proc"].terminate()  # Sends SIGTERM
@@ -111,12 +111,12 @@ def start_all_auto():
     if not os.path.isfile(running_file):
         open(running_file, 'a').close()
 
-    for module in config.modules:
+    for module in config.all_modules:
         if module in ["launcher"]:
             continue
         if not os.path.isdir(os.path.join(root_path, module)):
             continue
-        if "auto_start" in config.config['modules'][module] and config.config['modules'][module]["auto_start"]:
+        if getattr(config, "enable_" + module):
             start_time = time.time()
             start(module)
             # web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
@@ -130,4 +130,7 @@ def stop_all():
     for module in running_modules:
         stop(module)
 
-    os.remove(running_file)
+    try:
+        os.remove(running_file)
+    except:
+        pass

@@ -37,12 +37,15 @@
 
 import sys
 import os
+import traceback
+import platform
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+gae_proxy_path = os.path.join(root_path, "gae_proxy")
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = root_path
 
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
@@ -59,14 +62,17 @@ elif sys.platform == "darwin":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
-import traceback
-import platform
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
     __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
 work_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(work_path)
+
+sys.path.append(root_path)
+from gae_proxy.local.cert_util import CertUtil
+from gae_proxy.local import proxy_handler
+from gae_proxy.local.front import front, direct_front
 
 
 def check_create_data_path():
@@ -81,11 +87,8 @@ from xlog import getLogger
 xlog = getLogger("gae_proxy")
 xlog.set_buffer(1000)
 
-from cert_util import CertUtil
 import simple_http_server
-import proxy_handler
 import env_info
-from front import front, direct_front
 
 
 proxy_server = None
@@ -120,7 +123,7 @@ def main(args):
     allow_remote = args.get("allow_remote", 0)
 
     listen_ips = front.config.listen_ip
-    if isinstance(listen_ips, basestring):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)

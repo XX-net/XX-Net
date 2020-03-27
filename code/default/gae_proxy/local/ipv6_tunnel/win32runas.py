@@ -85,7 +85,7 @@ def runas(args=sys.argv, executable=sys.executable, cwd=None,
     except Exception as e:
         err = e
     if err:
-        print('runas failed! error: %r' % err)
+        print(('runas failed! error: %r' % err))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

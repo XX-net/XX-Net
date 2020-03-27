@@ -5,7 +5,7 @@
 if __name__ == "__main__":
     import os, sys
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir))
     noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
     win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'win32'))
@@ -14,11 +14,11 @@ if __name__ == "__main__":
 import webbrowser
 import os
 import ctypes
-import _winreg as winreg
+import winreg as winreg
 import win32_proxy_manager
 import module_init
 import update
-import config
+from config import config
 
 from xlog import getLogger
 xlog = getLogger("launcher")
@@ -36,7 +36,7 @@ class Win_tray():
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
         self.INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path, 0, winreg.KEY_ALL_ACCESS)
 
-        proxy_setting = config.get(["modules", "launcher", "proxy"], "pac")
+        proxy_setting = config.os_proxy_mode
         if proxy_setting == "pac":
             self.on_enable_pac()
         elif proxy_setting == "gae":
@@ -92,37 +92,37 @@ class Win_tray():
         disable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat == "disable" else 0
 
         if lang_code == "zh_CN":
-            menu_options = [(u"设置", None, self.on_show, 0)]
-            if config.get(["modules", "gae_proxy", "auto_start"], 0) == 1:
-                menu_options.append((u"全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked))
+            menu_options = [("设置", None, self.on_show, 0)]
+            if config.enable_gae_proxy == 1:
+                menu_options.append(("全局通过GAEProxy代理", None, self.on_enable_gae_proxy, gae_proxy_checked))
 
-            if config.get(["modules", "x_tunnel", "auto_start"], 0) == 1:
-                menu_options.append((u"全局通过X-Tunnel代理", None, self.on_enable_x_tunnel, x_tunnel_checked))
+            if config.enable_x_tunnel == 1:
+                menu_options.append(("全局通过X-Tunnel代理", None, self.on_enable_x_tunnel, x_tunnel_checked))
 
-            if config.get(["modules", "smart_router", "auto_start"], 0) == 1:
-                menu_options.append((u"全局通过智能路由代理", None, self.on_enable_smart_router, smart_router_checked))
+            if config.enable_smart_router == 1:
+                menu_options.append(("全局通过智能路由代理", None, self.on_enable_smart_router, smart_router_checked))
 
             menu_options += [
-                (u"全局PAC智能代理", None, self.on_enable_pac, pac_checked),
-                (u"取消全局代理", None, self.on_disable_proxy, disable_checked),
-                (u"重启各模块", None, self.on_restart_each_module, 0),
-                (u'退出', None, SysTrayIcon.QUIT, False)]
+                ("全局PAC智能代理", None, self.on_enable_pac, pac_checked),
+                ("取消全局代理", None, self.on_disable_proxy, disable_checked),
+                ("重启各模块", None, self.on_restart_each_module, 0),
+                ('退出', None, SysTrayIcon.QUIT, False)]
         else:
-            menu_options = [(u"Config", None, self.on_show, 0)]
-            if config.get(["modules", "gae_proxy", "auto_start"], 0) == 1:
-                menu_options.append((u"Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked))
+            menu_options = [("Config", None, self.on_show, 0)]
+            if config.enable_gae_proxy == 1:
+                menu_options.append(("Set Global GAEProxy Proxy", None, self.on_enable_gae_proxy, gae_proxy_checked))
 
-            if config.get(["modules", "x_tunnel", "auto_start"], 0) == 1:
-                menu_options.append((u"Set Global X-Tunnel Proxy", None, self.on_enable_x_tunnel, x_tunnel_checked))
+            if config.enable_x_tunnel == 1:
+                menu_options.append(("Set Global X-Tunnel Proxy", None, self.on_enable_x_tunnel, x_tunnel_checked))
 
-            if config.get(["modules", "smart_router", "auto_start"], 0) == 1:
-                menu_options.append((u"Set Global Smart-Router Proxy", None, self.on_enable_smart_router, smart_router_checked))
+            if config.enable_smart_router == 1:
+                menu_options.append(("Set Global Smart-Router Proxy", None, self.on_enable_smart_router, smart_router_checked))
 
             menu_options += [
-                (u"Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
-                (u"Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
-                (u"Reset Each module", None, self.on_restart_each_module, 0),
-                (u'Quit', None, SysTrayIcon.QUIT, False)]
+                ("Set Global PAC Proxy", None, self.on_enable_pac, pac_checked),
+                ("Disable Global Proxy", None, self.on_disable_proxy, disable_checked),
+                ("Reset Each module", None, self.on_restart_each_module, 0),
+                ('Quit', None, SysTrayIcon.QUIT, False)]
 
         return tuple(menu_options)
 
@@ -138,31 +138,31 @@ class Win_tray():
 
     def on_enable_gae_proxy(self, widget=None, data=None):
         win32_proxy_manager.set_proxy("127.0.0.1:8087")
-        config.set(["modules", "launcher", "proxy"], "gae")
+        config.os_proxy_mode = "gae"
         config.save()
 
     def on_enable_x_tunnel(self, widget=None, data=None):
         win32_proxy_manager.set_proxy("127.0.0.1:1080")
-        config.set(["modules", "launcher", "proxy"], "x_tunnel")
+        config.os_proxy_mode = "x_tunnel"
         config.save()
 
     def on_enable_smart_router(self, widget=None, data=None):
         win32_proxy_manager.set_proxy("127.0.0.1:8086")
-        config.set(["modules", "launcher", "proxy"], "smart_router")
+        config.os_proxy_mode = "smart_router"
         config.save()
 
     def on_enable_pac(self, widget=None, data=None):
         win32_proxy_manager.set_proxy("http://127.0.0.1:8086/proxy.pac")
-        config.set(["modules", "launcher", "proxy"], "pac")
+        config.os_proxy_mode = "pac"
         config.save()
 
     def on_disable_proxy(self, widget=None, data=None):
         win32_proxy_manager.disable_proxy()
-        config.set(["modules", "launcher", "proxy"], "disable")
+        config.os_proxy_mode = "disable"
         config.save()
 
     def show_control_web(self, widget=None, data=None):
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        host_port = config.control_port
         webbrowser.open("http://127.0.0.1:%s/" % host_port)
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 

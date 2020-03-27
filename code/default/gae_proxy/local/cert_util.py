@@ -4,17 +4,16 @@
 import os
 import sys
 import glob
-import binascii
 import time
 import random
 import base64
-import hashlib
+import utils
 import threading
 import subprocess
 import datetime
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "gae_proxy"))
 if not os.path.isdir(data_path):
@@ -54,7 +53,7 @@ class CertUtil(object):
     ca_vendor = 'GoAgent' #TODO: here should be XX-Net
     ca_certfile = os.path.join(data_path, 'CA.crt')
     ca_keyfile = os.path.join(data_path, 'CAkey.pem')
-    ca_thumbprint = ''
+    ca_thumbprint = b''
     ca_privatekey = None
     ca_subject = None
     ca_certdir = os.path.join(data_path, 'certs')
@@ -90,7 +89,7 @@ class CertUtil(object):
         ca.set_pubkey(key)
         ca.add_extensions([
             OpenSSL.crypto.X509Extension(
-                'basicConstraints', False, 'CA:TRUE', subject=ca, issuer=ca)
+                b'basicConstraints', False, b'CA:TRUE', subject=ca, issuer=ca)
             ])
         ca.sign(key, CertUtil.ca_digest)
         #xlog.debug("CA key:%s", key)
@@ -150,14 +149,14 @@ class CertUtil(object):
         sans = set(sans) if sans else set()
         sans.add(commonname)
         if isip:
-            sans = 'IP: ' + commonname
+            sans = b'IP: ' + commonname
         else:
-            sans = 'DNS: %s, DNS: *.%s' % (commonname,  commonname)
+            sans = b'DNS: %s, DNS: *.%s' % (commonname,  commonname)
         cert.add_extensions([OpenSSL.crypto.X509Extension(b'subjectAltName', True, sans)])
 
         cert.sign(CertUtil.ca_privatekey, CertUtil.ca_digest)
 
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
+        certfile = os.path.join(CertUtil.ca_certdir, utils.to_str(commonname) + '.crt')
         with open(certfile, 'wb') as fp:
             fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
             if CertUtil.cert_publickey is None:
@@ -166,11 +165,11 @@ class CertUtil(object):
 
     @staticmethod
     def _get_old_cert(commonname):
-        certfile = os.path.join(CertUtil.ca_certdir, commonname + '.crt')
+        certfile = os.path.join(CertUtil.ca_certdir, utils.to_str(commonname) + '.crt')
         if os.path.exists(certfile):
             with open(certfile, 'rb') as fp:
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, fp.read())
-            if datetime.datetime.strptime(cert.get_notAfter(), '%Y%m%d%H%M%SZ') < datetime.datetime.utcnow() + datetime.timedelta(days=30):
+            if datetime.datetime.strptime(utils.to_str(cert.get_notAfter()), '%Y%m%d%H%M%SZ') < datetime.datetime.utcnow() + datetime.timedelta(days=30):
                 try:
                     os.remove(certfile)
                 except OSError as e:
@@ -190,8 +189,8 @@ class CertUtil(object):
 
             # some site need full name cert
             # like https://about.twitter.com in Google Chrome
-            if not isip and not full_name and commonname.count('.') >= 2 and [len(x) for x in reversed(commonname.split('.'))] > [2, 4]:
-                commonname = commonname.partition('.')[-1]
+            if not isip and not full_name and commonname.count(b'.') >= 2 and [len(x) for x in reversed(commonname.split(b'.'))] > [2, 4]:
+                commonname = commonname.partition(b'.')[-1]
                 certfile = CertUtil._get_old_cert(commonname)
                 if certfile:
                     return certfile
@@ -217,11 +216,10 @@ class CertUtil(object):
         try:
             common_name = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, certdata).get_subject().CN
         except Exception as e:
-            logging.error('load_certificate(certfile=%r) 失败：%s', certfile, e)
+            #logging.error('load_certificate(certfile=%r) 失败：%s', certfile, e)
             return -1
 
         assert certdata, 'cert file %r is broken' % certfile
-        import ctypes
         import ctypes.wintypes
         class CERT_CONTEXT(ctypes.Structure):
             _fields_ = [
@@ -244,7 +242,7 @@ class CertUtil(object):
         ret = 0
         for store in (CERT_SYSTEM_STORE_LOCAL_MACHINE, CERT_SYSTEM_STORE_CURRENT_USER):
             try:
-                store_handle = crypt32.CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, None, CERT_STORE_OPEN_EXISTING_FLAG | store, u'root')
+                store_handle = crypt32.CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, None, CERT_STORE_OPEN_EXISTING_FLAG | store, 'root')
                 if not store_handle:
                     if store == CERT_SYSTEM_STORE_CURRENT_USER and not ca_exists:
                         xlog.warning('CertUtil.import_windows_ca failed: could not open system cert store')
@@ -305,7 +303,7 @@ class CertUtil(object):
                 xlog.warning('CertUtil.import_windows_ca failed: %r', e)
             return True
         elif ret == 1:
-            CertUtil.win32_notify(msg=u'已经导入GoAgent证书，请重启浏览器.', title=u'Restart browser need.')
+            CertUtil.win32_notify(msg='已经导入GoAgent证书，请重启浏览器.', title='Restart browser need.')
 
         return ret == 1
 
@@ -355,14 +353,14 @@ class CertUtil(object):
             get_sha1_title = False
             sha1 = ""
             for line in lines:
-                if line.endswith("Fingerprint (SHA1):\n"):
+                if line.endswith(b"Fingerprint (SHA1):\n"):
                     get_sha1_title = True
                     continue
                 if get_sha1_title:
                     sha1 = line
                     break
 
-            sha1 = sha1.replace(' ', '').replace(':', '').replace('\n', '')
+            sha1 = sha1.replace(b' ', b'').replace(b':', b'').replace(b'\n', b'')
             if len(sha1) != 40:
                 return False
             else:
@@ -378,7 +376,7 @@ class CertUtil(object):
             return False
 
         sha1 = get_linux_ca_sha1(nss_path)
-        ca_hash = CertUtil.ca_thumbprint.replace(':', '')
+        ca_hash = CertUtil.ca_thumbprint.replace(b':', b'')
         if sha1 == ca_hash:
             xlog.info("Database $HOME/.pki/nssdb cert exist")
             return
@@ -434,13 +432,13 @@ class CertUtil(object):
     @staticmethod
     def import_mac_ca(common_name, certfile):
         commonname = "GoAgent XX-Net" #TODO: need check again
-        ca_hash = CertUtil.ca_thumbprint.replace(':', '')
+        ca_hash = CertUtil.ca_thumbprint.replace(b':', b'')
 
         def get_exist_ca_sha1():
             args = ['security', 'find-certificate', '-Z', '-a', '-c', commonname]
             output = subprocess.check_output(args)
             for line in output.splitlines(True):
-                if len(line) == 53 and line.startswith("SHA-1 hash:"):
+                if len(line) == 53 and line.startswith(b"SHA-1 hash:"):
                     sha1_hash = line[12:52]
                     return sha1_hash
 

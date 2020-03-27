@@ -16,7 +16,7 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 data_path = os.path.join(top_path, "data", 'smart_router')
 
-python_path = os.path.join(root_path, 'python27', '1.0')
+python_path = root_path
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
@@ -24,7 +24,7 @@ import simple_queue
 import utils
 from dnslib import DNSRecord, DNSHeader, A, AAAA, RR, DNSQuestion, QTYPE
 
-import global_var as g
+from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -35,7 +35,7 @@ def remote_query_dns(domain, type=None):
 
     t0 = time.time()
     content, status, response = g.x_tunnel.front_dispatcher.request(
-        "GET", "dns.xx-net.net", path="/query?domain=%s" % (domain), timeout=5)
+        "GET", "dns.xx-net.net", path="/query?domain=%s" % utils.to_str(domain), timeout=5)
     t1 = time.time()
 
     if status != 200:
@@ -44,6 +44,8 @@ def remote_query_dns(domain, type=None):
 
     if isinstance(content, memoryview):
         content = content.tobytes()
+
+    content = utils.to_str(content)
 
     try:
         rs = json.loads(content)
@@ -58,17 +60,17 @@ def remote_query_dns(domain, type=None):
         return []
 
 
-allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
+allowed = re.compile(br"(?!-)[A-Z\d-]{1,63}(?<!-)$")
 
 
 def is_valid_hostname(hostname):
     hostname = hostname.upper()
     if len(hostname) > 255:
         return False
-    if hostname.endswith("."):
+    if hostname.endswith(b"."):
         hostname = hostname[:-1]
 
-    return all(allowed.match(x) for x in hostname.split("."))
+    return all(allowed.match(x) for x in hostname.split(b"."))
 
 
 class DnsServerList(object):
@@ -95,14 +97,20 @@ class DnsServerList(object):
             ctypes.windll.dnsapi.DnsQueryConfig(DNS_CONFIG_DNS_SERVER_LIST, 0, None, None, ctypes.byref(buf),
                                                 ctypes.byref(ctypes.wintypes.DWORD(len(buf))))
             ipcount = struct.unpack('I', buf[0:4])[0]
-            iplist = [socket.inet_ntoa(buf[i:i + 4]) for i in xrange(4, ipcount * 4 + 4, 4)]
+
+            # iplist = [socket.inet_ntoa(buf[i:i + 4]) for i in range(4, ipcount * 4 + 4, 4)]
+            iplist = []
+            for i in range(4, ipcount * 4 + 4, 4):
+                ip = socket.inet_ntoa(buf[i:i + 4])
+                iplist.append(ip)
+
         elif os.path.isfile('/etc/resolv.conf'):
             with open('/etc/resolv.conf', 'rb') as fp:
-                iplist = re.findall(r'(?m)^nameserver\s+(\S+)', fp.read())
+                iplist = re.findall(br'(?m)^nameserver\s+(\S+)', fp.read())
 
         out_list = []
         for ip in iplist:
-            if ip == "127.0.0.1":
+            if ip == b"127.0.0.1":
                 continue
             out_list.append(ip)
             xlog.debug("use local DNS server:%s", ip)
@@ -198,9 +206,9 @@ class DnsClient(object):
                         continue
 
                     for r in p.rr:
-                        ip = str(r.rdata)
+                        ip = bytes(r.rdata)
                         if utils.check_ip_valid(ip):
-                            if "." in ip and g.ip_region.check_ip(ip):
+                            if b"." in ip and g.ip_region.check_ip(ip):
                                 cn = g.ip_region.cn
                             else:
                                 cn = "XX"
@@ -208,7 +216,7 @@ class DnsClient(object):
                             if type ==1 and "." not in ip:
                                 continue
 
-                            ips.append(ip + "|" + cn)
+                            ips.append(ip + b"|" + cn)
                         else:
                             # It is domain, loop search it.
                             ipss = self.query_over_tcp(ip, type, loop_count+1)
@@ -455,7 +463,7 @@ class DnsServer(object):
 
             return ips
 
-        if "." not in domain:
+        if b"." not in domain:
             ips = g.dns_client.query(domain, timeout=1, use_local=True)
             if not ips:
                 ips = ["127.0.0.1|XX"]
@@ -494,9 +502,9 @@ class DnsServer(object):
                 xlog.warn("query num:%d %s", len(request.questions), request)
                 return
 
-            domain = str(request.questions[0].qname)
+            domain = utils.to_bytes(str(request.questions[0].qname))
 
-            if domain.endswith("."):
+            if domain.endswith(b"."):
                 domain = domain[:-1]
 
             type = request.questions[0].qtype
@@ -513,11 +521,11 @@ class DnsServer(object):
 
             reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1, auth=1), q=request.q)
             for ip_cn in ips:
-                ipcn_p = ip_cn.split("|")
+                ipcn_p = ip_cn.split(b"|")
                 ip = ipcn_p[0]
-                if "." in ip and type == 1:
+                if b"." in ip and type == 1:
                     reply.add_answer(RR(domain, ttl=60, rdata=A(ip)))
-                elif ":" in ip and type == 28:
+                elif b":" in ip and type == 28:
                     reply.add_answer(RR(domain, rtype=type, ttl=60, rdata=AAAA(ip)))
             res_data = reply.pack()
 

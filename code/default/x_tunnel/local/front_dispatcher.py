@@ -5,7 +5,7 @@ all_fronts = []
 light_fronts = []
 session_fronts = []
 
-import global_var as g
+from . import global_var as g
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -13,39 +13,39 @@ xlog = getLogger("x_tunnel")
 
 def init():
     if g.config.enable_gae_proxy:
-        import gae_front
+        from . import gae_front
         if gae_front.get_dispatcher():
             all_fronts.append(gae_front)
             session_fronts.append(gae_front)
             light_fronts.append(gae_front)
 
     if g.config.enable_cloudflare:
-        from cloudflare_front.front import front as cloudflare_front
+        from .cloudflare_front.front import front as cloudflare_front
         all_fronts.append(cloudflare_front)
         session_fronts.append(cloudflare_front)
         light_fronts.append(cloudflare_front)
         g.cloudflare_front = cloudflare_front
 
     if g.config.enable_cloudfront:
-        from cloudfront_front.front import front as cloudfront_front
+        from .cloudfront_front.front import front as cloudfront_front
         all_fronts.append(cloudfront_front)
         session_fronts.append(cloudfront_front)
         light_fronts.append(cloudfront_front)
 
     if g.config.enable_heroku:
-        from heroku_front.front import front as heroku_front
+        from .heroku_front.front import front as heroku_front
         all_fronts.append(heroku_front)
         light_fronts.append(heroku_front)
 
     if g.config.enable_tls_relay:
-        from tls_relay_front.front import front as tls_relay_front
+        from .tls_relay_front.front import front as tls_relay_front
         all_fronts.append(tls_relay_front)
         session_fronts.append(tls_relay_front)
         light_fronts.append(tls_relay_front)
         g.tls_relay_front = tls_relay_front
 
     if g.config.enable_direct:
-        import direct_front
+        from . import direct_front
         all_fronts.append(direct_front)
         session_fronts.append(direct_front)
         light_fronts.append(direct_front)

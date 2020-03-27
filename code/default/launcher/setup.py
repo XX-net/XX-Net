@@ -1,24 +1,24 @@
 #!/usr/bin/env python
 
-import config
+from config import config
 import os
 import re
 import shutil
 import subprocess
 import sys
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import zipfile
 
 from xlog import getLogger
 xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath(os.path.join(current_path, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath(os.path.join(current_path, os.pardir))
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-opener = urllib2.build_opener()
+opener = urllib.request.build_opener()
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
@@ -87,7 +87,7 @@ def get_new_new_config():
         new_config = yaml.load(open(data_path, 'r'))
         return new_config
     except yaml.YAMLError as exc:
-        print("Error in configuration file:", exc)
+        print(("Error in configuration file:", exc))
 
 
 def process_data_files():
@@ -146,8 +146,8 @@ def update_environment():
 
 def wait_xxnet_exit():
     def http_request(url, method="GET"):
-        proxy_handler = urllib2.ProxyHandler({})
-        opener = urllib2.build_opener(proxy_handler)
+        proxy_handler = urllib.request.ProxyHandler({})
+        opener = urllib.request.build_opener(proxy_handler)
         try:
             req = opener.open(url)
             return req
@@ -156,7 +156,7 @@ def wait_xxnet_exit():
             return False
 
     for i in range(20):
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        host_port = config.control_port
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) is False:
             return True

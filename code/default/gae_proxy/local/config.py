@@ -2,6 +2,7 @@ import os
 
 from front_base.config import ConfigBase
 import simple_http_client
+import utils
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -41,60 +42,60 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
-            "docs.google.com",
+            b"docs.google.com",
             #"play.google.com",
-            #"scholar.google.com",
+            b"scholar.google.com",
             #"scholar.google.com.hk",
-            "appengine.google.com"
+            b"appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
-            ".gvt1.com",
-            ".appspot.com"
+            #b".gvt1.com",
+            b".appspot.com"
         ])
 
         self.set_var("hosts_gae", [
-            "accounts.google.com",
-            "mail.google.com"
+            b"accounts.google.com",
+            b"mail.google.com"
         ])
 
         self.set_var("hosts_gae_endswith", [
-            ".googleapis.com"
+            b".googleapis.com"
         ])
 
         # sites using br
         self.set_var("BR_SITES", [
-            "webcache.googleusercontent.com",
-            "www.google.com",
-            "www.google.com.hk",
-            "www.google.com.cn",
-            "fonts.googleapis.com"
+            b"webcache.googleusercontent.com",
+            b"www.google.com",
+            b"www.google.com.hk",
+            b"www.google.com.cn",
+            b"fonts.googleapis.com"
         ])
 
         self.set_var("BR_SITES_ENDSWITH", [
-            ".youtube.com",
-            ".facebook.com",
-            ".googlevideo.com"
+            b".youtube.com",
+            b".facebook.com",
+            b".googlevideo.com"
         ])
 
         # some unsupport request like url length > 2048, will go Direct
         self.set_var("google_endswith", [
-            ".youtube.com",
-            ".googleapis.com",
-            ".google.com",
-            ".googleusercontent.com",
-            ".ytimg.com",
-            ".doubleclick.net",
-            ".google-analytics.com",
-            ".googlegroups.com",
-            ".googlesource.com",
-            ".gstatic.com",
-            ".appspot.com",
-            ".gvt1.com",
-            ".android.com",
-            ".ggpht.com",
-            ".googleadservices.com",
-            ".googlesyndication.com",
-            ".2mdn.net"
+            b".youtube.com",
+            b".googleapis.com",
+            b".google.com",
+            b".googleusercontent.com",
+            b".ytimg.com",
+            b".doubleclick.net",
+            b".google-analytics.com",
+            b".googlegroups.com",
+            b".googlesource.com",
+            b".gstatic.com",
+            b".appspot.com",
+            b".gvt1.com",
+            b".android.com",
+            b".ggpht.com",
+            b".googleadservices.com",
+            b".googlesyndication.com",
+            b".2mdn.net"
         ])
 
         # front
@@ -121,7 +122,7 @@ class Config(ConfigBase):
         self.set_var("http2_target_concurrent", 1)
         self.set_var("http2_max_timeout_tasks", 1)
         self.set_var("http2_timeout_active", 0)
-        self.set_var("http2_ping_min_interval", 30)
+        self.set_var("http2_ping_min_interval", 0)
 
         # connect_manager
         self.set_var("https_max_connect_thread", 10)
@@ -130,12 +131,12 @@ class Config(ConfigBase):
         self.set_var("https_connection_pool_min", 0)
         self.set_var("https_connection_pool_max", 10)
         self.set_var("https_new_connect_num", 3)
-        self.set_var("https_keep_alive", 15)
+        self.set_var("https_keep_alive", 10)
 
         # check_ip
         self.set_var("check_ip_host", "xxnet-1.appspot.com")
         self.set_var("check_ip_accept_status", [200, 503])
-        self.set_var("check_ip_content", "GoAgent")
+        self.set_var("check_ip_content", b"GoAgent")
 
         # host_manager
         self.set_var("GAE_APPIDS", [])
@@ -237,14 +238,14 @@ lwIDAQAB
             ]:
                 need_save += self.load_old_config(fn)
 
-        self.HOSTS_GAE = tuple(self.hosts_gae)
-        self.HOSTS_DIRECT = tuple(self.hosts_direct)
-        self.HOSTS_GAE_ENDSWITH = tuple(self.hosts_gae_endswith)
-        self.HOSTS_DIRECT_ENDSWITH = tuple(self.hosts_direct_endswith)
-        self.GOOGLE_ENDSWITH = tuple(self.google_endswith)
+        self.HOSTS_GAE = tuple(utils.to_bytes(self.hosts_gae))
+        self.HOSTS_DIRECT = tuple(utils.to_bytes(self.hosts_direct))
+        self.HOSTS_GAE_ENDSWITH = tuple(utils.to_bytes(self.hosts_gae_endswith))
+        self.HOSTS_DIRECT_ENDSWITH = tuple(utils.to_bytes(self.hosts_direct_endswith))
+        self.GOOGLE_ENDSWITH = tuple(utils.to_bytes(self.google_endswith))
 
-        self.br_sites = tuple(self.BR_SITES)
-        self.br_endswith = tuple(self.BR_SITES_ENDSWITH)
+        self.br_sites = tuple(utils.to_bytes(self.BR_SITES))
+        self.br_endswith = tuple(utils.to_bytes(self.BR_SITES_ENDSWITH))
 
         # there are only hundreds of GAE IPs, we don't need a large threads num
         self.max_scan_ip_thread_num = min(self.max_scan_ip_thread_num, 200)

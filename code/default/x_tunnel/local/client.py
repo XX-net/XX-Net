@@ -2,7 +2,7 @@ import os
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
@@ -35,13 +35,13 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import xconfig
-from proxy_handler import Socks5Server
-import global_var as g
-import proxy_session
+from .proxy_handler import Socks5Server
+from . import global_var as g
+from . import proxy_session
 import simple_http_server
-import front_dispatcher
+from . import front_dispatcher
 
-import web_control
+from . import web_control
 # don't remove, launcher web_control need it.
 
 
@@ -166,7 +166,7 @@ def main(args):
     allow_remote = args.get("allow_remote", 0)
 
     listen_ips = g.config.socks_host
-    if isinstance(listen_ips, basestring):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)

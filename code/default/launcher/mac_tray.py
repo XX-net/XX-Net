@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding:utf-8
 
 import os
@@ -8,15 +8,15 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 helper_path = os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'launcher', 'helper')
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
     osx_lib = os.path.join(python_path, 'lib', 'darwin')
     sys.path.append(osx_lib)
-    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC"
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/3.8/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 
-import config
+from config import config
 import module_init
 import subprocess
 import webbrowser
@@ -162,12 +162,12 @@ class MacTrayObject(AppKit.NSObject):
     def windowWillClose_(self, notification):
         executeResult = subprocess.check_output(['networksetup', '-listallnetworkservices'])
         services = executeResult.split('\n')
-        services = filter(lambda service : service and service.find('*') == -1 and getProxyState(service) != 'disable', services) # Remove disabled services and empty lines
+        services = [service for service in services if service and service.find('*') == -1 and getProxyState(service) != 'disable'] # Remove disabled services and empty lines
 
         if len(services) > 0:
             try:
-                map(helperDisableAutoProxy, services)
-                map(helperDisableGlobalProxy, services)
+                list(map(helperDisableAutoProxy, services))
+                list(map(helperDisableGlobalProxy, services))
             except:
                 disableAutoProxyCommand   = ';'.join(map(getDisableAutoProxyCommand, services))
                 disableGlobalProxyCommand = ';'.join(map(getDisableGlobalProxyCommand, services))
@@ -181,7 +181,7 @@ class MacTrayObject(AppKit.NSObject):
         AppKit.NSApp.terminate_(self)
 
     def config_(self, notification):
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        host_port = config.control_port
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
     def restartEachModule_(self, _):
@@ -199,7 +199,7 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable auto proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.set(["modules", "launcher", "proxy"], "pac")
+        config.os_proxy_mode = "pac"
         config.save()
         self.updateStatusBarMenu()
 
@@ -214,7 +214,7 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable global proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.set(["modules", "launcher", "proxy"], "gae")
+        config.os_proxy_mode = "gae"
         config.save()
         self.updateStatusBarMenu()
 
@@ -229,7 +229,7 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable global x-tunnel proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.set(["modules", "launcher", "proxy"], "x_tunnel")
+        config.os_proxy_mode = "x_tunnel"
         config.save()
         self.updateStatusBarMenu()
 
@@ -244,7 +244,7 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try enable global smart-router proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.set(["modules", "launcher", "proxy"], "smart_router")
+        config.os_proxy_mode = "smart_router"
         config.save()
         self.updateStatusBarMenu()
 
@@ -259,7 +259,7 @@ class MacTrayObject(AppKit.NSObject):
             
             xlog.info("try disable proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.set(["modules", "launcher", "proxy"], "disable")
+        config.os_proxy_mode = "disable"
         config.save()
         self.updateStatusBarMenu()
 
@@ -360,7 +360,7 @@ def helperDisableGlobalProxy(service):
 def loadConfig():
     if not currentService:
         return
-    proxy_setting = config.get(["modules", "launcher", "proxy"], "smart_router")
+    proxy_setting = config.os_proxy_mode
     if getProxyState(currentService) == proxy_setting:
         return
     try:

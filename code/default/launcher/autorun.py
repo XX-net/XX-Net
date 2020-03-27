@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """A simple crossplatform autostart helper"""
-from __future__ import with_statement
+
 
 import os
 import sys
@@ -13,27 +13,27 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
 if sys.platform == 'win32':
-    import _winreg
-    _registry = _winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
+    import winreg
+    _registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
 
     def get_runonce():
-        return _winreg.OpenKey(_registry, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, _winreg.KEY_ALL_ACCESS)
+        return winreg.OpenKey(_registry, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_ALL_ACCESS)
 
     def add(name, application):
         """add a new autostart entry"""
         key = get_runonce()
-        _winreg.SetValueEx(key, name, 0, _winreg.REG_SZ, application)
-        _winreg.CloseKey(key)
+        winreg.SetValueEx(key, name, 0, winreg.REG_SZ, application)
+        winreg.CloseKey(key)
 
     def exists(name):
         """check if an autostart entry exists"""
         key = get_runonce()
         exists = True
         try:
-            _winreg.QueryValueEx(key, name)
+            winreg.QueryValueEx(key, name)
         except:  # WindowsError
             exists = False
-        _winreg.CloseKey(key)
+        winreg.CloseKey(key)
         return exists
 
     def remove(name):
@@ -42,8 +42,8 @@ if sys.platform == 'win32':
 
         """delete an autostart entry"""
         key = get_runonce()
-        _winreg.DeleteValue(key, name)
-        _winreg.CloseKey(key)
+        winreg.DeleteValue(key, name)
+        winreg.CloseKey(key)
 
     run_cmd = "\"" + os.path.join(top_path, "start.vbs") + "\""
 elif sys.platform.startswith('linux'):

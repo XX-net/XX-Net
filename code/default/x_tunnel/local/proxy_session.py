@@ -7,9 +7,9 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import utils
-import base_container
+from . import base_container
 import encrypt
-import global_var as g
+from . import global_var as g
 from gae_proxy.local import check_local_network
 
 
@@ -260,7 +260,7 @@ class ProxySession():
 
         out_string += "on_road_num:%d<br>\n" % self.on_road_num
         out_string += "transfer_list: %d<br>\r\n" % len(self.transfer_list)
-        for transfer_no in sorted(self.transfer_list.iterkeys()):
+        for transfer_no in sorted(self.transfer_list.keys()):
             transfer = self.transfer_list[transfer_no]
             if "start" in self.transfer_list[transfer_no]:
                 time_way = " t:" + str((time.time() - self.transfer_list[transfer_no]["start"]))
@@ -286,13 +286,13 @@ class ProxySession():
             try:
                 start_time = time.time()
 
-                magic = "P"
+                magic = b"P"
                 pack_type = 1
-                upload_data_head = struct.pack("<cBB8sIHIIHH", magic, g.protocol_version, pack_type, str(self.session_id),
+                upload_data_head = struct.pack("<cBB8sIHIIHH", magic, g.protocol_version, pack_type, bytes(self.session_id),
                                                g.config.max_payload, g.config.send_delay, g.config.windows_size,
-                                               g.config.windows_ack, g.config.resend_timeout, g.config.ack_delay)
-                upload_data_head += struct.pack("<H", len(g.config.login_account)) + str(g.config.login_account)
-                upload_data_head += struct.pack("<H", len(g.config.login_password)) + str(g.config.login_password)
+                                               int(g.config.windows_ack), g.config.resend_timeout, g.config.ack_delay)
+                upload_data_head += struct.pack("<H", len(g.config.login_account)) + bytes(g.config.login_account, encoding='iso-8859-1')
+                upload_data_head += struct.pack("<H", len(g.config.login_password)) + bytes(g.config.login_password, encoding='iso-8859-1')
 
                 upload_post_data = encrypt_data(upload_data_head)
 
@@ -324,7 +324,7 @@ class ProxySession():
                 if isinstance(message, memoryview):
                     message = message.tobytes()
 
-                if magic != "P" or protocol_version != g.protocol_version or pack_type != 1:
+                if magic != b"P" or protocol_version != g.protocol_version or pack_type != 1:
                     xlog.error("login_session time:%d head error:%s", 1000 * time_cost, utils.str2hex(info[:6]))
                     return False
 
@@ -348,9 +348,11 @@ class ProxySession():
             return None
 
         self.lock.acquire()
-        self.last_conn_id += 1
+        self.last_conn_id += 2
         conn_id = self.last_conn_id
         self.lock.release()
+        if isinstance(host, str):
+            host = host.encode("ascii")
 
         seq = 0
         cmd_type = 0  # create connection
@@ -510,11 +512,11 @@ class ProxySession():
             while len(data):
                 conn_id, payload_len = struct.unpack("<II", data.get(8))
                 payload = data.get_buf(payload_len)
-                if conn_id not in self.conn_list:
-                    #xlog.debug("DATA conn_id %d not in list", conn_id)
-                    continue
 
                 # xlog.debug("conn:%d upload data len:%d", conn_id, len(payload))
+                if conn_id not in self.conn_list:
+                    xlog.warn("conn_id %d not exist", conn_id)
+                    return
                 self.conn_list[conn_id].put_cmd_data(payload)
         except Exception as e:
             xlog.exception("download_data_processor:%r", e)
@@ -560,7 +562,7 @@ class ProxySession():
             send_ack_len = len(ack)
             transfer_no = self.get_transfer_no()
 
-            magic = "P"
+            magic = b"P"
             pack_type = 2
 
             if self.on_road_num > g.config.concurent_thread_num * 0.6:
@@ -570,12 +572,12 @@ class ProxySession():
 
             request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIBIH", magic, g.protocol_version, pack_type,
-                                           str(self.session_id), transfer_no,
+                                           bytes(self.session_id), transfer_no,
                                            server_timeout, send_data_len, send_ack_len)
             upload_post_buf = base_container.WriteBuffer(upload_data_head)
             upload_post_buf.append(data)
             upload_post_buf.append(ack)
-            upload_post_data = str(upload_post_buf)
+            upload_post_data = upload_post_buf.to_bytes()
             upload_post_data = encrypt_data(upload_post_data)
             self.last_send_time = time.time()
 
@@ -589,8 +591,8 @@ class ProxySession():
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
 
-            xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-                       transfer_no, send_data_len, send_ack_len, server_timeout)
+            #xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+            #           transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                   path="/data?tid=%d" % transfer_no,
@@ -641,7 +643,7 @@ class ProxySession():
             payload = base_container.ReadBuffer(content)
 
             magic, version, pack_type = struct.unpack("<cBB", payload.get(3))
-            if magic != "P" or version != g.protocol_version:
+            if magic != b"P" or version != g.protocol_version:
                 xlog.warn("get data head:%s", utils.str2hex(content[:2]))
                 time.sleep(sleep_time)
                 continue
@@ -884,7 +886,7 @@ def create_conn(sock, host, port):
     if not (g.config.login_account and g.config.login_password):
         return False
 
-    for _ in xrange(0, 3):
+    for _ in range(0, 3):
         if login_process():
             break
         else:

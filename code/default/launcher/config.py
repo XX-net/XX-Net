@@ -1,100 +1,75 @@
 #!/usr/bin/env python
 
 import os
-import yaml
+
+import xconfig
+
 from xlog import getLogger
 xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-config_path = os.path.join(data_path, 'launcher', 'config.yaml')
-
-config = {}
-need_save_config = False
-modules = ["gae_proxy", "launcher", "x_tunnel", "smart_router"]
+config_path = os.path.join(data_path, 'launcher', 'config.json')
 
 
-def load():
-    global config, config_path
-    try:
-        config = yaml.load(open(config_path, 'r'))
-        if config is None:
-            config = {}
-        # print(yaml.dump(config))
-    except Exception as exc:
-        print("Error in configuration file:", exc)
+config = xconfig.Config(config_path)
+
+config.set_var("control_ip", "127.0.0.1")
+config.set_var("control_port", 8085)
+
+# System config
+config.set_var("language", "")
+config.set_var("allow_remote_connect", 0)
+config.set_var("show_systray", 1)
+config.set_var("no_mess_system", 0)
+config.set_var("auto_start", 0)
+config.set_var("popup_webui", 1)
+
+config.set_var("gae_show_detail", 0)
+config.set_var("show_compat_suggest", 1)
+
+# version control
+config.set_var("check_update", "notice-stable") # can be: "dont-check", "stable", "notice-stable", "test", "notice-test"
+config.set_var("keep_old_ver_num", 1)
+config.set_var("postUpdateStat", "noChange") # "noChange", "isNew", "isPostUpdate"
+config.set_var("current_version", "")
+config.set_var("ignore_version", "")
+config.set_var("last_run_version", "")
+config.set_var("skip_stable_version", "")
+config.set_var("skip_test_version", "")
+
+# update:
+config.set_var("last_path", "")
+config.set_var("update_uuid", "")
+
+# savedisk
+config.set_var("clear_cache", 0)
+config.set_var("del_win", 0)
+config.set_var("del_mac", 0)
+config.set_var("del_linux", 0)
+config.set_var("del_gae", 0)
+config.set_var("del_gae_server", 0)
+config.set_var("del_xtunnel", 0)
+config.set_var("del_smartroute", 0)
+
+# Module
+config.set_var("all_modules", ["launcher", "gae_proxy", "x_tunnel", "smart_router"])
+config.set_var("enable_launcher", 1)
+config.set_var("enable_x_tunnel", 1)
+config.set_var("enable_gae_proxy", 1)
+config.set_var("enable_smart_router", 1)
+
+config.set_var("os_proxy_mode", "pac") # can be: gae, x_tunnel, smart_router, disable
+
+# Proxy
+config.set_var("global_proxy_enable", 0)
+config.set_var("global_proxy_type", "HTTP") # can be: HTTP/ SOCKS4/ SOCKs5
+config.set_var("global_proxy_host", "")
+config.set_var("global_proxy_port", 0)
+config.set_var("global_proxy_username", "")
+config.set_var("global_proxy_password", "")
+
+config.load()
 
 
-def save():
-    global config, config_path
-    global need_save_config
-    try:
-        yaml.dump(config, open(config_path, "w"))
-        need_save_config = False
-    except Exception as e:
-        xlog.warn("save config %s fail %s", config_path, e)
-
-
-def get(path, default_val=""):
-    global config
-    try:
-        cmd = "config"
-        for p in path:
-            cmd += '["%s"]' % p
-        value = eval(cmd)
-        return value
-    except:
-        return default_val
-
-
-def _set(m, k_list, v):
-    k0 = k_list[0]
-    if len(k_list) == 1:
-        m[k0] = v
-        return
-    if k0 not in m:
-        m[k0] = {}
-    _set(m[k0], k_list[1:], v)
-
-
-def set(path, val):
-    global config
-    global need_save_config
-    _set(config, path, val)
-    need_save_config = True
-
-
-def recheck_module_path():
-    global config
-    global need_save_config
-
-    for module in modules:
-        if module not in ["launcher"]:
-            if not os.path.isdir(os.path.join(root_path, module)):
-                del config[module]
-                continue
-
-            if get(["modules", module, "auto_start"], -1) == -1:
-                set(["modules", module, "auto_start"], 1)
-
-    if get(["modules", "launcher", "control_port"], 0) == 0:
-        set(["modules", "launcher", "control_port"], 8085)
-        set(["modules", "launcher", "allow_remote_connect"], 0)
-
-    if get(["no_mess_system"], 0) == 1 or os.getenv("XXNET_NO_MESS_SYSTEM","0") != "0" :
-        xlog.debug("no_mess_system")
-        os.environ["XXNET_NO_MESS_SYSTEM"] = "1"
-        set(["no_mess_system"], 1)
-
-    return need_save_config
-
-
-def init():
-    if os.path.isfile(config_path):
-        load()
-
-    if recheck_module_path():
-        save()
-
-init()

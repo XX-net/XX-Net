@@ -13,9 +13,9 @@ from distutils.version import LooseVersion
 
 from xlog import getLogger
 xlog = getLogger("launcher")
-import config
+from config import config
 import update_from_github
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 try:
     reduce         # Python 2
@@ -44,16 +44,16 @@ def get_opener():
             cafile = None
         context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
                                              cafile=cafile)
-        https_handler = urllib2.HTTPSHandler(context=context)
+        https_handler = urllib.request.HTTPSHandler(context=context)
 
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
     else:
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
 
 def version_to_bin(s):
-    return reduce(lambda a, b: a << 8 | b, map(int, s.split(".")))
+    return reduce(lambda a, b: a << 8 | b, list(map(int, s.split("."))))
 
 
 def download_file(url, file):
@@ -107,7 +107,7 @@ def install_module(module, new_version):
         xlog.warn("update %s fail. setup script %s not exist", module, setup_script)
         return
 
-    config.set(["modules", module, "current_version"], str(new_version))
+    config.current_version = str(new_version)
     config.save()
 
     if module == "launcher":
@@ -162,7 +162,7 @@ def download_module(module, new_version):
 
             module_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, module))
             if not os.path.isdir(module_path):
-                os.path.mkdir(module_path, "755")
+                os.mkdir(module_path)
 
             version_path = os.path.join(module_path, new_version)
             if os.path.isdir(version_path):
@@ -188,7 +188,7 @@ def download_module(module, new_version):
                 sys_tray.notify_general(msg=msg, title="Install", buttons=buttons)
             elif sys.platform == "win32":
                 from win_tray import sys_tray
-                if sys_tray.dialog_yes_no(msg, u"Install", None, None) == 1:
+                if sys_tray.dialog_yes_no(msg, "Install", None, None) == 1:
                     install_module(module, new_version)
                 else:
                     ignore_module(module, new_version)
@@ -209,7 +209,7 @@ def download_module(module, new_version):
 
 
 def ignore_module(module, new_version):
-    config.set(["modules", module, "ignore_version"], str(new_version))
+    config.ignore_version = str(new_version)
     config.save()
 
 
@@ -238,14 +238,14 @@ def check_update():
 
         check_push_update()
 
-        update_rule = config.get(["update", "check_update"], "notice-stable")
+        update_rule = config.check_update
         if update_rule not in ("stable", "notice-stable", "test", "notice-test"):
             return
 
         versions = update_from_github.get_github_versions()
         current_version = update_from_github.current_version()
         test_version, stable_version = versions[0][1], versions[1][1]
-        if test_version != config.get(["update", "skip_test_version"]):
+        if test_version != config.skip_test_version:
             if update_rule == "notice-test":
                 if LooseVersion(current_version) < LooseVersion(test_version):
                     xlog.info("checked new test version %s", test_version)
@@ -254,7 +254,7 @@ def check_update():
                 if LooseVersion(current_version) < LooseVersion(test_version):
                     xlog.info("update to test version %s", test_version)
                     update_from_github.update_version(test_version)
-        if stable_version != config.get(["update", "skip_stable_version"]):
+        if stable_version != config.skip_stable_version:
             if update_rule == "notice-stable":
                 if LooseVersion(current_version) < LooseVersion(stable_version):
                     xlog.info("checked new stable version %s", stable_version)
@@ -283,63 +283,11 @@ def check_push_update():
         try:
             update_content = opener.open(req_url).read()
         except Exception as e:
-            xlog.warn("check_update fail:%r", e)
+            xlog.exception("check_update fail:%r", e)
             return False
 
         update_dict = json.loads(update_content)
         return True
-
-        for module in update_dict["modules"]:
-            new_version = str(update_dict["modules"][module]["last_version"])
-            describe = update_dict["modules"][module]["versions"][new_version]["describe"]
-
-            if update_dict["modules"][module]["versions"][new_version]["notify"] != "true":
-                continue
-
-            if not module in config.config["modules"]:
-                ignore_version = 0
-                current_version = 0
-                config.config["modules"][module] = {}
-                config.config["modules"][module]["current_version"] = '0.0.0'
-            else:
-                current_version = config.get(["modules", module, "current_version"])
-                if "ignore_version" in config.config["modules"][module]:
-                    ignore_version = config.config["modules"][module]["ignore_version"]
-                else:
-                    ignore_version = current_version
-
-            if version_to_bin(new_version) <= version_to_bin(ignore_version):
-                continue
-
-            if version_to_bin(new_version) > version_to_bin(current_version):
-                xlog.info("new %s version:%s", module, new_version)
-
-                if sys.platform == "linux" or sys.platform == "linux2":
-                    from gtk_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?\nNew:%s" % (module, new_version, describe)
-                    data_download = "%s|%s|download" % (module, new_version)
-                    data_ignore = "%s|%s|ignore" % (module, new_version)
-                    buttons = {1: {"data": data_download, "label": "Download", 'callback': general_gtk_callback},
-                               2: {"data": data_ignore, "label": "Ignore", 'callback': general_gtk_callback}}
-                    sys_tray.notify_general(msg=msg, title="New Version", buttons=buttons)
-                elif sys.platform == "win32":
-                    from win_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?" % (module, new_version)
-                    if sys_tray.dialog_yes_no(msg, u"Download", None, None) == 1:
-                        download_module(module, new_version)
-                    else:
-                        ignore_module(module, new_version)
-                elif sys.platform == "darwin":
-                    from mac_tray import sys_tray
-                    msg = "Module %s new version: %s, Download?" % (module, new_version)
-                    if sys_tray.presentAlert_withTitle_(msg, "Download"):
-                        download_module(module, new_version)
-                    else:
-                        ignore_module(module, new_version)
-
-                else:
-                    download_module(module, new_version)
-
     except Exception as e:
         xlog.exception("check_update except:%s", e)
         return
@@ -372,13 +320,13 @@ def create_desktop_shortcut():
 
 def notify_install_tcpz_for_winXp():
     import ctypes
-    ctypes.windll.user32.MessageBoxW(None, u"请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", u"Patch XP needed", 0)
+    ctypes.windll.user32.MessageBoxW(None, "请使用tcp-z对 tcpip.sys 打补丁，解决链接并发限制！", "Patch XP needed", 0)
 
 
 def check_new_machine():
     current_path = os.path.dirname(os.path.abspath(__file__))
-    if current_path != config.get(["update", "last_path"], ""):
-        config.set(["update", "last_path"], current_path)
+    if current_path != config.last_path:
+        config.last_path = current_path
         config.save()
 
         if sys.platform == "win32" and platform.release() == "XP":
@@ -408,7 +356,7 @@ def start():
 
 
 def need_new_uuid():
-    if not config.get(["update", "uuid"]):
+    if not config.update_uuid:
         xlog.info("need_new_uuid: uuid is empty")
         return True
     return False
@@ -416,7 +364,7 @@ def need_new_uuid():
 
 def generate_new_uuid():
     xx_net_uuid = str(uuid.uuid4())
-    config.set(["update", "uuid"], xx_net_uuid)
+    config.update_uuid = xx_net_uuid
     xlog.info("generate uuid:%s", xx_net_uuid)
     config.save()
 
@@ -425,7 +373,7 @@ def get_uuid():
     if need_new_uuid():
         generate_new_uuid()
 
-    xx_net_uuid = config.get(["update", "uuid"])
+    xx_net_uuid = config.update_uuid
     xlog.info("get uuid:%s", xx_net_uuid)
     return xx_net_uuid
 

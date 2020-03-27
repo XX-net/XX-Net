@@ -29,8 +29,8 @@ import struct
 import zlib
 import base64
 import logging
-import urlparse
-import httplib
+import urllib.parse
+import http.client
 import io
 import string
 import traceback
@@ -86,7 +86,7 @@ except ImportError:
     class RC4Cipher(object):
         def __init__(self, key):
             x = 0
-            box = range(256)
+            box = list(range(256))
             for i, y in enumerate(box):
                 x = (x + y + ord(key[i % len(key)])) & 0xff
                 box[i], box[x] = box[x], y
@@ -124,8 +124,8 @@ def format_response(status, headers, content):
         headers['Content-Length'] = str(len(content))
     data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % \
             (status,
-             httplib.responses.get(status,'Unknown'),
-             '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()),
+             http.client.responses.get(status,'Unknown'),
+             '\r\n'.join('%s: %s' % (k.title(), v) for k, v in list(headers.items())),
              content)
     data = deflate(data)
     return struct.pack('!h', len(data)) + data
@@ -162,7 +162,7 @@ def is_deflate(data):
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET' and 'HTTP_X_URLFETCH_PS1' not in environ:
         # xxnet 自用
-        timestamp = long(
+        timestamp = int(
             os.environ['CURRENT_VERSION_ID'].split('.')[1]) / 2**28
         ctime = time.strftime(
             '%Y-%m-%d %H:%M:%S',
@@ -244,7 +244,7 @@ def application(environ, start_response):
     # 获取ｇａｅ用的头
     kwargs = {}
     any(kwargs.__setitem__(x[len('x-urlfetch-'):].lower(), headers.pop(x))
-        for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
+        for x in list(headers.keys()) if x.lower().startswith('x-urlfetch-'))
 
     if 'Content-Encoding' in headers and body:
         # fix bug for LinkedIn android client
@@ -270,7 +270,7 @@ def application(environ, start_response):
         yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'}, message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''), 'GoAgent proxy.ini password is wrong!'))
         raise StopIteration
 
-    netloc = urlparse.urlparse(url).netloc
+    netloc = urllib.parse.urlparse(url).netloc
 
     if __hostsdeny__ and netloc.endswith(__hostsdeny__):
         yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'}, message_html('403 Hosts Deny', 'Hosts Deny(%r)' % netloc, detail='公用appid因为资源有限，限制观看视频和文件下载等消耗资源过多的访问，请使用自己的appid <a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a> '))
@@ -301,7 +301,7 @@ def application(environ, start_response):
         '')
     errors = []
     allow_truncated = False
-    for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
+    for i in range(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
             response = urlfetch.fetch(
                 url,

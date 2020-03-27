@@ -4,8 +4,9 @@ import time
 import collections
 import operator
 
-import global_var as g
+from . import global_var as g
 
+import utils
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -154,9 +155,8 @@ class DomainRecords(object):
 
         with self.lock:
             with open(self.file_path, "w") as fd:
-                for host in self.cache:
-                    record = self.cache[host]
-                    line = host + " " + record["r"] + " " + str(record["g"]) + " "
+                for host, record in self.cache.items():
+                    line = utils.to_str(host) + " " + record["r"] + " " + str(record["g"]) + " "
                     if len(record["ip"]) and time_now - record["update"] < self.ttl:
                         for ip in record["ip"]:
                             cn = record["ip"][ip]
@@ -202,7 +202,7 @@ class DomainRecords(object):
         if not ip_rate:
             return []
 
-        ip_time = sorted(ip_rate.items(), key=operator.itemgetter(1))
+        ip_time = sorted(list(ip_rate.items()), key=operator.itemgetter(1))
 
         ordered_ips = []
         for ip, rate in ip_time:

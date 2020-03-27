@@ -45,7 +45,7 @@ _blacklist = {
     #    "explorer",
     #    "Python",
     #],
-    (u"渣雷", "Xhunder"): [
+    ("渣雷", "Xhunder"): [
         "ThunderPlatform",
         "ThunderFW",
         "ThunderLiveUD",
@@ -61,7 +61,7 @@ _blacklist = {
         "XLGameBoot",
         "XMPBoot",
     ],
-    (u"百毒", "Baidu"): [
+    ("百毒", "Baidu"): [
         "BaiduSdSvc",
         "BaiduSdTray",
         "BaiduSd",
@@ -69,7 +69,7 @@ _blacklist = {
         "bddownloader",
         "baiduansvx",
     ],
-    (u"流氓 360", u"360"): [
+    ("流氓 360", "360"): [
         "360sd",
         "360tray",
         "360Safe",
@@ -77,12 +77,12 @@ _blacklist = {
         "360safebox",
         "360se",
     ],
-    (u"疼讯复制机", "Tencent"): [
+    ("疼讯复制机", "Tencent"): [
         "QQPCRTP",
         "QQPCTray",
         "QQProtect",
     ],
-    (u"金山", "Kingsoft"): [
+    ("金山", "Kingsoft"): [
         "kismain",
         "ksafe",
         "KSafeSvc",
@@ -91,35 +91,35 @@ _blacklist = {
         "KWatch",
         "KMailMon",
     ],
-    (u"瑞星", "Rising"): [
+    ("瑞星", "Rising"): [
         "rstray",
         "ravmond",
         "rsmain",
     ],
-    (u"江民", "Jiangmin"): [
+    ("江民", "Jiangmin"): [
         "UIHost",
         "KVMonXP",
         "kvsrvxp",
         "kvxp",
     ],
-    (u"2345 不安全", "2345"): [
+    ("2345 不安全", "2345"): [
         "2345MPCSafe",
     ],
-    (u"天网防火墙", "SkyNet"): [
+    ("天网防火墙", "SkyNet"): [
         "PFW",
     ],
 }
 
-_title = u"XX-Net 兼容性建议", u"XX-Net compatibility suggest"
+_title = "XX-Net 兼容性建议", "XX-Net compatibility suggest"
 _notice = (
-u"某些软件可能和 XX-Net 存在冲突，导致 CPU 占用过高或者无法正常使用。"
-u"如有此现象建议暂时退出以下软件来保证 XX-Net 正常运行：\n",
-u"Some software may conflict with XX-Net, "
-u"causing the CPU to be overused or not working properly."
-u"If this is the case, it is recommended to temporarily quit the following "
-u"software to ensure XX-Net runnig:\n",
-u"\n你可以在配置页面关闭此建议。",
-u"\nYou can close this suggestion on the configuration page.",
+"某些软件可能和 XX-Net 存在冲突，导致 CPU 占用过高或者无法正常使用。"
+"如有此现象建议暂时退出以下软件来保证 XX-Net 正常运行：\n",
+"Some software may conflict with XX-Net, "
+"causing the CPU to be overused or not working properly."
+"If this is the case, it is recommended to temporarily quit the following "
+"software to ensure XX-Net runnig:\n",
+"\n你可以在配置页面关闭此建议。",
+"\nYou can close this suggestion on the configuration page.",
 )
 
 
@@ -129,7 +129,7 @@ def main():
 
     lang = 0 if locale.getdefaultlocale()[0] == "zh_CN" else 1
     blacklist = {}
-    for k, v in _blacklist.items():
+    for k, v in list(_blacklist.items()):
         for name in v:
             blacklist[name] = k[lang]
 
@@ -145,13 +145,13 @@ def main():
             displaylist[company].append(software)
 
         displaystr = [_notice[lang],]
-        for company, softwares in displaylist.items():
-            displaystr.append(u"    %s: \n\t%s" % (company, 
-                u"\n\t".join(processlist[name.lower()].filename for name in softwares)))
+        for company, softwares in list(displaylist.items()):
+            displaystr.append("    %s: \n\t%s" % (company, 
+                "\n\t".join(processlist[name.lower()].filename for name in softwares)))
 
         title = _title[lang]
         displaystr.append(_notice[lang + 2])
-        error = u"\n".join(displaystr)
+        error = "\n".join(displaystr)
 
         ctypes.windll.user32.MessageBoxW(None, error, title, 48)
 

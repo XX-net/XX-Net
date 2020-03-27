@@ -7,7 +7,7 @@ import collections
 import simple_http_client
 import random
 
-import global_var as g
+from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
 

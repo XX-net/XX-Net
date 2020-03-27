@@ -9,7 +9,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'gae_proxy')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = root_path
 
 
 if __name__ == "__main__":
@@ -38,7 +38,7 @@ from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.host_manager import HostManagerBase
 import front_base.check_ip
-from config import config
+from gae_proxy.local.config import config
 
 
 class CheckIp(front_base.check_ip.CheckIp):
@@ -52,7 +52,7 @@ class CheckIp(front_base.check_ip.CheckIp):
 
         if response.status == 503:
             # out of quota
-            if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
+            if b"gws" not in server_type and b"Google Frontend" not in server_type and b"GFE" not in server_type:
                 xlog.warn("503 but server type:%s", server_type)
                 return False
             else:
@@ -72,8 +72,8 @@ class CheckAllIp(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         openssl_context = SSLContext(
             logger, ca_certs=ca_certs,
-            cipher_suites=['ALL', "!RC4-SHA", "!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
-                           "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
+            cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+                           b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
         host_manager = HostManagerBase()
         connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
         exit(0)
 
-    print("test ip:%s" % ip)
+    print(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
@@ -166,8 +166,8 @@ if __name__ == "__main__":
     ca_certs = os.path.join(current_path, "cacert.pem")
     openssl_context = SSLContext(
         logger, ca_certs=ca_certs,
-        cipher_suites=['ALL', "!RC4-SHA", "!ECDHE-RSA-RC4-SHA", "!ECDHE-RSA-AES128-GCM-SHA256",
-                       "!AES128-GCM-SHA256", "!ECDHE-RSA-AES128-SHA", "!AES128-SHA"]
+        cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+                       b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
     )
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
@@ -178,6 +178,6 @@ if __name__ == "__main__":
     if not res:
         print("connect fail")
     elif res.ok:
-        print("success, domain:%s handshake:%d" % (res.host, res.handshake_time))
+        print(("success, domain:%s handshake:%d" % (res.host, res.handshake_time)))
     else:
         print("not support")

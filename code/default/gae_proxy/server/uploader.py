@@ -35,7 +35,7 @@ sys.modules.pop('google', None)
 lib_path = os.path.join(code_path, "lib")
 sys.path.insert(0, lib_path)
 
-noarch_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, "python27", "1.0", "lib", "noarch"))
+noarch_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, "lib", "noarch"))
 sys.path.append(noarch_path)
 
 data_path = os.path.abspath(os.path.join(code_path, os.path.pardir, os.path.pardir, os.path.pardir, os.path.pardir, "data", "gae_proxy"))
@@ -55,10 +55,10 @@ def upload(appid):
     logging.info("appid:%s", appid)
 
     dirname = os.path.join(code_path, "gae")
-    assert isinstance(dirname, basestring) and isinstance(appid, basestring)
+    assert isinstance(dirname, str) and isinstance(appid, str)
     app_yaml_file = os.path.join(dirname, 'app.yaml')
     template_filename = os.path.join(dirname, 'app.template.yaml')
-    assert os.path.isfile(template_filename), u'%s not exists!' % template_filename
+    assert os.path.isfile(template_filename), '%s not exists!' % template_filename
 
     with open(template_filename, 'rb') as fp:
         yaml = fp.read()
@@ -97,7 +97,7 @@ def upload(appid):
 
 
 def println(s, file=sys.stderr):
-    assert type(s) is type(u'')
+    assert type(s) is type('')
     file.write(s.encode(sys.getfilesystemencoding(), 'replace') + os.linesep)
 
 
@@ -106,11 +106,11 @@ def appid_is_valid(appid):
         logging.info("appid wrong:%s" % appid)
         return False
     if not re.match(r'[0-9a-zA-Z\-|]+', appid):
-        logging.info(u'appid:%s format err, check http://appengine.google.com !' % appid)
+        logging.info('appid:%s format err, check http://appengine.google.com !' % appid)
         return False
     if any(x in appid.lower() for x in ('ios', 'android', 'mobile')):
-        logging.info(u'appid:%s format err, check http://appengine.google.com !' % appid)
-        logging.info(u'appid 不能包含 ios/android/mobile 等字样。')
+        logging.info('appid:%s format err, check http://appengine.google.com !' % appid)
+        logging.info('appid 不能包含 ios/android/mobile 等字样。')
         return False
     return True
 
@@ -120,7 +120,7 @@ def clean_cookie_file():
         try:
             os.remove(cookie_file)
         except OSError:
-            logging.info(u'令牌删除失败，请手动删除 %s 。', cookie_file)
+            logging.info('令牌删除失败，请手动删除 %s 。', cookie_file)
 
 
 def update_rc4_password(rc4_password):

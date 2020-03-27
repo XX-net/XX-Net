@@ -12,11 +12,13 @@ xlog = getLogger("x_tunnel")
 
 class WriteBuffer(object):
     def __init__(self, s=None):
-        if isinstance(s, str):
+        if isinstance(s, bytes):
             self.string_len = len(s)
             self.buffer_list = [s]
-        else:
+        elif s is None:
             self.reset()
+        else:
+            raise Exception("WriteBuffer init not bytes or StringBuffer")
 
     def reset(self):
         self.buffer_list = []
@@ -33,7 +35,7 @@ class WriteBuffer(object):
         if isinstance(s, WriteBuffer):
             self.buffer_list = s.buffer_list + self.buffer_list
             self.string_len += s.string_len
-        elif isinstance(s, str):
+        elif isinstance(s, bytes):
             self.buffer_list.insert(0, s)
             self.string_len += len(s)
         else:
@@ -43,17 +45,14 @@ class WriteBuffer(object):
         if isinstance(s, WriteBuffer):
             self.buffer_list.extend(s.buffer_list)
             self.string_len += s.string_len
-        elif isinstance(s, str):
+        elif isinstance(s, bytes):
             self.buffer_list.append(s)
             self.string_len += len(s)
         else:
-            raise Exception("WriteBuffer append not string or StringBuffer")
+            raise Exception("WriteBuffer append not bytes or StringBuffer")
 
-    def __str__(self):
-        return self.get_string()
-
-    def get_string(self):
-        return "".join(self.buffer_list)
+    def to_bytes(self):
+        return b"".join(self.buffer_list)
 
 
 class ReadBuffer(object):
@@ -260,7 +259,7 @@ class SendBuffer():
         out_string += " head_sn:%d<br>\n" % self.head_sn
         out_string += " tail_sn:%d<br>\n" % self.tail_sn
         out_string += "block_list:[%d]<br>\n" % len(self.block_list)
-        for sn in sorted(self.block_list.iterkeys()):
+        for sn in sorted(self.block_list.keys()):
             data = self.block_list[sn]
             out_string += "[%d] len:%d<br>\r\n" % (sn, len(data))
 
@@ -385,7 +384,7 @@ class Conn(object):
         self.stop_thread.start()
 
     def do_stop(self, reason="unknown"):
-        self.xlog.debug("Conn session:%s conn:%d stop:%s", self.session.session_id, self.conn_id, reason)
+        self.xlog.debug("Conn session:%s conn:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id, reason)
         self.running = False
 
         self.cmd_notice.acquire()
@@ -574,6 +573,8 @@ class Conn(object):
             self.transfered_close_to_peer = True
 
             cmd = struct.pack("<IB", self.next_recv_seq, 2)
+            if isinstance(reason, str):
+                reason = reason.encode("utf-8")
             self.session.send_conn_data(self.conn_id, cmd + reason)
             self.next_recv_seq += 1
 

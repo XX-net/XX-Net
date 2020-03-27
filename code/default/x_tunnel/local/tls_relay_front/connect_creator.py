@@ -23,9 +23,9 @@ class ConnectCreator(ConnectCreatorBase):
         ip, port = utils.get_ip_port(ip_str)
 
         if int(self.config.PROXY_ENABLE):
-            sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+            sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         else:
-            sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+            sock = socket.socket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
@@ -37,7 +37,6 @@ class ConnectCreator(ConnectCreatorBase):
         if info["client_ca"]:
             self.openssl_context.context.use_certificate_file(info["client_ca_fn"])
             self.openssl_context.context.use_privatekey_file(info["client_key_fn"])
-            #self.openssl_context.context.load_cert_chain(certfile=info["client_ca"], keyfile=info["client_key"])
 
         ssl_sock = front_base.openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip_str, on_close=close_cb)
         ssl_sock.set_connect_state()

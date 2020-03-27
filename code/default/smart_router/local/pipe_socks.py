@@ -6,7 +6,7 @@ import socket
 
 import utils
 
-import global_var as g
+from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -54,9 +54,7 @@ class PipeSocks(object):
 
     def add_socks(self, s1, s2):
         for s in [s1, s2]:
-            if isinstance(s._sock, socket._closedsocket) or \
-                    (isinstance(s._sock, ssl.SSLSocket) and
-                     isinstance(s._sock._sock, socket._closedsocket)):
+            if s._sock._closed:
                 xlog.warn("try to add_socks closed socket:%s %s", s1, s2)
                 s1.close()
                 s2.close()
@@ -144,7 +142,7 @@ class PipeSocks(object):
                     self.close(s1, "miss")
 
             try:
-                r, w, e = select.select(self.read_set, self.write_set, self.error_set, 0.1)
+                r, w, error_set = select.select(self.read_set, self.write_set, self.error_set, 0.1)
                 for s1 in list(r):
                     if s1 not in self.read_set:
                         continue
@@ -174,8 +172,8 @@ class PipeSocks(object):
                             g.gfwlist.check(s2.host):
                         p1 = d.find(s2.host)
                         if p1 > 1:
-                            if "google" in s2.host:
-                                p2 = d.find("google") + 3
+                            if b"google" in s2.host:
+                                p2 = d.find(b"google") + 3
                             else:
                                 p2 = p1 + len(s2.host) - 6
 
@@ -190,13 +188,16 @@ class PipeSocks(object):
                                 continue
 
                             s2.add_dat(d2)
-                            d = ""
+                            d = b""
                             xlog.debug("pipe send split SNI:%s", s2.host)
 
                     if s2.buf_size == 0:
                         try:
+                            sended = 0
                             sended = s2.send(d)
                             # xlog.debug("direct send %d to %s from:%s", sended, s2, s1)
+                        except BlockingIOError as e:
+                            pass
                         except Exception as e:
                             self.close(s2, "w")
                             continue
@@ -232,7 +233,10 @@ class PipeSocks(object):
                             break
 
                         try:
+                            sended = 0
                             sended = s1.send(dat)
+                        except BlockingIOError as e:
+                            pass
                         except Exception as e:
                             self.close(s1, "w")
                             break
@@ -251,14 +255,12 @@ class PipeSocks(object):
                         elif s1.buf_size == 0 and s2.is_closed():
                             self.close(s1, "n")
 
-                for s1 in list(e):
+                for s1 in list(error_set):
                     self.close(s1, "e")
             except Exception as e:
                 xlog.exception("pipe except:%r", e)
                 for s in list(self.error_set):
-                    if isinstance(s._sock, socket._closedsocket) or \
-                            (isinstance(s._sock, ssl.SSLSocket) and
-                             isinstance(s._sock._sock, socket._closedsocket)):
+                    if s._sock._closed:
                         xlog.warn("socket %s is closed", s)
                         self.close(s, "e")
 

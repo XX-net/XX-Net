@@ -1,5 +1,5 @@
 
-from front import front, direct_front
+from .front import front, direct_front
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 

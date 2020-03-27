@@ -6,8 +6,8 @@ logger = xlog.getLogger("heroku_front")
 logger.set_buffer(500)
 
 import simple_http_client
-from config import Config
-import host_manager
+from .config import Config
+from . import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.ip_manager import IpManager

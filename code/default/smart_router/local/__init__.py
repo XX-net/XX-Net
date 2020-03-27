@@ -1,6 +1,6 @@
 import os
 import sys
-import apis
+from . import apis
 
 from xlog import getLogger
 xlog = getLogger("smart_router")
@@ -26,18 +26,23 @@ except:
 
 
 from . import global_var as g
-import dns_server
-import host_records
-import user_rules
+from . import dns_server
+from . import host_records
+from . import user_rules
 from . import proxy_handler
-import web_control
-import connect_manager
-import pac_server
-import pipe_socks
-import ip_region
-import gfwlist
+from . import web_control
+from . import connect_manager
+from . import pac_server
+from . import pipe_socks
+from . import ip_region
+from . import gfwlist
 
 ready = False
+
+
+def is_ready():
+    global ready
+    return ready
 
 
 def load_config():
@@ -84,7 +89,7 @@ def load_config():
     g.config = config
 
 
-def run(args):
+def start(args):
     global proc_handler, ready, g
 
     if not proc_handler:
@@ -122,7 +127,7 @@ def run(args):
     allow_remote = args.get("allow_remote", 0)
 
     listen_ips = g.config.proxy_bind_ip
-    if isinstance(listen_ips, basestring):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
@@ -133,10 +138,10 @@ def run(args):
     g.proxy_server = simple_http_server.HTTPServer(addresses,
                                                    proxy_handler.ProxyServer, logger=xlog)
     g.proxy_server.start()
-    xlog.info("Proxy server listen:%s:%d.", listen_ip, g.config.proxy_port)
+    xlog.info("Proxy server listen:%s:%d.", listen_ips, g.config.proxy_port)
 
     listen_ips = g.config.dns_bind_ip
-    if isinstance(listen_ips, basestring):
+    if isinstance(listen_ips, str):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
@@ -151,7 +156,7 @@ def run(args):
     g.dns_srv.server_forever()
 
 
-def terminate():
+def stop():
     global ready
 
     g.domain_cache.save(True)

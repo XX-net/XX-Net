@@ -12,6 +12,6 @@ class CloudflareHttp2Worker(Http2Worker):
     def get_host(self, task_host):
         if not self.host:
             sub, top = utils.split_domain(task_host)
-            self.host = sub + "." + self.ssl_sock.host
+            self.host = utils.to_str(sub) + "." + utils.to_str(self.ssl_sock.host)
 
         return self.host

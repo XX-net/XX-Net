@@ -1,7 +1,7 @@
 import time
 
-import global_var as g
-import front_dispatcher
+from . import global_var as g
+from . import front_dispatcher
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -27,7 +27,7 @@ def is_workable():
         loop_num = 1
 
     workable_call_times += 1
-    for i in xrange(0, loop_num):
+    for i in range(0, loop_num):
         for front in front_dispatcher.session_fronts:
             score = front.get_dispatcher().get_score()
             if score is None:

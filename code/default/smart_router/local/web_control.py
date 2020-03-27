@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import urlparse
+import urllib.parse
 import os
 import cgi
 
@@ -9,8 +9,8 @@ from xlog import getLogger
 xlog = getLogger("smart_router")
 
 import simple_http_server
-import pac_server
-import global_var as g
+from . import pac_server
+from . import global_var as g
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -27,7 +27,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile = wfile
 
     def do_GET(self):
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/status":
@@ -37,19 +37,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def do_POST(self):
         xlog.debug('Web_control %s %s %s ', self.address_string(), self.command, self.path)
-        try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-            if ctype == 'multipart/form-data':
-                self.postvars = cgi.parse_multipart(self.rfile, pdict)
-            elif ctype == 'application/x-www-form-urlencoded':
-                length = int(self.headers.getheader('content-length'))
-                self.postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
-            else:
-                self.postvars = {}
-        except:
-            self.postvars = {}
 
-        path = urlparse.urlparse(self.path).path
+        path = urllib.parse.urlparse(self.path).path
         if path == '/rules':
             return self.req_rules_handler()
         elif path == "/cache":
@@ -61,8 +50,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_not_found()
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urllib.parse.urlparse(self.path).query
+        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs["cmd"]:

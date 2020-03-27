@@ -5,7 +5,7 @@ import sys
 import platform
 import locale
 import ctypes
-import win32runas
+from . import win32runas
 
 
 def win32_notify( msg='msg', title='Title'):
@@ -24,7 +24,7 @@ def reset_teredo():
     gp_regpol_new = [gp for gp in gp_regpol_old if gp_teredo not in gp]
 
     if len(gp_regpol_new) != len(gp_regpol_old) and \
-            win32_notify(u'发现组策略 Teredo 设置，是否重置？', u'提醒'):
+            win32_notify('发现组策略 Teredo 设置，是否重置？', '提醒'):
         with open(gp_regpol_file, 'wb') as f:
             f.write(gp_split.join(gp_regpol_new))
         os.system(sysnative + '\\gpupdate /target:computer /force')

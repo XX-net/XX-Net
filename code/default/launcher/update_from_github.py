@@ -14,15 +14,15 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 code_path = os.path.abspath(os.path.join(root_path, os.pardir))
 data_root = os.path.join(top_path, 'data')
-python_path = os.path.join(root_path, 'python27', '1.0')
+python_path = root_path
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
+import utils
 import simple_http_client
 from xlog import getLogger
 xlog = getLogger("launcher")
-import config
-import update
+from config import config
 
 
 if not os.path.isdir(data_root):
@@ -41,24 +41,24 @@ def init_update_info(check_update):
     global update_info
     if check_update == "dont-check":
         update_info = "dont-check"
-    elif config.get(["update", "check_update"]) == update_info == "dont-check":
+    elif config.check_update == update_info:
         update_info = "init"
     elif check_update != "init":
         update_info = ""
 
 
-init_update_info(config.get(["update", "check_update"]))
+init_update_info(config.check_update)
 
 
 def request(url, retry=0, timeout=30):
     if retry == 0:
-        if int(config.get(["proxy", "enable"], 0)):
+        if config.global_proxy_enable == 1:
             client = simple_http_client.Client(proxy={
-                "type": config.get(["proxy", "type"], ""),
-                "host": config.get(["proxy", "host"], ""),
-                "port": int(config.get(["proxy", "port"], 0)),
-                "user": config.get(["proxy", "user"], ""),
-                "pass": config.get(["proxy", "passwd"], ""),
+                "type": config.global_proxy_type,
+                "host": config.global_proxy_host,
+                "port": config.global_proxy_port,
+                "user": config.global_proxy_username,
+                "pass": config.global_proxy_password,
             }, timeout=timeout)
         else:
             client = simple_http_client.Client(timeout=timeout)
@@ -119,7 +119,7 @@ def download_file(url, filename):
                 progress[url]["status"] = "finished"
                 return True
             else:
-                file_size = progress[url]["size"] = int(req.getheader('Content-Length', 0))
+                file_size = progress[url]["size"] = int(req.getheader(b'Content-Length', 0))
 
                 left = file_size
                 downloaded = 0
@@ -154,15 +154,16 @@ def download_file(url, filename):
 def parse_readme_versions(readme_file):
     versions = []
     try:
-        fd = open(readme_file, "r")
+        fd = open(readme_file, "rb")
         lines = fd.readlines()
-        p = re.compile(r'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+) ([0-9a-fA-F]*)')
+        p = re.compile(br'https://codeload.github.com/XX-net/XX-Net/zip/([0-9]+)\.([0-9]+)\.([0-9]+) ([0-9a-fA-F]*)')
         for line in lines:
             m = p.match(line)
             if m:
-                version = m.group(1) + "." + m.group(2) + "." + m.group(3)
+                version = m.group(1) + b"." + m.group(2) + b"." + m.group(3)
                 hashsum = m.group(4).lower()
                 versions.append([m.group(0), version, hashsum])
+                versions = utils.to_str(versions)
                 if len(versions) == 2:
                     return versions
     except Exception as e:
@@ -327,7 +328,7 @@ def get_local_versions():
             v = get_folder_version(name)
             if v:
                 local_versions.append([v, name])
-    local_versions.sort(key=lambda s: map(int, s[0].split('.')), reverse=True)
+    local_versions.sort(key=lambda s: list(map(int, s[0].split('.'))), reverse=True)
     return local_versions
 
 
@@ -432,7 +433,7 @@ def cleanup():
                 except:
                     pass
 
-    keep_old_num = config.get(["modules", "launcher", "keep_old_ver_num"], 6)  # default keep several old versions
+    keep_old_num = config.keep_old_ver_num  # default keep several old versions
     if keep_old_num < 99 and keep_old_num >= 0:  # 99 means don't delete any old version
         del_paths = []
         local_vs = get_local_versions()
@@ -445,42 +446,38 @@ def cleanup():
             rm_paths(del_paths)
 
     del_paths = []
-    if config.get(["savedisk", "clear_cache"], 0):
+    if config.clear_cache:
         del_paths += [
             "data/*/*.*.log",
             "data/*/*.log.*",
             "data/downloads/XX-Net-*.zip"
         ]
 
-    if config.get(["savedisk", "del_win"], 0):
+    if config.del_win:
         del_paths += [
-            "code/*/python27/1.0/WinSxS/",
-            "code/*/python27/1.0/*.dll",
-            "code/*/python27/1.0/*.exe",
-            "code/*/python27/1.0/Microsoft.VC90.CRT.manifest",
-            "code/*/python27/1.0/lib/win32/"
+            "code/*/lib/win32/"
         ]
-    if config.get(["savedisk", "del_mac"], 0):
+    if config.del_mac:
         del_paths += [
-            "code/*/python27/1.0/lib/darwin/"
+            "code/*/lib/darwin/"
         ]
-    if config.get(["savedisk", "del_linux"], 0):
+    if config.del_linux:
         del_paths += [
-            "code/*/python27/1.0/lib/linux/"
+            "code/*/lib/linux/"
         ]
-    if config.get(["savedisk", "del_gae"], 0):
+    if config.del_gae:
         del_paths += [
             "code/*/gae_proxy/"
         ]
-    if config.get(["savedisk", "del_gae_server"], 0):
+    if config.del_gae_server:
         del_paths += [
             "code/*/gae_proxy/server/"
         ]
-    if config.get(["savedisk", "del_xtunnel"], 0):
+    if config.del_xtunnel:
         del_paths += [
             "code/*/x_tunnel/"
         ]
-    if config.get(["savedisk", "del_smartroute"], 0):
+    if config.del_smartroute:
         del_paths += [
             "code/*/smart_router/"
         ]

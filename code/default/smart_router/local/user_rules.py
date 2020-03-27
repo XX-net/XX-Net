@@ -9,6 +9,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
 
+import utils
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
@@ -43,7 +44,7 @@ class Config(object):
         for section in self.rule_list:
             fn = os.path.join(data_path, "%s_list.txt" % section)
             if not os.path.isfile(fn):
-                rules_info[section] = ""
+                rules_info[section] = b""
                 continue
 
             with open(fn, "r") as fd:
@@ -56,36 +57,38 @@ class Config(object):
         end_fix = []
         hosts = []
 
-        content = content.replace(",", "\n").replace(";", "\n")
-        lines = content.split("\n")
+        content = utils.to_bytes(content)
+
+        content = content.replace(b",", b"\n").replace(b";", b"\n")
+        lines = content.split(b"\n")
         for line in lines:
             line = line.strip()
             if not line:
                 continue
 
-            if "=" in line:
-                lp = line.split("=")
+            if b"=" in line:
+                lp = line.split(b"=")
                 left = lp[0].strip()
                 right = lp[1].strip()
             else:
                 left = line
                 right = None
 
-            if left.startswith("http://"):
+            if left.startswith(b"http://"):
                 left = left[7:]
-            if left.startswith("https://"):
+            if left.startswith(b"https://"):
                 left = left[8:]
-            if left.startswith("*"):
+            if left.startswith(b"*"):
                 left = left[1:]
-            if "/" in left:
-                p = left.find("/")
+            if b"/" in left:
+                p = left.find(b"/")
                 host = left[:p]
             else:
                 host = left
 
-            if host.startswith("."):
+            if host.startswith(b"."):
                 end_fix.append(host)
-            elif host.startswith("*."):
+            elif host.startswith(b"*."):
                 end_fix.append(host[1:])
             else:
                 hosts.append(host)
@@ -107,14 +110,14 @@ class Config(object):
                 hosts, end_fix = self.parse_rules(content)
                 self.rule_lists[section] = tuple(hosts + end_fix)
                 if section == "redirect_https":
-                    self.redirect_https_host_rules = tuple(hosts)
-                    self.redirect_https_end_rules = tuple(end_fix)
+                    self.redirect_https_host_rules = tuple(utils.to_bytes(hosts))
+                    self.redirect_https_end_rules = tuple(utils.to_bytes(end_fix))
                 else:
                     for host in hosts:
                         self.host_rules[host] = section
 
                     if len(end_fix):
-                        self.end_rules[section] = tuple(end_fix)
+                        self.end_rules[section] = tuple(utils.to_bytes(end_fix))
 
     def check_host(self, domain, port=None):
         if port == 80:

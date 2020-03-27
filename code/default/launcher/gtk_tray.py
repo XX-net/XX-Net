@@ -9,10 +9,10 @@ import webbrowser
 from xlog import getLogger
 xlog = getLogger("launcher")
 
-import config
+from config import config
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir))
     noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
@@ -122,9 +122,9 @@ class Gtk_tray():
 
     def make_menu(self):
         menu = gtk.Menu()
-        itemlist = [(u'Config', self.on_show),
-                    (u'Reset Each Module', self.on_restart_each_module),
-                    (u'Quit', self.on_quit)]
+        itemlist = [('Config', self.on_show),
+                    ('Reset Each Module', self.on_restart_each_module),
+                    ('Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
             item.connect('activate', callback)
@@ -153,7 +153,7 @@ class Gtk_tray():
         return True
 
     def show_control_web(self, widget=None, data=None):
-        host_port = config.get(["modules", "launcher", "control_port"], 8085)
+        host_port = config.control_port
         webbrowser.open_new("http://127.0.0.1:%s/" % host_port)
 
     def on_restart_each_module(self, widget=None, data=None):

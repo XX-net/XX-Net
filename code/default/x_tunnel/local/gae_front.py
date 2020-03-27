@@ -9,6 +9,8 @@ launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir
 if launcher_path not in sys.path:
     sys.path.append(launcher_path)
 
+import utils
+
 try:
     from module_init import proc_handler
 except:
@@ -42,10 +44,17 @@ def request(method, host, schema="https", path="/", headers={}, data="", timeout
     if not gae_proxy:
         return "", 602, {}
 
+    method = utils.to_bytes(method)
+    host = utils.to_bytes(host)
+    schema = utils.to_bytes(schema)
+    path = utils.to_bytes(path)
+    headers = utils.to_bytes(headers)
+    data = utils.to_bytes(data)
+
     # use http to avoid cert fail
-    url = "http://" + host + path
+    url = b"%s://%s%s" % (schema, host, path)
     if data:
-        headers["Content-Length"] = str(len(data))
+        headers[b"Content-Length"] = bytes(str(len(data)), encoding='ascii')
 
     # xlog.debug("gae_proxy %s %s", method, url)
     try:

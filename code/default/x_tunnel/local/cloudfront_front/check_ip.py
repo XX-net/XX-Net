@@ -9,7 +9,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
-python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
+python_path = root_path
 
 sys.path.append(root_path)
 
@@ -35,11 +35,11 @@ logger = xlog.getLogger("cloudfront_front")
 logger.set_buffer(500)
 
 from front_base.openssl_wrap import SSLContext
-from front_base.connect_creator import ConnectCreator
+from .connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 from front_base.host_manager import HostManagerBase
 
-from config import Config
+from .config import Config
 
 
 class CheckAllIp(object):
@@ -107,10 +107,10 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
-    default_ip = "54.192.37.196"
+    default_ip = "54.192.35.105"
 
-    sni = "www.binance.com"
-    host = "scan1.xx-net.net"
+    sni = "dnn506yrbagrg.cloudfront.net"
+    host = "d14haayoytfxn1.cloudfront.net"
     if len(sys.argv) > 1:
         ip = sys.argv[1]
         if not utils.check_ip_valid(ip):
@@ -146,5 +146,6 @@ if __name__ == "__main__":
         xlog.warn("connect fail")
     elif res.ok:
         xlog.info("success, domain:%s handshake:%d", res.host, res.handshake_time)
+        xlog.info("response:%s",res.response.content)
     else:
         xlog.warn("not support")
