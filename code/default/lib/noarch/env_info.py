@@ -1,6 +1,7 @@
 import platform
 import sys
 
+import utils
 
 def win32_version():
     import ctypes
@@ -66,12 +67,34 @@ def win32_version_string():
     return version_string
 
 
+def linux_distribution():
+    try:
+        with open("/etc/os-release", "br") as fd:
+            kvs = {}
+            for line in fd.readlines():
+                kv = line.split(b"=")
+                if kv[0] == b"NAME":
+                    v = kv[1].replace(b"\"", b"")
+                    kvs[kv[0]] = v
+        if b"PRETTY_NAME" in kvs:
+            return kvs[b"PRETTY_NAME"]
+        elif b"NAME" in kvs:
+            return kvs[b"NAME"]
+        else:
+            return None
+    except Exception as e:
+        return None
+
+
 def os_detail():
     if sys.platform == "win32":
         return win32_version_string()
     elif sys.platform.startswith("linux"):
-        distname,version,id = platform.linux_distribution()
-        return "Dist:%s; Version:%s; ID:%s" % (distname,version,id)
+        distribution = linux_distribution()
+        if distribution is None:
+            return "plat:%s release:%s ver:%s" % (platform.platform(), platform.release(), platform.version())
+        else:
+            return utils.to_str(distribution)
     elif sys.platform == "darwin":
         release, versioninfo, machine = platform.mac_ver()
         return "Release:%s; Version:%s Machine:%s" % (release, versioninfo, machine)

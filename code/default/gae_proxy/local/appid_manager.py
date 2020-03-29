@@ -44,7 +44,9 @@ class AppidManager(object):
                 time_to_reset = 600 - (time.time() - self.last_reset_time)
                 if time_to_reset > 0:
                     self.logger.warn("all appid out of quota, wait %d seconds to reset", time_to_reset)
-                    time.sleep(time_to_reset)
+                    sleep_end = time.time() + time_to_reset
+                    while len(self.working_appid_list) == 0 & time.time() < sleep_end:
+                        time.sleep(1)
                     return None
                 else:
                     self.logger.warn("reset appid")

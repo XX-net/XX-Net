@@ -183,6 +183,7 @@ def send_header(wfile, keyword, value):
 
 
 def send_response(wfile, status=404, headers={}, body=b''):
+    body = utils.to_bytes(body)
     headers = dict((k.title(), v) for k, v in list(headers.items()))
     if b'Transfer-Encoding' in headers:
         del headers[b'Transfer-Encoding']
@@ -196,12 +197,18 @@ def send_response(wfile, status=404, headers={}, body=b''):
         for key, value in list(headers.items()):
             send_header(wfile, key, value)
         wfile.write(b"\r\n")
-        wfile.write(utils.to_bytes(body))
+        wfile.write(body)
+    except ConnectionAbortedError as e:
+        xlog.warn("gae send response fail. %r", e)
+        return
     except ConnectionResetError as e:
-        xlog.warn("gae send response fail.")
+        xlog.warn("gae send response fail: %r", e)
         return
     except BrokenPipeError as e:
-        xlog.warn("send response fail.")
+        xlog.warn("gae send response fail. %r", e)
+        return
+    except ssl.SSLError as e:
+        xlog.warn("gae send response fail. %r", e)
         return
     except Exception as e:
         xlog.exception("send response fail %r", e)
@@ -216,7 +223,7 @@ def return_fail_message(wfile):
 
 def pack_request(method, url, headers, body, timeout):
     headers = dict(headers)
-    if isinstance(body, str) and body:
+    if isinstance(body, bytes) and body:
         if len(body) < 10 * 1024 * 1024 and b'Content-Encoding' not in headers:
             # 可以压缩
             zbody = deflate(body)
@@ -225,7 +232,7 @@ def pack_request(method, url, headers, body, timeout):
                 headers[b'Content-Encoding'] = b'deflate'
         if len(body) > 10 * 1024 * 1024:
             xlog.warn("body len:%d %s %s", len(body), method, url)
-        headers[b'Content-Length'] = str(len(body))
+        headers[b'Content-Length'] = utils.to_bytes(str(len(body)))
 
     # GAE don't allow set `Host` header
     if b'Host' in headers:
@@ -533,6 +540,11 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         send_response(wfile, e.error_code, body=e.message)
         return_fail_message(wfile)
         return "ok"
+    except Exception as e:
+        xlog.exception("request_gae except:%r", e)
+        send_response(wfile, 502, body=e.args[1]) # 502 means Gateway error.
+        return_fail_message(wfile)
+        return "ok"
 
     if response.app_msg:
         # XX-net 自己数据包
@@ -589,11 +601,12 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
         # 写入除body外内容
 
     def is_text_content_type(content_type):
+        content_type = utils.to_bytes(content_type)
         mct, _, sct = content_type.partition(b'/')
         if mct == b'text':
             return True
         if mct == b'application':
-            sct = sct.split(';', 1)[0]
+            sct = sct.split(b';', 1)[0]
             if (sct in (b'json', b'javascript', b'x-www-form-urlencoded') or
                     sct.endswith((b'xml', b'script')) or
                     sct.startswith((b'xml', b'rss', b'atom'))):
@@ -607,7 +620,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             content_encoding == b"gzip" and \
             response.gps < b"GPS 3.3.2" and \
             is_text_content_type(content_type):
-        url_guess_type = guess_type(url)[0]
+        url_guess_type = guess_type(utils.to_str(url))[0]
         if url_guess_type is None or is_text_content_type(url_guess_type):
             # try decode and detect type
 
@@ -682,9 +695,7 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             body_sended = len(data0)
         else:
             body_sended = 0
-    except BrokenPipeError as e:
-        return
-    except ConnectionAbortedError as e:
+    except (BrokenPipeError, ConnectionAbortedError) as e:
         return
     except Exception as e:
         xlog.exception("gae_handler.handler send response fail. e:%r %s", e, url)
@@ -776,7 +787,7 @@ class RangeFetch2(object):
             # xlog.debug("range req head:%s => %s", k, v)
             if k.lower() == b"range":
                 req_range_begin, req_range_end = tuple(
-                    x for x in re.search(r'bytes=(\d*)-(\d*)', v).group(1, 2))
+                    x for x in re.search(br'bytes=(\d*)-(\d*)', v).group(1, 2))
                 # break
 
         response_headers = dict((k.title(), v)
@@ -797,7 +808,7 @@ class RangeFetch2(object):
             del response_headers[b'Content-Range']
             state_code = 200
         else:
-            response_headers[b'Content-Range'] = b'bytes %s-%s/%s' % (
+            response_headers[b'Content-Range'] = b'bytes %d-%d/%d' % (
                 res_begin, self.req_end, res_length)
             response_headers[b'Content-Length'] = bytes(str(
                 self.req_end - res_begin + 1), encoding='ascii')
@@ -818,6 +829,10 @@ class RangeFetch2(object):
                 #xlog.debug("Head %s: %s", key.title(), value)
                 send_header(self.wfile, key, value)
             self.wfile.write(b"\r\n")
+        except (ConnectionAbortedError, BrokenPipeError) as e:
+            self.keep_running = False
+            xlog.warn("RangeFetch send response fail:%r %s", e, self.url)
+            return
         except Exception as e:
             self.keep_running = False
             xlog.exception("RangeFetch send response fail:%r %s", e, self.url)
@@ -835,9 +850,9 @@ class RangeFetch2(object):
 
         ok = "ok"
         while self.keep_running and \
-                (front.config.use_ipv6 == "force_ipv6" and \
-                check_local_network.IPv6.is_ok() or \
-                front.config.use_ipv6 != "force_ipv6" and \
+                (front.config.use_ipv6 == "force_ipv6" and
+                check_local_network.IPv6.is_ok() or
+                front.config.use_ipv6 != "force_ipv6" and
                 check_local_network.is_ok()) and \
                 self.wait_begin < self.req_end + 1:
             with self.lock:

@@ -133,7 +133,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         else:
             response += b"Access-Control-Allow-Origin: *\r\n"
 
-        response += "\r\n"
+        response += b"\r\n"
 
         self.wfile.write(response)
 
@@ -181,8 +181,8 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                 certfile = CertUtil.get_cert(host, full_name=True)
                 return
             except Exception as e:
-                #if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
-                xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
+                if e.args[0] not in (errno.ECONNABORTED, errno.ECONNRESET):
+                    xlog.exception('ssl.wrap_socket(self.connection=%r) failed: %s path:%s, errno:%s', self.connection, e, self.path, e.args[0])
                 return
 
             self.__realwfile = self.wfile
@@ -323,7 +323,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 
 # called by smart_router
 def wrap_ssl(sock, host, port, client_address):
-    certfile = CertUtil.get_cert(host or 'www.google.com')
+    certfile = CertUtil.get_cert(host or b'www.google.com')
     ssl_sock = ssl.wrap_socket(sock, keyfile=CertUtil.cert_keyfile,
                                certfile=certfile, server_side=True)
     return ssl_sock

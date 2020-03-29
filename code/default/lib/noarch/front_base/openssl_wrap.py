@@ -18,7 +18,7 @@ import errno
 
 
 import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
+#SSLError = OpenSSL.SSL.WantReadError
 
 import datetime
 import ssl

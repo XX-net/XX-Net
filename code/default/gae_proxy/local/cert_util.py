@@ -181,6 +181,7 @@ class CertUtil(object):
 
     @staticmethod
     def get_cert(commonname, sans=None, full_name=False):
+        commonname = utils.to_bytes(commonname)
         isip =  check_ip_valid(commonname)
         with CertUtil.ca_lock:
             certfile = CertUtil._get_old_cert(commonname)

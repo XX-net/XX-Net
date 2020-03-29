@@ -187,7 +187,9 @@ class HttpServerHandler():
                 return
 
             self.wfile.flush() #actually send the response if not already done.
-
+        except ParseReqFail as e:
+            self.logger.warn("parse req except:%r", e)
+            self.close_connection = 1
         except socket.error as e:
             #self.logger.warn("socket error:%r", e)
             self.close_connection = 1
