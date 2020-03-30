@@ -58,7 +58,14 @@ class CheckIp(front_base.check_ip.CheckIp):
             else:
                 return True
 
-        content = response.read()
+        try:
+            content = response.read()
+        except ConnectionResetError:
+            return False
+        except Exception as e:
+            self.logger.warn("app check except:%r", e)
+            return False
+
         if self.config.check_ip_content not in content:
             self.logger.warn("app check content:%s", content)
             return False

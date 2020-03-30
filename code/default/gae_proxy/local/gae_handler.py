@@ -932,7 +932,7 @@ class RangeFetch2(object):
                         self.method, self.url, headers, self.body)
                 except GAE_Exception as e:
                     xlog.warning('RangeFetch %s request fail:%r',
-                                 headers['Range'], e)
+                                 headers[b'Range'], e)
                     continue
 
             if response.app_msg:

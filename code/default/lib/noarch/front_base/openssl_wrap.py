@@ -223,6 +223,9 @@ class SSLConnection(object):
         return self.__iowait(self._connection.connect, *args, **kwargs)
 
     def __send(self, data, flags=0):
+        if not self.running:
+            raise OpenSSL.SSL.Error
+
         try:
             return self.__iowait(self._connection.send, data, flags)
         except OpenSSL.SSL.SysCallError as e:
@@ -242,6 +245,9 @@ class SSLConnection(object):
         pending = self._connection.pending()
         if pending:
             return self._connection.recv(min(pending, bufsiz))
+
+        if not self.running:
+            raise OpenSSL.SSL.Error
 
         try:
             return self.__iowait(self._connection.recv, bufsiz, flags)
@@ -304,7 +310,6 @@ class SSLConnection(object):
     def makefile(self, mode='r', bufsize=-1):
         self._makefile_refs += 1
         return self._connection.makefile(mode=mode, buffering=bufsize)
-        #return socket._fileobject(self, mode, bufsize, close=True)
 
 
 class SSLContext(object):
