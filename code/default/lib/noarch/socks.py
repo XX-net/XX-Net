@@ -678,7 +678,7 @@ class socksocket(_BaseSocket):
         self.sendall(b"\r\n".join(http_headers))
 
         # We just need the first line to check if the connection was successful
-        fobj = self.makefile()
+        fobj = self.makefile("rb")
         status_line = fobj.readline()
         fobj.close()
 
@@ -686,11 +686,11 @@ class socksocket(_BaseSocket):
             raise GeneralProxyError("Connection closed unexpectedly")
 
         try:
-            proto, status_code, status_msg = status_line.split(" ", 2)
+            proto, status_code, status_msg = status_line.split(b" ", 2)
         except ValueError:
             raise GeneralProxyError("HTTP proxy server sent invalid response")
 
-        if not proto.startswith("HTTP/"):
+        if not proto.startswith(b"HTTP/"):
             raise GeneralProxyError("Proxy server does not appear to be an HTTP proxy")
 
         try:

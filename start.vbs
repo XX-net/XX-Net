@@ -193,5 +193,8 @@ Set oShell = CreateObject ("Wscript.Shell")
 oShell.Environment("Process")("PYTHONPATH")=""
 oShell.Environment("Process")("PYTHONHOME")=""
 Do
+    StartTime = Timer
     oShell.Run strArgs, isConsole(), true
-Loop Until not fso.FileExists(RunningLockFn)
+    EndTime = Timer
+    run_cost = EndTime - StartTime
+Loop Until (not fso.FileExists(RunningLockFn)) or run_cost < 20

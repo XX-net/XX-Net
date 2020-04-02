@@ -123,7 +123,7 @@ class Response(BaseResponse):
                     return line
 
                 if time.time() - start_time > timeout:
-                    raise Exception("time out")
+                    raise socket.timeout()
                 time.sleep(0.001)
                 try:
                     data = sock.recv(8192)
@@ -157,7 +157,7 @@ class Response(BaseResponse):
                     return block
 
                 if time.time() - start_time > timeout:
-                    raise Exception("time out")
+                    raise socket.timeout()
 
                 time.sleep(0.001)
                 try:
@@ -259,7 +259,7 @@ class Response(BaseResponse):
                 out_list.append(data)
                 out_len += len(data)
         if read_len is not None and out_len < read_len:
-            raise Exception("time out")
+            raise socket.timeout()
 
         return b"".join(out_list)
 
@@ -304,7 +304,7 @@ class Response(BaseResponse):
 
             out_len += nbytes
         if out_len < read_len:
-            raise Exception("time out")
+            raise socket.timeout()
 
         return out_bytes
 
@@ -331,7 +331,7 @@ class Response(BaseResponse):
             while True:
                 time_left = timeout - (time.time() - start_time)
                 if time_left < 0:
-                    raise Exception("time out")
+                    raise socket.timeout()
 
                 dat = self._read_chunked(time_left)
                 if not dat:

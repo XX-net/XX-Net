@@ -297,9 +297,9 @@ def error(fmt, *args, **kwargs):
     default_log.error(fmt, *args, **kwargs)
 
 
-def exception(self, fmt, *args, **kwargs):
-    self.error(fmt, *args, **kwargs)
-    self.error("Except stack:%s", traceback.format_exc(), **kwargs)
+def exception(fmt, *args, **kwargs):
+    error(fmt, *args, **kwargs)
+    error("Except stack:%s", traceback.format_exc(), **kwargs)
 
 
 def critical(fmt, *args, **kwargs):
