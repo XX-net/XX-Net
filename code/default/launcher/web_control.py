@@ -332,8 +332,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if allow_remote_switch != 0 and allow_remote_switch != 1:
                     data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_switch
                 else:
-                    config.allow_remote_connect = allow_remote_switch
-                    config.save()
 
                     try:
                         del module_init.xargs["allow_remote"]
@@ -357,6 +355,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     time.sleep(1)
                     start()
                     module_init.start_all_auto()
+
+                    config.allow_remote_connect = allow_remote_switch
+                    config.save()
+
                     xlog.debug("launcher web control restarted.")
             elif 'show_systray' in reqs:
                 show_systray = int(reqs['show_systray'][0])
@@ -715,12 +717,15 @@ def start(allow_remote=0):
     if allow_remote:
         xlog.info("allow remote access WebUI")
 
-    if isinstance(host_ip, str):
-        listen_ips = [host_ip]
-    else:
-        listen_ips = list(host_ip)
+    listen_ips = []
     if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
         listen_ips.append("0.0.0.0")
+    else:
+        if isinstance(host_ip, str):
+            listen_ips = [host_ip]
+        else:
+            listen_ips = list(host_ip)
+
     addresses = [(listen_ip, host_port) for listen_ip in listen_ips]
 
     xlog.info("begin to start web control")
