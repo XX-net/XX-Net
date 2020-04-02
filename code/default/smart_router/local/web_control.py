@@ -119,15 +119,15 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             if "country" in reqs:
                 g.config.country_code = reqs["country"][0]
             if "auto_direct" in reqs:
-                g.config.auto_direct = bool(int(reqs["auto_direct"][0]))
+                g.config.auto_direct = int(reqs["auto_direct"][0])
             if "auto_direct6" in reqs:
-                g.config.auto_direct6 = bool(int(reqs["auto_direct6"][0]))
+                g.config.auto_direct6 = int(reqs["auto_direct6"][0])
             if "auto_gae" in reqs:
-                g.config.auto_gae = bool(int(reqs["auto_gae"][0]))
+                g.config.auto_gae = int(reqs["auto_gae"][0])
             if "enable_fake_ca" in reqs:
-                g.config.enable_fake_ca = bool(int(reqs["enable_fake_ca"][0]))
+                g.config.enable_fake_ca = int(reqs["enable_fake_ca"][0])
             if "block_advertisement" in reqs:
-                g.config.block_advertisement = bool(int(reqs["block_advertisement"][0]))
+                g.config.block_advertisement = int(reqs["block_advertisement"][0])
             g.config.save()
             return self.response_json({"res": "success"})
 
