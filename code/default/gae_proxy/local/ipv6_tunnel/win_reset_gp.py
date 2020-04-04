@@ -3,15 +3,15 @@
 import os
 import sys
 import platform
-import locale
 import ctypes
-from . import win32runas
+import win32runas
 
 
 def win32_notify( msg='msg', title='Title'):
     res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
     # Yes:1 No:2
     return res == 1
+
 
 def reset_teredo():
     gp_split = b'[\x00'
@@ -28,6 +28,7 @@ def reset_teredo():
         with open(gp_regpol_file, 'wb') as f:
             f.write(gp_split.join(gp_regpol_new))
         os.system(sysnative + '\\gpupdate /target:computer /force')
+
 
 if '__main__' == __name__:
     if os.name != 'nt':

@@ -3,6 +3,7 @@ import shlex
 import subprocess
 from .pteredor import teredo_prober
 
+import utils
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
@@ -118,7 +119,7 @@ def run(cmd):
     except Exception as e:
         out = "Exception:%r" % e
 
-    return out
+    return utils.to_str(out, coding="gb18030")
 
 
 def run_cmds(cmds):

@@ -58,7 +58,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
             stream = i18n_translator.render(locale_dir, menu_path)
-            module_menu = json.loads(stream)
+            module_menu = json.loads(utils.to_str(stream))
             new_module_menus[module] = module_menu
 
         module_menus = sorted(iter(new_module_menus.items()), key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))

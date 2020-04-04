@@ -7,6 +7,7 @@ import socket
 import ctypes
 import os
 
+import utils
 
 class sockaddr(ctypes.Structure):
     _fields_ = [("sa_family", ctypes.c_short),
@@ -31,6 +32,8 @@ def inet_pton(address_family, ip_string):
     addr = sockaddr()
     addr.sa_family = address_family
     addr_size = ctypes.c_int(ctypes.sizeof(addr))
+
+    ip_string = utils.to_bytes(ip_string)
 
     if WSAStringToAddressA(
             ip_string,

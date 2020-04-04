@@ -16,6 +16,7 @@ xlog = getLogger("launcher")
 from config import config
 import update_from_github
 import urllib.request, urllib.error, urllib.parse
+import utils
 
 try:
     reduce         # Python 2
@@ -286,7 +287,7 @@ def check_push_update():
             xlog.exception("check_update fail:%r", e)
             return False
 
-        update_dict = json.loads(update_content)
+        update_dict = json.loads(utils.to_str(update_content))
         return True
     except Exception as e:
         xlog.exception("check_update except:%s", e)
