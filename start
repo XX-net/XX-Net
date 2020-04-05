@@ -78,9 +78,7 @@ openwrt_setup_env()
 # get operating system name
 os_name=`uname -s`
 if [ $os_name = 'Linux' ]; then
-    if has_command opkg; then
-        openwrt_setup_env
-    elif ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
+    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
         echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
         if has_command zypper; then
             # openSUSE
@@ -100,7 +98,7 @@ if [ $os_name = 'Linux' ]; then
         elif has_command opkg; then
             # OpenWrt
             echo "install python"
-            opkg --dest usb install python3 python3-pyopenssl
+            opkg install python3 python3-pyopenssl
         fi
         pip install pyopenssl
     fi
