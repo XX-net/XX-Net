@@ -115,7 +115,7 @@ def run(cmd):
         out, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
-            return out + "\n retcode:%s\n unused_err:%s\n" % (retcode, unused_err)
+            return out + b"\n retcode:%s\n unused_err:%s\n" % (retcode, unused_err)
     except Exception as e:
         out = "Exception:%r" % e
 
@@ -143,6 +143,7 @@ def run_cmds(cmds):
 
 
 def get_line_value(r, n):
+    r = utils.to_str(r)
     rls = r.split("\r\n")
     if len(rls) < n + 1:
         return None
