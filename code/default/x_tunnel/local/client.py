@@ -170,8 +170,9 @@ def main(args):
         listen_ips = [listen_ips]
     else:
         listen_ips = list(listen_ips)
+
     if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
-        listen_ips.append("0.0.0.0")
+        listen_ips = [("0.0.0.0"),]
     addresses = [(listen_ip, g.config.socks_port) for listen_ip in listen_ips]
 
     g.socks5_server = simple_http_server.HTTPServer(addresses, Socks5Server, logger=xlog)
