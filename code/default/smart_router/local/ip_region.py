@@ -29,7 +29,7 @@ class IpRegion(object):
     cn_ipdb = os.path.join(data_path, "cn_ipdb.dat")
 
     def __init__(self):
-        self.cn = "CN"
+        self.cn = b"CN"
         self.ipdb = self.load_db()
 
     def load_db(self):
@@ -56,6 +56,7 @@ class IpRegion(object):
         self.data = struct.unpack('4s' * (data_len // 4), data)
 
     def check_ip(self, ip):
+        ip = utils.to_str(ip)
         if ":" in ip:
             return False
 
@@ -84,6 +85,7 @@ class IpRegion(object):
         return lo & 1
 
     def check_ips(self, ips):
+        ips = utils.to_str(ips)
         for ipd in ips:
             if "|" in ipd:
                 ipl = ipd.split("|")
@@ -246,30 +248,30 @@ class UpdateIpRange(object):
         try:
             data = subprocess.check_output(['wget', url, '-O-'])
         except (OSError, AttributeError):
-            print("Fetching data from apnic.net, " \
+            print("Fetching data from apnic.net, "
                                  "it might take a few minutes, please wait...", file=sys.stderr)
             data = urllib.request.urlopen(url).read()
 
-        with open(fn, "w") as f:
+        with open(fn, "bw") as f:
             f.write(data)
         return data
 
     def save_apnic_cniplist(self, fn):
         try:
-            fd = open(fn, "r")
-            fw = open(self.cn_ipv4_range, "w")
+            fd = open(fn, "br")
+            fw = open(self.cn_ipv4_range, "bw")
             for line in fd.readlines():
                 if line.startswith(b'apnic|CN|ipv4'):
-                    ip = line.decode().split('|')
+                    ip = line.split(b'|')
                     if len(ip) > 5:
-                        fw.write("%s %s\n" % (ip[3], ip[4]))
+                        fw.write(b"%s %s\n" % (ip[3], ip[4]))
 
         except Exception as e:
             xlog.exception("parse_apnic_cniplist %s e:%r", fn, e)
 
 
 if __name__ == '__main__':
-    #up = UpdateIpRange()
+    up = UpdateIpRange()
     ipr = IpRegion()
     print((ipr.check_ip("8.8.8.8")))
     print((ipr.check_ip("114.111.114.114")))

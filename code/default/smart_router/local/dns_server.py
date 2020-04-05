@@ -211,9 +211,9 @@ class DnsClient(object):
                             if b"." in ip and g.ip_region.check_ip(ip):
                                 cn = g.ip_region.cn
                             else:
-                                cn = "XX"
+                                cn = b"XX"
 
-                            if type ==1 and "." not in ip:
+                            if type == 1 and b"." not in ip:
                                 continue
 
                             ips.append(ip + b"|" + cn)
@@ -520,6 +520,7 @@ class DnsServer(object):
                            (time.time() - start_time) * 1000)
 
             reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1, auth=1), q=request.q)
+            ips = utils.to_bytes(ips)
             for ip_cn in ips:
                 ipcn_p = ip_cn.split(b"|")
                 ip = ipcn_p[0]

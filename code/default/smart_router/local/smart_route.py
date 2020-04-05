@@ -119,7 +119,7 @@ def extract_sni_name(packet):
 
 
 def netloc_to_host_port(netloc, default_port=80):
-    if ":" in netloc:
+    if b":" in netloc:
         host, _, port = netloc.rpartition(':')
         port = int(port)
     else:
