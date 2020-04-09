@@ -352,7 +352,7 @@ class CertUtil(object):
             lines = get_cmd_out(cmd)
 
             get_sha1_title = False
-            sha1 = ""
+            sha1 = b""
             for line in lines:
                 if line.endswith(b"Fingerprint (SHA1):\n"):
                     get_sha1_title = True
