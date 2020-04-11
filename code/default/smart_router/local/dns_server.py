@@ -302,7 +302,7 @@ class DnsClient(object):
                         continue
 
                     if "." in ip and g.ip_region.check_ip(ip):
-                        cn = g.ip_region.cn
+                        cn = g.ip_region.cn.decode()
                     else:
                         cn = "XX"
                     ips.append(ip+"|"+cn)
