@@ -289,9 +289,10 @@ def unpack_response(response):
                 "get protocol head fail, len:%d" % headers_length)
 
         raw_response_line, headers_data = inflate(data).split(b'\r\n', 1)
-        _, status, reason = raw_response_line.split(None, 2)
-        response.app_status = int(status)
-        response.app_reason = reason.strip()
+        rl = raw_response_line.split()
+        response.app_status = int(rl[1])
+        if len(rl) >=3:
+            response.app_reason = rl[2].strip()
 
         headers_block, app_msg = headers_data.split(b'\r\n\r\n')
         headers_pairs = headers_block.split(b'\r\n')
@@ -342,7 +343,6 @@ def request_gae_server(headers, body, url, timeout):
             raise GAE_Exception(604, "appid out of quota:%s" % appid)
 
         server_type = response.getheader(b"Server", b"")
-        # content_type = response.getheaders("content-type", "")
         if (b"gws" not in server_type and b"Google Frontend" not in server_type and b"GFE" not in server_type) or \
                 response.status == 403 or response.status == 405:
 

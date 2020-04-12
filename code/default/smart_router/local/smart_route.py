@@ -199,9 +199,6 @@ def get_sni(sock, left_buf=b""):
 
 
 def do_direct(sock, host, ips, port, client_address, left_buf=b""):
-    if not g.config.auto_direct:
-        raise ConnectFail()
-
     remote_sock = g.connect_manager.get_conn(host, ips, port)
     if not remote_sock:
         raise ConnectFail()
@@ -213,9 +210,6 @@ def do_direct(sock, host, ips, port, client_address, left_buf=b""):
 
 
 def do_redirect_https(sock, host, ips, port, client_address, left_buf=b""):
-    if not g.config.auto_direct:
-        raise ConnectFail()
-
     remote_sock = g.connect_manager.get_conn(host, ips, 443)
     if not remote_sock:
         raise RedirectHttpsFail()
@@ -350,20 +344,6 @@ def do_gae(sock, host, port, client_address, left_buf=""):
 
 
 def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
-    if not g.config.auto_direct:
-        for rule in ["direct", "redirect_https"]:
-            try:
-                rule_list.remove(rule)
-            except:
-                pass
-    elif g.config.auto_direct6 and "direct" in rule_list:
-        rule_list.insert(rule_list.index("direct"), "direct6")
-
-    if not g.config.enable_fake_ca and port == 443 or not g.config.auto_gae:
-        try:
-            rule_list.remove("gae")
-        except:
-            pass
 
     start_time = time.time()
 
@@ -507,6 +487,21 @@ def handle_ip_proxy(sock, ip, port, client_address):
     else:
         rule_list = ["direct", "gae", "socks"]
 
+    if not g.config.auto_direct:
+        for rule in ["direct", "redirect_https"]:
+            try:
+                rule_list.remove(rule)
+            except:
+                pass
+    elif g.config.auto_direct6 and "direct" in rule_list:
+        rule_list.insert(rule_list.index("direct"), "direct6")
+
+    if not g.config.enable_fake_ca and port == 443 or not g.config.auto_gae:
+        try:
+            rule_list.remove("gae")
+        except:
+            pass
+
     try_loop("ip", rule_list, sock, ip, port, client_address)
 
 
@@ -518,6 +513,7 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     if not isinstance(sock, SocketWrap):
         sock = SocketWrap(sock, client_address[0], client_address[1])
 
+    # Check user rules
     sock.target = "%s:%d" % (host, port)
     rule = g.user_rules.check_host(host, port)
     if not rule:
@@ -561,5 +557,21 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
             rule_list = ["direct", "socks", "redirect_https"]
         else:
             rule_list = ["direct", "gae", "socks", "redirect_https"]
+
+    # check config.
+    if not g.config.auto_direct:
+        for rule in ["direct", "redirect_https"]:
+            try:
+                rule_list.remove(rule)
+            except:
+                pass
+    elif g.config.auto_direct6 and "direct" in rule_list:
+        rule_list.insert(rule_list.index("direct"), "direct6")
+
+    if not g.config.enable_fake_ca and port == 443 or not g.config.auto_gae:
+        try:
+            rule_list.remove("gae")
+        except:
+            pass
 
     try_loop("domain", rule_list, sock, host, port, client_address, left_buf)

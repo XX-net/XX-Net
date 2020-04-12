@@ -767,6 +767,8 @@ def call_api(path, req_info):
         content = decrypt_data(content)
         if isinstance(content, memoryview):
             content = content.tobytes()
+
+        content = utils.to_str(content)
         try:
             info = json.loads(content)
         except Exception as e:

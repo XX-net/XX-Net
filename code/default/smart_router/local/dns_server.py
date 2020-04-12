@@ -301,11 +301,12 @@ class DnsClient(object):
                         self.sock.sendto(req_pack, (server, 53))
                         continue
 
-                    if "." in ip and g.ip_region.check_ip(ip):
+                    ip = utils.to_bytes(ip)
+                    if b"." in ip and g.ip_region.check_ip(ip):
                         cn = g.ip_region.cn
                     else:
-                        cn = "XX"
-                    ips.append(ip+"|"+cn)
+                        cn = b"XX"
+                    ips.append(ip+b"|"+cn)
 
                 if ips:
                     que.put(ips)
