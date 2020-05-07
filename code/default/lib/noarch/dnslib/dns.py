@@ -976,10 +976,12 @@ class A(RD):
         if type(data) in (tuple,list):
             self.data = tuple(data)
         else:
+            if isinstance(data, bytes):
+                data = data.decode('utf-8')
             self.data = tuple(map(int,data.rstrip(".").split(".")))
 
     def pack(self,buffer):
-        buffer.pack("!BBBB",*self.data)
+        buffer.pack("!BBBB", *self.data)
 
     def __repr__(self):
         return "%d.%d.%d.%d" % self.data
@@ -997,6 +999,9 @@ def _parse_ipv6(a):
         (18, 52, 86, 120, 0, 0, 0, 0, 0, 0, 171, 205, 0, 0, 255, 0)
 
     """
+
+    if isinstance(a, bytes):
+        a = a.decode('utf-8')
     l,_,r = a.partition("::")
     l_groups = list(chain(*[divmod(int(x,16),256) for x in l.split(":") if x]))
     r_groups = list(chain(*[divmod(int(x,16),256) for x in r.split(":") if x]))
