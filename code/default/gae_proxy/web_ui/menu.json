@@ -10,10 +10,6 @@
       "title": "{{ _("Configuration") }}",
       "url": "config"
     },
-    "3":{
-      "title": "{{ _("Deploy Server") }}",
-      "url": "deploy"
-    },
     "4":{
       "title": "{{ _("Advanced") }}",
       "url": "advanced"
