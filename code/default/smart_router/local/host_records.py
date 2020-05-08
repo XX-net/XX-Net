@@ -218,6 +218,7 @@ class DomainRecords(object):
             record["r"] = rule
 
         for ipd in ips:
+            ipd = utils.to_str(ipd)
             ipl = ipd.split("|")
             ip = ipl[0]
             cn = ipl[1]
