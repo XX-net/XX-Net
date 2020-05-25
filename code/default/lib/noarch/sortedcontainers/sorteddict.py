@@ -580,14 +580,9 @@ class ValuesView(AbstractValuesView, Sequence):
                 return idx
         else:
             raise ValueError('{0} is not in dict'.format(repr(value)))
-    if hexversion < 0x03000000:
-        def count(self, value):
-            """Return the number of occurrences of *value* in self."""
-            return sum(1 for val in self._dict.values() if val == value)
-    else:
-        def count(self, value):
-            """Return the number of occurrences of *value* in self."""
-            return sum(1 for val in list(_dict.values()) if val == value)
+    def count(self, value):
+        """Return the number of occurrences of *value* in self."""
+        return len(val for val in self._dict.values() if val == value)
     def __lt__(self, that):
         raise TypeError
     def __gt__(self, that):
