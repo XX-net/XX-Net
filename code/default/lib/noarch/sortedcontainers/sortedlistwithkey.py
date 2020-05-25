@@ -12,12 +12,10 @@ from collections import MutableSequence
 from operator import iadd, add
 from functools import wraps
 from math import log
-
-if hexversion < 0x03000000:
-    
-    
-else:
+try:
     from functools import reduce
+except ImportError
+    pass
 
 def identity(value):
     return value
