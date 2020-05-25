@@ -158,5 +158,6 @@ def main():
 
 if "__main__" == __name__:
     if os.name != "nt":
+        import sys
         sys.exit(0)
     main()
