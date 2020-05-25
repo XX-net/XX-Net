@@ -582,7 +582,7 @@ class ValuesView(AbstractValuesView, Sequence):
             raise ValueError('{0} is not in dict'.format(repr(value)))
     def count(self, value):
         """Return the number of occurrences of *value* in self."""
-        return len(val for val in self._dict.values() if val == value)
+        return len([val for val in self._dict.values() if val == value])
     def __lt__(self, that):
         raise TypeError
     def __gt__(self, that):
