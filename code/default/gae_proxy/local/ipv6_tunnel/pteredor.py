@@ -49,7 +49,7 @@ try:
             return _real_raw_input()
         else:
             return _real_raw_input(s)
-except:
+except NameError:
     raw_input = input
 
 logger = logging.getLogger('pteredor')
