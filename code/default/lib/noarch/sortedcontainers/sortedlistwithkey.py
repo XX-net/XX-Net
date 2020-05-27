@@ -14,7 +14,7 @@ from functools import wraps
 from math import log
 try:
     from functools import reduce
-except ImportError
+except ImportError:
     pass
 
 def identity(value):
@@ -1327,4 +1327,3 @@ class SortedListWithKey(MutableSequence):
             print('lists', self._lists)
 
             raise
- 
