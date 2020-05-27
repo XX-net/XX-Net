@@ -733,8 +733,9 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             return
 
     # 完整一次https请求
-    xlog.info("GAE t:%d s:%d %s %s %s", (time.time() - request_time) * 1000, content_length, method, url,
-              response.task.get_trace())
+    appid = response.ssl_sock.host.split(".")[0]
+    xlog.info("GAE t:%d s:%d %s %s %s appid:%s", (time.time() - request_time) * 1000, content_length, method, url,
+              response.task.get_trace(), appid)
     return "ok"
 
 
