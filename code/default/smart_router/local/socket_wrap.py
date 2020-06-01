@@ -34,8 +34,8 @@ class SocketWrap(object):
 
     def recv(self, bufsiz, flags=0):
         d = self._sock.recv(bufsiz, flags)
-        if self.replace_pattern and " HTTP/1.1\r\n" in d:
-            line_end = d.find("\r\n")
+        if self.replace_pattern and b" HTTP/1.1\r\n" in d:
+            line_end = d.find(b"\r\n")
             req_line = d[:line_end]
 
             words = req_line.split()
@@ -43,7 +43,7 @@ class SocketWrap(object):
                 method, url, http_version = words
                 url = url.replace(self.replace_pattern[0], self.replace_pattern[1])
 
-                d = "%s %s %s" % (method, url, http_version) + d[line_end:]
+                d = b"%s %s %s" % (method, url, http_version) + d[line_end:]
 
         return d
 
@@ -54,7 +54,7 @@ class SocketWrap(object):
 
     def get_dat(self):
         if not self.buf:
-            return ""
+            return b""
         dat = self.buf.pop(0)
         self.buf_size -= len(dat)
         self.buf_num -= 1
