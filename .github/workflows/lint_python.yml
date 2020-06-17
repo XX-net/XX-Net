@@ -23,7 +23,7 @@ jobs:
       #    pip install black
       #    black --check . || true
       - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
-      - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - run: flake8 code --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=code/default/gae_proxy/server
       # isort and reorder-python-imports are two ways of doing the same thing
       - run: isort --recursive . || true
       - run: reorder-python-imports . || true
