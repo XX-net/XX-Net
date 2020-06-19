@@ -328,7 +328,7 @@ class HttpServerHandler():
         self.wfile.write(b'HTTP/1.1 %d\r\n' % code)
         self.wfile.write(b'Connection: close\r\n\r\n')
         if message:
-            self.wfile.write(message)
+            self.wfile.write(utils.to_bytes(message))
 
     def send_response(self, mimetype=b"", content=b"", headers=b"", status=200):
         data = []

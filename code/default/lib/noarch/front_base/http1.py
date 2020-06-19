@@ -241,7 +241,7 @@ class Http1Worker(HttpWorker):
         self.record_active("head")
         start_time = time.time()
         # self.logger.debug("head request %s", self.ip)
-        request_data = b'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % self.ssl_sock.host
+        request_data = b'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % utils.to_bytes(self.ssl_sock.host)
 
         try:
             data = request_data
