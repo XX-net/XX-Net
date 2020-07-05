@@ -86,13 +86,7 @@ class IpRegion(object):
 
     def check_ips(self, ips):
         ips = utils.to_str(ips)
-        for ipd in ips:
-            if "|" in ipd:
-                ipl = ipd.split("|")
-                ip = ipl[0]
-            else:
-                ip = ipd
-
+        for ip in ips:
             try:
                 if self.check_ip(ip):
                     return True

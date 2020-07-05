@@ -217,12 +217,22 @@ def main():
     post_update.check()
 
     allow_remote = 0
+    no_mess_system = 0
     if len(sys.argv) > 1:
         for s in sys.argv[1:]:
             xlog.info("command args:%s", s)
             if s == "-allow_remote":
                 allow_remote = 1
-                module_init.xargs["allow_remote"] = 1
+            elif s == "-no_mess_system":
+                no_mess_system = 1
+
+    if allow_remote or config.allow_remote_connect:
+        xlog.info("start with allow remote connect.")
+        module_init.xargs["allow_remote"] = 1
+
+    if os.getenv("XXNET_NO_MESS_SYSTEM", "0") != "0" or no_mess_system or config.no_mess_system:
+        xlog.info("start with no_mess_system, no CA will be imported to system.")
+        module_init.xargs["no_mess_system"] = 1
 
     if os.path.isfile(running_file):
         restart_from_except = True
@@ -238,7 +248,8 @@ def main():
         webbrowser.open("http://localhost:%s/" % host_port)
 
     update.start()
-    download_modules.start_download()
+    if has_desktop:
+        download_modules.start_download()
     update_from_github.cleanup()
 
     if config.show_systray:

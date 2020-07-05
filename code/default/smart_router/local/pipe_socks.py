@@ -169,7 +169,7 @@ class PipeSocks(object):
                                     s1.recved_times == 1 and \
                                     s2.port == 443 and \
                                     d[0] == '\x16' and \
-                            g.gfwlist.check(s2.host):
+                            g.gfwlist.in_block_list(s2.host):
                         p1 = d.find(s2.host)
                         if p1 > 1:
                             if b"google" in s2.host:

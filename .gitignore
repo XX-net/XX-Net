@@ -10,10 +10,8 @@ data
 
 .DS_Store
 desktop.ini
-/python27/
 /SwitchyOmega/AutoProxy.xpi
 /SwitchyOmega/SwitchyOmega.crx
 /code/default/gae_proxy/server/lib/
-
 /code/default/gae_proxy/local/ipv6_tunnel/enable_ipv6_temp.bat
 /code/default/gae_proxy/local/ipv6_tunnel/set_best_server_temp.bat

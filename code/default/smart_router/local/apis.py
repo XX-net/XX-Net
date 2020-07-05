@@ -14,7 +14,7 @@ def set_proxy(args):
     try:
         g.config.PROXY_PORT = int(args["port"])
     except:
-        g.config.PROXY_POT = 0
+        g.config.PROXY_PORT = 0
 
         g.config.PROXY_USER = args["user"]
     g.config.PROXY_PASSWD = args["passwd"]

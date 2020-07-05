@@ -276,8 +276,8 @@ class SSLConnection(object):
                 raise e
             except OpenSSL.SSL.SysCallError as e:
                 raise ConnectionResetError(e)
-            except errno.EAGAIN:
-                continue
+            #except errno.EAGAIN:
+            #    continue
             except Exception as e:
                 #self.logger.exception("recv_into:%r", e)
                 raise e

@@ -22,7 +22,7 @@ class Config(ConfigBase):
 
         # connect_manager
         self.set_var("ssl_first_use_timeout", 5)
-        self.set_var("connection_pool_min", 0)
+        self.set_var("connection_pool_min", 1)
         self.set_var("https_new_connect_num", 0)
 
         # check_ip
@@ -36,7 +36,7 @@ class Config(ConfigBase):
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 1)
-        self.set_var("max_good_ip_num", 50)
-        self.set_var("target_handshake_time", 300)
+        self.set_var("max_good_ip_num", 150)
+        self.set_var("target_handshake_time", 50)
 
         self.load()

@@ -27,6 +27,7 @@ except:
 
 from . import global_var as g
 from . import dns_server
+from . import dns_query
 from . import host_records
 from . import user_rules
 from . import proxy_handler
@@ -81,6 +82,8 @@ def load_config():
     config.set_var("enable_fake_ca", 1)
     config.set_var("block_advertisement", 1)
 
+    config.set_var("log_debug", 0)
+
     config.load()
     if config.PROXY_ENABLE:
         xlog.info("use LAN proxy:%s://%s:%d/", config.PROXY_TYPE,
@@ -122,7 +125,7 @@ def start(args):
     g.connect_manager = connect_manager.ConnectManager()
     g.pipe_socks = pipe_socks.PipeSocks(g.config.pip_cache_size)
     g.pipe_socks.run()
-    g.dns_client = dns_server.DnsClient()
+    g.dns_query = dns_query.CombineDnsQuery()
 
     allow_remote = args.get("allow_remote", 0)
 
@@ -165,7 +168,7 @@ def stop():
 
     g.connect_manager.stop()
     g.pipe_socks.stop()
-    g.dns_client.stop()
+    g.dns_query.stop()
 
     g.dns_srv.stop()
     g.proxy_server.shutdown()

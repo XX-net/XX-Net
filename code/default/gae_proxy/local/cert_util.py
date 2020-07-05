@@ -490,7 +490,7 @@ class CertUtil(object):
 
 
     @staticmethod
-    def init_ca():
+    def init_ca(no_mess_system=0):
         #xlog.debug("Initializing CA")
 
         #Check Certs Dir
@@ -560,14 +560,13 @@ class CertUtil(object):
                 xlog.info("clean old site certs in XX-Net cert dir")
                 any(os.remove(x) for x in certfiles)
 
-        if os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0" :
+        if not no_mess_system:
             CertUtil.import_ca(CertUtil.ca_keyfile)
 
         # change the status,
         # web_control /cert_import_status will return True, else return False
         # launcher will wait ready to open browser and check update
         # config.cert_import_ready = True
-
 
 
 if __name__ == '__main__':

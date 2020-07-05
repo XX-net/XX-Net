@@ -3,16 +3,15 @@ import threading
 import time
 import zipfile
 import shutil
-import platform
 
-from update_from_github import request, xlog
+from update_from_github import request, xlog, hash_file_sum
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
 
-def download_file(url, filename):
+def download_file(url, filename, sha256=None):
     org_url = url
     if os.path.isfile(filename):
         return True
@@ -26,7 +25,7 @@ def download_file(url, filename):
                 continue
 
             if req.status == 302:
-                url = req.headers["Location"]
+                url = req.headers[b"Location"]
                 continue
 
             start_time = time.time()
@@ -50,7 +49,7 @@ def download_file(url, filename):
 
                 return True
             else:
-                file_size = int(req.getheader('Content-Length', 0))
+                file_size = int(req.getheader(b'Content-Length', 0))
 
                 left = file_size
                 downloaded = 0
@@ -72,8 +71,12 @@ def download_file(url, filename):
                 os.remove(filename)
                 continue
             else:
-                xlog.info("download %s to %s success.", org_url, filename)
-                return True
+                if sha256 and sha256 != hash_file_sum(filename):
+                    xlog.warn("donwload %s checksum fail.", filename)
+                    return False
+                else:
+                    xlog.info("download %s to %s success.", org_url, filename)
+                    return True
         except Exception as e:
             xlog.warn("download %s to %s fail:%r", org_url, filename, e)
             continue
@@ -109,16 +112,29 @@ def download_unzip(url, extract_path):
     os.remove(dfn)
 
 
+def get_sha256(fn):
+    sha256_dict = {}
+    with open(fn, "r") as fd:
+        for line in fd.readlines():
+            if not line:
+                break
+            n, sha256 = line.split()[:2]
+            sha256_dict[n] = sha256
+        return sha256_dict
+
+
 def download_worker():
-    if not ("arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine()):
-        # If not Andorid/IOS/Router, download browser plugin
-        switchyomega_path = os.path.join(top_path, "SwitchyOmega")
-        download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/SwitchyOmega.crx", os.path.join(switchyomega_path, "SwitchyOmega.crx"))
-        download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/AutoProxy.xpi", os.path.join(switchyomega_path, "AutoProxy.xpi"))
+    switchyomega_path = os.path.join(top_path, "SwitchyOmega")
+
+    sha256_fn = os.path.join(switchyomega_path, "Sha256.txt")
+    download_file("https://raw.githubusercontent.com/XX-net/XX-Net/master/SwitchyOmega/Sha256.txt", sha256_fn)
+    sha256_dict = get_sha256(sha256_fn)
+    download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/SwitchyOmega.crx", os.path.join(switchyomega_path, "SwitchyOmega.crx"), sha256_dict.get("SwitchyOmega.crx", None))
+    download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/AutoProxy.xpi", os.path.join(switchyomega_path, "AutoProxy.xpi"), sha256_dict.get("AutoProxy.xpi", None))
 
 
 def start_download():
-    time.sleep(10)
+    #time.sleep(10)
     th = threading.Thread(target=download_worker)
     th.start()
     return True

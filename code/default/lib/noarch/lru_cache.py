@@ -52,3 +52,9 @@ class LruCache(object):
 
     def __getitem__(self, item):
         return self.cache.__getitem__(item)
+
+    def __setitem__(self, key, value):
+        return self.set(key, value)
+
+    def __delitem__(self, key):
+        self.cache.__delitem__(key)

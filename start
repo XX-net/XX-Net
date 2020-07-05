@@ -120,6 +120,8 @@ start -h
 start
  -allow_remote
    enable remote connect.
+ -no_mess_system
+   Don't mess the system, include not install CA to browser, not add shortcut to desktop automatically.
  -hungup
    start with nohup to run in background.
 
@@ -183,6 +185,8 @@ case $1 in
 -?) help;shift 1;;
 
 -allow_remote)shift 1;;
+
+-no_mess_system)shift 1;;
 
 -hungup)HANGUP='1';shift 1;;
 

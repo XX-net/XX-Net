@@ -35,35 +35,28 @@ class GfwList(object):
             if not line:
                 continue
 
-            gfwdict[line] = 1
+            gfwdict["." + line] = 1
 
         gfwlist = [h for h in gfwdict]
         return tuple(gfwlist)
 
-    def check(self, host):
-        if host.endswith(self.gfw_white_list):
-            return False
-
-        if not host.endswith(self.gfw_black_list):
-            return False
-
-        # check avoid wrong match like xgoogle.com
-        dpl = host.split(b".")
-        for i in range(0, len(dpl)):
-            h = b".".join(dpl[i:])
-            if h in self.gfw_black_list:
-                return True
+    def in_block_list(self, host):
+        dot_host = b"." + host
+        if dot_host.endswith(self.gfw_black_list):
+            return True
 
         return False
 
-    def is_white(self, host):
-        if host.endswith(self.gfw_white_list):
+    def in_white_list(self, host):
+        dot_host = b"." + host
+        if dot_host.endswith(self.gfw_white_list):
             return True
         else:
             return False
 
     def is_advertisement(self, host):
-        if host.endswith(self.advertisement_list):
+        dot_host = b"." + host
+        if dot_host.endswith(self.advertisement_list):
             return True
         else:
             return False

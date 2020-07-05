@@ -151,7 +151,7 @@ def download_file(url, filename):
     return False
 
 
-def parse_readme_versions(readme_file):
+def parse_update_versions(readme_file):
     versions = []
     try:
         fd = open(readme_file, "rb")
@@ -189,13 +189,13 @@ def current_version():
 
 
 def get_github_versions():
-    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_version.txt"
+    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v4.txt"
     readme_target = os.path.join(download_path, "version.txt")
 
     if not download_file(readme_url, readme_target):
-        raise IOError("get README %s fail:" % readme_url)
+        raise IOError("get update file %s fail:" % readme_url)
 
-    versions = parse_readme_versions(readme_target)
+    versions = parse_update_versions(readme_target)
     return versions
 
 

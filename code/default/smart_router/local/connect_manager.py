@@ -97,9 +97,9 @@ class ConnectManager(object):
 
     def create_connect(self, queue, host, ip, port, timeout=5):
         if int(g.config.PROXY_ENABLE):
-            sock = socks.socksocket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+            sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         else:
-            sock = socket.socket(socket.AF_INET if ':' not in ip else socket.AF_INET6)
+            sock = socket.socket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
@@ -132,9 +132,7 @@ class ConnectManager(object):
             return sock
 
         ip_rate = {}
-        for ipd in ips:
-            ipl = ipd.split("|")
-            ip = ipl[0]
+        for ip in ips:
             connect_time = g.ip_cache.get_connect_time(ip, port)
             if connect_time >= 8000:
                 continue

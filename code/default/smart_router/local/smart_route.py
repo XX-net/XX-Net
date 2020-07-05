@@ -353,9 +353,12 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 if port != 80:
                     continue
 
-                ips = g.dns_srv.query(host)
-                if not g.gae_proxy.check_local_network.IPv6.is_ok():
-                    ips = [ip for ip in ips if "." in ip]
+                if is_ipv6_ok():
+                    query_type = None
+                else:
+                    query_type = 1
+                ips = g.dns_query.query(host, query_type)
+
                 do_redirect_https(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d redirect_https", scense, host, port)
                 return
@@ -365,10 +368,8 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     query_type = None
                 else:
                     query_type = 1
-                ips = g.dns_srv.query(host, query_type)
+                ips = g.dns_query.query(host, query_type)
 
-                if not g.gae_proxy.check_local_network.IPv6.is_ok():
-                    ips = [ip for ip in ips if "." in ip]
                 do_direct(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d direct", scense, host, port)
                 return
@@ -377,7 +378,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 if not is_ipv6_ok():
                     continue
 
-                ips = [ip for ip in g.dns_srv.query(host) if ":" in ip]
+                ips = g.dns_query.query(host, 28)
                 if not ips:
                     continue
                 do_direct(sock, host, ips, port, client_address, left_buf)
@@ -450,6 +451,8 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
 
 
 def handle_ip_proxy(sock, ip, port, client_address):
+    xlog.debug("connect to %s:%d from:%s:%d", ip, port, client_address[0], client_address[1])
+
     if not isinstance(sock, SocketWrap):
         sock = SocketWrap(sock, client_address[0], client_address[1])
 
@@ -464,11 +467,6 @@ def handle_ip_proxy(sock, ip, port, client_address):
     try:
         host = get_sni(sock)
         if host:
-            ips = g.dns_srv.query(host)
-            if not ips:
-                cn = "CN" if g.ip_region.check_ip(ip) else "XX"
-                ips.append("%s|%s" % (ip, cn))
-                g.domain_cache.set_ips(host, ips)
             return handle_domain_proxy(sock, host, port, client_address)
     except SniNotExist as e:
         xlog.debug("ip:%s:%d get sni fail", ip, port)
@@ -507,6 +505,8 @@ def handle_ip_proxy(sock, ip, port, client_address):
 
 def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     global fake_host
+    xlog.debug("connect to %s:%d from:%s:%d", host, port, client_address[0], client_address[1])
+
     if not fake_host and g.gae_proxy:
         fake_host = g.gae_proxy.web_control.get_fake_host()
 
@@ -530,14 +530,13 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         sock.close()
         return
 
-    #ips = g.dns_srv.query(host)
+    #ips = g.dns_query.query(host)
     #if check_local_network.IPv6.is_ok() and have_ipv6(ips) and port == 443:
     #    rule_list = ["direct", "gae", "socks", "redirect_https"]
     # gae is more faster then direct.
 
-    record = g.domain_cache.get(host)
-    if record and record["r"] != "unknown":
-        rule = record["r"]
+    rule = g.domain_cache.get_rule(host)
+    if rule != "unknown":
         if rule == "gae":
             rule_list = ["gae", "socks", "redirect_https", "direct"]
         elif rule == "socks":
@@ -547,12 +546,12 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
 
         if not g.domain_cache.accept_gae(host):
             rule_list.remove("gae")
-    elif g.gfwlist.is_white(host):
+    elif g.gfwlist.in_white_list(host):
         rule_list = ["direct", "gae", "socks", "redirect_https"]
-    elif g.gfwlist.check(host):
+    elif g.gfwlist.in_block_list(host):
         rule_list = ["gae", "socks", "redirect_https", "direct"]
     else:
-        ips = g.dns_srv.query(host)
+        ips = g.dns_query.query_recursively(host, 1)
         if g.ip_region.check_ips(ips):
             rule_list = ["direct", "socks", "redirect_https"]
         else:

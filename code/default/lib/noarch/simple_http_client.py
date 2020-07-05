@@ -348,6 +348,10 @@ class Client(object):
     def __init__(self, proxy=None, timeout=60, cert=""):
         self.timeout = timeout
         self.cert = cert
+        self.connection = None
+        self.host = None
+        self.port = None
+        self.tls = None
 
         if isinstance(proxy, str):
             proxy_sp = urllib.parse.urlsplit(proxy)
@@ -398,30 +402,44 @@ class Client(object):
 
         return None
 
-    def connect(self, host, port):
+    def connect(self, host, port, tls):
+        if self.connection and host == self.host and port == self.port and self.tls == tls:
+            return self.connection
+
         if not self.proxy:
-            return self.direct_connect(host, port)
+            sock = self.direct_connect(host, port)
+        else:
+            connect_timeout = 5
 
-        connect_timeout = 5
+            import socks
 
-        import socks
+            sock = socks.socksocket(socket.AF_INET)
+            sock.set_proxy(proxy_type=self.proxy["type"],
+                           addr=self.proxy["host"],
+                           port=self.proxy["port"], rdns=True,
+                           username=self.proxy["user"],
+                           password=self.proxy["pass"])
 
-        sock = socks.socksocket(socket.AF_INET)
-        sock.set_proxy(proxy_type=self.proxy["type"],
-                       addr=self.proxy["host"],
-                       port=self.proxy["port"], rdns=True,
-                       username=self.proxy["user"],
-                       password=self.proxy["pass"])
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
+            sock.settimeout(connect_timeout)
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
-        sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-        sock.settimeout(connect_timeout)
+            sock.connect((host, port))
 
-        sock.connect((host, port))
+            # conn_time = time.time() - start_time
+            # xlog.debug("proxy:%s tcp conn:%s time:%d", proxy["host"], host, conn_time * 1000)
 
-        # conn_time = time.time() - start_time
-        # xlog.debug("proxy:%s tcp conn:%s time:%d", proxy["host"], host, conn_time * 1000)
+        if tls:
+            if os.path.isfile(self.cert):
+                sock = ssl.wrap_socket(sock, ca_certs=self.cert)
+            else:
+                sock = ssl.wrap_socket(sock)
+
+        self.connection = sock
+        self.host = host
+        self.port = port
+        self.tls = tls
 
         return sock
 
@@ -448,15 +466,9 @@ class Client(object):
         if upl.query:
             path += b"?" + upl.query
 
-        sock = self.connect(upl.hostname, port)
+        sock = self.connect(upl.hostname, port, upl.scheme == b"https")
         if not sock:
             return None
-
-        if upl.scheme == b"https":
-            if os.path.isfile(self.cert):
-                sock = ssl.wrap_socket(sock, ca_certs=self.cert)
-            else:
-                sock = ssl.wrap_socket(sock)
 
         request_data = b'%s %s HTTP/1.1\r\n' % (method, path)
 

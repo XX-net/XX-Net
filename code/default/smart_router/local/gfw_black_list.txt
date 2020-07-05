@@ -277,7 +277,6 @@ aolchannels.aol.com
 aolnews.com
 aomiwang.com
 apetube.com
-app-measurement.com
 api-secure.recaptcha.net
 api-verify.recaptcha.net
 api.ai
@@ -295,6 +294,7 @@ apkmonk.com
 apkplz.com
 apkpure.com
 aplusvpn.com
+app-measurement.com
 app.box.com
 app.heywire.com
 app.tutanota.com
@@ -1096,6 +1096,7 @@ delcamp.net
 delicious.com
 demo.opera-mini.net
 democrats.org
+denis.stalker.upeer.me
 derekhsu.homeip.net
 desc.se
 design.google
@@ -1218,6 +1219,7 @@ duplicati.com
 dupola.com
 dupola.net
 dushi.ca
+dutchtracking.com
 dvorak.org
 dw-world.com
 dw-world.de
@@ -2091,7 +2093,6 @@ hkfront.org
 hkgolden.com
 hkgreenradio.org
 hkheadline.com
-hkheadline.com*blog
 hkhkhk.com
 hkhrc.org.hk
 hkhrm.org.hk
@@ -2249,13 +2250,11 @@ idv.tw
 ieasy5.com
 ied2k.net
 ienergy1.com
-if.
 ifan.cz.cc
 ifanqiang.com
 ifcss.org
 ifjc.org
 ifreewares.com
-ift.
 ift.tt
 igcd.net
 igfw.net
@@ -3259,12 +3258,14 @@ ontrac.com
 oopsforum.com
 opedialogue.org
 open.com.hk
+open.demonii.si
 openallweb.com
 opendemocracy.net
 opendn.xyz
 openervpn.in
 openid.net
 openleaks.org
+opentracker.xyz
 openvpn.net
 openwebster.com
 openwrt.org.cn
@@ -3607,6 +3608,7 @@ rcinet.ca
 rconversation.blogs.com
 rd.com
 rdio.com
+re-tracker.uz
 read01.com
 read100.com
 readingtimes.com.tw

@@ -113,14 +113,14 @@ def log_info():
 
 def main(args):
     global ready, proxy_server
+    no_mess_system = args.get("no_mess_system", 0)
+    allow_remote = args.get("allow_remote", 0)
 
     check_create_data_path()
 
     log_info()
 
-    CertUtil.init_ca()
-
-    allow_remote = args.get("allow_remote", 0)
+    CertUtil.init_ca(no_mess_system)
 
     listen_ips = front.config.listen_ip
     if isinstance(listen_ips, str):
