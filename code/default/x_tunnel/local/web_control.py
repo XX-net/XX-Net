@@ -15,11 +15,7 @@ xlog = getLogger("x_tunnel")
 import simple_http_server
 from . import global_var as g
 from . import proxy_session
-from .cloudflare_front import web_control as cloudflare_web
-from .cloudfront_front import web_control as cloudfront_web
 from .tls_relay_front import web_control as tls_relay_web
-from .heroku_front import web_control as heroku_web
-from .front_dispatcher import all_fronts
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -52,13 +48,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_status()
         elif path.startswith("/cloudflare_front/"):
             path = self.path[17:]
+            from .cloudflare_front import web_control as cloudflare_web
             controler = cloudflare_web.ControlHandler(self.client_address,
                              self.headers,
                              self.command, path,
                              self.rfile, self.wfile)
             controler.do_GET()
         elif path.startswith("/cloudfront_front/"):
+            if not g.config.enable_cloudfront:
+                return self.send_not_found()
+
             path = self.path[17:]
+            from .cloudfront_front import web_control as cloudfront_web
             controler = cloudfront_web.ControlHandler(self.client_address,
                              self.headers,
                              self.command, path,
@@ -66,6 +67,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             controler.do_GET()
         elif path.startswith("/heroku_front/"):
             path = self.path[13:]
+            from .heroku_front import web_control as heroku_web
             controler = heroku_web.ControlHandler(self.client_address,
                              self.headers,
                              self.command, path,
@@ -99,6 +101,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_transfer_handler()
         elif path.startswith("/cloudflare_front/"):
             path = path[17:]
+            from .cloudflare_front import web_control as cloudflare_web
             controler = cloudflare_web.ControlHandler(self.client_address,
                                                       self.headers,
                                                       self.command, path,
@@ -106,6 +109,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             controler.do_POST()
         elif path.startswith("/cloudfront_front/"):
             path = path[17:]
+            from .cloudfront_front import web_control as cloudfront_web
             controler = cloudfront_web.ControlHandler(self.client_address,
                                                       self.headers,
                                                       self.command, path,
@@ -113,6 +117,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             controler.do_POST()
         elif path.startswith("/heroku_front/"):
             path = path[13:]
+
+            from .heroku_front import web_control as heroku_web
             controler = heroku_web.ControlHandler(self.client_address,
                                                       self.headers,
                                                       self.command, path,

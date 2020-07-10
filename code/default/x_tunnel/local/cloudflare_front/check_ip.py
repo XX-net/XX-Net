@@ -131,7 +131,7 @@ if __name__ == "__main__":
     # case 5: domain sni
 
     ip = "141.101.120.131"
-    host = "tangg.tk"
+    host = "v3.freena.cf"
     sni = host
 
     args = list(sys.argv[1:])

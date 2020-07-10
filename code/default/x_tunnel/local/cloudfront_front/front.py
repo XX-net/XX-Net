@@ -28,7 +28,7 @@ class Front(object):
 
     def __init__(self):
         self.running = True
-        self.last_host = "center.xx-net.net"
+        self.last_host = "www.xx-net.net"
 
         self.logger = logger
         config_path = os.path.join(module_data_path, "cloudfront_front.json")

@@ -74,6 +74,7 @@ def load_config():
     config.set_var("encrypt_method", "aes-256-cfb")
 
     config.set_var("api_server", "center.xx-net.net")
+    config.set_var("scan_servers", ["scan1"])
     config.set_var("server_host", "")
     config.set_var("server_port", 443)
     config.set_var("use_https", 1)
@@ -118,8 +119,8 @@ def load_config():
 
     config.set_var("enable_gae_proxy", 1)
     config.set_var("enable_cloudflare", 1)
-    config.set_var("enable_cloudfront", 1)
-    config.set_var("enable_heroku", 1)
+    config.set_var("enable_cloudfront", 0)
+    config.set_var("enable_heroku", 0)
     config.set_var("enable_tls_relay", 1)
     config.set_var("enable_direct", 0)
 

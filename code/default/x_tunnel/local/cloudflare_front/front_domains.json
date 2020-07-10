@@ -1,18 +1,15 @@
 {
-  "masaji.tk": [
-    "masaji.tk"
-  ],
   "newyears.ga": [
-    "newyears.ga"
+    "www.newyears.ga"
   ],
   "bookhome.ga": [
-    "bookhome.ga"
+    "www.bookhome.ga"
   ]
-  , "sacramen.tk": ["sacramen.tk"]
-  , "tomosaki.ml": ["tomosaki.ml"]
-  , "meetgod.tk": ["meetgod.tk"]
-  , "hatenaki.tk": ["hatenaki.tk"]
-  , "mostlygood.ga": ["mostlygood.ga"]
-  , "worldtrust.cf": ["worldtrust.cf"]
-  , "freena.cf": ["freena.cf"]
+  , "sacramen.tk": ["www.sacramen.tk"]
+  , "tomosaki.ml": ["www.tomosaki.ml"]
+  , "meetgod.tk": ["www.meetgod.tk"]
+  , "hatenaki.tk": ["www.hatenaki.tk"]
+  , "mostlygood.ga": ["www.mostlygood.ga"]
+  , "worldtrust.cf": ["www.worldtrust.cf"]
+  , "freena.cf": ["www.freena.cf"]
 }

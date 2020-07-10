@@ -31,6 +31,7 @@ def init():
         all_fronts.append(cloudfront_front)
         session_fronts.append(cloudfront_front)
         light_fronts.append(cloudfront_front)
+        g.cloudfront_front = cloudfront_front
 
     if g.config.enable_heroku:
         from .heroku_front.front import front as heroku_front
