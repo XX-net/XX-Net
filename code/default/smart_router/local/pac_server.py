@@ -55,11 +55,14 @@ class PacHandler(simple_http_server.HttpServerHandler):
         proxy = host + ":" + str(port)
         content = content.replace(self.PROXY_LISTEN, proxy)
 
-        black = b'",\n"'.join(g.gfwlist.gfw_black_list
+        black_list = tuple([domain[1:] for domain in g.gfwlist.gfw_black_list])
+        white_list = tuple([domain[1:] for domain in g.gfwlist.gfw_white_list])
+
+        black = b'",\n"'.join(black_list
                              + g.user_rules.rule_lists["gae"]
                              + g.user_rules.rule_lists["socks"]
                              )
-        white = b'",\n"'.join(g.gfwlist.gfw_white_list + g.user_rules.rule_lists["direct"])
+        white = b'",\n"'.join(white_list + g.user_rules.rule_lists["direct"])
 
         content = content.replace("BLACK_LIST", utils.to_str(black)).replace("WHITE_LIST", utils.to_str(white))
         return content

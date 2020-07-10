@@ -165,7 +165,10 @@ class DomainRecords(object):
         if dns_type not in record["dns"]:
             record["dns"][dns_type] = ips
         else:
-            record["dns"][dns_type] += ips
+            for ip in ips:
+                if ip in record["dns"][dns_type]:
+                    continue
+                record["dns"][dns_type].append(ip)
 
         self._set(domain, record)
 

@@ -95,7 +95,7 @@ def have_ipv6(ips):
 
 
 def extract_sni_name(packet):
-    if not packet.startswith('\x16\x03'):
+    if not packet.startswith(b'\x16\x03'):
         return
 
     stream = io.BytesIO(packet)

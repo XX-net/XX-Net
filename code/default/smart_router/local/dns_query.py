@@ -248,6 +248,8 @@ class DnsOverTcpQuery():
             except socket.error:
                 if s:
                     s.close()
+            except Exception as e:
+                xlog.warn("Connect to Dns server %s:%d fail:%r", host, port)
 
         return None
 
@@ -336,11 +338,11 @@ class DnsOverTlsQuery(DnsOverTcpQuery):
         self.protocol = "DoT"
 
     def get_connection(self):
-        s = super(DnsOverTlsQuery, self).get_connection()
-        if isinstance(s, ssl.SSLSocket):
-            return s
-
         try:
+            s = super(DnsOverTlsQuery, self).get_connection()
+            if isinstance(s, ssl.SSLSocket):
+                return s
+
             sock = ssl.wrap_socket(s, ca_certs=os.path.join(current_path, "cloudflare_cert.pem"))
         except Exception as e:
             xlog.warn("DnsOverTlsQuery wrap_socket fail %r", e)
@@ -386,9 +388,9 @@ class DnsOverHttpsQuery(object):
 
             url = self.server + "?name=" + domain + "&type=A" # type need to map to Text.
             r = client.request("GET", url, headers={"accept": "application/dns-json"})
-            t2 = time.time()
             t = utils.to_str(r.text)
 
+            t2 = time.time()
             ips = []
             data = json.loads(t)
             for answer in data["Answer"]:
@@ -399,7 +401,7 @@ class DnsOverHttpsQuery(object):
             xlog.debug("Dns s %s return %s t:%f", self.server, domain, ips, t2 - t0)
             return ips
         except Exception as e:
-            xlog.exception("DnsOverHttpQuery query fail:%r", e)
+            xlog.warn("DnsOverHttpsQuery query fail:%r", e)
             return []
 
     def query(self, domain, dns_type=1):
@@ -430,27 +432,23 @@ class DnsOverHttpsQuery(object):
             xlog.debug("Dns %s %s return %s t:%f", self.protocol, domain, ips, t2 - t0)
             return ips
         except Exception as e:
-            xlog.exception("DnsOverHttpQuery query fail:%r", e)
+            xlog.exception("DnsOverHttpsQuery query fail:%r", e)
             return []
 
 
 class ParallelQuery():
-    def __init__(self):
-        self.tcp_query = DnsOverTcpQuery()
-        self.tls_query = DnsOverTlsQuery()
-        self.http_query = DnsOverHttpsQuery()
-
     def query_worker(self, task, function):
         ips = function(task.domain, task.dns_type)
         if len(ips):
+            g.domain_cache.set_ips(task.domain, ips, task.dns_type)
             task.put(ips)
 
-    def query(self, domain, dns_type):
+    def query(self, domain, dns_type, funcs):
         task = simple_queue.Queue()
         task.domain = domain
         task.dns_type = dns_type
 
-        for func in [self.http_query.query, self.tls_query.query, self.tcp_query.query, query_dns_from_xxnet]:
+        for func in funcs:
             threading.Thread(target=self.query_worker, args=(task, func)).start()
 
         ips = task.get(3) or []
@@ -461,6 +459,11 @@ class CombineDnsQuery():
     def __init__(self):
         self.domain_allowed_pattern = re.compile(br"(?!-)[A-Z\d-]{1,63}(?<!-)$")
         self.local_dns_resolve = LocalDnsQuery()
+
+        self.tcp_query = DnsOverTcpQuery()
+        self.tls_query = DnsOverTlsQuery()
+        self.https_query = DnsOverHttpsQuery()
+
         self.parallel_query = ParallelQuery()
 
     def is_valid_hostname(self, hostname):
@@ -472,8 +475,11 @@ class CombineDnsQuery():
 
         return all(self.domain_allowed_pattern.match(x) for x in hostname.split(b"."))
 
+    def query_blocked_domain(self, domain, dns_type):
+        return self.parallel_query.query(domain, dns_type, [self.https_query.query, self.tls_query.query, query_dns_from_xxnet])
+
     def query_unknown_domain(self, domain, dns_type):
-        return self.parallel_query.query(domain, dns_type)
+        return self.parallel_query.query(domain, dns_type, [self.https_query.query, self.tls_query.query, self.tcp_query.query, query_dns_from_xxnet])
 
     def query(self, domain, dns_type=1):
         domain = utils.to_bytes(domain)
@@ -500,12 +506,13 @@ class CombineDnsQuery():
             g.domain_cache.set_ips(domain, ips, dns_type)
             return ips
 
-        #elif g.gfwlist.in_block_list(domain) or rule in ["gae", "socks"]:
-        ips = self.query_unknown_domain(domain, dns_type)
-        if not ips and g.config.auto_direct:
-            ips = g.dns_client.query_over_tcp(domain, dns_type)
+        elif g.gfwlist.in_block_list(domain) or rule in ["gae", "socks"]:
+            ips = self.query_blocked_domain(domain, dns_type)
+        else:
+            ips = self.query_unknown_domain(domain, dns_type)
 
-        g.domain_cache.set_ips(domain, ips, dns_type)
+        if not ips:
+            ips = self.local_dns_resolve.query(domain, timeout=1)
 
         return ips
 

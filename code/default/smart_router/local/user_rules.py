@@ -120,6 +120,7 @@ class Config(object):
                         self.end_rules[section] = tuple(utils.to_bytes(end_fix))
 
     def check_host(self, domain, port=None):
+        domain = utils.to_bytes(domain)
         if port == 80:
             if domain in self.redirect_https_host_rules or domain.endswith(self.redirect_https_end_rules):
                 return "redirect_https"
@@ -128,5 +129,8 @@ class Config(object):
             return self.host_rules[domain]
 
         for sec in self.end_rules:
-            if domain.endswith(self.end_rules[sec]):
-                return sec
+            try:
+                if domain.endswith(self.end_rules[sec]):
+                    return sec
+            except Exception as e:
+                xlog.exception("check_host domain:%s sec:%s self.end_rules[sec]", domain, sec, self.end_rules[sec])
