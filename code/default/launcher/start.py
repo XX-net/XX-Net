@@ -135,7 +135,7 @@ elif sys.platform == "darwin":
     try:
         import mac_tray as sys_tray
     except Exception as e:
-        #xlog.exception("import mac_tray except:%r", e)
+        xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
         from non_tray import sys_tray
 else:
     print(("detect platform fail:%s" % sys.platform))

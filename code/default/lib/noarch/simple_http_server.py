@@ -414,7 +414,7 @@ class HttpServerHandler():
 
 
 class HTTPServer():
-    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=1024):
+    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=3024):
         self.sockets = []
         self.running = True
         if isinstance(address, tuple):
@@ -547,7 +547,11 @@ class HTTPServer():
 
         else:
             while self.running:
-                r, w, e = select.select(self.sockets, [], [], 1)
+                try:
+                    r, w, e = select.select(self.sockets, [], [], 1)
+                except:
+                    continue
+
                 for rsock in r:
                     try:
                         (sock, address) = rsock.accept()
