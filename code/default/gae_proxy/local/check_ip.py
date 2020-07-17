@@ -155,8 +155,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
     else:
-        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
-        exit(0)
+        ip = "142.250.66.180"
 
     print(("test ip:%s" % ip))
 
@@ -173,8 +172,9 @@ if __name__ == "__main__":
     ca_certs = os.path.join(current_path, "cacert.pem")
     openssl_context = SSLContext(
         logger, ca_certs=ca_certs,
-        cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
-                       b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
+        protocol="TLSv1_2"
+        #cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+        #               b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
     )
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,

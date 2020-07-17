@@ -37,8 +37,9 @@ class Front(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
             logger, ca_certs=ca_certs, support_http2=config.support_http2,
-            cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
-                           b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
+            protocol="TLSv1_2"
+            #cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+            #               b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
 
         self.appid_manager = AppidManager(self.config, logger)
@@ -134,9 +135,9 @@ class DirectFront(object):
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         self.openssl_context = SSLContext(
-            logger, ca_certs=ca_certs, support_http2=False,
-            cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
-                           b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
+            logger, ca_certs=ca_certs, support_http2=False, protocol="TLSv1_2"
+            #cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+            #               b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
 
         self.connect_creator = ConnectCreator(

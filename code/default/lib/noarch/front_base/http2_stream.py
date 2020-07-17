@@ -266,6 +266,9 @@ class Stream(object):
             pass
 
         if b'END_HEADERS' in frame.flags:
+            if self.config.http2_show_debug:
+                self.logger.debug("END_HEADERS")
+
             if self.response_headers is not None:
                 raise ProtocolError("Too many header blocks.")
 
@@ -298,7 +301,9 @@ class Stream(object):
                 self.send_response()
 
         if b'END_STREAM' in frame.flags:
-            #self.logger.debug("%s Closing remote side of stream:%d", self.ip, self.stream_id)
+            if self.config.http2_show_debug:
+                self.logger.debug("%s Closing remote side of stream:%d", self.connection.ssl_sock.ip_str, self.stream_id)
+
             time_now = time.time()
             time_cost = time_now - self.get_head_time
             if time_cost > 0 and \
@@ -326,6 +331,9 @@ class Stream(object):
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task
+        if self.config.http2_show_debug:
+            self.logger.debug("self.task.queue.put(response)")
+
         self.task.queue.put(response)
         if status in self.config.http2_status_to_close:
             self.connection.close("status %d" % status)

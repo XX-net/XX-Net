@@ -106,7 +106,9 @@ elif [ $os_name = 'Darwin' ]; then
   if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
     sudo pip3 install pyOpenSSL
   fi
-  sudo pip3 install -U PyObjC Pillow
+  if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
+    sudo pip3 install -U PyObjC Pillow
+  fi
 
 fi
 
@@ -122,8 +124,13 @@ start -h
 start
  -allow_remote
    enable remote connect.
+
  -no_mess_system
    Don't mess the system, include not install CA to browser, not add shortcut to desktop automatically.
+
+ -f
+   Run in foreground, in Mac will run in background as default.
+
  -hungup
    start with nohup to run in background.
 
@@ -177,19 +184,25 @@ unset_iptables(){
 
 
 ARGS=$@
-HANGUP='0'
+if [ $os_name = 'Darwin' ] ; then
+  HANGUP='1'
+else
+  HANGUP='0'
+fi
+
 while [ -n "$1" ]; do
 case $1 in
 
 -h) help;shift 1;;
 -help) help;shift 1;;
 --help) help;shift 1;;
--?) help;shift 1;;
+-\?) help;shift 1;;
 
 -allow_remote)shift 1;;
 
 -no_mess_system)shift 1;;
 
+-f)HANGUP='0'; shift 1;;
 -hungup)HANGUP='1';shift 1;;
 
 set_iptables) set_iptables $2;;
@@ -201,14 +214,10 @@ esac
 done
 
 # Start Application
-if [ $os_name = 'Darwin' ]; then
-
-  if [ ${TERM} = "xterm-256color" ]; then
-    launchWithHungup $ARGS
-  else
-    launchWithNoHungup $ARGS
-  fi
-
+if [ $HANGUP = '1' ]; then
+  echo "Run XX-Net in background."
+  launchWithNoHungup $ARGS
 else
-    launchWithHungup $ARGS
+  launchWithHungup $ARGS
 fi
+

@@ -158,7 +158,7 @@ if __name__ == "__main__":
     config = Config(config_path)
 
     ca_certs = os.path.join(current_path, "cacert.pem")
-    openssl_context = SSLContext(logger, ca_certs=ca_certs, support_http2=True)
+    openssl_context = SSLContext(logger, ca_certs=ca_certs)
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager, debug=True)
     check_ip = CheckIp(logger, config, connect_creator)

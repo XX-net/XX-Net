@@ -166,10 +166,10 @@ IPv4.urls = [
 IPv4.triger_check_network()
 
 IPv6 = CheckNetwork("IPv6")
-IPv6.urls = ["http://[2001:41d0:8:e8ad::1]",
-             "http://[2001:260:401:372::5f]",
-             "http://[2a02:188:3e00::32]",
-             "http://[2804:10:4068::202:82]"
+IPv6.urls = ["https:/ipv6.vm3.test-ipv6.com",
+             "http://[2001:470:1:18::115]",
+             "http://ipv6.lookup.test-ipv6.com",
+             "http://v6.myip.la"
              ]
 IPv6.triger_check_network()
 

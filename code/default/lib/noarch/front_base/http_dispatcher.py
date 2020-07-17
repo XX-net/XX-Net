@@ -261,6 +261,8 @@ class HttpsDispatcher(object):
 
             task.set_state("get_response")
             return response
+        except Exception as e:
+            self.logger.exception("http_dispatcher:request:%r", e)
         finally:
             with self.task_count_lock:
                 self.task_count -= 1

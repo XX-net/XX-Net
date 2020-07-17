@@ -13,7 +13,7 @@ import datetime
 import locale
 import time
 import hashlib
-import OpenSSL
+import ssl
 
 import simple_http_server
 import simple_http_client
@@ -98,8 +98,8 @@ def test_appids(appids):
 
 
 def get_openssl_version():
-    return "%s %s h2:%s" % (OpenSSL.version.__version__,
-                            front.openssl_context.ssl_version,
+    return "%s %s h2:%s" % (ssl.OPENSSL_VERSION,
+                            front.openssl_context.supported_protocol(),
                             front.openssl_context.support_alpn_npn)
 
 
@@ -698,7 +698,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_not_exist()
 
     def req_debug_handler(self):
-        data = "ssl_socket num:%d \n" % openssl_wrap.socks_num
+        data = ""
         for obj in [front.connect_manager, front.http_dispatcher]:
             data += "%s\r\n" % obj.__class__
             for attr in dir(obj):

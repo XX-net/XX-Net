@@ -39,7 +39,6 @@ class CheckIp(object):
     def check_ip(self, ip, sni=None, host=None, wait_time=0):
         try:
             ssl_sock = self.connect_creator.connect_ssl(ip, sni=sni)
-            self.connect_creator.get_ssl_cert_domain(ssl_sock)
         except socket.timeout:
             self.logger.warn("connect timeout")
             return False

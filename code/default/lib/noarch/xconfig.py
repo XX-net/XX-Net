@@ -26,6 +26,10 @@ class Config(object):
         if os.path.isfile(self.config_path):
             with open(self.config_path, 'r') as f:
                 content = f.read()
+                content = content.strip()
+                content = content.replace("\r", "")
+                content = content.replace("\n", "")
+                content = content.replace(",}", "}")
                 self.file_config = json.loads(content)
 
         for var_name in self.default_config:

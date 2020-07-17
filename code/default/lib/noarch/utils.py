@@ -227,6 +227,7 @@ for b, e in private_ipv4_range:
 
 
 def is_private_ip(ip):
+    ip = to_str(ip)
     try:
         if "." in ip:
             ip_bin = ip_string_to_num(ip)
