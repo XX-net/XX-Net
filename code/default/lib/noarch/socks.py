@@ -150,7 +150,6 @@ def set_default_proxy(proxy_type=None, addr=None, port=None, rdns=True, username
     username = utils.to_bytes(username)
     password = utils.to_bytes(password)
 
-
     if isinstance(proxy_type, str):
         proxy_type = proxy_type.lower()
         if "http" in proxy_type:
@@ -163,8 +162,8 @@ def set_default_proxy(proxy_type=None, addr=None, port=None, rdns=True, username
             raise ProxyError("unknown proxy type:%s" % proxy_type)
 
     socksocket.default_proxy = (proxy_type, addr, port, rdns,
-                                username.encode() if username else None,
-                                password.encode() if password else None)
+                                username if username else None,
+                                password if password else None)
 
 
 setdefaultproxy = set_default_proxy
@@ -338,8 +337,8 @@ class socksocket(_BaseSocket):
                 raise ProxyError("unknown proxy type:%s" % proxy_type)
 
         self.proxy = (proxy_type, addr, port, rdns,
-                      username.encode() if username else None,
-                      password.encode() if password else None)
+                      username if username else None,
+                      password if password else None)
 
     setproxy = set_proxy
 
