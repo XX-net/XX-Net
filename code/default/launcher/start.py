@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # coding:utf-8
 
-import atexit
 import os
 import sys
 import time
-import platform
-import shutil
 import traceback
 from datetime import datetime
+import atexit
 
 # reduce resource request for threading
 # for OpenWrt
@@ -25,14 +23,14 @@ except:
     pass
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+data_path = os.path.abspath(os.path.join(default_path, os.pardir, os.pardir, 'data'))
 data_launcher_path = os.path.join(data_path, 'launcher')
-python_path = root_path
-noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
+noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
 running_file = os.path.join(data_launcher_path, "Running.Lck")
+
 
 def create_data_path():
     if not os.path.isdir(data_path):
@@ -74,75 +72,6 @@ sys.excepthook = uncaughtExceptionHandler
 
 has_desktop = True
 
-if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine():
-    xlog.info("This is Android or IOS or router.")
-    has_desktop = False
-
-    # check remove linux lib
-    shutil.rmtree(os.path.join(noarch_lib, "OpenSSL"), ignore_errors=True)
-
-    linux_lib = os.path.join(python_path, 'lib', 'linux')
-    shutil.rmtree(linux_lib, ignore_errors=True)
-    from non_tray import sys_tray
-
-    platform_lib = ""
-elif sys.platform.startswith("linux"):
-    def X_is_running():
-        try:
-            from subprocess import Popen, PIPE
-            p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
-            p.communicate()
-            return p.returncode == 0
-        except:
-            return False
-
-    def has_gi():
-        try:
-            import gi
-            gi.require_version('Gtk', '3.0')
-            from gi.repository import Gtk as gtk
-            return True
-        except:
-            return False
-
-    def has_pygtk():
-        try:
-            import pygtk
-            pygtk.require('2.0')
-            import gtk
-            return True
-        except:
-            return False
-
-    if X_is_running() and (has_pygtk() or has_gi()):
-        from gtk_tray import sys_tray
-    else:
-        from non_tray import sys_tray
-        has_desktop = False
-
-    platform_lib = os.path.join(python_path, 'lib', 'linux')
-    sys.path.append(platform_lib)
-elif sys.platform == "win32":
-    platform_lib = os.path.join(python_path, 'lib', 'win32')
-    sys.path.append(platform_lib)
-    from  win_tray import sys_tray
-elif sys.platform == "darwin":
-    platform_lib = os.path.abspath(os.path.join(python_path, 'lib', 'darwin'))
-    sys.path.append(platform_lib)
-    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
-    sys.path.append(extra_lib)
-
-    try:
-        import mac_tray as sys_tray
-    except Exception as e:
-        xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
-        from non_tray import sys_tray
-else:
-    print(("detect platform fail:%s" % sys.platform))
-    from non_tray import sys_tray
-    has_desktop = False
-    platform_lib = ""
-
 
 def unload(module):
     for m in list(sys.modules.keys()):
@@ -178,7 +107,7 @@ except Exception as e1:
         input("Press Enter to continue...")
         os._exit(0)
 
-
+import sys_platform
 from config import config
 import web_control
 import module_init
@@ -253,7 +182,7 @@ def main():
     update_from_github.cleanup()
 
     if config.show_systray:
-        sys_tray.serve_forever()
+        sys_platform.sys_tray.serve_forever()
     else:
         while True:
             time.sleep(1)

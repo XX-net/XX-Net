@@ -136,7 +136,6 @@ class Gtk_tray():
     def on_show(self, widget=None, data=None):
         self.show_control_web()
 
-
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         if not notify:
             return False
@@ -170,10 +169,13 @@ class Gtk_tray():
         gtk.main()
         gdk.threads_leave()
 
+
 sys_tray = Gtk_tray()
+
 
 def main():
     sys_tray.serve_forever()
+
 
 if __name__ == '__main__':
     main()

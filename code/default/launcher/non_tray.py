@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+import os
 import time
+
+import module_init
 
 
 class None_tray():
@@ -9,7 +12,8 @@ class None_tray():
         pass
 
     def on_quit(self, widget, data=None):
-        pass
+        module_init.stop_all()
+        os._exit(0)
 
     def serve_forever(self):
         while True:
@@ -18,8 +22,10 @@ class None_tray():
 
 sys_tray = None_tray()
 
+
 def main():
     sys_tray.serve_forever()
+
 
 if __name__ == '__main__':
     main()

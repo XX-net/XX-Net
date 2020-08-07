@@ -455,6 +455,11 @@ def serve_forever():
     AppHelper.runEventLoop()
 
 
+def on_quit(widget=None, data=None):
+    helperDisableAutoProxy(currentService)
+    helperDisableGlobalProxy(currentService)
+
+
 def main():
     serve_forever()
 
