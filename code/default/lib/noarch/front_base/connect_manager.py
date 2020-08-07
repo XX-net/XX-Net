@@ -285,8 +285,6 @@ class ConnectManager(object):
             time.sleep(10)
             return
 
-        ssl_sock = None
-
         try:
             ssl_sock = self.connect_creator.connect_ssl(ip_str,
                                                         close_cb=self.ip_manager.ssl_closed)
@@ -298,25 +296,16 @@ class ConnectManager(object):
             return ssl_sock
         except socket.error as e:
             self.logger.debug("connect %s network fail:%r", ip_str, e)
-            if ssl_sock:
-                ssl_sock.close()
+            self.ip_manager.report_connect_fail(ip_str, str(e))
         except NoRescourceException as e:
             self.logger.warning("create ssl for %s except:%r", ip_str, e)
-
-            if ssl_sock:
-                ssl_sock.close()
         except Exception as e:
-            self.ip_manager.report_connect_fail(ip_str, str(e))
-
             if not self.check_local_network.is_ok(ip_str):
                 self.logger.debug("connect %s network fail", ip_str)
                 time.sleep(10)
             else:
                 self.logger.exception("connect %s fail:%r", ip_str, e)
                 time.sleep(1)
-
-            if ssl_sock:
-                ssl_sock.close()
 
     def get_ssl_connection(self):
         with self.get_num_lock:
