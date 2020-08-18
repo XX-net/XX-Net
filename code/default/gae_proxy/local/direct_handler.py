@@ -45,9 +45,9 @@ def handler(method, host, path, headers, body, wfile, timeout=60):
 
                     if b"G" not in server_type and b"g" not in server_type and server_type not in google_server_types:
 
-                        xlog.warn("IP:%s host:%s not support GAE, server type:%s status:%d",
+                        xlog.debug("IP:%s host:%s not support GAE, server type:%s status:%d",
                                   response.ssl_sock.ip_str, host, server_type, response.status)
-                        direct_front.ip_manager.report_connect_fail(response.ssl_sock.ip_str, force_remove=True)
+                        #direct_front.ip_manager.report_connect_fail(response.ssl_sock.ip_str, force_remove=True)
                         response.worker.close()
                         continue
                 break

@@ -20,8 +20,8 @@ throwaway = datetime.datetime.strptime('20110101','%Y%m%d')
 
 
 class SSLConnection():
-    def __init__(self, context, sock, ip_str=None, on_close=None):
-        self._connection = context.wrap_socket(sock)
+    def __init__(self, context, sock, ip_str=None, server_hostname=None, on_close=None):
+        self._connection = context.wrap_socket(sock, server_hostname=server_hostname, do_handshake_on_connect=False)
         self._context = context
         self._sock = sock
         self.ip_str = ip_str
@@ -30,7 +30,11 @@ class SSLConnection():
         self.socket_closed = False
 
     def __getattr__(self, attr):
-        if hasattr(self._connection, attr):
+        if attr == "socket_closed":
+            # work around in case close before finished init.
+            return True
+
+        if hasattr(self, "_connection") and hasattr(self._connection, attr):
             return getattr(self._connection, attr)
         else:
             return None

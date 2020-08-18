@@ -279,12 +279,6 @@ class ConnectManager(object):
             self.logger.exception("connect_process except:%r", e)
 
     def _create_ssl_connection(self, ip_str):
-        if not self.check_local_network.is_ok(ip_str):
-            self.logger.debug("connect %s blocked: network fail", ip_str)
-            self.ip_manager.ssl_closed(ip_str, "network fail")
-            time.sleep(10)
-            return
-
         try:
             ssl_sock = self.connect_creator.connect_ssl(ip_str,
                                                         close_cb=self.ip_manager.ssl_closed)
@@ -295,11 +289,16 @@ class ConnectManager(object):
 
             return ssl_sock
         except socket.error as e:
-            self.logger.debug("connect %s network fail:%r", ip_str, e)
-            self.ip_manager.report_connect_fail(ip_str, str(e))
+            if not self.check_local_network.is_ok(ip_str):
+                self.logger.debug("connect %s network fail", ip_str)
+                time.sleep(10)
+            else:
+                self.logger.debug("connect %s network fail:%r", ip_str, e)
+                self.ip_manager.report_connect_fail(ip_str, str(e))
         except NoRescourceException as e:
             self.logger.warning("create ssl for %s except:%r", ip_str, e)
         except Exception as e:
+            self.logger.exception("connect except:%r", e)
             if not self.check_local_network.is_ok(ip_str):
                 self.logger.debug("connect %s network fail", ip_str)
                 time.sleep(10)

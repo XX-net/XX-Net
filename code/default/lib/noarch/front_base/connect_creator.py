@@ -16,7 +16,7 @@ class ConnectCreator(object):
         self.config = config
         self.openssl_context = openssl_context
         self.host_manager = host_manager
-        self.timeout = timeout
+        self.timeout = self.config.socket_timeout
         self.debug = debug or self.config.show_state_debug
         self.peer_cert = None
         if check_cert:
@@ -39,11 +39,13 @@ class ConnectCreator(object):
                 self.logger.error("proxy type %s unknown, disable proxy", self.config.PROXY_TYPE)
                 raise Exception()
 
-            socks.set_default_proxy(proxy_type, self.config.PROXY_HOST, self.config.PROXY_PORT,
-                                    self.config.PROXY_USER,
-                                    self.config.PROXY_PASSWD)
+            socks.set_default_proxy(proxy_type=proxy_type,
+                                    addr=self.config.PROXY_HOST,
+                                    port=self.config.PROXY_PORT,
+                                    username=self.config.PROXY_USER,
+                                    password=self.config.PROXY_PASSWD)
 
-    def connect_ssl(self, ip_str, sni=b"", close_cb=None):
+    def connect_ssl(self, ip_str, sni=None, close_cb=None):
         if sni:
             host = sni
         else:
@@ -52,9 +54,15 @@ class ConnectCreator(object):
         host = str(host)
         if isinstance(sni, str):
             sni = bytes(sni, encoding='ascii')
+
+        if self.debug:
+            self.logger.debug("sni:%s", sni)
+
         ip, port = utils.get_ip_port(ip_str)
         if isinstance(ip, str):
             ip = bytes(ip, encoding='ascii')
+
+        ip_port = (utils.to_str(ip), port)
 
         if int(self.config.PROXY_ENABLE):
             sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
@@ -68,29 +76,25 @@ class ConnectCreator(object):
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 
-        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip_str, on_close=close_cb)
+        time_begin = time.time()
+        try:
+            sock.connect(ip_port)
+        except Exception as e:
+            raise socket.error('conn fail, sni:%s, top:%s e:%r' % (sni, host, e))
 
-        if sni:
-            if self.debug:
-                self.logger.debug("sni:%s", sni)
-
-            try:
-                ssl_sock.set_tlsext_host_name(sni)
-            except Exception as e:
-                self.logger.exception("set_tlsext_host_name %s except:%r", sni, e)
-                pass
+        ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock,
+                                              ip_str=ip_str,
+                                              server_hostname=sni,
+                                              on_close=close_cb)
 
         ssl_sock.sni = utils.to_str(sni)
 
-        time_begin = time.time()
-        ip_port = (utils.to_str(ip), port)
+        time_connected = time.time()
 
         try:
-            ssl_sock.connect(ip_port)
-            time_connected = time.time()
             ssl_sock.do_handshake()
         except Exception as e:
-            raise socket.error('conn fail, sni:%s, top:%s e:%r' % (sni, host, e))
+            raise socket.error('tls handshake fail, sni:%s, top:%s e:%r' % (sni, host, e))
 
         if self.connect_force_http1:
             ssl_sock.h2 = False

@@ -131,6 +131,9 @@ class ProxySession():
         self.stop()
         return self.start()
 
+    def is_idle(self):
+        return time.time() - self.last_send_time > 60
+
     def timer(self):
         while self.running:
             self.wait_queue.notify()
@@ -143,10 +146,10 @@ class ProxySession():
                 break
 
             self.check_report_status()
-            sleep(60)
+            sleep(g.config.report_interval)
 
     def check_report_status(self):
-        if not g.config.login_account or not self.running or time.time() - self.last_send_time > 60:
+        if self.is_idle():
             return
 
         good_ip_num = 0
@@ -284,8 +287,6 @@ class ProxySession():
         start_time = time.time()
         while time.time() - start_time < 30:
             try:
-                start_time = time.time()
-
                 magic = b"P"
                 pack_type = 1
                 upload_data_head = struct.pack("<cBB8sIHIIHH", magic, g.protocol_version, pack_type, bytes(self.session_id),

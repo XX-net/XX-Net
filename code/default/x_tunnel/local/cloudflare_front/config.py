@@ -11,10 +11,10 @@ class Config(ConfigBase):
         self.set_var("front_continue_fail_block", 20 * 60)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 0)
+        self.set_var("dispather_min_idle_workers", 3)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
-        self.set_var("dispather_max_workers", 5)
+        self.set_var("dispather_max_workers", 15)
         self.set_var("dispather_score_factor", 10)
 
         # http 2 worker
@@ -22,7 +22,7 @@ class Config(ConfigBase):
 
         # connect_manager
         self.set_var("ssl_first_use_timeout", 5)
-        self.set_var("connection_pool_min", 1)
+        self.set_var("connection_pool_min", 0)
         self.set_var("https_new_connect_num", 0)
 
         # check_ip

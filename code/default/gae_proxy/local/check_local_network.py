@@ -166,7 +166,7 @@ IPv4.urls = [
 IPv4.triger_check_network()
 
 IPv6 = CheckNetwork("IPv6")
-IPv6.urls = ["https:/ipv6.vm3.test-ipv6.com",
+IPv6.urls = ["https://ipv6.vm3.test-ipv6.com",
              "http://[2001:470:1:18::115]",
              "http://ipv6.lookup.test-ipv6.com",
              "http://v6.myip.la"
@@ -199,4 +199,4 @@ def is_ok(ip=None):
 
 if __name__ == "__main__":
     #print(IPv6._test_host("http://[2804:10:4068::202:82]"))
-    IPv4._test_host("https://www.google.com")
+    IPv4._test_host("https://www.baidu.com")

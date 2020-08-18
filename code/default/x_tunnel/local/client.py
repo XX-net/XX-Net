@@ -68,6 +68,7 @@ def load_config():
 
     config.set_var("log_level", "DEBUG")
     config.set_var("write_log_file", 0)
+    config.set_var("show_debug", 0)
 
     config.set_var("encrypt_data", 0)
     config.set_var("encrypt_password", "encrypt_pass")
@@ -116,6 +117,7 @@ def load_config():
 
     # reporter
     config.set_var("timeout_threshold", 2)
+    config.set_var("report_interval", 60)
 
     config.set_var("enable_gae_proxy", 1)
     config.set_var("enable_cloudflare", 1)

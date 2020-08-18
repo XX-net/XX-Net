@@ -307,6 +307,11 @@ class Http2Worker(HttpWorker):
     def _consume_single_frame(self):
         try:
             header = self._sock.recv(9)
+        except socket.timeout as e:
+            self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e,
+                                  time.time() - self.last_recv_time)
+            self.close("recv.timeout:%r" % e)
+            return
         except ConnectionResetError as e:
             self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e,
                                   time.time() - self.last_recv_time)

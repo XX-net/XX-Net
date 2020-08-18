@@ -60,6 +60,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("check_ip_content", "OK")
 
         # connect_creator
+        self.set_var("socket_timeout", 5)
         self.set_var("connect_receive_buffer", 1024 * 128)
         self.set_var("connect_force_http1", 0)
         self.set_var("connect_force_http2", 0)

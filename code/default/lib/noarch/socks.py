@@ -651,19 +651,19 @@ class socksocket(_BaseSocket):
             reader.close()
             writer.close()
 
-    def _negotiate_HTTP(self, dest_addr, dest_port):
+    def _negotiate_HTTP(self, dest_host, dest_port):
         """
         Negotiates a connection through an HTTP server.
         NOTE: This currently only supports HTTP CONNECT-style proxies.
         """
-        proxy_type, addr, port, rdns, username, password = self.proxy
+        proxy_type, proxy_addr, port, rdns, username, password = self.proxy
 
         # If we need to resolve locally, we do this now
-        dest_addr = utils.to_bytes(dest_addr)
-        addr = dest_addr if rdns else socket.gethostbyname(dest_addr)
+        dest_host = utils.to_bytes(dest_host)
+        dest_addr = dest_host if rdns else socket.gethostbyname(dest_host)
 
         http_headers = [
-            (b"CONNECT " + utils.to_bytes(addr) + b":"
+            (b"CONNECT " + utils.to_bytes(dest_addr) + b":"
              + str(dest_port).encode() + b" HTTP/1.1"),
             b"Host: " + dest_addr
         ]
@@ -706,7 +706,7 @@ class socksocket(_BaseSocket):
             raise HTTPError(error)
 
         self.proxy_sockname = (b"0.0.0.0", 0)
-        self.proxy_peername = addr, dest_port
+        self.proxy_peername = dest_addr, dest_port
 
     _proxy_negotiators = {
                            SOCKS4: _negotiate_SOCKS4,

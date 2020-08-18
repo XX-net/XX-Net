@@ -1,4 +1,4 @@
-
+import os
 import socket
 import struct
 import time
@@ -34,31 +34,31 @@ class ConnectCreator(ConnectCreatorBase):
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 
-        if info["client_ca"]:
-            self.openssl_context.context.use_certificate_file(info["client_ca_fn"])
-            self.openssl_context.context.use_privatekey_file(info["client_key_fn"])
-
-        ssl_sock = front_base.openssl_wrap.SSLConnection(self.openssl_context.context, sock, ip_str, on_close=close_cb)
-        ssl_sock.set_connect_state()
-
-        if sni:
-            if self.debug:
-                self.logger.debug("sni:%s", sni)
-
-            try:
-                ssl_sock.set_tlsext_host_name(sni)
-            except:
-                pass
-
         time_begin = time.time()
         ip_port = (ip, port)
-
         try:
-            ssl_sock.connect(ip_port)
-            time_connected = time.time()
-            ssl_sock.do_handshake()
+            sock.connect(ip_port)
         except Exception as e:
             raise socket.error('conn fail, sni:%s, top:%s e:%r' % (sni, host, e))
+
+        time_connected = time.time()
+
+        if info["client_ca"]:
+            #self.openssl_context.context.use_certificate_file(info["client_ca_fn"])
+            #self.openssl_context.set_ca(info["client_ca_fn"])
+            #self.openssl_context.context.use_privatekey_file(info["client_key_fn"])
+            self.openssl_context.context.load_cert_chain(os.path.abspath(info["client_ca_fn"]),
+                                                         os.path.abspath(info["client_key_fn"]))
+
+        ssl_sock = front_base.openssl_wrap.SSLConnection(self.openssl_context.context, sock,
+                                                         ip_str=ip_str,
+                                                         server_hostname=sni,
+                                                         on_close=close_cb)
+
+        try:
+            ssl_sock.do_handshake()
+        except Exception as e:
+            raise socket.error('tls handshake fail, sni:%s, top:%s e:%r' % (sni, host, e))
 
         if self.connect_force_http1:
             ssl_sock.h2 = False
