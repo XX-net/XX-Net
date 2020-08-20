@@ -15,6 +15,7 @@ fqrouter = simple_http_client.request("GET", "http://127.0.0.1:2515/ping", heade
 mobile = fqrouter and "PONG" in fqrouter.text
 del headers, fqrouter
 
+
 class Config(ConfigBase):
     def __init__(self, fn):
         super(Config, self).__init__(fn)
@@ -42,11 +43,11 @@ class Config(ConfigBase):
 
         # host rules
         self.set_var("hosts_direct", [
-            b"docs.google.com",
+            #b"docs.google.com",
             #"play.google.com",
-            b"scholar.google.com",
+            #b"scholar.google.com",
             #"scholar.google.com.hk",
-            b"appengine.google.com"
+            #b"appengine.google.com"
         ])
         self.set_var("hosts_direct_endswith", [
             #b".gvt1.com",
@@ -363,6 +364,7 @@ lwIDAQAB
             self.save()
             self.load()
 
+
 class DirectConfig(object):
     def __init__(self, config):
         self._config = config
@@ -437,6 +439,7 @@ class DirectConfig(object):
             self.https_connection_pool_max = 10
 
     set_default = set_level
+
 
 config_path = os.path.join(module_data_path, "config.json")
 config = Config(config_path)

@@ -6,39 +6,38 @@ import os
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+default_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(default_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'gae_proxy')
-python_path = root_path
-
 
 if __name__ == "__main__":
-    sys.path.append(root_path)
+    sys.path.append(default_path)
 
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.abspath(os.path.join(default_path, 'lib', 'win32'))
         sys.path.append(win32_lib)
     elif sys.platform.startswith("linux"):
-        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        linux_lib = os.path.abspath(os.path.join(default_path, 'lib', 'linux'))
         sys.path.append(linux_lib)
     elif sys.platform == "darwin":
-        darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+        darwin_lib = os.path.abspath(os.path.join(default_path, 'lib', 'darwin'))
         sys.path.append(darwin_lib)
         extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
         sys.path.append(extra_lib)
 
-
 import xlog
+
 logger = xlog.getLogger("gae_proxy")
 
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
-from front_base.host_manager import HostManagerBase
 import front_base.check_ip
+
 from gae_proxy.local.config import config
+from gae_proxy.local.host_manager import HostManager
 
 
 class CheckIp(front_base.check_ip.CheckIp):
@@ -146,7 +145,7 @@ def check_all():
 
 
 if __name__ == "__main__":
-    #check_all()
+    # check_all()
 
     # case 1: only ip
     # case 2: ip + domain
@@ -173,10 +172,10 @@ if __name__ == "__main__":
     openssl_context = SSLContext(
         logger, ca_certs=ca_certs,
         protocol="TLSv1_2"
-        #cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
+        # cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
         #               b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
     )
-    host_manager = HostManagerBase()
+    host_manager = HostManager(config, logger)
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
                                      debug=True)
     check_ip = CheckIp(logger, config, connect_creator)

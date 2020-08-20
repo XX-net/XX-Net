@@ -2,7 +2,7 @@ import time
 
 from front_base.connect_manager import NoRescourceException
 from front_base.host_manager import HostManagerBase
-from .sni_manager import SniManager
+from . sni_manager import SniManager
 
 
 class HostManager(HostManagerBase):

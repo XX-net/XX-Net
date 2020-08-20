@@ -219,7 +219,10 @@ class Http2Worker(HttpWorker):
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
-        self.logger.warn("%s close, reason: %s, trace:%s", self.ip_str, reason, self.get_trace())
+        if reason.startswith("GoAway"):
+            self.logger.debug("%s close, reason: %s, trace:%s", self.ip_str, reason, self.get_trace())
+        else:
+            self.logger.warn("%s close, reason: %s, trace:%s", self.ip_str, reason, self.get_trace())
         self.send_queue.put(None)
 
         for stream in list(self.streams.values()):

@@ -121,7 +121,7 @@ class SSLContext(object):
                 self.support_alpn_npn = "alpn"
                 return
             except Exception as e:
-                # self.logger.exception("set_alpn_protos:%r", e)
+                self.logger.exception("set_alpn_protos:%r", e)
                 pass
 
             try:
