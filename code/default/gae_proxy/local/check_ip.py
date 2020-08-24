@@ -81,7 +81,7 @@ class CheckAllIp(object):
             cipher_suites=[b'ALL', b"!RC4-SHA", b"!ECDHE-RSA-RC4-SHA", b"!ECDHE-RSA-AES128-GCM-SHA256",
                            b"!AES128-GCM-SHA256", b"!ECDHE-RSA-AES128-SHA", b"!AES128-SHA"]
         )
-        host_manager = HostManagerBase()
+        host_manager = HostManager()
         connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
                                          debug=True)
         self.check_ip = CheckIp(logger, config, connect_creator)
