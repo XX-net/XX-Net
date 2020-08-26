@@ -94,10 +94,10 @@ def load_config():
     config.set_var("concurent_thread_num", 50)
 
     # min roundtrip on road if connectoin exist
-    config.set_var("min_on_road", 1)
+    config.set_var("min_on_road", 3)
 
     # range 1 - 1000, ms
-    config.set_var("send_delay", 30)
+    config.set_var("send_delay", 10)
 
     # range 1 - 20000, ms
     config.set_var("resend_timeout", 5000)
@@ -106,7 +106,7 @@ def load_config():
     config.set_var("ack_delay", 300)
 
     # max 10M
-    config.set_var("max_payload", 128 * 1024)
+    config.set_var("max_payload", 3 * 128 * 1024)
 
     # range 1 - 30
     config.set_var("roundtrip_timeout", 25)

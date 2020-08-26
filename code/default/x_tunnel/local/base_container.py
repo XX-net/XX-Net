@@ -284,7 +284,7 @@ class BlockReceivePool():
                 # xlog.warn("recv_pool put timeout sn:%d", sn)
                 return False
             elif sn > self.next_sn:
-                # xlog.debug("recv_pool put unorder sn:%d", sn)
+                # xlog.debug("recv_pool put disorder sn:%d", sn)
                 if sn in self.block_list:
                     # xlog.warn("recv_pool put sn:%d exist", sn)
                     return False
@@ -641,6 +641,7 @@ class Conn(object):
                     return
 
                 self.transfer_received_data(data)
-                # xlog.debug("Conn session:%s conn:%d Recv len:%d id:%d", self.session.session_id, self.conn_id, data_len, self.recv_id)
+                # xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
+                #           self.session.session_id, self.conn_id, data_len, self.received_position)
 
                 # xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)
