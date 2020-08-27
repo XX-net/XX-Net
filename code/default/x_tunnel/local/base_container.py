@@ -428,7 +428,7 @@ class Conn(object):
         # self.xlog.info("session_id:%s create_conn conn:%d %s:%d", self.session.session_id, self.conn_id, host, port)
         connect_timeout = 30
         sock = None
-        # start_time = time.time()
+        start_time = time.time()
         ip = ""
         try:
             if ':' in host:
@@ -459,7 +459,7 @@ class Conn(object):
 
             return sock, True
         except Exception as e:
-            # conn_time = int((time.time() - start_time) * 1000)
+            conn_time = int((time.time() - start_time) * 1000)
             self.xlog.debug("tcp conn host:%s %s:%d fail t:%d %r", host, ip, port, conn_time, e)
             if sock:
                 sock.close()
