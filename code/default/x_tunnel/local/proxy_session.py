@@ -79,6 +79,7 @@ class ProxySession(object):
     def start(self):
         with self.lock:
             if self.running is True:
+                xlog.warn("session try to run but is running.")
                 return True
 
             self.round_trip_thread = {}
@@ -119,6 +120,7 @@ class ProxySession(object):
 
     def stop(self):
         if not self.running:
+            xlog.warn("session stop but not running")
             return
 
         with self.lock:
@@ -270,7 +272,7 @@ class ProxySession(object):
         out_string += "running:%d<br>\n" % self.running
         out_string += "last_send_time:%f<br>\n" % (time.time() - self.last_send_time)
         out_string += "last_receive_time:%f<br>\n" % (time.time() - self.last_receive_time)
-        out_string += "last_conn_id:%d<br>\n" % self.last_conn_id
+        out_string += "last_conn:%d<br>\n" % self.last_conn_id
         out_string += "last_transfer_no:%d<br>\n" % self.last_transfer_no
         out_string += "traffic:%d<br>\n" % self.traffic
 
@@ -389,16 +391,16 @@ class ProxySession(object):
         conn_list = dict(self.conn_list)
         for conn_id in conn_list:
             try:
-                xlog.debug("stopping conn_id:%d", conn_id)
+                # xlog.debug("stopping conn:%d", conn_id)
                 self.conn_list[conn_id].stop(reason="system reset")
             except Exception as e:
-                xlog.warn("stopping conn_id:%d fail:%r", conn_id, e)
+                xlog.warn("stopping conn:%d fail:%r", conn_id, e)
                 pass
         # self.conn_list = {}
         xlog.debug("stop all connection finished")
 
     def remove_conn(self, conn_id):
-        xlog.debug("remove conn_id:%d", conn_id)
+        xlog.debug("remove conn:%d", conn_id)
         try:
             del self.conn_list[conn_id]
         except:
@@ -407,11 +409,12 @@ class ProxySession(object):
         if len(self.conn_list) == 0:
             self.target_on_roads = 0
 
-    def send_conn_data(self, conn_id, data, no_delay=False):
+    def send_conn_data(self, conn_id, data):
         if not self.running:
+            xlog.warn("send_conn_data but not running")
             return
 
-        # xlog.debug("upload conn_id:%d, len:%d", conn_id, len(data))
+        # xlog.debug("upload conn:%d, len:%d", conn_id, len(data))
         buf = base_container.WriteBuffer()
         buf.append(struct.pack("<II", conn_id, len(data)))
         buf.append(data)
@@ -428,7 +431,7 @@ class ProxySession(object):
     def sn_payload_head(sn, payload):
         return struct.pack("<II", sn, len(payload))
 
-    def get_data(self):
+    def get_data(self, work_id):
         time_now = time.time()
         buf = base_container.WriteBuffer()
 
@@ -448,7 +451,8 @@ class ProxySession(object):
                         return buf
 
             if self.send_buffer.pool_size > g.config.max_payload or \
-                    (self.send_buffer.pool_size > 0 and time.time() - self.oldest_received_time > self.send_delay):
+                    (self.send_buffer.pool_size > 0 and
+                     (time.time() - self.oldest_received_time > self.send_delay or work_id < self.target_on_roads)):
                 payload, sn = self.send_buffer.get()
                 self.wait_ack_send_list[sn] = (payload, time_now)
                 buf.append(self.sn_payload_head(sn, payload))
@@ -480,21 +484,22 @@ class ProxySession(object):
         return ""
 
     def get_send_data(self, work_id):
-        # xlog.debug("get_send_data %d", force)
-
         force = False
         while self.running:
-            data = self.get_data()
+            data = self.get_data(work_id)
+            # xlog.debug("get_send_data work_id:%d len:%d", work_id, len(data))
             if data or work_id < self.target_on_roads:
                 # xlog.debug("got data, force get ack")
                 force = True
 
             ack = self.get_ack(force=force)
             if data or ack or force:
+                # xlog.debug("get_send_data work_id:%d data_len:%d ack_len:%d force:%d", work_id, len(data), len(ack), force)
                 return data, ack
 
             self.wait_queue.wait(work_id)
 
+        xlog.debug("get_send_data on stop")
         return "", ""
 
     def ack_process(self, ack):
@@ -535,8 +540,8 @@ class ProxySession(object):
 
                 # xlog.debug("conn:%d upload data len:%d", conn_id, len(payload))
                 if conn_id not in self.conn_list:
-                    xlog.warn("conn_id %d not exist", conn_id)
-                    return
+                    xlog.debug("conn:%d not exist", conn_id)
+                    continue
                 self.conn_list[conn_id].put_cmd_data(payload)
         except Exception as e:
             xlog.exception("download_data_processor:%r", e)
@@ -545,7 +550,7 @@ class ProxySession(object):
         while len(data):
             sn, plen = struct.unpack("<II", data.get(8))
             pdata = data.get_buf(plen)
-            # xlog.debug("upload sn:%d len:%d", sn, plen)
+            # xlog.debug("download sn:%d len:%d", sn, plen)
 
             self.receive_process.put(sn, pdata)
 
@@ -577,6 +582,7 @@ class ProxySession(object):
             send_data_len = len(data)
             send_ack_len = len(ack)
             transfer_no = self.get_transfer_no()
+            # xlog.debug("trip:%d no:%d send data:%s", work_id, transfer_no, parse_data(data))
 
             magic = b"P"
             pack_type = 2
@@ -609,7 +615,7 @@ class ProxySession(object):
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
 
-            # xlog.debug("start roundtrip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+            # xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
             #           transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
@@ -701,10 +707,10 @@ class ProxySession(object):
 
             time_cost, server_send_pool_size, data_len, ack_len = struct.unpack("<IIIH", payload.get(14))
             xlog.debug(
-                "trip:%d tc:%f cost:%f to:%d no:%d snd:%d rcv:%d s_pool:%d on_road:%d target:%d",
-                work_id,
+                "trip:%d no:%d tc:%f cost:%f to:%d snd:%d rcv:%d s_pool:%d on_road:%d target:%d",
+                work_id, transfer_no,
                 roundtrip_time, time_cost / 1000.0, server_timeout,
-                transfer_no, send_data_len, len(content), server_send_pool_size,
+                send_data_len, len(content), server_send_pool_size,
                 self.on_road_num,
                 self.target_on_roads)
 
@@ -729,9 +735,11 @@ class ProxySession(object):
             try:
                 data = payload.get_buf(data_len)
                 ack = payload.get_buf(ack_len)
-            except:
-                xlog.debug("data not enough")
+            except Exception as e:
+                xlog.warn("trip:%d no:%d data not enough %r", work_id, transfer_no, e)
                 continue
+
+            # xlog.debug("trip:%d no:%d recv data:%s", work_id, transfer_no, parse_data(data))
 
             try:
                 self.round_trip_process(data, ack)
@@ -741,6 +749,50 @@ class ProxySession(object):
                 xlog.exception("data process:%r", e)
 
         xlog.info("roundtrip thread exit")
+
+
+def parse_data(data):
+    if len(data) == 0:
+        return ""
+
+    o = ""
+
+    data = bytes(data)
+    data = base_container.ReadBuffer(data)
+    while len(data):
+
+        sn, block_len = struct.unpack("<II", data.get(8))
+        block = data.get_buf(block_len)
+
+        o += "sn:%d {" % sn
+
+        while len(block):
+            conn_id, payload_len = struct.unpack("<II", block.get(8))
+
+            o += "conn:%d [" % conn_id
+            conn_data = block.get_buf(payload_len)
+
+            seq = struct.unpack("<I", conn_data.get(4))[0]
+            cmd_id = struct.unpack("<B", conn_data.get(1))[0]
+            conn_payload = conn_data.get_buf()
+            if cmd_id == 0:  # create connection
+                sock_type = struct.unpack("<B", conn_payload.get(1))[0]
+                host_len = struct.unpack("<H", conn_payload.get(2))[0]
+                host = str(bytes(conn_payload.get(host_len)))
+                port = struct.unpack("<H", conn_payload.get(2))[0]
+                o += "%d|Connect:%s:%d" % (seq, host, port)
+            elif cmd_id == 1:  # data
+                o += "%d|D:%d" % (seq, len(conn_payload))
+            elif cmd_id == 2:  # closed
+                o += "%d|Closed:%s" % (seq, conn_payload)
+            elif cmd_id == 3:  # ack
+                position = struct.unpack("<Q", conn_payload.get())[0]
+                o += "%d|Ack:%d" % (seq, position)
+
+            o += "],"
+        o += "},"
+
+    return o
 
 
 def calculate_quota_left(quota_list):

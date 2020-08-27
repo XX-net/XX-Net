@@ -5,9 +5,9 @@
 [Mac/Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.4.3.zip)  
 
 
-测试版(Test version 4.5.0)：  
-[Windows 版下载](https://github.com/XX-net/XX-Net/releases/download/4.5.0/XX-Net-windows-4.5.0.7z)   
-[Mac/Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.5.0.zip)  
+测试版(Test version 4.5.1)：  
+[Windows 版下载](https://github.com/XX-net/XX-Net/releases/download/4.5.1/XX-Net-windows-4.5.1.7z)   
+[Mac/Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.5.1.zip)  
 
 
 Android:  
