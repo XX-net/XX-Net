@@ -35,13 +35,13 @@ from xlog import getLogger
 xlog = getLogger("x_tunnel")
 
 import xconfig
-from .proxy_handler import Socks5Server
-from . import global_var as g
-from . import proxy_session
+from x_tunnel.local.proxy_handler import Socks5Server
+from x_tunnel.local import global_var as g
+from x_tunnel.local import proxy_session
 import simple_http_server
-from . import front_dispatcher
+from x_tunnel.local import front_dispatcher
 
-from . import web_control
+from x_tunnel.local import web_control
 # don't remove, launcher web_control need it.
 
 
@@ -189,6 +189,7 @@ def terminate():
     global ready
     g.running = False
     g.http_client.stop()
+    front_dispatcher.stop()
 
     if g.socks5_server:
         xlog.info("Close Socks5 server ")
