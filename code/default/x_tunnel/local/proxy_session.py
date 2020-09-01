@@ -587,7 +587,10 @@ class ProxySession(object):
             magic = b"P"
             pack_type = 2
 
-            if work_id > g.config.concurent_thread_num * 0.9:
+            if self.send_buffer.pool_size > g.config.max_payload or \
+                    (self.send_buffer.pool_size and len(self.wait_queue.waiters) < g.config.min_on_road):
+                server_timeout = 0
+            elif work_id > g.config.concurent_thread_num * 0.9:
                 server_timeout = 1
             elif work_id > g.config.concurent_thread_num * 0.7:
                 server_timeout = 3
