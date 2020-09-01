@@ -2,7 +2,7 @@ import os
 import urllib.parse
 import datetime
 import threading
-import http
+from http import client
 import socket
 import errno
 import sys
@@ -39,7 +39,7 @@ class HttpServerHandler():
     WebSocket_MAGIC_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
     default_request_version = b"HTTP/1.1"
 
-    MessageClass = http.client.HTTPMessage
+    MessageClass = client.HTTPMessage
 
     rbufsize = 32*1024
     wbufsize = 32*1024
@@ -145,7 +145,7 @@ class HttpServerHandler():
         self.command, self.path, self.request_version = command, path, version
 
         # Examine the headers and look for a Connection directive
-        headers = http.client.parse_headers(self.rfile, _class=self.MessageClass)
+        headers = client.parse_headers(self.rfile, _class=self.MessageClass)
         self.headers = dict(map(utils.to_bytes, headers.items()))
         #email.message_from_file(self.rfile)
 
@@ -459,6 +459,8 @@ class HTTPServer():
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         addr = tuple((ip, port))
         try:
             sock.bind(addr)
