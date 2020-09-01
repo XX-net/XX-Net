@@ -509,7 +509,7 @@ class Conn(object):
 
             elif cmd_id == 3:  # ack:
                 position = struct.unpack("<Q", data.get(8))[0]
-                self.xlog.debug("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
+                # self.xlog.debug("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
                 if position > self.remote_acked_position:
                     self.remote_acked_position = position
                     self.recv_notice.acquire()
