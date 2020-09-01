@@ -30,7 +30,11 @@ class Config(object):
                 content = content.replace("\r", "")
                 content = content.replace("\n", "")
                 content = content.replace(",}", "}")
-                self.file_config = json.loads(content)
+                try:
+                    self.file_config = json.loads(content)
+                except Exception as e:
+                    xlog.error("Loading config:%s fail:r", self.config_path, e)
+                    return
 
         for var_name in self.default_config:
             if self.file_config and var_name in self.file_config:
