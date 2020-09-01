@@ -87,6 +87,7 @@ def request(method, host, schema="http", path="/", headers={}, data="", timeout=
         fail_num += 1
         continue_fail_num += 1
         last_fail_time = time.time()
+        time.sleep(1)
         return "", 602, {}
 
     last_success_time = time.time()
