@@ -68,11 +68,16 @@ class ConnectCreator(object):
             sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         else:
             sock = socket.socket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
+
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
+        # Close the connection with a TCP RST instead of a TCP FIN.
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
-        # resize socket recv buffer ->64 above to improve browser releated application performance
+
+        # resize socket receive buffer ->64 above to improve browser related application performance
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, self.config.connect_receive_buffer)
+
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 
