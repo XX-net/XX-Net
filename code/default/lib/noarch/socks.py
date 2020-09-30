@@ -660,7 +660,11 @@ class socksocket(_BaseSocket):
 
         # If we need to resolve locally, we do this now
         dest_host = utils.to_bytes(dest_host)
-        dest_addr = dest_host if rdns else socket.gethostbyname(dest_host)
+        if b":" not in dest_host and not rdns:
+            dest_addr = socket.gethostbyname(dest_host)
+            dest_addr = utils.to_bytes(dest_addr)
+        else:
+            dest_addr = dest_host
 
         http_headers = [
             (b"CONNECT " + utils.to_bytes(dest_addr) + b":"
