@@ -416,6 +416,9 @@ class HttpsDispatcher(object):
         return len(self.workers)
 
     def get_score(self):
+        if self.task_count >= self.config.max_task_num:
+            return None
+
         now = time.time()
         if now - self.last_fail_time < 60 and \
                 self.continue_fail_num > 10:

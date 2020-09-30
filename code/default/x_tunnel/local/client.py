@@ -1,6 +1,6 @@
 import os
 import sys
-
+import json
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
@@ -54,6 +54,17 @@ def xxnet_version():
     except Exception as e:
         xlog.exception("xxnet_version fail")
     return "get_version_fail"
+
+
+def get_launcher_uuid():
+    launcher_config_fn = os.path.join(data_path, "launcher", "config.json")
+    try:
+        with open(launcher_config_fn, "r") as fd:
+            info = json.load(fd)
+            return info["update_uuid"]
+    except Exception as e:
+        xlog.exception("get_launcher_uuid except:%r", e)
+        return ""
 
 
 def load_config():
@@ -143,6 +154,7 @@ def main(args):
     global ready
 
     g.xxnet_version = xxnet_version()
+    g.client_uuid = get_launcher_uuid()
 
     load_config()
     front_dispatcher.init()

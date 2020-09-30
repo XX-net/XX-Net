@@ -1,4 +1,6 @@
 xxnet_version = ""
+client_uuid = ""
+
 running = True
 protocol_version = 2
 last_refresh_time = 0

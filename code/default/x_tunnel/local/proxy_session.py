@@ -176,6 +176,7 @@ class ProxySession(object):
 
         stat = self.get_stat("minute")
         stat["version"] = g.xxnet_version
+        stat["client_uuid"] = g.client_uuid
         stat["global"]["timeout"] = g.stat["timeout_roundtrip"] - self.last_state["timeout"]
         stat["global"]["ipv6"] = check_local_network.IPv6.is_ok()
         stat["tls_relay_front"]["ip_dict"] = g.tls_relay_front.ip_manager.ip_dict
