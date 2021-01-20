@@ -35,7 +35,7 @@ xlog = getLogger("tls_relay")
 
 
 def t1():
-    content, status, response = tls_relay.front.request("GET", "scan1.xx-net.net", timeout=1000)
+    content, status, response = tls_relay.front.request("GET", "scan1.xx-net.org", timeout=1000)
     print(status)
 
     tls_relay.front.stop()

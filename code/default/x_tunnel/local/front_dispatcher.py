@@ -68,7 +68,7 @@ def debug_data_clearup_thread():
 
 def get_front(host, timeout):
     start_time = time.time()
-    if host in ["dns.xx-net.net", g.config.api_server]:
+    if host in ["dns.xx-net.org", g.config.api_server]:
         fronts = light_fronts
     else:
         fronts = session_fronts

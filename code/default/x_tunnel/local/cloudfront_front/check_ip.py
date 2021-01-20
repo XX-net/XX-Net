@@ -98,7 +98,7 @@ class CheckAllIp(object):
 
 
 def check_all_ip(check_ip):
-    check = CheckAllIp(check_ip, "scan1.xx-net.net")
+    check = CheckAllIp(check_ip, "scan1.xx-net.org")
     check.run()
 
 

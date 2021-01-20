@@ -41,7 +41,7 @@ def query_dns_from_xxnet(domain, dns_type=None):
 
     t0 = time.time()
     content, status, response = g.x_tunnel.front_dispatcher.request(
-        "GET", "dns.xx-net.net", path="/query?domain=%s" % (utils.to_str(domain)), timeout=5)
+        "GET", "dns.xx-net.org", path="/query?domain=%s" % (utils.to_str(domain)), timeout=5)
     t1 = time.time()
 
     if status != 200:

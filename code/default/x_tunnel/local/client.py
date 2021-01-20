@@ -85,7 +85,7 @@ def load_config():
     config.set_var("encrypt_password", "encrypt_pass")
     config.set_var("encrypt_method", "aes-256-cfb")
 
-    config.set_var("api_server", "center.xx-net.net")
+    config.set_var("api_server", "center.xx-net.org")
     config.set_var("scan_servers", ["scan1"])
     config.set_var("server_host", "")
     config.set_var("server_port", 443)

@@ -39,8 +39,8 @@ xlog.set_buffer(2000)
 def get():
     start_time = time.time()
 
-    content, status, response = front.request("GET", "scan1.xx-net.net", "/", timeout=10)
-    #content, status, response = front.request("GET", "dns.xx-net.net", path="/query?domain=www.google.com")
+    content, status, response = front.request("GET", "scan1.xx-net.org", "/", timeout=10)
+    #content, status, response = front.request("GET", "dns.xx-net.org", path="/query?domain=www.google.com")
 
     if isinstance(content, memoryview):
         content = content.tobytes()

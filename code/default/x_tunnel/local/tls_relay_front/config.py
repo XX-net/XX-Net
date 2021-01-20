@@ -26,7 +26,7 @@ class Config(ConfigBase):
         self.set_var("max_links_per_ip", 5)
 
         # check_ip
-        self.set_var("check_ip_host", "scan1.xx-net.net")
+        self.set_var("check_ip_host", "scan1.xx-net.org")
         self.set_var("check_ip_content", "X_Tunnel OK.")
 
         # connect_creator

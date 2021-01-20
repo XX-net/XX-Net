@@ -28,7 +28,7 @@ class Front(object):
 
     def __init__(self):
         self.running = True
-        self.last_host = "www.xx-net.net"
+        self.last_host = "www.xx-net.org"
 
         self.logger = logger
         config_path = os.path.join(module_data_path, "cloudfront_front.json")
@@ -61,7 +61,7 @@ class Front(object):
 
     def check_ip(self, ip):
         sni, host = self.host_manager.get_sni_host(ip)
-        host = "scan1.xx-net.net"
+        host = "scan1.xx-net.org"
         return self.ip_checker.check_ip(ip, sni=sni, host=host)
 
     def get_dispatcher(self, host=None):
