@@ -144,29 +144,16 @@ class Config(ConfigBase):
 
         # connect_creator
         self.set_var("check_pkp", [
-# https://pki.google.com/GIAG2.crt has expired
+# Expired CAs
+# GIAG2
+# GIAG3
+# GTSGIAG3
+# GIAG3ECC
 
-# https://pki.goog/gsr2/GIAG3.crt
-# https://pki.goog/gsr2/GTSGIAG3.crt
-b'''\
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylJL6h7/ziRrqNpyGGjV
-Vl0OSFotNQl2Ws+kyByxqf5TifutNP+IW5+75+gAAdw1c3UDrbOxuaR9KyZ5zhVA
-Cu9RuJ8yjHxwhlJLFv5qJ2vmNnpiUNjfmonMCSnrTykUiIALjzgegGoYfB29lzt4
-fUVJNk9BzaLgdlc8aDF5ZMlu11EeZsOiZCx5wOdlw1aEU1pDbcuaAiDS7xpp0bCd
-c6LgKmBlUDHP+7MvvxGIQC61SRAPCm7cl/q/LJ8FOQtYVK8GlujFjgEWvKgaTUHF
-k5GiHqGL8v7BiCRJo0dLxRMB3adXEmliK+v+IO9p+zql8H4p7u2WFvexH6DkkCXg
-MwIDAQAB
------END PUBLIC KEY-----
-''',
-# https://pki.goog/gsr4/GIAG3ECC.crt
-b'''\
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG4ANKJrwlpAPXThRcA3Z4XbkwQvW
-hj5J/kicXpbBQclS4uyuQ5iSOGKcuCRt8ralqREJXuRsnLZo0sIT680+VQ==
------END PUBLIC KEY-----
-''',
-# https://pki.goog/gsr2/giag4.crt
+# GIAG4
+# https://pki.goog/repo/certs/giag4.pem
+# GIAG4x
+# https://pki.goog/repo/certs/giag4x.pem
 b'''\
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvSw7AnhsoyYa5z/crKtt
@@ -178,14 +165,55 @@ XWuFsu4edue27nG8g9gO1YozIUCV7+zExG0G5kxTovis+FJpy9hIIxSFrRIKM4DX
 aQIDAQAB
 -----END PUBLIC KEY-----
 ''',
-# https://pki.goog/gsr4/giag4ecc.crt
+# GIAG4 ECC
+# https://pki.goog/repo/certs/giag4ecc.pem
 b'''\
 -----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWgDxDsTP7Od9rB8TPUltMacYCHYI
 NthcDjlPu3wP0Csmy6Drit3ghqaTqFecqcgks5RwcKQkT9rbY3e8lHuuAw==
 -----END PUBLIC KEY-----
 ''',
-# https://pki.goog/gsr2/GTS1O1.crt
+# GTS CA 1C3
+# https://pki.goog/repo/certs/gts1c3.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9Yjf52KMHjf4N0KQf2yH
+0PtlgiX96MtrpP9t6Voj4pn2HOmSA5kTfAkKivpC1l5WJKp6M4Qf0elpu7l07FdM
+ZmiTdzdVU/45EE23NLtfJXc3OxeU6jzlndW8w7RD6y6nR++wRBFj2LRBhd1BMEiT
+G7+39uBFAiHglkIXz9krZVY0ByYEDaj9fcou7+pIfDdNPwCfg9/vdYQueVdc/Fdu
+Gpb//Iyappm+Jdl/liwG9xEqAoCA62MYPFBJh+WKyl8ZK1mWgQCg+1HbyncLC8mW
+T+9wScdcbSD9mbS04soud/0t3Au2axMMjBkrF5aYufCL9qAnu7bjjVGPva7Hm7GJ
+nQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS CA 1D2
+# https://pki.goog/repo/certs/gts1d2.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAstl74eHXPxyRcv/5EM2H
+FXl0tz5Hi7JhVf0MNsZ+d0I6svpSWwtxgdZN1ekrJE0jXosrcl8hVbUp70TL64JS
+qz4npJJJQUreqN0x4DzfbXpNLdZtCbAO42Hysv6QbFp7EGRJtAs8CPLqeQxsphqJ
+alYyoCmiMIKPgVEM86K52XW5Ip4nFLpKLyxjWIfxXRDmX5G7uVvMR+IedbaMj8x1
+XVcF54LGhA50cirLO1X1bnDrZmnDJLs4kzWbaGEvm9aupndyfHFIWDMQr+mAgh21
+B0Ab9j3soq1HnbSUKTSzjC/NJQNYNcAlpFVf4bMHVj3I0GO4IPuMHUMs+Pmp1exv
+lwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS CA 1D4
+# https://pki.goog/repo/certs/gts1d4.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq8Cqo8ITbuXTD3MLx1M8
+gTz1sD7FOYNobvLtV9Dhz6Y5aGVR5tRCkrTK/avrvxEkTErQdYON6r6csgc3USbm
+PqsBFmLGbJFKOEhHQo5A8YExSV2xrO0ggns7SD/zaqP+8YOX//e3i1OrGJGEtCdM
+tcl14H7YOGR1TogiDHrA3sTk1xQfdFyx6NyqPynlKPX28GbqLUWGosbKaEwWuhZV
+QY7fG0gf3V2yDLh4Upx8pUtYrejbX3RDQub9KIqYttEnkC7jLV64UmbYkz14HzgW
+SpreK+tdZR5W3J7QJB0q+xjYWRrO/G3G+6wsnMtZgeTnnNxEBpwMDZJ4S0FtB8PW
+qwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS CA 1O1
+# https://pki.goog/repo/certs/gts1o1.pem
 b'''\
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0BjPRdSLzdOc5EDvfrTd
@@ -197,16 +225,111 @@ EAW48THCOyT9GjN0+CPg7GsZihbG482kzQvbs6RZYDiIO60ducaMp1Mb/LzZpKu8
 BwIDAQAB
 -----END PUBLIC KEY-----
 ''',
-# https://pki.goog/gsr2/GTS1D2.crt
+# GTS CA 1P5
+# https://pki.goog/repo/certs/gts1p5.pem
 b'''\
 -----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAstl74eHXPxyRcv/5EM2H
-FXl0tz5Hi7JhVf0MNsZ+d0I6svpSWwtxgdZN1ekrJE0jXosrcl8hVbUp70TL64JS
-qz4npJJJQUreqN0x4DzfbXpNLdZtCbAO42Hysv6QbFp7EGRJtAs8CPLqeQxsphqJ
-alYyoCmiMIKPgVEM86K52XW5Ip4nFLpKLyxjWIfxXRDmX5G7uVvMR+IedbaMj8x1
-XVcF54LGhA50cirLO1X1bnDrZmnDJLs4kzWbaGEvm9aupndyfHFIWDMQr+mAgh21
-B0Ab9j3soq1HnbSUKTSzjC/NJQNYNcAlpFVf4bMHVj3I0GO4IPuMHUMs+Pmp1exv
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs4LwJIy/LYevstmnrvrK
+ukTWWz7+sveyZRbc3hDoTy0QWFoohoeh7mqzoNl1T3+hUgGLVahKWwZIyDYSJauJ
++fIjX51gZflc2r466FxtfZzQhBiFMM1Om+w82LPhltTzxQtl24+wdMv2HvN48ayV
+xd1zwzGIga90qm/9DOMFlfDFEE9lY/qgr8YYPcWh35d51wWJszCwdK49khBrjBV3
+3QsEV/uBA93qIjTV5Vay8MSNQbHDAtti7IDQ/3bUhuQEGra2DCticX3Zr9nxXvrA
+HsqgGVxV8IDRKgwHhpCfNeMoK1vvI8ijHaSjOu7+g9yCTCWwTcVRrZ6b01uEwhpa
+6QIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS CA 2A1
+# https://pki.goog/repo/certs/gts2a1.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAN+bsxmjxoOPZBA3MIh/CdD/J31/
+5vRh3MdletXO0zD+TrcD4wZPMrVdMsX4tiPtyzI/rYEiaaJFIBfAXqKIiA==
+-----END PUBLIC KEY-----
+''',
+# GTS Root R1 Cross
+# https://pki.goog/repo/certs/gtsr1x.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAthECix7joXebO9y/lD63
+ladAPKH9gvl9MgaCcfb2jH/76Nu8ai6Xl6OMS/kr9rH5zoQdsfnFl97vufKj6bwS
+iV6nqlKr+CMny6SxnGPb15l+8Ape62im9MZaRw1NEDPjTrETo8gYbEvs/AmQ351k
+KSUjB6G00j0uYODP0gmHu81I8E3CwnqIiru6z1kZ1q+PsAewnjHxgsHA3y6mbWwZ
+DrXYfiYaRQM9sHmklCitD38m5agI/pboPGiUU+6DOogrFZYJsuB6jC511pzrp1Zk
+j5ZPaK49l8KEj8C8QMALXL32h7M1bKwYUH+E4EzNktMg6TO8UpmvMrUpsyUqtEj5
+cuHKZPfmghCN6J3Cioj6OGaK/GP5Afl4/Xtcd/p2h/rs37EOeZVXtL0m79YB0esW
+CruOC7XFxYpVq9Os6pFLKcwZpDIlTirxZUTQAs6qzkm06p98g7BAe+dDq6dso499
+iYH6TKX/1Y7DzkvgtdizjkXPdsDtQCv9Uw+wp9U7DbGKogPeMa3Md+pvez7W35Ei
+Eua++tgy/BBjFFFy3l3WFpO9KWgz7zpm7AeKJt8T11dleCfeXkkUAKIAf5qoIbap
+sZWwpbkNFhHax2xIPEDgfg1azVY80ZcFuctL7TlLnMQ/0lUTbiSw1nH69MG6zO0b
+9f6BQdgAmD06yK56mDcYBZUCAwEAAQ==
+-----END PUBLIC KEY-----
+''',
+# GTS Y1
+# https://pki.goog/repo/certs/gtsy1.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv72WKaCDZTTnN6KC5yhi
+aDZLawHdgu2zIhpeHogZBdpibue99PU8V26a17//FpbCHzCLBxq8IDnAcIGBtOkG
+J+QfHcUow/iFccLDQrhN4YlHl4hhEAaejqXKBy3U+NN2De/rfdDB/QX+38MZnfrx
+cLudTgS8ItVbmA9kC/8wnGGrMbLvC7KhJk6aPspN8hXzmjfEHnz3Y9O64eu9QBou
+47trCZspr6bXqW/XZV/b/KiOlsprLR4pobkd4gOkrLSNMTsRcrTHh/4SCPYLR6QV
+oIZ1K2cmLhJHuxYTOy7ziG0sQmvku/Sh+GeU2Pakm3wSPubxQFDofYs8AQ2dZYfw
+YQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS Y2
+# https://pki.goog/repo/certs/gtsy2.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqB9XbHMq4soQmRpOVF9C
+snIPC2uZ3ITR0QRReBLhOY3sWwjeBctqqMcocN0zg+30c4+UVAcOdAxHjEpVakbr
+tcqfF71wrhau8o6sn+y8MrdYAtrGrYzns26KETX8NIzxJy/v31wJOQnW/WZEizes
+4JfO/1Mo3qWAiaoctsiHmL5PG8xQkdOhPNdHu6KcgO0IsJ9BCCufd9TpJMb0EnO1
+WK3WZLQdgmVny5FkEqp0Fz5TgQKekHyajnbujf1T09AGzTQgO0Btz15WL9pkMADM
+WKwYtbEurJaHrAgejMHWC7KjaqH3XlVmFMJs3rDDIQxyTRLBPqRLaiUkzxvBBnmr
 lwIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS Y3
+# https://pki.goog/repo/certs/gtsy3.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8rfkbjTwx1dixmkxk3b8dhsNCYRC
+npKv6jT9gnu5BtJlK3kG/l57HRM9E1/GwErnpBxDBnkLeee+Qb3VxGWHsw==
+-----END PUBLIC KEY-----
+''',
+# GTS Y4
+# https://pki.goog/repo/certs/gtsy4.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEqPJbOoggUvyliF5Us9hq047KDrKP
+9uViYwR13jjZCM4rgkOdciVuN0w8zuxzFnQWaY0r085HwQKAr8rGsbJYdg==
+-----END PUBLIC KEY-----
+''',
+# Google CA1
+# https://pki.goog/repo/certs/tp_googleca1.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAupYx7NU9sbeWxSISCARB
+GUNj/YKmUpoFxnM+cFwU98Qm3TWk+QkkbgWN7ScBqBHKHqwHt6OZvkhCEbV3D7C2
+iDknM8riJdR45f9mDzHUiO12AHyxqao54PrSGvIukBCxU0BO8UV8zg/ZDFUoRPL6
+4Pk9xWld9Thzlwts6Bi6CkjZ6HM5EiFiiIcOSvx8tGIHc0/ncBBjsop/ceRK6415
+ReXKpyFHEEqH42P64XrGdDYSVli0jZhUDQoHCCjZxIpAagLYM5pryVvdWBGTvH4n
+0j0uzPIM8riC+XYyHKnpW/JgargXADBQvIRwRNwEuvfvTVa4JIlPhCYwMo4qLzhx
+vQIDAQAB
+-----END PUBLIC KEY-----
+''',
+# GTS CA 1D3
+# https://pki.goog/repo/certs/tp_gtsca1d3.pem
+b'''\
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsUX4++gDvlpQYGaFi9Jm
+omOPfqAsDVJBCLMQa8Ox2vBPsdd7ZqzqiVJquTRnSWNnOJBSuzf+RDZuEZz9eS5k
+Z19DcwrRU/aIKEhPBcnui7Z//JZpHBF6ai89CXpChanZXbX6I9ylVomPI9+uuTb6
+3RUAy6++1I/FdU/G/YTVNbJHsHXyBSHm7C537EPXowAH5zQZ8t18IoLuPVBrQpDV
+KvBVMdT9Wc21fvPvrkEY+Il/6Z8NXL/kUmAMxsSsulpUBwEUKe+1haRtGMsM6DZh
+N3Tphr+AwTioLnSvaNDyqo+zfpJeXsoiwFLH+Y6YsP6R5IjVBzUoimFgeWeTSbYP
+YQIDAQAB
 -----END PUBLIC KEY-----
 '''
         ])
