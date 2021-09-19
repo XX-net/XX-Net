@@ -1,7 +1,7 @@
 
 
 
-How to to make linux allow non-root user listen on 53 port:
+How to make linux allow non-root user listen on 53 port:
 `sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python3.7`
 
 Notice:

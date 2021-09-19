@@ -57,7 +57,7 @@ config.set_var("del_smartroute", 0)
 config.set_var("all_modules", ["launcher", "gae_proxy", "x_tunnel", "smart_router"])
 config.set_var("enable_launcher", 1)
 config.set_var("enable_x_tunnel", 1)
-config.set_var("enable_gae_proxy", 1)
+config.set_var("enable_gae_proxy", 0)
 config.set_var("enable_smart_router", 1)
 
 config.set_var("os_proxy_mode", "pac") # can be: gae, x_tunnel, smart_router, disable
