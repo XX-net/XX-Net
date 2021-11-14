@@ -60,8 +60,10 @@ import socket
 import struct
 from errno import EOPNOTSUPP, EINVAL, EAGAIN
 from io import BytesIO, SEEK_CUR
-from collections import Callable
-import encodings.idna
+try:
+    from collections import Callable
+except:
+    from collections.abc import Callable
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))

@@ -10,7 +10,10 @@ import os
 import socket
 import base64
 
-from collections import Iterable, Mapping
+try:
+    from collections import Iterable, Mapping
+except:
+    from collections.abc import Iterable, Mapping
 
 from .response import HTTP11Response
 from ..tls import wrap_socket, H2C_PROTOCOL

@@ -5,12 +5,16 @@ hyper/common/headers
 
 Contains hyper's structures for storing and working with HTTP headers.
 """
-import collections
+try:
+    from collections import MutableMapping
+except:
+    from collections.abc import MutableMapping
+
 
 from hyper.common.util import to_bytestring, to_bytestring_tuple
 
 
-class HTTPHeaderMap(collections.MutableMapping):
+class HTTPHeaderMap(MutableMapping):
     """
     A structure that contains HTTP headers.
 
