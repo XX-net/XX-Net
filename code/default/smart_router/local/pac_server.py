@@ -87,4 +87,4 @@ class PacHandler(simple_http_server.HttpServerHandler):
         else:
             content = self.policy_smart_router(host)
 
-        self.send_response('text/plain', content)
+        self.send_response('application/x-ns-proxy-autoconfig', content)
