@@ -103,6 +103,13 @@ if [ $os_name = 'Linux' ]; then
         pip install pyopenssl
     fi
 elif [ $os_name = 'Darwin' ]; then
+
+  PYTHON310="python3.10.1/bin/python3.10"
+  if test -f "$PYTHON310"; then
+    echo "It is Darwin, use embedded python."
+    PYTHON="$PYTHON310"
+  fi
+
   if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
     sudo pip3 install pyOpenSSL
   fi
