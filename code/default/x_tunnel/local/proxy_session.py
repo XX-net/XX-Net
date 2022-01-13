@@ -632,6 +632,8 @@ class ProxySession(object):
                 traffic = len(upload_post_data) + len(content) + 645
                 self.traffic += traffic
                 g.quota -= traffic
+                if g.quota < 0:
+                    g.quota = 0
             except Exception as e:
                 xlog.exception("request except:%r ", e)
 
