@@ -106,17 +106,16 @@ elif [ $os_name = 'Darwin' ]; then
 
   PYTHON310="python3.10.1/bin/python3.10"
   if test -f "$PYTHON310"; then
-    echo "It is Darwin, use embedded python."
+    echo "Darwin using embedded python."
     PYTHON="$PYTHON310"
+  else
+    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
+      sudo pip3 install pyOpenSSL
+    fi
+    if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
+      sudo pip3 install -U PyObjC Pillow
+    fi
   fi
-
-  if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
-    sudo pip3 install pyOpenSSL
-  fi
-  if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
-    sudo pip3 install -U PyObjC Pillow
-  fi
-
 fi
 
 
