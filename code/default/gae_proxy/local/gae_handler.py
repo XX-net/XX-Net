@@ -67,9 +67,9 @@ import traceback
 from mimetypes import guess_type
 
 try:
-    from urllib.parse import urlparse, urljoin
+    from urllib.parse import urlparse, urljoin, urljoin
 except ImportError:
-    from urlparse import urlparse, urljoin
+    from urlparse import urlparse, urljoin, urljoin
 
 from . import check_local_network
 from .front import front
@@ -220,7 +220,7 @@ def send_response(wfile, status=404, headers={}, body=b''):
 def return_fail_message(wfile):
     html = generate_message_html(
         '504 GAEProxy Proxy Time out', '连接超时，先休息一会再来！')
-    send_response(wfile, 504, body=html.encode('utf-8'))
+    send_response(wfile, 504, body=utils.to_bytes(html))
     return
 
 
@@ -949,7 +949,7 @@ class RangeFetch2(object):
 
             response.status = response.app_status
             if response.headers.get(b'Location', None):
-                self.url = urllib.parse.urljoin(
+                self.url = urljoin(
                     self.url, response.headers.get(b'Location'))
                 xlog.warn('RangeFetch Redirect(%r) status:%s',
                           self.url, response.status)

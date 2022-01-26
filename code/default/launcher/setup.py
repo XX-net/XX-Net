@@ -7,8 +7,12 @@ import shutil
 import subprocess
 import sys
 import time
-import urllib.request, urllib.error, urllib.parse
 import zipfile
+
+try:
+    from urllib.request import build_opener, ProxyHandler
+except ImportError:
+    from urllib2 import build_opener, ProxyHandler
 
 from xlog import getLogger
 xlog = getLogger("launcher")
@@ -18,7 +22,7 @@ python_path = os.path.abspath(os.path.join(current_path, os.pardir))
 noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-opener = urllib.request.build_opener()
+opener = build_opener()
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
@@ -65,38 +69,17 @@ def get_XXNet():
     if not os.path.isdir(download_path):
         os.mkdir(download_path)
     if not download_file(readme_url, readme_targe):
-        raise "get README fail:" % readme_url
+        raise "get README fail:" + readme_url
     xxnet_url, xxnet_version = get_xxnet_url_version(readme_targe)
     xxnet_unzip_path = os.path.join(download_path, "XX-Net-%s" % xxnet_version)
     xxnet_zip_file = os.path.join(download_path, "XX-Net-%s.zip" % xxnet_version)
 
     if not download_file(xxnet_url, xxnet_zip_file):
-        raise "download xxnet zip fail:" % download_path
+        raise "download xxnet zip fail:" + download_path
 
     with zipfile.ZipFile(xxnet_zip_file, "r") as dz:
         dz.extractall(download_path)
         dz.close()
-
-
-def get_new_new_config():
-    global xxnet_unzip_path
-    import yaml
-    data_path = os.path.abspath(os.path.join(xxnet_unzip_path, 'data',
-                                             'launcher', 'config.yaml'))
-    try:
-        new_config = yaml.load(open(data_path, 'r'))
-        return new_config
-    except yaml.YAMLError as exc:
-        xlog.error(("Error in configuration file:", exc))
-
-
-def process_data_files():
-    # TODO: fix bug
-    # new_config = get_new_new_config()
-    # config.load()
-    # config.config["modules"]["gae_proxy"]["current_version"] = new_config["modules"]["gae_proxy"]["current_version"]
-    # config.config["modules"]["launcher"]["current_version"] = new_config["modules"]["launcher"]["current_version"]
-    config.save()
 
 
 def install_xxnet_files():
@@ -140,14 +123,13 @@ def install_xxnet_files():
 
 def update_environment():
     get_XXNet()
-    process_data_files()
     install_xxnet_files()
 
 
 def wait_xxnet_exit():
     def http_request(url, method="GET"):
-        proxy_handler = urllib.request.ProxyHandler({})
-        opener = urllib.request.build_opener(proxy_handler)
+        proxy_handler = ProxyHandler({})
+        opener = build_opener(proxy_handler)
         try:
             req = opener.open(url)
             return req

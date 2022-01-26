@@ -516,7 +516,6 @@ def handle_ip_proxy(sock, ip, port, client_address):
 
 def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     global fake_host
-    xlog.debug("connect to %s:%d from:%s:%d", host, port, client_address[0], client_address[1])
 
     if not fake_host and g.gae_proxy:
         fake_host = g.gae_proxy.web_control.get_fake_host()
@@ -557,16 +556,22 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
 
         if not g.domain_cache.accept_gae(host):
             rule_list.remove("gae")
-    elif g.gfwlist.in_white_list(host):
-        rule_list = ["direct", "gae", "socks", "redirect_https"]
-    elif g.gfwlist.in_block_list(host):
-        rule_list = ["gae", "socks", "redirect_https", "direct"]
-    else:
-        ips = g.dns_query.query_recursively(host, 1)
-        if g.ip_region.check_ips(ips):
-            rule_list = ["direct", "socks", "redirect_https"]
-        else:
+    elif g.config.country_code == "CN":
+        if g.gfwlist.in_white_list(host):
             rule_list = ["direct", "gae", "socks", "redirect_https"]
+        elif g.gfwlist.in_block_list(host):
+            if g.config.pac_policy == "black_X-Tunnel":
+                rule_list = ["socks", "redirect_https", "direct", "gae"]
+            else:
+                rule_list = ["gae", "socks", "redirect_https", "direct"]
+        else:
+            ips = g.dns_query.query_recursively(host, 1)
+            if g.ip_region.check_ips(ips):
+                rule_list = ["direct", "socks", "redirect_https"]
+            else:
+                rule_list = ["direct", "gae", "socks", "redirect_https"]
+    else:
+        rule_list = ["direct", "socks", "gae", "redirect_https"]
 
     # check config.
     if not g.config.auto_direct:
@@ -584,4 +589,6 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         except:
             pass
 
+    xlog.debug("connect to %s:%d from:%s:%d, rule:%s", host, port, client_address[0], client_address[1],
+               utils.to_str(rule_list))
     try_loop("domain", rule_list, sock, host, port, client_address, left_buf)

@@ -47,8 +47,8 @@ msgstr "中国"
 msgid "Other"
 msgstr "其他"
 
-msgid "PAC Policy"
-msgstr "PAC 策略"
+msgid "Route Policy"
+msgstr "路由策略"
 
 msgid "Black->GAEProxy"
 msgstr "黑名单->GAEProxy"
