@@ -135,7 +135,7 @@ class ConnectPool():
             pool = sorted(list(self.pool.items()), key=operator.itemgetter(1))
             i = 0
             for item in pool:
-                sock,t = item
+                sock, t = item
                 out_str += "%d \t %s handshake:%d not_active_time:%d \r\n" % (i, sock.ip_str, t, time.time() - sock.last_use_time)
                 i += 1
         finally:
@@ -263,11 +263,11 @@ class ConnectManager(object):
             ip_str = self.ip_manager.get_ip()
             if not ip_str:
                 with self.no_ip_lock:
-                    self.logger.warning("not enough ip")
+                    # self.logger.warning("not enough ip")
                     time.sleep(10)
                 return
 
-            #self.logger.debug("create ssl conn %s", ip_str)
+            # self.logger.debug("create ssl conn %s", ip_str)
             ssl_sock = self._create_ssl_connection(ip_str)
             if not ssl_sock:
                 time.sleep(1)
@@ -280,8 +280,7 @@ class ConnectManager(object):
 
     def _create_ssl_connection(self, ip_str):
         try:
-            ssl_sock = self.connect_creator.connect_ssl(ip_str,
-                                                        close_cb=self.ip_manager.ssl_closed)
+            ssl_sock = self.connect_creator.connect_ssl(ip_str, close_cb=self.ip_manager.ssl_closed)
 
             self.ip_manager.update_ip(ip_str, ssl_sock.handshake_time)
             self.logger.debug("create_ssl update ip:%s time:%d h2:%d sni:%s, host:%s",

@@ -30,10 +30,13 @@ def ignore_missing():
 
 if is_py2:
     if is_py2_7_9_or_later:
-        pass
+        import ssl
     else:
         ssl = ssl_compat
 
+    from urllib import urlencode
+    from urlparse import urlparse, urlsplit
+    from itertools import imap
 
     def to_byte(char):
         return ord(char)
@@ -54,7 +57,7 @@ if is_py2:
     bytes = str
 
 elif is_py3:
-
+    from urllib.parse import urlparse, urlsplit
     imap = map
 
     def to_byte(char):

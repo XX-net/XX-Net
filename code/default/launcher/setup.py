@@ -87,7 +87,7 @@ def get_new_new_config():
         new_config = yaml.load(open(data_path, 'r'))
         return new_config
     except yaml.YAMLError as exc:
-        print(("Error in configuration file:", exc))
+        xlog.error(("Error in configuration file:", exc))
 
 
 def process_data_files():

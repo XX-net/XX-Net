@@ -1,4 +1,4 @@
-
+import sys
 import queue
 import threading
 import socket
@@ -9,6 +9,7 @@ from .http_common import *
 
 
 from hyper.common.bufsocket import BufferedSocket
+from hyper.common.exceptions import ConnectionResetError
 
 from hyper.packages.hyperframe.frame import (
     FRAMES, DataFrame, HeadersFrame, PushPromiseFrame, RstStreamFrame,
@@ -320,12 +321,12 @@ class Http2Worker(HttpWorker):
                                   time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)
             return
-        except BlockingIOError as e:
-            # This error happened on upload large file or speed test
-            # Just ignore this error and will be fine
-            # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-            return
         except Exception as e:
+            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
+                # This error happened on upload large file or speed test
+                # Just ignore this error and will be fine
+                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
+                pass
             if self.keep_running:
                 self.logger.exception("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e, time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)

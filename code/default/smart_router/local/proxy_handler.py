@@ -1,8 +1,12 @@
 import time
 import socket
 import struct
-import urllib.parse
 import select
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 from . import pac_server
 from . import global_var as g
@@ -325,7 +329,7 @@ class ProxyServer():
             return
 
         if url.lower().startswith(b"http://"):
-            o = urllib.parse.urlparse(url)
+            o = urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
             url_prex_len = url[7:].find(b"/")

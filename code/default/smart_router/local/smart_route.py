@@ -1,9 +1,13 @@
 import time
 import socket
 import struct
-import urllib.parse
 import io
 import ssl
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import utils
 import simple_http_server
@@ -175,7 +179,8 @@ def get_sni(sock, left_buf=b""):
     else:
         raise SniNotExist
 
-    if method not in g.gae_proxy.proxy_handler.GAEProxyHandler.gae_support_methods:
+    support_methods = tuple([b"GET", b"POST", b"HEAD", b"PUT", b"DELETE", b"PATCH"])
+    if method not in support_methods:
         raise SniNotExist
 
     n2 = leaddata.find(b"\r\n\r\n", n1)
@@ -288,6 +293,9 @@ def do_unwrap_socks(sock, host, port, client_address, req, left_buf=b""):
 
 
 def do_gae(sock, host, port, client_address, left_buf=""):
+    if not g.gae_proxy:
+        raise DontFakeCA()
+
     sock.setblocking(1)
     if left_buf:
         schema = b"http"
@@ -339,7 +347,7 @@ def do_gae(sock, host, port, client_address, left_buf=""):
         xlog.debug("gae %s %s, method not supported", req.command, req.path)
         raise NotSupported(req, sock)
 
-    req.parsed_url = urllib.parse.urlparse(req.path)
+    req.parsed_url = urlparse(req.path)
     req.do_METHOD()
 
 
@@ -371,7 +379,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 ips = g.dns_query.query(host, query_type)
 
                 do_direct(sock, host, ips, port, client_address, left_buf)
-                xlog.info("%s %s:%d direct", scense, host, port)
+                xlog.info("%s %s:%d forward to direct", scense, host, port)
                 return
 
             elif rule == "direct6":
@@ -382,12 +390,12 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 if not ips:
                     continue
                 do_direct(sock, host, ips, port, client_address, left_buf)
-                xlog.info("%s %s:%d direct6", scense, host, port)
+                xlog.info("%s %s:%d forward to direct6", scense, host, port)
                 return
 
             elif rule == "gae":
                 if not is_gae_workable() and host != fake_host:
-                    xlog.debug("%s gae host:%s:%d, but gae not work", scense, host, port)
+                    # xlog.debug("%s gae host:%s:%d, but gae not work", scense, host, port)
                     continue
 
                 if not g.domain_cache.accept_gae(host):
@@ -431,7 +439,10 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     return
 
             elif rule == "socks":
-                xlog.info("%s %s:%d socks", scense, host, port)
+                if not g.x_tunnel or not g.x_tunnel.proxy_session.login_process():
+                    continue
+
+                xlog.info("%s %s:%d forward to socks", scense, host, port)
                 do_socks(sock, host, port, client_address, left_buf)
                 return
             elif rule == "black":

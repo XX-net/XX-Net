@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import urllib.parse
 import os
-import cgi
+
+try:
+    from urllib.parse import urlparse, parse_qs
+except ImportError:
+    from urlparse import urlparse, parse_qs
 
 from xlog import getLogger
 xlog = getLogger("smart_router")
@@ -27,7 +30,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile = wfile
 
     def do_GET(self):
-        path = urllib.parse.urlparse(self.path).path
+        path = urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/status":
@@ -38,7 +41,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
     def do_POST(self):
         xlog.debug('Web_control %s %s %s ', self.address_string(), self.command, self.path)
 
-        path = urllib.parse.urlparse(self.path).path
+        path = urlparse(self.path).path
         if path == '/rules':
             return self.req_rules_handler()
         elif path == "/cache":
@@ -50,8 +53,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.send_not_found()
 
     def req_log_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs["cmd"]:

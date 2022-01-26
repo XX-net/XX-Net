@@ -1,8 +1,12 @@
 import time
 import socket
 import struct
-import urllib.parse
 import select
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import utils
 from xlog import getLogger
@@ -336,7 +340,7 @@ class Socks5Server():
         #    xlog.warn("https req method not known:%s", method)
 
         if url.startswith(b"http://") or url.startswith(b"HTTP://"):
-            o = urllib.parse.urlparse(url)
+            o = urlparse(url)
             host, port = netloc_to_host_port(o.netloc)
 
             p = url[7:].find(b"/")

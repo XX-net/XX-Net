@@ -54,7 +54,7 @@ def request(method, host, schema="https", path="/", headers={}, data="", timeout
     # use http to avoid cert fail
     url = b"%s://%s%s" % (schema, host, path)
     if data:
-        headers[b"Content-Length"] = bytes(str(len(data)), encoding='ascii')
+        headers[b"Content-Length"] = utils.to_bytes(str(len(data)))
 
     # xlog.debug("gae_proxy %s %s", method, url)
     try:

@@ -1,6 +1,10 @@
 
 import select
-import urllib.parse
+try:
+    from urllib.parse import urlparse, urlsplit
+except ImportError:
+    from urlparse import urlparse, urlsplit
+
 import socket
 import http.client
 import time
@@ -207,7 +211,7 @@ class Response(BaseResponse):
             self.chunk_list = []
 
         if b"gzip" in self.getheader(b"Transfer-Encoding", b""):
-            print("not work")
+            print("gzip not work")
 
     def _read_plain(self, read_len, timeout):
         if read_len == 0:
@@ -354,7 +358,7 @@ class Client(object):
         self.tls = None
 
         if isinstance(proxy, str):
-            proxy_sp = urllib.parse.urlsplit(proxy)
+            proxy_sp = urlparse.urlsplit(proxy)
 
             self.proxy = {
                 "type": proxy_sp.scheme,
@@ -447,7 +451,7 @@ class Client(object):
         method = utils.to_bytes(method)
         url = utils.to_bytes(url)
 
-        upl = urllib.parse.urlsplit(url)
+        upl = urlsplit(url)
         headers[b"Content-Length"] = str(len(body))
         headers[b"Host"] = upl.netloc
         port = upl.port

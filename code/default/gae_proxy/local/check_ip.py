@@ -59,9 +59,14 @@ class CheckIp(front_base.check_ip.CheckIp):
 
         try:
             content = response.read()
-        except ConnectionResetError:
-            return False
         except Exception as e:
+            if sys.version_info[0] == 3 and (
+                    isinstance(e, ConnectionError) or
+                    isinstance(e, ConnectionResetError) or
+                    isinstance(e, BrokenPipeError)
+            ):
+                return False
+
             self.logger.warn("app check except:%r", e)
             return False
 
@@ -156,7 +161,7 @@ if __name__ == "__main__":
     else:
         ip = "142.250.66.180"
 
-    print(("test ip:%s" % ip))
+    xlog.info(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
@@ -182,8 +187,8 @@ if __name__ == "__main__":
 
     res = check_ip.check_ip(ip, host=top_domain, wait_time=wait_time)
     if not res:
-        print("connect fail")
+        xlog.info("connect fail")
     elif res.ok:
-        print(("success, domain:%s handshake:%d" % (res.host, res.handshake_time)))
+        xlog.info(("success, domain:%s handshake:%d" % (res.host, res.handshake_time)))
     else:
-        print("not support")
+        xlog.info("not support")

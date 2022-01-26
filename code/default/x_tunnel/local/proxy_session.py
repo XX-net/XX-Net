@@ -309,10 +309,8 @@ class ProxySession(object):
                                                bytes(self.session_id),
                                                g.config.max_payload, g.config.send_delay, g.config.windows_size,
                                                int(g.config.windows_ack), g.config.resend_timeout, g.config.ack_delay)
-                upload_data_head += struct.pack("<H", len(g.config.login_account)) + bytes(g.config.login_account,
-                                                                                           encoding='iso-8859-1')
-                upload_data_head += struct.pack("<H", len(g.config.login_password)) + bytes(g.config.login_password,
-                                                                                            encoding='iso-8859-1')
+                upload_data_head += struct.pack("<H", len(g.config.login_account)) + utils.to_bytes(g.config.login_account)
+                upload_data_head += struct.pack("<H", len(g.config.login_password)) + utils.to_bytes(g.config.login_password)
 
                 upload_post_data = encrypt_data(upload_data_head)
 

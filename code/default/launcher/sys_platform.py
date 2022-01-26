@@ -75,7 +75,7 @@ elif sys.platform == "darwin":
         xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
         from non_tray import sys_tray
 else:
-    print(("detect platform fail:%s" % sys.platform))
+    xlog.warn(("detect platform fail:%s" % sys.platform))
     from non_tray import sys_tray
     has_desktop = False
     platform_lib = ""

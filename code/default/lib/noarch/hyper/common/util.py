@@ -8,14 +8,16 @@ General utility functions for use with hyper.
 from hyper.compat import str, bytes, imap
 from ..packages.rfc3986.uri import URIReference
 from ..compat import is_py3
-import re
+from six import string_types
 
 
 def to_bytestring(element):
     """
     Converts a single string to a bytestring, encoding via UTF-8 if needed.
     """
-    if isinstance(element, str):
+    if isinstance(element, bytes):
+        return element
+    if isinstance(element, string_types):
         return element.encode('utf-8')
     elif isinstance(element, bytes):
         return element

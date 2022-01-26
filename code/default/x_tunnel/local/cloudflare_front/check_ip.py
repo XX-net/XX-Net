@@ -130,8 +130,9 @@ if __name__ == "__main__":
     # case 4: domain
     # case 5: domain sni
 
-    ip = "141.101.120.131"
-    host = "v3.freena.cf"
+    # ip = "141.101.120.131"
+    ip = "162.159.217.3"
+    host = "v3.pc-nvme.shop"
     sni = host
 
     args = list(sys.argv[1:])
@@ -176,4 +177,3 @@ if __name__ == "__main__":
 
     front.stop()
     sys.exit(0)
-    exit(0)

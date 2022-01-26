@@ -5,7 +5,10 @@ import os
 import struct
 import sys
 import socket
-
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, "launcher"))
@@ -236,15 +239,12 @@ class UpdateIpRange(object):
 
     def download_apnic(self, fn):
         import subprocess
-        import sys
-        import urllib.request, urllib.error, urllib.parse
         url = 'https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
         try:
             data = subprocess.check_output(['wget', url, '-O-'])
         except (OSError, AttributeError):
-            print("Fetching data from apnic.net, "
-                                 "it might take a few minutes, please wait...", file=sys.stderr)
-            data = urllib.request.urlopen(url).read()
+            xlog.info("Fetching data from apnic.net, it might take a few minutes, please wait...")
+            data = urlopen(url).read()
 
         with open(fn, "bw") as f:
             f.write(data)
@@ -267,5 +267,5 @@ class UpdateIpRange(object):
 if __name__ == '__main__':
     up = UpdateIpRange()
     ipr = IpRegion()
-    print((ipr.check_ip("8.8.8.8")))
-    print((ipr.check_ip("114.111.114.114")))
+    xlog.info((ipr.check_ip("8.8.8.8")))
+    xlog.info((ipr.check_ip("114.111.114.114")))

@@ -7,7 +7,7 @@ data
 *.mo
 *.xpi
 *pybabel_update.sh
-
+core
 .DS_Store
 desktop.ini
 /SwitchyOmega/AutoProxy.xpi

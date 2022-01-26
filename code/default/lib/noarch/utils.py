@@ -5,6 +5,7 @@ import re
 import os
 import threading
 from functools import reduce
+from six import string_types
 
 ipv4_pattern = re.compile(br'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$')
 
@@ -77,7 +78,7 @@ def get_ip_port(ip_str, port=443):
             # format is ip
             ip = ip_str
     else:
-        #ipv6
+        # ipv6
         if b"[" in ip_str:
             # format: [ab01:12:23:34::1]
             # format: [ab01:12:23:34::1]:23
@@ -291,7 +292,7 @@ def map_with_parameter(function, datas, args):
 def to_bytes(data, coding='utf-8'):
     if isinstance(data, bytes):
         return data
-    if isinstance(data, str):
+    if isinstance(data, string_types):
         return data.encode(coding)
     if isinstance(data, dict):
         return dict(map_with_parameter(to_bytes, data.items(), coding))
@@ -307,7 +308,7 @@ def to_bytes(data, coding='utf-8'):
 
 
 def to_str(data, coding='utf-8'):
-    if isinstance(data, str):
+    if isinstance(data, string_types):
         return data
     if isinstance(data, bytes):
         return data.decode(coding)

@@ -11,17 +11,22 @@ import platform
 import uuid
 from distutils.version import LooseVersion
 
-from xlog import getLogger
-xlog = getLogger("launcher")
-from config import config
-import update_from_github
-import urllib.request, urllib.error, urllib.parse
-import utils
+try:
+    from urllib.request import build_opener, HTTPSHandler, ProxyHandler
+except ImportError:
+    from urllib2 import build_opener, HTTPSHandler, ProxyHandler
 
 try:
     reduce         # Python 2
 except NameError:  # Python 3
     from functools import reduce
+
+import utils
+from xlog import getLogger
+xlog = getLogger("launcher")
+from config import config
+import update_from_github
+
 
 update_url = "https://xxnet-update.appspot.com/update.json"
 
@@ -36,20 +41,20 @@ data_root = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'
 
 
 def get_opener():
-    autoproxy = '127.0.0.1:8087'
+    autoproxy = '127.0.0.1:8086'
 
-    import ssl
-    if getattr(ssl, "create_default_context", None):
-        cafile = os.path.join(data_root, "gae_proxy", "CA.crt")
-        if not os.path.isfile(cafile):
-            cafile = None
-        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
-                                             cafile=cafile)
-        https_handler = urllib.request.HTTPSHandler(context=context)
-
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
-    else:
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({'http': autoproxy, 'https': autoproxy}))
+    # import ssl
+    # if getattr(ssl, "create_default_context", None):
+    #     cafile = os.path.join(data_root, "gae_proxy", "CA.crt")
+    #     if not os.path.isfile(cafile):
+    #         cafile = None
+    #     context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+    #                                          cafile=cafile)
+    #     https_handler = HTTPSHandler(context=context)
+    #
+    #     opener = build_opener(ProxyHandler({'http': autoproxy, 'https': autoproxy}), https_handler)
+    # else:
+    opener = build_opener(ProxyHandler({'http': autoproxy, 'https': autoproxy}))
     return opener
 
 
@@ -237,7 +242,7 @@ def check_update():
         if update_from_github.update_info == "dont-check":
             return
 
-        check_push_update()
+        # check_push_update()  # server broken
 
         update_rule = config.check_update
         if update_rule not in ("stable", "notice-stable", "test", "notice-test"):
@@ -265,7 +270,7 @@ def check_update():
                     xlog.info("update to stable version %s", stable_version)
                     update_from_github.update_version(stable_version)
     except IOError as e:
-        xlog.warn("check update fail:%r", e)
+        xlog.exception("check update fail:%r", e)
     except Exception as e:
         xlog.exception("check_update fail:%r", e)
     finally:
@@ -282,9 +287,10 @@ def check_push_update():
                   + "&version=" + update_from_github.current_version() \
                   + "&platform=" + platform.platform()
         try:
-            update_content = opener.open(req_url).read()
+            res = opener.open(req_url)
+            update_content = res.read()
         except Exception as e:
-            xlog.exception("check_update fail:%r", e)
+            xlog.exception("check_update get content fail:%r", e)
             return False
 
         update_dict = json.loads(utils.to_str(update_content))

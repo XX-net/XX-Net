@@ -1,8 +1,7 @@
 import threading
 import select
 import time
-import ssl
-import socket
+import sys
 
 import utils
 
@@ -54,7 +53,7 @@ class PipeSocks(object):
 
     def add_socks(self, s1, s2):
         for s in [s1, s2]:
-            if s._sock._closed:
+            if hasattr(s._sock, "socket_closed") and s._sock.socket_closed:
                 xlog.warn("try to add_socks closed socket:%s %s", s1, s2)
                 s1.close()
                 s2.close()
@@ -196,9 +195,12 @@ class PipeSocks(object):
                             sended = 0
                             sended = s2.send(d)
                             # xlog.debug("direct send %d to %s from:%s", sended, s2, s1)
-                        except BlockingIOError as e:
-                            pass
                         except Exception as e:
+                            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
+                                # This error happened on upload large file or speed test
+                                # Just ignore this error and will be fine
+                                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
+                                pass
                             self.close(s2, "w")
                             continue
 
@@ -235,9 +237,12 @@ class PipeSocks(object):
                         try:
                             sended = 0
                             sended = s1.send(dat)
-                        except BlockingIOError as e:
-                            pass
                         except Exception as e:
+                            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
+                                # This error happened on upload large file or speed test
+                                # Just ignore this error and will be fine
+                                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
+                                pass
                             self.close(s1, "w")
                             break
 
@@ -260,7 +265,7 @@ class PipeSocks(object):
             except Exception as e:
                 xlog.exception("pipe except:%r", e)
                 for s in list(self.error_set):
-                    if s._sock._closed:
+                    if hasattr(s._sock, "socket_closed") and s._sock.socket_closed:
                         xlog.warn("socket %s is closed", s)
                         self.close(s, "e")
 

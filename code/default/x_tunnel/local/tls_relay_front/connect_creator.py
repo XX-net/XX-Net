@@ -35,14 +35,6 @@ class ConnectCreator(ConnectCreatorBase):
         sock.settimeout(self.timeout)
 
         time_begin = time.time()
-        ip_port = (ip, port)
-        try:
-            sock.connect(ip_port)
-        except Exception as e:
-            raise socket.error('conn fail, sni:%s, top:%s e:%r' % (sni, host, e))
-
-        time_connected = time.time()
-
         if info["client_ca"]:
             #self.openssl_context.context.use_certificate_file(info["client_ca_fn"])
             #self.openssl_context.set_ca(info["client_ca_fn"])
@@ -52,9 +44,9 @@ class ConnectCreator(ConnectCreatorBase):
 
         ssl_sock = front_base.openssl_wrap.SSLConnection(self.openssl_context.context, sock,
                                                          ip_str=ip_str,
-                                                         server_hostname=sni,
+                                                         sni=sni,
                                                          on_close=close_cb)
-
+        time_connected = time.time()
         try:
             ssl_sock.do_handshake()
         except Exception as e:

@@ -334,12 +334,12 @@ class DnsOverTcpQuery():
 
 class DnsOverTlsQuery(DnsOverTcpQuery):
     def __init__(self, server_list=[b"1.1.1.1", b"9.9.9.9"]):
-        super(DnsOverTlsQuery, self).__init__(server_list=server_list, port=853)
+        DnsOverTcpQuery.__init__(self, server_list=server_list, port=853)
         self.protocol = "DoT"
 
     def get_connection(self):
         try:
-            s = super(DnsOverTlsQuery, self).get_connection()
+            s = DnsOverTcpQuery.get_connection(self)
             if isinstance(s, ssl.SSLSocket):
                 return s
 

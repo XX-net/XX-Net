@@ -2,10 +2,15 @@
 import socket
 import struct
 import time
+import sys
+import OpenSSL
+SSLError = OpenSSL.SSL.WantReadError
 
 import socks
 import utils
 from . import openssl_wrap
+from subj_alt_name import SubjectAltName
+from pyasn1.codec.der import decoder as der_decoder
 
 
 class ConnectCreator(object):
@@ -53,16 +58,14 @@ class ConnectCreator(object):
 
         host = str(host)
         if isinstance(sni, str):
-            sni = bytes(sni, encoding='ascii')
+            sni = utils.to_bytes(sni)
 
         if self.debug:
             self.logger.debug("sni:%s", sni)
 
         ip, port = utils.get_ip_port(ip_str)
         if isinstance(ip, str):
-            ip = bytes(ip, encoding='ascii')
-
-        ip_port = (utils.to_str(ip), port)
+            ip = utils.to_bytes(ip)
 
         if int(self.config.PROXY_ENABLE):
             sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
@@ -82,14 +85,9 @@ class ConnectCreator(object):
         sock.settimeout(self.timeout)
 
         time_begin = time.time()
-        try:
-            sock.connect(ip_port)
-        except Exception as e:
-            raise socket.error('conn fail, sni:%s, top:%s e:%r' % (sni, host, e))
-
         ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock,
                                               ip_str=ip_str,
-                                              server_hostname=sni,
+                                              sni=sni,
                                               on_close=close_cb)
 
         ssl_sock.sni = utils.to_str(sni)
@@ -107,7 +105,7 @@ class ConnectCreator(object):
             ssl_sock.h2 = True
         else:
             try:
-                if ssl_sock.selected_alpn_protocol() == "h2" or ssl_sock.selected_npn_protocol() == "h2":
+                if ssl_sock.is_support_h2():
                     ssl_sock.h2 = True
                 else:
                     ssl_sock.h2 = False
@@ -132,20 +130,113 @@ class ConnectCreator(object):
         return ssl_sock
 
     def check_cert(self, ssl_sock):
-        try:
-            peer_cert = ssl_sock.get_cert()
+        if sys.version_info[0] == 3:
+            try:
+                peer_cert = ssl_sock.get_cert()
+                if self.debug:
+                    self.logger.debug("cert:%r", peer_cert)
+
+                if self.config.check_commonname:
+                    if not peer_cert["issuer_commonname"].startswith(self.config.check_commonname):
+                        raise socket.error(' certificate is issued by %r' % (peer_cert["issuer_commonname"]))
+
+                if isinstance(self.config.check_sni, str):
+                    if self.config.check_sni not in peer_cert["altName"]:
+                        raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
+                elif self.config.check_sni:
+                    if not ssl_sock.sni.endswith(peer_cert["altName"]):
+                        raise socket.error('check sni:%s fail, alt_names:%s' % (ssl_sock.sni, peer_cert["altName"]))
+            except Exception as e:
+                self.logger.exception("check_cert %r", e)
+        else:
+
+            cert_chain = ssl_sock.get_peer_cert_chain()
+            if not cert_chain:
+                raise socket.error('certificate is none, sni:%s' % ssl_sock.sni)
+
+            if len(cert_chain) < self.config.min_intermediate_CA:
+                raise socket.error('No intermediate CA was found.')
+
+            if self.config.check_pkp and hasattr(OpenSSL.crypto, "dump_publickey"):
+                # old OpenSSL not support this function.
+                pub_key = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM,
+                                                        cert_chain[1].get_pubkey())
+                if pub_key not in self.config.CHECK_PKP:
+                    # google_ip.report_connect_fail(ip, force_remove=True)
+                    raise socket.error('The intermediate CA is mismatching.')
+            self.get_ssl_cert_domain(ssl_sock)
+            issuer_commonname = next((v for k, v in cert_chain[0].get_issuer().get_components() if k == 'CN'), '')
             if self.debug:
-                self.logger.debug("cert:%r", peer_cert)
+                for cert in cert_chain:
+                    for k, v in cert.get_issuer().get_components():
+                        if k != "CN":
+                            continue
+                        cn = v
+                        self.logger.debug("cn:%s", cn)
 
-            if self.config.check_commonname:
-                if not peer_cert["issuer_commonname"].startswith(self.config.check_commonname):
-                    raise socket.error(' certificate is issued by %r' % (peer_cert["issuer_commonname"]))
+                self.logger.debug("issued by:%s", issuer_commonname)
+                self.logger.debug("Common Name:%s", ssl_sock.domain)
 
-            if isinstance(self.config.check_sni, str):
-                if self.config.check_sni not in peer_cert["altName"]:
-                    raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
-            elif self.config.check_sni:
-                if not ssl_sock.sni.endswith(peer_cert["altName"]):
-                    raise socket.error('check sni:%s fail, alt_names:%s' % (ssl_sock.sni, peer_cert["altName"]))
-        except Exception as e:
-            self.logger.exception("check_cert %r", e)
+            if self.config.check_commonname and not issuer_commonname.startswith(self.config.check_commonname):
+                raise socket.error(' certificate is issued by %r' % (issuer_commonname))
+
+            cert = ssl_sock.get_peer_certificate()
+            if not cert:
+                raise socket.error('certificate is none')
+
+            if self.config.check_sni:
+                # get_subj_alt_name cost near 100ms. be careful.
+                try:
+                    alt_names = ConnectCreator.get_subj_alt_name(cert)
+                except Exception as e:
+                    # self.logger.warn("get_subj_alt_name fail:%r", e)
+                    alt_names = [""]
+
+                if self.debug:
+                    self.logger.debug('alt names: "%s"', '", "'.join(alt_names))
+
+                if isinstance(self.config.check_sni, str):
+                    if self.config.check_sni not in alt_names:
+                        raise socket.error('check sni fail, alt_names:%s' % (alt_names))
+                else:
+                    alt_names = tuple(alt_names)
+                    if not ssl_sock.sni.endswith(alt_names):
+                        raise socket.error('check sni:%s fail, alt_names:%s' % (ssl_sock.sni, alt_names))
+
+    def get_ssl_cert_domain(self, ssl_sock):
+        cert = ssl_sock.get_peer_certificate()
+        if not cert:
+            raise SSLError("no cert")
+
+        ssl_cert = openssl_wrap.SSLCert(cert)
+        ssl_sock.domain = ssl_cert.cn
+
+    @staticmethod
+    def get_subj_alt_name(peer_cert):
+        '''
+        Copied from ndg.httpsclient.ssl_peer_verification.ServerSSLCertVerification
+        Extract subjectAltName DNS name settings from certificate extensions
+        @param peer_cert: peer certificate in SSL connection.  subjectAltName
+        settings if any will be extracted from this
+        @type peer_cert: OpenSSL.crypto.X509
+        '''
+        # Search through extensions
+        dns_name = []
+        general_names = SubjectAltName()
+        for i in range(peer_cert.get_extension_count()):
+            ext = peer_cert.get_extension(i)
+            ext_name = ext.get_short_name()
+            if ext_name == "subjectAltName":
+                # PyOpenSSL returns extension data in ASN.1 encoded form
+                ext_dat = ext.get_data()
+                decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
+
+                for name in decoded_dat:
+                    if isinstance(name, SubjectAltName):
+                        for entry in range(len(name)):
+                            component = name.getComponentByPosition(entry)
+                            n = str(component.getComponent())
+                            if n.startswith("*"):
+                                continue
+                            dns_name.append(n)
+        return dns_name

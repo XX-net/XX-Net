@@ -5,6 +5,7 @@ import sys
 
 import utils
 
+
 class SimpleI18N:
     def __init__(self, lang=None):
         if lang:
@@ -55,9 +56,10 @@ class SimpleI18N:
 
     def po_loader(self, file):
         po_dict = {}
-        fp = open(file, "br")
+        fp = open(file, "r")
         while True:
             line = fp.readline()
+            line = utils.to_bytes(line)
             if not line:
                 break
 
@@ -72,6 +74,7 @@ class SimpleI18N:
                 value = b""
                 while True:
                     line = fp.readline()
+                    line = utils.to_bytes(line)
                     if not line:
                         break
 
@@ -85,6 +88,7 @@ class SimpleI18N:
 
                 while True:
                     line = fp.readline()
+                    line = utils.to_bytes(line)
                     if not line:
                         break
 
@@ -101,8 +105,8 @@ class SimpleI18N:
         return po_dict
 
     def _render(self, po_dict, file):
-        fp = open(file, "br")
-        content = fp.read()
+        fp = open(file, "r")
+        content = utils.to_bytes(fp.read())
 
         out_arr = []
 
@@ -114,26 +118,26 @@ class SimpleI18N:
 
             ep = content.find(b"}}", bp)
             if ep == -1:
-                print((content[bp:]))
+                # print((content[bp:]))
                 break
 
             b1p = content.find(b"_(", bp, ep)
             if b1p == -1:
-                print((content[bp:]))
+                # print((content[bp:]))
                 continue
             b2p = content.find(b"\"", b1p + 2, b1p + 4)
             if b2p == -1:
-                print((content[bp:]))
+                # print((content[bp:]))
                 continue
 
             e1p = content.find(b")", ep - 2, ep)
             if e1p == -1:
-                print((content[bp:]))
+                # print((content[bp:]))
                 continue
 
             e2p = content.find(b"\"", e1p - 2, e1p)
             if e2p == -1:
-                print((content[bp:]))
+                # print((content[bp:]))
                 continue
 
             out_arr.append(content[cp:bp])

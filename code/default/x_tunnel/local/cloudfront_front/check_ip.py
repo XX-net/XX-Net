@@ -118,7 +118,7 @@ if __name__ == "__main__":
             host = sys.argv[1]
     else:
         ip = default_ip
-        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+        xlog.info("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     xlog.info("test ip:%s", ip)
 
     if len(sys.argv) > 2:

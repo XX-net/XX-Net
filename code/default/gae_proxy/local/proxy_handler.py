@@ -38,21 +38,24 @@ What GAE mode:
 import errno
 import socket
 import ssl
-import urllib.parse
 import OpenSSL
 NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
 
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 import simple_http_client
 import simple_http_server
-from .cert_util import CertUtil
-from . import gae_handler
-from . import direct_handler
-from . import web_control
+from gae_proxy.local.cert_util import CertUtil
+from gae_proxy.local import gae_handler
+from gae_proxy.local import direct_handler
+from gae_proxy.local import web_control
 import utils
-from .front import front
+from gae_proxy.local.front import front
 
 
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
@@ -154,7 +157,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
                     or s.startswith(b'10.') \
                     or s.startswith(b'169.254.') \
                     or s in self.local_names:
-                print(s)
+                # xlog.debug(s)
                 return True
 
         return False
@@ -225,7 +228,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
             self.url = b'%s://%s%s' % (schema, host, self.path)
         else:
             self.url = self.path
-            self.parsed_url = urllib.parse.urlparse(self.path)
+            self.parsed_url = urlparse(self.path)
             self.host = self.parsed_url[1]
             if len(self.parsed_url[4]):
                 self.path = b'?'.join([self.parsed_url[2], self.parsed_url[4]])

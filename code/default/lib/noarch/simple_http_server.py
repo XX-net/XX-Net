@@ -1,5 +1,4 @@
 import os
-import urllib.parse
 import datetime
 import threading
 from http import client
@@ -12,7 +11,16 @@ import json
 import base64
 import hashlib
 import struct
-import cgi
+
+try:
+    from urllib.parse import urlparse, urlencode, parse_qs
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
+except ImportError:
+    from urlparse import urlparse, parse_qs
+    from urllib import urlencode
+    from urllib2 import urlopen, Request, HTTPError
+    import mimetools
 
 import xlog
 import utils
@@ -41,22 +49,22 @@ class HttpServerHandler():
 
     MessageClass = client.HTTPMessage
 
-    rbufsize = 32*1024
-    wbufsize = 32*1024
+    rbufsize = 32 * 1024
+    wbufsize = 32 * 1024
 
     def __init__(self, sock, client, args, logger=None):
         self.connection = sock
         sock.setblocking(1)
         sock.settimeout(60)
-        self.rfile = self.connection.makefile(mode='rb', buffering=self.rbufsize)
-        self.wfile = self.connection.makefile(mode='wb', buffering=self.wbufsize)
+        self.rfile = self.connection.makefile('rb', self.rbufsize)
+        self.wfile = self.connection.makefile('wb', self.wbufsize)
         self.client_address = client
         self.args = args
         if logger:
             self.logger = logger
         else:
             self.logger = xlog.getLogger("simple_http_server")
-        #self.logger.debug("new connect from:%s", self.address_string())
+        # self.logger.debug("new connect from:%s", self.address_string())
 
         self.setup()
 
@@ -70,7 +78,7 @@ class HttpServerHandler():
             pass
 
     def handle(self):
-        #self.logger.info('Connected from %r', self.client_address)
+        # self.logger.info('Connected from %r', self.client_address)
         while True:
             try:
                 self.close_connection = 1
@@ -82,7 +90,7 @@ class HttpServerHandler():
             if self.close_connection:
                 break
         self.connection.close()
-        #self.logger.debug("closed from %s:%d", self.client_address[0], self.client_address[1])
+        # self.logger.debug("closed from %s:%d", self.client_address[0], self.client_address[1])
 
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
@@ -144,10 +152,17 @@ class HttpServerHandler():
             raise ParseReqFail("Req command format fail:%s" % requestline)
         self.command, self.path, self.request_version = command, path, version
 
-        # Examine the headers and look for a Connection directive
-        headers = client.parse_headers(self.rfile, _class=self.MessageClass)
-        self.headers = dict(map(utils.to_bytes, headers.items()))
-        #email.message_from_file(self.rfile)
+        # Parse HTTP headers
+        if sys.version_info[0] == 3:
+            headers = client.parse_headers(self.rfile, _class=self.MessageClass)
+            self.headers = dict(map(utils.to_bytes, headers.items()))
+        else:
+            self.headers = {}
+            headers = mimetools.Message(self.rfile, 0)
+            for line in headers.headers:
+                line = line.strip()
+                k, v = line.split(":", 1)
+                self.headers[k] = v.lstrip()
 
         self.host = self.headers.get(b'Host', b"")
         conntype = self.headers.get(b'Connection', b"")
@@ -186,12 +201,12 @@ class HttpServerHandler():
                 self.logger.warn("unhandler cmd:%s path:%s from:%s", self.command, self.path, self.address_string())
                 return
 
-            self.wfile.flush() #actually send the response if not already done.
+            self.wfile.flush()  # actually send the response if not already done.
         except ParseReqFail as e:
             self.logger.warn("parse req except:%r", e)
             self.close_connection = 1
         except socket.error as e:
-            #self.logger.warn("socket error:%r", e)
+            # self.logger.warn("socket error:%r", e)
             self.close_connection = 1
         except IOError as e:
             if e.errno == errno.EPIPE:
@@ -200,14 +215,15 @@ class HttpServerHandler():
             else:
                 self.logger.warn("IOError:%r", e)
                 pass
-        #except OpenSSL.SSL.SysCallError as e:
-        #    self.logger.warn("socket error:%r", e)
+            # except OpenSSL.SSL.SysCallError as e:
+            #    self.logger.warn("socket error:%r", e)
             self.close_connection = 1
         except GetReqTimeout as e:
-            #self.logger.exception("GetReqTimeout %r", e)
+            # self.logger.exception("GetReqTimeout %r", e)
             self.close_connection = 1
         except Exception as e:
-            self.logger.exception("handler:%r cmd:%s path:%s from:%s", e,  self.command, self.path, self.address_string())
+            self.logger.exception("handler:%r cmd:%s path:%s from:%s", e, self.command, self.path,
+                                  self.address_string())
             self.close_connection = 1
 
     def WebSocket_handshake(self):
@@ -248,7 +264,6 @@ class HttpServerHandler():
             try:
                 h = self.rfile.read(2)
                 if h is None or len(h) == 0:
-
                     break
 
                 length = ord(h[1]) & 127
@@ -336,8 +351,7 @@ class HttpServerHandler():
         if len(mimetype):
             data.append(b'Content-Type: %s\r\n' % utils.to_bytes(mimetype))
 
-        if isinstance(content, str):
-            content = content.encode("utf-8")
+        content = utils.to_bytes(content)
 
         data.append(b'Content-Length: %d\r\n' % len(content))
         if len(headers):
@@ -393,9 +407,10 @@ class HttpServerHandler():
                 return
 
             file_size = os.path.getsize(filename)
-            tme = (datetime.datetime.today()+datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            tme = (datetime.datetime.today() + datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
             head = b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\n'
-            head += b'Expires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % utils.to_bytes((tme, mimetype, file_size))
+            head += b'Expires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % utils.to_bytes(
+                (tme, mimetype, file_size))
             self.wfile.write(head)
 
             with open(filename, 'rb') as fp:
@@ -406,7 +421,7 @@ class HttpServerHandler():
                     self.wfile.write(data)
         except:
             pass
-            #self.logger.warn("download broken")
+            # self.logger.warn("download broken")
 
     def response_json(self, res_arr):
         data = json.dumps(utils.to_str(res_arr), indent=0, sort_keys=True)
@@ -429,7 +444,7 @@ class HTTPServer():
         self.cert = cert
         self.init_socket()
         self.max_thread = max_thread
-        #self.logger.info("server %s:%d started.", address[0], address[1])
+        # self.logger.info("server %s:%d started.", address[0], address[1])
 
     def start(self):
         self.http_thread = threading.Thread(target=self.serve_forever)
@@ -569,7 +584,7 @@ class HTTPServer():
         self.server_close()
 
     def process_connect(self, sock, address):
-        #self.logger.debug("connect from %s:%d", address[0], address[1])
+        # self.logger.debug("connect from %s:%d", address[0], address[1])
         if threading.activeCount() > self.max_thread:
             self.logger.warn("thread num exceed the limit. drop request from %s.", address)
             sock.close()
@@ -599,8 +614,8 @@ class TestHttpServer(HttpServerHandler):
         len_lc = 26
         ba = bytearray(os.urandom(n))
         for i, b in enumerate(ba):
-            ba[i] = min_lc + b % len_lc # convert 0..255 to 97..122
-        #sys.stdout.buffer.write(ba)
+            ba[i] = min_lc + b % len_lc  # convert 0..255 to 97..122
+        # sys.stdout.buffer.write(ba)
         return ba
 
     def WebSocket_on_connect(self):
@@ -610,9 +625,9 @@ class TestHttpServer(HttpServerHandler):
         self.WebSocket_send_message(message)
 
     def do_GET(self):
-        url_path = urllib.parse.urlparse(self.path).path
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        url_path = urlparse(self.path).path
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
 
         self.logger.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 
@@ -624,7 +639,8 @@ class TestHttpServer(HttpServerHandler):
 
         elif url_path == '/':
             data = b"OK\r\n"
-            self.wfile.write(b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' %(len(data), data) )
+            self.wfile.write(
+                b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' % (len(data), data))
         elif url_path == b'/null':
             mimetype = b"application/x-binary"
             if b"size" in reqs:
@@ -645,11 +661,11 @@ class TestHttpServer(HttpServerHandler):
             if os.path.isfile(target):
                 self.send_file(target, b"application/x-binary")
             else:
-                self.wfile.write(b'HTTP/1.1 404\r\nContent-Length: 0\r\n\r\n' )
+                self.wfile.write(b'HTTP/1.1 404\r\nContent-Length: 0\r\n\r\n')
 
 
 def main(data_path="."):
-    print("listen http on 8880")
+    xlog.info("listen http on 8880")
     httpd = HTTPServer(('', 8880), TestHttpServer, data_path)
     httpd.start()
 
@@ -667,7 +683,7 @@ if __name__ == "__main__":
         main(data_path=data_path)
     except Exception:
         import traceback
+
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
         sys.exit()
-

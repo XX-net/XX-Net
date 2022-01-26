@@ -6,7 +6,7 @@
 """
 
 
-
+import sys
 import base64,binascii,collections,copy,os.path,random,socket,\
        string,struct,textwrap,time
 
@@ -15,7 +15,10 @@ from itertools import chain
 try:
     from itertools import zip_longest
 except ImportError:
-    from itertools import zip_longest as zip_longest
+    if sys.version_info[0] == 2:
+        from itertools import izip_longest as zip_longest
+    else:
+        from itertools import zip_longest as zip_longest
 
 from dnslib.bit import get_bits,set_bits
 from dnslib.bimap import Bimap,BimapError

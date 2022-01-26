@@ -4,7 +4,11 @@
 
 import os
 import time
-import urllib.parse
+
+try:
+    from urllib.parse import urlparse, parse_qs
+except ImportError:
+    from urlparse import urlparse, parse_qs
 
 import simple_http_server
 from .front import front
@@ -26,7 +30,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.wfile = wfile
 
     def do_GET(self):
-        path = urllib.parse.urlparse(self.path).path
+        path = urlparse(self.path).path
         if path == "/log":
             return self.req_log_handler()
         elif path == "/ip_list":
@@ -40,8 +44,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         front.logger.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_log_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         cmd = "get_last"

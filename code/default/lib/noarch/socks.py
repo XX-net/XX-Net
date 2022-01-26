@@ -65,6 +65,8 @@ try:
 except:
     from collections.abc import Callable
 
+from six import string_types
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 if sys.platform == "win32":
@@ -323,7 +325,7 @@ class socksocket(_BaseSocket):
         username = utils.to_bytes(username)
         password = utils.to_bytes(password)
 
-        if isinstance(proxy_type, str):
+        if isinstance(proxy_type, string_types):
             proxy_type = proxy_type.lower()
             if "http" in proxy_type:
                 proxy_type = PROXY_TYPE_HTTP
@@ -752,6 +754,7 @@ class socksocket(_BaseSocket):
             return
 
         proxy_type, proxy_host, proxy_port, rdns, username, password = self.proxy
+        proxy_host = utils.to_bytes(proxy_host)
 
         # Do a minimal input check first
         if not dest_addr or not isinstance(dest_port, int):

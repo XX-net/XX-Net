@@ -8,6 +8,8 @@ import threading
 import json
 import shutil
 
+from six import string_types
+
 #reload(sys)
 #sys.setdefaultencoding('utf8')
 import utils
@@ -203,7 +205,7 @@ class Logger():
         jd = {}
         if buffer_len > 0:
             for i in range(first_no, self.last_no + 1):
-                jd[i] = self.unicode_line(self.buffer[i])
+                jd[i] = utils.to_str(self.buffer[i])
         self.buffer_lock.release()
         return json.dumps(jd)
     
@@ -216,21 +218,9 @@ class Logger():
 
         if self.last_no >= from_no:
             for i in range(from_no, self.last_no + 1):
-                jd[i] = self.unicode_line(self.buffer[i])
+                jd[i] = utils.to_str(self.buffer[i])
         self.buffer_lock.release()
         return json.dumps(jd)
-
-    def unicode_line(self, line):
-        try:
-            if type(line) is str:
-                return line
-            else:
-                return str(line, errors='ignore')
-        except Exception as e:
-            print(("unicode err:%r" % e))
-            print(("line can't decode:%s" % line))
-            print(("Except stack:%s" % traceback.format_exc()))
-            return ""
 
 
 class null():
@@ -260,7 +250,7 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1):
     if name is None:
         name = u"default"
 
-    if not isinstance(name, str):
+    if not isinstance(name, string_types):
         raise TypeError('A logger name must be string or Unicode')
     if isinstance(name, bytes):
         name = name.decode('utf-8')

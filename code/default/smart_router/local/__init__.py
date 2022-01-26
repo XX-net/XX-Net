@@ -74,7 +74,7 @@ def load_config():
     config.set_var("dns_ttl", 60*30)
     config.set_var("direct_split_SNI", 1)
 
-    config.set_var("pac_policy", "black_GAE")
+    config.set_var("pac_policy", "black_X-Tunnel")
     config.set_var("country_code", "CN")
     config.set_var("auto_direct", 1)
     config.set_var("auto_direct6", 0)

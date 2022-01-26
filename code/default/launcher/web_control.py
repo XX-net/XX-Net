@@ -11,15 +11,29 @@ if __name__ == "__main__":
 
 import re
 import socket, ssl
-import urllib.parse
-import urllib.request, urllib.error, urllib.parse
 import time
 import threading
+import json
+import cgi
+
+try:
+    from urllib.parse import urlparse, urlencode, parse_qs
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
+except ImportError:
+    from urlparse import urlparse, parse_qs
+    from urllib import urlencode
+    from urllib2 import urlopen, Request, HTTPError
+
+try:
+    from urllib.request import ProxyHandler
+    from urllib.request import build_opener
+except ImportError:
+    from urllib2 import ProxyHandler
+    from urllib2 import build_opener
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
-import json
-import cgi
 
 import sys_platform
 from xlog import getLogger
@@ -67,31 +81,35 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
-        self.headers = utils.to_str(self.headers)
         self.path = utils.to_str(self.path)
 
         refer = self.headers.get('Referer')
         if refer:
-            refer_loc = urllib.parse.urlparse(refer).netloc
+            refer_loc = urlparse(refer).netloc
             host = self.headers.get('Host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
 
         try:
-            ctype, pdict = cgi.parse_header(self.headers.get('Content-Type', ""))
+            content_type = self.headers.get('Content-Type', "")
+            ctype, pdict = cgi.parse_header(content_type)
             if ctype == 'multipart/form-data':
                 self.postvars = cgi.parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
                 length = int(self.headers.get('Content-Length'))
-                self.postvars = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=True)
+                content = self.rfile.read(length)
+                self.postvars = parse_qs(content, keep_blank_values=True)
+            elif ctype == 'application/json':
+                length = int(self.headers.get('Content-Length'))
+                content = self.rfile.read(length)
+                self.postvars = json.loads(content)
             else:
                 self.postvars = {}
         except Exception as e:
             xlog.exception("do_POST %s except:%r", self.path, e)
             self.postvars = {}
 
-        #url_path = urlparse.urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
             module = url_path_list[2]
@@ -109,12 +127,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_GET(self):
-        self.headers = utils.to_str(self.headers)
+        # self.headers = utils.to_str(self.headers)
         self.path = utils.to_str(self.path)
 
         refer = self.headers.get('Referer')
         if refer:
-            refer_loc = urllib.parse.urlparse(refer).netloc
+            refer_loc = urlparse(refer).netloc
             host = self.headers.get('Host')
             if refer_loc != host:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
@@ -126,7 +144,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path)
             return
 
-        url_path = urllib.parse.urlparse(self.path).path
+        url_path = urlparse(self.path).path
         if url_path == '/':
             return self.req_index_handler()
 
@@ -198,8 +216,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def req_index_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
 
         try:
             target_module = reqs['module'][0]
@@ -252,8 +270,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_config_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_config']:
@@ -474,8 +492,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_update_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_info']:
@@ -530,8 +548,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_config_proxy_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_config']:
@@ -576,8 +594,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         try:
@@ -601,8 +619,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def req_debug_handler(self):
         global mem_stat
-        req = urllib.parse.urlparse(self.path).query
-        reqs = urllib.parse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
 
         try:
             import tracemalloc
@@ -745,8 +763,8 @@ def stop():
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib.request.ProxyHandler({})
-    opener = urllib.request.build_opener(proxy_handler)
+    proxy_handler = ProxyHandler({})
+    opener = build_opener(proxy_handler)
     try:
         req = opener.open(url, timeout=30)
         return req

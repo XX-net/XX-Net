@@ -2,8 +2,11 @@
 # coding:utf-8
 
 import os
-import urllib.parse
 
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import simple_http_server
 
@@ -68,7 +71,7 @@ class PacHandler(simple_http_server.HttpServerHandler):
         return content
 
     def do_GET(self):
-        path = urllib.parse.urlparse(self.path).path # '/proxy.pac'
+        path = urlparse(self.path).path # '/proxy.pac'
         path = utils.to_str(path)
         self.headers = utils.to_str(self.headers)
 

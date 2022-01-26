@@ -117,7 +117,7 @@ import download_modules
 
 
 def exit_handler():
-    print('Stopping all modules before exit!')
+    xlog.info('Stopping all modules before exit!')
     module_init.stop_all()
     web_control.stop()
 

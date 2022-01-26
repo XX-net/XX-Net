@@ -78,7 +78,7 @@ def download_file(url, filename, sha256=None):
                     xlog.info("download %s to %s success.", org_url, filename)
                     return True
         except Exception as e:
-            xlog.warn("download %s to %s fail:%r", org_url, filename, e)
+            xlog.exception("download %s to %s fail:%r", org_url, filename, e)
             continue
     xlog.warn("download %s fail", org_url)
 
