@@ -3,17 +3,18 @@ import sys
 import os
 
 from xlog import getLogger
+
 xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-
 
 if "arm" in platform.machine() or "mips" in platform.machine() or "aarch64" in platform.machine():
     xlog.info("This is Android or IOS or router.")
     has_desktop = False
     platform_lib = ""
     from non_tray import sys_tray
+
 
 elif sys.platform.startswith("linux"):
     def X_is_running():
@@ -25,6 +26,7 @@ elif sys.platform.startswith("linux"):
         except:
             return False
 
+
     def has_gi():
         try:
             import gi
@@ -33,6 +35,7 @@ elif sys.platform.startswith("linux"):
             return True
         except:
             return False
+
 
     def has_pygtk():
         try:
@@ -43,18 +46,20 @@ elif sys.platform.startswith("linux"):
         except:
             return False
 
+
     if X_is_running() and (has_pygtk() or has_gi()):
-        has_desktop= True
+        has_desktop = True
         from gtk_tray import sys_tray
     else:
         from non_tray import sys_tray
+
         has_desktop = False
 
     platform_lib = os.path.join(default_path, 'lib', 'linux')
     sys.path.append(platform_lib)
 
 elif sys.platform == "win32":
-    has_desktop= True
+    has_desktop = True
 
     platform_lib = os.path.join(default_path, 'lib', 'win32')
     sys.path.append(platform_lib)
@@ -77,5 +82,6 @@ elif sys.platform == "darwin":
 else:
     xlog.warn(("detect platform fail:%s" % sys.platform))
     from non_tray import sys_tray
+
     has_desktop = False
     platform_lib = ""

@@ -405,8 +405,8 @@ class DnsOverHttpsQuery(object):
             return []
 
     def query(self, domain, dns_type=1):
+        t0 = time.time()
         try:
-            t0 = time.time()
             client = self.get_connection()
 
             url = self.server
@@ -432,7 +432,9 @@ class DnsOverHttpsQuery(object):
             xlog.debug("Dns %s %s return %s t:%f", self.protocol, domain, ips, t2 - t0)
             return ips
         except Exception as e:
-            xlog.exception("DnsOverHttpsQuery query fail:%r", e)
+            t1 = time.time()
+            t = t1 - t0
+            xlog.exception("DnsOverHttpsQuery query %s cost:%f fail:%r", domain, t, e)
             return []
 
 

@@ -234,12 +234,12 @@ class Socks5Server():
             xlog.warn("socks5 protocol error:%r", e)
             return
 
-        socks_version = data[0]
+        socks_version = ord(data[0])
         if socks_version != 5:
             xlog.warn("request version:%d error", socks_version)
             return
 
-        command = data[1]
+        command = ord(data[1])
         if command != 1:  # 1. Tcp connect
             xlog.warn("request not supported command mode:%d", command)
             sock.send(b"\x05\x07\x00\x01")  # Command not supported

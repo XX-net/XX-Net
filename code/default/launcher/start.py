@@ -8,6 +8,14 @@ import traceback
 from datetime import datetime
 import atexit
 
+try:
+    import OpenSSL
+except Exception as e2:
+    print("import pyOpenSSL fail:%r", e2)
+    print("Try install python-openssl\r\n")
+    input("Press Enter to continue...")
+    os._exit(0)
+
 # reduce resource request for threading
 # for OpenWrt
 import threading
@@ -16,20 +24,13 @@ try:
 except:
     pass
 
-try:
-    import tracemalloc
-    tracemalloc.start(10)
-except:
-    pass
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-data_path = os.path.abspath(os.path.join(default_path, os.pardir, os.pardir, 'data'))
+default_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
+data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.pardir, 'data'))
 data_launcher_path = os.path.join(data_path, 'launcher')
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
-
-running_file = os.path.join(data_launcher_path, "Running.Lck")
 
 
 def create_data_path():
@@ -43,15 +44,27 @@ def create_data_path():
     if not os.path.isdir(data_gae_proxy_path):
         os.mkdir(data_gae_proxy_path)
 
+
 create_data_path()
 
 
+import sys_platform
+from config import config
+import web_control
+import module_init
+import update
+import update_from_github
+import download_modules
+
 from xlog import getLogger
+
 log_file = os.path.join(data_launcher_path, "launcher.log")
 xlog = getLogger("launcher", file_name=log_file)
 
+running_file = os.path.join(data_launcher_path, "Running.Lck")
 
-def uncaughtExceptionHandler(etype, value, tb):
+
+def uncaught_exception_handler(etype, value, tb):
     if etype == KeyboardInterrupt:  # Ctrl + C on console
         xlog.warn("KeyboardInterrupt, exiting...")
         module_init.stop_all()
@@ -67,53 +80,7 @@ def uncaughtExceptionHandler(etype, value, tb):
     # sys.exit(1)
 
 
-sys.excepthook = uncaughtExceptionHandler
-
-
-has_desktop = True
-
-
-def unload(module):
-    for m in list(sys.modules.keys()):
-        if m == module or m.startswith(module + "."):
-            del sys.modules[m]
-
-    for p in list(sys.path_importer_cache.keys()):
-        if module in p:
-            del sys.path_importer_cache[p]
-
-    try:
-        del module
-    except:
-        pass
-
-
-try:
-    sys.path.insert(0, noarch_lib)
-    import OpenSSL as oss_test
-    xlog.info("use build-in openssl lib")
-except Exception as e1:
-    xlog.info("import build-in openssl fail:%r", e1)
-    sys.path.pop(0)
-    del sys.path_importer_cache[noarch_lib]
-    unload("OpenSSL")
-    unload("cryptography")
-    unload("cffi")
-    try:
-        import OpenSSL
-    except Exception as e2:
-        xlog.exception("import system python-OpenSSL fail:%r", e2)
-        print("Try install python-openssl\r\n")
-        input("Press Enter to continue...")
-        os._exit(0)
-
-import sys_platform
-from config import config
-import web_control
-import module_init
-import update
-import update_from_github
-import download_modules
+sys.excepthook = uncaught_exception_handler
 
 
 def exit_handler():
@@ -121,7 +88,10 @@ def exit_handler():
     module_init.stop_all()
     web_control.stop()
 
+
 atexit.register(exit_handler)
+
+has_desktop = True
 
 
 def main():

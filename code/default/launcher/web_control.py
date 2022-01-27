@@ -81,6 +81,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
+        self.headers = utils.to_str(self.headers)
         self.path = utils.to_str(self.path)
 
         refer = self.headers.get('Referer')

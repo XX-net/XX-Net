@@ -105,9 +105,12 @@ class SimpleI18N:
         return po_dict
 
     def _render(self, po_dict, file):
-        fp = open(file, "r")
-        content = fp.read()
-        content = utils.to_bytes(content)
+        if sys.version_info[0] == 2:
+            fp = open(file, "r")
+            content = fp.read()
+        else:
+            fp = open(file, "rb")
+            content = fp.read()
 
         out_arr = []
 

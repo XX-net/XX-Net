@@ -1,12 +1,15 @@
-
 import select
+
 try:
+    # py3
     from urllib.parse import urlparse, urlsplit
+    from http.client import IncompleteRead
 except ImportError:
+    # py2
     from urlparse import urlparse, urlsplit
+    from httplib import IncompleteRead
 
 import socket
-import http.client
 import time
 import os
 import utils
@@ -46,21 +49,24 @@ class BaseResponse(object):
 
 
 class TxtResponse(BaseResponse):
-    def __init__(self, buffer):
+    def __init__(self, buf):
         BaseResponse.__init__(self)
-        if isinstance(buffer, memoryview):
-            self.view = buffer
-            self.read_buffer = buffer.tobytes()
-        elif isinstance(buffer, str):
-            self.read_buffer = utils.to_bytes(buffer)
+        if isinstance(buf, memoryview):
+            self.view = buf
+            self.read_buffer = buf.tobytes()
+        elif isinstance(buf, str):
+            self.read_buffer = utils.to_bytes(buf)
             self.view = memoryview(self.read_buffer)
-        elif isinstance(buffer, bytes):
-            self.read_buffer = buffer
-            self.view = memoryview(buffer)
+        elif isinstance(buf, bytes):
+            self.read_buffer = buf
+            self.view = memoryview(buf)
         else:
             raise Exception("TxtResponse error")
 
         self.buffer_start = 0
+        self.version = None
+        self.info = None
+        self.body = None
         self.parse()
 
     def read_line(self):
@@ -96,7 +102,7 @@ class TxtResponse(BaseResponse):
         for line in lines:
             p = line.find(b":")
             key = line[0:p]
-            value = line[p+2:]
+            value = line[p + 2:]
             key = str(key.title())
             self.headers[key] = value
 
@@ -106,100 +112,61 @@ class TxtResponse(BaseResponse):
 
 
 class Response(BaseResponse):
-    rbufsize = 32 * 1024
-    wbufsize = 32 * 1024
 
     def __init__(self, ssl_sock):
         BaseResponse.__init__(self)
         self.connection = ssl_sock
-        self.rfile = self.connection.makefile('rb', self.rbufsize)
-        self.wfile = self.connection.makefile('wb', self.wbufsize)
         ssl_sock.settimeout(1)
-        ssl_sock.setblocking(1)
         self.read_buffer = b""
         self.buffer_start = 0
         self.chunked = False
+        self.version = None
+        self.content_length = None
 
-    def read_line(self, timeout=60):
-        original_timeout = self.connection.gettimeout()
-        self.connection.settimeout(timeout)
-        line = self.rfile.readline(65537)
-        self.connection.settimeout(original_timeout)
-        return line
-    #     start_time = time.time()
-    #     sock = self.connection
-    #     sock.setblocking(1)
-    #     try:
-    #         while True:
-    #             n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
-    #             if n1 > -1:
-    #                 line = self.read_buffer[self.buffer_start:n1]
-    #                 self.buffer_start = n1 + 2
-    #                 return line
-    #
-    #             if time.time() - start_time > timeout:
-    #                 raise socket.timeout()
-    #             time.sleep(0.001)
-    #             try:
-    #                 data = sock.recv(8192)
-    #             except socket.error as e:
-    #                 # logging.exception("e:%r", e)
-    #                 if e.errno in [2, 11, 10035]:
-    #                     #time.sleep(0.1)
-    #                     time_left = start_time + timeout - time.time()
-    #                     r, w, e = select.select([sock], [], [], time_left)
-    #                     continue
-    #                 else:
-    #                     raise e
-    #
-    #             if isinstance(data, int):
-    #                 continue
-    #             if data and len(data):
-    #                 self.read_buffer += data
-    #     finally:
-    #         sock.setblocking(1)
+    def read_line(self, timeout=60.0):
+        start_time = time.time()
+        sock = self.connection
+        sock.setblocking(0)
+        try:
+            while True:
+                n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
+                if n1 > -1:
+                    line = self.read_buffer[self.buffer_start:n1]
+                    self.buffer_start = n1 + 2
+                    return line
 
-    def read_headers(self, timeout=60):
+                if time.time() - start_time > timeout:
+                    raise socket.timeout()
+                time.sleep(0.001)
+                try:
+                    data = sock.recv(8192)
+                except socket.error as e:
+                    if e.errno in [2, 11, 10035]:
+                        time_left = start_time + timeout - time.time()
+                        select.select([sock], [], [], time_left)
+                        continue
+                    else:
+                        raise e
+
+                if isinstance(data, int):
+                    continue
+                if data and len(data):
+                    self.read_buffer += data
+        finally:
+            sock.setblocking(1)
+
+    def read_headers(self, timeout=60.0):
         start_time = time.time()
         lines = []
         while True:
             left_time = timeout - (time.time() - start_time)
             line = self.read_line(left_time)
-            if line == "\r\n":
-                return "".join(lines)
+            if len(line.strip()) == 0:
+                return b"\r\n".join(lines)
 
             lines.append(line)
-        # sock = self.connection
-        # sock.setblocking(0)
-        # try:
-        #     while True:
-        #         n1 = self.read_buffer.find(b"\r\n\r\n", self.buffer_start)
-        #         if n1 > -1:
-        #             block = self.read_buffer[self.buffer_start:n1]
-        #             self.buffer_start = n1 + 4
-        #             return block
-        #
-        #         if time.time() - start_time > timeout:
-        #             raise socket.timeout()
-        #
-        #         time.sleep(0.001)
-        #         try:
-        #             data = sock.recv(8192)
-        #         except socket.error as e:
-        #             # logging.exception("e:%r", e)
-        #             if e.errno in [2, 11, 10035]:
-        #                 time.sleep(0.1)
-        #                 continue
-        #             else:
-        #                 raise e
-        #
-        #         self.read_buffer += data
-        # except Exception as e:
-        #     print(e)
-        # finally:
-        #     sock.setblocking(1)
 
-    def begin(self, timeout=60):
+    def begin(self, timeout=60.0):
         start_time = time.time()
         line = self.read_line(500)
 
@@ -220,14 +187,13 @@ class Response(BaseResponse):
         for line in lines:
             p = line.find(b":")
             key = line[0:p]
-            value = line[p+2:]
+            value = line[p + 2:]
             key = key.title()
             self.headers[key] = value
 
         self.content_length = self.getheader(b"content-length", b"")
         if b"chunked" in self.getheader(b"Transfer-Encoding", b""):
             self.chunked = True
-            self.chunk_list = []
 
         if b"gzip" in self.getheader(b"Transfer-Encoding", b""):
             print("gzip not work")
@@ -235,8 +201,6 @@ class Response(BaseResponse):
     def _read_plain(self, read_len, timeout):
         if read_len == 0:
             return ""
-        #elif read_len > 0:
-        #    return self._read_size(read_len, timeout)
 
         if read_len is not None and len(self.read_buffer) - self.buffer_start > read_len:
             out_str = self.read_buffer[self.buffer_start:self.buffer_start + read_len]
@@ -246,9 +210,10 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
+        self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
-        out_list = [ self.read_buffer[self.buffer_start:] ]
+        out_list = [self.read_buffer[self.buffer_start:]]
 
         self.read_buffer = b""
         self.buffer_start = 0
@@ -266,13 +231,11 @@ class Response(BaseResponse):
             else:
                 to_read = 65535
             try:
-                data = self.rfile.read()
+                data = self.connection.recv(to_read)
             except socket.error as e:
-                # logging.exception("e:%r", e)
                 if e.errno in [2, 11, 10035]:
-                    #time.sleep(0.1)
-                    # time_left = start_time + timeout - time.time()
-                    # r, w, e = select.select([self.connection], [], [], time_left)
+                    time_left = start_time + timeout - time.time()
+                    select.select([self.connection], [], [], time_left)
                     continue
                 else:
                     raise e
@@ -295,7 +258,7 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
-        # self.connection.setblocking(0)
+        self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
         out_bytes = bytearray(read_len)
@@ -313,16 +276,11 @@ class Response(BaseResponse):
             to_read = min(to_read, 65535)
 
             try:
-                # nbytes = self.connection.recv_into(view[out_len:], to_read)
-                data = self.rfile.read()
-                nbytes = len(data)
-                view[out_len:out_len+nbytes] = nbytes
+                nbytes = self.connection.recv_into(view[out_len:], to_read)
             except socket.error as e:
-                # logging.exception("e:%r", e)
                 if e.errno in [2, 11, 10035]:
-                    # time.sleep(0.1)
-                    # time_left = start_time + timeout - time.time()
-                    # r, w, e = select.select([self.connection], [], [], time_left)
+                    time_left = start_time + timeout - time.time()
+                    select.select([self.connection], [], [], time_left)
                     continue
                 else:
                     raise e
@@ -340,9 +298,6 @@ class Response(BaseResponse):
         return dat[:-2]
 
     def read(self, read_len=None, timeout=60):
-        #if not read_len and self.content_length is not None:
-        #    read_len = int(self.content_length)
-
         if not self.chunked:
             data = self._read_plain(read_len, timeout)
         else:
@@ -379,7 +334,7 @@ class Client(object):
         self.tls = None
 
         if isinstance(proxy, str):
-            proxy_sp = urlparse.urlsplit(proxy)
+            proxy_sp = urlsplit(proxy)
 
             self.proxy = {
                 "type": proxy_sp.scheme,
@@ -393,7 +348,8 @@ class Client(object):
         else:
             self.proxy = None
 
-    def direct_connect(self, host, port):
+    @staticmethod
+    def direct_connect(host, port):
         connect_timeout = 30
 
         if b':' in host:
@@ -446,7 +402,7 @@ class Client(object):
                            password=self.proxy["pass"])
 
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32*1024)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             sock.settimeout(connect_timeout)
 
@@ -468,7 +424,9 @@ class Client(object):
 
         return sock
 
-    def request(self, method, url, headers={}, body=b"", read_payload=True):
+    def request(self, method, url, headers=None, body=b"", read_payload=True):
+        if headers is None:
+            headers = {}
         method = utils.to_bytes(method)
         url = utils.to_bytes(url)
 
@@ -525,7 +483,7 @@ class Client(object):
         response.begin(timeout=self.timeout)
 
         if response.status != 200:
-            #logging.warn("status:%r", response.status)
+            # logging.warn("status:%r", response.status)
             return response
 
         if not read_payload:
@@ -536,7 +494,7 @@ class Client(object):
             while True:
                 try:
                     data = response.read(8192, timeout=self.timeout)
-                except http.client.IncompleteRead as e:
+                except IncompleteRead as e:
                     data = e.partial
                 except Exception as e:
                     raise e
@@ -549,17 +507,18 @@ class Client(object):
             response.text = b"".join(data_buffer)
             return response
         else:
-            content_length = int(response.getheader(b'Content-Length', 0))
+            content_length = int(response.getheader(b'Content-Length', "0"))
             if content_length:
                 response.text = response.read(content_length, timeout=self.timeout)
 
             return response
 
 
-def request(method="GET", url=None, headers={}, body="", proxy=None, timeout=60, read_payload=True):
+def request(method="GET", url=None, headers=None, body="", proxy=None, timeout=60, read_payload=True):
+    if headers is None:
+        headers = {}
     if not url:
         raise Exception("no url")
 
     client = Client(proxy, timeout=timeout)
     return client.request(method, url, headers, body, read_payload)
-
