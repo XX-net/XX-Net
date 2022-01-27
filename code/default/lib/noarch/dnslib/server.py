@@ -283,8 +283,8 @@ class DNSLogger:
                     e))
 
     def log_data(self,dnsobj):
-        print("\n",dnsobj.toZone("    "),"\n",sep="")
-
+        # print("\n",dnsobj.toZone("    "),"\n",sep="")
+        pass
 
 class UDPServer(socketserver.UDPServer):
     allow_reuse_address = True

@@ -39,7 +39,7 @@ from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
 from x_tunnel.local.tls_relay_front.config import Config
-
+from x_tunnel.local.tls_relay_front.host_manager import HostManager
 
 
 if __name__ == "__main__":
@@ -69,10 +69,12 @@ if __name__ == "__main__":
 
     openssl_context = SSLContext(logger)
 
-    connect_creator = ConnectCreator(logger, config, openssl_context)
+    host_fn = os.path.join(module_data_path, "tls_host.json")
+    host_manager = HostManager(host_fn)
+    connect_creator = ConnectCreator(logger, config, openssl_context, host_manager)
     check_ip = CheckIp(logger, config, connect_creator)
 
-    res = check_ip.check_ip(ip, top_domain=top_domain, wait_time=wait_time)
+    res = check_ip.check_ip(ip, sni=top_domain, host=top_domain, wait_time=wait_time)
     if not res:
         print("connect fail")
     elif res.ok:

@@ -3,6 +3,7 @@ import select
 import time
 import sys
 
+from six import BlockingIOError
 import utils
 
 from . import global_var as g

@@ -996,3 +996,30 @@ if sys.meta_path:
     del i, importer
 # Finally, add the importer to the meta path import hook.
 sys.meta_path.append(_importer)
+
+
+if PY2:
+  class BlockingIOError(Exception):
+      pass
+
+
+  class BrokenPipeError(Exception):
+      pass
+
+
+  class ConnectionError(Exception):
+      pass
+
+
+  class ConnectionResetError(Exception):
+      pass
+
+
+  class ConnectionAbortedError(Exception):
+      pass
+else:
+    BlockingIOError = BlockingIOError
+    BrokenPipeError = BrokenPipeError
+    ConnectionError = ConnectionError
+    ConnectionResetError = ConnectionResetError
+    ConnectionAbortedError = ConnectionAbortedError

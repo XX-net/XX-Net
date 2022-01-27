@@ -72,8 +72,8 @@ if __name__ == '__main__':
                         args.port,
                         "UDP/TCP" if args.tcp else "UDP"))
 
-    for rr in resolver.rrs:
-        print("    | ",rr.toZone().strip(),sep="")
+    # for rr in resolver.rrs:
+    #     print("    | ",rr.toZone().strip(),sep="")
     print()
 
     if args.udplen:

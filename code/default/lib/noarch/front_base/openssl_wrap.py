@@ -48,7 +48,7 @@ class SSLConnection(object):
             try:
                 self._sock.connect((ip, port))
             except Exception as e:
-                raise socket.error('conn fail, sni:%s, e:%r' % (self.sni, e))
+                raise socket.error('conn %s fail, sni:%s, e:%r' % (self.ip_str, self.sni, e))
 
             self._connection = self._context.wrap_socket(self._sock, server_hostname=self.sni,
                                                          do_handshake_on_connect=False)
@@ -310,14 +310,7 @@ class SSLContext(object):
             self.logger.info("SSL use version:%s", self.supported_protocol())
             self.context = ssl.SSLContext(protocol=ssl_version)
 
-            try:
-                if ca_certs:
-                    self.context.load_verify_locations(cafile=os.path.abspath(ca_certs))
-                    self.context.verify_mode = ssl.CERT_REQUIRED
-                else:
-                    self.context.verify_mode = ssl.CERT_NONE
-            except Exception as e:
-                self.logger.debug("set_ca fail:%r", e)
+            self.set_ca(ca_certs)
 
             if cipher_suites:
                 self.context.set_ciphers(':'.join(cipher_suites))
@@ -347,11 +340,7 @@ class SSLContext(object):
             protocol_version = getattr(OpenSSL.SSL, '%s_METHOD' % self.ssl_version)
             self.context = OpenSSL.SSL.Context(protocol_version)
 
-            if ca_certs:
-                self.context.load_verify_locations(os.path.abspath(ca_certs))
-                self.context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
-            else:
-                self.context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
+            self.set_ca(ca_certs)
 
             if cipher_suites:
                 self.context.set_cipher_list(':'.join(cipher_suites))
@@ -422,6 +411,23 @@ class SSLContext(object):
                 ssl_version = "TLSv1"
 
         return ssl_version
+
+    def set_ca(self, ca_certs):
+        if sys.version_info[0] == 3:
+            try:
+                if ca_certs:
+                    self.context.load_verify_locations(cafile=os.path.abspath(ca_certs))
+                    self.context.verify_mode = ssl.CERT_REQUIRED
+                else:
+                    self.context.verify_mode = ssl.CERT_NONE
+            except Exception as e:
+                self.logger.debug("set_ca fail:%r", e)
+        else:
+            if ca_certs:
+                self.context.load_verify_locations(os.path.abspath(ca_certs))
+                self.context.set_verify(OpenSSL.SSL.VERIFY_PEER, lambda c, x, e, d, ok: ok)
+            else:
+                self.context.set_verify(OpenSSL.SSL.VERIFY_NONE, lambda c, x, e, d, ok: ok)
 
 
 from pyasn1.codec.der.decoder import decode

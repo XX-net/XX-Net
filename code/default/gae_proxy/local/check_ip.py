@@ -29,8 +29,9 @@ if __name__ == "__main__":
         sys.path.append(extra_lib)
 
 import xlog
-
 logger = xlog.getLogger("gae_proxy")
+
+from six import ConnectionError, ConnectionResetError, BrokenPipeError
 
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator

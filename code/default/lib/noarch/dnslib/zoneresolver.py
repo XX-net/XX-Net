@@ -92,8 +92,8 @@ if __name__ == '__main__':
                         args.port,
                         "UDP/TCP" if args.tcp else "UDP"))
 
-    for rr in resolver.zone:
-        print("    | ",rr[2].toZone(),sep="")
+    # for rr in resolver.zone:
+    #     print("    | ",rr[2].toZone(),sep="")
     print()
 
     if args.udplen:

@@ -116,8 +116,8 @@ if __name__ == '__main__':
                         args.dns,args.dns_port,
                         "UDP/TCP" if args.tcp else "UDP"))
 
-    for rr in resolver.zone:
-        print("    | ",rr[2].toZone(),sep="")
+    # for rr in resolver.zone:
+    #     print("    | ",rr[2].toZone(),sep="")
     if resolver.nxdomain:
         print("    NXDOMAIN:",", ".join(resolver.nxdomain))
     if resolver.skip:
