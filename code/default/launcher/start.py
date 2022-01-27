@@ -8,14 +8,6 @@ import traceback
 from datetime import datetime
 import atexit
 
-try:
-    import OpenSSL
-except Exception as e2:
-    print("import pyOpenSSL fail:%r", e2)
-    print("Try install python-openssl\r\n")
-    input("Press Enter to continue...")
-    os._exit(0)
-
 # reduce resource request for threading
 # for OpenWrt
 import threading
@@ -31,6 +23,14 @@ data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.p
 data_launcher_path = os.path.join(data_path, 'launcher')
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+try:
+    import OpenSSL
+except Exception as e2:
+    print("import pyOpenSSL fail:%r", e2)
+    print("Try install python-openssl\r\n")
+    input("Press Enter to continue...")
+    os._exit(0)
 
 
 def create_data_path():
