@@ -61,7 +61,7 @@ def get_launcher_uuid():
     try:
         with open(launcher_config_fn, "r") as fd:
             info = json.load(fd)
-            return str(info[u"update_uuid"])
+            return info.get("update_uuid")
     except Exception as e:
         xlog.exception("get_launcher_uuid except:%r", e)
         return ""

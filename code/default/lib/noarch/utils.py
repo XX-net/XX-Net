@@ -36,6 +36,7 @@ ipv6_pattern = re.compile(br"""
         $
     """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
 
+
 def check_ip_valid4(ip):
     """检查ipv4地址的合法性"""
     ip = to_bytes(ip)
@@ -85,14 +86,15 @@ def get_ip_port(ip_str, port=443):
 
             p1 = ip_str.find(b"[")
             p2 = ip_str.find(b"]")
-            ip = ip_str[p1+1:p2]
-            port_str = ip_str[p2+1:]
+            ip = ip_str[p1 + 1:p2]
+            port_str = ip_str[p2 + 1:]
             if len(port_str) > 0:
                 port = port_str[1:]
         else:
             ip = ip_str
 
     return ip, int(port)
+
 
 domain_allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
 
@@ -170,8 +172,8 @@ def generate_random_lowercase(n):
     len_lc = 26
     ba = bytearray(os.urandom(n))
     for i, b in enumerate(ba):
-        ba[i] = min_lc + b % len_lc # convert 0..255 to 97..122
-    #sys.stdout.buffer.write(ba)
+        ba[i] = min_lc + b % len_lc  # convert 0..255 to 97..122
+    # sys.stdout.buffer.write(ba)
     return ba
 
 
@@ -219,7 +221,6 @@ private_ipv6_range = [
     ("fc00::", "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
 ]
 
-
 private_ipv4_range_bin = []
 for b, e in private_ipv4_range:
     bb = ip_string_to_num(b)
@@ -255,6 +256,7 @@ def is_private_ip(ip):
 
 
 import string
+
 printable = set(string.printable)
 
 
@@ -341,9 +343,8 @@ def bytes2str_only(data, coding='utf-8'):
 
 
 if __name__ == '__main__':
-    #print(get_ip_port("1.2.3.4", 443))
-    #print(get_ip_port("1.2.3.4:8443", 443))
+    # print(get_ip_port("1.2.3.4", 443))
+    # print(get_ip_port("1.2.3.4:8443", 443))
     print((get_ip_port("[face:ab1:11::0]", 443)))
     print((get_ip_port("ab01::1", 443)))
     print((get_ip_port("[ab01:55::1]:8444", 443)))
-

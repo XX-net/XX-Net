@@ -6,7 +6,7 @@
 [Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.5.6.zip)  
 
 
-测试版(Test version 4.6.1)：  
-[Windows 版下载](https://github.com/XX-net/XX-Net/releases/download/4.6.1/XX-Net-windows-4.6.1.7z)     
-[Mac 版下载](https://github.com/XX-net/XX-Net/releases/download/4.6.1/XX-Net-mac-4.6.1.7z)    
-[Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.6.1.zip)  
+测试版(Test version 4.5.6)：  
+[Windows 版下载](https://github.com/XX-net/XX-Net/releases/download/4.5.6/XX-Net-windows-4.5.6.7z)  
+[Mac 版下载](https://github.com/XX-net/XX-Net/releases/download/4.5.6/XX-Net-mac-4.5.6.7z)  
+[Linux 版下载](https://github.com/XX-net/XX-Net/archive/4.5.6.zip)  

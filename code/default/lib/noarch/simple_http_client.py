@@ -106,79 +106,98 @@ class TxtResponse(BaseResponse):
 
 
 class Response(BaseResponse):
+    rbufsize = 32 * 1024
+    wbufsize = 32 * 1024
+
     def __init__(self, ssl_sock):
         BaseResponse.__init__(self)
         self.connection = ssl_sock
+        self.rfile = self.connection.makefile('rb', self.rbufsize)
+        self.wfile = self.connection.makefile('wb', self.wbufsize)
         ssl_sock.settimeout(1)
+        ssl_sock.setblocking(1)
         self.read_buffer = b""
         self.buffer_start = 0
         self.chunked = False
 
     def read_line(self, timeout=60):
-        start_time = time.time()
-        sock = self.connection
-        sock.setblocking(0)
-        try:
-            while True:
-                n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
-                if n1 > -1:
-                    line = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 2
-                    return line
-
-                if time.time() - start_time > timeout:
-                    raise socket.timeout()
-                time.sleep(0.001)
-                try:
-                    data = sock.recv(8192)
-                except socket.error as e:
-                    # logging.exception("e:%r", e)
-                    if e.errno in [2, 11, 10035]:
-                        #time.sleep(0.1)
-                        time_left = start_time + timeout - time.time()
-                        r, w, e = select.select([sock], [], [], time_left)
-                        continue
-                    else:
-                        raise e
-
-                if isinstance(data, int):
-                    continue
-                if data and len(data):
-                    self.read_buffer += data
-        finally:
-            sock.setblocking(1)
+        original_timeout = self.connection.gettimeout()
+        self.connection.settimeout(timeout)
+        line = self.rfile.readline(65537)
+        self.connection.settimeout(original_timeout)
+        return line
+    #     start_time = time.time()
+    #     sock = self.connection
+    #     sock.setblocking(1)
+    #     try:
+    #         while True:
+    #             n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
+    #             if n1 > -1:
+    #                 line = self.read_buffer[self.buffer_start:n1]
+    #                 self.buffer_start = n1 + 2
+    #                 return line
+    #
+    #             if time.time() - start_time > timeout:
+    #                 raise socket.timeout()
+    #             time.sleep(0.001)
+    #             try:
+    #                 data = sock.recv(8192)
+    #             except socket.error as e:
+    #                 # logging.exception("e:%r", e)
+    #                 if e.errno in [2, 11, 10035]:
+    #                     #time.sleep(0.1)
+    #                     time_left = start_time + timeout - time.time()
+    #                     r, w, e = select.select([sock], [], [], time_left)
+    #                     continue
+    #                 else:
+    #                     raise e
+    #
+    #             if isinstance(data, int):
+    #                 continue
+    #             if data and len(data):
+    #                 self.read_buffer += data
+    #     finally:
+    #         sock.setblocking(1)
 
     def read_headers(self, timeout=60):
         start_time = time.time()
-        sock = self.connection
-        sock.setblocking(0)
-        try:
-            while True:
-                n1 = self.read_buffer.find(b"\r\n\r\n", self.buffer_start)
-                if n1 > -1:
-                    block = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 4
-                    return block
+        lines = []
+        while True:
+            left_time = timeout - (time.time() - start_time)
+            line = self.read_line(left_time)
+            if line == "\r\n":
+                return "".join(lines)
 
-                if time.time() - start_time > timeout:
-                    raise socket.timeout()
-
-                time.sleep(0.001)
-                try:
-                    data = sock.recv(8192)
-                except socket.error as e:
-                    # logging.exception("e:%r", e)
-                    if e.errno in [2, 11, 10035]:
-                        time.sleep(0.1)
-                        continue
-                    else:
-                        raise e
-
-                self.read_buffer += data
-        except Exception as e:
-            print(e)
-        finally:
-            sock.setblocking(1)
+            lines.append(line)
+        # sock = self.connection
+        # sock.setblocking(0)
+        # try:
+        #     while True:
+        #         n1 = self.read_buffer.find(b"\r\n\r\n", self.buffer_start)
+        #         if n1 > -1:
+        #             block = self.read_buffer[self.buffer_start:n1]
+        #             self.buffer_start = n1 + 4
+        #             return block
+        #
+        #         if time.time() - start_time > timeout:
+        #             raise socket.timeout()
+        #
+        #         time.sleep(0.001)
+        #         try:
+        #             data = sock.recv(8192)
+        #         except socket.error as e:
+        #             # logging.exception("e:%r", e)
+        #             if e.errno in [2, 11, 10035]:
+        #                 time.sleep(0.1)
+        #                 continue
+        #             else:
+        #                 raise e
+        #
+        #         self.read_buffer += data
+        # except Exception as e:
+        #     print(e)
+        # finally:
+        #     sock.setblocking(1)
 
     def begin(self, timeout=60):
         start_time = time.time()
@@ -227,7 +246,6 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
-        self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
         out_list = [ self.read_buffer[self.buffer_start:] ]
@@ -248,13 +266,13 @@ class Response(BaseResponse):
             else:
                 to_read = 65535
             try:
-                data = self.connection.recv(to_read)
+                data = self.rfile.read()
             except socket.error as e:
                 # logging.exception("e:%r", e)
                 if e.errno in [2, 11, 10035]:
                     #time.sleep(0.1)
-                    time_left = start_time + timeout - time.time()
-                    r, w, e = select.select([self.connection], [], [], time_left)
+                    # time_left = start_time + timeout - time.time()
+                    # r, w, e = select.select([self.connection], [], [], time_left)
                     continue
                 else:
                     raise e
@@ -277,7 +295,7 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
-        self.connection.setblocking(0)
+        # self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
         out_bytes = bytearray(read_len)
@@ -295,13 +313,16 @@ class Response(BaseResponse):
             to_read = min(to_read, 65535)
 
             try:
-                nbytes = self.connection.recv_into(view[out_len:], to_read)
+                # nbytes = self.connection.recv_into(view[out_len:], to_read)
+                data = self.rfile.read()
+                nbytes = len(data)
+                view[out_len:out_len+nbytes] = nbytes
             except socket.error as e:
                 # logging.exception("e:%r", e)
                 if e.errno in [2, 11, 10035]:
                     # time.sleep(0.1)
-                    time_left = start_time + timeout - time.time()
-                    r, w, e = select.select([self.connection], [], [], time_left)
+                    # time_left = start_time + timeout - time.time()
+                    # r, w, e = select.select([self.connection], [], [], time_left)
                     continue
                 else:
                     raise e

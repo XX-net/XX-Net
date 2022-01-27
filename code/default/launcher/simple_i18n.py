@@ -106,7 +106,8 @@ class SimpleI18N:
 
     def _render(self, po_dict, file):
         fp = open(file, "r")
-        content = utils.to_bytes(fp.read())
+        content = fp.read()
+        content = utils.to_bytes(content)
 
         out_arr = []
 
