@@ -228,7 +228,10 @@ class ProxyServer():
         sock.send(reply)
 
         # xlog.debug("Socks4:%r to %s:%d", self.client_address, addr, port)
-        handle_ip_proxy(sock, addr, port, self.client_address)
+        if domain_mode:
+            handle_domain_proxy(sock, addr, port, self.client_address)
+        else:
+            handle_ip_proxy(sock, addr, port, self.client_address)
 
     def socks5_handler(self):
         sock = self.conn

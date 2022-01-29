@@ -454,7 +454,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 sock.close()
                 return
         except Exception as e:
-            xlog.debug("%s %s to %s:%d except:%r", scense, rule, host, port, e)
+            xlog.exception("%s %s to %s:%d except:%r", scense, rule, host, port, e)
 
     xlog.info("%s %s to %s:%d fail", scense, rule_list, host, port)
     sock.close()

@@ -113,10 +113,11 @@ class TxtResponse(BaseResponse):
 
 class Response(BaseResponse):
 
-    def __init__(self, ssl_sock):
+    def __init__(self, sock):
         BaseResponse.__init__(self)
-        self.connection = ssl_sock
-        ssl_sock.settimeout(1)
+        self.sock = sock
+        self.sock.settimeout(1)
+        self.sock.setblocking(0)
         self.read_buffer = b""
         self.buffer_start = 0
         self.chunked = False
@@ -125,35 +126,30 @@ class Response(BaseResponse):
 
     def read_line(self, timeout=60.0):
         start_time = time.time()
-        sock = self.connection
-        sock.setblocking(0)
-        try:
-            while True:
-                n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
-                if n1 > -1:
-                    line = self.read_buffer[self.buffer_start:n1]
-                    self.buffer_start = n1 + 2
-                    return line
+        while True:
+            n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
+            if n1 > -1:
+                line = self.read_buffer[self.buffer_start:n1]
+                self.buffer_start = n1 + 2
+                return line
 
-                if time.time() - start_time > timeout:
-                    raise socket.timeout()
-                time.sleep(0.001)
-                try:
-                    data = sock.recv(8192)
-                except socket.error as e:
-                    if e.errno in [2, 11, 10035]:
-                        time_left = start_time + timeout - time.time()
-                        select.select([sock], [], [], time_left)
-                        continue
-                    else:
-                        raise e
-
-                if isinstance(data, int):
+            if time.time() - start_time > timeout:
+                raise socket.timeout()
+            time.sleep(0.001)
+            try:
+                data = self.sock.recv(8192)
+            except socket.error as e:
+                if e.errno in [2, 11, 10035]:
+                    time_left = start_time + timeout - time.time()
+                    select.select([self.sock], [], [], time_left)
                     continue
-                if data and len(data):
-                    self.read_buffer += data
-        finally:
-            sock.setblocking(1)
+                else:
+                    raise e
+
+            if isinstance(data, int):
+                continue
+            if data and len(data):
+                self.read_buffer += data
 
     def read_headers(self, timeout=60.0):
         start_time = time.time()
@@ -168,7 +164,7 @@ class Response(BaseResponse):
 
     def begin(self, timeout=60.0):
         start_time = time.time()
-        line = self.read_line(500)
+        line = self.read_line(timeout)
 
         requestline = line.rstrip(b'\r\n')
         words = requestline.split()
@@ -210,7 +206,6 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
-        self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
         out_list = [self.read_buffer[self.buffer_start:]]
@@ -231,11 +226,11 @@ class Response(BaseResponse):
             else:
                 to_read = 65535
             try:
-                data = self.connection.recv(to_read)
+                data = self.sock.recv(to_read)
             except socket.error as e:
                 if e.errno in [2, 11, 10035]:
                     time_left = start_time + timeout - time.time()
-                    select.select([self.connection], [], [], time_left)
+                    select.select([self.sock], [], [], time_left)
                     continue
                 else:
                     raise e
@@ -258,7 +253,6 @@ class Response(BaseResponse):
                 self.buffer_start = 0
             return out_str
 
-        self.connection.setblocking(0)
         start_time = time.time()
         out_len = len(self.read_buffer) - self.buffer_start
         out_bytes = bytearray(read_len)
@@ -276,11 +270,11 @@ class Response(BaseResponse):
             to_read = min(to_read, 65535)
 
             try:
-                nbytes = self.connection.recv_into(view[out_len:], to_read)
+                nbytes = self.sock.recv_into(view[out_len:], to_read)
             except socket.error as e:
                 if e.errno in [2, 11, 10035]:
                     time_left = start_time + timeout - time.time()
-                    select.select([self.connection], [], [], time_left)
+                    select.select([self.sock], [], [], time_left)
                     continue
                 else:
                     raise e
@@ -328,7 +322,7 @@ class Client(object):
     def __init__(self, proxy=None, timeout=60, cert=""):
         self.timeout = timeout
         self.cert = cert
-        self.connection = None
+        self.sock = None
         self.host = None
         self.port = None
         self.tls = None
@@ -384,8 +378,8 @@ class Client(object):
         return None
 
     def connect(self, host, port, tls):
-        if self.connection and host == self.host and port == self.port and self.tls == tls:
-            return self.connection
+        if self.sock and host == self.host and port == self.port and self.tls == tls:
+            return self.sock
 
         if not self.proxy:
             sock = self.direct_connect(host, port)
@@ -405,7 +399,11 @@ class Client(object):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             sock.settimeout(connect_timeout)
-
+            #
+            # if self.proxy["type"] in ["socks4",]:
+            #     ip = socket.gethostbyname(host)
+            #     sock.connect((ip, port))
+            # else:
             sock.connect((host, port))
 
             # conn_time = time.time() - start_time
@@ -417,7 +415,7 @@ class Client(object):
             else:
                 sock = ssl.wrap_socket(sock)
 
-        self.connection = sock
+        self.sock = sock
         self.host = host
         self.port = port
         self.tls = tls
@@ -431,8 +429,8 @@ class Client(object):
         url = utils.to_bytes(url)
 
         upl = urlsplit(url)
-        headers[b"Content-Length"] = str(len(body))
-        headers[b"Host"] = upl.netloc
+        headers["Content-Length"] = str(len(body))
+        headers["Host"] = upl.netloc
         port = upl.port
         if not port:
             if upl.scheme == b"http":
@@ -507,14 +505,14 @@ class Client(object):
             response.text = b"".join(data_buffer)
             return response
         else:
-            content_length = int(response.getheader(b'Content-Length', "0"))
+            content_length = int(response.getheader(b'Content-Length', b"0"))
             if content_length:
                 response.text = response.read(content_length, timeout=self.timeout)
 
             return response
 
 
-def request(method="GET", url=None, headers=None, body="", proxy=None, timeout=60, read_payload=True):
+def request(method="GET", url=None, headers=None, body=b"", proxy=None, timeout=60, read_payload=True):
     if headers is None:
         headers = {}
     if not url:

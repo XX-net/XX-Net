@@ -23,7 +23,10 @@ import simple_http_client
 from xlog import getLogger
 
 xlog = getLogger("launcher")
-from config import config
+try:
+    from config import config
+except:
+    from .config import config
 
 if not os.path.isdir(data_root):
     os.mkdir(data_root)
@@ -144,7 +147,7 @@ def download_file(url, filename):
                 progress[url]["status"] = "finished"
                 return True
         except Exception as e:
-            xlog.warn("download %s to %s fail:%r", url, filename, e)
+            xlog.exception("download %s to %s fail:%r", url, filename, e)
             continue
 
     progress[url]["status"] = "failed"

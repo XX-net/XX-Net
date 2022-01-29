@@ -230,6 +230,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         pa = check_email(username)
         if not pa:
+            xlog.warn("login with invalid email: %s", username)
             return self.response_json({
                 "res": "fail",
                 "reason": "Invalid email."

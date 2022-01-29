@@ -55,8 +55,12 @@ class SimpleI18N:
             return 'Unknown'
 
     def po_loader(self, file):
+        if sys.version_info[0] == 2:
+            fp = open(file, "r")
+        else:
+            fp = open(file, "rb")
+
         po_dict = {}
-        fp = open(file, "r")
         while True:
             line = fp.readline()
             line = utils.to_bytes(line)

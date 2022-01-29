@@ -71,7 +71,7 @@ try:
 except ImportError:
     from urlparse import urlparse, urljoin, urljoin
 
-from six import ConnectionError, ConnectionResetError, BrokenPipeError, ConnectionAbortedError
+from xx_six import ConnectionError, ConnectionResetError, BrokenPipeError, ConnectionAbortedError
 
 from . import check_local_network
 from .front import front

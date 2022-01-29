@@ -325,7 +325,7 @@ class IpRecord(object):
     def get_connect_time(self, ip, port=None):
         record = self.get(ip)
         if not record or time.time() - record["update"] > self.ttl:
-            if b"." in ip:
+            if utils.check_ip_valid4(ip):
                 return 6000
             else:
                 return 4000

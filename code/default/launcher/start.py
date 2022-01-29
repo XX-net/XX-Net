@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding:utf-8
 
+import platform
 import os
 import sys
 import time
@@ -109,6 +110,8 @@ def main():
     current_version = update_from_github.current_version()
 
     xlog.info("start XX-Net %s", current_version)
+    xlog.info("Python version: %s", sys.version)
+    xlog.info("System: %s|%s|%s", platform.system(), platform.version(),platform.architecture())
 
     web_control.confirm_xxnet_not_running()
 
