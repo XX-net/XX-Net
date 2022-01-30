@@ -6,30 +6,37 @@ on:
 jobs:
   lint_python:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [2.7, 3.8, 3.9, 3.10]
+    # strategy:
+      # matrix:
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        # python-version: [2.7, 3.8, 3.9, 3.10]
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@master
       # with:
       #   python-version: ${{ matrix.python-version }}
       - run: pip install black codespell flake8 isort pytest reorder-python-imports
-      - run: black --check . || true
+#      - run: black --check . || true
       # - run: black --diff . || true
+
       # - if: matrix.python-version >= 3.6
       #  run: |
       #    pip install black
       #    black --check . || true
-      - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
-      - run: flake8 code --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=code/default/gae_proxy/server,code/default/lib/noarch/six.py
+
+#      - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
+#      - run: flake8 code --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=code/default/gae_proxy/server,code/default/lib/noarch/six.py
       # isort and reorder-python-imports are two ways of doing the same thing
-      - run: isort --recursive . || true
-      - run: reorder-python-imports . || true
+#      - run: isort --recursive . || true
+#      - run: reorder-python-imports . || true
       - run: pip install -r requirements.txt || true
       - shell: bash
         env:
           XTUNNEL_USER: ${{ secrets.XTUNNEL_USER }}
           XTUNNEL_PASS: ${{ secrets.XTUNNEL_PASS }}
-        run: PYTHONPATH=code/default:code/default/lib/noarch pytest code/default || true
+          PYTHONPATH: ./code/default:./code/default/lib/noarch
+        run: |
+          find . |grep web_ui
+          pytest -v code/default || true
+          python code/default/launcher/tests/ingegrate_testing.py
+          cat running.log

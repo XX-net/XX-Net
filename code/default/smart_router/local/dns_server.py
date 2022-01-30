@@ -126,7 +126,15 @@ class DnsServer(object):
         while self.running:
             r, w, e = select.select(self.sockets, [], [], 1)
             for rsock in r:
-                data, addr = rsock.recvfrom(1024)
+                if not self.running:
+                    break
+
+                try:
+                    data, addr = rsock.recvfrom(1024)
+                except Exception as e:
+                    xlog.warn("recv except: %r", e)
+                    break
+
                 threading.Thread(target=self.on_udp_query, args=(rsock, data, addr)).start()
 
         self.th = None

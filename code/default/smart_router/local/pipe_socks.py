@@ -78,6 +78,7 @@ class PipeSocks(object):
             pass
 
     def close(self, s1, e):
+        # xlog.debug("%s close", s1)
         if s1 not in self.sock_dict:
             # xlog.warn("sock not in dict")
             return
@@ -92,11 +93,11 @@ class PipeSocks(object):
             remote_sock = s1
 
         create_time = time.time() - remote_sock.create_time
-        xlog.debug("pipe close %s->%s run_time:%d upload:%d,%d download:%d,%d, by remote:%d, left:%d e:%r",
+        xlog.debug("pipe close %s->%s run_time:%.2f upload:%d(%d)->%d(%d) download:%d(%d)->%d(%d), by remote:%d, server left:%d client left:%d e:%r",
                    local_sock, remote_sock, create_time,
-                   local_sock.recved_data, local_sock.recved_times,
-                   remote_sock.recved_data, remote_sock.recved_times,
-                   s1==remote_sock, s1.buf_size, e)
+                   local_sock.recved_data, local_sock.recved_times, remote_sock.sent_data, remote_sock.sent_times,
+                   remote_sock.recved_data, remote_sock.recved_times, local_sock.sent_data, local_sock.sent_times,
+                   s1==remote_sock, remote_sock.buf_size, local_sock.buf_size, e)
 
         if local_sock.recved_data > 0 and local_sock.recved_times == 1 and remote_sock.port == 443 and \
                 ((s1 == local_sock and create_time > 30) or (s1 == remote_sock)):
@@ -111,9 +112,8 @@ class PipeSocks(object):
         s1.close()
 
         if s2.buf_size:
-            xlog.debug("pipe close %s e:%s, but s2:%s have data(%d) to send",
-                       s1, e, s2, s2.buf_size)
-            s2.add_dat("")
+            xlog.debug("pipe close %s e:%s, but s2:%s have data(%d) to send", s1, e, s2, s2.buf_size)
+            s2.add_dat("")  # add empty block to close socket.
             return
 
         if s2 in self.sock_dict:
@@ -145,11 +145,13 @@ class PipeSocks(object):
                 r, w, error_set = select.select(self.read_set, self.write_set, self.error_set, 0.1)
                 for s1 in list(r):
                     if s1 not in self.read_set:
+                        xlog.warn("%s not in read list", s1)
                         continue
 
                     try:
                         d = s1.recv(65535)
                     except Exception as e:
+                        # xlog.debug("%s recv e:%r", e)
                         self.close(s1, "r")
                         continue
 
@@ -163,6 +165,7 @@ class PipeSocks(object):
 
                     s2 = self.sock_dict[s1]
                     if s2.is_closed():
+                        # xlog.debug("s2:%s is closed", s2)
                         continue
 
                     if g.config.direct_split_SNI and\
@@ -182,6 +185,8 @@ class PipeSocks(object):
 
                             try:
                                 flush_send_s(s2, d1)
+                                s2.sent_data += len(d1)
+                                s2.sent_times += 1
                             except Exception as e:
                                 xlog.warn("send split SNI:%s fail:%r", s2.host, e)
                                 self.close(s2, "w")
@@ -193,17 +198,20 @@ class PipeSocks(object):
 
                     if s2.buf_size == 0:
                         try:
-                            sended = 0
                             sended = s2.send(d)
+                            s2.sent_data += sended
+                            s2.sent_times += 1
                             # xlog.debug("direct send %d to %s from:%s", sended, s2, s1)
                         except Exception as e:
+                            # xlog.debug("%s send e:%r", s2, e)
                             if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
                                 # This error happened on upload large file or speed test
                                 # Just ignore this error and will be fine
                                 # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-                                pass
-                            self.close(s2, "w")
-                            continue
+                                sended = 0
+                            else:
+                                self.close(s2, "w")
+                                continue
 
                         if sended == len(d):
                             continue
@@ -223,29 +231,34 @@ class PipeSocks(object):
 
                 for s1 in list(w):
                     if s1 not in self.write_set:
+                        xlog.warn("%s not in write list", s1)
                         continue
 
                     if s1.buf_num == 0:
+                        # xlog.warn("%s write event but no buf", s1)
                         self.try_remove(self.write_set, s1)
                         continue
 
                     while s1.buf_num:
                         dat = s1.get_dat()
                         if not dat:
+                            xlog.error("%s get data fail", s1)
                             self.close(s1, "n")
                             break
 
                         try:
-                            sended = 0
                             sended = s1.send(dat)
+                            s1.sent_data += sended
+                            s1.sent_times += 1
                         except Exception as e:
                             if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
                                 # This error happened on upload large file or speed test
                                 # Just ignore this error and will be fine
                                 # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-                                pass
-                            self.close(s1, "w")
-                            break
+                                sended = 0
+                            else:
+                                self.close(s1, "w")
+                                break
 
                         if len(dat) - sended > 0:
                             s1.restore_dat(dat[sended:])
@@ -253,6 +266,7 @@ class PipeSocks(object):
 
                     if s1.buf_size < self.buf_size:
                         if s1 not in self.sock_dict:
+                            # xlog.debug("%s can send but removed", s1)
                             continue
 
                         s2 = self.sock_dict[s1]

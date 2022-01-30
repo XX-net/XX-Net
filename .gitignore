@@ -16,3 +16,4 @@ desktop.ini
 /code/default/gae_proxy/local/ipv6_tunnel/enable_ipv6_temp.bat
 /code/default/gae_proxy/local/ipv6_tunnel/set_best_server_temp.bat
 .pytest_cache
+*.log

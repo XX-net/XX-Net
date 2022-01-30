@@ -238,6 +238,12 @@ class Response(BaseResponse):
             if data:
                 out_list.append(data)
                 out_len += len(data)
+            else:
+                time_left = start_time + timeout - time.time()
+                r, w, e = select.select([self.sock], [], [self.sock], time_left)
+                if e:
+                    raise socket.error
+
         if read_len is not None and out_len < read_len:
             raise socket.timeout()
 

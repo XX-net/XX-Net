@@ -1,5 +1,8 @@
 import time
 
+from xlog import getLogger
+xlog = getLogger("smart_router")
+
 
 class SocketWrap(object):
 
@@ -11,6 +14,8 @@ class SocketWrap(object):
         self.target = target
         self.recved_data = 0
         self.recved_times = 0
+        self.sent_data = 0
+        self.sent_times = 0
         self.create_time = time.time()
         self.closed = False
         self.replace_pattern = None
@@ -23,6 +28,7 @@ class SocketWrap(object):
         return getattr(self._sock, attr)
 
     def close(self):
+        # xlog.debug("%s close", self)
         self._sock.close()
         self.closed = True
 
@@ -30,7 +36,7 @@ class SocketWrap(object):
         return self.closed
 
     def __str__(self):
-        return "%s[%s]:%d" % (self.host, self.ip, self.port)
+        return "%s[%s]:%d buf[%d]" % (self.host, self.ip, self.port, self.buf_size)
 
     def recv(self, bufsiz, flags=0):
         d = self._sock.recv(bufsiz, flags)
@@ -45,9 +51,11 @@ class SocketWrap(object):
 
                 d = b"%s %s %s" % (method, url, http_version) + d[line_end:]
 
+        # xlog.debug("%s recv %d", self, len(d))
         return d
 
     def add_dat(self, data):
+        # xlog.debug("%s add data %d", self, len(data))
         self.buf.append(data)
         self.buf_size += len(data)
         self.buf_num += 1
@@ -61,6 +69,7 @@ class SocketWrap(object):
         return dat
 
     def restore_dat(self, dat):
+        # xlog.debug("%s restore_dat %d", self, len(dat))
         self.buf.insert(0, dat)
         self.buf_size += len(dat)
         self.buf_num += 1

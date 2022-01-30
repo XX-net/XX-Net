@@ -532,6 +532,9 @@ class HTTPServer():
                         time.sleep(1)
                         continue
 
+                if not self.running:
+                    break
+
                 for fn, event in events:
                     if fn not in fn_map:
                         self.logger.error("p.poll get fn:%d", fn)
@@ -568,6 +571,9 @@ class HTTPServer():
                     r, w, e = select.select(self.sockets, [], [], 1)
                 except:
                     continue
+
+                if not self.running:
+                    break
 
                 for rsock in r:
                     try:

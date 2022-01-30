@@ -120,9 +120,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return self.send_not_found()
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler = module_init.proc_handler[module]["imp"].local.web_control.\
+                    ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.postvars = utils.to_str(self.postvars)
-                return controler.do_POST()
+                try:
+                    controler.do_POST()
+                    return
+                except Exception as e:
+                    xlog.exception("POST %s except:%r", path, e)
 
         self.send_not_found()
         xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
