@@ -11,6 +11,7 @@ performance optimisation at the cost of burning some memory in the userspace
 process.
 """
 import select
+import socket
 from .exceptions import ConnectionResetError, LineTooLongError
 # import logging
 # logger = logging.getLogger()
@@ -218,7 +219,15 @@ class BufferedSocket(object):
             should_read = True
 
         if ((self._remaining_capacity > self._bytes_in_buffer) and (should_read)):
-            count = self._sck.recv_into(self._buffer_view[self._buffer_end:])
+            while True:
+                try:
+                    count = self._sck.recv_into(self._buffer_view[self._buffer_end:])
+                    break
+                except socket.error as e:
+                    if e.errno in [2, 11, 35, 10035]:
+                        continue
+                    else:
+                        raise e
 
             # The socket just got closed. We should throw an exception if we
             # were asked for more data than we can return.
