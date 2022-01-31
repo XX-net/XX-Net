@@ -633,7 +633,8 @@ class ProxySession(object):
                 if g.quota < 0:
                     g.quota = 0
             except Exception as e:
-                xlog.exception("request except:%r ", e)
+                if self.running:
+                    xlog.exception("request except:%r ", e)
 
                 time.sleep(sleep_time)
                 continue

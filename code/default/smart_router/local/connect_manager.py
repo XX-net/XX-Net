@@ -6,6 +6,8 @@ import time
 import threading
 import struct
 
+import utils
+
 if __name__ == '__main__':
     current_path = os.path.dirname(os.path.abspath(__file__))
     root_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -96,6 +98,7 @@ class ConnectManager(object):
                         break
 
     def create_connect(self, queue, host, ip, port, timeout=5):
+        ip = utils.to_bytes(ip)
         if int(g.config.PROXY_ENABLE):
             sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
         else:
