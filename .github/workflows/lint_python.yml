@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
        matrix:
-         os: [ubuntu-latest]
-         python-version: [2.7, 3.8, 3.9 ]
+         python-version: ['2.7', '3.10' ]  # 3.8, 3.9,
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install codespell flake8 isort pytest reorder-python-imports
@@ -48,30 +47,16 @@ jobs:
           python code/default/launcher/tests/integrate_testing.py
 
   testing_windows:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
        matrix:
-         os: [windows-latest]
          python-version: [3.8]
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install codespell flake8 isort pytest reorder-python-imports
-
-      # - if: matrix.python-version >= 3.6
-      #  run: |
-      #    pip install black
-      #    black --check . || true
-      # - run: black --diff . || true
-
-#      - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
-#      - run: flake8 code --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=code/default/gae_proxy/server,code/default/lib/noarch/six.py
-      # isort and reorder-python-imports are two ways of doing the same thing
-#      - run: isort --recursive . || true
-#      - run: reorder-python-imports . || true
-
+      - run: pip install pytest
       - run: pip install -r requirements.txt || true
       - shell: bash
         env:
@@ -88,32 +73,19 @@ jobs:
           XTUNNEL_PASS: ${{ secrets.XTUNNEL_PASS }}
           PYTHONPATH: ./code/default:./code/default/lib/noarch
         run: |
-          python3.8.2/python.exe code/default/launcher/tests/integrate_testing.py
+          python code/default/launcher/tests/integrate_testing.py
 
   testing_mac:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
        matrix:
-         os: [macos-latest]
-         python-version: [2.7, 3.8, 3.9]
+         python-version: ['3.10']
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install codespell flake8 isort pytest reorder-python-imports
-
-      # - if: matrix.python-version >= 3.6
-      #  run: |
-      #    pip install black
-      #    black --check . || true
-      # - run: black --diff . || true
-
-#      - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
-#      - run: flake8 code --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=code/default/gae_proxy/server,code/default/lib/noarch/six.py
-      # isort and reorder-python-imports are two ways of doing the same thing
-#      - run: isort --recursive . || true
-#      - run: reorder-python-imports . || true
+      - run: pip install pytest
 
       - run: pip install -r requirements.txt || true
       - shell: bash

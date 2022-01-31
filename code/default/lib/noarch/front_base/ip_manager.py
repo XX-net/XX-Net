@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import queue
+from simple_queue import Queue
 import operator
 import os
-import sys
 import threading
 import time
 import random
@@ -127,8 +126,8 @@ class IpManager():
 
         # gererate from ip_dict, sort by handshake_time, when get_batch_ip
         self.ip_list = []
-        self.to_check_ip_queue = queue.Queue()
-        self.scan_exist_ip_queue = queue.Queue()
+        self.to_check_ip_queue = Queue()
+        self.scan_exist_ip_queue = Queue()
         self.ip_lock.release()
 
         self.load_config()
@@ -800,7 +799,7 @@ class IpManager():
 
     def stop_scan_all_exist_ip(self):
         self.keep_scan_all_exist_ip = False
-        self.scan_exist_ip_queue = queue.Queue()
+        self.scan_exist_ip_queue = Queue()
 
     def scan_exist_ip_worker(self):
         while self.running and self.keep_scan_all_exist_ip:

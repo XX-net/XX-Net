@@ -239,15 +239,16 @@ class SSLConnection(object):
             except OpenSSL.SSL.ZeroReturnError as e:
                 raise e
             except OpenSSL.SSL.SysCallError as e:
-                if e[0] == -1 and 'Unexpected EOF' in e[1]:
-                    # errors when reading empty strings are expected and can be ignored
-                    return 0
-                elif e[0] == 11 and e[1] == 'EAGAIN':
-                    continue
+                if sys.version_info[0] == 2:
+                    if e[0] == -1 and 'Unexpected EOF' in e[1]:
+                        # errors when reading empty strings are expected and can be ignored
+                        return 0
+                    elif e[0] == 11 and e[1] == 'EAGAIN':
+                        continue
                 raise
-            except errno.EAGAIN:
-                continue
             except Exception as e:
+                if sys.version_info[0] == 2 and e == errno.EAGAIN:
+                    continue
                 #self.logger.exception("recv_into:%r", e)
                 raise e
 

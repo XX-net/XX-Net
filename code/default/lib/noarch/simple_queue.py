@@ -2,7 +2,6 @@ import time
 import threading
 import sys
 
-
 # This simple Queue fix the performance problem in the system build-in Queue.
 # Every get with time out will run in thread sleep check sleep check...
 # cost too many CPU and delay queue response.
@@ -17,6 +16,7 @@ queue_list = []
 timer_th = None
 
 timeout_interval = 0.1
+
 # User can change  timeout_interval to bigger to reduce CPU load.
 
 
@@ -71,6 +71,9 @@ class Queue(object):
         _add_queue(self)
 
     def __sizeof__(self):
+        return len(self.queue)
+
+    def _qsize(self):
         return len(self.queue)
 
     def reset(self):
@@ -147,7 +150,7 @@ class Queue(object):
                     except Exception as e:
                         if i >= len(self.waiters):
                             break
-                        #xlog.warn("get %d from size:%d fail.", i, len(self.waiters))
+                        # xlog.warn("get %d from size:%d fail.", i, len(self.waiters))
                         continue
 
                 if is_max:
@@ -158,24 +161,3 @@ class Queue(object):
             _add_wait()
 
         lock.acquire()
-
-
-def test_pub(q, x):
-    time.sleep(2)
-    print("put x")
-    q.put(x)
-
-
-def test():
-    q1 = Queue()
-    q1.put("a")
-    print((q1.get()))
-
-    threading.Thread(target=test_pub, args=(q1, "b")).start()
-    print((q1.get(15)))
-
-
-if __name__ == '__main__':
-    test()
-
-

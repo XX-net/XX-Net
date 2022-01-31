@@ -28,16 +28,9 @@ import logging
 import select
 import errno
 import subprocess
+import threading
+from six.moves import queue as Queue
 
-try:
-    import queue
-except:
-    import queue as queue
-
-try:
-    import _thread
-except:
-    import _thread as thread
 
 try:
     _real_raw_input = raw_input
@@ -271,7 +264,7 @@ class teredo_prober(object):
         elif len(self.server_ip_list) < 2:
             print(('Need input more teredo servers, now is %d.'
                    % len(self.server_ip_list)))
-        _thread.start_new_thread(self.receive_loop, ())
+        threading.Thread(target=self.receive_loop).start()
         if probe_nat:
             self.nat_type = self.nat_type_probe()
 
@@ -418,9 +411,9 @@ class teredo_prober(object):
         print('Starting evaluate servers...')
         self.clear()
         eval_list = []
-        queue_obj = queue.Queue()
+        queue_obj = Queue.Queue()
         for server_ip in self.server_ip_list:
-            _thread.start_new_thread(self._eval_servers, (server_ip, queue_obj))
+            threading.Thread(target=self._eval_servers, args=(server_ip, queue_obj)).start()
         for _ in self.server_ip_list:
             eval_list.append(queue_obj.get())
         return eval_list

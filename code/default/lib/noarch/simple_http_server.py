@@ -1,7 +1,6 @@
 import os
 import datetime
 import threading
-from http import client
 import socket
 import errno
 import sys
@@ -46,8 +45,6 @@ class ParseReqFail(Exception):
 class HttpServerHandler():
     WebSocket_MAGIC_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
     default_request_version = b"HTTP/1.1"
-
-    MessageClass = client.HTTPMessage
 
     rbufsize = 32 * 1024
     wbufsize = 32 * 1024
@@ -94,6 +91,19 @@ class HttpServerHandler():
 
     def address_string(self):
         return '%s:%s' % self.client_address[:2]
+
+    def parse_headers(self):
+        headers = {}
+        while True:
+            line = self.rfile.readline(65537)
+            line = line.strip()
+            if len(line) == 0:
+                break
+
+            k, v = line.split(b":", 1)
+            key = k.title()
+            headers[key] = v.lstrip()
+        return headers
 
     def parse_request(self):
         try:
@@ -153,16 +163,7 @@ class HttpServerHandler():
         self.command, self.path, self.request_version = command, path, version
 
         # Parse HTTP headers
-        if sys.version_info[0] == 3:
-            headers = client.parse_headers(self.rfile, _class=self.MessageClass)
-            self.headers = dict(map(utils.to_bytes, headers.items()))
-        else:
-            self.headers = {}
-            headers = mimetools.Message(self.rfile, 0)
-            for line in headers.headers:
-                line = line.strip()
-                k, v = line.split(":", 1)
-                self.headers[k] = v.lstrip()
+        self.headers = self.parse_headers()
 
         self.host = self.headers.get(b'Host', b"")
         conntype = self.headers.get(b'Connection', b"")
@@ -612,7 +613,7 @@ class HTTPServer():
 
 class TestHttpServer(HttpServerHandler):
     def __init__(self, sock, client, args):
-        self.data_path = args
+        self.data_path = utils.to_bytes(args)
         HttpServerHandler.__init__(self, sock, client, args)
 
     def generate_random_lowercase(self, n):
@@ -637,13 +638,14 @@ class TestHttpServer(HttpServerHandler):
 
         self.logger.debug("GET %s from %s:%d", self.path, self.client_address[0], self.client_address[1])
 
-        if url_path == "/test":
+        if url_path == b"/test":
             tme = (datetime.datetime.today() + datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            tme = utils.to_bytes(tme)
             head = b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\n'
             head += b'Expires: %s\r\nContent-Type: text/plain\r\nContent-Length: 4\r\n\r\nOK\r\n' % (tme)
             self.wfile.write(head)
 
-        elif url_path == '/':
+        elif url_path == b'/':
             data = b"OK\r\n"
             self.wfile.write(
                 b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s' % (len(data), data))
@@ -663,7 +665,10 @@ class TestHttpServer(HttpServerHandler):
                 self.wfile.write(data[:send_batch])
                 start += send_batch
         else:
-            target = os.path.abspath(os.path.join(self.data_path, url_path[1:]))
+            if b".." in url_path[1:]:
+                return self.send_not_found()
+
+            target = os.path.join(self.data_path, url_path[1:])
             if os.path.isfile(target):
                 self.send_file(target, b"application/x-binary")
             else:

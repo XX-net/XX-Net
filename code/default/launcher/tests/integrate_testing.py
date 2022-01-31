@@ -26,8 +26,10 @@ class ServiceTesting(object):
 
         self.pth = None
         self.log_fp = None
+        self.log_fn = None
+
         if self.check_web_console():
-            # XX-Net was running externally
+            xlog.info("XX-Net was running externally.")
             self.th = None
             return
 
@@ -73,13 +75,13 @@ class ServiceTesting(object):
 
     def check_web_console(self):
         try:
-            res = simple_http_client.request("GET", "http://127.0.0.1:8085/", timeout=10)
+            res = simple_http_client.request("GET", "http://127.0.0.1:8085/", timeout=30)
             return res is not None and res.status == 200
         except Exception as e:
             xlog.exception("get web_console fail:%r", e)
             return False
 
-    def get_xxnet_web_console(self, timeout=1000):
+    def get_xxnet_web_console(self, timeout=15):
         t0 = time.time()
         t_end = t0 + timeout
         while time.time() < t_end and self.running:
@@ -150,7 +152,7 @@ class ServiceTesting(object):
         py_bin = sys.executable
         start_script = os.path.join(default_path, "launcher", "start.py")
         cmd = [py_bin, start_script]
-        xlog.info("cmd: %s" % cmd)
+        xlog.info("start XX-Net cmd: %s" % cmd)
         try:
             self.pth = Popen(cmd, stdout=PIPE, stderr=STDOUT, bufsize=1)  # , preexec_fn=os.setsid, shell=True,
             for line in iter(self.pth.stdout.readline, b''):
@@ -210,3 +212,4 @@ if __name__ == "__main__":
         xlog.exception("test failed:%r", e)
         testing.stop_xxnet()
         testing.kill_python()
+        exit(1)

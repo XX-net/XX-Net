@@ -1,5 +1,4 @@
-
-import queue
+from six.moves import queue as Queue
 import threading
 
 from .http_common import *
@@ -32,7 +31,7 @@ class Http1Worker(HttpWorker):
         self.trace_time.append([ssl_sock.create_time, "connect"])
         self.record_active("init")
 
-        self.task_queue = queue.Queue()
+        self.task_queue = Queue.Queue()
         threading.Thread(target=self.work_loop).start()
         self.idle_cb()
 

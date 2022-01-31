@@ -126,6 +126,7 @@ class Response(BaseResponse):
 
     def read_line(self, timeout=60.0):
         start_time = time.time()
+        end_time = start_time + timeout
         while True:
             n1 = self.read_buffer.find(b"\r\n", self.buffer_start)
             if n1 > -1:
@@ -133,14 +134,15 @@ class Response(BaseResponse):
                 self.buffer_start = n1 + 2
                 return line
 
-            if time.time() - start_time > timeout:
+            if time.time() > end_time:
                 raise socket.timeout()
+
             time.sleep(0.001)
             try:
                 data = self.sock.recv(8192)
             except socket.error as e:
                 if e.errno in [2, 11, 10035]:
-                    time_left = start_time + timeout - time.time()
+                    time_left = end_time - time.time()
                     select.select([self.sock], [], [], time_left)
                     continue
                 else:
@@ -150,6 +152,14 @@ class Response(BaseResponse):
                 continue
             if data and len(data):
                 self.read_buffer += data
+            else:
+                time_left = end_time - time.time()
+                if time_left < 0:
+                    raise socket.error
+
+                r, w, e = select.select([self.sock], [], [self.sock], time_left)
+                if e:
+                    raise socket.error
 
     def read_headers(self, timeout=60.0):
         start_time = time.time()
@@ -240,6 +250,9 @@ class Response(BaseResponse):
                 out_len += len(data)
             else:
                 time_left = start_time + timeout - time.time()
+                if time_left < 0:
+                    raise socket.error
+
                 r, w, e = select.select([self.sock], [], [self.sock], time_left)
                 if e:
                     raise socket.error

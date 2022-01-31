@@ -25,14 +25,6 @@ data_launcher_path = os.path.join(data_path, 'launcher')
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
-try:
-    import OpenSSL
-except Exception as e2:
-    print("import pyOpenSSL fail:%r", e2)
-    print("Try install python-openssl\r\n")
-    input("Press Enter to continue...")
-    os._exit(0)
-
 
 def create_data_path():
     if not os.path.isdir(data_path):
@@ -61,6 +53,20 @@ from xlog import getLogger
 
 log_file = os.path.join(data_launcher_path, "launcher.log")
 xlog = getLogger("launcher", file_name=log_file)
+
+current_version = update_from_github.current_version()
+
+xlog.info("start XX-Net %s", current_version)
+xlog.info("Python version: %s", sys.version)
+xlog.info("System: %s|%s|%s", platform.system(), platform.version(), platform.architecture())
+
+try:
+    import OpenSSL
+except Exception as e2:
+    print("import pyOpenSSL fail:%r", e2)
+    print("Try install python-openssl\r\n")
+    input("Press Enter to continue...")
+    os._exit(0)
 
 running_file = os.path.join(data_launcher_path, "Running.Lck")
 
@@ -106,12 +112,6 @@ def main():
     if sys.platform == "win32" and config.show_compat_suggest:
         import win_compat_suggest
         win_compat_suggest.main()
-
-    current_version = update_from_github.current_version()
-
-    xlog.info("start XX-Net %s", current_version)
-    xlog.info("Python version: %s", sys.version)
-    xlog.info("System: %s|%s|%s", platform.system(), platform.version(),platform.architecture())
 
     web_control.confirm_xxnet_not_running()
 
