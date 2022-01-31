@@ -4,6 +4,7 @@ import threading
 import socket
 import errno
 import struct
+from ssl import SSLError
 
 from .http_common import *
 
@@ -311,6 +312,8 @@ class Http2Worker(HttpWorker):
     def _consume_single_frame(self):
         try:
             header = self._sock.recv(9)
+        except SSLError as e:
+            return self.close("recv.ssl error:%r" % e)
         except socket.timeout as e:
             self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e,
                                   time.time() - self.last_recv_time)
@@ -328,7 +331,7 @@ class Http2Worker(HttpWorker):
                 # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
                 pass
             if self.keep_running:
-                self.logger.exception("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e, time.time() - self.last_recv_time)
+                self.logger.warn("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e, time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)
             return
         self.last_recv_time = time.time()

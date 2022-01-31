@@ -569,7 +569,7 @@ class socksocket(_BaseSocket):
         else:
             if rdns:
                 # Resolve remotely
-                host_bytes = host.encode("idna")
+                host_bytes = host.encode("utf-8")
                 file.write(b"\x03" + chr(len(host_bytes)).encode() + host_bytes)
             else:
                 # Resolve locally
@@ -630,7 +630,7 @@ class socksocket(_BaseSocket):
             # NOTE: This is actually an extension to the SOCKS4 protocol
             # called SOCKS4A and may not be supported in all cases.
             if remote_resolve:
-                writer.write(dest_addr.encode('idna') + b"\x00")
+                writer.write(dest_addr.encode('utf-8') + b"\x00")
             writer.flush()
 
             # Get the response from the server

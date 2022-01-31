@@ -39,6 +39,7 @@ import sys
 import os
 import traceback
 import platform
+import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
@@ -120,7 +121,7 @@ def main(args):
 
     log_info()
 
-    CertUtil.init_ca(no_mess_system)
+    threading.Thread(target=CertUtil.init_ca, args=(no_mess_system,)).start()
 
     listen_ips = front.config.listen_ip
     if isinstance(listen_ips, str):

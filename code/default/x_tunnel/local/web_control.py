@@ -279,7 +279,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         g.config.login_password = ""
         g.config.save()
 
-        g.session.stop()
+        if g.session:
+            g.session.stop()
 
         return self.response_json({"res": "success"})
 

@@ -456,8 +456,9 @@ def serve_forever():
 
 
 def on_quit(widget=None, data=None):
-    helperDisableAutoProxy(currentService)
-    helperDisableGlobalProxy(currentService)
+    # helperDisableAutoProxy(currentService)
+    # helperDisableGlobalProxy(currentService)
+    sys_tray.windowWillClose_(None)
 
 
 def main():

@@ -1,5 +1,5 @@
 import select
-
+import sys
 try:
     # py3
     from urllib.parse import urlparse, urlsplit
@@ -124,6 +124,28 @@ class Response(BaseResponse):
         self.version = None
         self.content_length = None
 
+    def recv(self, to_read=8192, timeout=30.0):
+        if timeout < 0:
+            raise Exception("recv timeout")
+
+        start_time = time.time()
+        end_time = start_time + timeout
+        while time.time() < end_time:
+            try:
+                return self.sock.recv(to_read)
+            except socket.error as e:
+                if e.errno in [2, 11, 35, 10035]:
+                    time_left = end_time - time.time()
+                    if time_left < 0:
+                        break
+
+                    select.select([self.sock], [], [self.sock], time_left)
+                    continue
+                else:
+                    raise e
+
+        raise Exception("recv timeout")
+
     def read_line(self, timeout=60.0):
         start_time = time.time()
         end_time = start_time + timeout
@@ -137,16 +159,8 @@ class Response(BaseResponse):
             if time.time() > end_time:
                 raise socket.timeout()
 
-            time.sleep(0.001)
-            try:
-                data = self.sock.recv(8192)
-            except socket.error as e:
-                if e.errno in [2, 11, 10035]:
-                    time_left = end_time - time.time()
-                    select.select([self.sock], [], [], time_left)
-                    continue
-                else:
-                    raise e
+            time_left = end_time - time.time()
+            data = self.recv(8192, time_left)
 
             if isinstance(data, int):
                 continue
@@ -217,6 +231,7 @@ class Response(BaseResponse):
             return out_str
 
         start_time = time.time()
+        end_time = start_time + timeout
         out_len = len(self.read_buffer) - self.buffer_start
         out_list = [self.read_buffer[self.buffer_start:]]
 
@@ -235,15 +250,9 @@ class Response(BaseResponse):
                 to_read = min(to_read, 65535)
             else:
                 to_read = 65535
-            try:
-                data = self.sock.recv(to_read)
-            except socket.error as e:
-                if e.errno in [2, 11, 10035]:
-                    time_left = start_time + timeout - time.time()
-                    select.select([self.sock], [], [], time_left)
-                    continue
-                else:
-                    raise e
+
+            time_left = end_time - time.time()
+            data = self.recv(to_read, time_left)
 
             if data:
                 out_list.append(data)
@@ -291,8 +300,11 @@ class Response(BaseResponse):
             try:
                 nbytes = self.sock.recv_into(view[out_len:], to_read)
             except socket.error as e:
-                if e.errno in [2, 11, 10035]:
+                if e.errno in [2, 11, 35, 10035]:
                     time_left = start_time + timeout - time.time()
+                    if time_left < 0:
+                        raise socket.timeout
+
                     select.select([self.sock], [], [], time_left)
                     continue
                 else:

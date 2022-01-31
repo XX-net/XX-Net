@@ -41,6 +41,7 @@ class ServiceTesting(object):
 
         self.th = threading.Thread(target=self.start_xxnet)
         self.th.start()
+        time.sleep(20)
 
     def __del__(self):
         if self.log_fp:
@@ -60,6 +61,9 @@ class ServiceTesting(object):
         self.xtunnel_proxy_socks4()
         self.xtunnel_proxy_socks5()
 
+        if not self.th:
+            return
+
         self.stop_xxnet()
 
         self.check_log()
@@ -78,10 +82,10 @@ class ServiceTesting(object):
             res = simple_http_client.request("GET", "http://127.0.0.1:8085/", timeout=30)
             return res is not None and res.status == 200
         except Exception as e:
-            xlog.exception("get web_console fail:%r", e)
+            # xlog.debug("get web_console fail:%r", e)
             return False
 
-    def get_xxnet_web_console(self, timeout=15):
+    def get_xxnet_web_console(self, timeout=40):
         t0 = time.time()
         t_end = t0 + timeout
         while time.time() < t_end and self.running:
@@ -91,6 +95,8 @@ class ServiceTesting(object):
 
             xlog.info("got web console")
             return
+
+        xlog.warn("Get Web Console timeout.")
 
     def xtunnel_logout(self):
         res = simple_http_client.request("POST", "http://localhost:8085/module/x_tunnel/control/logout", timeout=10)
@@ -179,7 +185,7 @@ class ServiceTesting(object):
         xlog.info("start kill python")
         if sys.platform == "win32":
             # This will kill this script as well.
-            os.system("taskkill /im /F python.exe")
+            os.system("taskkill /F /im python.exe")
         else:
             os.system("pkill -9 -f 'start.py'")
 
