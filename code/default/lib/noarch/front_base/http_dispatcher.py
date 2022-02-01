@@ -16,13 +16,7 @@ performance:
  get the fastest worker to process the request.
  sorted by rtt and pipeline task on load.
 """
-
-try:
-    from Queue import deque
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
-    from queue import deque
+from six.moves import queue
 
 import operator
 import threading
@@ -53,7 +47,7 @@ class HttpsDispatcher(object):
         self.http1worker = http1worker
         self.http2worker = http2worker
 
-        self.request_queue = Queue()
+        self.request_queue = queue.Queue()
         self.workers = []
         self.working_tasks = {}
         self.h1_num = 0
@@ -71,7 +65,7 @@ class HttpsDispatcher(object):
         self.rtts = []
         self.last_sent = self.total_sent = 0
         self.last_received = self.total_received = 0
-        self.second_stats = deque()
+        self.second_stats = queue.deque()
         self.last_statistic_time = time.time()
         self.second_stat = {
             "rtt": 0,
@@ -399,7 +393,7 @@ class HttpsDispatcher(object):
                 "sent": sent,
                 "received": received
             }
-            self.second_stats = deque()
+            self.second_stats = queue.deque()
             self.last_statistic_time = now
 
         if len(self.rtts):

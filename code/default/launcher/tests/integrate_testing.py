@@ -41,7 +41,6 @@ class ServiceTesting(object):
 
         self.th = threading.Thread(target=self.start_xxnet)
         self.th.start()
-        time.sleep(20)
 
     def __del__(self):
         if self.log_fp:
@@ -56,7 +55,6 @@ class ServiceTesting(object):
         self.smart_route_proxy_socks5()
 
         self.xtunnel_login()
-        time.sleep(10)
         self.xtunnel_proxy_http()
         self.xtunnel_proxy_socks4()
         self.xtunnel_proxy_socks5()
@@ -86,7 +84,8 @@ class ServiceTesting(object):
             # xlog.debug("get web_console fail:%r", e)
             return False
 
-    def get_xxnet_web_console(self, timeout=40):
+    def get_xxnet_web_console(self, timeout=50):
+        xlog.info("Start get xxnet web console.")
         t0 = time.time()
         t_end = t0 + timeout
         while time.time() < t_end and self.running:
@@ -94,32 +93,41 @@ class ServiceTesting(object):
                 time.sleep(1)
                 continue
 
-            xlog.info("got web console")
+            xlog.info("Got web console success.")
             return
 
         xlog.warn("Get Web Console timeout.")
 
     def xtunnel_logout(self):
+        xlog.info("Start testing XTunnel logout")
         res = simple_http_client.request("POST", "http://localhost:8085/module/x_tunnel/control/logout", timeout=10)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = False
+        xlog.info("Finished testing XTunnel logout")
 
     def smart_route_proxy_http(self):
+        xlog.info("Start testing SmartRouter HTTP proxy protocol")
         proxy = "http://localhost:8086"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=20)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing SmartRouter HTTP proxy protocol")
 
     def smart_route_proxy_socks4(self):
+        xlog.info("Start testing SmartRouter SOCKS4 proxy protocol")
         proxy = "socks4://localhost:8086"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing SmartRouter SOCKS4 proxy protocol")
 
     def smart_route_proxy_socks5(self):
+        xlog.info("Start testing SmartRouter SOCKS5 proxy protocol")
         proxy = "socks5://localhost:8086"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing SmartRouter SOCKS5 proxy protocol")
 
     def xtunnel_login(self):
+        xlog.info("Start testing XTunnel login")
         headers = {
             "Content-Type": "application/json"
         }
@@ -133,27 +141,34 @@ class ServiceTesting(object):
                                          headers=headers, body=data, timeout=15)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = True
+        xlog.info("Finished testing XTunnel login")
 
     def xtunnel_proxy_http(self):
+        xlog.info("Start testing XTunnel HTTP proxy protocol")
         if not self.xtunnel_login_status:
             self.xtunnel_login()
         proxy = "http://localhost:1080"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=30)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing XTunnel HTTP proxy protocol")
 
     def xtunnel_proxy_socks4(self):
+        xlog.info("Start testing XTunnel Socks4 proxy protocol")
         if not self.xtunnel_login_status:
             self.xtunnel_login()
         proxy = "socks4://localhost:1080"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing XTunnel Socks4 proxy protocol")
 
     def xtunnel_proxy_socks5(self):
+        xlog.info("Start testing XTunnel Socks5 proxy protocol")
         if not self.xtunnel_login_status:
             self.xtunnel_login()
         proxy = "socks5://localhost:1080"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
+        xlog.info("Finished testing XTunnel Socks5 proxy protocol")
 
     def start_xxnet(self):
         py_bin = sys.executable
@@ -167,6 +182,8 @@ class ServiceTesting(object):
                 self.log_fp.flush()
                 line = line.strip()
                 xlog.info("LOG|%s", line)
+                if not self.running:
+                    break
         except Exception as e:
             xlog.exception("run %s error:%r", cmd, e)
 
@@ -183,6 +200,7 @@ class ServiceTesting(object):
             pass
 
     def kill_python(self):
+        self.running = False
         xlog.info("start kill python")
         if sys.platform == "win32":
             # This will kill this script as well.

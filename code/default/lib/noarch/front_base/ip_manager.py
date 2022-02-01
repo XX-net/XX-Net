@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from simple_queue import Queue
+from six.moves import queue
 import operator
 import os
 import threading
@@ -126,8 +126,8 @@ class IpManager():
 
         # gererate from ip_dict, sort by handshake_time, when get_batch_ip
         self.ip_list = []
-        self.to_check_ip_queue = Queue()
-        self.scan_exist_ip_queue = Queue()
+        self.to_check_ip_queue = queue.Queue()
+        self.scan_exist_ip_queue = queue.Queue()
         self.ip_lock.release()
 
         self.load_config()
@@ -591,7 +591,7 @@ class IpManager():
         while self.running:
             try:
                 ip_str, test_time = self.to_check_ip_queue.get()
-            except:
+            except Exception as e:
                 continue
 
             time_wait = test_time - time.time()
@@ -799,7 +799,7 @@ class IpManager():
 
     def stop_scan_all_exist_ip(self):
         self.keep_scan_all_exist_ip = False
-        self.scan_exist_ip_queue = Queue()
+        self.scan_exist_ip_queue = queue.Queue()
 
     def scan_exist_ip_worker(self):
         while self.running and self.keep_scan_all_exist_ip:

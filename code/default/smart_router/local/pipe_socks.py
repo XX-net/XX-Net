@@ -132,7 +132,7 @@ class PipeSocks(object):
 
         while self.running:
             if not self.error_set:
-                time.sleep(0.1)
+                time.sleep(0.1)  # TODO: use notify to block.
                 continue
 
             for s1 in self.error_set:

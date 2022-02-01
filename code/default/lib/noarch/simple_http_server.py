@@ -572,7 +572,7 @@ class HTTPServer():
             while self.running:
                 try:
                     r, w, e = select.select(self.sockets, [], [], 1)
-                except:
+                except Exception as e:
                     continue
 
                 if not self.running:
