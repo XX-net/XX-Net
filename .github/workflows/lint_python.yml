@@ -10,12 +10,13 @@ jobs:
        matrix:
          python-version: ['2.7', '3.10' ]  # 3.8, 3.9,
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install codespell flake8 isort pytest reorder-python-imports
+      - run: pip install pytest
 
+      # - run: pip install  reorder-python-imports codespell flake8 isort
       # - if: matrix.python-version >= 3.6
       #  run: |
       #    pip install black

@@ -325,11 +325,6 @@ class Http2Worker(HttpWorker):
             self.close("ConnectionReset:%r" % e)
             return
         except Exception as e:
-            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
-                # This error happened on upload large file or speed test
-                # Just ignore this error and will be fine
-                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-                pass
             if self.keep_running:
                 self.logger.warn("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e, time.time() - self.last_recv_time)
             self.close("ConnectionReset:%r" % e)

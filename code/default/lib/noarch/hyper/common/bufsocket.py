@@ -220,12 +220,18 @@ class BufferedSocket(object):
 
         if ((self._remaining_capacity > self._bytes_in_buffer) and (should_read)):
             while True:
+                count = 0
                 try:
                     count = self._sck.recv_into(self._buffer_view[self._buffer_end:])
                     break
                 except socket.error as e:
                     if e.errno in [2, 11, 35, 10035]:
-                        continue
+                        if self._bytes_in_buffer >= amt:
+                            # It is not necessary to read, just continue
+                            break
+                        else:
+                            select.select([self._sck], [], [], 10)
+                            continue
                     else:
                         raise e
 

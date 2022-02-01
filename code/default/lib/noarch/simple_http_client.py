@@ -305,7 +305,7 @@ class Response(BaseResponse):
                     if time_left < 0:
                         raise socket.timeout
 
-                    select.select([self.sock], [], [], time_left)
+                    select.select([self.sock], [], [self.sock], time_left)
                     continue
                 else:
                     raise e
