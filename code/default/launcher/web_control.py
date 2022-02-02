@@ -247,7 +247,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         # i18n code lines (Both the locale dir & the template dir are module-dependent)
         locale_dir = os.path.abspath(os.path.join(current_path, 'lang'))
-        index_content = i18n_translator.render(locale_dir, os.path.join(current_path, "web_ui", "index.html"))
+        fn = os.path.join(current_path, "web_ui", "index.html")
+        try:
+            index_content = i18n_translator.render(locale_dir, fn)
+        except Exception as e:
+            xlog.warn("render %s except:%r", fn, e)
+            return self.send_not_found()
 
         current_version = utils.to_bytes(update_from_github.current_version())
         menu_content = b''

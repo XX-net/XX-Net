@@ -1,5 +1,8 @@
 import select
-import sys
+
+from xlog import getLogger
+xlog = getLogger("simple_http_client")
+
 try:
     # py3
     from urllib.parse import urlparse, urlsplit
@@ -390,6 +393,7 @@ class Client(object):
 
         for res in info:
             af, socktype, proto, canonname, sa = res
+            ip_port = (sa[0], sa[1])
             s = None
             try:
                 s = socket.socket(af, socktype, proto)
@@ -400,9 +404,10 @@ class Client(object):
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
                 s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
                 s.settimeout(connect_timeout)
-                s.connect((host, port))
+                s.connect(ip_port)
                 return s
-            except socket.error:
+            except socket.error as e:
+                xlog.warn("direct connect %s except:%r", sa, e)
                 if s:
                     s.close()
 
@@ -414,6 +419,8 @@ class Client(object):
 
         if not self.proxy:
             sock = self.direct_connect(host, port)
+            if not sock:
+                return None
         else:
             connect_timeout = 5
 
@@ -430,11 +437,6 @@ class Client(object):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32 * 1024)
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             sock.settimeout(connect_timeout)
-            #
-            # if self.proxy["type"] in ["socks4",]:
-            #     ip = socket.gethostbyname(host)
-            #     sock.connect((ip, port))
-            # else:
             sock.connect((host, port))
 
             # conn_time = time.time() - start_time

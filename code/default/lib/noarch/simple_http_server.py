@@ -207,8 +207,6 @@ class HttpServerHandler():
             self.logger.warn("parse req except:%r", e)
             self.close_connection = 1
         except socket.error as e:
-            if e.errno == 2:
-                self.send_not_found()
             # self.logger.warn("socket error:%r", e)
             self.close_connection = 1
         except IOError as e:

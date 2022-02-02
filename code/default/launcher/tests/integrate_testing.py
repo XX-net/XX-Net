@@ -13,6 +13,7 @@ noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
 import utils
+import simple_http_server
 
 import simple_http_client
 from xlog import getLogger
@@ -27,6 +28,22 @@ class ServiceTesting(object):
         self.pth = None
         self.log_fp = None
         self.log_fn = None
+
+        # Lock for one integrate testing at the same time.
+        # github act running in local will run multi python version in same VM, so we need to lock to avoid conflict.
+        while True:
+            try:
+                res = simple_http_client.request("GET", "http://127.0.0.1:8888/test")
+                if res and res.status == 200:
+                    time.sleep(1)
+                    continue
+                else:
+                    break
+            except:
+                break
+
+        self.lock_server = simple_http_server.HTTPServer(('', 8888), simple_http_server.TestHttpServer, ".")
+        self.lock_server.start()
 
         if self.check_web_console():
             xlog.info("XX-Net was running externally.")
@@ -66,6 +83,8 @@ class ServiceTesting(object):
 
         self.check_log()
 
+        self.lock_server.shutdown()
+
         for _ in range(30):
             if not self.th:
                 return
@@ -77,7 +96,7 @@ class ServiceTesting(object):
 
     def check_web_console(self):
         try:
-            res = simple_http_client.request("GET", "http://127.0.0.1:8085/", timeout=30)
+            res = simple_http_client.request("GET", "http://127.0.0.1:8085/", timeout=1)
             return res is not None and res.status in [200, 404]
             # 404 is because act running locally may lost some folder. just bypass this error.
         except Exception as e:
@@ -100,7 +119,7 @@ class ServiceTesting(object):
 
     def xtunnel_logout(self):
         xlog.info("Start testing XTunnel logout")
-        res = simple_http_client.request("POST", "http://localhost:8085/module/x_tunnel/control/logout", timeout=10)
+        res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/logout", timeout=10)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = False
         xlog.info("Finished testing XTunnel logout")
@@ -137,7 +156,7 @@ class ServiceTesting(object):
             "is_register": [0,]
         }
         data = json.dumps(data)
-        res = simple_http_client.request("POST", "http://localhost:8085/module/x_tunnel/control/login",
+        res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/login",
                                          headers=headers, body=data, timeout=15)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = True
@@ -176,7 +195,7 @@ class ServiceTesting(object):
         cmd = [py_bin, start_script]
         xlog.info("start XX-Net cmd: %s" % cmd)
         try:
-            self.pth = Popen(cmd, stdout=PIPE, stderr=STDOUT, bufsize=1)  # , preexec_fn=os.setsid, shell=True,
+            self.pth = Popen(cmd, stdout=PIPE, stderr=STDOUT)  # , preexec_fn=os.setsid, shell=True, , bufsize=1
             for line in iter(self.pth.stdout.readline, b''):
                 self.log_fp.write(line)
                 self.log_fp.flush()
@@ -192,12 +211,15 @@ class ServiceTesting(object):
         self.th = None
 
     def stop_xxnet(self):
-        xlog.info("call api to stop xxnet")
-
+        xlog.info("call api to Quit xxnet")
         try:
-            simple_http_client.request("GET", "http://127.0.0.1:8085/quit", timeout=0.5)
-        except:
-            pass
+            res = simple_http_client.request("GET", "http://127.0.0.1:8085/quit", timeout=0.5)
+            if res:
+                xlog.info("Quit API res:%s", res.text)
+            else:
+                xlog.info("Quit API request failed.")
+        except Exception as e:
+            xlog.info("Quit API except:%r", e)
 
     def kill_python(self):
         self.running = False
@@ -207,6 +229,7 @@ class ServiceTesting(object):
             os.system("taskkill /F /im python.exe")
         else:
             os.system("pkill -9 -f 'start.py'")
+        xlog.info("Finished kill python")
 
     def check_log(self):
         if not self.log_fn:
@@ -220,6 +243,8 @@ class ServiceTesting(object):
 
                 self.assertNotIn("[ERROR]", line)
 
+        xlog.info("Log Check passed!")
+
     def assertEqual(self, a, b):
         if not a == b:
             raise Exception("%s not equal %s" % (a, b))
@@ -229,7 +254,7 @@ class ServiceTesting(object):
             raise Exception("%s in %s" % (a, b))
 
 
-if __name__ == "__main__":
+def run_testing():
     testing = ServiceTesting()
     try:
         testing.run()
@@ -238,3 +263,7 @@ if __name__ == "__main__":
         testing.stop_xxnet()
         testing.kill_python()
         exit(1)
+
+
+if __name__ == "__main__":
+    run_testing()

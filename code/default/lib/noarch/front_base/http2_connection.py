@@ -1,5 +1,4 @@
-import sys
-from six.moves import queue as Queue
+from six.moves import queue
 import threading
 import socket
 import errno
@@ -102,7 +101,7 @@ class Http2Worker(HttpWorker):
         # then send by send_loop
         # every frame put to this queue must allowed by stream window and connection window
         # any data frame blocked by connection window should put to self.blocked_send_frames
-        self.send_queue = Queue.Queue()
+        self.send_queue = queue.Queue()
         self.encoder = Encoder()
         self.decoder = Decoder()
 
