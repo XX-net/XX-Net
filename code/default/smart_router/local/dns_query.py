@@ -354,7 +354,7 @@ class DnsOverTlsQuery(DnsOverTcpQuery):
 
 
 class DnsOverHttpsQuery(object):
-    def __init__(self, timeout=3):
+    def __init__(self, timeout=6):
         self.protocol = "DoH"
         self.timeout = timeout
         self.server = "https://1.1.1.1/dns-query"

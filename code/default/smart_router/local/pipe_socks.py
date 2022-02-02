@@ -21,6 +21,8 @@ class PipeSocks(object):
         self.error_set = []
 
         self.running = True
+        self.sock_lock = threading.Lock()
+        self.sock_notify = threading.Condition(self.sock_lock)
 
     def __str__(self):
         outs = ["Pipe Sockets:"]
@@ -63,13 +65,16 @@ class PipeSocks(object):
         s1.setblocking(0)
         s2.setblocking(0)
 
-        self.read_set.append(s1)
-        self.read_set.append(s2)
-        self.error_set.append(s1)
-        self.error_set.append(s2)
+        with self.sock_notify:
+            self.read_set.append(s1)
+            self.read_set.append(s2)
+            self.error_set.append(s1)
+            self.error_set.append(s2)
 
-        self.sock_dict[s1] = s2
-        self.sock_dict[s2] = s1
+            self.sock_dict[s1] = s2
+            self.sock_dict[s2] = s1
+
+            self.sock_notify.notify()
 
     def try_remove(self, l, s):
         try:
@@ -132,7 +137,8 @@ class PipeSocks(object):
 
         while self.running:
             if not self.error_set:
-                time.sleep(0.1)  # TODO: use notify to block.
+                with self.sock_notify:
+                    self.sock_notify.wait()
                 continue
 
             for s1 in self.error_set:
