@@ -358,18 +358,20 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
     for rule in rule_list:
         try:
             if rule == "redirect_https":
-                if port != 80:
-                    continue
+                continue
 
-                if is_ipv6_ok():
-                    query_type = None
-                else:
-                    query_type = 1
-                ips = g.dns_query.query(host, query_type)
-
-                do_redirect_https(sock, host, ips, port, client_address, left_buf)
-                xlog.info("%s %s:%d redirect_https", scense, host, port)
-                return
+                # if port != 80:
+                #     continue
+                #
+                # if is_ipv6_ok():
+                #     query_type = None
+                # else:
+                #     query_type = 1
+                # ips = g.dns_query.query(host, query_type)
+                #
+                # do_redirect_https(sock, host, ips, port, client_address, left_buf)
+                # xlog.info("%s %s:%d redirect_https", scense, host, port)
+                # return
 
             elif rule == "direct":
                 if is_ipv6_ok():
@@ -377,6 +379,8 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 else:
                     query_type = 1
                 ips = g.dns_query.query(host, query_type)
+                if not ips:
+                    continue
 
                 do_direct(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d forward to direct", scense, host, port)
@@ -389,6 +393,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 ips = g.dns_query.query(host, 28)
                 if not ips:
                     continue
+                    
                 do_direct(sock, host, ips, port, client_address, left_buf)
                 xlog.info("%s %s:%d forward to direct6", scense, host, port)
                 return

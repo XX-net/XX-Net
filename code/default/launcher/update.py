@@ -248,7 +248,12 @@ def check_update():
         if update_rule not in ("stable", "notice-stable", "test", "notice-test"):
             return
 
-        versions = update_from_github.get_github_versions()
+        try:
+            versions = update_from_github.get_github_versions()
+        except Exception as e:
+            xlog.warn("check_update get version failed. e:%r", e)
+            return
+
         current_version = update_from_github.current_version()
         test_version, stable_version = versions[0][1], versions[1][1]
         if test_version != config.skip_test_version:

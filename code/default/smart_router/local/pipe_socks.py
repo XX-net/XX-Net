@@ -130,6 +130,7 @@ class PipeSocks(object):
 
     def pipe(self):
         def flush_send_s(s2, d1):
+            # xlog.debug("pipe flush_send_s %s %d", s2, len(d1))
             s2.setblocking(1)
             s2.settimeout(1)
             s2.sendall(d1)
@@ -166,6 +167,7 @@ class PipeSocks(object):
                         self.close(s1, "r")
                         continue
 
+                    # xlog.debug("direct received %d bytes from:%s", len(d), s1)
                     s1.recved_data += len(d)
                     s1.recved_times += 1
 
@@ -256,6 +258,7 @@ class PipeSocks(object):
                             sended = s1.send(dat)
                             s1.sent_data += sended
                             s1.sent_times += 1
+                            # xlog.debug("direct send %d bytes to %s", sended, s1)
                         except Exception as e:
                             if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
                                 # This error happened on upload large file or speed test

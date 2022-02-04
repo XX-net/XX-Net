@@ -36,7 +36,7 @@ class SocketWrap(object):
         return self.closed
 
     def __str__(self):
-        return "%s[%s]:%d buf[%d]" % (self.host, self.ip, self.port, self.buf_size)
+        return "%s[%s]:%d" % (self.host, self.ip, self.port)
 
     def recv(self, bufsiz, flags=0):
         d = self._sock.recv(bufsiz, flags)

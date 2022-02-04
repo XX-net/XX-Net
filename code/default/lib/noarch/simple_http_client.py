@@ -480,7 +480,12 @@ class Client(object):
         if upl.query:
             path += b"?" + upl.query
 
-        sock = self.connect(upl.hostname, port, upl.scheme == b"https")
+        try:
+            sock = self.connect(upl.hostname, port, upl.scheme == b"https")
+        except Exception as e:
+            xlog.warn("connect %s:%s fail:%r", upl.hostname, port, e)
+            return None
+
         if not sock:
             return None
 

@@ -251,7 +251,7 @@ def is_private_ip(ip):
             else:
                 return False
     except Exception as e:
-        print(("is_private_ip(%s), except:%r", ip, e))
+        # print(("is_private_ip(%s), except:%r", ip, e))
         return False
 
 
