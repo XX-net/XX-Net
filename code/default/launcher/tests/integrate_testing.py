@@ -157,7 +157,7 @@ class ServiceTesting(object):
         }
         data = json.dumps(data)
         res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/login",
-                                         headers=headers, body=data, timeout=15)
+                                         headers=headers, body=data, timeout=60)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = True
         xlog.info("Finished testing XTunnel login")

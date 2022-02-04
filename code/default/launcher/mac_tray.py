@@ -40,6 +40,11 @@ class MacTrayObject(AppKit.NSObject):
         self.registerObserver()
 
     def setupUI(self):
+        self.autoGaeProxyMenuItem = None
+        self.globalGaeProxyMenuItem = None
+        self.globalXTunnelMenuItem = None
+        self.globalSmartRouterMenuItem = None
+
         self.statusbar = AppKit.NSStatusBar.systemStatusBar()
         self.statusitem = self.statusbar.statusItemWithLength_(
             AppKit.NSSquareStatusItemLength)  # NSSquareStatusItemLength #NSVariableStatusItemLength
@@ -123,25 +128,29 @@ class MacTrayObject(AppKit.NSObject):
         self.currentServiceMenuItem.setTitle_(getCurrentServiceMenuItemTitle())
 
         # Remove Tick before All Menu Items
-        self.autoGaeProxyMenuItem.setState_(AppKit.NSOffState)
-        self.globalGaeProxyMenuItem.setState_(AppKit.NSOffState)
-        self.globalXTunnelMenuItem.setState_(AppKit.NSOffState)
-        self.globalSmartRouterMenuItem.setState_(AppKit.NSOffState)
+        if self.autoGaeProxyMenuItem:
+            self.autoGaeProxyMenuItem.setState_(AppKit.NSOffState)
+        if self.globalGaeProxyMenuItem:
+            self.globalGaeProxyMenuItem.setState_(AppKit.NSOffState)
+        if self.globalXTunnelMenuItem:
+            self.globalXTunnelMenuItem.setState_(AppKit.NSOffState)
+        if self.globalSmartRouterMenuItem:
+            self.globalSmartRouterMenuItem.setState_(AppKit.NSOffState)
         self.disableGaeProxyMenuItem.setState_(AppKit.NSOffState)
 
         # Get current selected mode
         proxyState = getProxyState(currentService)
 
         # Update Tick before Menu Item
-        if proxyState == 'pac':
+        if proxyState == 'pac' and self.autoGaeProxyMenuItem:
             self.autoGaeProxyMenuItem.setState_(AppKit.NSOnState)
-        elif proxyState == 'gae':
+        elif proxyState == 'gae' and self.globalGaeProxyMenuItem:
             self.globalGaeProxyMenuItem.setState_(AppKit.NSOnState)
-        elif proxyState == 'x_tunnel':
+        elif proxyState == 'x_tunnel' and self.globalXTunnelMenuItem:
             self.globalXTunnelMenuItem.setState_(AppKit.NSOnState)
-        elif proxyState == 'smart_router':
+        elif proxyState == 'smart_router' and self.globalSmartRouterMenuItem:
             self.globalSmartRouterMenuItem.setState_(AppKit.NSOnState)
-        elif proxyState == 'disable':
+        else:
             self.disableGaeProxyMenuItem.setState_(AppKit.NSOnState)
 
         # Trigger autovalidation
@@ -398,25 +407,25 @@ def loadConfig():
     if getProxyState(currentService) == proxy_setting:
         return
     try:
-        if proxy_setting == "pac":
+        if proxy_setting == "pac" and config.enable_smart_router:
             helperDisableGlobalProxy(currentService)
             helperEnableAutoProxy(currentService)
-        elif proxy_setting == "gae":
+        elif proxy_setting == "gae" and config.enable_gae_proxy:
             helperDisableAutoProxy(currentService)
             helperEnableGlobalProxy(currentService)
-        elif proxy_setting == "x_tunnel":
+        elif proxy_setting == "x_tunnel" and config.enable_x_tunnel:
             helperDisableAutoProxy(currentService)
             helperEnableXTunnelProxy(currentService)
-        elif proxy_setting == "smart_router":
+        elif proxy_setting == "smart_router" and config.enable_smart_router:
             helperDisableAutoProxy(currentService)
             helperEnableSmartRouterProxy(currentService)
-        elif proxy_setting == "disable":
+        else:
             helperDisableAutoProxy(currentService)
             helperDisableGlobalProxy(currentService)
-        else:
-            xlog.warn("proxy_setting:%r", proxy_setting)
-    except:
-        xlog.warn("helper failed, please manually reset proxy settings after switching connection")
+        # else:
+        #     xlog.warn("proxy_setting:%r", proxy_setting)
+    except Exception as e:
+        xlog.warn("helper failed:%r, please manually reset proxy settings after switching connection", e)
 
 
 sys_tray = MacTrayObject.alloc().init()
