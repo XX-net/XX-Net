@@ -39,11 +39,11 @@ class Win_tray():
         proxy_setting = config.os_proxy_mode
         if proxy_setting == "pac":
             self.on_enable_pac()
-        elif proxy_setting == "gae":
+        elif proxy_setting == "gae" and config.enable_gae_proxy == 1:
             self.on_enable_gae_proxy()
-        elif proxy_setting == "x_tunnel":
+        elif proxy_setting == "x_tunnel" and config.enable_x_tunnel == 1:
             self.on_enable_x_tunnel()
-        elif proxy_setting == "smart_router":
+        elif proxy_setting == "smart_router" and config.enable_smart_router == 1:
             self.on_enable_smart_router()
         elif proxy_setting == "disable":
             # Don't disable proxy setting, just do nothing.

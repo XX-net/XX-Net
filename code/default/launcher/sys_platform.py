@@ -33,7 +33,8 @@ elif sys.platform.startswith("linux"):
             gi.require_version('Gtk', '3.0')
             from gi.repository import Gtk as gtk
             return True
-        except:
+        except Exception as e:
+            xlog.warn("load gi fail:%r, SysTray will not show.", e)
             return False
 
 

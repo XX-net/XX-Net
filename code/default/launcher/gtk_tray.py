@@ -31,6 +31,17 @@ try:
     use_gi = False
     xlog.info('Using PyGTK as the GUI Backend.')
 except:
+    # How to install gi:
+    # The simple way:
+    #    sudo apt-get install python3-gi
+    # For virtualenv users - The vext way
+    #    pip install vext
+    #    pip install vext.gi
+    # The pure python developer way:
+    #    Install a bunch of developer stuff:
+    #    sudo apt-get install pkg-config libcairo2-dev gcc python3-dev libgirepository1.0-dev
+    #    Install the python packages:
+    #    pip install gobject PyGObject
     import gi
     gi.require_version('Gtk', '3.0')
     gi.require_version('Gdk', '3.0')
