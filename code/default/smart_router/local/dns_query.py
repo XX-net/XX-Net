@@ -106,6 +106,13 @@ class LocalDnsQuery():
         elif os.path.isfile('/etc/resolv.conf'):
             with open('/etc/resolv.conf', 'rb') as fp:
                 iplist = re.findall(br'(?m)^nameserver\s+(\S+)', fp.read())
+        else:
+            iplist = [
+                b"1.1.1.1",
+                b"8.8.8.8",
+                b"9.9.9.9",
+                b"208.67.222.222",
+            ]
 
         out_list = []
         for ip in iplist:

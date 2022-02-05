@@ -1,8 +1,10 @@
+import os
 import unittest
 import time
 import utils
 import json
 import simple_http_client
+import tempfile
 
 
 class HttpClientTest(unittest.TestCase):
@@ -38,7 +40,8 @@ class HttpClientTest(unittest.TestCase):
         req = client.request("GET", url, read_payload=False)
         self.assertIsNotNone(req)
 
-        filename = "/tmp/v4.txt"
+        tp = tempfile.gettempdir()
+        filename = os.path.join(tp, "v4.txt")
         if req.chunked:
             downloaded = 0
             with open(filename, 'wb') as fp:

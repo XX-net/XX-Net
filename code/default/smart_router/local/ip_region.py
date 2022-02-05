@@ -224,7 +224,7 @@ class IpRegion(object):
         fd.write(b', range count: %d' % count)
         fd.close()
 
-        xlog.debug('include IP range number：%s' % count)
+        xlog.debug('include IP range number: %s' % count)
         xlog.debug('save to file:%s' % self.cn_ipdb)
 
 
