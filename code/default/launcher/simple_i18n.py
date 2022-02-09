@@ -1,60 +1,20 @@
-import locale
+
 import os
-import subprocess
 import sys
 
 import utils
+from config import get_language
+from xlog import getLogger
+xlog = getLogger("launcher")
 
 
-class SimpleI18N:
-    def __init__(self, lang=None):
-        if lang:
-            self.lang = lang
-        else:
-            self.lang = self.get_os_language()
+class SimpleI18N(object):
+    def __init__(self):
+        self.lang = get_language()
+        xlog.debug("lang: %s", self.lang)
 
-        if not self.lang:
-            self.lang = "en_US"
-
-    def get_os_language(self):
-        try:
-            lang_code, code_page = locale.getdefaultlocale()
-            # ('en_GB', 'cp1252'), en_US,
-            self.lang_code = lang_code
-            return lang_code
-        except:
-            # Mac fail to run this
-            pass
-
-        if sys.platform == "darwin":
-            try:
-                oot = os.pipe()
-                p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
-                p.communicate()
-                lang_code = self.get_default_language_code_for_mac(os.read(oot[0], 10000))
-                self.lang_code = lang_code
-                return lang_code
-            except:
-                pass
-
-        lang_code = 'Unknown'
-        return lang_code
-
-    def get_valid_languages(self):
-        # return ['de_DE', 'en_US', 'es_VE', 'fa_IR', 'ja_JP', 'zh_CN']
-        return ['en_US', 'fa_IR', 'zh_CN']
-
-    def get_default_language_code_for_mac(self, lang_code):
-        if 'zh' in lang_code:
-            return 'zh_CN'
-        elif 'en' in lang_code:
-            return 'en_US'
-        elif 'fa' in lang_code:
-            return 'fa_IR'
-        else:
-            return 'Unknown'
-
-    def po_loader(self, file):
+    @staticmethod
+    def po_loader(file):
         if sys.version_info[0] == 2:
             fp = open(file, "r")
         else:
@@ -108,7 +68,8 @@ class SimpleI18N:
 
         return po_dict
 
-    def _render(self, po_dict, file):
+    @staticmethod
+    def _render(po_dict, file):
         if sys.version_info[0] == 2:
             fp = open(file, "r")
             content = fp.read()

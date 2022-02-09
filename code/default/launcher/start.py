@@ -109,9 +109,15 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    if sys.platform == "win32" and config.show_compat_suggest:
+    if sys.platform == "win32":
         import win_compat_suggest
-        win_compat_suggest.main()
+
+        if config.show_compat_suggest:
+            win_compat_suggest.main()
+
+        ports_resolve_solution = win_compat_suggest.Win10PortReserveSolution()
+        if not ports_resolve_solution.check_and_resolve():
+            return
 
     web_control.confirm_xxnet_not_running()
 

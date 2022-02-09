@@ -39,7 +39,7 @@ import sys_platform
 from xlog import getLogger
 xlog = getLogger("launcher")
 import module_init
-from config import config
+from config import config, valid_language
 import autorun
 import update
 import update_from_github
@@ -50,7 +50,7 @@ from simple_i18n import SimpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
-i18n_translator = SimpleI18N(config.language)
+i18n_translator = SimpleI18N()
 
 
 module_menus = {}
@@ -337,7 +337,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif 'language' in reqs:
                 language = reqs['language'][0]
 
-                if language not in i18n_translator.get_valid_languages():
+                if language not in valid_language:
                     data = '{"res":"fail, language:%s"}' % language
                 else:
                     config.language = language
@@ -790,7 +790,7 @@ def confirm_xxnet_not_running():
     xlog.debug("start confirm_xxnet_exit")
 
     for i in range(30):
-        host_port = config.control_port = 8085  # web_control(default port:8085)
+        host_port = config.control_port
         req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) == False:
             xlog.debug("good, xxnet:%s clear!" % host_port)

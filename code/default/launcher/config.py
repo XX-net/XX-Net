@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import os
+import sys
+import subprocess
+import locale
 
 import xconfig
-
 from xlog import getLogger
 xlog = getLogger("launcher")
 
@@ -19,7 +21,7 @@ config.set_var("control_ip", "127.0.0.1")
 config.set_var("control_port", 8085)
 
 # System config
-config.set_var("language", "")
+config.set_var("language", "")  # en_US,
 config.set_var("allow_remote_connect", 0)
 config.set_var("show_systray", 1)
 config.set_var("no_mess_system", 0)
@@ -73,3 +75,41 @@ config.set_var("global_proxy_password", "")
 config.load()
 
 
+valid_language = ['en_US', 'fa_IR', 'zh_CN']
+
+
+def _get_os_language():
+    try:
+        lang_code, code_page = locale.getdefaultlocale()
+        # ('en_GB', 'cp1252'), en_US,
+        return lang_code
+    except:
+        # Mac fail to run this
+        pass
+
+    if sys.platform == "darwin":
+        try:
+            oot = os.pipe()
+            p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
+            p.communicate()
+            lang_code = os.read(oot[0], 10000)
+            if b'zh' in lang_code:
+                return 'zh_CN'
+            elif b'en' in lang_code:
+                return 'en_US'
+            elif b'fa' in lang_code:
+                return 'fa_IR'
+        except:
+            pass
+
+
+def get_language():
+    if config.language:
+        lang = config.language
+    else:
+        lang = _get_os_language()
+
+    if lang not in valid_language:
+        lang = 'en_US'
+
+    return lang
