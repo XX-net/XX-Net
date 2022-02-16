@@ -52,7 +52,7 @@ def xxnet_version():
             version = fd.read()
         return version
     except Exception as e:
-        xlog.exception("xxnet_version fail")
+        xlog.exception("get version fail")
     return "get_version_fail"
 
 
@@ -160,7 +160,7 @@ def main(args):
     front_dispatcher.init()
     g.data_path = data_path
 
-    xlog.info("xxnet_version:%s", g.xxnet_version)
+    xlog.info("version:%s", g.xxnet_version)
 
     g.running = True
     if not g.server_host or not g.server_port:

@@ -71,16 +71,6 @@
                         </p>
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
-                <div class="row-fluid">
-                    <div class="span4">
-                        <label for="bandwidth">{{ _("Bandwidth") }}</label>
-                    </div> <!-- .span4 -->
-                    <div class="span8">
-                        <p>
-                            <span id="bandwidth">N/a</span>
-                        </p>
-                    </div> <!-- .span8 -->
-                </div> <!-- .row-fluid -->
             </div> <!-- .section -->
             <div class="section">
                 <h4>{{ _("Available Bandwidth") }}</h4>
@@ -89,7 +79,7 @@
                     <thead>
                         <tr>
                             <th>{{ _("Expire Time") }}</th>
-                            <th>{{ _("Left Bandwidth") }}</th>
+<!--                            <th>{{ _("Left Bandwidth") }}</th>-->
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -472,12 +462,6 @@
                                     <li>
                                         <div class="row-fluid">
                                             <div class="span4 text-right">%s</div> <!-- .span4 -->
-                                            <div class="span8">GB {{ _("Bandwidth") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
-                                    </li>
-                                    <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">%s</div> <!-- .span4 -->
                                             <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
                                         </div> <!-- .row-fluid -->
                                     </li>
@@ -487,7 +471,7 @@
                                 </p>
                             </div> <!-- .caption -->
                         </div> <!-- .thumbnail -->
-                    </li>`.format(cost, quota_G, time_limit_month, plan, title);
+                    </li>`.format(cost, time_limit_month, plan, title);
             $('#plan-list').append(text);
             $('#charge-plan').append('<option value="%s">{{ _("%s") }} $%s</option>'.format(title, title, cost));
 
@@ -502,7 +486,7 @@
             expireTimeString    = expireTimeObj.toISOString().substring(0, 10);
             bandwidth           = getBandwidthForHumanReading(bandwidthRecord['quota']);
 
-        $('#available-bandwidth tbody').append('<tr><td><span class="expire-time" data-value="%s">%s</span></td><td><span class="bandwidth">%s</span> <a href="javascript:void(0);" class="transfer">[{{ _("Transfer") }}]</a></td></tr>'.format(expireTime, expireTimeString, bandwidth));
+        $('#available-bandwidth tbody').append('<tr><td><span class="expire-time" data-value="%s">%s</span></td></tr>'.format(expireTime, expireTimeString));
     }
 </script>
 <script type="text/javascript">

@@ -61,7 +61,7 @@ def get_XXNet():
                     version = m.group(1) + "." + m.group(2) + "." + m.group(3)
                     return m.group(0), version
         except Exception as e:
-            xlog.exception("xxnet_version fail:%s", e)
+            xlog.exception("get version fail:%s", e)
         raise "get_version_fail:" % readme_file
 
     readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/README.md"

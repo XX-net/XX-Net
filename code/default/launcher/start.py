@@ -56,7 +56,7 @@ xlog = getLogger("launcher", file_name=log_file)
 
 current_version = update_from_github.current_version()
 
-xlog.info("start XX-Net %s", current_version)
+xlog.info("start Version %s", current_version)
 xlog.info("Python version: %s", sys.version)
 xlog.info("System: %s|%s|%s", platform.system(), platform.version(), platform.architecture())
 
@@ -138,7 +138,7 @@ def main():
         xlog.info("start with allow remote connect.")
         module_init.xargs["allow_remote"] = 1
 
-    if os.getenv("XXNET_NO_MESS_SYSTEM", "0") != "0" or no_mess_system or config.no_mess_system:
+    if os.getenv("NOT_MESS_SYSTEM", "0") != "0" or no_mess_system or config.no_mess_system:
         xlog.info("start with no_mess_system, no CA will be imported to system.")
         module_init.xargs["no_mess_system"] = 1
 

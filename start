@@ -18,7 +18,7 @@ path_to_script () {
 
 goto_script_path() {
   PATH_TO_SCRIPT="$(path_to_script "$0")"
-  # XX-Net fails to start if the install path contains spaces, so it must be quoted.
+  # Fails to start if the install path contains spaces, so it must be quoted.
   cd "$PATH_TO_SCRIPT"
 }
 
@@ -43,7 +43,7 @@ if [ ! -f "code/$VERSION/launcher/start.py" ]; then
     VERSION="default"
 fi
 REAL_VERSION=`cat code/$VERSION/version.txt`
-echo "XX-Net version:$REAL_VERSION"
+echo "Start version:$REAL_VERSION"
 
 
 # launch xx-net service by ignore hungup signal
