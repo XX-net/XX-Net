@@ -332,7 +332,14 @@ class DnsOverTcpQuery():
             ips = []
             for r in p.rr:
                 ip = utils.to_bytes(str(r.rdata))
-                ips.append(ip)
+                if not utils.check_ip_valid(ip):
+                    if ip == domain:
+                        continue
+
+                    ip_ips = self.query(ip, dns_type)
+                    ips += ip_ips
+                else:
+                    ips.append(ip)
 
             xlog.debug("DNS %s %s return %s t:%f", self.protocol, domain, ips, t2-t0)
             self.connections.append([sock, time.time()])
@@ -440,11 +447,18 @@ class DnsOverHttpsQuery(object):
 
             p = DNSRecord.parse(r.text)
 
+            self.connections.append([client, time.time()])
+
             for r in p.rr:
                 ip = utils.to_bytes(str(r.rdata))
-                ips.append(ip)
+                if not utils.check_ip_valid(ip):
+                    if ip == domain:
+                        continue
 
-            self.connections.append([client, time.time()])
+                    ip_ips = self.query(ip, dns_type)
+                    ips += ip_ips
+                else:
+                    ips.append(ip)
 
             xlog.debug("DNS %s %s return %s t:%f", self.protocol, domain, ips, t2 - t0)
             return ips
