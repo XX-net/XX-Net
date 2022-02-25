@@ -4,14 +4,16 @@ import os
 import sys
 import subprocess
 import locale
+import json
 
 import xconfig
 from xlog import getLogger
 xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+version_path = os.path.abspath(os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(version_path, os.pardir, os.pardir))
+data_path = os.path.join(root_path, 'data')
 config_path = os.path.join(data_path, 'launcher', 'config.json')
 
 
@@ -74,8 +76,16 @@ config.set_var("global_proxy_password", "")
 
 config.load()
 
-
+app_name = "XX-Net"
 valid_language = ['en_US', 'fa_IR', 'zh_CN']
+try:
+    fp = os.path.join(root_path, "code", "app_info.json")
+    with open(fp, "r") as fd:
+        app_info = json.load(fd)
+        app_name = app_info["app_name"]
+except Exception as e:
+    print("load app_info except:", e)
+    pass
 
 
 def _get_os_language():

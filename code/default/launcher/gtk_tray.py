@@ -6,17 +6,20 @@ import os
 import sys
 import webbrowser
 
+from config import app_name
 from xlog import getLogger
+
 xlog = getLogger("launcher")
 
 from config import config
+
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
-#Only enable AppIndicator in the DEs that are Unity and QT-based
+# Only enable AppIndicator in the DEs that are Unity and QT-based
 enable_appind = False
 if 'XDG_CURRENT_DESKTOP' in os.environ:
     cur_desktops = os.environ['XDG_CURRENT_DESKTOP'].split(':')
@@ -25,9 +28,11 @@ if 'XDG_CURRENT_DESKTOP' in os.environ:
 
 try:
     import pygtk
+
     pygtk.require('2.0')
     import gtk
     import gtk.gdk as gdk
+
     use_gi = False
     xlog.info('Using PyGTK as the GUI Backend.')
 except:
@@ -43,10 +48,12 @@ except:
     #    Install the python packages:
     #    pip install gobject PyGObject
     import gi
+
     gi.require_version('Gtk', '3.0')
     gi.require_version('Gdk', '3.0')
     from gi.repository import Gtk as gtk
     from gi.repository import Gdk as gdk
+
     use_gi = True
     xlog.info('Using PyGObject as the GUI Backend.')
 
@@ -58,16 +65,18 @@ if use_gi:
     try:
         gi.require_version('Notify', '0.7')
         from gi.repository import Notify as notify
-        notify.init('XX-Net Notify')
+
+        notify.init(app_name + ' Notify')
         new_notification = notify.Notification.new
     except:
         xlog.warn("import Notify fail, please install libnotify if possible.")
         notify = None
 
     try:
-        assert(enable_appind)
+        assert (enable_appind)
         gi.require_version('AppIndicator3', '0.1')
         from gi.repository import AppIndicator3 as appindicator
+
         new_appindicator = appindicator.Indicator.new
         appind_category = appindicator.IndicatorCategory.APPLICATION_STATUS
         appind_status = appindicator.IndicatorStatus.ACTIVE
@@ -77,15 +86,17 @@ if use_gi:
 else:
     try:
         import pynotify as notify
-        notify.init('XX-Net Notify')
+
+        notify.init(app_name + ' Notify')
         new_notification = notify.Notification
     except:
         xlog.warn("import pynotify fail, please install python-notify if possible.")
         notify = None
 
     try:
-        assert(enable_appind)
+        assert (enable_appind)
         import appindicator
+
         new_appindicator = appindicator.Indicator
         appind_category = appindicator.CATEGORY_APPLICATION_STATUS
         appind_status = appindicator.STATUS_ACTIVE
@@ -96,6 +107,7 @@ else:
 
 class Gtk_tray():
     notify_list = []
+
     def __init__(self):
         logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
 
@@ -107,13 +119,13 @@ class Gtk_tray():
             xlog.info('Gtk.StatusIcon used.')
 
     def appind_trayicon(self, logo_filename):
-        trayicon = new_appindicator('XX-Net', 'indicator-messages', appind_category)
+        trayicon = new_appindicator(app_name, 'indicator-messages', appind_category)
         trayicon.set_status(appind_status)
         trayicon.set_attention_icon('indicator-messages-new')
         trayicon.set_icon(logo_filename)
         trayicon.set_menu(self.make_menu())
-        try:  #this method does not exist when using pygtk and python2-appindicator
-            trayicon.set_title('XX-Net')
+        try:  # this method does not exist when using pygtk and python2-appindicator
+            trayicon.set_title(app_name)
         except:
             pass
 
@@ -125,8 +137,8 @@ class Gtk_tray():
 
         trayicon.connect('popup-menu', lambda i, b, t: popup_trayicon_menu(self.make_menu(), trayicon, b, t))
         trayicon.connect('activate', self.show_control_web)
-        trayicon.set_tooltip_text('XX-Net')
-        trayicon.set_title('XX-Net')
+        trayicon.set_tooltip_text(app_name)
+        trayicon.set_title(app_name)
         trayicon.set_visible(True)
 
         return trayicon
@@ -190,4 +202,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-11-19 10:30+0800\n"
+"POT-Creation-Date: 2022-02-25 02:08-0500\n"
 "PO-Revision-Date: 2015-12-06 09:18+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fa_IR\n"
@@ -12,7 +12,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.3.4\n"
+"Generated-By: Babel 2.9.1\n"
 
 msgid "Version"
 msgstr ""
@@ -38,26 +38,38 @@ msgstr "صفحه ورود به سیستم "
 msgid "contents"
 msgstr "فهرست"
 
-msgid "Thanks the following projects"
+msgid "Thanks to the following projects"
 msgstr "تشکر از پروژه های زیر"
 
-msgid "About XX-Net"
-msgstr "درباره XX-Net"
+msgid "About "
+msgstr "در باره"
+
+msgid "APP_NAME"
+msgstr ""
 
 msgid "General Settings"
 msgstr ""
 
-msgid "System Update"
+msgid "System Version"
+msgstr "نسخه آزمایشی"
+
+msgid "LAN Proxy Setting"
 msgstr ""
 
-msgid "Proxy Setting"
-msgstr ""
-
-msgid "System configuration options"
+msgid "System Configuration"
 msgstr "گزینه های پیکربندی سیستم"
 
-msgid "Settings saved successfully."
-msgstr "تنظیمات با موفقیت ذخیره شده است."
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عرض٪ s ثانیه تازه کردن."
+
+msgid "GAE Proxy"
+msgstr "GAE پروکسی"
+
+msgid "X-Tunnel"
+msgstr ""
+
+msgid "Smart Router"
+msgstr ""
 
 msgid "Language"
 msgstr "زبان"
@@ -68,14 +80,20 @@ msgstr "خودکار راه اندازی"
 msgid "Popup Status Page on Startup"
 msgstr "پنجره وضعیت صفحه در راه اندازی"
 
-msgid "Enable Remote Web Control"
-msgstr "کنترل از راه دور را فعال کنید وب"
+msgid "Allow Remote"
+msgstr ""
 
 msgid "Help"
 msgstr "کمک"
 
-msgid "Display System Tray(Restarting XX-Net Required)"
-msgstr "نمایش سینی سیستم (شروع مجدد _XX-Net_ مورد نیاز)"
+msgid "Display System Tray(Restarting APP Required)"
+msgstr "نمایش سینی سیستم (شروع مجدد __ مورد نیاز)"
+
+msgid "Display Windows software compatibility suggestions"
+msgstr ""
+
+msgid "Feedback"
+msgstr "بازخورد اشکال"
 
 msgid "Run as Green Software"
 msgstr ""
@@ -86,46 +104,7 @@ msgstr "ماژول مدیریت"
 msgid "Enable"
 msgstr "فعال کردن"
 
-msgid "Configuring the service[%s]. This page will refresh within %s seconds."
-msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عرض٪ s ثانیه تازه کردن."
-
-msgid "GAE Proxy"
-msgstr "GAE پروکسی"
-
-msgid "X_tunnel proxy"
-msgstr ""
-
-msgid "LAN proxy(Generally not needed)"
-msgstr ""
-
-msgid "Proxy type"
-msgstr ""
-
-msgid "Proxy IP address or domain name"
-msgstr ""
-
-msgid "Port"
-msgstr ""
-
-msgid "User name"
-msgstr ""
-
-msgid "Password"
-msgstr ""
-
-msgid "Save"
-msgstr ""
-
-msgid "Failed reading the settings."
-msgstr ""
-
-msgid "Wait for checking setting..."
-msgstr ""
-
-msgid "Settings saved successfully"
-msgstr ""
-
-msgid "Failed saving settings"
+msgid "Restarting all remote, wait to refresh."
 msgstr ""
 
 msgid "Auto-Upgrade to"
@@ -161,7 +140,64 @@ msgstr "به روز رسانی در حال حاضر"
 msgid "Version of the stable one"
 msgstr "نسخه از یکی از با ثبات"
 
+msgid "Keep old versions count"
+msgstr ""
+
+msgid "keep all"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Manually Manage"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
 msgid "All versions download page"
+msgstr ""
+
+msgid "Released version"
+msgstr "نسخه آزمایشی"
+
+msgid "Released"
+msgstr ""
+
+msgid "Download & Change to"
+msgstr ""
+
+msgid "no hash check"
+msgstr ""
+
+msgid "Local version"
+msgstr "نسخه پایدار"
+
+msgid "Local"
+msgstr ""
+
+msgid "Change to this version"
+msgstr "بررسی آخرین نسخه"
+
+msgid "Delete"
+msgstr ""
+
+msgid "Settings saved successfully."
+msgstr "تنظیمات با موفقیت ذخیره شده است."
+
+msgid "Settings save fail:"
+msgstr "تنظیمات با موفقیت ذخیره شده است."
+
+msgid "Deleted successfully."
+msgstr "موفقیت خارج"
+
+msgid "Deleting local version fail."
+msgstr ""
+
+msgid "Failed getting local versions."
+msgstr ""
+
+msgid "Failed getting released versions."
 msgstr ""
 
 msgid "(Remote Web Control Enabled)"
@@ -173,6 +209,21 @@ msgstr ""
 msgid "Exit the program"
 msgstr ""
 
+msgid "Hello!"
+msgstr ""
+
+msgid "You seem to be on your first visit."
+msgstr ""
+
+msgid "Learn more"
+msgstr ""
+
+msgid "Notice"
+msgstr ""
+
+msgid "click to view"
+msgstr ""
+
 msgid "Remind me later"
 msgstr ""
 
@@ -182,16 +233,19 @@ msgstr ""
 msgid "View changes"
 msgstr ""
 
-msgid "Exited successfully"
+msgid "Exited successfully."
 msgstr "موفقیت خارج"
 
-msgid "Exitting failed"
+msgid "Exitting failed."
 msgstr "Exitting شکست خورده"
 
 msgid "Exitting failed. A network error occurred."
 msgstr "Exitting شکست خورده است. یک خطای شبکه رخ داده است."
 
-msgid "Unkown error occured. Please refresh the page and try again"
+msgid "new to this version?"
+msgstr "نسخه آزمایشی"
+
+msgid "Unkown error occured. Please refresh the page and try again."
 msgstr "خطای ناشناخته رخ داد. لطفا صفحه را تازه کنید و دوباره امتحان "
 
 msgid "Updating in progress ..."
@@ -200,20 +254,212 @@ msgstr "به روز رسانی در حال انجام ..."
 msgid "New "
 msgstr ""
 
+msgid "Finished."
+msgstr ""
+
 msgid "Downloading ..."
 msgstr ""
 
-msgid "Download completed"
+msgid "Download completed."
 msgstr ""
 
-msgid "System"
-msgstr "سیستم"
+msgid "Info"
+msgstr "اطلاعات و "
 
-msgid "Configuration"
-msgstr "پیکربندی"
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr ""
 
-msgid "About"
-msgstr "در باره"
+msgid "The latest Chrome browser is recommended."
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search all issues"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Property"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Browser Proxy Setting"
+msgstr ""
+
+msgid "CA status"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "System Proxy"
+msgstr ""
+
+msgid "Modules"
+msgstr ""
+
+msgid "Launcher Web UI"
+msgstr ""
+
+msgid "LAN proxy"
+msgstr ""
+
+msgid "System Info"
+msgstr ""
+
+msgid "Diagnostic Info"
+msgstr ""
+
+msgid "Check"
+msgstr ""
+
+msgid "GitHub issues"
+msgstr ""
+
+msgid "or"
+msgstr ""
+
+msgid "Google Group Discussions"
+msgstr ""
+
+msgid "Show Details"
+msgstr ""
+
+msgid "Post to Github issue needs to sign in your Github account"
+msgstr ""
+
+msgid "Status Info"
+msgstr ""
+
+msgid ""
+"-----------%0AProblem Description:%0APlease describe your problem, "
+"running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
+msgstr ""
+
+msgid "disable"
+msgstr "فعال کردن"
+
+msgid "idle"
+msgstr ""
+
+msgid "working"
+msgstr ""
+
+msgid "The status page is empty. Highly likely that "
+msgstr ""
+
+msgid " failed getting started. Please follow "
+msgstr ""
+
+msgid "guide"
+msgstr ""
+
+msgid " to troubleshoot."
+msgstr ""
+
+msgid "Your local network failed, please check your network and firewall."
+msgstr ""
+
+msgid "Force-IPv6"
+msgstr ""
+
+msgid " not available, Please check."
+msgstr ""
+
+msgid "Force-IPv4"
+msgstr ""
+
+msgid "You may want to $1turn on IP scaner$2."
+msgstr ""
+
+msgid ""
+"You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
+"on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>."
+msgstr ""
+
+msgid "XX-Net is scanning IP. Please wait about half an hour."
+msgstr ""
+
+msgid ""
+"Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own "
+"AppID</a>."
+msgstr ""
+
+msgid ""
+"Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more "
+"AppID</a>."
+msgstr ""
+
+msgid "No working AppID. Please check."
+msgstr ""
+
+msgid "System is Idle."
+msgstr ""
+
+msgid "Connection not established yet."
+msgstr ""
+
+msgid "Please check your browser proxy setting."
+msgstr ""
+
+msgid "Detecting ..."
+msgstr ""
+
+msgid "Please import certificates to your browser."
+msgstr ""
+
+msgid ""
+"You are using public AppIDs. You are recommended to <a "
+"href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" "
+"target=\"_blank\">deploy your own AppID</a>."
+msgstr ""
+
+msgid ", Everything is OK. Welcome to the FREE Internet."
+msgstr ""
+
+msgid "No response from process: "
+msgstr ""
+
+msgid ". It might have already exited."
+msgstr ""
+
+msgid "Global PAC Proxy set"
+msgstr ""
+
+msgid "Global GAEProxy Proxy set"
+msgstr ""
+
+msgid "Global X-Tunnel Proxy set"
+msgstr ""
+
+msgid "Global Smart-Router Proxy set"
+msgstr ""
+
+msgid "Global Proxy disabled"
+msgstr ""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

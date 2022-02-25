@@ -3,7 +3,7 @@ function getParent(path) {
     return fso.GetParentFolderName(path)
 }
 
-function CreateShortcut() {
+function CreateShortcut(app_name) {
     var wsh = new ActiveXObject('WScript.Shell');
     var fso = new ActiveXObject("Scripting.FileSystemObject");
     system_folder = fso.GetSpecialFolder(1)
@@ -14,19 +14,20 @@ function CreateShortcut() {
     argument_file = '"' + xxnet_path + '\\start.vbs"';
     icon_path = wsh.CurrentDirectory + '\\web_ui\\favicon.ico';
 
-    link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\XX-Net.lnk');
+    link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\' + app_name + '.lnk');
     link.TargetPath = target_path;
     link.Arguments = argument_file;
     link.WindowStyle = 7;
     link.IconLocation = icon_path;
-    link.Description = 'XX-Net';
+    link.Description = app_name;
     link.WorkingDirectory = xxnet_path;
     link.Save();
 }
 
 
 function main() {
-    CreateShortcut();
+    var app_name = WScript.arguments(0);
+    CreateShortcut(app_name);
 }
 
 main();

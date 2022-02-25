@@ -16,7 +16,7 @@ if __name__ == "__main__":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/3.8/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 
-from config import config
+from config import config, app_name
 import module_init
 import subprocess
 import webbrowser
@@ -58,13 +58,13 @@ class MacTrayObject(AppKit.NSObject):
 
         # Let it highlight upon clicking
         self.statusitem.setHighlightMode_(1)
-        self.statusitem.setToolTip_("XX-Net")
+        self.statusitem.setToolTip_(app_name)
 
         # Get current selected mode
         proxyState = getProxyState(currentService)
 
         # Build a very simple menu
-        self.menu = AppKit.NSMenu.alloc().initWithTitle_('XX-Net')
+        self.menu = AppKit.NSMenu.alloc().initWithTitle_(app_name)
 
         menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)

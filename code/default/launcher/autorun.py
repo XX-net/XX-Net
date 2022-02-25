@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """A simple crossplatform autostart helper"""
 
-
 import os
 import sys
 
+from config import app_name
 from xlog import getLogger
+
 xlog = getLogger("launcher")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -14,16 +15,20 @@ top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 
 if sys.platform == 'win32':
     import winreg
+
     _registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+
 
     def get_runonce():
         return winreg.OpenKey(_registry, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_ALL_ACCESS)
+
 
     def add(name, application):
         """add a new autostart entry"""
         key = get_runonce()
         winreg.SetValueEx(key, name, 0, winreg.REG_SZ, application)
         winreg.CloseKey(key)
+
 
     def exists(name):
         """check if an autostart entry exists"""
@@ -36,6 +41,7 @@ if sys.platform == 'win32':
         winreg.CloseKey(key)
         return exists
 
+
     def remove(name):
         if not exists(name):
             return
@@ -45,15 +51,18 @@ if sys.platform == 'win32':
         winreg.DeleteValue(key, name)
         winreg.CloseKey(key)
 
+
     run_cmd = "\"" + os.path.join(top_path, "start.vbs") + "\""
 elif sys.platform.startswith('linux'):
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
     home_config_path = os.path.expanduser(_xdg_config_home)
     _xdg_user_autostart = os.path.join(home_config_path, "autostart")
 
+
     def getfilename(name):
         """get the filename of an autostart (.desktop) file"""
         return os.path.join(_xdg_user_autostart, name + ".desktop")
+
 
     def add(name, application):
         if not os.path.isdir(home_config_path):
@@ -77,14 +86,17 @@ elif sys.platform.startswith('linux'):
         with open(getfilename(name), "w") as f:
             f.write(desktop_entry)
 
+
     def exists(name):
         """check if an autostart entry exists"""
         return os.path.exists(getfilename(name))
+
 
     def remove(name):
         """delete an autostart entry"""
         if (exists(name)):
             os.unlink(getfilename(name))
+
 
     run_cmd = os.path.join(top_path, "start")
 elif sys.platform == 'darwin':
@@ -116,10 +128,12 @@ elif sys.platform == 'darwin':
 
     run_cmd = os.path.join(top_path, "start")
     from os.path import expanduser
+
     home = expanduser("~")
     launch_path = os.path.join(home, "Library/LaunchAgents")
 
     plist_file_path = os.path.join(launch_path, "com.xxnet.launcher.plist")
+
 
     def add(name, cmd):
         file_content = plist_template % cmd
@@ -131,6 +145,7 @@ elif sys.platform == 'darwin':
         with open(plist_file_path, "w") as f:
             f.write(file_content)
 
+
     def remove(name):
         if (os.path.isfile(plist_file_path)):
             os.unlink(plist_file_path)
@@ -139,14 +154,18 @@ else:
     def add(name, cmd):
         pass
 
+
     def remove(name):
         pass
 
+
 def enable():
-    add("XX-Net", run_cmd)
+    add(app_name, run_cmd)
+
 
 def disable():
-    remove("XX-Net")
+    remove(app_name)
+
 
 def test():
     assert not exists("test_xxx")

@@ -46,7 +46,7 @@ class ServiceTesting(object):
         self.lock_server.start()
 
         if self.check_web_console():
-            xlog.info("XX-Net was running externally.")
+            xlog.info("APP was running externally.")
             self.th = None
             return
 
@@ -91,7 +91,7 @@ class ServiceTesting(object):
 
             time.sleep(1)
 
-        # If XX-Net not exit, kill all python to exit, this script will also be killed.
+        # If APP not exit, kill all python to exit, this script will also be killed.
         self.kill_python()
 
     def check_web_console(self):
@@ -193,7 +193,7 @@ class ServiceTesting(object):
         py_bin = sys.executable
         start_script = os.path.join(default_path, "launcher", "start.py")
         cmd = [py_bin, start_script]
-        xlog.info("start XX-Net cmd: %s" % cmd)
+        xlog.info("start APP cmd: %s" % cmd)
         try:
             self.pth = Popen(cmd, stdout=PIPE, stderr=STDOUT)  # , preexec_fn=os.setsid, shell=True, , bufsize=1
             for line in iter(self.pth.stdout.readline, b''):

@@ -18,7 +18,7 @@ import winreg as winreg
 import win32_proxy_manager
 import module_init
 import update
-from config import config
+from config import config, app_name
 
 from xlog import getLogger
 xlog = getLogger("launcher")
@@ -31,7 +31,7 @@ lang_code, code_page = locale.getdefaultlocale()
 class Win_tray():
     def __init__(self):
         icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
-        self.systray = SysTrayIcon(icon_path, "XX-Net", self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
+        self.systray = SysTrayIcon(icon_path, app_name, self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
         self.INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path, 0, winreg.KEY_ALL_ACCESS)

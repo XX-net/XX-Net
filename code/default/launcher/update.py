@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import os
+import os, stat
 import json
 import time
 import threading
@@ -24,7 +24,7 @@ except NameError:  # Python 3
 import utils
 from xlog import getLogger
 xlog = getLogger("launcher")
-from config import config
+from config import config, app_name
 import update_from_github
 
 
@@ -313,21 +313,43 @@ def create_desktop_shortcut():
     os.chdir(work_path)
 
     if sys.platform.startswith("linux"):
-        if os.getenv("DESKTOP_SESSION", "unknown") != "unknown":  # make sure this is desktop linux
+        def create_xwindows_shortcut():
+            if os.getenv("DESKTOP_SESSION", "unknown") == "unknown":  # make sure this is desktop linux
+                return
+
+            desktop_path = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+            if not os.path.isdir(desktop_path):
+                return
+
             xxnet_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
-            cmd = 'env XXNETPATH="' + xxnet_path + '" "' + work_path + '/create_shortcut_linux.sh"'
-            os.system(cmd)
+            content = "[Desktop Entry]\n" + \
+                      "Version=1.0\n" + \
+                      "Type=Application\n" + \
+                      "Name=" + app_name + "\n" +\
+                      "Comment=\n" + \
+                      "Exec=sh -c \"" + xxnet_path + "/start\"\n" + \
+                      "Icon=" + xxnet_path + "/code/default/launcher/web_ui/favicon.ico\n" + \
+                      "Path=\n" + \
+                      "Terminal=false\n" + \
+                      "StartupNotify=false\n"
+
+            fp = os.path.join(desktop_path, app_name + ".desktop")
+            with open(fp, "w") as fd:
+                fd.write(content)
+            os.chmod(fp, 0o0744)
+
+        create_xwindows_shortcut()
 
     elif sys.platform == "win32":
         # import ctypes
         # msg = u"是否在桌面创建图标？"
-        # title = u"XX-Net 叉叉网"
+        # title = app_name
         #res = ctypes.windll.user32.MessageBoxW(None, msg, title, 1)
         # Yes:1 No:2
         #if res == 2:
         #    return
 
-        subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js"], shell=False)
+        subprocess.call(["Wscript.exe", "//E:JScript", "create_shortcut.js", app_name], shell=False)
 
 
 def notify_install_tcpz_for_winXp():

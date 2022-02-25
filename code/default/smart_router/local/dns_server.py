@@ -82,7 +82,7 @@ class DnsServer(object):
             if sys.platform.startswith("linux"):
                 xlog.warn("You can try: install libcap2-bin")
                 xlog.warn("Then: sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python2.7")
-                xlog.warn("Or run XX-Net as root")
+                xlog.warn("Or run as root")
 
     def on_udp_query(self, rsock, req_data, addr):
         start_time = time.time()

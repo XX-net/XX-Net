@@ -12,6 +12,10 @@ class SimpleI18N(object):
     def __init__(self):
         self.lang = get_language()
         xlog.debug("lang: %s", self.lang)
+        self.base_po_dict = {}
+
+    def add_translate(self, key, value):
+        self.base_po_dict[key] = value
 
     @staticmethod
     def po_loader(file):
@@ -68,8 +72,9 @@ class SimpleI18N(object):
 
         return po_dict
 
-    @staticmethod
-    def _render(po_dict, file):
+    def _render(self, po_dict, file):
+        po_dict = utils.merge_two_dict(po_dict, self.base_po_dict)
+
         if sys.version_info[0] == 2:
             fp = open(file, "r")
             content = fp.read()

@@ -13,3 +13,13 @@ class TestIP(unittest.TestCase):
         ip = 'bat-bing-com.a-0001.a-msedge.net.'
         res = utils.is_private_ip(ip)
         self.assertFalse(res)
+
+    def test_merge_dict(self):
+        x = {'a': 1, 'b': 2}
+        y = {'b': 3, 'c': 4}
+        z = utils.merge_two_dict(x, y)
+        self.assertEqual(z, {
+            'a': 1,
+            'b': 3,
+            'c': 4
+        })

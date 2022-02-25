@@ -7,7 +7,7 @@ import locale
 import subprocess
 
 from launcher.config import get_language
-
+from config import app_name
 from xlog import getLogger
 xlog = getLogger("launcher")
 
@@ -184,14 +184,14 @@ _blacklist = {
     ],
 }
 
-_title = "XX-Net 兼容性建议", "XX-Net compatibility suggest"
+_title = app_name + " 兼容性建议", app_name + " compatibility suggest"
 _notice = (
-    "某些软件可能和 XX-Net 存在冲突，导致 CPU 占用过高或者无法正常使用。"
-    "如有此现象建议暂时退出以下软件来保证 XX-Net 正常运行：\n",
-    "Some software may conflict with XX-Net, "
+    "某些软件可能和 " + app_name + " 存在冲突，导致 CPU 占用过高或者无法正常使用。"
+    "如有此现象建议暂时退出以下软件来保证" + app_name + "正常运行：\n",
+    "Some software may conflict with This app, "
     "causing the CPU to be overused or not working properly."
     "If this is the case, it is recommended to temporarily quit the following "
-    "software to ensure XX-Net runnig:\n",
+    "software to ensure " + app_name + " running:\n",
     "\n你可以在配置页面关闭此建议。",
     "\nYou can close this suggestion on the configuration page.",
 )

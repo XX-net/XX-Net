@@ -89,7 +89,7 @@
         </thead>
         <tbody>
             <tr>
-                <td>XX-Net Version</td>
+                <td>{{ _( "APP_NAME" ) }} Version</td>
                 <td id="xxnet-version"></td>
             </tr>
             <tr>
@@ -164,7 +164,7 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('{{ _( "XX-Net Status Info" ) }}');
+    title('{{ _( "APP_NAME" ) }} {{ _( "Status Info" ) }}');
 </script>
 <script type="text/javascript">
     function OneKeyReport() {
@@ -205,7 +205,7 @@
                     'Using_Public_Appid: ' + is_public_appid(result['gae_appid'])
                 ];
 
-                updateProperty("textarea#DiagInfo", "XX-Net Status:\n\n" + information.join("\n"));
+                updateProperty("textarea#DiagInfo", {{ _( "APP_NAME" ) }} + " Status:\n\n" + information.join("\n"));
 
                 IssueURL = 'https://github.com/XX-net/XX-Net/issues/new?body={{ _( "-----------%0AProblem Description:%0APlease describe your problem, running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A" ) }}' + encodeURIComponent(information.join("\n")) + ";";
                 $("a#one-key-issue").attr("href", IssueURL);
@@ -304,7 +304,7 @@
                 }
 
                 if (formValue === '') {
-                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _( "APP_NAME" ) }}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 }
             }
         });
@@ -378,15 +378,15 @@
                     }
                 }
 
-                return updateProperty('#noob-info', "XX-Net " + result['xxnet_version'].trim() + '{{ _( ", Everything is OK. Welcome to the FREE Internet." ) }}', 'fluent');
+                return updateProperty('#noob-info', {{ _( "APP_NAME" ) }} + " " + result['xxnet_version'].trim() + '{{ _( ", Everything is OK. Welcome to the FREE Internet." ) }}', 'fluent');
 
             },
             error: function (result) {
                 var infoValue = $('#noob-info').html();
                 if (infoValue == '') {
-                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _("XX-Net")}}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
+                    tip('{{ _("The status page is empty. Highly likely that ")}}{{ _( "APP_NAME" ) }}{{ _(" failed getting started. Please follow ")}}<a href="https://github.com/XX-net/XX-Net/wiki/How-to-get-start-error-log" target="_blank">{{ _("guide")}}</a>{{ _(" to troubleshoot.")}}<br>', 'warning', false);
                 } else {
-                    updateProperty('#noob-info', '{{ _("No response from process: ")}}{{ _("XX-Net")}}{{ _(". It might have already exited.")}}', 'none');
+                    updateProperty('#noob-info', '{{ _("No response from process: ")}}{{ _( "APP_NAME" ) }}{{ _(". It might have already exited.")}}', 'none');
                 }
             }
         });

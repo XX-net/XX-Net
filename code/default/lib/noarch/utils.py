@@ -342,6 +342,13 @@ def bytes2str_only(data, coding='utf-8'):
         return data
 
 
+def merge_two_dict(x, y):
+    """Given two dictionaries, merge them into a new dict as a shallow copy."""
+    z = x.copy()
+    z.update(y)
+    return z
+
+
 if __name__ == '__main__':
     # print(get_ip_port("1.2.3.4", 443))
     # print(get_ip_port("1.2.3.4:8443", 443))

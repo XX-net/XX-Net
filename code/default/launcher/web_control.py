@@ -34,12 +34,12 @@ except ImportError:
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
-
 import sys_platform
 from xlog import getLogger
+
 xlog = getLogger("launcher")
 import module_init
-from config import config, valid_language
+from config import config, valid_language, app_name
 import autorun
 import update
 import update_from_github
@@ -50,10 +50,13 @@ from simple_i18n import SimpleI18N
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
+current_version = utils.to_bytes(update_from_github.current_version())
 i18n_translator = SimpleI18N()
-
-
+i18n_translator.add_translate(b"APP_NAME", utils.to_bytes(app_name))
+i18n_translator.add_translate(b"APP_VERSION", current_version)
 module_menus = {}
+
+
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
 
@@ -77,7 +80,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             new_module_menus[module] = module_menu
 
         module_menus = sorted(iter(new_module_menus.items()), key=lambda k_and_v: (k_and_v[1]['menu_sort_id']))
-        #for k,v in self.module_menus:
+        # for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_POST(self):
@@ -120,7 +123,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return self.send_not_found()
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.\
+                controler = module_init.proc_handler[module]["imp"].local.web_control. \
                     ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.postvars = utils.to_str(self.postvars)
                 try:
@@ -169,7 +172,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return
 
                 path = '/' + '/'.join(url_path_list[4:])
-                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(
+                    self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
                 controler.do_GET()
                 return
             else:
@@ -254,10 +258,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.warn("render %s except:%r", fn, e)
             return self.send_not_found()
 
-        current_version = utils.to_bytes(update_from_github.current_version())
         menu_content = b''
         for module, v in module_menus:
-            #xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
+            # xlog.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += b'<li class="nav-header">%s</li>\n' % utils.to_bytes(title)
             for sub_id in v['sub_menus']:
@@ -267,17 +270,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     active = b'class="active"'
                 else:
                     active = b''
-                menu_content += b'<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % utils.to_bytes( (active, module, sub_url, sub_title) )
+                menu_content += b'<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % utils.to_bytes(
+                    (active, module, sub_url, sub_title))
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
             locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
-            right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui", target_menu + ".html"))
+            right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui",
+                                                                            target_menu + ".html"))
         else:
             right_content = b""
 
-        data = index_content % (current_version, current_version, menu_content, right_content )
+        data = index_content % (menu_content, right_content)
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -478,7 +483,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if smart_router_enable != 0 and smart_router_enable != 1:
                     data = '{"res":"fail, smart_router_enable:%s"}' % smart_router_enable
                 else:
-                    config.enable_smart_router =  smart_router_enable
+                    config.enable_smart_router = smart_router_enable
                     config.save()
                     if smart_router_enable:
                         module_init.start("smart_router")
@@ -523,7 +528,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif reqs['cmd'] == ['get_new_version']:
             current_version = update_from_github.current_version()
             github_versions = update_from_github.get_github_versions()
-            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (github_versions[0][1], github_versions[1][1], current_version)
+            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (
+            github_versions[0][1], github_versions[1][1], current_version)
             xlog.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
             version = reqs['version'][0]
@@ -622,7 +628,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif reqs['cmd'] == ['restart']:
                 result_stop = module_init.stop(module)
                 result_start = module_init.start(module)
-                data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (module, result_stop, result_start)
+                data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (
+                module, result_stop, result_start)
         except Exception as e:
             xlog.exception("init_module except:%s", e)
 
@@ -686,6 +693,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         except Exception as e:
             xlog.exception("debug:%r", e)
             self.send_response("text/html", "no mem_top")
+
 
 mem_stat = None
 
@@ -780,7 +788,7 @@ def http_request(url, method="GET"):
         req = opener.open(url, timeout=30)
         return req
     except Exception as e:
-        #xlog.exception("web_control http_request:%s fail:%s", url, e)
+        # xlog.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
 
@@ -817,7 +825,7 @@ def confirm_module_ready(port):
 
         content = req.read(1024)
         req.close()
-        #xlog.debug("cert_import_ready return:%s", content)
+        # xlog.debug("cert_import_ready return:%s", content)
         if content == "True":
             return True
         else:
@@ -827,4 +835,4 @@ def confirm_module_ready(port):
 
 if __name__ == "__main__":
     pass
-    #confirm_xxnet_exit()
+    # confirm_xxnet_exit()
