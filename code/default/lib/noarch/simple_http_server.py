@@ -408,8 +408,8 @@ class HttpServerHandler():
                 return
 
             file_size = os.path.getsize(filename)
-            tme = (datetime.datetime.today() + datetime.timedelta(minutes=330)).strftime('%a, %d %b %Y %H:%M:%S GMT')
-            head = b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:public, max-age=31536000\r\n'
+            tme = (datetime.datetime.today() + datetime.timedelta(minutes=0)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            head = b'HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nCache-Control:no-cache\r\n'
             head += b'Expires: %s\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % utils.to_bytes(
                 (tme, mimetype, file_size))
             self.wfile.write(head)

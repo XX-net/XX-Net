@@ -382,7 +382,11 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                 if not ips:
                     continue
 
-                do_direct(sock, host, ips, port, client_address, left_buf)
+                try:
+                    do_direct(sock, host, ips, port, client_address, left_buf)
+                except ConnectFail:
+                    continue
+
                 xlog.info("%s %s:%d forward to direct", scense, host, port)
                 return
 
