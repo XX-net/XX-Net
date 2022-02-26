@@ -4,6 +4,11 @@ html, body {
     padding: 0;
 }
 
+.container-fluid{
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
 button,
 input,
 select,

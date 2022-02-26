@@ -20,30 +20,34 @@
     <script type="text/javascript" src="/js/ladda.min.js"></script>
     <script type="text/javascript" src="/js/site.js"></script>
     <!--[if lte IE 9]>
-        <script type="text/javascript" src="/js/jquery.placeholder.min.js"></script>
-        <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.placeholder.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.xdomainrequest.min.js"></script>
     <![endif]-->
 </head>
 <script type="text/javascript">
     var documentReadyToRun = new Array();
+
+
 </script>
 <body>
 <div id="header" class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
         <div class="container">
             <div class="row-fluid">
-                <div id="logo" >
+                <div id="logo">
                     <a href="/" title='{{ _( "APP_NAME" ) }}'>
                         <img src="/img/logo.png" alt="Logo">
                         {{ _( "APP_NAME" ) }}
                         <span id="version_on_logo" class=""></span>
                     </a>
-                    <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{ _( "(Remote Web Control Enabled)" ) }}</a>
+                    <a id="remote-connection-identifier" style="display: none;" href="/?module=launcher&menu=config">{{
+                        _( "(Remote Web Control Enabled)" ) }}</a>
                 </div> <!-- #logo -->
                 <div class="align-right d-md-block">
                     <ul class="inline">
                         <li>
-                            <a id="resize-window-trigger" href="javascript:void(0);" title='{{ _( "Adaptive width" ) }}'>
+                            <a id="resize-window-trigger" href="javascript:void(0);"
+                               title='{{ _( "Adaptive width" ) }}'>
                                 <img src="/img/fixed-width.png" alt="resize-window">
                             </a>
                         </li>
@@ -82,7 +86,8 @@
                     <span id="update-notify-close">×</span>
                     <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
                     <span id="update-next" class="update-notify-action">{{ _( "Remind me later" ) }}</span>
-                    <span id="update-skip" class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
+                    <span id="update-skip"
+                          class="update-notify-action">{{ _( "Do not remind me this version" ) }}</span>
                     <span id="update-message"></span>
                     <span> &nbsp; <a id="update-viewchanges" target="_blank">{{ _( "View changes" ) }}</a></span>
                 </div> <!-- #update-notify -->
@@ -102,23 +107,29 @@
 <!-- JavaScript -->
 <!-- Placed at the end of the document so the pages load faster -->
 <script type="text/javascript">
-  function on_resize() {
-    var viewportWidth = $(window).width();
-    var viewportHeight = $(window).height();
+    function on_resize() {
+        var viewportWidth = $(window).width();
+        var viewportHeight = $(window).height();
 
-    //console.log("resize w:" + viewportWidth + " h:" + viewportHeight);
-    if (viewportWidth < 768) {
-      $('.d-md-block').addClass('hide');
-      $('.d-md-none').removeClass('hide');
-    } else {
-      $('.d-md-block').removeClass('hide');
-      $('.d-md-none').addClass('hide');
+        //console.log("resize w:" + viewportWidth + " h:" + viewportHeight);
+        if (viewportWidth < 768) {
+            $('.d-md-block').addClass('hide');
+            $('.d-md-none').removeClass('hide');
+
+            $('.container').addClass('container-fluid');
+            $('.container').removeClass('container');
+        } else {
+            $('.d-md-block').removeClass('hide');
+            $('.d-md-none').addClass('hide');
+
+            $('.container-fluid').addClass('container');
+            $('.container-fluid').removeClass('container-fluid');
+        }
     }
-  }
 
-  $(window).resize(function() {
-    on_resize();
-  });
+    $(window).resize(function() {
+        on_resize();
+    });
 
     $(function () {
         window.isFullWidth = false;
@@ -128,6 +139,8 @@
 
         on_resize();
     });
+
+
 </script>
 <script type="text/javascript">
     $('.fluid-down-control').click(function () {
@@ -144,6 +157,8 @@
             $('#' + id).slideUp();
         }
     });
+
+
 </script>
 <script type="text/javascript">
 
@@ -341,6 +356,8 @@
         getIssuesByLabels("发布," + versionSplitBig, getRELEASENOTE_ISSUEID_Callback);
         updateWelcome();
     }
+
+
 </script>
 <script type="text/javascript">
     function getConfig(key) {
@@ -407,6 +424,8 @@
     function displayErrorMessage() {
         tip('{{ _( "Unkown error occured. Please refresh the page and try again." ) }}', 'error');
     }
+
+
 </script>
 <script type="text/javascript">
     init_main();
@@ -431,6 +450,8 @@
             $('#remote-connection-identifier').show();
         }
     }
+
+
 </script>
 <script type="text/javascript">
     var checkUpdateTimeout = 600000;
@@ -728,6 +749,8 @@
     $('#update-notify-close').click(clearUpdateInfo);
     // site.js fix
     $('#tip-close').click(tipClose);
+
+
 </script>
 <div id="display-issue-modal" class="modal hide fade" style="width: auto;">
     <div class="modal-header">
@@ -806,6 +829,8 @@
             // tip('{ { _( err ) }}', 'error');
         }
     }
+
+
 </script>
 </body>
 </html>
