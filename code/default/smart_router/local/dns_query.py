@@ -344,6 +344,9 @@ class DnsOverTcpQuery():
             xlog.debug("DNS %s %s return %s t:%f", self.protocol, domain, ips, t2-t0)
             self.connections.append([sock, time.time()])
             return ips
+        except socket.timeout:
+            xlog.warn("query_over_tcp %s type:%s timeout", domain, dns_type)
+            return []
         except Exception as e:
             xlog.exception("query_over_tcp %s type:%s except:%r", domain, dns_type, e)
             return []

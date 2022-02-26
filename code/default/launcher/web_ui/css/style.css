@@ -68,6 +68,7 @@ div#header div#logo img {
 }
 
 div#header a#resize-window-trigger,
+div#header a#menu-button,
 div#header a#quit-trigger {
     display: block;
     padding-top: 8px;
@@ -77,6 +78,11 @@ div#header img {
     max-height: 22px;
 }
 
+.align-right {
+    position: absolute;
+    top: 5px;
+    right: 30px;
+}
 
 div#content {
     margin: 40px auto 0;

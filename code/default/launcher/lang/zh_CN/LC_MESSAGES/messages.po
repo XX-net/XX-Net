@@ -41,7 +41,7 @@ msgstr "内容"
 msgid "Thanks to the following projects"
 msgstr "感谢以下项目"
 
-msgid "About "
+msgid "About"
 msgstr "关于"
 
 msgid "General Settings"
@@ -53,8 +53,11 @@ msgstr "版本"
 msgid "LAN Proxy Setting"
 msgstr "前置代理"
 
-msgid "System Configuration"
-msgstr "系统配置"
+msgid "System"
+msgstr "系统"
+
+msgid "Configuration"
+msgstr "配置"
 
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
 msgstr "正在配置服务 [%s], 页面将在 %s 秒后刷新。"
