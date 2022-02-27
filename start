@@ -23,7 +23,7 @@ goto_script_path() {
 }
 
 goto_script_path
-if ! type python > /dev/null 2>&1; then
+if ! type python3 > /dev/null 2>&1; then
     PYTHON="python3"
 elif python -V 2>&1| grep -q "Python 3" ;then
     PYTHON="python"
