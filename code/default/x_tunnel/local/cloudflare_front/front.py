@@ -85,10 +85,10 @@ class Front(object):
         status = response.status
         content = response.task.read_all()
         if status == 200:
-            self.logger.debug("%s %s%s status:%d trace:%s", method, response.worker.host, path, status,
+            self.logger.debug("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,
                        response.task.get_trace())
         else:
-            self.logger.warn("%s %s%s status:%d trace:%s", method, response.worker.host, path, status,
+            self.logger.warn("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,
                        response.task.get_trace())
         return content, status, response
 

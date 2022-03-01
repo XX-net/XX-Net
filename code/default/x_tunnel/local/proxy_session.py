@@ -399,10 +399,12 @@ class ProxySession(object):
         xlog.debug("stop all connection finished")
 
     def remove_conn(self, conn_id):
-        xlog.debug("remove conn:%d", conn_id)
         try:
+            conn = self.conn_list[conn_id]
+            xlog.debug("remove conn:%d %s:%d", conn_id, conn.host, conn.port)
             del self.conn_list[conn_id]
         except:
+            xlog.debug("remove conn:%d", conn_id)
             pass
 
         if len(self.conn_list) == 0:

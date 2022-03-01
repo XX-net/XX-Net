@@ -476,7 +476,11 @@ def handle_ip_proxy(sock, ip, port, client_address):
     if not isinstance(sock, SocketWrap):
         sock = SocketWrap(sock, client_address[0], client_address[1])
 
-    rule = g.user_rules.check_host(ip, port)
+    if g.config.pac_policy == "all_X-Tunnel":
+        rule = "socks"
+    else:
+        rule = g.user_rules.check_host(ip, port)
+
     if not rule:
         if utils.is_private_ip(ip):
             rule = "direct"
@@ -519,6 +523,9 @@ def handle_ip_proxy(sock, ip, port, client_address):
             rule_list.remove("gae")
         except:
             pass
+
+    if g.config.pac_policy == "all_X-Tunnel":
+        rule_list = ["socks", ]
 
     try_loop("ip", rule_list, sock, ip, port, client_address)
 
@@ -597,6 +604,9 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
             rule_list.remove("gae")
         except:
             pass
+
+    if g.config.pac_policy == "all_X-Tunnel":
+        rule_list = ["socks", ]
 
     xlog.debug("connect to %s:%d from:%s:%d, rule:%s", host, port, client_address[0], client_address[1],
                utils.to_str(rule_list))

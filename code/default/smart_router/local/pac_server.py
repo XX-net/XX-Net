@@ -27,7 +27,7 @@ user_pacfile = os.path.join(data_path, "proxy.pac")
 gae_ca_file = os.path.join(top_path, 'data', "gae_proxy", "CA.crt")
 
 
-allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router"]
+allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router", "all_X-Tunnel"]
 
 
 def get_serving_pacfile():
@@ -45,14 +45,14 @@ def get_serving_pacfile():
 class PacHandler(simple_http_server.HttpServerHandler):
     PROXY_LISTEN = "PROXY_LISTEN"
 
-    def policy_smart_router(self, host):
+    def policy_all_to_proxy(self, host, port):
         content = """function FindProxyForURL(url, host) { return 'PROXY PROXY_LISTEN';}"""
 
-        proxy = host + ":" + str(g.config.proxy_port)
+        proxy = host + ":" + str(port)
         content = content.replace(self.PROXY_LISTEN, proxy)
         return content
 
-    def policy_black_port(self, host, port):
+    def policy_blacklist_to_proxy(self, host, port):
         content = get_serving_pacfile()
 
         proxy = host + ":" + str(port)
@@ -84,10 +84,12 @@ class PacHandler(simple_http_server.HttpServerHandler):
         host, _, port = host.rpartition(":")
 
         if g.config.pac_policy == "black_GAE":
-            content = self.policy_black_port(host, "%s" % g.gae_proxy_listen_port)
+            content = self.policy_blacklist_to_proxy(host, "%s" % g.gae_proxy_listen_port)
         elif g.config.pac_policy == "black_X-Tunnel":
-            content = self.policy_black_port(host, "%s" % g.x_tunnel_socks_port)
+            content = self.policy_blacklist_to_proxy(host, "%s" % g.x_tunnel_socks_port)
+        elif g.config.pac_policy == "all_X-Tunnel":
+            content = self.policy_all_to_proxy(host, "%s" % g.x_tunnel_socks_port)
         else:
-            content = self.policy_smart_router(host)
+            content = self.policy_all_to_proxy(host, g.config.proxy_port)
 
         self.send_response('application/x-ns-proxy-autoconfig', content)
