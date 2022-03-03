@@ -14,6 +14,8 @@ sys.path.append(noarch_lib)
 
 import utils
 import simple_http_server
+from dnslib.dns import DNSRecord, DNSHeader, DNSQuestion
+import socket
 
 import simple_http_client
 from xlog import getLogger
@@ -67,6 +69,7 @@ class ServiceTesting(object):
     def run(self):
         self.get_xxnet_web_console()
         self.xtunnel_logout()
+        self.smart_route_dns_query()
         self.smart_route_proxy_http()
         self.smart_route_proxy_socks4()
         self.smart_route_proxy_socks5()
@@ -144,6 +147,22 @@ class ServiceTesting(object):
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
         xlog.info("Finished testing SmartRouter SOCKS5 proxy protocol")
+
+    def smart_route_dns_query(self):
+        domain = "appsec.hicloud.com"
+        d = DNSRecord(DNSHeader(123))
+        d.add_question(DNSQuestion(domain, 1))
+        req4_pack = d.pack()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(req4_pack, ("127.0.0.1", 53))
+        sock.sendto(req4_pack, ("127.0.0.1", 8053))
+
+        response, server = sock.recvfrom(8192)
+        p = DNSRecord.parse(response)
+        for r in p.rr:
+            ip = utils.to_bytes(str(r.rdata))
+            self.assertEqual(utils.check_ip_valid(ip), True)
 
     def xtunnel_login(self):
         xlog.info("Start testing XTunnel login")

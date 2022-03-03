@@ -517,7 +517,7 @@ class CombineDnsQuery():
     def query_unknown_domain(self, domain, dns_type):
         return self.parallel_query.query(domain, dns_type, [self.https_query.query, self.tls_query.query, self.tcp_query.query, query_dns_from_xxnet])
 
-    def query(self, domain, dns_type=1):
+    def query(self, domain, dns_type=1, history=[]):
         domain = utils.to_bytes(domain)
         if utils.check_ip_valid(domain):
             return [domain]
@@ -550,7 +550,23 @@ class CombineDnsQuery():
         if not ips:
             ips = self.local_dns_resolve.query(domain, timeout=1)
 
-        return ips
+        out_ips = []
+        for ip in ips:
+            if not utils.check_ip_valid(ip):
+                if ip == domain:
+                    continue
+
+                if ip in history:
+                    continue
+
+                ip_ips = self.query(ip, dns_type, history.append(ip))
+                for ip in ip_ips:
+                    out_ips.append(ip)
+
+            elif ip not in ips:
+                out_ips.append(ip)
+
+        return out_ips
 
     def query_recursively(self, domain, dns_type=None):
         if not dns_type:

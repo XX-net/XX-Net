@@ -110,9 +110,9 @@ class DnsServer(object):
             for ip_cn in ips:
                 ipcn_p = ip_cn.split(b"|")
                 ip = ipcn_p[0]
-                if b"." in ip and type == 1:
+                if utils.check_ip_valid4(ip) and type == 1:
                     reply.add_answer(RR(domain, ttl=60, rdata=A(ip)))
-                elif b":" in ip and type == 28:
+                elif utils.check_ip_valid6(ip) and type == 28:
                     reply.add_answer(RR(domain, rtype=type, ttl=60, rdata=AAAA(ip)))
             res_data = reply.pack()
 
