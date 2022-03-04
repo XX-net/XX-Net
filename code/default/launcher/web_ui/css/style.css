@@ -53,6 +53,12 @@ select:focus {
     outline: none;
 }
 
+.navbar-fixed-top {
+    position:fixed;
+    top:0;
+    width:100%;
+}
+
 div#header a {
     color: #fff;
     text-decoration: none;
@@ -91,7 +97,7 @@ div#header img {
 
 div#content {
     margin: 40px auto 0;
-    padding: 40px 0 40px;
+    padding-top: 3rem;
 }
 
 div#content div#sidebar a {
@@ -390,10 +396,6 @@ div#history.tab-pane h4 {
 
     div#header div#logo {
         text-align: center;
-    }
-
-    div#content {
-        padding: 0;
     }
 }
 
