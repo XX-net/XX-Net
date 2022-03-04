@@ -542,7 +542,7 @@ class CombineDnsQuery():
             g.domain_cache.set_ips(domain, ips, dns_type)
             return ips
 
-        elif g.gfwlist.in_block_list(domain) or rule in ["gae", "socks"]:
+        elif g.gfwlist.in_block_list(domain) or rule in ["gae", "socks"] or g.config.pac_policy == "all_X-Tunnel":
             ips = self.query_blocked_domain(domain, dns_type)
         else:
             ips = self.query_unknown_domain(domain, dns_type)

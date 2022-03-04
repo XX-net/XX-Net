@@ -149,6 +149,7 @@ class ServiceTesting(object):
         xlog.info("Finished testing SmartRouter SOCKS5 proxy protocol")
 
     def smart_route_dns_query(self):
+        xlog.info("Start testing SmartRouter DNS Query")
         domain = "appsec.hicloud.com"
         d = DNSRecord(DNSHeader(123))
         d.add_question(DNSQuestion(domain, 1))
@@ -162,7 +163,10 @@ class ServiceTesting(object):
         p = DNSRecord.parse(response)
         for r in p.rr:
             ip = utils.to_bytes(str(r.rdata))
+            xlog.info("IP:%s" % ip)
             self.assertEqual(utils.check_ip_valid(ip), True)
+
+        xlog.info("Finished testing SmartRouter DNS Query")
 
     def xtunnel_login(self):
         xlog.info("Start testing XTunnel login")
