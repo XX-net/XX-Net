@@ -49,9 +49,7 @@ fi
 
 start() {
     echo -n "Starting ${PACKAGE_DESC}: "
-    if hash python2 2>/dev/null; then
-        nohup "${PYTHON}" ${PACKAGE_START} >/dev/null 2>&1 &
-    fi
+    nohup "${PYTHON}" ${PACKAGE_START} >/dev/null 2>&1 &
     echo "${PACKAGE_NAME}."
 }
 
