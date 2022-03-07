@@ -80,7 +80,7 @@ def load_config():
     config.set_var("auto_direct6", 0)
     config.set_var("auto_gae", 1)
     config.set_var("enable_fake_ca", 1)
-    config.set_var("block_advertisement", 1)
+    config.set_var("block_advertisement", 0)
 
     config.set_var("log_debug", 0)
 
