@@ -204,6 +204,7 @@ def get_sni(sock, left_buf=b""):
 
 
 def do_direct(sock, host, ips, port, client_address, left_buf=b""):
+    xlog.debug("host:%s:%d try direct connect from %s", host, port, client_address)
     remote_sock = g.connect_manager.get_conn(host, ips, port)
     if not remote_sock:
         raise ConnectFail()
@@ -352,6 +353,7 @@ def do_gae(sock, host, port, client_address, left_buf=""):
 
 
 def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
+    xlog.debug("try_loop %s %s to %s:%d", scense, rule_list, host, port)
 
     start_time = time.time()
 
@@ -465,13 +467,13 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
         except Exception as e:
             xlog.exception("%s %s to %s:%d except:%r", scense, rule, host, port, e)
 
-    xlog.info("%s %s to %s:%d fail", scense, rule_list, host, port)
+    xlog.warn("%s %s to %s:%d try_loop fail", scense, rule_list, host, port)
     sock.close()
     return
 
 
 def handle_ip_proxy(sock, ip, port, client_address):
-    xlog.debug("connect to %s:%d from:%s:%d", ip, port, client_address[0], client_address[1])
+    xlog.debug("handle_ip_proxy to %s:%d from:%s:%d", ip, port, client_address[0], client_address[1])
 
     if not isinstance(sock, SocketWrap):
         sock = SocketWrap(sock, client_address[0], client_address[1])
@@ -488,12 +490,14 @@ def handle_ip_proxy(sock, ip, port, client_address):
     if rule:
         return try_loop("ip user", [rule], sock, ip, port, client_address)
 
-    try:
-        host = get_sni(sock)
-        if host:
-            return handle_domain_proxy(sock, host, port, client_address)
-    except SniNotExist as e:
-        xlog.debug("ip:%s:%d get sni fail", ip, port)
+    if port == 443:
+        try:
+            host = get_sni(sock)
+            if host and not utils.check_ip_valid(host):
+                xlog.debug("ip connect to %s:%d translate to %s", ip, port, host)
+                return handle_domain_proxy(sock, host, port, client_address)
+        except SniNotExist as e:
+            xlog.debug("ip:%s:%d get sni fail", ip, port)
 
     record = g.ip_cache.get(ip)
     if record and record["r"] != "unknown":
@@ -608,6 +612,6 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     if g.config.pac_policy == "all_X-Tunnel":
         rule_list = ["socks", ]
 
-    xlog.debug("connect to %s:%d from:%s:%d, rule:%s", host, port, client_address[0], client_address[1],
+    xlog.debug("handle_domain_proxy to %s:%d from:%s:%d, rule:%s", host, port, client_address[0], client_address[1],
                utils.to_str(rule_list))
     try_loop("domain", rule_list, sock, host, port, client_address, left_buf)
