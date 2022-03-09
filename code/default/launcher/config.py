@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import subprocess
 import locale
 import json
 
+from sys_platform import platform
+from simple_http_client import request
 import xconfig
 from xlog import getLogger
 xlog = getLogger("launcher")
@@ -89,15 +90,8 @@ except Exception as e:
 
 
 def _get_os_language():
-    try:
-        lang_code, code_page = locale.getdefaultlocale()
-        # ('en_GB', 'cp1252'), en_US,
-        return lang_code
-    except:
-        # Mac fail to run this
-        pass
 
-    if sys.platform == "darwin":
+    if platform == "mac":
         try:
             oot = os.pipe()
             p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
@@ -110,6 +104,31 @@ def _get_os_language():
             elif b'fa' in lang_code:
                 return 'fa_IR'
         except:
+            pass
+    elif platform == "android":
+        try:
+            res = request("GET", "http://localhost:8084/env/")
+            dat = json.loads(res.text)
+            lang_code = dat["lang_code"]
+            xlog.debug("lang_code:%s", lang_code)
+            if 'zh' in lang_code:
+                return 'zh_CN'
+            elif 'en' in lang_code:
+                return 'en_US'
+            elif 'fa' in lang_code:
+                return 'fa_IR'
+            else:
+                return None
+        except Exception as e:
+            xlog.exception("get lang except:%r", e)
+            return None
+    else:
+        try:
+            lang_code, code_page = locale.getdefaultlocale()
+            # ('en_GB', 'cp1252'), en_US,
+            return lang_code
+        except:
+            # Mac fail to run this
             pass
 
 
