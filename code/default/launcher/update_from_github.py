@@ -20,6 +20,7 @@ sys.path.append(noarch_lib)
 
 import utils
 import simple_http_client
+import sys_platform
 from xlog import getLogger
 
 xlog = getLogger("launcher")

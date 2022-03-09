@@ -5,7 +5,7 @@ import subprocess
 import locale
 import json
 
-from sys_platform import platform
+import sys_platform
 from simple_http_client import request
 import xconfig
 from xlog import getLogger
@@ -91,7 +91,7 @@ except Exception as e:
 
 def _get_os_language():
 
-    if platform == "mac":
+    if sys_platform.platform == "mac":
         try:
             oot = os.pipe()
             p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
@@ -105,7 +105,7 @@ def _get_os_language():
                 return 'fa_IR'
         except:
             pass
-    elif platform == "android":
+    elif sys_platform.platform == "android":
         try:
             res = request("GET", "http://localhost:8084/env/")
             dat = json.loads(res.text)

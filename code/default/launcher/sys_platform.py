@@ -1,4 +1,4 @@
-import platform
+
 import sys
 import os
 
@@ -11,7 +11,7 @@ default_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
 
 if sys.platform.startswith("linux"):
-    if os.path.isfile("/system/bin/dalvikvm"):
+    if os.path.isfile("/system/bin/dalvikvm") or os.path.isfile("/system/bin/dalvikvm64"):
         xlog.info("This is Android")
         has_desktop = False
         platform = "android"
