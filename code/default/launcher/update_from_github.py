@@ -250,6 +250,9 @@ def overwrite(xxnet_version, xxnet_unzip_path):
             for filename in files:
                 src_file = os.path.join(root, filename)
                 dst_file = os.path.join(top_path, target_relate_path, filename)
+                if relate_path == 'code' and filename == 'app_info.json':
+                    continue
+
                 if not os.path.isfile(dst_file) or hash_file_sum(src_file) != hash_file_sum(dst_file):
                     xlog.info("copy %s => %s", src_file, dst_file)
                     # modify by outofmemo, files in '/sdcard' are not allowed to chmod for Android
