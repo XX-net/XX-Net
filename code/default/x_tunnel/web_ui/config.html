@@ -401,6 +401,8 @@
 
                 update_paypal_button_id(result['paypal_button_id']);
                 updatePlans(result['plans']);
+
+                window.refresh_timer.stop();
             }
         });
     }
