@@ -32,10 +32,16 @@
             <input id="allow-remote" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid", id="show_systray">
+    <div class="row-fluid" id="show_systray">
         <div class="span4">{{ _( "Display System Tray(Restarting APP Required)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+    <div class="row-fluid" id="show_android_notification_">
+        <div class="span4">{{ _( "Display Notification(Restarting APP Required)" ) }}</div> <!-- .span4 -->
+        <div class="span8">
+            <input id="show_android_notification" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid" id="display_windows_suggestion">
@@ -143,6 +149,12 @@
 
                     $("#show-systray").prop('checked', true);
                 }
+                if (result['show_android_notification'] != 0) {
+                    $("#show_android_notification").parent().removeClass('switch-off');
+                    $("#show_android_notification").parent().addClass('switch-on');
+
+                    $("#show_android_notification").prop('checked', true);
+                }
                 if (result['show-compat-suggest'] != 0) {
                     $("#show-compat-suggest").parent().removeClass('switch-off');
                     $("#show-compat-suggest").parent().addClass('switch-on');
@@ -187,6 +199,9 @@
                     $("#run_as_green_software").hide();
                     $("#smart_router_model").hide();
                 }
+                if (result['platform'] != 'android') {
+                    $("#show_android_notification_").hide();
+                }
             },
             error: function () {
                 displayErrorMessage();
@@ -217,6 +232,14 @@
     $('#show-systray').change(function () {
         var isChecked = $(this).is(':checked'),
             key       = 'show_systray',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
+
+    $('#show_android_notification').change(function () {
+        var isChecked = $(this).is(':checked'),
+            key       = 'show_android_notification',
             value     = isChecked ? 1 : 0;
 
         setConfig(key, value);

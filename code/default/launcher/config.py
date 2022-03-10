@@ -27,6 +27,7 @@ config.set_var("control_port", 8085)
 config.set_var("language", "")  # en_US,
 config.set_var("allow_remote_connect", 0)
 config.set_var("show_systray", 1)
+config.set_var("show_android_notification", 1)
 config.set_var("no_mess_system", 0)
 config.set_var("auto_start", 0)
 config.set_var("popup_webui", 1)

@@ -224,6 +224,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.send_response('text/html', content)
                 self.wfile.flush()
 
+                if sys_platform.platform == "android":
+                    simple_http_client.request("GET", "http://localhost:8084/quit/", timeout=0.2)
+
                 sys_platform.sys_tray.on_quit(None)
             elif url_path == "/debug":
                 self.req_debug_handler()
@@ -323,6 +326,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "allow_remote_connect": allow_remote_connect,
                 "allow_remote_switch": config.allow_remote_connect,
                 "show_systray": config.show_systray,
+                "show_android_notification": config.show_android_notification,
                 "auto_start": config.auto_start,
                 "show_detail": config.gae_show_detail,
                 "gae_proxy_enable": config.enable_gae_proxy,
@@ -418,6 +422,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
                     config.show_systray = show_systray
+                    config.save()
+
+                    data = '{"res":"success"}'
+            elif 'show_android_notification' in reqs:
+                show_android_notification = int(reqs['show_android_notification'][0])
+                if show_android_notification != 0 and show_android_notification != 1:
+                    data = '{"res":"fail, show_systray:%s"}' % show_android_notification
+                else:
+                    config.show_android_notification = show_android_notification
                     config.save()
 
                     data = '{"res":"success"}'
