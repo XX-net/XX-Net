@@ -463,3 +463,6 @@ msgstr "选择应该代理哪个APP。 更改此设置后，您需要重新启�
 
 msgid "Settings saved successfully, Please restart VPN."
 msgstr "设置保存成功，请重启VPN"
+
+msgid "Display Notification"
+msgstr "显示磁贴通知"
