@@ -14,13 +14,13 @@
             </select>
         </div>
     </div>
-    <div class="row-fluid">
+    <div class="row-fluid" id="auto-startup">
         <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="auto-start" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
+    <div class="row-fluid" id="popup_web_console">
         <div class="span4">{{ _( "Popup Status Page on Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="popup-webui" type="checkbox" data-toggle="switch"/>
@@ -32,19 +32,19 @@
             <input id="allow-remote" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
+    <div class="row-fluid", id="show_systray">
         <div class="span4">{{ _( "Display System Tray(Restarting APP Required)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
+    <div class="row-fluid" id="display_windows_suggestion">
         <div class="span4">{{ _( "Display Windows software compatibility suggestions" ) }}<a href="https://github.com/XX-net/XX-Net/issues/10957" target="_blank">({{ _( "Feedback" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
             <input id="show-compat-suggest" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
+    <div class="row-fluid" id="run_as_green_software">
         <div class="span4">{{ _( "Run as Green Software" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/%E4%BB%A5%E7%BB%BF%E8%89%B2%E8%BD%AF%E4%BB%B6%E8%BF%90%E8%A1%8C" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
             <input id="no-mess-system" type="checkbox" data-toggle="switch"/>
@@ -72,7 +72,7 @@
                 <input id="x-tunnel-enable" type="checkbox" data-toggle="switch"/>
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
-        <div class="row-fluid">
+        <div class="row-fluid" id="smart_router_model">
             <div class="span4">{{ _( "Enable" ) }} {{ _( "Smart Router" ) }}</div> <!-- .span4 -->
             <div class="span8">
                 <input id="smart-router-enable" type="checkbox" data-toggle="switch"/>
@@ -176,6 +176,17 @@
                     $("#smart-router-enable").prop('checked', true);
                 }
                 $("#language").val(result['language']);
+
+                if (result['platform'] != 'windows') {
+                    $("#display_windows_suggestion").hide();
+                }
+                if (result['platform'] == 'android' || result['platform'] == 'ios') {
+                    $("#auto-startup").hide();
+                    $("#popup_web_console").hide();
+                    $("#show_systray").hide();
+                    $("#run_as_green_software").hide();
+                    $("#smart_router_model").hide();
+                }
             },
             error: function () {
                 displayErrorMessage();

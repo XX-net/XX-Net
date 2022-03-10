@@ -9,6 +9,10 @@
      "3":{
        "title": "{{ _( "About" ) }}",
        "url": "about"
+     },
+     "4":{
+       "title": "{{ _( "Exit" ) }}",
+       "api_url": "/quit"
      }
   }
 }

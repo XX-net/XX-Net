@@ -115,6 +115,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             self.postvars = {}
 
         url_path_list = self.path.split('/')
+        url_path = urlparse(self.path).path
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
             module = url_path_list[2]
             if len(url_path_list) >= 4 and url_path_list[3] == "control":
@@ -131,6 +132,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     return
                 except Exception as e:
                     xlog.exception("POST %s except:%r", path, e)
+
+        elif url_path == "/set_proxy_applist":
+            return self.set_proxy_applist()
 
         self.send_not_found()
         xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
@@ -211,10 +215,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.req_update_handler()
             elif url_path == '/config_proxy':
                 self.req_config_proxy_handler()
+            elif url_path == '/installed_app':
+                self.req_get_installed_app()
             elif url_path == '/init_module':
                 self.req_init_module_handler()
             elif url_path == '/quit':
-                self.send_response('text/html', '{"status":"success"}')
+                content = b'Exited successfully.'
+                self.send_response('text/html', content)
+                self.wfile.flush()
+
                 sys_platform.sys_tray.on_quit(None)
             elif url_path == "/debug":
                 self.req_debug_handler()
@@ -264,14 +273,23 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             title = v["module_title"]
             menu_content += b'<li class="nav-header">%s</li>\n' % utils.to_bytes(title)
             for sub_id in v['sub_menus']:
+                list_meta = b''
+                web_id = v['sub_menus'][sub_id].get("id")
+                if web_id:
+                    list_meta += b' id="%s"' % sub_id
+
                 sub_title = v['sub_menus'][sub_id]['title']
-                sub_url = v['sub_menus'][sub_id]['url']
-                if target_module == module and target_menu == sub_url:
-                    active = b'class="active"'
-                else:
-                    active = b''
-                menu_content += b'<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % utils.to_bytes(
-                    (active, module, sub_url, sub_title))
+                if "url" in v['sub_menus'][sub_id]:
+                    sub_url = v['sub_menus'][sub_id]['url']
+                    if target_module == module and target_menu == sub_url:
+                        list_meta += b'class="active"'
+
+                    menu_content += b'<li %s><a href="/?module=%s&menu=%s">%s</a></li>\n' % utils.to_bytes(
+                        (list_meta, module, sub_url, sub_title))
+                elif "api_url" in v['sub_menus'][sub_id]:
+                    api_url = v['sub_menus'][sub_id]["api_url"]
+                    menu_content += b'<li %s><a href="%s">%s</a></li>\n' % utils.to_bytes(
+                        (list_meta, api_url, sub_title))
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
@@ -298,6 +316,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 allow_remote_connect = config.allow_remote_connect
 
             dat = {
+                "platform": sys_platform.platform,
                 "check_update": config.check_update,
                 "language": config.language or i18n_translator.lang,
                 "popup_webui": config.popup_webui,
@@ -609,6 +628,55 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
             data = '{"res":"success"}'
         self.send_response('text/html', data)
+
+    def req_get_installed_app(self):
+        if sys_platform.platform != 'android':
+            data = {
+                "proxy_by_app": config.proxy_by_app,
+                "installed_app_list": [
+                    {
+                        "name": "Test",
+                        "package": "com.test"
+                    },{
+                        "name": "APP",
+                        "package": "com.app"
+                    }
+                ]
+            }
+            for app in data["installed_app_list"]:
+                package = app["package"]
+                if package in config.enabled_app_list:
+                    app["enable"] = True
+                else:
+                    app["enable"] = False
+
+            return self.send_response("text/html", json.dumps(data))
+
+        res = simple_http_client.request("GET", "http://localhost:8084/installed_app_list/")
+        data = json.loads(res.text)
+        data["proxy_by_app"] = config.proxy_by_app
+
+        for app in data["installed_app_list"]:
+            package = app["package"]
+            if package in config.enabled_app_list:
+                app["enable"] = True
+            else:
+                app["enable"] = False
+
+        return self.send_response("text/html", json.dumps(data))
+
+    def set_proxy_applist(self):
+        xlog.debug("set_proxy_applist %r", self.postvars)
+        config.proxy_by_app = int(self.postvars.get(b'proxy_by_app') == [b"true"])
+        config.enabled_app_list = utils.to_str(self.postvars.get(b"enabled_app_list[]", []))
+        xlog.debug("set_proxy_applist proxy_by_app:%s", config.proxy_by_app)
+        xlog.debug("set_proxy_applist enabled_app_list:%s", config.enabled_app_list)
+        config.save()
+
+        data = {
+            "res": "success"
+        }
+        self.send_response("text/html", json.dumps(data))
 
     def req_init_module_handler(self):
         req = urlparse(self.path).query

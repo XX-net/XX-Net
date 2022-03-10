@@ -107,6 +107,11 @@ msgstr "提交"
 msgid "Smart Router Log"
 msgstr "智能路由日志"
 
+msgid "Log"
+msgstr "日志"
 
+msgid "Configuration"
+msgstr "设置"
 
-
+msgid "Smart Router"
+msgstr "智能路由"

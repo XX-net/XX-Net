@@ -206,8 +206,8 @@ msgstr "(已允许远程访问)"
 msgid "Adaptive width"
 msgstr "自适应宽度"
 
-msgid "Exit the program"
-msgstr "退出程序"
+msgid "Exit"
+msgstr "退出"
 
 msgid "Hello!"
 msgstr "你好！"
@@ -455,20 +455,11 @@ msgstr "全局 Smart-Router 代理"
 msgid "Global Proxy disabled"
 msgstr "全局代理禁用"
 
+msgid "App List"
+msgstr "应用列表"
 
+msgid "Select which APP should be proxied. You need to restart VPN after change this."
+msgstr "选择应该代理哪个APP。 更改此设置后，您需要重新启动 VPN。"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+msgid "Settings saved successfully, Please restart VPN."
+msgstr "设置保存成功，请重启VPN"

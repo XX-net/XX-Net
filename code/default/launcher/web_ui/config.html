@@ -3,6 +3,7 @@
     <li class="active"><a class="config_tab" id="general" data-toggle="tab">{{ _( "General Settings" ) }}</a></li>
     <li><a class="config_tab" id="update" data-toggle="tab">{{ _( "System Version" ) }}</a></li>
     <li><a class="config_tab" id="proxy" data-toggle="tab">{{ _( "LAN Proxy Setting" ) }}</a></li>
+    <li id="app_list" hidden><a class="config_tab" id="applist" data-toggle="tab">{{ _( "App List" ) }}</a></li>
 </ul>
 
 <div id="config_content" class="tab-content">
@@ -52,4 +53,28 @@
             location.reload();
         }, restatingTime * 1000);
     }
+
+
+    $(function () {
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['platform'] == 'android' ) {
+                    $("#app_list").show();
+                } else {
+                    $("#app_list").hide();
+                }
+            },
+            error: function () {
+                displayErrorMessage();
+            }
+        });
+    });
 </script>

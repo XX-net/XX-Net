@@ -72,15 +72,8 @@ class SimpleI18N(object):
 
         return po_dict
 
-    def _render(self, po_dict, file):
+    def _render(self, po_dict, content):
         po_dict = utils.merge_two_dict(po_dict, self.base_po_dict)
-
-        if sys.version_info[0] == 2:
-            fp = open(file, "r")
-            content = fp.read()
-        else:
-            fp = open(file, "rb")
-            content = fp.read()
 
         out_arr = []
 
@@ -129,8 +122,24 @@ class SimpleI18N(object):
 
     def render(self, lang_path, template_file):
         po_file = os.path.join(lang_path, self.lang, "LC_MESSAGES", "messages.po")
+
+        if sys.version_info[0] == 2:
+            fp = open(template_file, "r")
+            content = fp.read()
+        else:
+            fp = open(template_file, "rb")
+            content = fp.read()
+
         if not os.path.isfile(po_file):
-            return self._render(dict(), template_file)
+            return self._render(dict(), content)
         else:
             po_dict = self.po_loader(po_file)
-            return self._render(po_dict, template_file)
+            return self._render(po_dict, content)
+
+    def render_content(self, lang_path, content):
+        po_file = os.path.join(lang_path, self.lang, "LC_MESSAGES", "messages.po")
+        if not os.path.isfile(po_file):
+            return self._render(dict(), content)
+        else:
+            po_dict = self.po_loader(po_file)
+            return self._render(po_dict, content)

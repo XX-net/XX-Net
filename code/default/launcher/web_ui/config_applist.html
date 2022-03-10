@@ -1,0 +1,140 @@
+<form id="config_proxy" method="POST" onSubmit="onSubmit(); return false;">
+    <div class="row-fluid">
+        <div class="span4">
+            <label for="proxy_by_app">{{ _( "Proxy by APP" ) }} </label>
+        </div> <!-- .span4 -->
+        <div class="span8">
+            <input id="proxy_by_app" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
+
+
+    <p class="tip">* {{ _( "Select which APP should be proxied. You need to restart VPN after change this." ) }}</p>
+
+    <div id="installed-app-list" style="display: none;">
+
+    </div>
+
+    <div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="submit">{{ _( "Save" ) }}</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form>
+
+
+<script type="text/javascript">
+
+    $('#proxy_by_app').change(function () {
+        var isChecked = $(this).is(':checked');
+        if (isChecked) {
+            $('#installed-app-list').slideDown();
+        } else {
+            $('#installed-app-list').slideUp();
+        }
+    });
+
+    var installed_app_list = [];
+    var enabled_app_list = [];
+    function arrayRemove(arr, value) {
+        return arr.filter(function(ele){
+            return ele != value;
+        });
+    }
+
+    $(function () {
+        $.ajax({
+            type: 'GET',
+            url: '/installed_app',
+            dataType: 'JSON',
+            success: function (result) {
+
+                if (result['proxy_by_app'] != 0) {
+                    $("#proxy_by_app").parent().removeClass('switch-off');
+                    $("#proxy_by_app").parent().addClass('switch-on');
+
+                    $("#proxy_by_app").prop('checked', true);
+                    $('#installed-app-list').slideDown();
+                }
+
+
+                installed_app_list = [];
+                var content = '';
+                for (var i in result["installed_app_list"]) {
+                    app = result["installed_app_list"][i];
+                    if (app["enable"]) {
+                        enabled_app_list.push(app['package']);
+                        checked = "checked";
+                    } else {
+                        checked = "";
+                    }
+
+                    installed_app_list.push(app["package"]);
+                    var c = '<div class="row-fluid" ><div class="span4">'
+                            + app["name"]
+                            + '</div><div class="span8"><input class="app_item" id="'
+                            + app['package']
+                            + '" type="checkbox" data-toggle="switch" '
+                            + checked
+                            + '/></div></div>';
+                    content = content + c;
+                }
+                $("#installed-app-list").html(content);
+
+                $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+
+
+                $('.app_item').change(function () {
+                    var isChecked = $(this).is(':checked');
+                    var app_id = $(this)[0].id;
+                    // console.log(app_id);
+                    // console.log("on change:" + isChecked);
+                    if (isChecked) {
+                        enabled_app_list.push(app_id);
+                    } else {
+                        enabled_app_list = arrayRemove(enabled_app_list, app_id);
+                    }
+                });
+
+                for (var i in enabled_app_list) {
+                    var app_id = enabled_app_list[i];
+                    //console.log("enable:"+app_id);
+
+                    $("#"+app_id).parent().removeClass('switch-off');
+                    $("#"+app_id).parent().addClass('switch-on');
+
+                    $("#"+app_id).prop('checked', true);
+                }
+
+            },
+            error: function () {
+                tip('{{ _( "Failed reading the app list." ) }}', 'error');
+            }
+        });
+    });
+
+    function onSubmit() {
+
+        var config = {
+            'proxy_by_app': $('#proxy_by_app').is(':checked'),
+            'enabled_app_list': enabled_app_list
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/set_proxy_applist',
+            data: config,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] == 'success') {
+                    tip('{{ _( "Settings saved successfully, Please restart VPN." ) }}', 'success');
+                } else {
+                    tip('{{ _( "Failed saving settings: " ) }}'+ result['reason'], 'error');
+                }
+            },
+            error: function () {
+                tip('{{ _( "Failed saving settings." ) }}', 'error');
+            }
+        });
+    }
+</script>

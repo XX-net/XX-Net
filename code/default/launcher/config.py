@@ -33,6 +33,8 @@ config.set_var("popup_webui", 1)
 
 config.set_var("gae_show_detail", 0)
 config.set_var("show_compat_suggest", 1)
+config.set_var("proxy_by_app", 0)
+config.set_var("enabled_app_list", [])
 
 # version control
 config.set_var("check_update", "notice-stable") # can be: "dont-check", "stable", "notice-stable", "test", "notice-test"

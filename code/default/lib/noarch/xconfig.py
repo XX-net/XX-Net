@@ -33,7 +33,7 @@ class Config(object):
                 try:
                     self.file_config = json.loads(content)
                 except Exception as e:
-                    xlog.warn("Loading config:%s content:%s fail:r", self.config_path, content, e)
+                    xlog.warn("Loading config:%s content:%s fail:%r", self.config_path, content, e)
                     self.file_config = {}
 
         for var_name in self.default_config:
