@@ -161,7 +161,7 @@ def main():
     update_from_github.cleanup()
 
     if config.show_systray:
-        sys_platform.sys_tray.serve_forever()
+        sys_platform.show_systray()
     else:
         while True:
             time.sleep(1)

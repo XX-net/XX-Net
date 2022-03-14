@@ -9,7 +9,7 @@ class None_tray():
     def notify_general(self, msg="msg", title="Title", buttons={}, timeout=3600):
         pass
 
-    def on_quit(self, widget, data=None):
+    def on_quit(self, widget=None, data=None):
         import module_init
 
         module_init.stop_all()

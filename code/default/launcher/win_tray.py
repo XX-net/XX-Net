@@ -166,7 +166,7 @@ class Win_tray():
         webbrowser.open("http://127.0.0.1:%s/" % host_port)
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
-    def on_quit(self, widget, data=None):
+    def on_quit(self, widget=None, data=None):
         if self.get_proxy_state() != "unknown":
             win32_proxy_manager.disable_proxy()
 

@@ -227,7 +227,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 if sys_platform.platform == "android":
                     simple_http_client.request("GET", "http://localhost:8084/quit/", timeout=0.2)
 
-                sys_platform.sys_tray.on_quit(None)
+                sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
             elif url_path == '/restart':

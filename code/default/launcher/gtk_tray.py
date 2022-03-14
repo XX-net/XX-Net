@@ -182,7 +182,7 @@ class Gtk_tray():
         module_init.stop_all()
         module_init.start_all_auto()
 
-    def on_quit(self, widget, data=None):
+    def on_quit(self, widget=None, data=None):
         module_init.stop_all()
         os._exit(0)
         gtk.main_quit()

@@ -1,9 +1,9 @@
 <form id="config_proxy" method="POST" onSubmit="onSubmit(); return false;">
     <div class="row-fluid">
-        <div class="span4">
+        <div class="config_label">
             <label for="proxy_by_app">{{ _( "Proxy by APP" ) }} </label>
         </div> <!-- .span4 -->
-        <div class="span8">
+        <div class="config_switch">
             <input id="proxy_by_app" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
@@ -11,8 +11,16 @@
 
     <p class="tip">* {{ _( "Select which APP should be proxied. You need to restart VPN after change this." ) }}</p>
 
-    <div id="installed-app-list" style="display: none;">
+    <div class="row-fluid" hidden>
+        <div class="config_label">
+            <label for="select_all">{{ _( "Select All" ) }} </label>
+        </div> <!-- .span4 -->
+        <div class="config_switch">
+            <input id="select_all" type="checkbox" data-toggle="switch"/>
+        </div> <!-- .span8 -->
+    </div> <!-- .row-fluid -->
 
+    <div id="installed-app-list" style="display: none;">
     </div>
 
     <div class="row-fluid">
@@ -42,6 +50,36 @@
         });
     }
 
+    $('#select_all').change(function () {
+        // Not work because the app items are added dynamic, needs a fix.
+        //  hide this function currently.
+        var isChecked = $(this).is(':checked');
+        if (isChecked) {
+            enabled_app_list = [];
+            for (var i in installed_app_list) {
+                var app_id = installed_app_list[i];
+                console.log("appid:" + app_id);
+
+                $("#"+app_id).parent().removeClass('switch-off');
+                $("#"+app_id).parent().addClass('switch-on');
+
+                $("#"+app_id).prop('checked', true);
+
+                enabled_app_list.push(app_id);
+            }
+        } else {
+            enabled_app_list = [];
+            for (var i in installed_app_list) {
+                var app_id = installed_app_list[i];
+
+                $("#"+app_id).parent().removeClass('switch-on');
+                $("#"+app_id).parent().addClass('switch-off');
+
+                $("#"+app_id).prop('checked', false);
+            }
+        }
+    });
+
     $(function () {
         $.ajax({
             type: 'GET',
@@ -70,16 +108,16 @@
                     }
 
                     installed_app_list.push(app["package"]);
-                    var c = '<div class="row-fluid" ><div class="span4">'
+                    var c = '<div class="row-fluid" ><div class="config_label">'
                             + app["name"]
-                            + '</div><div class="span8"><input class="app_item" id="'
+                            + '</div><div class="config_switch"><input class="app_item" id="'
                             + app['package']
                             + '" type="checkbox" data-toggle="switch" '
                             + checked
                             + '/></div></div>';
                     content = content + c;
                 }
-                $("#installed-app-list").html(content);
+                $("#installed-app-list").append(content);
 
                 $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
 

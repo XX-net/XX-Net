@@ -465,4 +465,13 @@ msgid "Settings saved successfully, Please restart VPN."
 msgstr "设置保存成功，请重启VPN"
 
 msgid "Display Notification"
-msgstr "显示磁贴通知"
+msgstr "显示常驻通知"
+
+msgid "System Configuration"
+msgstr "系统配置 "
+
+msgid "Proxy by APP"
+msgstr "选择要代理的APP"
+
+msgid "Select All"
+msgstr "全选 "
