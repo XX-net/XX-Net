@@ -644,6 +644,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def req_get_installed_app(self):
         if sys_platform.platform != 'android':
+            # simulate data for developing
             data = {
                 "proxy_by_app": config.proxy_by_app,
                 "installed_app_list": [
@@ -653,21 +654,17 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     },{
                         "name": "APP",
                         "package": "com.app"
+                    },{
+                        "name": "com.google.foundation.Foundation.Application.",
+                        "package": "com.google.application"
                     }
                 ]
             }
-            for app in data["installed_app_list"]:
-                package = app["package"]
-                if package in config.enabled_app_list:
-                    app["enable"] = True
-                else:
-                    app["enable"] = False
-
-            return self.send_response("text/html", json.dumps(data))
-
-        res = simple_http_client.request("GET", "http://localhost:8084/installed_app_list/")
-        data = json.loads(res.text)
-        data["proxy_by_app"] = config.proxy_by_app
+            time.sleep(5)
+        else:
+            res = simple_http_client.request("GET", "http://localhost:8084/installed_app_list/")
+            data = json.loads(res.text)
+            data["proxy_by_app"] = config.proxy_by_app
 
         for app in data["installed_app_list"]:
             package = app["package"]
@@ -676,7 +673,30 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             else:
                 app["enable"] = False
 
-        return self.send_response("text/html", json.dumps(data))
+        if config.proxy_by_app:
+            # Pass the config in html.
+            content = '<div id="proxy_by_app_config" checked hidden></div>'
+        else:
+            content = '<div id="proxy_by_app_config" hidden></div>'
+
+        for app in data["installed_app_list"]:
+            if app["enable"]:
+                checked = " checked "
+            else:
+                checked = ""
+
+            content += '<div class="row-fluid"> <div class="config_label" >'\
+                        + app["name"] \
+                        + '</div><div class="config_switch"><input class="app_item" id="'\
+                        + app['package']\
+                        + '" type="checkbox" data-toggle="switch" '\
+                        + checked\
+                        + '/></div></div>\n'\
+
+        # jquery can't work on dynamic insert elements.
+        # load html content from backend is the best way to make it works.
+
+        return self.send_response("text/html", content)
 
     def set_proxy_applist(self):
         xlog.debug("set_proxy_applist %r", self.postvars)

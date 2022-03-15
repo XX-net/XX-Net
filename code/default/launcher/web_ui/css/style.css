@@ -414,14 +414,20 @@ div#history.tab-pane h4 {
 }
 
 .config_label {
-  display: inline-block;
+    display: inline-block;
     font-weight: bold;
     margin: 10px 0 0;
+    max-width:  100%;
+    overflow: hidden;
 }
 .config_switch {
-  //display: inline-block;
-  float: right;
+    float: right;
     padding-right: 1rem;
     margin: 10px 0 0;
+}
 
+#loading_animation {
+  height: 250px;
+  top: 50%;
+  text-align: center;
 }
