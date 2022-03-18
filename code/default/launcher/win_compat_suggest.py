@@ -1,5 +1,5 @@
 # coding:utf-8
-
+import json
 import os
 import ctypes
 import collections
@@ -7,12 +7,20 @@ import locale
 import subprocess
 
 from launcher.config import get_language
-from config import app_name
+from config import app_name, config
 from xlog import getLogger
 xlog = getLogger("launcher")
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+version_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
+root_path = os.path.abspath(os.path.join(version_path, os.path.pardir, os.path.pardir))
+data_path = os.path.join(root_path, 'data')
+
 
 class Win10PortReserveSolution(object):
+    def __init__(self):
+        self.service_ports = self.get_service_ports()
+
     def check_and_resolve(self):
         if self.is_port_reserve_conflict():
             language = get_language()
@@ -41,6 +49,31 @@ class Win10PortReserveSolution(object):
         lines = out.readlines()
         return lines
 
+    @staticmethod
+    def get_config_value(fn, key, default_value):
+        if not os.path.isfile(fn):
+            return default_value
+
+        try:
+            with open(fn, "r") as fd:
+                dat = json.load(fd)
+                value = dat.get(key, default_value)
+                return value
+        except Exception as e:
+            xlog.warn("load config %s except:%r", fn, e)
+            return default_value
+
+    def get_service_ports(self):
+        web_console_port = config.control_port
+        smart_router_config_fn = os.path.join(data_path, "smart_router", "config.json")
+        smart_router_socks_port = self.get_config_value(smart_router_config_fn, "proxy_port", 8086)
+        smart_router_dns_port = self.get_config_value(smart_router_config_fn, "dns_backup_port", 8083)
+
+        x_tunnel_config_fn = os.path.join(data_path, "x_tunnel", "client.json")
+        x_tunnel_port = self.get_config_value(x_tunnel_config_fn, "socks_port", 1080)
+
+        return [web_console_port, smart_router_socks_port, smart_router_dns_port, x_tunnel_port]
+
     def is_port_reserve_conflict(self):
         cmd = "netsh int ipv4 show excludedportrange protocol=tcp"
         lines = self.run_cmd(cmd)
@@ -57,15 +90,33 @@ class Win10PortReserveSolution(object):
                 continue
 
             # xlog.debug("range:%d - %d", p0, p1)
-            if p0 < 1080 < p1 or p0 < 8085 < p1:
-                return True
+            for port in self.service_ports:
+                if p0 < port < p1:
+                    return True
 
         return False
 
-    @staticmethod
-    def change_reserved_port_range():
+    def search_port_range(self):
+        port_number = 16384
+        for port_start in range(10000, 45000, 5000):
+            port_end = port_start + port_number
+            acceptable = True
+            for port in self.service_ports:
+                if port_start <= port <= port_end:
+                    acceptable = False
+                    break
+
+            if acceptable:
+                return [port_start, port_number]
+
+    def change_reserved_port_range(self):
+        ports = self.search_port_range()
+        if not ports:
+            xlog.warn("Can't found acceptable ports")
+            return
+
         exec = b"netsh"
-        args = b"int ipv4 set dynamic tcp start=49152 num=16384"
+        args = b"int ipv4 set dynamic tcp start=%d num=%d" % (ports[0], ports[1])
         import win32elevate
         win32elevate.elevateAdminRun(args, exec)
 
