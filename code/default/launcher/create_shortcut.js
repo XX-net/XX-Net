@@ -12,7 +12,7 @@ function CreateShortcut(app_name) {
     //var shell = new ActiveXObject("WScript.Shell");
     //shell.Popup(xxnet_path); // for debugging
     argument_file = '"' + xxnet_path + '\\start.vbs"';
-    icon_path = wsh.CurrentDirectory + '\\web_ui\\favicon.ico';
+    icon_path = wsh.CurrentDirectory + '\\web_ui\\img\\' + app_name + '\\favicon.ico';
 
     link = wsh.CreateShortcut(wsh.SpecialFolders("Desktop") + '\\' + app_name + '.lnk');
     link.TargetPath = target_path;

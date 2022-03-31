@@ -50,7 +50,7 @@ class MacTrayObject(AppKit.NSObject):
             AppKit.NSSquareStatusItemLength)  # NSSquareStatusItemLength #NSVariableStatusItemLength
 
         # Set initial image icon
-        icon_path = os.path.join(current_path, "web_ui", "favicon-mac.ico")
+        icon_path = os.path.join(current_path, "web_ui", "img", app_name, "favicon-mac.ico")
         image = AppKit.NSImage.alloc().initByReferencingFile_(icon_path)
         image.setScalesWhenResized_(True)
         image.setSize_((20, 20))

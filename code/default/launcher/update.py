@@ -328,7 +328,7 @@ def create_desktop_shortcut():
                       "Name=" + app_name + "\n" +\
                       "Comment=\n" + \
                       "Exec=sh -c \"" + xxnet_path + "/start\"\n" + \
-                      "Icon=" + xxnet_path + "/code/default/launcher/web_ui/favicon.ico\n" + \
+                      "Icon=" + xxnet_path + "/code/default/launcher/web_ui/img/" + app_name + "/favicon.ico\n" + \
                       "Path=\n" + \
                       "Terminal=false\n" + \
                       "StartupNotify=false\n"

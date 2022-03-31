@@ -133,21 +133,24 @@ class ConnectCreator(object):
         if sys.version_info[0] == 3:
             try:
                 peer_cert = ssl_sock.get_cert()
-                if self.debug:
-                    self.logger.debug("cert:%r", peer_cert)
-
-                if self.config.check_commonname:
-                    if not peer_cert["issuer_commonname"].startswith(self.config.check_commonname):
-                        raise socket.error(' certificate is issued by %r' % (peer_cert["issuer_commonname"]))
-
-                if isinstance(self.config.check_sni, str):
-                    if self.config.check_sni not in peer_cert["altName"]:
-                        raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
-                elif self.config.check_sni:
-                    if not ssl_sock.sni.endswith(peer_cert["altName"]):
-                        raise socket.error('check sni:%s fail, alt_names:%s' % (ssl_sock.sni, peer_cert["altName"]))
             except Exception as e:
                 self.logger.exception("check_cert %r", e)
+
+            if self.debug:
+                self.logger.debug("cert:%r", peer_cert)
+
+            if self.config.check_commonname:
+                if not peer_cert["issuer_commonname"].startswith(self.config.check_commonname):
+                    raise socket.error(' certificate is issued by %r' % (peer_cert["issuer_commonname"]))
+
+            if isinstance(self.config.check_sni, str):
+                if self.config.check_sni not in peer_cert["altName"]:
+                    raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
+
+            elif self.config.check_sni:
+                if not ssl_sock.sni.endswith(peer_cert["altName"]):
+                    raise socket.error('check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, peer_cert["altName"]))
+
         else:
 
             cert_chain = ssl_sock.get_peer_cert_chain()

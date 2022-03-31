@@ -6,12 +6,11 @@ import os
 import sys
 import webbrowser
 
-from config import app_name
+from config import config, app_name
 from xlog import getLogger
 
 xlog = getLogger("launcher")
 
-from config import config
 
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
@@ -44,9 +43,9 @@ except:
     #    pip install vext.gi
     # The pure python developer way:
     #    Install a bunch of developer stuff:
-    #    sudo apt-get install pkg-config libcairo2-dev gcc python3-dev libgirepository1.0-dev
+    #      sudo apt-get install pkg-config libcairo2-dev gcc python3-dev libgirepository1.0-dev
     #    Install the python packages:
-    #    pip install gobject PyGObject
+    #      pip install gobject PyGObject
     import gi
 
     gi.require_version('Gtk', '3.0')
@@ -109,7 +108,7 @@ class Gtk_tray():
     notify_list = []
 
     def __init__(self):
-        logo_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'web_ui', 'favicon.ico')
+        logo_filename = os.path.join(os.path.abspath(current_path), 'web_ui', 'img', app_name, 'favicon.ico')
 
         if appindicator:
             self.trayicon = self.appind_trayicon(logo_filename)

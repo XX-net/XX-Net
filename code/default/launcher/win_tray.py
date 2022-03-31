@@ -30,7 +30,7 @@ lang_code, code_page = locale.getdefaultlocale()
 
 class Win_tray():
     def __init__(self):
-        icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "favicon.ico")
+        icon_path = os.path.join(os.path.dirname(__file__), "web_ui", "img", app_name, "favicon.ico")
         self.systray = SysTrayIcon(icon_path, app_name, self.make_menu(), self.on_quit, left_click=self.on_show, right_click=self.on_right_click)
 
         reg_path = r'Software\Microsoft\Windows\CurrentVersion\Internet Settings'
