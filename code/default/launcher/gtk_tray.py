@@ -10,10 +10,10 @@ from config import config, app_name
 from xlog import getLogger
 
 xlog = getLogger("launcher")
+current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 if __name__ == "__main__":
-    current_path = os.path.dirname(os.path.abspath(__file__))
     python_path = os.path.abspath(os.path.join(current_path, os.pardir))
     noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
