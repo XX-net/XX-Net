@@ -998,7 +998,7 @@
                 }
 
                 result['history'].forEach(function (entry) {
-                    displayHistory(entry[1]);
+                    displayHistory(entry);
                 });
 
                 $('#get-history-button').html('{{ _("Get") }}');
@@ -1009,12 +1009,13 @@
 </script>
 <script type="text/javascript">
     function displayHistory(item) {
-        var timeString = item['time'];
-        delete item['time'];
+        var timestamp = item[0];
+        var t = new Date(timestamp*1000);
+        var timeString = t.getFullYear() + "-" + t.getMonth() + "-" + t.getDate() + " " + t.getHours() + ":" + t.getMinutes();
 
         var message = '';
-        for (property in item) {
-            message += property + ':' + item[property] + '; ';
+        for (property in item[1]) {
+            message += property + ':' + item[1][property] + '; ';
         }
 
         $('#history-list tbody').append('<tr><td>%s</td><td>%s</td></tr>'.format(timeString, message));
