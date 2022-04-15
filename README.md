@@ -1,17 +1,20 @@
-# XX-Net
+# XX-Net (翻墙VPN)
 
-* 安全的翻墙工具  
+* 靠谱的翻墙工具  
 <br>
 
-### [__进入下载页面__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
+### 主页: [https://fq-vpn.com](https://fq-vpn.com)
+### 客户端 [__\[下载\]__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
+###
 ###### [使用文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3) &nbsp; &nbsp; &nbsp;[English](https://github.com/XX-net/XX-Net/wiki/English-Home-Page) &nbsp; &nbsp; &nbsp;[فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page) 
 
 <br>
 
 
 ### 最新公告：
- 2022-03-08
-* 新版 4.7.3 隆重推出Android版
+ 2022-04-15
+* 推出新名字“翻墙VPN”， 域名： https://fq-vpn.com
+* 新版 4.7.10 
 * GAE 模块默认关闭.   
   没有绑卡无法工作, 想使用GAE模块请手动启用, 暂时没有流量控制功能，请注意流量费用。
 
