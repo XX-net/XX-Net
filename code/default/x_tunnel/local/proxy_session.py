@@ -1,3 +1,4 @@
+import os
 import time
 import json
 import threading
@@ -11,6 +12,9 @@ from . import base_container
 import encrypt
 from . import global_var as g
 from gae_proxy.local import check_local_network
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
 
 def encrypt_data(data):
@@ -883,6 +887,17 @@ def call_api(path, req_info):
 center_login_process = False
 
 
+def get_app_name():
+    app_info_file = os.path.join(root_path, os.path.pardir, "app_info.json")
+    try:
+        with open(app_info_file, "r") as fd:
+            dat = json.load(fd)
+        return dat["app_name"]
+    except Exception as e:
+        xlog.exception("get version fail:%r", e)
+    return "XX-Net"
+
+
 def request_balance(account=None, password=None, is_register=False, update_server=True, promoter=""):
     global center_login_process
     if not g.config.api_server:
@@ -904,8 +919,14 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         account = g.config.login_account
         password = g.config.login_password
 
-    req_info = {"account": account, "password": password, "protocol_version": "2",
-                "promoter": promoter}
+    app_name = get_app_name()
+    req_info = {
+        "account": account,
+        "password": password,
+        "protocol_version": "2",
+        "promoter": promoter,
+        "app_id": app_name,
+    }
 
     try:
         center_login_process = True
