@@ -926,6 +926,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         "protocol_version": "2",
         "promoter": promoter,
         "app_id": app_name,
+        "client_version": g.xxnet_version,
+        "sys_info": g.system,
     }
 
     try:

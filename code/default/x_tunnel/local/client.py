@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import platform
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
@@ -31,9 +33,9 @@ def create_data_path():
 create_data_path()
 
 from xlog import getLogger
-
 xlog = getLogger("x_tunnel")
 
+import os_platform
 import xconfig
 from x_tunnel.local.proxy_handler import Socks5Server
 from x_tunnel.local import global_var as g
@@ -155,6 +157,7 @@ def main(args):
 
     g.xxnet_version = xxnet_version()
     g.client_uuid = get_launcher_uuid()
+    g.system = os_platform.platform + "|" + platform.version() + "|" + str(platform.architecture()) + "|" + sys.version
 
     load_config()
     front_dispatcher.init()
