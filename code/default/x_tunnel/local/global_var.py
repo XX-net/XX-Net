@@ -1,5 +1,6 @@
 xxnet_version = ""
 client_uuid = ""
+system = ""
 
 running = True
 protocol_version = 2
