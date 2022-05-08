@@ -431,3 +431,14 @@ div#history.tab-pane h4 {
   top: 50%;
   text-align: center;
 }
+.p80 {
+  max-width: 600px;
+  text-align: center;
+}
+.plan-block {
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+
+}
