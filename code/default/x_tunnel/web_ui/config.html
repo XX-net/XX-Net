@@ -1,5 +1,5 @@
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#info" data-toggle="tab">{{ _("Info") }}</a></li>
+    <li class="active"><a href="#info" data-toggle="tab">{{ _("Account") }}</a></li>
     <li class="hide"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
     <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
     <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
@@ -23,7 +23,58 @@
             <p class="text-center">
                 <a id="register-trigger" href="javascript:void(0);">{{ _("Haven't an account?") }}</a>
             </p>
+            <p class="text-center">
+                <a id="reset-password-trigger" href="javascript:void(0);">{{ _("Forget password?") }}</a>
+            </p>
         </form> <!-- #login-form -->
+
+        <form id="request-reset-form" class="hide" onSubmit="onResetRequest(); return false;">
+            <h4>{{ _("Reset password") }}</h4>
+            <p class="p80" >
+                <label for="request-reset-username">{{ _("Email") }}</label>
+                <input id="request-reset-username" type="text"/>
+            </p>
+            <p>
+                <button class="btn btn-primary btn-block p80" type="submit">{{ _("Next") }}</button>
+            </p>
+        </form> <!-- #register-form -->
+
+        <form id="reset-password-check-form" class="hide" onSubmit="onResetPasswordCheck(); return false;">
+            <h4>{{ _("Input confirmation code") }}</h4>
+            <p >{{ _("The confirmation code has sent to your email, please check your email box.") }}</p>
+            <p class="p80" >
+                <label for="reset-confirmation-code">{{ _("Confirmation Code") }}</label>
+                <input id="reset-confirmation-code" type="text"/>
+            </p>
+            <p>
+                <button class="btn btn-primary btn-block p80" type="submit">{{ _("Next") }}</button>
+            </p>
+        </form> <!-- #register-form -->
+
+        <form id="change-password-form" class="hide" onSubmit="onChangePassword(); return false;">
+            <h4>{{ _("Set new password") }}</h4>
+            <p >{{ _("Please input your new password.") }}</p>
+            <p class="p80" >
+                <label for="new-password">{{ _("Password") }}</label>
+                <input id="new-password" type="password"/>
+            </p>
+            <p class="p80" >
+                <label for="new-password2">{{ _("Confirm your password") }}</label>
+                <input id="new-password2" type="password"/>
+            </p>
+            <p>
+                <button class="btn btn-primary btn-block p80" type="submit">{{ _("Submit") }}</button>
+            </p>
+        </form> <!-- #register-form -->
+
+        <div id="password-reset-successful" class="hide" >
+            <h4>{{ _("Your password has reset successfully.") }}</h4>
+            <p >{{ _("Please use your new password to login.") }}</p>
+            <p>
+                <button class="btn btn-primary btn-block p80" id="goto-login-trigger">{{ _("Login") }}</button>
+            </p>
+        </div> <!-- #register-form -->
+
         <form id="register-form" class="hide" onSubmit="onRegisterSubmit(); return false;">
             <h4>{{ _("Register") }}</h4>
             <p>
@@ -118,7 +169,7 @@
             </div>
         </form>
     </div> <!-- #info -->
-    <div id="plans" class="tab-pane fade in">
+    <div id="plans" class="tab-pane fade in" style="padding-left:0">
         <div class="section">
             <h4>{{ _("Plans and Pricing") }}</h4>
             <div class="row-fluid">
@@ -329,10 +380,16 @@
         $('#login-form').addClass('hide');
         $('#register-form').removeClass('hide');
     });
-</script>
-<script type="text/javascript">
+    $('#reset-password-trigger').click(function () {
+        $('#login-form').addClass('hide');
+        $('#request-reset-form').removeClass('hide');
+    });
     $('#login-trigger').click(function () {
         $('#register-form').addClass('hide');
+        $('#login-form').removeClass('hide');
+    });
+    $('#goto-login-trigger').click(function () {
+        $('#password-reset-successful').addClass('hide');
         $('#login-form').removeClass('hide');
     });
 </script>
@@ -456,16 +513,32 @@
             var cost = plan_info["cost"];
             var quota_G = plan_info["quota_G"];
             var time_limit_month = plan_info["time_limit_month"];
+            var monthly_cost = cost / time_limit_month;
 
-            var text = `<li class="span4">
+            var text = `<div class="plan-block span4">
                         <div class="thumbnail">
                             <div class="caption">
-                                <h1 class="price"><sup>$</sup> %s</h1><ul class="details">
+                                <p class="price" style="text-align:center">
+                                    <font style="font-size:2rem"
+                                        <sup>$</sup>
+                                         %s
+                                     </font>
+                                     {{ _("Per Month") }}
+                                </p>
+
+                                <ul class="details">
                                     <li>
-                                        <div class="row-fluid">
-                                            <div class="span4 text-right">%s</div> <!-- .span4 -->
-                                            <div class="span8">{{ _("Months") }}</div> <!-- .span8 -->
-                                        </div> <!-- .row-fluid -->
+                                        <p style="text-align:center">
+                                            %s
+                                            {{ _("Months") }}
+                                        </p>
+                                    </li>
+                                    <li>
+                                        <p style="text-align:center">
+                                            $
+                                            %s
+                                            {{ _("Total") }}
+                                        </p>
                                     </li>
                                 </ul>
                                 <p>
@@ -473,7 +546,7 @@
                                 </p>
                             </div> <!-- .caption -->
                         </div> <!-- .thumbnail -->
-                    </li>`.format(cost, time_limit_month, plan, title);
+                    </div>`.format(monthly_cost, time_limit_month, cost, plan, title);
             $('#plan-list').append(text);
             $('#charge-plan').append('<option value="%s">{{ _("%s") }} $%s</option>'.format(title, title, cost));
 
@@ -553,7 +626,7 @@
             tip('{{ _("Email seems invalid." )}}', 'error', false);
             return;
         } else if (password.length < 6) {
-            tip('{{ _("Password needs at least 6 charactors, and no more than 20.") }}', 'error', false);
+            tip('{{ _("Password needs at least 6 characters, and no more than 20.") }}', 'error', false);
             return;
         }
 
@@ -561,6 +634,52 @@
         $('button[type=submit]', '#login-form').html('{{ _("Please wait ...") }}');
         $('button[type=submit]', '#login-form').attr('disabled', 'disabled');
         return doLoginAction(username, password);
+    }
+    function onResetRequest() {
+        var username = $('#request-reset-username').val();
+
+        if (!isEmailLegal(username)) {
+            tip('{{ _("Email seems invalid." )}}', 'error', false);
+            return;
+        }
+
+        tip('{{ _("Loading ...") }}', 'info', false);
+        $('button[type=submit]', '#request-reset-form').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#request-reset-form').attr('disabled', 'disabled');
+        return doRequestResetPassword(username);
+    }
+    function onResetPasswordCheck() {
+        var username = $('#request-reset-username').val();
+        var code = $('#reset-confirmation-code').val();
+
+        if (code.length < 6) {
+            tip('{{ _("Please input invalid confirmation code." )}}', 'error', false);
+            return;
+        }
+
+        tip('{{ _("Loading ...") }}', 'info', false);
+        $('button[type=submit]', '#reset-password-check-form').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#reset-password-check-form').attr('disabled', 'disabled');
+        return doResetPasswordCheck(username, code);
+    }
+    function onChangePassword() {
+        var username = $('#request-reset-username').val();
+        var code = $('#reset-confirmation-code').val();
+        var password = $('#new-password').val();
+        var password2 = $('#new-password2').val();
+
+        if (password.length < 6) {
+            tip('{{ _("Password needs at least 6 characters, and no more than 20.") }}', 'error', false);
+            return;
+        } else if (password != password2) {
+            tip('{{ _("Passwords are not match.") }}', 'error', false);
+            return;
+        }
+
+        tip('{{ _("Loading ...") }}', 'info', false);
+        $('button[type=submit]', '#change-password-form').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#change-password-form').attr('disabled', 'disabled');
+        return doChangePassword(username, code, password);
     }
 </script>
 <script type="text/javascript">
@@ -592,6 +711,119 @@
 
                     $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                     $('button[type=submit]', '#login-form').removeAttr('disabled');
+                }
+            }
+        });
+    }
+    function doRequestResetPassword(username) {
+        var postData = {
+            'stage': "request_reset_password",
+            'username': username,
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/reset_password',
+            data: postData,
+            dataType: 'JSON',
+            success: function (result) {
+                $('button[type=submit]', '#request-reset-form').html('{{ _("Next") }}');
+                $('button[type=submit]', '#request-reset-form').removeAttr('disabled');
+
+                if (result['res'] == 'success') {
+                    $('#request-reset-form').addClass('hide');
+                    $('#reset-password-check-form').removeClass('hide');
+                    tipClose();
+                } else {
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "network_fail") {
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
+                    } else if (result['reason'] == "account not exists") {
+                        tip('{{ _("Account not exist.") }}', 'error', false);
+                    } else if (result['reason'] == "try again later") {
+                        tip('{{ _("Try again later.") }}', 'error', false);
+                    } else {
+                        tip('{{ _("Request fail:") }}' + result['reason'], 'error', false);
+                    }
+                }
+            }
+        });
+    }
+    function doResetPasswordCheck(username, code) {
+        var postData = {
+            'stage': "reset_password_check",
+            'username': username,
+            'code': code,
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/reset_password',
+            data: postData,
+            dataType: 'JSON',
+            success: function (result) {
+                $('button[type=submit]', '#eset-password-check-form').html('{{ _("Next") }}');
+                $('button[type=submit]', '#eset-password-check-form').removeAttr('disabled');
+
+                if (result['res'] == 'success') {
+                    $('#reset-password-check-form').addClass('hide');
+                    $('#change-password-form').removeClass('hide');
+                    tipClose();
+                } else {
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "network_fail") {
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
+                    } else if (result['reason'] == "account not exists") {
+                        tip('{{ _("Account not exist.") }}', 'error', false);
+                    } else if (result['reason'] == "code expired") {
+                        tip('{{ _("Confirmation code expired, please restart again.") }}', 'error', false);
+                    } else if (result['reason'] == "exceed max retry times") {
+                        tip('{{ _("You have exceeded the retry limitation.") }}', 'error', false);
+                    } else if (result['reason'] == "code not match") {
+                        tip('{{ _("The code is not match, please check your code.") }}', 'error', false);
+                    } else {
+                        tip('{{ _("Request fail:") }}' + result['reason'], 'error', false);
+                    }
+                }
+            }
+        });
+    }
+    function doChangePassword(username, code, password) {
+        var postData = {
+            'stage': "change_password",
+            'username': username,
+            'code': code,
+            'password': password,
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/reset_password',
+            data: postData,
+            dataType: 'JSON',
+            success: function (result) {
+                $('button[type=submit]', '#change-password-form').html('{{ _("Submit") }}');
+                $('button[type=submit]', '#change-password-form').removeAttr('disabled');
+
+                if (result['res'] == 'success') {
+                    $('#change-password-form').addClass('hide');
+                    $('#password-reset-successful').removeClass('hide');
+
+                    $('#request-reset-username').val("");
+                    $('#reset-confirmation-code').val("");
+                    tipClose();
+                } else {
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "network_fail") {
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
+                    } else if (result['reason'] == "account not exists") {
+                        tip('{{ _("Account not exist.") }}', 'error', false);
+                    } else if (result['reason'] == "code expired") {
+                        tip('{{ _("Confirmation code expired, please restart again.") }}', 'error', false);
+                    } else if (result['reason'] == "exceed max retry times") {
+                        tip('{{ _("You have exceeded the retry limitation.") }}', 'error', false);
+                    } else if (result['reason'] == "code not match") {
+                        tip('{{ _("The code is not match, please check your code.") }}', 'error', false);
+                    } else {
+                        tip('{{ _("Request fail:") }}' + result['reason'], 'error', false);
+                    }
                 }
             }
         });
