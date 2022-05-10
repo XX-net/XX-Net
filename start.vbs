@@ -19,7 +19,7 @@ strVersion = CurrentVersion()
 Dim oShell : Set oShell = CreateObject("WScript.Shell")
 oShell.CurrentDirectory = strCurrentPath
 
-python_version = "3.8.2"
+python_version = "3.10.4"
 pythonDir = "python" & python_version & "\"
 If Not DirIsExist(pythonDir) then
     includeFile strCurrentPath & "\code\" & strVersion & "\launcher\download.vbs"
