@@ -273,7 +273,7 @@ class HttpsDispatcher(object):
         self.logger.warn("retry_task_cb: %s", task.url)
 
         if task.responsed:
-            self.logger.warn("retry but responsed. %s", task.url)
+            self.logger.warn("retry but responses. %s", task.url)
             st = traceback.extract_stack()
             stl = traceback.format_list(st)
             self.logger.warn("stack:%r", repr(stl))

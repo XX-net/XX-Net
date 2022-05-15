@@ -599,6 +599,8 @@ class ProxySession(object):
                 server_timeout = 1
             elif work_id > g.config.concurent_thread_num * 0.7:
                 server_timeout = 3
+            elif g.http_client.count_connection(g.server_host) <= 3:
+                server_timeout = 1
             else:
                 server_timeout = g.config.roundtrip_timeout
 

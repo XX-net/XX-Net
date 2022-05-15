@@ -45,6 +45,7 @@ class ConfigBase(xconfig.Config):
         # connect manager
         self.set_var("https_max_connect_thread", 1)
         self.set_var("max_connect_thread", 1)
+        self.set_var("connect_create_interval", 1)
         self.set_var("ssl_first_use_timeout", 10)
         self.set_var("connection_pool_min", 1)
         self.set_var("https_keep_alive", 15) # time to pass created link to worker

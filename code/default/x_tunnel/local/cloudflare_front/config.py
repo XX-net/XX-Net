@@ -24,6 +24,7 @@ class Config(ConfigBase):
         self.set_var("ssl_first_use_timeout", 5)
         self.set_var("connection_pool_min", 0)
         self.set_var("https_new_connect_num", 0)
+        self.set_var("connect_create_interval", 10)
 
         # check_ip
         self.set_var("check_ip_content", b"OK")

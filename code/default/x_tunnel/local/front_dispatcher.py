@@ -97,6 +97,22 @@ def get_front(host, timeout):
     return None
 
 
+def count_connection(host):
+    fronts = session_fronts
+
+    num = 0
+    for front in fronts:
+        dispatcher = front.get_dispatcher(host)
+        if not dispatcher:
+            continue
+
+        num += len(dispatcher.workers)
+
+        num += dispatcher.connection_manager.new_conn_pool.qsize()
+
+    return num
+
+
 def request(method, host, path="/", headers={}, data="", timeout=100):
     # xlog.debug("front request %s timeout:%d", path, timeout)
     start_time = time.time()
