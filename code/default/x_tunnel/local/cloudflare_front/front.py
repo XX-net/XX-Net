@@ -28,11 +28,15 @@ class Front(object):
 
     def __init__(self):
         self.running = True
-        self.last_host = "www.xx-net.org"
+        self.last_host = "center.xx-net.org"
 
         self.logger = logger
         config_path = os.path.join(module_data_path, "cloudflare_front.json")
         self.config = Config(config_path)
+
+        self.center_config = Config(config_path)
+        self.center_config.dispather_min_workers = 1
+        self.center_config.max_good_ip_num = 2
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         default_domain_fn = os.path.join(current_path, "front_domains.json")
@@ -67,8 +71,13 @@ class Front(object):
             self.last_host = host
 
         if host not in self.dispatchs:
+            if host == "center.xx-net.org":
+                config = self.center_config
+            else:
+                config = self.config
+
             http_dispatcher = HttpsDispatcher(
-                logger, self.config, self.ip_manager, self.connect_manager,
+                logger, config, self.ip_manager, self.connect_manager,
                 http2worker=CloudflareHttp2Worker)
             self.dispatchs[host] = http_dispatcher
 

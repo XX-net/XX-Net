@@ -272,7 +272,7 @@ class ConnectManager(object):
             # self.logger.debug("create ssl conn %s", ip_str)
             ssl_sock = self._create_ssl_connection(ip_str)
             if not ssl_sock:
-                time.sleep(self.config.connect_create_interval/2 + 1)
+                time.sleep(1)
                 return
 
             self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
