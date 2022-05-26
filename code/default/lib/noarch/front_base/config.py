@@ -48,11 +48,12 @@ class ConfigBase(xconfig.Config):
         self.set_var("connect_create_interval", 1)
         self.set_var("ssl_first_use_timeout", 10)
         self.set_var("connection_pool_min", 1)
-        self.set_var("https_keep_alive", 15) # time to pass created link to worker
+        self.set_var("https_keep_alive", 15)  # time to pass created link to worker
         self.set_var("https_connection_pool_min", 1)
         self.set_var("https_connection_pool_max", 2)
         self.set_var("https_new_connect_num", 1)
         self.set_var("http1_new_connect_num", 1)
+        self.set_var("connection_max_life", 5*60)
 
         # check_ip
         self.set_var("check_ip_host", "")
@@ -80,6 +81,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("ip_connect_interval", 5)
         self.set_var("record_ip_history", 0)
         self.set_var("down_fail_connect_interval", 60)
+        self.set_var("active_connect_interval", 0)
         self.set_var("long_fail_threshold", 300)
         self.set_var("long_fail_connect_interval", 180)
         self.set_var("short_fail_connect_interval", 10)

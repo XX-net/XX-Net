@@ -125,8 +125,8 @@ class Http1Worker(HttpWorker):
             self.last_send_time = time_now
             self.last_recv_time = time_now
 
-            if self.processed_tasks > self.config.http1_max_process_tasks:
-                self.close("lift end.")
+            if self.processed_tasks > self.config.http1_max_process_tasks or self.is_life_end():
+                self.close("lift end")
                 return
 
     def request_task(self, task):

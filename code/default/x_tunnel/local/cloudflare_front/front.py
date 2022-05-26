@@ -34,9 +34,9 @@ class Front(object):
         config_path = os.path.join(module_data_path, "cloudflare_front.json")
         self.config = Config(config_path)
 
-        self.center_config = Config(config_path)
-        self.center_config.dispather_min_workers = 1
-        self.center_config.max_good_ip_num = 2
+        self.light_config = Config(config_path)
+        self.light_config.dispather_min_workers = 1
+        self.light_config.max_good_ip_num = 10
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         default_domain_fn = os.path.join(current_path, "front_domains.json")
@@ -65,14 +65,14 @@ class Front(object):
         self.dispatchs = {}
 
     def get_dispatcher(self, host=None):
-        if host is None:
+        if not host:
             host = self.last_host
         else:
             self.last_host = host
 
         if host not in self.dispatchs:
-            if host == "center.xx-net.org":
-                config = self.center_config
+            if host in ["center.xx-net.org", "dns.xx-net.org"]:
+                config = self.light_config
             else:
                 config = self.config
 

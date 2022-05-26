@@ -220,8 +220,10 @@ class Http2Worker(HttpWorker):
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
-        if reason.startswith("GoAway"):
-            self.logger.debug("%s close, reason: %s, trace:%s", self.ip_str, reason, self.get_trace())
+        if reason.startswith("GoAway") or reason in ["life end"]:
+            life_time = time.time() - self.ssl_sock.create_time
+            self.logger.debug("%s close, reason: %s, life_time:%d trace:%s",
+                              self.ip_str, reason, life_time, self.get_trace())
         else:
             self.logger.warn("%s close, reason: %s, trace:%s", self.ip_str, reason, self.get_trace())
         self.send_queue.put(None)
@@ -300,13 +302,17 @@ class Http2Worker(HttpWorker):
         except KeyError:
             pass
 
+        self.processed_tasks += 1
+
+        if len(self.streams) == 0 and self.is_life_end():
+            self.close("life end")
+            return
+
         if self.keep_running and \
                 len(self.streams) < self.config.http2_max_concurrent and \
                 self.remote_window_size > 10000:
             self.accept_task = True
             self.idle_cb()
-
-        self.processed_tasks += 1
 
     def _consume_single_frame(self):
         try:

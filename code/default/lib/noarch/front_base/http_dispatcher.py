@@ -35,6 +35,16 @@ from .http2_connection import Http2Worker
 class HttpsDispatcher(object):
     idle_time = 2 * 60
 
+    base_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "same-origin",
+    }
+
     def __init__(self, logger, config, ip_manager, connection_manager,
                  http1worker=Http1Worker,
                  http2worker=Http2Worker):
@@ -157,7 +167,7 @@ class HttpsDispatcher(object):
             idle_num = 0
             now = time.time()
             for worker in self.workers:
-                if not worker.accept_task:
+                if not worker.accept_task or worker.is_life_end():
                     # self.logger.debug("not accept")
                     continue
 
@@ -227,6 +237,8 @@ class HttpsDispatcher(object):
         method = utils.to_bytes(method)
         host = utils.to_bytes(host)
         path = utils.to_bytes(path)
+
+        headers = utils.merge_two_dict(self.base_headers, headers)
         headers = utils.to_bytes(headers)
         body = utils.to_bytes(body)
 

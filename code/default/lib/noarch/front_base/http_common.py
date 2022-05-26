@@ -1,4 +1,5 @@
 import time
+import random
 
 import simple_queue
 import simple_http_client
@@ -75,7 +76,7 @@ class Task(object):
                 buff_view = memoryview(buff)
                 p = 0
                 for data in self.read_buffers:
-                    buff_view[p:p+len(data)] = data
+                    buff_view[p:p + len(data)] = data
                     p += len(data)
 
                 if self.read_buffer_len == size:
@@ -108,7 +109,7 @@ class Task(object):
             buff_view = memoryview(buff)
             p = 0
             for data in self.read_buffers:
-                buff_view[p:p+len(data)] = data
+                buff_view[p:p + len(data)] = data
                 p += len(data)
 
             self.read_buffers = []
@@ -148,7 +149,7 @@ class Task(object):
             time_diff = int((t - last_time) * 1000)
             last_time = t
             out_list.append("%d:%s" % (time_diff, stat))
-        out_list.append(":%d" % ((time.time()-last_time)*1000))
+        out_list.append(":%d" % ((time.time() - last_time) * 1000))
         return ",".join(out_list)
 
     def response_fail(self, reason=""):
@@ -194,6 +195,8 @@ class HttpWorker(object):
         self.speed_history = []
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
+        self.life_end_time = self.ssl_sock.create_time + \
+                             random.randint(self.config.connection_max_life, self.config.connection_max_life * 1.5)
 
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
@@ -205,7 +208,7 @@ class HttpWorker(object):
         self.accept_task = False
         self.keep_running = False
         self.ssl_sock.close()
-        if reason not in ["idle timeout"]:
+        if reason not in ["idle timeout", "life end"]:
             now = time.time()
             inactive_time = now - self.last_recv_time
             if inactive_time < self.config.http2_ping_min_interval:
@@ -243,3 +246,8 @@ class HttpWorker(object):
         else:
             return self.ssl_sock.host
 
+    def is_life_end(self):
+        if time.time() > self.life_end_time:
+            return True
+        else:
+            return False
