@@ -33,7 +33,7 @@ class CheckIp(object):
             response = conn.get_response()
             return response
         except Exception as e:
-            self.logger.exception("http2 get response fail:%r", e)
+            self.logger.debug("check ip %s http2 get response fail:%r", ssl_sock.ip_str, e)
             return False
 
     def check_ip(self, ip, sni=None, host=None, wait_time=0):

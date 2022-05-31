@@ -19,6 +19,7 @@ import time
 import threading
 import operator
 import socket
+import random
 
 
 class NoRescourceException(Exception):
@@ -158,6 +159,7 @@ class ConnectManager(object):
         self.max_timeout = 60
         self.thread_num = 0
         self.running = True
+        self.connect_counter = 0
 
         self.get_num_lock = threading.Lock()
         self.https_get_num = 0
@@ -274,7 +276,14 @@ class ConnectManager(object):
                 return
 
             self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
-            time.sleep(1)
+            self.connect_counter += 1
+
+            if self.config.connect_create_interval > 0:
+                if self.connect_counter >= 2:
+                    sleep = random.randint(self.config.connect_create_interval, self.config.connect_create_interval*2)
+                    time.sleep(sleep)
+                else:
+                    time.sleep(1)
         except Exception as e:
             self.logger.exception("connect_process except:%r", e)
 

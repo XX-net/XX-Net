@@ -220,7 +220,7 @@ class ProxySession(object):
             if not front:
                 continue
             name = front.name
-            dispatcher = front.get_dispatcher()
+            dispatcher = front.get_dispatcher(g.server_host)
             if not dispatcher:
                 res[name] = {
                     "score": "False",

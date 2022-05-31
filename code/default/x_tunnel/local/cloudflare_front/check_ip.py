@@ -46,6 +46,7 @@ from front_base.host_manager import HostManagerBase
 
 from cloudflare_front.config import Config
 from cloudflare_front import front
+from cloudflare_front.host_manager import HostManager
 
 
 def check_all_domain(check_ip):
@@ -117,11 +118,18 @@ class CheckAllIp(object):
 
 
 def check_all_ip(check_ip):
+
+    host_manager.HostManager(config, logger, default_domain_fn, domain_fn, front)
     check = CheckAllIp(check_ip, "scan1.movistar.gq")
     check.run()
 
 
 if __name__ == "__main__":
+
+    config_path = os.path.join(module_data_path, "cloudflare_front.json")
+    config = Config(config_path)
+    default_domain_fn = os.path.join(current_path, "front_domains.json")
+    domain_fn = os.path.join(module_data_path, "cloudflare_domains.json")
     # format: [ip] [domain [sni] ]
 
     # case 1: only ip
@@ -154,9 +162,6 @@ if __name__ == "__main__":
     xlog.info("sni:%s", sni)
 
     wait_time = 0
-
-    config_path = os.path.join(module_data_path, "cloudflare_front.json")
-    config = Config(config_path)
 
     ca_certs = os.path.join(current_path, "cacert.pem")
     openssl_context = SSLContext(logger, ca_certs=ca_certs)

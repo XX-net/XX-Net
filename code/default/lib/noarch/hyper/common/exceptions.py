@@ -38,7 +38,7 @@ class LineTooLongError(Exception):
 try:  # pragma: no cover
     ConnectionResetError = ConnectionResetError
 except NameError:  # pragma: no cover
-    class ConnectionResetError(Exception):
+    class ConnectionResetError(BaseException):
         """
         A HTTP connection was unexpectedly reset.
         """
