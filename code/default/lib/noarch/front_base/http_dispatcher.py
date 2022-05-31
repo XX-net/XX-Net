@@ -359,7 +359,7 @@ class HttpsDispatcher(object):
 
                     worker.check_active(now)
             except Exception as e:
-                self.logger.exception("check worker except:%r")
+                self.logger.exception("check worker except:%r", e)
 
             time.sleep(1)
 

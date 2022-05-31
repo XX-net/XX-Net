@@ -136,18 +136,18 @@ class SSLConnection(object):
 
             try:
                 return io_func(*args, **kwargs)
-            except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError):
+            except (OpenSSL.SSL.WantReadError, OpenSSL.SSL.WantX509LookupError) as e:
                 sys.exc_clear()
                 _, _, errors = select.select([fd], [], [fd], wait_timeout)
                 if errors:
-                    raise
+                    raise e
                 if time_now - time_start > self.timeout:
                     break
-            except OpenSSL.SSL.WantWriteError:
+            except OpenSSL.SSL.WantWriteError as e:
                 sys.exc_clear()
                 _, _, errors = select.select([], [fd], [fd], wait_timeout)
                 if errors:
-                    raise
+                    raise e
                 time_now = time.time()
                 if time_now - time_start > self.timeout:
                     break
@@ -160,7 +160,7 @@ class SSLConnection(object):
                         _, _, errors = select.select([fd], [], [fd], wait_timeout)
 
                     if errors:
-                        raise
+                        raise e
                     time_now = time.time()
                     if time_now - time_start > self.timeout:
                         break
@@ -249,7 +249,7 @@ class SSLConnection(object):
             except Exception as e:
                 if sys.version_info[0] == 2 and e == errno.EAGAIN:
                     continue
-                #self.logger.exception("recv_into:%r", e)
+                # logging.exception("recv %r", e)
                 raise e
 
     def read(self, bufsiz, flags=0):

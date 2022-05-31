@@ -207,6 +207,12 @@ msgstr "转账流量"
 msgid "X-Tunnel Configuration"
 msgstr "X-Tunnel 配置"
 
+msgid "Configuration"
+msgstr "配置"
+
+msgid "Status"
+msgstr "状态"
+
 msgid "Logining ..."
 msgstr "正在登录..."
 
