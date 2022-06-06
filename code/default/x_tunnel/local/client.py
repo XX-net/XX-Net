@@ -104,7 +104,7 @@ def load_config():
 
     # performance parameters
     # range 2 - 100
-    config.set_var("concurent_thread_num", 50)
+    config.set_var("concurent_thread_num", 20)
 
     # min roundtrip on road if connectoin exist
     config.set_var("min_on_road", 3)
