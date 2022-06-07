@@ -54,6 +54,20 @@ def init():
     threading.Thread(target=debug_data_clearup_thread).start()
 
 
+def save_cloudflare_domain(domains):
+    if not domains or not g.config.enable_cloudflare:
+        return
+
+    for front in all_fronts:
+        if front.name != "cloudflare_front":
+            continue
+
+        front.config.update_domains = False
+        front.config.save()
+
+        front.host_manager.save_domains(domains)
+
+
 def debug_data_clearup_thread():
     while g.running:
         for front in all_fronts:

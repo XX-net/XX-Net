@@ -196,7 +196,7 @@ class HttpWorker(object):
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
-                             random.randint(self.config.connection_max_life, self.config.connection_max_life * 1.5)
+                             random.randint(self.config.connection_max_life, int(self.config.connection_max_life * 1.5))
 
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt

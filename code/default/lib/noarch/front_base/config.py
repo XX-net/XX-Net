@@ -53,7 +53,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("https_connection_pool_max", 2)
         self.set_var("https_new_connect_num", 1)
         self.set_var("http1_new_connect_num", 1)
-        self.set_var("connection_max_life", 5*60)
+        self.set_var("connection_max_life", 999990)
 
         # check_ip
         self.set_var("check_ip_host", "")

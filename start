@@ -104,7 +104,7 @@ if [ $os_name = 'Linux' ]; then
     fi
 elif [ $os_name = 'Darwin' ]; then
 
-  PYTHON310="python3.10.1/bin/python3.10"
+  PYTHON310="python3/bin/python3.10"
   if test -f "$PYTHON310"; then
     echo "Darwin using embedded python."
     PYTHON="$PYTHON310"
