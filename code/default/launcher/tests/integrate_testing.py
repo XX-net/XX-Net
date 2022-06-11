@@ -155,9 +155,10 @@ class ServiceTesting(object):
         d.add_question(DNSQuestion(domain, 1))
         req4_pack = d.pack()
 
-        for port in [53, 8053]:
+        for port in [8053, 53]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.sendto(req4_pack, ("127.0.0.1", port))
+            sock.settimeout(5)
 
             try:
                 response, server = sock.recvfrom(8192)
