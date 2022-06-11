@@ -51,7 +51,7 @@ jobs:
     runs-on: windows-latest
     strategy:
        matrix:
-         python-version: [3.8]
+         python-version: [3.8, '3.10']
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2

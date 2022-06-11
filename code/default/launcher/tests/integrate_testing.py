@@ -155,18 +155,24 @@ class ServiceTesting(object):
         d.add_question(DNSQuestion(domain, 1))
         req4_pack = d.pack()
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.sendto(req4_pack, ("127.0.0.1", 53))
-        sock.sendto(req4_pack, ("127.0.0.1", 8053))
+        for port in [53, 8053]:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.sendto(req4_pack, ("127.0.0.1", port))
 
-        response, server = sock.recvfrom(8192)
-        p = DNSRecord.parse(response)
-        for r in p.rr:
-            ip = utils.to_bytes(str(r.rdata))
-            xlog.info("IP:%s" % ip)
-            self.assertEqual(utils.check_ip_valid(ip), True)
+            try:
+                response, server = sock.recvfrom(8192)
+            except Exception as e:
+                xlog.warn("recv fail for port:%s e:%r", port, e)
+                continue
 
-        xlog.info("Finished testing SmartRouter DNS Query")
+            p = DNSRecord.parse(response)
+            for r in p.rr:
+                ip = utils.to_bytes(str(r.rdata))
+                xlog.info("IP:%s" % ip)
+                self.assertEqual(utils.check_ip_valid(ip), True)
+
+            xlog.info("Finished testing SmartRouter DNS Query")
+            return
 
     def xtunnel_login(self):
         xlog.info("Start testing XTunnel login")
