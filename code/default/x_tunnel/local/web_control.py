@@ -326,10 +326,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         elif stage == "change_password":
             password = self.postvars.get('password', [""])[0]
-            res, info = proxy_session.call_api("/reset_password_check", {
+            password_hash = str(hashlib.sha256(utils.to_bytes(password)).hexdigest())
+            res, info = proxy_session.call_api("/change_password", {
                 "account": account,
                 "code": code,
-                "password": password,
+                "password": password_hash,
                 "app_id": app_name,
                 "lang": get_lang(),
             })
