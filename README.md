@@ -4,7 +4,7 @@
 * 高速下载，稳定不掉线
 <br>
 
-### 主页: [https://fq-vpn.com](https://fq-vpn.com)
+### 主页: [https://xx-net.com](https://xx-net.com)
 ### 客户端 [__\[下载\]__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
 ###
 ###### [中文帮助文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3) &nbsp; &nbsp; &nbsp;[English Document](https://github.com/XX-net/XX-Net/wiki/English-Home-Page) &nbsp; &nbsp; &nbsp;[فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page) 
