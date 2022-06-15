@@ -17,6 +17,7 @@ class HostManager(HostManagerBase):
         self.fn = fn
         self.front = front
         self.ns = self.load()
+        self.ns_idx = 0
         if self.config.update_domains:
             threading.Thread(target=self.update_front_domains).start()
         
@@ -40,8 +41,14 @@ class HostManager(HostManagerBase):
         return lns
 
     def get_sni_host(self, ip):
-        top_domain, subs = random.choice(self.ns)
+        ns_num = len(self.ns)
+        if ns_num == 0:
+            return None, None
+
+        i = self.ns_idx % ns_num
+        top_domain, subs = self.ns[i]
         sni = random.choice(subs)
+        self.ns_idx += 1
         
         return sni, top_domain
 
