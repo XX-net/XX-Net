@@ -153,50 +153,51 @@ class IpManager():
         self.record_ip_history = self.config.record_ip_history
 
     def load_ip(self):
-        if os.path.isfile(self.ip_list_fn):
-            file_path = self.ip_list_fn
-        elif self.default_ip_list_fn and os.path.isfile(self.default_ip_list_fn):
-            file_path = self.default_ip_list_fn
-        else:
+        for file_path in [self.ip_list_fn, self.default_ip_list_fn]:
+            if not os.path.isfile(file_path):
+                continue
+
+            with open(file_path, "r") as fd:
+                lines = fd.readlines()
+
+            if not lines:
+                continue
+
+            for line in lines:
+                try:
+                    if line.startswith("#"):
+                        continue
+
+                    str_l = line.split(' ')
+
+                    if len(str_l) < 4:
+                        self.logger.warning("line err: %s", line)
+                        continue
+                    ip_str = str_l[0]
+                    domain = str_l[1]
+                    server = str_l[2]
+                    handshake_time = int(str_l[3])
+                    if len(str_l) > 4:
+                        fail_times = int(str_l[4])
+                    else:
+                        fail_times = 0
+
+                    if len(str_l) > 5:
+                        down_fail = int(str_l[5])
+                    else:
+                        down_fail = 0
+
+                    #self.logger.info("load ip: %s time:%d domain:%s server:%s", ip, handshake_time, domain, server)
+                    self.add_ip(ip_str, handshake_time, domain, server, fail_times, down_fail, False)
+                except Exception as e:
+                    self.logger.exception("load_ip line:%s err:%s", line, e)
+
+            self.logger.info("load ip_list %s num:%d, target num:%d", file_path, len(self.ip_dict), len(self.ip_list))
+            self.try_sort_ip(force=True)
+            # if file_path == self.default_good_ip_file:
+            #    self.logger.info("first run, rescan all exist ip")
+            #    self.start_scan_all_exist_ip()
             return
-
-        with open(file_path, "r") as fd:
-            lines = fd.readlines()
-
-        for line in lines:
-            try:
-                if line.startswith("#"):
-                    continue
-
-                str_l = line.split(' ')
-
-                if len(str_l) < 4:
-                    self.logger.warning("line err: %s", line)
-                    continue
-                ip_str = str_l[0]
-                domain = str_l[1]
-                server = str_l[2]
-                handshake_time = int(str_l[3])
-                if len(str_l) > 4:
-                    fail_times = int(str_l[4])
-                else:
-                    fail_times = 0
-
-                if len(str_l) > 5:
-                    down_fail = int(str_l[5])
-                else:
-                    down_fail = 0
-
-                #self.logger.info("load ip: %s time:%d domain:%s server:%s", ip, handshake_time, domain, server)
-                self.add_ip(ip_str, handshake_time, domain, server, fail_times, down_fail, False)
-            except Exception as e:
-                self.logger.exception("load_ip line:%s err:%s", line, e)
-
-        self.logger.info("load ip_list num:%d, target num:%d", len(self.ip_dict), len(self.ip_list))
-        self.try_sort_ip(force=True)
-        # if file_path == self.default_good_ip_file:
-        #    self.logger.info("first run, rescan all exist ip")
-        #    self.start_scan_all_exist_ip()
 
     def save(self, force=False):
         if not force:
