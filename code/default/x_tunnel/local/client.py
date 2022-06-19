@@ -101,6 +101,7 @@ def load_config():
 
     config.set_var("socks_host", "127.0.0.1")
     config.set_var("socks_port", 1080)
+    config.set_var("update_cloudflare_domains", True)
 
     # performance parameters
     # range 2 - 100

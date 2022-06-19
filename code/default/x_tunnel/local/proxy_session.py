@@ -955,7 +955,9 @@ def request_balance(account=None, password=None, is_register=False, update_serve
             xlog.info("update xt_server %s:%d", g.server_host, g.server_port)
 
         g.selectable = info["selectable"]
-        g.http_client.save_cloudflare_domain(info.get("cloudflare_domains"))
+
+        if g.config.update_cloudflare_domains:
+            g.http_client.save_cloudflare_domain(info.get("cloudflare_domains"))
 
         g.promote_code = info["promote_code"]
         g.promoter = info["promoter"]
