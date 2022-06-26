@@ -96,10 +96,7 @@ def _get_os_language():
 
     if sys_platform.platform == "mac":
         try:
-            oot = os.pipe()
-            p = subprocess.Popen(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'], stdout=oot[1])
-            p.communicate()
-            lang_code = os.read(oot[0], 10000)
+            lang_code = subprocess.check_output(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'])
             if b'zh' in lang_code:
                 return 'zh_CN'
             elif b'en' in lang_code:
