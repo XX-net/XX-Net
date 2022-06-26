@@ -33,7 +33,7 @@ def create_data_path():
 create_data_path()
 
 from xlog import getLogger
-xlog = getLogger("x_tunnel")
+xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=500, save_warning_log=True)
 
 import os_platform
 import xconfig
@@ -80,6 +80,7 @@ def load_config():
     config = xconfig.Config(config_path)
 
     config.set_var("log_level", "DEBUG")
+    config.set_var("upload_logs", True)
     config.set_var("write_log_file", 0)
     config.set_var("show_debug", 0)
 

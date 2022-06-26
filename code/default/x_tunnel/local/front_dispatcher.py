@@ -1,5 +1,6 @@
 import time
 import threading
+import os
 
 all_fronts = []
 light_fronts = []
@@ -8,7 +9,13 @@ session_fronts = []
 from . import global_var as g
 
 from xlog import getLogger
-xlog = getLogger("x_tunnel")
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
+
+xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=500, save_warning_log=True)
 
 
 def init():

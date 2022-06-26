@@ -1,7 +1,12 @@
 import os
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'x_tunnel')
+
 import xlog
-logger = xlog.getLogger("cloudflare_front")
+logger = xlog.getLogger("cloudflare_front", log_path=module_data_path, save_start_log=500, save_warning_log=True)
 logger.set_buffer(500)
 
 from .config import Config
@@ -15,12 +20,6 @@ from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 from .http2_connection import CloudflareHttp2Worker
 from gae_proxy.local import check_local_network
-
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 class Front(object):

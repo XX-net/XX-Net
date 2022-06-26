@@ -17,7 +17,7 @@ class HostManager(HostManagerBase):
         self.fn = fn
         self.front = front
         self.ns = self.load()
-        self.ns_idx = 0
+        self.ns_idx = random.randint(0, len(self.ns))
         if self.config.update_domains:
             threading.Thread(target=self.update_front_domains).start()
         

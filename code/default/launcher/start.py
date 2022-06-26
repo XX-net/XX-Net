@@ -40,6 +40,9 @@ def create_data_path():
 
 create_data_path()
 
+from xlog import getLogger
+log_file = os.path.join(data_launcher_path, "launcher.log")
+xlog = getLogger("launcher", log_path=data_launcher_path, save_start_log=500, save_warning_log=True)
 
 import sys_platform
 from config import config
@@ -49,10 +52,6 @@ import update
 import update_from_github
 import download_modules
 
-from xlog import getLogger
-
-log_file = os.path.join(data_launcher_path, "launcher.log")
-xlog = getLogger("launcher", file_name=log_file)
 
 current_version = update_from_github.current_version()
 

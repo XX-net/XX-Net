@@ -1,10 +1,5 @@
 import os
 import sys
-from . import apis
-
-from xlog import getLogger
-xlog = getLogger("smart_router")
-xlog.set_buffer(500)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, "launcher"))
@@ -14,6 +9,10 @@ data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'
 if launcher_path not in sys.path:
     sys.path.append(launcher_path)
 
+
+from xlog import getLogger
+xlog = getLogger("smart_router", log_path=data_path, save_start_log=200, save_warning_log=True)
+xlog.set_buffer(500)
 
 import xconfig
 import simple_http_server
@@ -25,6 +24,7 @@ except:
     proc_handler = None
 
 
+from . import apis
 from . import global_var as g
 from . import dns_server
 from . import dns_query

@@ -12,6 +12,7 @@ from . import base_container
 import encrypt
 from . import global_var as g
 from gae_proxy.local import check_local_network
+from .upload_logs import upload_logs_thread
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -80,6 +81,9 @@ class ProxySession(object):
         if g.config.enable_tls_relay:
             threading.Thread(target=self.reporter).start()
 
+        if g.config.upload_logs:
+            threading.Thread(target=upload_logs_thread).start()
+
     def start(self):
         with self.lock:
             if self.running is True:
@@ -124,7 +128,7 @@ class ProxySession(object):
 
     def stop(self):
         if not self.running:
-            xlog.warn("session stop but not running")
+            # xlog.warn("session stop but not running")
             return
 
         with self.lock:

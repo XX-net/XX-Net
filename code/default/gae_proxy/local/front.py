@@ -1,7 +1,12 @@
 import os
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'gae_proxy')
+
 import xlog
-logger = xlog.getLogger("gae_proxy")
+logger = xlog.getLogger("gae_proxy", log_path=module_data_path, save_start_log=500, save_warning_log=True)
 logger.set_buffer(500)
 
 from . import check_local_network
@@ -17,11 +22,6 @@ from front_base.connect_manager import ConnectManager
 from .check_ip import CheckIp
 
 from .appid_manager import AppidManager
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'gae_proxy')
 
 
 class Front(object):
