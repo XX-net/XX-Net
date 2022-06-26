@@ -64,7 +64,7 @@ def pack_logs():
 
 def upload_logs_thread():
     sleep(3 * 60)
-    while True:
+    while g.running:
         if not g.running or not g.server_host or not g.session or g.session.last_receive_time == 0:
             time.sleep(1)
         else:

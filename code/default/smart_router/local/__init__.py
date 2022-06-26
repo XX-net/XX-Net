@@ -10,6 +10,9 @@ if launcher_path not in sys.path:
     sys.path.append(launcher_path)
 
 
+if not os.path.isdir(data_path):
+    os.mkdir(data_path)
+
 from xlog import getLogger
 xlog = getLogger("smart_router", log_path=data_path, save_start_log=200, save_warning_log=True)
 xlog.set_buffer(500)
@@ -48,8 +51,6 @@ def is_ready():
 
 def load_config():
     global g
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
 
     config_path = os.path.join(data_path, 'config.json')
     config = xconfig.Config(config_path)
