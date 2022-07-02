@@ -67,12 +67,25 @@ class Logger():
                     except:
                         pass
 
-    def reset_warning_log(self):
-        if not self.warning_log:
-            return
+    def reset_log_files(self):
+        if self.start_log:
+            self.start_log.close()
+            self.start_log = None
 
-        self.warning_log.truncate(0)
-        self.warning_log.seek(0)
+        if self.log_path:
+            for filename in os.listdir(self.log_path):
+                if not filename.startswith("start_log_") and filename not in ["error.log"]:
+                    continue
+
+                fp = os.path.join(self.log_path, filename)
+                try:
+                    os.remove(fp)
+                except:
+                    pass
+
+        if self.warning_log:
+            self.warning_log.truncate(0)
+            self.warning_log.seek(0)
 
     def setLevel(self, level):
         if level == "DEBUG":
@@ -308,9 +321,9 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1,
         return logger_instance
 
 
-def reset_warning_logs():
+def reset_log_files():
     for name, log in loggerDict.items():
-        log.reset_warning_log()
+        log.reset_log_files()
 
 
 default_log = getLogger()

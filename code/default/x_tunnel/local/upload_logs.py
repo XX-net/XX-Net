@@ -5,8 +5,9 @@ import json
 import zipfile
 
 
+import utils
 from . import global_var as g
-from xlog import getLogger, reset_warning_logs
+from xlog import getLogger, reset_log_files
 xlog = getLogger("x_tunnel")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -71,23 +72,9 @@ def upload_logs_thread():
             break
 
     sleep(30)
-    session_id = g.session.session_id
+    session_id = utils.to_str(g.session.session_id)
     data = pack_logs()
     upload(session_id, data)
-
-
-def reset_logs():
-    for root, subdirs, files in os.walk(data_path):
-        for filename in files:
-            if not filename.endswith(".log"):
-                continue
-
-            src_file = os.path.join(root, filename)
-            if filename.startswith("start_log_") or filename == "error.log":
-                # xlog.info("remove log %s", src_file)
-                os.remove(src_file)
-
-    reset_warning_logs()
 
 
 def upload(session_id, data):
@@ -106,4 +93,4 @@ def upload(session_id, data):
         return
 
     # xlog.info("upload logs successful")
-    reset_logs()
+    reset_log_files()

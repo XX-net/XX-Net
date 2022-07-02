@@ -78,10 +78,6 @@ def uncaught_exception_handler(etype, value, tb):
 
     exc_info = ''.join(traceback.format_exception(etype, value, tb))
     print(("uncaught Exception:\n" + exc_info))
-    with open(os.path.join(data_launcher_path, "error.log"), "a") as fd:
-        now = datetime.now()
-        time_str = now.strftime("%b %d %H:%M:%S.%f")[:19]
-        fd.write("%s type:%s value=%s traceback:%s" % (time_str, etype, value, exc_info))
     xlog.error("uncaught Exception, type=%s value=%s traceback:%s", etype, value, exc_info)
     # sys.exit(1)
 
