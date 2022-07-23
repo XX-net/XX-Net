@@ -3,8 +3,6 @@ import socket
 import struct
 import time
 import sys
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
 
 import socks
 import utils
@@ -209,7 +207,7 @@ class ConnectCreator(object):
     def get_ssl_cert_domain(self, ssl_sock):
         cert = ssl_sock.get_peer_certificate()
         if not cert:
-            raise SSLError("no cert")
+            raise Exception("no cert")
 
         ssl_cert = openssl_wrap.SSLCert(cert)
         ssl_sock.domain = ssl_cert.cn

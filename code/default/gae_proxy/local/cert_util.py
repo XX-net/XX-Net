@@ -36,7 +36,6 @@ if __name__ == "__main__":
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-import OpenSSL
 from utils import check_ip_valid
 
 
@@ -66,6 +65,9 @@ class CertUtil(object):
     cert_publickey = None
     cert_keyfile = os.path.join(data_path, 'Certkey.pem')
     serial_reduce =  3600 * 24 * 365 * 46
+
+    def __int__(self):
+        import OpenSSL
 
     @staticmethod
     def create_ca():

@@ -38,8 +38,13 @@ What GAE mode:
 import errno
 import socket
 import ssl
-import OpenSSL
-NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+
+try:
+    import OpenSSL
+    NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+except:
+    NetWorkIOError = (socket.error, ssl.SSLError, OSError)
+
 
 try:
     from urllib.parse import urlparse

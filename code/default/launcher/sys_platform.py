@@ -9,6 +9,8 @@ xlog = getLogger("launcher")
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
+from non_tray import sys_tray
+
 
 if sys.platform.startswith("linux"):
     if os.path.isfile("/system/bin/dalvikvm") or os.path.isfile("/system/bin/dalvikvm64"):
@@ -22,7 +24,6 @@ if sys.platform.startswith("linux"):
             sys_tray.serve_forever()
 
         def on_quit():
-            from non_tray import sys_tray
             sys_tray.on_quit()
 
     else:
@@ -68,18 +69,16 @@ if sys.platform.startswith("linux"):
 
 
         def show_systray():
+            global sys_tray
             if has_desktop:
                 from gtk_tray import sys_tray
-            else:
-                from non_tray import sys_tray
 
             sys_tray.serve_forever()
 
         def on_quit():
+            global sys_tray
             if has_desktop:
                 from gtk_tray import sys_tray
-            else:
-                from non_tray import sys_tray
             sys_tray.on_quit()
 
 elif sys.platform == "win32":
@@ -109,15 +108,14 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
     def show_systray():
+        global sys_tray
         try:
             import mac_tray as sys_tray
         except Exception as e:
             xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
-            from non_tray import sys_tray
         sys_tray.serve_forever()
 
     def on_quit():
-        import mac_tray as sys_tray
         sys_tray.on_quit()
 else:
     xlog.warn(("detect platform fail:%s" % sys.platform))
@@ -127,9 +125,7 @@ else:
     platform_lib = ""
 
     def show_systray():
-        from non_tray import sys_tray
         sys_tray.serve_forever()
 
     def on_quit():
-        from non_tray import sys_tray
         sys_tray.on_quit()

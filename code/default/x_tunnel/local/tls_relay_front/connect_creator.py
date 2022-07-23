@@ -3,9 +3,6 @@ import socket
 import struct
 import time
 
-import OpenSSL
-SSLError = OpenSSL.SSL.WantReadError
-
 import socks
 import utils
 import front_base.openssl_wrap
