@@ -154,7 +154,7 @@ class IpManager():
 
     def load_ip(self):
         for file_path in [self.ip_list_fn, self.default_ip_list_fn]:
-            if not os.path.isfile(file_path):
+            if not file_path or not os.path.isfile(file_path):
                 continue
 
             with open(file_path, "r") as fd:

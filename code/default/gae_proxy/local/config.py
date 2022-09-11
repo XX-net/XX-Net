@@ -136,7 +136,7 @@ class Config(ConfigBase):
 
         # check_ip
         self.set_var("check_ip_host", "xxnet-1.appspot.com")
-        self.set_var("check_ip_accept_status", [200, 503])
+        self.set_var("check_ip_accept_status", [200, 500, 503])
         self.set_var("check_ip_content", b"GoAgent")
 
         # host_manager

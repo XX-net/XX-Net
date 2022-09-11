@@ -150,7 +150,7 @@ class ConnectCreator(object):
                     raise socket.error('check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, peer_cert["altName"]))
 
         else:
-
+            import OpenSSL
             cert_chain = ssl_sock.get_peer_cert_chain()
             if not cert_chain:
                 raise socket.error('certificate is none, sni:%s' % ssl_sock.sni)
