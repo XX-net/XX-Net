@@ -150,6 +150,11 @@ class PipeSocks(object):
 
             try:
                 r, w, error_set = select.select(self.read_set, self.write_set, self.error_set, 0.1)
+            except ValueError as e:
+                xlog.exception("pipe select except:%r", e)
+                return
+
+            try:
                 for s1 in list(r):
                     if s1 not in self.read_set:
                         xlog.warn("%s not in read list", s1)

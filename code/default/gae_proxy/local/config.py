@@ -11,9 +11,9 @@ module_data_path = os.path.join(data_path, 'gae_proxy')
 
 
 headers = {"connection": "close"}
-fqrouter = simple_http_client.request("GET", "http://127.0.0.1:2515/ping", headers=headers, timeout=0.5)
-mobile = fqrouter and "PONG" in fqrouter.text
-del headers, fqrouter
+# fqrouter = simple_http_client.request("GET", "http://127.0.0.1:2515/ping", headers=headers, timeout=0.5)
+# mobile = fqrouter and "PONG" in fqrouter.text
+# del headers, fqrouter
 
 
 class Config(ConfigBase):
@@ -30,11 +30,11 @@ class Config(ConfigBase):
 
         # auto range
         self.set_var("AUTORANGE_THREADS", 10)
-        self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
-        if mobile:
-            self.set_var("AUTORANGE_MAXBUFFERSIZE", 10 * 1024 * 1024 / 8)
-        else:
-            self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024)
+        # self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
+        # if mobile:
+        #     self.set_var("AUTORANGE_MAXBUFFERSIZE", 10 * 1024 * 1024 / 8)
+        # else:
+        self.set_var("AUTORANGE_MAXBUFFERSIZE", 20 * 1024 * 1024)
         self.set_var("JS_MAXSIZE", 0)
 
         # gae

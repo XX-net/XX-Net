@@ -743,8 +743,8 @@ class ProxySession(object):
             speed = (send_data_len + len(content) + 400) / rtt
             response.worker.update_debug_data(rtt, send_data_len, len(content), speed)
             if rtt > 8000:
-                xlog.debug("rtt:%d speed:%d trace:%s", rtt, speed, response.worker.get_trace())
-                xlog.debug("task trace:%s", response.task.get_trace())
+                xlog.warn("rtt:%d speed:%d trace:%s", rtt, speed, response.worker.get_trace())
+                xlog.warn("task trace:%s", response.task.get_trace())
                 g.stat["slow_roundtrip"] += 1
 
             try:

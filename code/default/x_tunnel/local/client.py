@@ -33,7 +33,7 @@ def create_data_path():
 create_data_path()
 
 from xlog import getLogger
-xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=500, save_warning_log=True)
+xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=1500, save_warning_log=True)
 
 import os_platform
 import xconfig
