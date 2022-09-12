@@ -21,7 +21,7 @@ msgid "Project main page"
 msgstr "项目主页"
 
 msgid "Bug feedback"
-msgstr "Bug 反馈"
+msgstr "问题反馈"
 
 msgid "When submitting a bug, please attach "
 msgstr "报告问题时, 请附上"
@@ -475,3 +475,12 @@ msgstr "选择要代理的APP"
 
 msgid "Select All"
 msgstr "全选 "
+
+msgid "Official Web Site"
+msgstr "官网"
+
+msgid "Telegram group"
+msgstr "电报群"
+
+msgid "Telegram Channel"
+msgstr "电报频道"
