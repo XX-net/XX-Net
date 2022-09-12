@@ -13,11 +13,12 @@
 
 
 ### 最新公告：
- 2022-07-01
-* 新版 4.9.5，如果无法登陆请按[公告](https://github.com/XX-net/XX-Net/issues/13702)操作。
-* 免费用户可以无限流量访问google 和 twitter，但部分地区（比如上海、北京）封锁严重，需要购买套餐才能连接接。
-* GAE 模块默认关闭.   
-  没有绑卡无法工作, 想使用GAE模块请手动启用, 暂时没有流量控制功能，请注意流量费用。
+ 2022-09-12
+* 新版 4.9.6，如果无法登陆请按[公告](https://github.com/XX-net/XX-Net/issues/13702)操作。
+* 免费用户可以无限流量访问google, Wikipedia 和 twitter，但部分地区（比如上海、北京）封锁严重，需要购买套餐才能连接接。
+* GAE 模块需要手动开启.   
+  没有绑卡无法工作, 想使用GAE模块请手动启用, 老id需要重新部署。  
+  https://github.com/XX-net/XX-Net/tree/master/code/default/gae_proxy/server
 
   
 <br>
