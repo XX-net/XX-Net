@@ -50,10 +50,10 @@ class CheckIp(front_base.check_ip.CheckIp):
         if response.status not in self.config.check_ip_accept_status:
             return False
 
-        if response.status == 503:
+        if response.status in [503, 500]:
             # out of quota
             if b"gws" not in server_type and b"Google Frontend" not in server_type and b"GFE" not in server_type:
-                xlog.warn("503 but server type:%s", server_type)
+                xlog.warn("%d but server type:%s", response.status, server_type)
                 return False
             else:
                 return True

@@ -6,7 +6,6 @@ import os
 import sys
 import time
 import traceback
-from datetime import datetime
 import atexit
 
 # reduce resource request for threading
@@ -19,6 +18,7 @@ except:
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_path)
 default_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
 data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.pardir, 'data'))
 data_launcher_path = os.path.join(data_path, 'launcher')
@@ -62,10 +62,7 @@ xlog.info("System: %s|%s|%s", platform.system(), platform.version(), platform.ar
 try:
     import OpenSSL
 except Exception as e2:
-    print("import pyOpenSSL fail:%r", e2)
-    print("Try install python-openssl\r\n")
-    input("Press Enter to continue...")
-    os._exit(0)
+    print("import pyOpenSSL fail:", e2)
 
 running_file = os.path.join(data_launcher_path, "Running.Lck")
 
@@ -162,13 +159,12 @@ def main():
             time.sleep(1)
 
 
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:  # Ctrl + C on console
-        module_init.stop_all()
-        os._exit(0)
-        sys.exit()
-    except Exception as e:
-        xlog.exception("launcher except:%r", e)
-        input("Press Enter to continue...")
+try:
+    main()
+except KeyboardInterrupt:  # Ctrl + C on console
+    module_init.stop_all()
+    os._exit(0)
+    sys.exit()
+except Exception as e:
+    xlog.exception("launcher except:%r", e)
+    input("Press Enter to continue...")

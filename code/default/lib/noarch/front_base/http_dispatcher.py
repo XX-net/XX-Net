@@ -237,8 +237,6 @@ class HttpsDispatcher(object):
         method = utils.to_bytes(method)
         host = utils.to_bytes(host)
         path = utils.to_bytes(path)
-
-        headers = utils.merge_two_dict(self.base_headers, headers)
         headers = utils.to_bytes(headers)
         body = utils.to_bytes(body)
 

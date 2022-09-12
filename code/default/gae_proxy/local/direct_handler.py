@@ -8,8 +8,11 @@ import socket
 import ssl
 import errno
 
-import OpenSSL
-NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+try:
+    import OpenSSL
+    NetWorkIOError = (socket.error, ssl.SSLError, OpenSSL.SSL.Error, OSError)
+except:
+    NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 
 from .gae_handler import send_header, return_fail_message
