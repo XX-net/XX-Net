@@ -5,6 +5,8 @@
 <br>
 
 ### 主页: [https://xx-net.com](https://xx-net.com)
+### 电报群: [https://t.me/xxnetshare](**https://xx-net.com**)
+### Twitter: [https://twitter.com/XXNetDev](https://twitter.com/XXNetDev)
 ### 客户端 [__\[下载\]__](https://github.com/XX-net/XX-Net/blob/master/code/default/download.md)
 ###
 ###### [中文帮助文档](https://github.com/XX-net/XX-Net/wiki/%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3) &nbsp; &nbsp; &nbsp;[English Document](https://github.com/XX-net/XX-Net/wiki/English-Home-Page) &nbsp; &nbsp; &nbsp;[فارسی صفحه اصلی](https://github.com/XX-net/XX-Net/wiki/Persian-home-page) 
