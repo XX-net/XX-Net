@@ -17,14 +17,16 @@
 # Then GAE_proxy local client will switch to range fetch mode.
 
 
-__version__ = '3.3.5'
+__version__ = '3.4.0'
 __password__ = ''
 __hostsdeny__ = ()
-#__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
 
 import os
 import re
 import time
+# import datetime
+# from datetime import datetime
+# from pytz import timezone
 import struct
 import zlib
 import base64
@@ -39,11 +41,13 @@ from mimetypes import guess_type
 from google.appengine.api import urlfetch
 from google.appengine.api.taskqueue.taskqueue import MAX_URL_LENGTH
 from google.appengine.runtime import apiproxy_errors
+from google.appengine.api import memcache
 
 URLFETCH_MAX = 2
 URLFETCH_MAXSIZE = 4 * 1024 * 1024
 URLFETCH_DEFLATE_MAXSIZE = 4 * 1024 * 1024
 URLFETCH_TIMEOUT = 30
+allowed_traffic = 1024 * 1024 * 1024 * 0.9
 
 
 def message_html(title, banner, detail=''):
@@ -74,14 +78,14 @@ def message_html(title, banner, detail=''):
     <table width=100% cellpadding=0 cellspacing=0><tr><td bgcolor=#3366cc><img alt="" width=1 height=4></td></tr></table>
     </body></html>
     '''
-    return string.Template(MESSAGE_TEMPLATE).substitute(
-        title=title, banner=banner, detail=detail)
+    return string.Template(MESSAGE_TEMPLATE).substitute(title=title, banner=banner, detail=detail)
 
 
 try:
     from Crypto.Cipher.ARC4 import new as RC4Cipher
 except ImportError:
     logging.warn('Load Crypto.Cipher.ARC4 Failed, Use Pure Python Instead.')
+
 
     class RC4Cipher(object):
         def __init__(self, key):
@@ -123,10 +127,10 @@ def format_response(status, headers, content):
         headers.pop('content-length', None)
         headers['Content-Length'] = str(len(content))
     data = 'HTTP/1.1 %d %s\r\n%s\r\n\r\n%s' % \
-            (status,
-             httplib.responses.get(status, 'Unknown'),
-             '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()),
-             content)
+           (status,
+            httplib.responses.get(status, 'Unknown'),
+            '\r\n'.join('%s: %s' % (k.title(), v) for k, v in headers.items()),
+            content)
     data = deflate(data)
     return struct.pack('!h', len(data)) + data
 
@@ -159,11 +163,66 @@ def is_deflate(data):
     return False
 
 
+# def get_pacific_time():
+#     tz = timezone('US/Pacific')
+#     sa_time = datetime.now(tz)
+#
+#     return sa_time.strftime('%H:%M:%S')
+
+
+def traffic(environ, start_response):
+    try:
+        traffic_sum = memcache.get(key="traffic")
+    except Exception as e:
+        traffic_sum = "get fail:%r" % e
+
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    yield 'traffic:%s\r\n' % traffic_sum
+    yield 'Usage: %f %%\r\n' % (int(int(traffic_sum) * 100 / allowed_traffic)/100)
+    # yield "American Pacific time:%d" % get_pacific_time()
+
+    raise StopIteration
+
+
+def reset(environ, start_response):
+    try:
+        memcache.set(key="traffic", value="0")
+    except:
+        pass
+
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    yield 'traffic reset finished.'
+    raise StopIteration
+
+
+def is_traffic_exceed():
+
+    try:
+        traffic_sum = int(memcache.get(key="traffic"))
+        if traffic_sum > allowed_traffic:
+            return True
+    except:
+        pass
+    return False
+
+
+def count_traffic(add_traffic):
+    try:
+        traffic_sum = int(memcache.get(key="traffic"))
+    except:
+        traffic_sum = 0
+
+    try:
+        v = str(traffic_sum + add_traffic)
+        memcache.set(key="traffic", value=v)
+    except Exception as e:
+        logging.exception('memcache.set fail:%r', e)
+
+
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET' and 'HTTP_X_URLFETCH_PS1' not in environ:
         # xxnet 自用
-        timestamp = long(
-            os.environ['CURRENT_VERSION_ID'].split('.')[1]) / 2**28
+        timestamp = long(os.environ['CURRENT_VERSION_ID'].split('.')[1]) / 2 ** 28
         ctime = time.strftime(
             '%Y-%m-%d %H:%M:%S',
             time.gmtime(
@@ -187,7 +246,11 @@ def application(environ, start_response):
         # 如果客户端需要加密，但ｇａｅ无密码
 
         # 但rc4 如不改源码，则恒为假
-        yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'}, message_html('400 Bad Request', 'Bad Request (options) - please set __password__ in gae.py', 'please set __password__ and upload gae.py again'))
+        yield format_response(400,
+                              {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('400 Bad Request',
+                                           'Bad Request (options) - please set __password__ in gae.py',
+                                           'please set __password__ and upload gae.py again'))
         raise StopIteration
 
     try:
@@ -202,33 +265,34 @@ def application(environ, start_response):
             # POST
             # POST 获取数据的方式
             wsgi_input = environ['wsgi.input']
-            input_data = wsgi_input.read(
-                int(environ.get('CONTENT_LENGTH', '0')))
+            input_data = wsgi_input.read(int(environ.get('CONTENT_LENGTH', '0')))
+            count_traffic(len(input_data))
+
             if 'rc4' in options:
                 input_data = RC4Cipher(__password__).encrypt(input_data)
             payload_length, = struct.unpack('!h', input_data[:2])  # 获取长度
-            payload = inflate(input_data[2:2 + payload_length])  # 　获取负载
-            body = input_data[2 + payload_length:]  # 　获取ｂｏｄｙ
+            payload = inflate(input_data[2:2 + payload_length])  # 获取负载
+            body = input_data[2 + payload_length:]  # 获取ｂｏｄｙ
 
         raw_response_line, payload = payload.split('\r\n', 1)
         method, url = raw_response_line.split()[:2]
-    # http content:
-    # 此为ｂｏｄｙ
-    #{
-      # pack_req_head_len: 2 bytes,＃ＰＯＳＴ　时使用
+        # http content:
+        # 此为ｂｏｄｙ
+        # {
+        # pack_req_head_len: 2 bytes,＃ＰＯＳＴ　时使用
 
-      # pack_req_head : deflate{
-      # 此为负载
+        # pack_req_head : deflate{
+        # 此为负载
         # original request line,
         # original request headers,
         # X-URLFETCH-kwargs HEADS, {
-          # password,
-          # maxsize, defined in config AUTO RANGE MAX SIZE
-          # timeout, request timeout for GAE urlfetch.
-        #}
-      #}
-      # body
-    #}
+        # password,
+        # maxsize, defined in config AUTO RANGE MAX SIZE
+        # timeout, request timeout for GAE urlfetch.
+        # }
+        # }
+        # body
+        # }
 
         headers = {}
         # 获取　原始头
@@ -236,15 +300,17 @@ def application(environ, start_response):
             key, value = line.split(':', 1)
             headers[key.title()] = value.strip()
     except (zlib.error, KeyError, ValueError):
-        import traceback
-        yield format_response(500, {'Content-Type': 'text/html; charset=utf-8'}, message_html('500 Internal Server Error', 'Bad Request (payload) - Possible Wrong Password', '<pre>%s</pre>' % traceback.format_exc()))
+        yield format_response(500,
+                              {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('500 Internal Server Error',
+                                           'Bad Request (payload) - Possible Wrong Password',
+                                           '<pre>%s</pre>' % traceback.format_exc()))
         raise StopIteration
-
 
     # 获取ｇａｅ用的头
     kwargs = {}
-    any(kwargs.__setitem__(x[len('x-urlfetch-'):].lower(), headers.pop(x))
-        for x in headers.keys() if x.lower().startswith('x-urlfetch-'))
+    any(kwargs.__setitem__(x[len('x-urlfetch-'):].lower(), headers.pop(x)) for x in headers.keys() if
+        x.lower().startswith('x-urlfetch-'))
 
     if 'Content-Encoding' in headers and body:
         # fix bug for LinkedIn android client
@@ -257,48 +323,50 @@ def application(environ, start_response):
             except BaseException:
                 pass
 
-    logging.info(
-        '%s "%s %s %s" - -',
-        environ['REMOTE_ADDR'],
-        method,
-        url,
-        'HTTP/1.1')
-
+    ref = headers.get('Referer', '')
+    logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, ref)
 
     # 参数使用
     if __password__ and __password__ != kwargs.get('password', ''):
-        yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'}, message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''), 'GoAgent proxy.ini password is wrong!'))
+        yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''),
+                                           'GoAgent proxy.ini password is wrong!'))
         raise StopIteration
 
     netloc = urlparse.urlparse(url).netloc
-
-    if __hostsdeny__ and netloc.endswith(__hostsdeny__):
-        yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'}, message_html('403 Hosts Deny', 'Hosts Deny(%r)' % netloc, detail='公用appid因为资源有限，限制观看视频和文件下载等消耗资源过多的访问，请使用自己的appid <a href=" https://github.com/XX-net/XX-Net/wiki/Register-Google-appid" target="_blank">帮助</a> '))
-        raise StopIteration
+    if is_traffic_exceed():
+        traffic_limit = True
+    else:
+        traffic_limit = False
 
     if len(url) > MAX_URL_LENGTH:
-        yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'}, message_html('400 Bad Request', 'length of URL too long(greater than %r)' % MAX_URL_LENGTH, detail='url=%r' % url))
+        yield format_response(400,
+                              {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('400 Bad Request',
+                                           'length of URL too long(greater than %r)' % MAX_URL_LENGTH,
+                                           detail='url=%r' % url))
         raise StopIteration
 
     if netloc.startswith(('127.0.0.', '::1', 'localhost')):
         # 测试用
-        yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'}, message_html('GoAgent %s is Running' % __version__, 'Now you can visit some websites', ''.join('<a href="https://%s/">%s</a><br/>' % (x, x) for x in ('google.com', 'mail.google.com'))))
+        yield format_response(400, {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('GoAgent %s is Running' % __version__, 'Now you can visit some websites',
+                                           ''.join('<a href="https://%s/">%s</a><br/>' % (x, x) for x in
+                                                   ('google.com', 'mail.google.com'))))
         raise StopIteration
 
     fetchmethod = getattr(urlfetch, method, None)
     if not fetchmethod:
-        yield format_response(405, {'Content-Type': 'text/html; charset=utf-8'}, message_html('405 Method Not Allowed', 'Method Not Allowed: %r' % method, detail='Method Not Allowed URL=%r' % url))
+        yield format_response(405, {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('405 Method Not Allowed', 'Method Not Allowed: %r' % method,
+                                           detail='Method Not Allowed URL=%r' % url))
         raise StopIteration
 
     timeout = int(kwargs.get('timeout', URLFETCH_TIMEOUT))
     validate_certificate = bool(int(kwargs.get('validate', 0)))
     maxsize = int(kwargs.get('maxsize', 0))
     # https://www.freebsdchina.org/forum/viewtopic.php?t=54269
-    accept_encoding = headers.get(
-        'Accept-Encoding',
-        '') or headers.get(
-        'Bccept-Encoding',
-        '')
+    accept_encoding = headers.get('Accept-Encoding', '') or headers.get('Bccept-Encoding', '')
     errors = []
     allow_truncated = False
     for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
@@ -376,14 +444,16 @@ def application(environ, start_response):
         error_string = '<br />\n'.join(errors)
         if not error_string:
             logurl = 'https://appengine.google.com/logs?&app_id=%s' % os.environ['APPLICATION_ID']
-            error_string = 'Internal Server Error. <p/>try <a href="javascript:window.location.reload(true);">refresh</a> or goto <a href="%s" target="_blank">appengine.google.com</a> for details' % logurl
-        yield format_response(502, {'Content-Type': 'text/html; charset=utf-8'}, message_html('502 Urlfetch Error', 'Python Urlfetch Error: %r' % method, error_string))
+            error_string = 'Internal Server Error. <p/>try <a href="javascript:window.location.reload(true);">refresh' \
+                           '</a> or goto <a href="%s" target="_blank">appengine.google.com</a> for details' % logurl
+        yield format_response(502, {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('502 Urlfetch Error', 'Python Urlfetch Error: %r' % method, error_string))
         raise StopIteration
 
-    #logging.debug('url=%r response.status_code=%r response.headers=%r response.content[:1024]=%r', url, response.status_code, dict(response.headers), response.content[:1024])
+    # logging.debug('url=%r response.status_code=%r response.headers=%r response.content[:1024]=%r', url,
+    # response.status_code, dict(response.headers), response.content[:1024])
 
-    #以上实现ｆｅｔｃｈ 的细节
-
+    # 以上实现ｆｅｔｃｈ 的细节
 
     status_code = int(response.status_code)
     data = response.content

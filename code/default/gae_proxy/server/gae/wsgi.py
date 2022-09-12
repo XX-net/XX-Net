@@ -5,8 +5,7 @@
 
 __version__ = '3.0.7'
 __password__ = ''
-__hostsdeny__ = ()
-#__hostsdeny__ = ('.youtube.com', '.youku.com', ".googlevideo.com")
+from gae import __hostsdeny__
 __content_type__ = 'image/gif'
 
 import sys
@@ -163,7 +162,7 @@ def gae_application(environ, start_response):
         else:
             if 'rc4' in options:
                 input_data = rc4crypt(input_data, __password__)
-            metadata_length = struct.unpack('!h', input_data[:2])
+            metadata_length, = struct.unpack('!h', input_data[:2])
             metadata = zlib.decompress(input_data[2:2+metadata_length], -zlib.MAX_WBITS)
             payload = input_data[2+metadata_length:]
         headers = dict(x.split(':', 1) for x in metadata.splitlines() if x)
@@ -184,7 +183,8 @@ def gae_application(environ, start_response):
             headers['Content-Length'] = str(len(payload))
             del headers['Content-Encoding']
 
-    logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, 'HTTP/1.1')
+    ref = headers.get('Referer', '')
+    logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, ref)
     #logging.info('request headers=%s', headers)
 
     if __password__ and __password__ != kwargs.get('password', ''):
