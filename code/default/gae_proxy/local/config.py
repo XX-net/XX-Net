@@ -30,7 +30,7 @@ class Config(ConfigBase):
 
         # auto range
         self.set_var("AUTORANGE_THREADS", 10)
-        # self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
+        self.set_var("AUTORANGE_MAXSIZE", 512 * 1024)
         # if mobile:
         #     self.set_var("AUTORANGE_MAXBUFFERSIZE", 10 * 1024 * 1024 / 8)
         # else:
