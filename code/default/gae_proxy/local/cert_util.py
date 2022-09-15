@@ -12,6 +12,11 @@ import threading
 import subprocess
 import datetime
 
+try:
+    import OpenSSL
+except:
+    pass
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -36,7 +41,6 @@ if __name__ == "__main__":
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
-import OpenSSL
 from utils import check_ip_valid
 
 
