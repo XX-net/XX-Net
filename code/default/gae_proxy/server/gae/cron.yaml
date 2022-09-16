@@ -1,6 +1,0 @@
-
-cron:
-- description: daily reset traffic
-  url: /tasks/reset
-  timezone: US/Pacific
-  schedule: every day 00:00

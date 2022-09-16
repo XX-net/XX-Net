@@ -24,9 +24,7 @@ __hostsdeny__ = ()
 import os
 import re
 import time
-# import datetime
-# from datetime import datetime
-# from pytz import timezone
+from datetime import timedelta, datetime, tzinfo
 import struct
 import zlib
 import base64
@@ -163,23 +161,53 @@ def is_deflate(data):
     return False
 
 
-# def get_pacific_time():
-#     tz = timezone('US/Pacific')
-#     sa_time = datetime.now(tz)
-#
-#     return sa_time.strftime('%H:%M:%S')
+class Pacific(tzinfo):
+    def utcoffset(self, dt):
+        return timedelta(hours=-8) + self.dst(dt)
+
+    def dst(self, dt):
+        # DST starts last Sunday in March
+        d = datetime(dt.year, 3, 12)   # ends last Sunday in October
+        self.dston = d - timedelta(days=d.weekday() + 1)
+        d = datetime(dt.year, 11, 6)
+        self.dstoff = d - timedelta(days=d.weekday() + 1)
+        if self.dston <=  dt.replace(tzinfo=None) < self.dstoff:
+            return timedelta(hours=1)
+        else:
+            return timedelta(0)
+
+    def tzname(self,dt):
+         return "Pacific"
+
+
+def get_pacific_date():
+    tz = Pacific()
+    sa_time = datetime.now(tz)
+    return sa_time.strftime('%Y-%m-%d')
 
 
 def traffic(environ, start_response):
     try:
+        reset_date = memcache.get(key="reset_date")
+    except:
+        reset_date = None
+
+    try:
         traffic_sum = memcache.get(key="traffic")
+        if not traffic_sum:
+            traffic_sum = "0"
     except Exception as e:
-        traffic_sum = "get fail:%r" % e
+        traffic_sum = "0"
 
     start_response('200 OK', [('Content-Type', 'text/plain')])
     yield 'traffic:%s\r\n' % traffic_sum
-    yield 'Usage: %f %%\r\n' % (int(int(traffic_sum) * 100 / allowed_traffic)/100)
-    # yield "American Pacific time:%d" % get_pacific_time()
+    yield 'Reset date:%s\r\n' % reset_date
+    yield 'Usage: %f %%\r\n' % int(int(traffic_sum) * 100 / allowed_traffic)
+
+    tz = Pacific()
+    sa_time = datetime.now(tz)
+    pacific_time = sa_time.strftime('%Y-%m-%d %H:%M:%S')
+    yield "American Pacific time:%s" % pacific_time
 
     raise StopIteration
 
@@ -196,14 +224,26 @@ def reset(environ, start_response):
 
 
 def is_traffic_exceed():
+    try:
+        reset_date = memcache.get(key="reset_date")
+    except:
+        reset_date = None
+
+    pacific_date = get_pacific_date()
+    if reset_date != pacific_date:
+        memcache.set(key="reset_date", value=pacific_date)
+        memcache.set(key="traffic", value="0")
+        return False
 
     try:
         traffic_sum = int(memcache.get(key="traffic"))
-        if traffic_sum > allowed_traffic:
-            return True
     except:
-        pass
-    return False
+        traffic_sum = 0
+
+    if traffic_sum > allowed_traffic:
+        return True
+    else:
+        return False
 
 
 def count_traffic(add_traffic):
@@ -266,7 +306,6 @@ def application(environ, start_response):
             # POST 获取数据的方式
             wsgi_input = environ['wsgi.input']
             input_data = wsgi_input.read(int(environ.get('CONTENT_LENGTH', '0')))
-            count_traffic(len(input_data))
 
             if 'rc4' in options:
                 input_data = RC4Cipher(__password__).encrypt(input_data)
@@ -274,6 +313,7 @@ def application(environ, start_response):
             payload = inflate(input_data[2:2 + payload_length])  # 获取负载
             body = input_data[2 + payload_length:]  # 获取ｂｏｄｙ
 
+        count_traffic(len(input_data))
         raw_response_line, payload = payload.split('\r\n', 1)
         method, url = raw_response_line.split()[:2]
         # http content:
@@ -328,16 +368,18 @@ def application(environ, start_response):
 
     # 参数使用
     if __password__ and __password__ != kwargs.get('password', ''):
-        yield format_response(403, {'Content-Type': 'text/html; charset=utf-8'},
+        yield format_response(401, {'Content-Type': 'text/html; charset=utf-8'},
                               message_html('403 Wrong password', 'Wrong password(%r)' % kwargs.get('password', ''),
                                            'GoAgent proxy.ini password is wrong!'))
         raise StopIteration
 
     netloc = urlparse.urlparse(url).netloc
     if is_traffic_exceed():
-        traffic_limit = True
-    else:
-        traffic_limit = False
+        yield format_response(510, {'Content-Type': 'text/html; charset=utf-8'},
+                              message_html('510 Traffic exceed',
+                                           'Traffic exceed',
+                                           'Traffic exceed!'))
+        raise StopIteration
 
     if len(url) > MAX_URL_LENGTH:
         yield format_response(400,
@@ -516,3 +558,5 @@ def application(environ, start_response):
         cipher = RC4Cipher(__password__)
         yield cipher.encrypt(format_response(status_code, response_headers, ''))
         yield cipher.encrypt(data)
+
+    count_traffic(len(data))

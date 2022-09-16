@@ -455,7 +455,7 @@ def request_gae_proxy(method, url, headers, body, timeout=None):
                 if response.app_status == 510:
                     # reach 80% of traffic today
                     # disable for get big file.
-                    appid = response.ssl_sock.host.split(b".")[0]
+                    appid = response.ssl_sock.host.split(".")[0]
                     front.appid_manager.report_out_of_quota(appid)
                     response.worker.close(
                         "appid out of quota:%s" % appid)
