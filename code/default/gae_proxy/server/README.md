@@ -8,8 +8,11 @@
 https://cloud.google.com/sdk/docs/install
 
 ## 登陆google账户，选择部署的appid
-  需要先指定代理服务器，可以使用X-tunnel作为代理服务器，端口1080。  
-  先确认X-Tunnel 已经登陆并可以访问google服务。
+  需要先指定代理服务器，可以使用X-tunnel作为代理服务器，端口1080。 
+  `gcloud config set proxy/type socks5`  
+  `gcloud config set proxy/address localhost`  
+  `gcloud config set proxy/port 1080`   
+  请先确认X-Tunnel 已经登陆并可以访问google服务。  
 
   参考这里：  
   https://cloud.google.com/sdk/docs/proxy-settings
