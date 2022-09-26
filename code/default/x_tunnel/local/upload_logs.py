@@ -41,7 +41,8 @@ def pack_logs():
 
             for root, subdirs, files in os.walk(data_path):
                 for filename in files:
-                    if not filename.endswith(".log") and not filename.endswith(".json"):
+                    extension = filename.split(".")[-1]
+                    if extension not in ["log", "json", "txt"]:
                         continue
 
                     src_file = os.path.join(root, filename)

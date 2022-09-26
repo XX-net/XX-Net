@@ -28,6 +28,7 @@ class Config(ConfigBase):
         self.set_var("connect_create_interval", 10)
 
         # check_ip
+        self.set_var("check_ip_subdomain", "scan1")
         self.set_var("check_ip_content", b"OK")
 
         # connect_creator
@@ -37,9 +38,13 @@ class Config(ConfigBase):
         self.set_var("update_domains", 1)
 
         # ip_manager
-        self.set_var("max_scan_ip_thread_num", 0)
+        self.set_var("max_scan_ip_thread_num", 1)
         self.set_var("max_good_ip_num", 50)
-        self.set_var("target_handshake_time", 50)
+        self.set_var("target_handshake_time", 500)
         self.set_var("active_connect_interval", 3*60)
+
+        # ip source
+        self.set_var("use_ipv6", "auto")  # force_ipv4/force_ipv6/auto
+        self.set_var("ipv6_scan_ratio", 40)  # 0 - 100
 
         self.load()

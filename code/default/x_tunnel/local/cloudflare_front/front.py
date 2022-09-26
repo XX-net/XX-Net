@@ -14,7 +14,7 @@ from . import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.ip_manager import IpManager
-from front_base.ip_source import Ipv4RangeSource
+from front_base.ip_source import Ipv4RangeSource, Ipv6PoolSource, IpCombineSource
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
@@ -46,13 +46,21 @@ class Front(object):
         self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
         self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
-        ip_source = Ipv4RangeSource(
+        self.ipv4_source = Ipv4RangeSource(
             logger, self.config,
             os.path.join(current_path, "ip_range.txt"),
             os.path.join(module_data_path, "cloudflare_ip_range.txt")
         )
+        self.ipv6_source = Ipv6PoolSource(
+            logger, self.config,
+            os.path.join(current_path, "ipv6_list.txt")
+        )
+        self.ip_source = IpCombineSource(
+            logger, self.config,
+            self.ipv4_source, self.ipv6_source
+        )
         self.ip_manager = IpManager(
-            logger, self.config, ip_source, check_local_network,
+            logger, self.config, self.ip_source, check_local_network,
             self.check_ip.check_ip,
             os.path.join(current_path, "good_ip.txt"),
             os.path.join(module_data_path, "cloudflare_ip_list.txt"),

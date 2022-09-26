@@ -50,6 +50,8 @@ class CheckIp(object):
 
         if host:
             pass
+        elif self.config.check_ip_subdomain:
+            host = self.config.check_ip_subdomain + "." + ssl_sock.host
         elif self.config.check_ip_host:
             host = self.config.check_ip_host
         else:

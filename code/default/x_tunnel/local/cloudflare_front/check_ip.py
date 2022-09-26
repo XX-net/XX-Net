@@ -139,8 +139,8 @@ if __name__ == "__main__":
     # case 5: domain sni
 
     # ip = "141.101.120.131"
-    ip = "162.159.217.3"
-    host = "v3.pc-nvme.shop"
+    ip = "2a06:98c1:3120::1"
+    host = "v3.half.autos"
     sni = host
 
     args = list(sys.argv[1:])

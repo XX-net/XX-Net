@@ -56,6 +56,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("connection_max_life", 999990)
 
         # check_ip
+        self.set_var("check_ip_subdomain", "")
         self.set_var("check_ip_host", "")
         self.set_var("check_ip_path", "/")
         self.set_var("check_ip_accept_status", [200])
