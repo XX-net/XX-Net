@@ -77,41 +77,39 @@ openwrt_setup_env()
 # Install Packages
 # get operating system name
 os_name=`uname -s`
-if [ $os_name = 'Linux' ]; then
-    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
-        echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
-        if has_command zypper; then
-            # openSUSE
-            sudo zypper in -y python3-pyOpenSSL
-        elif has_command apt-get; then
-            # Debian or Debian-like
-            sudo apt-get install -y python3-openssl
-        elif has_command dnf; then
-            # Fedora
-            sudo dnf install -y python3-pyOpenSSL
-        elif has_command yum; then
-            # RedHat
-            sudo yum install -y pyOpenSSL
-        elif has_command pacman; then
-            # ArchLinux
-            sudo pacman -S --noconfirm python-pyopenssl
-        elif has_command opkg; then
-            # OpenWrt
-            echo "install python"
-            opkg install python3 python3-pyopenssl
-        fi
-        pip install pyopenssl
-    fi
-elif [ $os_name = 'Darwin' ]; then
+#if [ $os_name = 'Linux' ]; then
+#    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
+#        echo 'Installing pyOpenSSL for your system... Please type in your password if requested'
+#        if has_command zypper; then
+#            # openSUSE
+#            sudo zypper in -y python3-pyOpenSSL
+#        elif has_command apt-get; then
+#            # Debian or Debian-like
+#            sudo apt-get install -y python3-openssl
+#        elif has_command dnf; then
+#            # Fedora
+#            sudo dnf install -y python3-pyOpenSSL
+#        elif has_command yum; then
+#            # RedHat
+#            sudo yum install -y pyOpenSSL
+#        elif has_command pacman; then
+#            # ArchLinux
+#            sudo pacman -S --noconfirm python-pyopenssl
+#        elif has_command opkg; then
+#            # OpenWrt
+#            echo "install python"
+#            opkg install python3 python3-pyopenssl
+#        fi
+#        pip install pyopenssl
+#    fi
+#el
+if [ $os_name = 'Darwin' ]; then
 
   PYTHON310="python3/bin/python3.10"
   if test -f "$PYTHON310"; then
     echo "Darwin using embedded python."
     PYTHON="$PYTHON310"
   else
-    if ! ${PYTHON} -c 'import OpenSSL' 2> /dev/null; then
-      sudo pip3 install pyOpenSSL
-    fi
     if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
       sudo pip3 install -U PyObjC Pillow
     fi
