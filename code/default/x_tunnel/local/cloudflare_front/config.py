@@ -11,11 +11,11 @@ class Config(ConfigBase):
         self.set_var("front_continue_fail_block", 20 * 60)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 0)
+        self.set_var("dispather_min_idle_workers", 1)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
         self.set_var("dispather_min_workers", 1)
-        self.set_var("dispather_max_workers", 1)
+        self.set_var("dispather_max_workers", 3)
         self.set_var("dispather_score_factor", 10)
 
         # http 2 worker
