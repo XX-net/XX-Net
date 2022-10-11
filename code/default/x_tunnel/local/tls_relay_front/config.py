@@ -22,8 +22,8 @@ class Config(ConfigBase):
         self.set_var("down_fail_connect_interval", 1)
 
         # connect_manager
-        self.set_var("https_connection_pool_min", 0)
-        self.set_var("max_links_per_ip", 5)
+        self.set_var("https_connection_pool_min", 1)
+        self.set_var("max_links_per_ip", 3)
 
         # check_ip
         self.set_var("check_ip_host", "scan1.xx-net.org")

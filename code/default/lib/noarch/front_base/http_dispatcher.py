@@ -29,7 +29,7 @@ import utils
 
 from . import http_common
 from .http1 import Http1Worker
-from .http2_connection import Http2Worker
+from .http2_connection import Http2Worker, Stream
 
 
 class HttpsDispatcher(object):
@@ -47,7 +47,8 @@ class HttpsDispatcher(object):
 
     def __init__(self, logger, config, ip_manager, connection_manager,
                  http1worker=Http1Worker,
-                 http2worker=Http2Worker):
+                 http2worker=Http2Worker,
+                 http2stream_class=None):
         self.logger = logger
         self.config = config
         self.ip_manager = ip_manager
@@ -56,6 +57,10 @@ class HttpsDispatcher(object):
 
         self.http1worker = http1worker
         self.http2worker = http2worker
+        if http2stream_class:
+            self.http2stream_class = http2stream_class
+        else:
+            self.http2stream_class = Stream
 
         self.request_queue = queue.Queue()
         self.workers = []
@@ -112,7 +117,8 @@ class HttpsDispatcher(object):
         if ssl_sock.h2:
             worker = self.http2worker(
                 self.logger, self.ip_manager, self.config, ssl_sock,
-              self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data)
+                self.close_cb, self.retry_task_cb, self._on_worker_idle_cb, self.log_debug_data,
+                stream_class=self.http2stream_class)
             self.h2_num += 1
         else:
             worker = self.http1worker(

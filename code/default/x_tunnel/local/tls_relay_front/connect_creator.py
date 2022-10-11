@@ -16,6 +16,7 @@ class ConnectCreator(ConnectCreatorBase):
     def connect_ssl(self, ip_str, sni="", close_cb=None):
         info = self.host_manager.get_info(ip_str)
         sni = str(info["sni"])
+        url_path = info["url_path"]
         host = sni
         ip, port = utils.get_ip_port(ip_str)
 
@@ -32,10 +33,7 @@ class ConnectCreator(ConnectCreatorBase):
         sock.settimeout(self.timeout)
 
         time_begin = time.time()
-        if info["client_ca"]:
-            #self.openssl_context.context.use_certificate_file(info["client_ca_fn"])
-            #self.openssl_context.set_ca(info["client_ca_fn"])
-            #self.openssl_context.context.use_privatekey_file(info["client_key_fn"])
+        if info.get("client_ca"):
             self.openssl_context.context.load_cert_chain(os.path.abspath(info["client_ca_fn"]),
                                                          os.path.abspath(info["client_key_fn"]))
 
@@ -70,6 +68,7 @@ class ConnectCreator(ConnectCreatorBase):
         time_handshaked = time.time()
 
         ssl_sock.sni = sni
+        ssl_sock.url_path = utils.to_bytes(url_path)
         self.check_cert(ssl_sock)
 
         connect_time = int((time_connected - time_begin) * 1000)

@@ -35,6 +35,8 @@ def mask_x_tunnel_password(fp):
 
 
 def pack_logs():
+    max_upload_size = 1 * 1024 * 1024
+    content_size = 0
     try:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode="w") as zfd:
@@ -58,6 +60,13 @@ def pack_logs():
                         zfd.writestr(relate_path, content)
                     else:
                         zfd.write(src_file, arcname=relate_path)
+
+                    content_size += file_size
+                    if content_size > max_upload_size:
+                        break
+
+                if content_size > max_upload_size:
+                    break
         return zip_buffer.getvalue()
     except Exception as e:
         xlog.exception("packing logs except:%r", e)

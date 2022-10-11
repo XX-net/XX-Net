@@ -106,7 +106,7 @@ def load_config():
 
     # performance parameters
     # range 2 - 100
-    config.set_var("concurent_thread_num", 20)
+    config.set_var("concurent_thread_num", 40)
 
     # min roundtrip on road if connectoin exist
     config.set_var("min_on_road", 3)
@@ -132,7 +132,7 @@ def load_config():
 
     # reporter
     config.set_var("timeout_threshold", 2)
-    config.set_var("report_interval", 3600*24)
+    config.set_var("report_interval", 5 * 60)
 
     config.set_var("enable_gae_proxy", 0)
     config.set_var("enable_cloudflare", 1)
