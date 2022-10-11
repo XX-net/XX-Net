@@ -45,8 +45,6 @@ class HostManager(HostManagerBase):
             raise Exception
 
         info = self.info[ip_str]
-        info["client_key_fn"] = str(os.path.join(tls_certs_path, ip_str + ".key"))
-        info["client_ca_fn"] = str(os.path.join(tls_certs_path, ip_str + ".ca"))
 
         return info
 

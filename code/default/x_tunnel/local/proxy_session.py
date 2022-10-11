@@ -185,7 +185,11 @@ class ProxySession(object):
         stat = self.get_stat("minute")
         stat["version"] = g.xxnet_version
         stat["client_uuid"] = g.client_uuid
-        stat["global"]["timeout"] = g.stat["timeout_roundtrip"] - self.last_state["timeout"]
+        timeout_count = g.stat["timeout_roundtrip"] - self.last_state["timeout"]
+        if timeout_count == 0:
+            return
+
+        stat["global"]["timeout"] = timeout_count
         stat["global"]["ipv6"] = check_local_network.IPv6.is_ok()
         stat["tls_relay_front"]["ip_dict"] = g.tls_relay_front.ip_manager.ip_dict
 
@@ -737,6 +741,7 @@ class ProxySession(object):
             elif len(content) <= 21:
                 self.target_on_roads = max(g.config.min_on_road, self.target_on_roads - 5)
             self.trigger_more()
+            xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
 
             rtt = roundtrip_time * 1000 - time_cost
             rtt = max(100, rtt)

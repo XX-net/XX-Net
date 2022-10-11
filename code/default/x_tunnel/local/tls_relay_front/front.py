@@ -14,6 +14,7 @@ from front_base.connect_manager import ConnectManager
 from front_base.ip_source import IpSimpleSource
 from front_base.check_ip import CheckIp
 from gae_proxy.local import check_local_network
+from . import http2_stream
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -32,10 +33,7 @@ class Front(object):
         config_path = os.path.join(module_data_path, "tls_relay.json")
         self.config = Config(config_path)
 
-        self.ca_cert_fn = os.path.join(module_data_path, "tls_relay_CA.crt")
         self.openssl_context = SSLContext(logger)
-        if os.path.isfile(self.ca_cert_fn):
-            self.openssl_context.set_ca(self.ca_cert_fn)
 
         if not os.path.isdir(module_data_path):
             os.mkdir(module_data_path)
@@ -59,7 +57,8 @@ class Front(object):
             self.ip_manager.add_ip(ip, 100)
 
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
-        self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager)
+        self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager,
+                                               http2stream_class=http2_stream.Stream)
 
         self.account = ""
         self.password = ""
@@ -76,39 +75,30 @@ class Front(object):
             return
 
         host_info = {}
-        ca_certs = []
         ipss = []
         for ip_str in ips:
             dat = ips[ip_str]
-            ca_cert = dat["ca_crt"]
             sni = dat["sni"]
+            url_path = dat["url_path"]
 
             host_info[ip_str] = {
                 "sni":sni,
-                "ca_crt":ca_cert,
-                "client_ca": dat["client_ca"],
-                "client_ca_fn": str(os.path.join(tls_certs_path, ip_str + ".ca")),
-                "client_key": dat["client_key"],
-                "client_key_fn": str(os.path.join(tls_certs_path, ip_str + ".key"))
+                "url_path": url_path,
             }
-            if ca_cert not in ca_certs:
-                ca_certs.append(ca_cert)
+
             ipss.append(ip_str)
 
-            with open(host_info[ip_str]["client_ca_fn"], "w") as ca_fd:
-                ca_fd.write(dat["client_ca"])
-
-            with open(host_info[ip_str]["client_key_fn"], "w") as key_fd:
-                key_fd.write(dat["client_key"])
+            ipv6 = dat["ipv6"]
+            if ipv6:
+                host_info[ipv6] = {
+                    "sni": sni
+                }
+                ipss.append(ipv6)
 
         self.ip_manager.update_ips(ipss)
         self.ip_manager.save(True)
         self.host_manager.set_host(host_info)
 
-        ca_content = "\n\n".join(ca_certs)
-        with open(self.ca_cert_fn, "w") as fd:
-            fd.write(ca_content)
-        self.openssl_context.set_ca(self.ca_cert_fn)
         self.logger.info("set_ips:%s", ",".join(ipss))
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):

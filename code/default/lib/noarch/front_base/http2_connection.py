@@ -72,11 +72,16 @@ class RawFrame(object):
 class Http2Worker(HttpWorker):
     version = "2"
 
-    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
+    def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data,
+                 stream_class=None):
         super(Http2Worker, self).__init__(
             logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
 
         self.network_buffer_size = 65535
+        if stream_class:
+            self.stream_class = stream_class
+        else:
+            self.stream_class = Stream
 
         # Google http/2 time out is 4 mins.
         self.ssl_sock.settimeout(240)
@@ -159,7 +164,7 @@ class Http2Worker(HttpWorker):
             # http/2 client use odd stream_id
             self.next_stream_id += 2
 
-            stream = Stream(self.logger, self.config, self, self.ip_str, stream_id, task,
+            stream = self.stream_class(self.logger, self.config, self, self.ip_str, stream_id, task,
                             self._send_cb, self._close_stream_cb, self.encode_header, self.decoder,
                             FlowControlManager(self.local_settings[SettingsFrame.INITIAL_WINDOW_SIZE]),
                             self.remote_settings[SettingsFrame.INITIAL_WINDOW_SIZE],

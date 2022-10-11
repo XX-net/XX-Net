@@ -91,17 +91,17 @@ class SSLConnection(object):
             "commonName": "",
             "altName": []
         }
-        for kv in cert["issuer"]:
+        for kv in cert.get("issuer", {}):
             k, v = kv[0]
             if k == 'commonName':
                 self.peer_cert["issuer_commonname"] = v
 
-        for kv in cert["subject"]:
+        for kv in cert.get("subject", {}):
             k, v = kv[0]
             if k == 'commonName':
                 self.peer_cert["commonName"] = v
 
-        for k, v in cert["subjectAltName"]:
+        for k, v in cert.get("subjectAltName", {}):
             self.peer_cert["altName"].append(v)
         self.peer_cert["altName"] = tuple(self.peer_cert["altName"])
 
