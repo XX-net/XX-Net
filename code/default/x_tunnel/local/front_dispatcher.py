@@ -42,7 +42,7 @@ def init():
 
     if g.config.enable_heroku:
         from .heroku_front.front import front as heroku_front
-        all_fronts.append(heroku_front)
+        # all_fronts.append(heroku_front)
         light_fronts.append(heroku_front)
 
     if g.config.enable_tls_relay:

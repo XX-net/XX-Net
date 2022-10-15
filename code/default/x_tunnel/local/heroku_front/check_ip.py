@@ -1,17 +1,19 @@
 #!/usr/bin/env python2
 # coding:utf-8
-
+import ssl
 import sys
 import os
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+local_path = os.path.abspath( os.path.join(current_path, os.pardir))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
 
 sys.path.append(root_path)
+sys.path.append(local_path)
 
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
@@ -39,7 +41,7 @@ from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
 
-from .config import Config
+from heroku_front.config import Config
 
 
 class CheckAllIp(object):
@@ -57,7 +59,8 @@ class CheckAllIp(object):
 
         self.lock = threading.Lock()
 
-        self.in_fd = open("good_ip.txt", "r")
+        fp = os.path.join(current_path, "good_ip.txt")
+        self.in_fd = open(fp, "r")
         self.out_fd = open(
             os.path.join(module_data_path, "heroku_checked_ip.txt"),
             "w"
@@ -112,18 +115,18 @@ def check_all():
     exit(0)
 
 
-def check_one(ip, top_domain, wait_time):
+def check_one(ip, sni, host, wait_time):
     config_path = os.path.join(module_data_path, "heroku_front.json")
     config = Config(config_path)
 
-    openssl_context = SSLContext(logger)
-
+    ca_certs = os.path.join(current_path, "cacert.pem")
+    openssl_context = SSLContext(logger, ca_certs=ca_certs)
     host_manager = HostManagerBase()
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
                                      debug=True)
     check_ip = CheckIp(logger, config, connect_creator)
 
-    res = check_ip.check_ip(ip, host=top_domain, wait_time=wait_time)
+    res = check_ip.check_ip(ip, sni=sni, host=host, wait_time=wait_time)
     if not res:
         print("connect fail")
     elif res.ok:
@@ -133,7 +136,7 @@ def check_one(ip, top_domain, wait_time):
 
 
 if __name__ == "__main__":
-    check_all()
+    # check_all()
 
     # case 1: only ip
     # case 2: ip + domain
@@ -142,18 +145,18 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ip = sys.argv[1]
     else:
-        ip = "54.225.129.54"
+        ip = "54.224.34.30"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     print(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
     else:
-        top_domain = None
+        top_domain = "ovenchapter.herokuapp.com"
 
     if len(sys.argv) > 3:
         wait_time = int(sys.argv[3])
     else:
         wait_time = 0
 
-    check_one(ip, top_domain, wait_time)
+    check_one(ip, top_domain, top_domain, wait_time)
