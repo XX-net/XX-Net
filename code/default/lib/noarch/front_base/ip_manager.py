@@ -413,7 +413,7 @@ class IpManager():
 
     def add_ip(self, ip_str, handshake_time=100, domain=None, server='gws', fail_times=0, down_fail=0, scan_result=True):
         if not isinstance(ip_str, str):
-            self.logger.error("add_ip input")
+            self.logger.error("add_ip input [%s] %s", type(ip_str), ip_str)
             return
 
         time_now = time.time()
