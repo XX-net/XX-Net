@@ -29,7 +29,7 @@ class Config(ConfigBase):
 
         # check_ip
         self.set_var("check_ip_host", "xxnet4.herokuapp.com")
-        self.set_var("check_ip_content", "We are building new site.")
+        self.set_var("check_ip_content", "Hello world!")
 
         # connect_creator
         self.set_var("check_sni", "herokuapp.com")

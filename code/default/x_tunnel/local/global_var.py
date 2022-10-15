@@ -29,6 +29,7 @@ server_host = ""
 server_port = 0
 selectable = []
 balance = 0
+tls_relays = {}
 
 stat = {
     "roundtrip_num": 0,

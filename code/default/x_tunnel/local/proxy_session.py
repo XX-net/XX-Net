@@ -741,7 +741,7 @@ class ProxySession(object):
             elif len(content) <= 21:
                 self.target_on_roads = max(g.config.min_on_road, self.target_on_roads - 5)
             self.trigger_more()
-            xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
+            # xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
 
             rtt = roundtrip_time * 1000 - time_cost
             rtt = max(100, rtt)
@@ -971,6 +971,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         g.promote_code = info["promote_code"]
         g.promoter = info["promoter"]
         g.balance = info["balance"]
+        g.tls_relays = info["tls_relays"]
+        g.tls_relay_front.set_ips(g.tls_relays["ips"])
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
                   g.balance, g.quota)
         return True, "success"
