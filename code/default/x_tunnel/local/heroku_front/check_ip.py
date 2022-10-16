@@ -6,8 +6,8 @@ import os
 import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-local_path = os.path.abspath( os.path.join(current_path, os.pardir))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+local_path = os.path.abspath(os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
@@ -15,23 +15,23 @@ python_path = root_path
 sys.path.append(root_path)
 sys.path.append(local_path)
 
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
 if sys.platform == "win32":
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+    win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'win32'))
     sys.path.append(win32_lib)
 elif sys.platform.startswith("linux"):
-    linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+    linux_lib = os.path.abspath(os.path.join(python_path, 'lib', 'linux'))
     sys.path.append(linux_lib)
 elif sys.platform == "darwin":
-    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
+    darwin_lib = os.path.abspath(os.path.join(python_path, 'lib', 'darwin'))
     sys.path.append(darwin_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
-
 import xlog
+
 logger = xlog.getLogger("check_ip")
 logger.set_buffer(500)
 
@@ -40,7 +40,7 @@ from front_base.host_manager import HostManagerBase
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
-
+from heroku_front.front import front
 from heroku_front.config import Config
 
 
@@ -50,8 +50,8 @@ class CheckAllIp(object):
         config_path = os.path.join(module_data_path, "heroku_front.json")
         config = Config(config_path)
 
-        openssl_context = SSLContext(logger)
-
+        ca_certs = os.path.join(current_path, "cacert.pem")
+        openssl_context = SSLContext(logger, ca_certs=ca_certs)
         host_manager = HostManagerBase()
         connect_creator = ConnectCreator(logger, config, openssl_context, host_manager,
                                          debug=True)
@@ -85,6 +85,8 @@ class CheckAllIp(object):
             self.out_fd.flush()
 
     def checker(self):
+        sni = "ovenchapter.herokuapp.com"
+        host = "ovenchapter.herokuapp.com"
         while True:
             try:
                 ip = self.get_ip()
@@ -93,7 +95,7 @@ class CheckAllIp(object):
                 return
 
             try:
-                res = self.check_ip.check_ip(ip)
+                res = self.check_ip.check_ip(ip, sni=sni, host=host)
             except Exception as e:
                 xlog.warn("check except:%r", e)
                 continue
@@ -136,8 +138,6 @@ def check_one(ip, sni, host, wait_time):
 
 
 if __name__ == "__main__":
-    # check_all()
-
     # case 1: only ip
     # case 2: ip + domain
     #    connect use domain
@@ -159,4 +159,9 @@ if __name__ == "__main__":
     else:
         wait_time = 0
 
-    check_one(ip, top_domain, top_domain, wait_time)
+    # check_all()
+    sni = ""
+    host = top_domain
+    check_one(ip, sni, host, wait_time)
+
+    front.stop()

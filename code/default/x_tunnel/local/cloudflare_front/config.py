@@ -42,6 +42,7 @@ class Config(ConfigBase):
         self.set_var("max_good_ip_num", 50)
         self.set_var("target_handshake_time", 500)
         self.set_var("active_connect_interval", 3*60)
+        self.set_var("scan_ip_interval", 10)
 
         # ip source
         self.set_var("use_ipv6", "auto")  # force_ipv4/force_ipv6/auto

@@ -81,6 +81,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("max_links_per_ip", 1)
         self.set_var("ip_connect_interval", 5)
         self.set_var("record_ip_history", 0)
+        self.set_var("scan_ip_interval", 1)
         self.set_var("down_fail_connect_interval", 60)
         self.set_var("active_connect_interval", 0)
         self.set_var("long_fail_threshold", 300)

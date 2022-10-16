@@ -1,5 +1,4 @@
 import os
-import struct
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
@@ -7,10 +6,10 @@ data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'
 module_data_path = os.path.join(data_path, 'x_tunnel')
 
 import xlog
+
 logger = xlog.getLogger("heroku_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
 logger.set_buffer(500)
 
-import simple_http_client
 from .config import Config
 from . import host_manager
 from front_base.openssl_wrap import SSLContext
@@ -26,30 +25,31 @@ class Front(object):
     name = "heroku_front"
 
     def __init__(self):
+        self.running = True
         self.logger = logger
         config_path = os.path.join(module_data_path, "heroku_front.json")
         self.config = Config(config_path)
 
         ca_certs = os.path.join(current_path, "cacert.pem")
-        self.host_manager = host_manager.HostManager(self.logger, self.config.appids)
+        default_domain_fn = os.path.join(current_path, "front_domains.json")
+        domain_fn = os.path.join(module_data_path, "heroku_domains.json")
+        self.host_manager = host_manager.HostManager(self.config, logger, default_domain_fn, domain_fn, self)
 
         openssl_context = SSLContext(logger, ca_certs=ca_certs)
         self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
         self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
-        self.ip_manager = IpManager(self.config, None, logger)
+        self.ip_manager = IpManager(self.config, self.host_manager, logger)
 
-        self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
+        self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager,
+                                              check_local_network)
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager)
 
     def get_dispatcher(self, host=None):
-        if len(self.host_manager.appids) == 0:
+        if len(self.host_manager.domains) == 0:
             return None
 
         return self.http_dispatcher
-
-    def set_ips(self, ips):
-        self.ip_manager.set_ips(ips)
 
     def _request(self, method, host, path="/", headers={}, data="", timeout=40):
         try:
@@ -69,26 +69,19 @@ class Front(object):
             return "", 500, {}
 
     def request(self, method, host, schema="http", path="/", headers={}, data="", timeout=40):
-        schema = "http"
+        # schema = "http"
         # force schema to http, avoid cert fail on heroku curl.
         # and all x-server provide ipv4 access
 
-        url = schema + "://" + host + path
-        payloads = ['%s %s HTTP/1.1\r\n' % (method, url)]
-        for k in headers:
-            v = headers[k]
-            payloads.append('%s: %s\r\n' % (k, v))
-        head_payload = "".join(payloads)
-
-        request_body = '%s%s%s%s' % \
-                       ((struct.pack('!H', len(head_payload)),  head_payload,
-                         struct.pack('!I', len(data)), data))
-        request_headers = {'Content-Length': len(data), 'Content-Type': 'application/octet-stream'}
+        request_headers = dict(headers)
+        request_headers["Content-Length"] = len(data)
+        request_headers["X-Host"] = host
+        request_headers["X-Path"] = path
 
         heroku_host = ""
         content, status, response = self._request(
-                                            "POST", heroku_host, "/2/",
-                                            request_headers, request_body, timeout)
+            "POST", heroku_host, "/2/",
+            request_headers, data, timeout)
 
         # self.logger.info('%s "PHP %s %s %s" %s %s', handler.address_string(), handler.command, url, handler.protocol_version, response.status, response.getheader('Content-Length', '-'))
         # self.logger.debug("status:%d", status)
@@ -110,22 +103,13 @@ class Front(object):
         if not content:
             return "", 501, {}
 
-        try:
-            res = simple_http_client.TxtResponse(content)
-        except Exception as e:
-            self.logger.warn("decode %s response except:%r", content, e)
-            return "", 501, {}
-
-        res.worker = response.worker
-        res.task = response.task
-        return res.body, res.status, res
+        return content, status, response
 
     def stop(self):
         logger.info("terminate")
         self.connect_manager.set_ssl_created_cb(None)
         self.http_dispatcher.stop()
         self.connect_manager.stop()
-        self.ip_manager.stop()
 
         self.running = False
 
