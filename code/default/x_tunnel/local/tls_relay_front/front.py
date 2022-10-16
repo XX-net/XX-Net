@@ -95,7 +95,8 @@ class Front(object):
             ipv6 = dat["ipv6"]
             if ipv6:
                 host_info[ipv6] = {
-                    "sni": sni
+                    "sni": sni,
+                    "url_path": url_path,
                 }
                 ipss.append(ipv6)
 

@@ -3,6 +3,7 @@ import time
 
 import hyper
 import simple_http_client
+import utils
 
 
 class CheckIp(object):
@@ -10,6 +11,7 @@ class CheckIp(object):
         self.logger = logger
         self.config = config
         self.connect_creator = connect_creator
+        self.check_content = utils.to_bytes(self.config.check_ip_content)
 
     def check_http1(self, ssl_sock, host):
         self.logger.info("ip:%s use http/1.1", ssl_sock.ip_str)
@@ -90,7 +92,7 @@ class CheckIp(object):
         content = response.read()
         response.content = content
 
-        if self.config.check_ip_content not in content:
+        if self.check_content and self.check_content not in content:
             self.logger.warn("app check content:%s", content)
             return False
 

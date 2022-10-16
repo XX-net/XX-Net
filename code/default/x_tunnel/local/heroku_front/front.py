@@ -1,8 +1,13 @@
 import os
 import struct
 
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
+data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+module_data_path = os.path.join(data_path, 'x_tunnel')
+
 import xlog
-logger = xlog.getLogger("heroku_front")
+logger = xlog.getLogger("heroku_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
 logger.set_buffer(500)
 
 import simple_http_client
@@ -10,17 +15,11 @@ from .config import Config
 from . import host_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
-from front_base.ip_manager import IpManager
+from .ip_manager import IpManager
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 from gae_proxy.local import check_local_network
-
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 class Front(object):
@@ -38,12 +37,7 @@ class Front(object):
         self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
         self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
-        ip_source = None
-        default_ip_list_fn = os.path.join(current_path, "good_ip.txt")
-        ip_list_fn = os.path.join(module_data_path, "heroku_ip_list.txt")
-        self.ip_manager = IpManager(logger, self.config, ip_source, check_local_network,
-                    self.check_ip.check_ip,
-                 default_ip_list_fn, ip_list_fn, scan_ip_log=None)
+        self.ip_manager = IpManager(self.config, None, logger)
 
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager)
