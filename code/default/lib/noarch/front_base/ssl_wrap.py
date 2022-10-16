@@ -22,7 +22,7 @@ class SSLConnection(object):
     def __init__(self, context, sock, ip_str=None, sni=None, on_close=None):
         self._context = context
         self._sock = sock
-        self.ip_str = ip_str
+        self.ip_str = utils.to_bytes(ip_str)
         self.sni = sni
         self._makefile_refs = 0
         self._on_close = on_close
