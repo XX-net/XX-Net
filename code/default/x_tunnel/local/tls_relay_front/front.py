@@ -11,12 +11,10 @@ logger.set_buffer(500)
 from .config import Config
 from . import host_manager
 from . import connect_creator
+from . import ip_manager
 from front_base.openssl_wrap import SSLContext
-from front_base.ip_manager import IpManager
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
-from front_base.ip_source import IpSimpleSource
-from front_base.check_ip import CheckIp
 from gae_proxy.local import check_local_network
 from . import http2_stream
 
@@ -24,7 +22,6 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
 data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 module_data_path = os.path.join(data_path, 'x_tunnel')
-tls_certs_path = os.path.join(module_data_path, "tls_certs")
 
 
 class Front(object):
@@ -42,24 +39,12 @@ class Front(object):
         if not os.path.isdir(module_data_path):
             os.mkdir(module_data_path)
 
-        if not os.path.isdir(tls_certs_path):
-            os.mkdir(tls_certs_path)
-
         host_fn = os.path.join(module_data_path, "relay_host.json")
         self.host_manager = host_manager.HostManager(host_fn)
 
         self.connect_creator = connect_creator.ConnectCreator(logger, self.config, self.openssl_context, self.host_manager)
-        self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
-        ip_source = IpSimpleSource(self.config.ip_source_ips)
-
-        default_ip_list_fn = ""
-        ip_list_fn = os.path.join(module_data_path, "relay_ip_list.txt")
-        self.ip_manager = IpManager(logger, self.config, ip_source, check_local_network, self.check_ip.check_ip,
-                 default_ip_list_fn, ip_list_fn, scan_ip_log=None)
-        for ip in self.config.ip_source_ips:
-            self.ip_manager.add_ip(ip, 100)
-
+        self.ip_manager = ip_manager.IpManager(self.config, self.host_manager, logger)
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager,
                                                http2stream_class=http2_stream.Stream)
@@ -79,7 +64,6 @@ class Front(object):
             return
 
         host_info = {}
-        ipss = []
         for ip_str in ips:
             dat = ips[ip_str]
             sni = dat["sni"]
@@ -90,21 +74,15 @@ class Front(object):
                 "url_path": url_path,
             }
 
-            ipss.append(ip_str)
-
             ipv6 = dat["ipv6"]
             if ipv6:
                 host_info[ipv6] = {
                     "sni": sni,
                     "url_path": url_path,
                 }
-                ipss.append(ipv6)
 
-        self.ip_manager.update_ips(ipss)
-        self.ip_manager.save(True)
         self.host_manager.set_host(host_info)
-
-        self.logger.info("set_ips:%s", ",".join(ipss))
+        self.logger.debug("set_ips:%s", ips)
 
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         headers = dict(headers)

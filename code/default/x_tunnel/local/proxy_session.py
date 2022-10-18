@@ -976,7 +976,7 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         g.promoter = info["promoter"]
         g.balance = info["balance"]
         g.tls_relays = info["tls_relays"]
-        if g.tls_relay_front:
+        if g.tls_relay_front and g.tls_relays.get("ips"):
             g.tls_relay_front.set_ips(g.tls_relays["ips"])
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
                   g.balance, g.quota)
