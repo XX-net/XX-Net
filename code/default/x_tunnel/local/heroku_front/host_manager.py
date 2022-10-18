@@ -120,6 +120,11 @@ class HostManager(HostManagerBase):
                         old_content = fd.read()
                         if content == old_content:
                             need_update = False
+                else:
+                    with open(self.default_fn, "r") as fd:
+                        old_content = fd.read()
+                        if content == old_content:
+                            need_update = False
 
                 if need_update:
                     with open(front_domains_fn, "w") as fd:
