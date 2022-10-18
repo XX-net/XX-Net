@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -28,7 +27,7 @@ class Logger():
         self.name = str(name)
         self.file_max_size = 1024 * 1024
         self.buffer_lock = threading.Lock()
-        self.buffer = {} # id => line
+        self.buffer = {}  # id => line
         self.buffer_size = buffer_size
         self.last_no = 0
         self.min_level = NOTSET
@@ -51,9 +50,10 @@ class Logger():
             self.start_log = None
 
         if log_path and save_warning_log:
-            log_fn = os.path.join(log_path, "%s_warning.log" % (name))
-            self.warning_log = open(log_fn, "a")
+            self.warning_log_fn = os.path.join(log_path, "%s_warning.log" % (name))
+            self.warning_log = open(self.warning_log_fn, "a")
         else:
+            self.warning_log_fn = None
             self.warning_log = None
 
     def set_buffer(self, buffer_size):
@@ -72,9 +72,13 @@ class Logger():
             self.start_log.close()
             self.start_log = None
 
+        if self.warning_log:
+            self.warning_log.close()
+            self.warning_log = None
+
         if self.log_path:
             for filename in os.listdir(self.log_path):
-                if not filename.startswith("start_log_") and filename not in ["error.log"]:
+                if not filename.endswith(".log"):
                     continue
 
                 fp = os.path.join(self.log_path, filename)
@@ -83,9 +87,8 @@ class Logger():
                 except:
                     pass
 
-        if self.warning_log:
-            self.warning_log.truncate(0)
-            self.warning_log.seek(0)
+        if self.warning_log_fn:
+            self.warning_log = open(self.warning_log_fn, "a")
 
     def setLevel(self, level):
         if level == "DEBUG":
@@ -100,7 +103,7 @@ class Logger():
             self.min_level = FATAL
         else:
             print(("log level not support:%s", level))
-    
+
     def set_color(self):
         self.err_color = None
         self.warn_color = None
@@ -113,18 +116,18 @@ class Logger():
                 self.warn_color = 0x06
                 self.debug_color = 0x002
                 self.reset_color = 0x07
-        
+
                 import ctypes
                 SetConsoleTextAttribute = ctypes.windll.kernel32.SetConsoleTextAttribute
                 GetStdHandle = ctypes.windll.kernel32.GetStdHandle
                 self.set_console_color = lambda color: SetConsoleTextAttribute(GetStdHandle(-11), color)
-        
+
             elif os.name == 'posix':
                 self.err_color = '\033[31m'
                 self.warn_color = '\033[33m'
                 self.debug_color = '\033[32m'
                 self.reset_color = '\033[0m'
-        
+
                 self.set_console_color = lambda color: sys.stderr.write(color)
 
     def set_file(self, file_name):
@@ -146,7 +149,7 @@ class Logger():
             if not os.path.isfile(old_name):
                 continue
 
-            #self.info("roll_log %s -> %s", old_name, new_name)
+            # self.info("roll_log %s -> %s", old_name, new_name)
             shutil.move(old_name, new_name)
 
         shutil.move(self.log_filename, self.log_filename + ".1")
@@ -208,7 +211,8 @@ class Logger():
                 if buffer_len > self.buffer_size:
                     del self.buffer[self.last_no - self.buffer_size]
         except Exception as e:
-            string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br> %s' % (time.ctime()[4:-5], level, fmt % args, e, traceback.format_exc())
+            string = '%s - [%s]LOG_EXCEPT: %s, Except:%s<br> %s' % \
+                     (time.ctime()[4:-5], level, fmt % args, e, traceback.format_exc())
             self.last_no += 1
             self.buffer[self.last_no] = string
             buffer_len = len(self.buffer)
@@ -221,35 +225,35 @@ class Logger():
         if self.min_level > DEBUG:
             return
         self.log('DEBUG', self.debug_color, '21610b', fmt, *args, **kwargs)
-    
+
     def info(self, fmt, *args, **kwargs):
         if self.min_level > INFO:
             return
         self.log('INFO', self.reset_color, '000000', fmt, *args)
-    
+
     def warning(self, fmt, *args, **kwargs):
         if self.min_level > WARN:
             return
         self.log('WARNING', self.warn_color, 'FF8000', fmt, *args, **kwargs)
-    
+
     def warn(self, fmt, *args, **kwargs):
         self.warning(fmt, *args, **kwargs)
-    
+
     def error(self, fmt, *args, **kwargs):
         if self.min_level > ERROR:
             return
         self.log('ERROR', self.err_color, 'FE2E2E', fmt, *args, **kwargs)
-    
+
     def exception(self, fmt, *args, **kwargs):
         self.error(fmt, *args, **kwargs)
         self.error("Except stack:%s", traceback.format_exc(), **kwargs)
-    
+
     def critical(self, fmt, *args, **kwargs):
         if self.min_level > CRITICAL:
             return
         self.log('CRITICAL', self.err_color, 'D7DF01', fmt, *args, **kwargs)
-    
-    #=================================================================
+
+    # =================================================================
     def get_last_lines(self, max_lines):
         self.buffer_lock.acquire()
         buffer_len = len(self.buffer)
@@ -264,7 +268,7 @@ class Logger():
                 jd[i] = utils.to_str(self.buffer[i])
         self.buffer_lock.release()
         return json.dumps(jd)
-    
+
     def get_new_lines(self, from_no):
         self.buffer_lock.acquire()
         jd = {}
@@ -283,12 +287,15 @@ class null():
     @staticmethod
     def debug(fmt, *args, **kwargs):
         pass
+
     @staticmethod
     def info(fmt, *args, **kwargs):
         pass
+
     @staticmethod
     def warn(fmt, *args, **kwargs):
         pass
+
     @staticmethod
     def exception(fmt, *args, **kwargs):
         pass

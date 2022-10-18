@@ -725,13 +725,20 @@ class ProxySession(object):
                 continue
 
             time_cost, server_send_pool_size, data_len, ack_len = struct.unpack("<IIIH", payload.get(14))
+
+            rtt = roundtrip_time * 1000 - time_cost
+            rtt = max(100, rtt)
+            speed = (send_data_len + len(content) + 400) / rtt
+            # speed = (send_data_len + len(content)) / (roundtrip_time - (time_cost / 1000.0))
             xlog.debug(
-                "trip:%d no:%d tc:%f cost:%f to:%d snd:%d rcv:%d s_pool:%d on_road:%d target:%d",
+                "wid:%d no:%d rt:%f st:%f sw:%d snd:%d rcv:%d s_pool:%d on_road:%d tor:%d sp:%d",
                 work_id, transfer_no,
                 roundtrip_time, time_cost / 1000.0, server_timeout,
                 send_data_len, len(content), server_send_pool_size,
                 self.on_road_num,
-                self.target_on_roads)
+                self.target_on_roads,
+                speed
+            )
 
             if len(self.conn_list) == 0:
                 self.target_on_roads = 0
@@ -743,9 +750,6 @@ class ProxySession(object):
             self.trigger_more()
             # xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
 
-            rtt = roundtrip_time * 1000 - time_cost
-            rtt = max(100, rtt)
-            speed = (send_data_len + len(content) + 400) / rtt
             response.worker.update_debug_data(rtt, send_data_len, len(content), speed)
             if rtt > 8000:
                 xlog.warn("rtt:%d speed:%d trace:%s", rtt, speed, response.worker.get_trace())

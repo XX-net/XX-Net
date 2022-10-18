@@ -3,7 +3,7 @@ import time
 import io
 import json
 import zipfile
-
+import operator
 
 import utils
 from . import global_var as g
@@ -34,36 +34,53 @@ def mask_x_tunnel_password(fp):
         return dat_str
 
 
+def list_files():
+    log_files = {}
+    other_files = []
+    for root, subdirs, files in os.walk(data_path):
+        for filename in files:
+            src_file = os.path.join(root, filename)
+
+            extension = filename.split(".")[-1]
+            if extension in ["json", "txt"]:
+                other_files.append(src_file)
+
+            if extension not in ["log",]:
+                continue
+
+            file_size = os.path.getsize(src_file)
+            if file_size == 0:
+                continue
+
+            mtime = os.path.getmtime(src_file)
+            log_files[src_file] = mtime
+
+    files = sorted(list(log_files.items()), key=operator.itemgetter(1))
+    log_files_list = [src_file for src_file, mtime in files]
+    return other_files + log_files_list
+
+
 def pack_logs():
-    max_upload_size = 1 * 1024 * 1024
+    max_upload_size = 800 * 1024
     content_size = 0
     try:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode="w") as zfd:
+            files = list_files()
+            for src_file in files:
+                file_size = os.path.getsize(src_file)
+                content_size += file_size
+                if content_size > max_upload_size:
+                    break
 
-            for root, subdirs, files in os.walk(data_path):
-                for filename in files:
-                    extension = filename.split(".")[-1]
-                    if extension not in ["log", "json", "txt"]:
-                        continue
+                relate_path = src_file[len(data_path) + 1:]
+                # xlog.debug("Add file:%s size:%d", relate_path, file_size)
 
-                    src_file = os.path.join(root, filename)
-                    file_size = os.path.getsize(src_file)
-                    if file_size == 0:
-                        continue
-
-                    relate_path = root[len(data_path) + 1:] + "/" + filename
-                    # xlog.debug("Add file:%s", relate_path)
-
-                    if filename == "client.json":
-                        content = mask_x_tunnel_password(src_file)
-                        zfd.writestr(relate_path, content)
-                    else:
-                        zfd.write(src_file, arcname=relate_path)
-
-                    content_size += file_size
-                    if content_size > max_upload_size:
-                        break
+                if relate_path.endswith("client.json"):
+                    content = mask_x_tunnel_password(src_file)
+                    zfd.writestr(relate_path, content)
+                else:
+                    zfd.write(src_file, arcname=relate_path)
 
                 if content_size > max_upload_size:
                     break

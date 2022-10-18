@@ -45,7 +45,7 @@ class Front(object):
         if not os.path.isdir(tls_certs_path):
             os.mkdir(tls_certs_path)
 
-        host_fn = os.path.join(module_data_path, "tls_host.json")
+        host_fn = os.path.join(module_data_path, "relay_host.json")
         self.host_manager = host_manager.HostManager(host_fn)
 
         self.connect_creator = connect_creator.ConnectCreator(logger, self.config, self.openssl_context, self.host_manager)
@@ -54,7 +54,7 @@ class Front(object):
         ip_source = IpSimpleSource(self.config.ip_source_ips)
 
         default_ip_list_fn = ""
-        ip_list_fn = os.path.join(module_data_path, "tls_relay_ip_list.txt")
+        ip_list_fn = os.path.join(module_data_path, "relay_ip_list.txt")
         self.ip_manager = IpManager(logger, self.config, ip_source, check_local_network, self.check_ip.check_ip,
                  default_ip_list_fn, ip_list_fn, scan_ip_log=None)
         for ip in self.config.ip_source_ips:
