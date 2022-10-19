@@ -109,7 +109,6 @@ class Front(object):
         self.connect_manager.set_ssl_created_cb(None)
         self.http_dispatcher.stop()
         self.connect_manager.stop()
-        self.ip_manager.stop()
 
         self.running = False
 
