@@ -1,3 +1,4 @@
+import random
 
 from front_base.ip_manager import IpManagerBase
 
@@ -7,8 +8,14 @@ class IpManager(IpManagerBase):
         super(IpManager, self).__init__(config, None, logger)
         self.host_manager = host_manager
         self.ip_dict = {}
+
+    def get_ip(self):
         ips = self.host_manager.ips
-        self.ips = [ ip + ":443" for ip in ips]
+        if not ips:
+            return None
+
+        ip = random.choice(ips)
+        return ip + ":443"
 
     def report_connect_fail(self, ip_str, reason=""):
         ip = ip_str.split(":")[0]
