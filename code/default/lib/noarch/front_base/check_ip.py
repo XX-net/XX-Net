@@ -17,14 +17,14 @@ class CheckIp(object):
         self.logger.info("ip:%s use http/1.1", ssl_sock.ip_str)
 
         try:
-            request_data = 'GET %s HTTP/1.1\r\nHost: %s\r\n\r\n' % (self.config.check_ip_path, host)
+            request_data = 'GET %s HTTP/1.1\r\nHost: %s\r\nAccept: */*\r\n\r\n' % (self.config.check_ip_path, host)
             ssl_sock.send(request_data.encode())
 
             response = simple_http_client.Response(ssl_sock)
             response.begin(timeout=5)
             return response
         except Exception as e:
-            self.logger.debug("check ip %s http1 e:%r", ssl_sock.ip_str, e)
+            self.logger.exception("check ip %s http1 e:%r", ssl_sock.ip_str, e)
             return False
 
     def check_http2(self, ssl_sock, host):

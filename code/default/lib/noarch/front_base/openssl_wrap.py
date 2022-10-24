@@ -8,7 +8,9 @@
 
 import sys
 
-if sys.version_info[0] == 3:
-    from .ssl_wrap import SSLConnection, SSLContext, SSLCert
-else:
-    from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
+# if sys.version_info[0] == 3:
+#     from .ssl_wrap import SSLConnection, SSLContext, SSLCert
+# else:
+#     from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
+
+from .tlslite_wrap import SSLConnection, SSLContext, SSLCert

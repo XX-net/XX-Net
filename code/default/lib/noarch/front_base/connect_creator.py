@@ -95,21 +95,13 @@ class ConnectCreator(object):
         try:
             ssl_sock.do_handshake()
         except Exception as e:
+            # self.logger.exception("handshake except:%r", e)
             raise socket.error('tls handshake fail, sni:%s, top:%s e:%r' % (sni, host, e))
 
-        if self.connect_force_http1:
-            ssl_sock.h2 = False
-        elif self.connect_force_http2:
+        if ssl_sock.is_support_h2():
             ssl_sock.h2 = True
         else:
-            try:
-                if ssl_sock.is_support_h2():
-                    ssl_sock.h2 = True
-                else:
-                    ssl_sock.h2 = False
-            except Exception as e:
-                self.logger.exception("alpn:%r", e)
-                ssl_sock.h2 = False
+            ssl_sock.h2 = False
 
         time_handshaked = time.time()
 
@@ -146,8 +138,16 @@ class ConnectCreator(object):
                     raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
 
             elif self.config.check_sni:
-                if not ssl_sock.sni.endswith(peer_cert["altName"]):
-                    raise socket.error('check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, peer_cert["altName"]))
+                alt_name = peer_cert["altName"]
+                if isinstance(alt_name, str):
+                    if not ssl_sock.sni.endswith(alt_name):
+                        raise socket.error('check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, alt_name))
+                elif isinstance(alt_name, list):
+                    for alt_name_n in alt_name:
+                        if ssl_sock.sni.endswith(alt_name_n):
+                            return
+                    raise socket.error(
+                        'check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, alt_name))
 
         else:
             import OpenSSL

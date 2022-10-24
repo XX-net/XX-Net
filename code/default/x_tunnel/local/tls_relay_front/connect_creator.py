@@ -47,23 +47,10 @@ class ConnectCreator(ConnectCreatorBase):
         except Exception as e:
             raise socket.error('tls handshake fail, sni:%s, top:%s e:%r' % (sni, host, e))
 
-        if self.connect_force_http1:
-            ssl_sock.h2 = False
-        elif self.connect_force_http2:
+        if ssl_sock.is_support_h2():
             ssl_sock.h2 = True
         else:
-            try:
-                h2 = ssl_sock.get_alpn_proto_negotiated()
-                if h2 == "h2":
-                    ssl_sock.h2 = True
-                else:
-                    ssl_sock.h2 = False
-            except Exception as e:
-                # xlog.exception("alpn:%r", e)
-                if hasattr(ssl_sock._connection, "protos") and ssl_sock._connection.protos == "h2":
-                    ssl_sock.h2 = True
-                else:
-                    ssl_sock.h2 = False
+            ssl_sock.h2 = False
 
         time_handshaked = time.time()
 

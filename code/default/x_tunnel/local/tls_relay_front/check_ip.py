@@ -47,17 +47,18 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
+    top_domain = None
+
     if len(sys.argv) > 1:
         ip = sys.argv[1]
     else:
-        ip = "207.246.89.177"
+        ip = "127.0.0.1:60000"
+        top_domain = "agentnobody.pics"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
     print(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
         top_domain = sys.argv[2]
-    else:
-        top_domain = None
 
     if len(sys.argv) > 3:
         wait_time = int(sys.argv[3])

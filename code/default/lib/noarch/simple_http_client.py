@@ -174,10 +174,6 @@ class Response(BaseResponse):
                 if time_left < 0:
                     raise socket.error
 
-                r, w, e = select.select([self.sock], [], [self.sock], time_left)
-                if e:
-                    raise socket.error
-
     def read_headers(self, timeout=60.0):
         start_time = time.time()
         lines = []
