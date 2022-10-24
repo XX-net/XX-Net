@@ -731,7 +731,7 @@ class TLSConnection(TLSRecordLayer):
             wireCipherSuites.append(CipherSuite.TLS_FALLBACK_SCSV)
 
         #Initialize acceptable certificate types
-        certificateTypes = settings.getCertificateTypes()
+        certificateTypes = None  # settings.getCertificateTypes()
 
         extensions = []
         extensions.append(TLSExtension().\
@@ -776,7 +776,9 @@ class TLSConnection(TLSRecordLayer):
         extensions.append(TLSExtension().create(ExtensionType.signed_certificate_timestamp, bytearray(0)))
 
         shares = []
-        for group_name in settings.keyShares:
+        grease_key_share = KeyShareEntry().create(self._get_GREASE(), bytearray(1))
+        shares.append(grease_key_share)
+        for group_name in ["x25519"]:
             group_id = getattr(GroupName, group_name)
             key_share = self._genKeyShareEntry(group_id, (3, 4))
 
@@ -805,66 +807,9 @@ class TLSConnection(TLSRecordLayer):
         GREASE_ID = self._get_GREASE()
         extensions.append(TLSExtension().create(GREASE_ID, bytearray(1)))
 
-        #Initialize TLS extensions
-        # if settings.useEncryptThenMAC:
-        #     extensions.append(TLSExtension().\
-        #                       create(ExtensionType.encrypt_then_mac,
-        #                              bytearray(0)))
-
-        session_id = bytearray()
         # when TLS 1.3 advertised, add key shares, set fake session_id
         # shares = None
-        # if next((i for i in settings.versions if i > (3, 3)), None):
-        #     # if we have a client cert configured, do indicate we're willing
-        #     # to perform Post Handshake Authentication
-        #     if certParams and certParams[1]:
-        #         extensions.append(TLSExtension(
-        #             extType=ExtensionType.post_handshake_auth).
-        #             create(bytearray(b'')))
-        #         self._client_keypair = certParams
-        #
-        #     # fake session_id for middlebox compatibility mode
-        #     session_id = getRandomBytes(32)
-
-            # shares = []
-            # for group_name in settings.keyShares:
-            #     group_id = getattr(GroupName, group_name)
-            #     key_share = self._genKeyShareEntry(group_id, (3, 4))
-            #
-            #     shares.append(key_share)
-            # # if TLS 1.3 is enabled, key_share must always be sent
-            # # (unless only static PSK is used)
-            # extensions.append(ClientKeyShareExtension().create(shares))
-
-        # groups = []
-        # #Send the ECC extensions only if we advertise ECC ciphers
-        # if next((cipher for cipher in cipherSuites \
-        #         if cipher in CipherSuite.ecdhAllSuites), None) is not None:
-        #     groups.extend(self._curveNamesToList(settings))
-        #     # extensions.append(ECPointFormatsExtension().\
-        #     #                   create([ECPointFormat.uncompressed]))
-        # # Advertise FFDHE groups if we have DHE ciphers
-        # if next((cipher for cipher in cipherSuites
-        #          if cipher in CipherSuite.dhAllSuites), None) is not None:
-        #     groups.extend(self._groupNamesToList(settings))
-        # # Send the extension only if it will be non empty
-        # if groups:
-        #     if shares:
-        #         # put the groups used for key shares first, and in order
-        #         # (req. from RFC 8446, section 4.2.8)
-        #         share_ids = [i.group for i in shares]
-        #         diff = set(groups) - set(share_ids)
-        #         groups = share_ids + [i for i in groups if i in diff]
-            # extensions.append(SupportedGroupsExtension().create(groups))
-
-        # if settings.use_heartbeat_extension:
-        #     extensions.append(HeartbeatExtension().create(
-        #         HeartbeatMode.PEER_ALLOWED_TO_SEND))
-        #     self.heartbeat_can_receive = True
-
-        # if settings.record_size_limit:
-        #     extensions.append(RecordSizeLimitExtension().create(
-        #         settings.record_size_limit))
+        session_id = getRandomBytes(32)
 
         # don't send empty list of extensions or extensions in SSLv3
         if not extensions or settings.maxVersion == (3, 0):

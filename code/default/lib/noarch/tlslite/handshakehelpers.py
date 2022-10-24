@@ -26,7 +26,7 @@ class HandshakeHelpers(object):
         # Check clientHello size if padding extension should be added
         # we want to add the extension even when using just SSLv3
         # cut-off 4 bytes with the Hello header (ClientHello type + Length)
-        clientHelloLength = len(clientHello.write()) - 4
+        clientHelloLength = len(clientHello.write())
         if 256 <= clientHelloLength <= 511:
             if clientHello.extensions is None:
                 clientHello.extensions = []
