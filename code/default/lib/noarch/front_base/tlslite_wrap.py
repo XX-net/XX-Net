@@ -78,11 +78,16 @@ class SSLConnection(object):
         from asn1crypto.x509 import Certificate
         cert = Certificate.load(cert)
 
+        try:
+            altName = cert.subject_alt_name_value.native
+        except:
+            altName = []
+
         self.peer_cert = {
             "cert": cert,
             "issuer_commonname": cert.issuer.human_friendly,
             "commonName": "",
-            "altName": cert.subject_alt_name_value.native
+            "altName": altName
         }
 
         return self.peer_cert
@@ -157,6 +162,7 @@ class SSLContext(object):
         self.settings = HandshakeSettings()
 
         self.support_alpn_npn = None
+        self.alpn = []
         if support_http2:
             self.alpn = [
                 bytearray(b"h2"),
