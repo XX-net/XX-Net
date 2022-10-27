@@ -169,6 +169,12 @@ class SSLContext(object):
             ]
         self.alpn.append(bytearray(b"http/1.1"))
 
+    def supported_protocol(self):
+        return "TLS 1.3"
+
+    def support_alpn_npn(self):
+        return "alpn"
+
 
 class SSLCert:
     def __init__(self, cert):
