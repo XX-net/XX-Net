@@ -113,6 +113,11 @@ elif [ $os_name = 'Darwin' ]; then
       sudo pip3 install -U PyObjC Pillow
     fi
   fi
+
+  if [ ! -d "data" ]; then
+    # remove the mask for download file warning
+    xattr -c -r code
+  fi
 fi
 
 
