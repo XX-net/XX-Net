@@ -376,7 +376,7 @@ def check_loop():
 
     # wait gae_proxy to start
     # update need gae_proxy as proxy
-    time.sleep(1)
+    time.sleep(500)
 
     while True:
         check_update()

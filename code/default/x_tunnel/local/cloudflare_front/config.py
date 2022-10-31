@@ -35,11 +35,11 @@ class Config(ConfigBase):
         self.set_var("check_sni", 1)
 
         # host_manager
-        self.set_var("update_domains", 1)
+        self.set_var("update_domains", 0)
 
         # ip_manager
-        self.set_var("max_scan_ip_thread_num", 1)
-        self.set_var("max_good_ip_num", 50)
+        self.set_var("max_scan_ip_thread_num", 0)
+        self.set_var("max_good_ip_num", 100)
         self.set_var("target_handshake_time", 500)
         self.set_var("active_connect_interval", 3*60)
         self.set_var("scan_ip_interval", 10)

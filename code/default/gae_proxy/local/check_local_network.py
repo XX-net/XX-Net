@@ -1,4 +1,3 @@
-
 import sys
 import os
 
@@ -8,27 +7,26 @@ import threading
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+    python_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
     root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
+    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
     sys.path.append(root_path)
 
     if sys.platform == "win32":
-        win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+        win32_lib = os.path.abspath(os.path.join(python_path, 'lib', 'win32'))
         sys.path.append(win32_lib)
     elif sys.platform.startswith("linux"):
-        linux_lib = os.path.abspath( os.path.join(python_path, 'lib', 'linux'))
+        linux_lib = os.path.abspath(os.path.join(python_path, 'lib', 'linux'))
         sys.path.append(linux_lib)
-
 
 from gae_proxy.local.config import config
 
 import simple_http_client
 from xlog import getLogger
-xlog = getLogger("gae_proxy")
 
+xlog = getLogger("gae_proxy")
 
 max_timeout = 5
 
@@ -46,10 +44,11 @@ class CheckNetwork(object):
         if config.PROXY_ENABLE:
             if config.PROXY_USER:
                 self.proxy = "%s://%s:%s@%s:%d" % \
-                    (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST, config.PROXY_PORT)
+                             (config.PROXY_TYPE, config.PROXY_USER, config.PROXY_PASSWD, config.PROXY_HOST,
+                              config.PROXY_PORT)
             else:
                 self.proxy = "%s://%s:%d" % \
-                    (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
+                             (config.PROXY_TYPE, config.PROXY_HOST, config.PROXY_PORT)
         else:
             self.proxy = None
 
@@ -98,7 +97,7 @@ class CheckNetwork(object):
                 "accept-encoding": "gzip, deflate, sdch",
                 "accept-language": 'en-US,en;q=0.8,ja;q=0.6,zh-CN;q=0.4,zh;q=0.2',
                 "connection": "keep-alive"
-                }
+            }
             response = self.http_client.request("HEAD", url, header, "", read_payload=False)
             if response:
                 return True
@@ -158,20 +157,20 @@ class CheckNetwork(object):
 
 IPv4 = CheckNetwork("IPv4")
 IPv4.urls = [
-            "https://www.microsoft.com",
-            "https://www.apple.com",
-            "https://code.jquery.com",
-            "https://cdn.bootcss.com",
-            "https://cdnjs.cloudflare.com"]
-IPv4.triger_check_network()
+    "https://www.bing.com",
+    "https://code.jquery.com",
+    "https://cdn.bootcss.com",
+    "https://cdnjs.cloudflare.com"]
+# IPv4.triger_check_network()
 
 IPv6 = CheckNetwork("IPv6")
-IPv6.urls = ["https://ipv6.vm3.test-ipv6.com",
-             "http://[2001:470:1:18::115]",
-             "http://ipv6.lookup.test-ipv6.com",
-             "http://v6.myip.la"
-             ]
-IPv6.triger_check_network()
+IPv6.urls = [
+    "https://ipv6.vm3.test-ipv6.com",
+    "http://[2001:470:1:18::115]",
+    "http://ipv6.lookup.test-ipv6.com",
+    "http://v6.myip.la"
+]
+# IPv6.triger_check_network()
 
 
 def report_ok(ip):
@@ -198,5 +197,5 @@ def is_ok(ip=None):
 
 
 if __name__ == "__main__":
-    #print(IPv6._test_host("http://[2804:10:4068::202:82]"))
+    # print(IPv6._test_host("http://[2804:10:4068::202:82]"))
     IPv4._test_host("https://www.baidu.com")

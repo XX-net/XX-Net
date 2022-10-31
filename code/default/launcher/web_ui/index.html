@@ -443,7 +443,7 @@
                 var currentVer = result['current_version'];
                 document.getElementById("version_on_logo").appendChild(document.createTextNode(currentVer));
 
-                getRELEASENOTE_ISSUEID(currentVer);
+                // getRELEASENOTE_ISSUEID(currentVer);
             }
         });
 
@@ -741,7 +741,7 @@
         window.updateProgress_timer = $.timer(updateProgress, 1000, true);
         updateProgress();
         checkUpdateTimer = $.timer(getUpdateInfo, checkUpdateTimeout, true);
-        window.setTimeout(getUpdateInfo, 1000);
+        window.setTimeout(getUpdateInfo, 300*1000);
     });
 
     $('#update-now').click(updateVersion);

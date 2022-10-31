@@ -35,7 +35,7 @@ class Config(ConfigBase):
         self.set_var("check_sni", "*.herokuapp.com")
 
         # host_manager
-        self.set_var("update_domains", True)
+        self.set_var("update_domains", 0)
 
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 0)
