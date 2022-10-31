@@ -1,4 +1,5 @@
 import os
+import random
 import time
 import json
 import threading
@@ -631,6 +632,11 @@ class ProxySession(object):
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
 
+            if len(upload_post_data) < 84:
+                padding = utils.to_str(utils.generate_random_lowercase(random.randint(64, 256)))
+            else:
+                padding = "Pad"
+
             # xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
             #           transfer_no, send_data_len, send_ack_len, server_timeout)
             try:
@@ -638,7 +644,9 @@ class ProxySession(object):
                                                                   path="/data?tid=%d" % transfer_no,
                                                                   data=upload_post_data,
                                                                   headers={
-                                                                      "Content-Length": str(len(upload_post_data))},
+                                                                      "Content-Length": str(len(upload_post_data)),
+                                                                      "Padding": padding
+                                                                  },
                                                                   timeout=server_timeout + g.config.network_timeout)
 
                 traffic = len(upload_post_data) + len(content) + 645
