@@ -116,7 +116,7 @@ elif [ $os_name = 'Darwin' ]; then
 
   if [ ! -d "data" ]; then
     # remove the mask for download file warning
-    xattr -c -r code
+    xattr -c -r *
   fi
 fi
 
