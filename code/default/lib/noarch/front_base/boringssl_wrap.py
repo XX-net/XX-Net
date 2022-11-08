@@ -63,7 +63,7 @@ class SSLConnection(object):
             return
 
         error = bssl.SSL_get_error(self._connection, ret)
-        print("SSL_connect fail: %s" % error)
+        raise socket.error("SSL_connect fail: %s" % error)
 
     def do_handshake(self):
         ret = bssl.SSL_do_handshake(self._connection)
@@ -71,7 +71,7 @@ class SSLConnection(object):
             return
 
         error = bssl.SSL_get_error(self._connection, ret)
-        print("do_handshake fail: %s" % error)
+        raise socket.error("do_handshake fail: %s" % error)
 
     def is_support_h2(self):
         out_data_pp = ffi.new("uint8_t**", ffi.NULL)
@@ -109,18 +109,17 @@ class SSLConnection(object):
         if self.peer_cert:
             return self.peer_cert
 
-        cert = bssl.SSL_get_peer_certificate(self._connection)
-        alt_names = bssl.get_alt_names(cert)
-        # cert = bssl.getpeercert(self._connection)
         def x509_name_to_string(xname):
             line = bssl.X509_NAME_oneline(xname, ffi.NULL, 0)
             return ffi.string(line)
 
         try:
+            cert = bssl.SSL_get_peer_certificate(self._connection)
+            alt_names_p = bssl.get_alt_names(cert)
+            alt_names = utils.to_str(ffi.string(alt_names_p))
             subject = x509_name_to_string(bssl.X509_get_subject_name(cert))
             issuer = x509_name_to_string(bssl.X509_get_issuer_name(cert))
-            extension = bssl.X509_get_ext(cert, 0)
-            altName = []
+            altName = alt_names.split(";")
         except Exception as e:
             subject = ""
             issuer = ""
@@ -180,7 +179,6 @@ class SSLConnection(object):
                 bssl.SSL_free(self._connection)
                 self._connection = None
 
-                # socket.socket.close(self._sock)
                 self._sock = None
                 self.socket_closed = True
                 if self._on_close:
