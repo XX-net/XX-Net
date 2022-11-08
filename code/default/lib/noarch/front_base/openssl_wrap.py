@@ -13,4 +13,7 @@ import sys
 # else:
 #     from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
 
-from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
+try:
+    from .boringssl_wrap import SSLConnection, SSLContext, SSLCert
+except Exception as e:
+    from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
