@@ -15,5 +15,7 @@ import sys
 
 try:
     from .boringssl_wrap import SSLConnection, SSLContext, SSLCert
+    implementation = "BoringSSL"
 except Exception as e:
     from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
+    implementation = "TLSLite"

@@ -59,6 +59,9 @@ xlog.info("start Version %s", current_version)
 xlog.info("Python version: %s", sys.version)
 xlog.info("System: %s|%s|%s", platform.system(), platform.version(), platform.architecture())
 
+from front_base import openssl_wrap
+xlog.info("TLS implementation: %s", openssl_wrap.implementation)
+
 try:
     import OpenSSL
 except Exception as e2:
