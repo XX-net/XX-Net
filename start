@@ -78,6 +78,12 @@ openwrt_setup_env()
 # get operating system name
 os_name=`uname -s`
 if [ $os_name = 'Linux' ]; then
+
+  PYTHON3="python3/bin/python3"
+  if test -f "$PYTHON3"; then
+    echo "Darwin using embedded python."
+    PYTHON="$PYTHON3"
+  else
     if ! ${PYTHON} -c 'import brotli' 2> /dev/null; then
         echo 'Installing brotli for your system... Please type in your password if requested'
         if has_command zypper; then
@@ -102,12 +108,13 @@ if [ $os_name = 'Linux' ]; then
         fi
         pip install brotli
     fi
+  fi
 elif [ $os_name = 'Darwin' ]; then
 
-  PYTHON310="python3/bin/python3.10"
-  if test -f "$PYTHON310"; then
+  PYTHON3="python3/bin/python3"
+  if test -f "$PYTHON3"; then
     echo "Darwin using embedded python."
-    PYTHON="$PYTHON310"
+    PYTHON="$PYTHON3"
   else
     if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
       sudo pip3 install -U PyObjC Pillow

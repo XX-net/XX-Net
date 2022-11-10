@@ -8,14 +8,22 @@
 
 import sys
 
-# if sys.version_info[0] == 3:
-#     from .ssl_wrap import SSLConnection, SSLContext, SSLCert
-# else:
-#     from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
-
 try:
     from .boringssl_wrap import SSLConnection, SSLContext, SSLCert
     implementation = "BoringSSL"
 except Exception as e:
-    from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
-    implementation = "TLSLite"
+    print("import boringssl except: %r" % e)
+
+    try:
+        from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
+        implementation = "TLSLite, import boringssl except:" + str(e)
+    except Exception as e:
+        print("import tlslite except: %r" % e)
+
+        if sys.version_info[0] == 3:
+            from .ssl_wrap import SSLConnection, SSLContext, SSLCert
+
+            implementation = "ssl, import tlslite except:" + str(e)
+        else:
+            from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
+            implementation = "OpenSSL, import tlslite except:" + str(e)
