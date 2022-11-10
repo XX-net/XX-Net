@@ -81,7 +81,7 @@ if [ $os_name = 'Linux' ]; then
 
   PYTHON3="python3/bin/python3"
   if test -f "$PYTHON3"; then
-    echo "Darwin using embedded python."
+    echo "Linux using embedded python."
     PYTHON="$PYTHON3"
   else
     if ! ${PYTHON} -c 'import brotli' 2> /dev/null; then
