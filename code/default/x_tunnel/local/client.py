@@ -137,7 +137,7 @@ def load_config():
     config.set_var("enable_gae_proxy", 0)
     config.set_var("enable_cloudflare", 1)
     config.set_var("enable_cloudfront", 0)
-    config.set_var("enable_heroku", 0)
+    config.set_var("enable_heroku", 1)
     config.set_var("enable_tls_relay", 1)
     config.set_var("enable_direct", 0)
 

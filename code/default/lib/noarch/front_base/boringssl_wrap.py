@@ -43,7 +43,7 @@ class SSLConnection(object):
         self._connection = bssl.SSL_new(self._context.ctx)
 
         if self.sni:
-            bssl.SSL_set_tlsext_host_name(self._connection, self.sni)
+            bssl.SSL_set_tlsext_host_name(self._connection, utils.to_bytes(self.sni))
 
         bssl.SSL_set_bio(self._connection, bio, bio)
 

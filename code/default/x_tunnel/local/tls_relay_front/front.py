@@ -90,6 +90,7 @@ class Front(object):
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         headers = dict(headers)
         headers["XX-Account"] = self.account
+        headers["X-Path"] = path
 
         response = self.http_dispatcher.request(method, host, path, dict(headers), data, timeout=timeout)
         if not response:

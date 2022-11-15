@@ -1,6 +1,6 @@
 {
   "ovenchapter.herokuapp.com": {
-    "sni_policy": "empty",
+    "sni_policy": "random_prefix",
     "ips": [
       "54.224.34.30",
       "34.201.81.34",

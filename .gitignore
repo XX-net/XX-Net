@@ -1,5 +1,5 @@
 .idea
-data
+/data*
 *~
 *.pyc
 *.swp
