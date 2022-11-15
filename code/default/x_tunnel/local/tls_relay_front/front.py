@@ -68,10 +68,12 @@ class Front(object):
             dat = ips[ip_str]
             sni = dat["sni"]
             url_path = dat["url_path"]
+            port = dat.get("port", 443)
 
             host_info[ip_str] = {
                 "sni":sni,
                 "url_path": url_path,
+                "port": port,
             }
 
             ipv6 = dat["ipv6"]
@@ -79,6 +81,7 @@ class Front(object):
                 host_info[ipv6] = {
                     "sni": sni,
                     "url_path": url_path,
+                    "port": port,
                 }
 
         self.host_manager.set_host(host_info)
