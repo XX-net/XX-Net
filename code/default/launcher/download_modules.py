@@ -138,7 +138,7 @@ def download_worker():
 
 
 def start_download():
-    # time.sleep(10)
+    time.sleep(150)
     th = threading.Thread(target=download_worker)
     th.start()
     return True

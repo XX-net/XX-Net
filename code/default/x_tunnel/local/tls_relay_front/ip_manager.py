@@ -15,7 +15,8 @@ class IpManager(IpManagerBase):
             return None
 
         ip = random.choice(ips)
-        return ip + ":443"
+        port = self.host_manager.info[ip].get("port", 443)
+        return ip + ":" + str(port)
 
     def report_connect_fail(self, ip_str, reason=""):
         ip = ip_str.split(":")[0]
