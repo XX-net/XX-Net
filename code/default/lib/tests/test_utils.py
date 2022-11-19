@@ -23,3 +23,9 @@ class TestIP(unittest.TestCase):
             'b': 3,
             'c': 4
         })
+
+    def test_memory(self):
+        buf = bytearray(8)
+        mv = memoryview(buf)
+        mv3 = mv[3:]
+        print(len(mv3))

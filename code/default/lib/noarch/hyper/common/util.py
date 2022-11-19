@@ -17,14 +17,14 @@ def to_bytestring(element):
     """
     if isinstance(element, bytes):
         return element
-    if isinstance(element, string_types):
-        return element.encode('utf-8')
-    elif isinstance(element, bytes):
-        return element
     elif isinstance(element, memoryview):
         return element.tobytes()
+    elif isinstance(element, bytes):
+        return element
     elif isinstance(element, int):
         return str(element)
+    if isinstance(element, string_types):
+        return element.encode('utf-8')
     else:
         raise ValueError("Non string type:%s" % type(element))
 

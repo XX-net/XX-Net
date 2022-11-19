@@ -23,6 +23,7 @@ if __name__ == "__main__":
 
 from gae_proxy.local.config import config
 
+import utils
 import simple_http_client
 from xlog import getLogger
 
@@ -190,7 +191,7 @@ def report_fail(ip):
 def is_ok(ip=None):
     if not ip:
         return IPv4.is_ok() or IPv6.is_ok()
-    elif "." in ip:
+    elif utils.check_ip_valid4(ip):
         return IPv4.is_ok()
     else:
         return IPv6.is_ok()

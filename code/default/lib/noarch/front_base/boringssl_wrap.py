@@ -115,8 +115,16 @@ class SSLConnection(object):
 
         try:
             cert = bssl.SSL_get_peer_certificate(self._connection)
+            if cert == ffi.NULL:
+                raise Exception("get cert failed")
+
             alt_names_p = bssl.get_alt_names(cert)
+            if alt_names_p == ffi.NULL:
+                raise Exception("get alt_names failed")
+
             alt_names = utils.to_str(ffi.string(alt_names_p))
+            bssl.free(alt_names_p)
+
             subject = x509_name_to_string(bssl.X509_get_subject_name(cert))
             issuer = x509_name_to_string(bssl.X509_get_issuer_name(cert))
             altName = alt_names.split(";")
@@ -139,15 +147,17 @@ class SSLConnection(object):
             ret = bssl.SSL_write(self._connection, data, len(data))
             return ret
         except Exception as e:
-            self.logger.exception("ssl send:%r", e)
+            self._context.logger.exception("ssl send:%r", e)
             raise e
 
     def recv(self, bufsiz, flags=0):
         buf = bytes(bufsiz)
         n = bssl.SSL_read(self._connection, buf, bufsiz)
         if n <= 0:
+            errno = bssl.SSL_get_error(self._connection, n)
+            self._context.logger.warn("recv errno: %d ip:%s", errno, self.ip_str)
             e = socket.error(2)
-            e.errno = 2
+            e.errno = errno
             raise e
 
         dat = buf[:n]
@@ -160,7 +170,11 @@ class SSLConnection(object):
         b = ffi.from_buffer(buf)
         n = bssl.SSL_read(self._connection, b, nbytes)
         if n <= 0:
-            return None
+            errno = bssl.SSL_get_error(self._connection, n)
+            self._context.logger.warn("recv_into errno: %d ip:%s", errno, self.ip_str)
+            e = socket.error(2)
+            e.errno = errno
+            raise e
 
         return n
 
