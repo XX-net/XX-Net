@@ -43,7 +43,9 @@ from gae_proxy.local.host_manager import HostManager
 
 class CheckIp(front_base.check_ip.CheckIp):
     def check_response(self, response):
-        server_type = response.headers.get('Server', "")
+        server_type = response.headers.get(b'Server', b"")
+        if isinstance(server_type, list):
+            server_type = server_type[0]
         self.logger.debug("status:%d", response.status)
         self.logger.debug("Server type:%s", server_type)
 

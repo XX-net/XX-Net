@@ -702,7 +702,9 @@ def handler(method, host, url, headers, body, wfile, fallback=None):
             body_sended = 0
     except Exception as e:
         if sys.version_info[0] == 3 and \
-                (isinstance(e, BrokenPipeError) or isinstance(e, ConnectionAbortedError)):
+                (isinstance(e, BrokenPipeError) or
+                 isinstance(e, ConnectionAbortedError) or
+                 isinstance(e, ssl.SSLEOFError)):
             return
 
         xlog.exception("gae_handler.handler send response fail. e:%r %s", e, url)

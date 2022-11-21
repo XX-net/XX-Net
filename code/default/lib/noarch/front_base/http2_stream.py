@@ -28,7 +28,7 @@ from hyper.common.util import to_host_port_tuple, to_native_string, to_bytestrin
 import simple_http_client
 
 from .http_common import *
-
+from utils import to_bytes
 
 # Define a set of states for a HTTP/2 stream.
 STATE_IDLE               = 0
@@ -172,6 +172,7 @@ class Stream(object):
         """
         Adds a single HTTP header to the headers to be sent on the request.
         """
+        value = to_bytes(value)
         if not replace:
             self.request_headers[name] = value
         else:

@@ -27,6 +27,9 @@ import subprocess
 import ctypes
 from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY
 from ctypes import c_ulong, c_char_p, c_int, c_void_p
+
+import utils
+
 PHANDLE = ctypes.POINTER(HANDLE)
 PDWORD = ctypes.POINTER(DWORD)
 
@@ -49,6 +52,7 @@ GetTokenInformation.restype = BOOL
 TOKEN_READ = 0x20008
 TokenElevation = 0x14
 
+
 class ShellExecuteInfo(ctypes.Structure):
     _fields_ = [('cbSize', DWORD),
                 ('fMask', c_ulong),
@@ -65,11 +69,15 @@ class ShellExecuteInfo(ctypes.Structure):
                 ('dwHotKey', DWORD),
                 ('hIcon', HANDLE),
                 ('hProcess', HANDLE)]
+
     def __init__(self, **kw):
         ctypes.Structure.__init__(self)
         self.cbSize = ctypes.sizeof(self)
         for fieldName, fieldValue in kw.items():
+            if isinstance(fieldValue, str):
+                fieldValue = utils.to_bytes(fieldValue)
             setattr(self, fieldName, fieldValue)
+
 
 PShellExecuteInfo = ctypes.POINTER(ShellExecuteInfo)
 

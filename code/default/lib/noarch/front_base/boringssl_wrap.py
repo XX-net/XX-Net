@@ -86,10 +86,11 @@ class SSLConnection(object):
         out_len_p = ffi.new("unsigned*")
         bssl.SSL_get0_alpn_selected(self._connection, out_data_pp, out_len_p)
 
-        if out_len_p[0] == 0:
+        proto_len = out_len_p[0]
+        if proto_len == 0:
             return False
 
-        if ffi.string(out_data_pp[0]) == b"h2":
+        if ffi.string(out_data_pp[0])[:proto_len] == b"h2":
             return True
 
         return False
@@ -182,7 +183,6 @@ class SSLConnection(object):
                 raise e
 
             dat = buf[:n]
-            self._context.logger.debug("recv %d", n)
             return dat
 
     def recv_into(self, buf, nbytes=None):

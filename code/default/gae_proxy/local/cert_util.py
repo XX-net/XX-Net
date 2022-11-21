@@ -7,7 +7,6 @@ import glob
 import time
 import random
 import base64
-import utils
 import threading
 import subprocess
 import datetime
@@ -38,6 +37,7 @@ if __name__ == "__main__":
         darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
         sys.path.append(darwin_lib)
 
+import utils
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
