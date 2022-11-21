@@ -5,6 +5,7 @@
 
 import socket
 import threading
+import select
 
 import utils
 
@@ -153,13 +154,21 @@ class SSLConnection(object):
                 raise e
 
             try:
-                ret = bssl.SSL_write(self._connection, data, len(data))
-                if ret <= 0:
-                    errno = bssl.SSL_get_error(self._connection, ret)
-                    self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
-                    e = socket.error(2)
-                    e.errno = errno
-                    raise e
+                while True:
+                    ret = bssl.SSL_write(self._connection, data, len(data))
+                    if ret <= 0:
+                        errno = bssl.SSL_get_error(self._connection, ret)
+                        if errno not in [2, 3, ]:
+                            self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
+                            e = socket.error(2)
+                            e.errno = errno
+                            raise e
+                        else:
+                            self._context.logger.debug("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
+                            r = select.select([], [self.fileno()], [], self.timeout)
+                            continue
+                    else:
+                        break
 
                 return ret
             except Exception as e:
