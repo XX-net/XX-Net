@@ -128,6 +128,7 @@ def download_worker():
     if not os.path.isdir(switchyomega_path):
         return
 
+    time.sleep(150)
     sha256_fn = os.path.join(switchyomega_path, "Sha256.txt")
     download_file("https://raw.githubusercontent.com/XX-net/XX-Net/master/SwitchyOmega/Sha256.txt", sha256_fn)
     sha256_dict = get_sha256(sha256_fn)
@@ -138,7 +139,6 @@ def download_worker():
 
 
 def start_download():
-    time.sleep(150)
     th = threading.Thread(target=download_worker)
     th.start()
     return True

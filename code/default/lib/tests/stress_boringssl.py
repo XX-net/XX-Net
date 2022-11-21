@@ -31,7 +31,6 @@ import xlog
 logger = xlog.getLogger("stress")
 
 from front_base.openssl_wrap import SSLContext
-from front_base.host_manager import HostManagerBase
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
@@ -61,4 +60,11 @@ def round():
     front.stop()
 
 
-round()
+def loop():
+    while True:
+        round()
+        # time.sleep(1)
+
+
+loop()
+

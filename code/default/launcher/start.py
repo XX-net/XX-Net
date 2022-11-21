@@ -93,7 +93,7 @@ def exit_handler():
 
 atexit.register(exit_handler)
 
-has_desktop = True
+has_desktop = sys_platform.has_desktop
 
 
 def main():

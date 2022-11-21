@@ -4,6 +4,7 @@
 
 
 import socket
+import threading
 
 import utils
 
@@ -14,6 +15,7 @@ class SSLConnection(object):
     BIO_CLOSE = 1
 
     def __init__(self, context, sock, ip_str=None, sni=None, on_close=None):
+        self._lock = threading.Lock()
         self._context = context
         self._sock = sock
         self.ip_str = utils.to_bytes(ip_str)
@@ -66,6 +68,9 @@ class SSLConnection(object):
         raise socket.error("SSL_connect fail: %s" % error)
 
     def do_handshake(self):
+        if not self._connection:
+            raise socket.error("do_handshake fail: not connected")
+
         ret = bssl.SSL_do_handshake(self._connection)
         if ret == 1:
             return
@@ -74,6 +79,9 @@ class SSLConnection(object):
         raise socket.error("do_handshake fail: %s" % error)
 
     def is_support_h2(self):
+        if not self._connection:
+            return False
+
         out_data_pp = ffi.new("uint8_t**", ffi.NULL)
         out_len_p = ffi.new("unsigned*")
         bssl.SSL_get0_alpn_selected(self._connection, out_data_pp, out_len_p)
@@ -90,20 +98,12 @@ class SSLConnection(object):
         self._sock.setblocking(block)
 
     def __getattr__(self, attr):
-        if attr == "socket_closed":
-            # work around in case close before finished init.
-            return True
-
-        elif attr in ('is_support_h2', "_on_close", '_context', '_sock', '_connection', '_makefile_refs',
+        if attr in ('is_support_h2', "_on_close", '_context', '_sock', '_connection', '_makefile_refs',
                       'sni', 'wrap', 'socket_closed'):
             return getattr(self, attr)
 
         elif hasattr(self._connection, attr):
             return getattr(self._connection, attr)
-
-    def __del__(self):
-        if not self.socket_closed and self._connection:
-            self.close()
 
     def get_cert(self):
         if self.peer_cert:
@@ -113,25 +113,27 @@ class SSLConnection(object):
             line = bssl.X509_NAME_oneline(xname, ffi.NULL, 0)
             return ffi.string(line)
 
-        try:
-            cert = bssl.SSL_get_peer_certificate(self._connection)
-            if cert == ffi.NULL:
-                raise Exception("get cert failed")
+        with self._lock:
+            if self._connection:
+                try:
+                    cert = bssl.SSL_get_peer_certificate(self._connection)
+                    if cert == ffi.NULL:
+                        raise Exception("get cert failed")
 
-            alt_names_p = bssl.get_alt_names(cert)
-            if alt_names_p == ffi.NULL:
-                raise Exception("get alt_names failed")
+                    alt_names_p = bssl.get_alt_names(cert)
+                    if alt_names_p == ffi.NULL:
+                        raise Exception("get alt_names failed")
 
-            alt_names = utils.to_str(ffi.string(alt_names_p))
-            bssl.free(alt_names_p)
+                    alt_names = utils.to_str(ffi.string(alt_names_p))
+                    bssl.free(alt_names_p)
 
-            subject = x509_name_to_string(bssl.X509_get_subject_name(cert))
-            issuer = x509_name_to_string(bssl.X509_get_issuer_name(cert))
-            altName = alt_names.split(";")
-        except Exception as e:
-            subject = ""
-            issuer = ""
-            altName = []
+                    subject = x509_name_to_string(bssl.X509_get_subject_name(cert))
+                    issuer = x509_name_to_string(bssl.X509_get_issuer_name(cert))
+                    altName = alt_names.split(";")
+                except Exception as e:
+                    subject = ""
+                    issuer = ""
+                    altName = []
 
         self.peer_cert = {
             "cert": subject,
@@ -143,40 +145,66 @@ class SSLConnection(object):
         return self.peer_cert
 
     def send(self, data, flags=0):
-        try:
-            ret = bssl.SSL_write(self._connection, data, len(data))
-            return ret
-        except Exception as e:
-            self._context.logger.exception("ssl send:%r", e)
-            raise e
+        with self._lock:
+            if not self._connection:
+                e = socket.error(5)
+                e.errno = 5
+                raise e
+
+            try:
+                ret = bssl.SSL_write(self._connection, data, len(data))
+                if ret <= 0:
+                    errno = bssl.SSL_get_error(self._connection, ret)
+                    self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
+                    e = socket.error(2)
+                    e.errno = errno
+                    raise e
+
+                return ret
+            except Exception as e:
+                self._context.logger.exception("ssl send:%r", e)
+                raise e
 
     def recv(self, bufsiz, flags=0):
-        buf = bytes(bufsiz)
-        n = bssl.SSL_read(self._connection, buf, bufsiz)
-        if n <= 0:
-            errno = bssl.SSL_get_error(self._connection, n)
-            self._context.logger.warn("recv errno: %d ip:%s", errno, self.ip_str)
-            e = socket.error(2)
-            e.errno = errno
-            raise e
+        with self._lock:
+            if not self._connection:
+                e = socket.error(2)
+                e.errno = 5
+                raise e
 
-        dat = buf[:n]
-        return dat
+            buf = bytes(bufsiz)
+            n = bssl.SSL_read(self._connection, buf, bufsiz)
+            if n <= 0:
+                errno = bssl.SSL_get_error(self._connection, n)
+                self._context.logger.warn("recv n:%d errno: %d ip:%s", n, errno, self.ip_str)
+                e = socket.error(2)
+                e.errno = errno
+                raise e
+
+            dat = buf[:n]
+            self._context.logger.debug("recv %d", n)
+            return dat
 
     def recv_into(self, buf, nbytes=None):
-        if not nbytes:
-            nbytes = len(buf)
+        with self._lock:
+            if not self._connection:
+                e = socket.error(2)
+                e.errno = 5
+                raise e
 
-        b = ffi.from_buffer(buf)
-        n = bssl.SSL_read(self._connection, b, nbytes)
-        if n <= 0:
-            errno = bssl.SSL_get_error(self._connection, n)
-            self._context.logger.warn("recv_into errno: %d ip:%s", errno, self.ip_str)
-            e = socket.error(2)
-            e.errno = errno
-            raise e
+            if not nbytes:
+                nbytes = len(buf)
+            buf_new = bytes(nbytes)
 
-        return n
+            n = bssl.SSL_read(self._connection, buf_new, nbytes)
+            if n <= 0:
+                errno = bssl.SSL_get_error(self._connection, n)
+                e = socket.error(2)
+                e.errno = errno
+                raise e
+
+            buf[:n] = buf_new[:n]
+            return n
 
     def read(self, bufsiz, flags=0):
         return self.recv(bufsiz, flags)
@@ -185,27 +213,29 @@ class SSLConnection(object):
         return self.send(buf, flags)
 
     def close(self):
-        if self._makefile_refs < 1:
+        with self._lock:
             self.running = False
             if not self.socket_closed:
+                if self._connection:
+                    bssl.SSL_shutdown(self._connection)
 
-                bssl.SSL_shutdown(self._connection)
-                bssl.SSL_free(self._connection)
-                self._connection = None
-
-                self._sock = None
                 self.socket_closed = True
                 if self._on_close:
                     self._on_close(self.ip_str)
-        else:
-            self._makefile_refs -= 1
+
+    def __del__(self):
+        self.close()
+        if self._connection:
+            bssl.SSL_free(self._connection)
+            self._connection = None
+        self._sock = None
 
     def settimeout(self, t):
         if not self.running:
             return
 
         if self.timeout != t:
-            # self._sock.settimeout(t)
+            self._sock.settimeout(t)
             self.timeout = t
 
     def makefile(self, mode='r', bufsize=-1):
