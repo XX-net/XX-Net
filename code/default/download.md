@@ -10,7 +10,7 @@
 
 
 
-测试版(Test version 4.13.6)：  
+测试版(Test version 4.13.7)：  
 [Win10 版下载](https://github.com/XX-net/XX-Net/releases/download/4.12.6/XX-Net-win10-4.12.6.7z)   
 [Win7 版下载](https://github.com/XX-net/XX-Net/releases/download/4.12.6/XX-Net-win7-4.12.6.7z)   
 [Mac 版下载](https://github.com/XX-net/XX-Net/releases/download/4.12.6/XX-Net-mac-4.12.6.7z)  
