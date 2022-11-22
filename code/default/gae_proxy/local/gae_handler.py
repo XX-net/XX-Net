@@ -842,7 +842,10 @@ class RangeFetch2(object):
         except Exception as e:
             self.keep_running = False
             if sys.version_info[0] == 3 and \
-                    (isinstance(e, BrokenPipeError) or isinstance(e, ConnectionAbortedError)):
+                    (isinstance(e, BrokenPipeError) or
+                     isinstance(e, ConnectionAbortedError) or
+                     isinstance(e, ssl.SSLEOFError)
+                    ):
                 xlog.warn("RangeFetch send response fail:%r %s", e, self.url)
                 return
             else:

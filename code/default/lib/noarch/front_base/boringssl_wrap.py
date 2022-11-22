@@ -159,12 +159,12 @@ class SSLConnection(object):
                     if ret <= 0:
                         errno = bssl.SSL_get_error(self._connection, ret)
                         if errno not in [2, 3, ]:
-                            self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
+                            # self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
                             e = socket.error(2)
                             e.errno = errno
                             raise e
                         else:
-                            self._context.logger.debug("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
+                            # self._context.logger.debug("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
                             r = select.select([], [self.fileno()], [], self.timeout)
                             continue
                     else:
@@ -244,6 +244,7 @@ class SSLConnection(object):
             return
 
         if self.timeout != t:
+            # self._context.logger.debug("settimeout %d", t)
             self._sock.settimeout(t)
             self.timeout = t
 

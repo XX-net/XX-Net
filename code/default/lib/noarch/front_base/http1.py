@@ -161,7 +161,7 @@ class Http1Worker(HttpWorker):
             task.set_state("response_begin")
 
         except Exception as e:
-            self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
+            self.logger.exception("%s h1_request:%r inactive_time:%d task.timeout:%d",
                              self.ip_str, e, time.time() - self.last_recv_time, task.timeout)
             self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
 
