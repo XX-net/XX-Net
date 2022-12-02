@@ -211,6 +211,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.debug('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
             if url_path == '/config':
                 self.req_config_handler()
+            if url_path == "/log":
+                return self.req_log_handler()
             elif url_path == '/update':
                 self.req_update_handler()
             elif url_path == '/config_proxy':
@@ -735,6 +737,28 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.exception("init_module except:%s", e)
 
         self.send_response("text/html", data)
+
+    def req_log_handler(self):
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        if reqs["cmd"]:
+            cmd = reqs["cmd"][0]
+        else:
+            cmd = "get_last"
+
+        if cmd == "get_last":
+            max_line = int(reqs["max_line"][0])
+            data = xlog.get_last_lines(max_line)
+        elif cmd == "get_new":
+            last_no = int(reqs["last_no"][0])
+            data = xlog.get_new_lines(last_no)
+        else:
+            xlog.error('xtunnel log cmd:%s', cmd)
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
 
     def req_debug_handler(self):
         global mem_stat

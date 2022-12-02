@@ -82,7 +82,7 @@
                     <ul class="nav nav-list">%s</ul>
                 </div> <!-- .sidebar-nav -->
             </div> <!-- #sidebar -->
-            <div class="span9">
+            <div class="span9" id="contents">
                 <div id="update-notify" class="alert fade in hide">
                     <span id="update-notify-close">×</span>
                     <span id="update-now" class="update-notify-action">{{ _( "Update now" ) }}</span>
@@ -166,8 +166,10 @@
     $('#menu-button').click(function () {
       if ($('#sidebar').hasClass('hide')) {
         $('#sidebar').removeClass('hide');
+        $('#contents').addClass('hide');
       } else {
         $('#sidebar').addClass('hide');
+        $('#contents').removeClass('hide');
       }
     });
 

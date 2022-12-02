@@ -43,6 +43,7 @@ create_data_path()
 from xlog import getLogger
 log_file = os.path.join(data_launcher_path, "launcher.log")
 xlog = getLogger("launcher", log_path=data_launcher_path, save_start_log=500, save_warning_log=True)
+xlog.set_buffer(500)
 
 import sys_platform
 from config import config

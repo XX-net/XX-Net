@@ -209,6 +209,9 @@ msgstr "自适应宽度"
 msgid "Exit"
 msgstr "退出"
 
+msgid "Log"
+msgstr "日志"
+
 msgid "Hello!"
 msgstr "你好！"
 

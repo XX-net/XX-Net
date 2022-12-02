@@ -41,42 +41,42 @@ class SSLConnection(object):
             raise socket.error('conn %s fail, sni:%s, e:%r' % (self.ip_str, self.sni, e))
 
         fn = self._sock.fileno()
-        bio = bssl.BIO_new_socket(fn, self.BIO_CLOSE)
+        bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
 
-        self._connection = bssl.SSL_new(self._context.ctx)
+        self._connection = bssl.BSSL_SSL_new(self._context.ctx)
 
         if self.sni:
-            bssl.SSL_set_tlsext_host_name(self._connection, utils.to_bytes(self.sni))
+            bssl.BSSL_SSL_set_tlsext_host_name(self._connection, utils.to_bytes(self.sni))
 
-        bssl.SSL_set_bio(self._connection, bio, bio)
+        bssl.BSSL_SSL_set_bio(self._connection, bio, bio)
 
         if self._context.support_http2:
             proto = b"h2"
             setting = b"h2"
-            ret = bssl.SSL_add_application_settings(self._connection,
+            ret = bssl.BSSL_SSL_add_application_settings(self._connection,
                                                     proto, len(proto),
                                                     setting, len(setting))
             if ret != 1:
-                error = bssl.SSL_get_error(self._connection, ret)
+                error = bssl.BSSL_SSL_get_error(self._connection, ret)
                 raise socket.error("set alpn fail, error:%s" % error)
 
         self._sock.setblocking(True)
-        ret = bssl.SSL_connect(self._connection)
+        ret = bssl.BSSL_SSL_connect(self._connection)
         if ret == 1:
             return
 
-        error = bssl.SSL_get_error(self._connection, ret)
+        error = bssl.BSSL_SSL_get_error(self._connection, ret)
         raise socket.error("SSL_connect fail: %s" % error)
 
     def do_handshake(self):
         if not self._connection:
             raise socket.error("do_handshake fail: not connected")
 
-        ret = bssl.SSL_do_handshake(self._connection)
+        ret = bssl.BSSL_SSL_do_handshake(self._connection)
         if ret == 1:
             return
 
-        error = bssl.SSL_get_error(self._connection, ret)
+        error = bssl.BSSL_SSL_get_error(self._connection, ret)
         raise socket.error("do_handshake fail: %s" % error)
 
     def is_support_h2(self):
@@ -85,7 +85,7 @@ class SSLConnection(object):
 
         out_data_pp = ffi.new("uint8_t**", ffi.NULL)
         out_len_p = ffi.new("unsigned*")
-        bssl.SSL_get0_alpn_selected(self._connection, out_data_pp, out_len_p)
+        bssl.BSSL_SSL_get0_alpn_selected(self._connection, out_data_pp, out_len_p)
 
         proto_len = out_len_p[0]
         if proto_len == 0:
@@ -112,13 +112,13 @@ class SSLConnection(object):
             return self.peer_cert
 
         def x509_name_to_string(xname):
-            line = bssl.X509_NAME_oneline(xname, ffi.NULL, 0)
+            line = bssl.BSSL_X509_NAME_oneline(xname, ffi.NULL, 0)
             return ffi.string(line)
 
         with self._lock:
             if self._connection:
                 try:
-                    cert = bssl.SSL_get_peer_certificate(self._connection)
+                    cert = bssl.BSSL_SSL_get_peer_certificate(self._connection)
                     if cert == ffi.NULL:
                         raise Exception("get cert failed")
 
@@ -129,8 +129,8 @@ class SSLConnection(object):
                     alt_names = utils.to_str(ffi.string(alt_names_p))
                     bssl.free(alt_names_p)
 
-                    subject = x509_name_to_string(bssl.X509_get_subject_name(cert))
-                    issuer = x509_name_to_string(bssl.X509_get_issuer_name(cert))
+                    subject = x509_name_to_string(bssl.BSSL_X509_get_subject_name(cert))
+                    issuer = x509_name_to_string(bssl.BSSL_X509_get_issuer_name(cert))
                     altName = alt_names.split(";")
                 except Exception as e:
                     subject = ""
@@ -155,9 +155,9 @@ class SSLConnection(object):
 
             try:
                 while True:
-                    ret = bssl.SSL_write(self._connection, data, len(data))
+                    ret = bssl.BSSL_SSL_write(self._connection, data, len(data))
                     if ret <= 0:
-                        errno = bssl.SSL_get_error(self._connection, ret)
+                        errno = bssl.BSSL_SSL_get_error(self._connection, ret)
                         if errno not in [2, 3, ]:
                             # self._context.logger.warn("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
                             e = socket.error(2)
@@ -183,9 +183,9 @@ class SSLConnection(object):
                 raise e
 
             buf = bytes(bufsiz)
-            n = bssl.SSL_read(self._connection, buf, bufsiz)
+            n = bssl.BSSL_SSL_read(self._connection, buf, bufsiz)
             if n <= 0:
-                errno = bssl.SSL_get_error(self._connection, n)
+                errno = bssl.BSSL_SSL_get_error(self._connection, n)
                 self._context.logger.warn("recv n:%d errno: %d ip:%s", n, errno, self.ip_str)
                 e = socket.error(2)
                 e.errno = errno
@@ -205,9 +205,9 @@ class SSLConnection(object):
                 nbytes = len(buf)
             buf_new = bytes(nbytes)
 
-            n = bssl.SSL_read(self._connection, buf_new, nbytes)
+            n = bssl.BSSL_SSL_read(self._connection, buf_new, nbytes)
             if n <= 0:
-                errno = bssl.SSL_get_error(self._connection, n)
+                errno = bssl.BSSL_SSL_get_error(self._connection, n)
                 e = socket.error(2)
                 e.errno = errno
                 raise e
@@ -226,7 +226,7 @@ class SSLConnection(object):
             self.running = False
             if not self.socket_closed:
                 if self._connection:
-                    bssl.SSL_shutdown(self._connection)
+                    bssl.BSSL_SSL_shutdown(self._connection)
 
                 self.socket_closed = True
                 if self._on_close:
@@ -235,7 +235,7 @@ class SSLConnection(object):
     def __del__(self):
         self.close()
         if self._connection:
-            bssl.SSL_free(self._connection)
+            bssl.BSSL_SSL_free(self._connection)
             self._connection = None
         self._sock = None
 
@@ -261,22 +261,22 @@ class SSLContext(object):
         self.logger = logger
         self.context = self
 
-        method = bssl.TLS_method()
-        self.ctx = bssl.SSL_CTX_new(method)
+        method = bssl.BSSL_TLS_method()
+        self.ctx = bssl.BSSL_SSL_CTX_new(method)
         self.support_http2 = support_http2
-        bssl.SSL_CTX_set_grease_enabled(self.ctx, 1)
+        bssl.BSSL_SSL_CTX_set_grease_enabled(self.ctx, 1)
 
         cmd = b"ALL:!aPSK:!ECDSA+SHA1:!3DES"
-        bssl.SSL_CTX_set_cipher_list(self.ctx, cmd)
+        bssl.BSSL_SSL_CTX_set_cipher_list(self.ctx, cmd)
 
         if support_http2:
             alpn = b""
             for proto in [b"h2", b"http/1.1"]:
                 proto_len = len(proto)
                 alpn += proto_len.to_bytes(1, 'big') + proto
-            bssl.SSL_CTX_set_alpn_protos(self.ctx, alpn, len(alpn))
-        bssl.SSL_CTX_enable_ocsp_stapling(self.ctx)
-        bssl.SSL_CTX_enable_signed_cert_timestamps(self.ctx)
+            bssl.BSSL_SSL_CTX_set_alpn_protos(self.ctx, alpn, len(alpn))
+        bssl.BSSL_SSL_CTX_enable_ocsp_stapling(self.ctx)
+        bssl.BSSL_SSL_CTX_enable_signed_cert_timestamps(self.ctx)
 
         # SSL_SIGN_ECDSA_SECP256R1_SHA256, SSL_SIGN_RSA_PSS_RSAE_SHA256,
         # SSL_SIGN_RSA_PKCS1_SHA256,       SSL_SIGN_ECDSA_SECP384R1_SHA384,
@@ -289,9 +289,9 @@ class SSLContext(object):
             algs_buf[i] = alg
             i += 1
         cdata_ptr = ffi.cast("uint16_t *", algs_buf)
-        bssl.SSL_CTX_set_verify_algorithm_prefs(self.ctx, cdata_ptr, len(algs))
+        bssl.BSSL_SSL_CTX_set_verify_algorithm_prefs(self.ctx, cdata_ptr, len(algs))
 
-        bssl.SSL_CTX_set_min_proto_version(self.ctx, 0x0303)
+        bssl.BSSL_SSL_CTX_set_min_proto_version(self.ctx, 0x0303)
 
         bssl.SetCompression(self.ctx)
 

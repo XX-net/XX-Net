@@ -117,6 +117,20 @@ elif sys.platform == "darwin":
 
     def on_quit():
         sys_tray.on_quit()
+
+elif sys.platform == "ios":
+    xlog.info("This is iOS")
+    has_desktop = False
+    platform = "ios"
+    platform_lib = ""
+
+    def show_systray():
+        from non_tray import sys_tray
+        sys_tray.serve_forever()
+
+    def on_quit():
+        sys_tray.on_quit()
+
 else:
     xlog.warn(("detect platform fail:%s" % sys.platform))
 
