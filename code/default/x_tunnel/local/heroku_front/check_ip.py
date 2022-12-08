@@ -146,7 +146,7 @@ if __name__ == "__main__":
         ip = sys.argv[1]
     else:
         ip = "54.224.34.30"
-        print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+        print("Usage: check_ip.py [ip] [top_domain] [sni=0]")
     print(("test ip:%s" % ip))
 
     if len(sys.argv) > 2:
@@ -155,13 +155,12 @@ if __name__ == "__main__":
         top_domain = "ovenchapter.herokuapp.com"
 
     if len(sys.argv) > 3:
-        wait_time = int(sys.argv[3])
+        sni = (sys.argv[3])
     else:
-        wait_time = 0
+        sni = ""
 
     # check_all()
-    sni = ""
     host = top_domain
-    check_one(ip, sni, host, wait_time)
+    check_one(ip, sni, host, 3)
 
     front.stop()

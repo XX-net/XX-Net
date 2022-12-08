@@ -13,7 +13,7 @@ logger.set_buffer(500)
 from .config import Config
 from . import host_manager
 from front_base.openssl_wrap import SSLContext
-from front_base.connect_creator import ConnectCreator
+from .connect_creator import ConnectCreator
 from .ip_manager import IpManager
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager

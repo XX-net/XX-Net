@@ -41,7 +41,8 @@ class HostManager(HostManagerBase):
                         for ip in ips:
                             self.ip_map[ip] = {
                                 "host": host,
-                                "sni_policy": info["sni_policy"]
+                                "sni_policy": info["sni_policy"],
+                                "sni_check": info["sni_check"],
                             }
                             self.ips.append(ip)
 

@@ -22,6 +22,7 @@ class Config(ConfigBase):
         self.set_var("http1_ping_interval", 0)
         self.set_var("http1_idle_time", 50)
         self.set_var("http1_max_process_tasks", 35)
+        self.set_var("http2_status_to_close", [404])
 
         # connect_manager
         self.set_var("connection_pool_min", 0)
