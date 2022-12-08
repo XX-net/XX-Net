@@ -34,7 +34,9 @@ class Front(object):
         self.config = Config(config_path)
 
         self.light_config = Config(config_path)
+        self.light_config.dispather_min_idle_workers = 0
         self.light_config.dispather_min_workers = 1
+        self.light_config.dispather_max_workers = 1
         self.light_config.max_good_ip_num = 10
 
         ca_certs = os.path.join(current_path, "cacert.pem")

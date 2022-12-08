@@ -5,6 +5,7 @@ import os
 all_fronts = []
 light_fronts = []
 session_fronts = []
+cloudflare_front = None
 
 from . import global_var as g
 
@@ -19,6 +20,8 @@ xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=500, sav
 
 
 def init():
+    global cloudflare_front
+
     if g.config.enable_gae_proxy:
         from . import gae_front
         if gae_front.get_dispatcher():
@@ -27,7 +30,8 @@ def init():
             light_fronts.append(gae_front)
 
     if g.config.enable_cloudflare:
-        from .cloudflare_front.front import front as cloudflare_front
+        from .cloudflare_front.front import front as _cloudflare_front
+        cloudflare_front = _cloudflare_front
         all_fronts.append(cloudflare_front)
         session_fronts.append(cloudflare_front)
         light_fronts.append(cloudflare_front)
@@ -98,6 +102,11 @@ def get_front(host, timeout):
         best_front = None
         best_score = 999999999
         for front in fronts:
+            if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
+                # share the x-tunnel connection with dns.xx-net.org
+                # x-tunnel server will forward the request to dns.xx-net.org
+                host = g.server_host
+
             dispatcher = front.get_dispatcher(host)
             if not dispatcher:
                 continue
@@ -144,6 +153,11 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
         if not front:
             xlog.warn("get_front fail")
             return "", 602, {}
+
+        if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
+            # share the x-tunnel connection with dns.xx-net.org
+            # x-tunnel server will forward the request to dns.xx-net.org
+            host = g.server_host
 
         content, status, response = front.request(
             method, host=host, path=path, headers=dict(headers), data=data, timeout=timeout)
