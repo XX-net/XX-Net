@@ -487,7 +487,10 @@ class ParallelQuery():
         for func in funcs:
             threading.Thread(target=self.query_worker, args=(task, func)).start()
 
-        ips = task.get(3) or []
+        ips = task.get(5)
+        if not ips:
+            ips = []
+
         return ips
 
 
@@ -563,7 +566,7 @@ class CombineDnsQuery():
                 for ip in ip_ips:
                     out_ips.append(ip)
 
-            elif ip not in ips:
+            elif ip not in out_ips:
                 out_ips.append(ip)
 
         return out_ips
