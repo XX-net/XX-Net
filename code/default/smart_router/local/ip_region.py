@@ -56,7 +56,7 @@ class IpRegion(object):
         # 每 4 字节为一个索引范围 fip：BE short -> int，对应 IP 范围序数
         self.index = struct.unpack('>' + 'h' * (224 * 2), index)
         # 每 8 字节对应一段直连 IP 范围和一段非直连 IP 范围
-        self.data = struct.unpack('4s' * (data_len // 4), data)
+        self.raw_data = data
 
     def check_ip(self, ip):
         ip = utils.to_str(ip)
@@ -77,10 +77,11 @@ class IpRegion(object):
             return False
         hi = index[fip + 1]
         #与 IP 范围比较确定 IP 位置
-        data = self.data
         while lo < hi:
             mid = (lo + hi) // 2
-            if data[mid] > nip:
+            mid_dat_raw = self.raw_data[mid * 4: mid*4 + 4]
+            mid_dat = struct.unpack('4s', mid_dat_raw)[0]
+            if mid_dat > nip:
                 hi = mid
             else:
                 lo = mid + 1
