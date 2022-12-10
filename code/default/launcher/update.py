@@ -26,6 +26,7 @@ from xlog import getLogger
 xlog = getLogger("launcher")
 from config import config, app_name
 import update_from_github
+import sys_platform
 
 
 update_url = "https://xxnet-update.appspot.com/update.json"
@@ -366,7 +367,7 @@ def check_new_machine():
         if sys.platform == "win32" and platform.release() == "XP":
             notify_install_tcpz_for_winXp()
 
-        if os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0":
+        if sys_platform.has_desktop and os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0":
             xlog.info("generate desktop shortcut")
             create_desktop_shortcut()
 
