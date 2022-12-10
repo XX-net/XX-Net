@@ -122,6 +122,16 @@ def _get_os_language():
         except Exception as e:
             xlog.exception("get lang except:%r", e)
             return None
+    elif sys_platform.platform == "ios":
+        lang_code = os.environ["IOS_LANG"]
+        if 'zh' in lang_code:
+            return 'zh_CN'
+        elif 'en' in lang_code:
+            return 'en_US'
+        elif 'fa' in lang_code:
+            return 'fa_IR'
+        else:
+            return None
     else:
         try:
             lang_code, code_page = locale.getdefaultlocale()
