@@ -99,6 +99,9 @@ def upload_logs_thread():
             break
 
     sleep(30)
+    if not g.running:
+        return
+
     session_id = utils.to_str(g.session.session_id)
     data = pack_logs()
     upload(session_id, data)
