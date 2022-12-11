@@ -2,7 +2,7 @@
 # Which is used by  ip manager
 #  ip manager keep a connection number counter for every ip.
 
-
+import time
 import socket
 import threading
 import select
@@ -19,6 +19,8 @@ class SSLConnection(object):
         self._lock = threading.Lock()
         self._context = context
         self._sock = sock
+        self._fileno = self._sock.fileno()
+        self._bio = None
         self.ip_str = utils.to_bytes(ip_str)
         self.sni = sni
         self._makefile_refs = 0
@@ -40,15 +42,15 @@ class SSLConnection(object):
         except Exception as e:
             raise socket.error('conn %s fail, sni:%s, e:%r' % (self.ip_str, self.sni, e))
 
-        fn = self._sock.fileno()
-        bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
+        fn = self._fileno
+        self._bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
 
         self._connection = bssl.BSSL_SSL_new(self._context.ctx)
 
         if self.sni:
             bssl.BSSL_SSL_set_tlsext_host_name(self._connection, utils.to_bytes(self.sni))
 
-        bssl.BSSL_SSL_set_bio(self._connection, bio, bio)
+        bssl.BSSL_SSL_set_bio(self._connection, self._bio, self._bio)
 
         if self._context.support_http2:
             proto = b"h2"
@@ -97,6 +99,7 @@ class SSLConnection(object):
         return False
 
     def setblocking(self, block):
+        self._context.logger.debug("%s setblocking: %d", self.ip_str, block)
         self._sock.setblocking(block)
 
     def __getattr__(self, attr):
@@ -155,6 +158,7 @@ class SSLConnection(object):
 
             try:
                 while True:
+                    # self._context.logger.debug("%s send %d ", self.ip_str, len(data))
                     ret = bssl.BSSL_SSL_write(self._connection, data, len(data))
                     if ret <= 0:
                         errno = bssl.BSSL_SSL_get_error(self._connection, ret)
@@ -182,38 +186,30 @@ class SSLConnection(object):
                 e.errno = 5
                 raise e
 
+            bufsiz = min(16*1024, bufsiz)
             buf = bytes(bufsiz)
+            # t0 = time.time()
             n = bssl.BSSL_SSL_read(self._connection, buf, bufsiz)
+            # t2 = time.time()
+            # self._context.logger.debug("%s read: %d t:%f", self.ip_str, n, t2 - t0)
             if n <= 0:
                 errno = bssl.BSSL_SSL_get_error(self._connection, n)
-                self._context.logger.warn("recv n:%d errno: %d ip:%s", n, errno, self.ip_str)
-                e = socket.error(2)
+                # self._context.logger.warn("recv n:%d errno: %d ip:%s", n, errno, self.ip_str)
+                e = socket.error(errno)
                 e.errno = errno
                 raise e
 
-            dat = buf[:n]
+            dat = bytes(buf[:n])
             return dat
 
     def recv_into(self, buf, nbytes=None):
-        with self._lock:
-            if not self._connection:
-                e = socket.error(2)
-                e.errno = 5
-                raise e
+        if not nbytes:
+            nbytes = len(buf)
 
-            if not nbytes:
-                nbytes = len(buf)
-            buf_new = bytes(nbytes)
-
-            n = bssl.BSSL_SSL_read(self._connection, buf_new, nbytes)
-            if n <= 0:
-                errno = bssl.BSSL_SSL_get_error(self._connection, n)
-                e = socket.error(2)
-                e.errno = errno
-                raise e
-
-            buf[:n] = buf_new[:n]
-            return n
+        dat = self.recv(nbytes)
+        n = len(dat)
+        buf[:n] = dat
+        return n
 
     def read(self, bufsiz, flags=0):
         return self.recv(bufsiz, flags)
@@ -237,6 +233,9 @@ class SSLConnection(object):
         if self._connection:
             bssl.BSSL_SSL_free(self._connection)
             self._connection = None
+        # if self._bio:
+        #     bssl.BSSL_BIO_free(self._bio)
+        #     self._bio = None
         self._sock = None
 
     def settimeout(self, t):
@@ -253,7 +252,7 @@ class SSLConnection(object):
         return socket._fileobject(self, mode, bufsize, close=True)
 
     def fileno(self):
-        return self._sock.fileno()
+        return self._fileno
 
 
 class SSLContext(object):
