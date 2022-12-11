@@ -7,7 +7,7 @@ module_data_path = os.path.join(data_path, 'x_tunnel')
 
 import xlog
 logger = xlog.getLogger("cloudflare_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
-logger.set_buffer(500)
+logger.set_buffer(300)
 
 from .config import Config
 from . import host_manager

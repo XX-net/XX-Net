@@ -20,7 +20,7 @@ sys.path.append(noarch_lib)
 
 import utils
 import simple_http_client
-import sys_platform
+import global_var
 from xlog import getLogger
 
 xlog = getLogger("launcher")
@@ -107,7 +107,7 @@ def download_file(url, filename):
 
                 downloaded = 0
                 with open(filename, 'wb') as fp:
-                    while True:
+                    while global_var.running:
                         time_left = timeout - (time.time() - start_time)
                         if time_left < 0:
                             raise Exception("time out")
@@ -128,7 +128,7 @@ def download_file(url, filename):
                 left = file_size
                 downloaded = 0
                 with open(filename, 'wb') as fp:
-                    while True:
+                    while global_var.running:
                         chunk_len = min(65536, left)
                         if not chunk_len:
                             break

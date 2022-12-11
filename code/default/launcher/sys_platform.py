@@ -9,6 +9,7 @@ xlog = getLogger("launcher")
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
+import global_var
 from non_tray import sys_tray
 
 
@@ -124,9 +125,14 @@ elif sys.platform == "ios":
     platform = "ios"
     platform_lib = ""
 
+    import time
+    import gc
+    gc.set_threshold(200, 12, 12)
+
     def show_systray():
-        from non_tray import sys_tray
-        sys_tray.serve_forever()
+        while global_var.running:
+            time.sleep(30)
+            gc.collect()
 
     def on_quit():
         sys_tray.on_quit()

@@ -232,6 +232,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
+            elif url_path == "/gc":
+                self.req_gc_handler()
             elif url_path == '/restart':
                 self.send_response('text/html', '{"status":"success"}')
                 update_from_github.restart_xxnet()
@@ -760,6 +762,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
 
+    def req_gc_handler(self):
+        import gc
+        count = gc.get_count()
+        gc.collect()
+        self.send_response("text/plain", "gc collected, count:%d,%d,%d" % count)
+
     def req_debug_handler(self):
         global mem_stat
         req = urlparse(self.path).query
@@ -768,7 +776,14 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         try:
             import tracemalloc
             import gc
+            import os
+            import linecache
+
+            python_lib = os.path.dirname(os.__file__)
             gc.collect()
+
+            if not mem_stat:
+                tracemalloc.start()
 
             if not mem_stat or "reset" in reqs:
                 mem_stat = tracemalloc.take_snapshot()
@@ -779,8 +794,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 top_stats = snapshot.compare_to(mem_stat, 'traceback')
             else:
                 top_stats = snapshot.statistics('traceback')
-
-            python_lib = os.path.join(root_path, "python27")
 
             dat = ""
             for stat in top_stats[:100]:

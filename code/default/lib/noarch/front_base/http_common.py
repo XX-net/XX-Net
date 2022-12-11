@@ -202,6 +202,8 @@ class HttpWorker(object):
         self.rtt = rtt
         self.speed = speed
         self.speed_history.append(speed)
+        if len(self.speed_history) > 20:
+            self.speed_history.pop(0)
         self.log_debug_data(rtt, sent, received)
 
     def close(self, reason):

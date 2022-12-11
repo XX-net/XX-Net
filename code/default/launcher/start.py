@@ -12,7 +12,7 @@ import atexit
 # for OpenWrt
 import threading
 try:
-    threading.stack_size(128 * 1024)
+    threading.stack_size(64 * 1024)
 except:
     pass
 
@@ -43,7 +43,7 @@ create_data_path()
 from xlog import getLogger
 log_file = os.path.join(data_launcher_path, "launcher.log")
 xlog = getLogger("launcher", log_path=data_launcher_path, save_start_log=500, save_warning_log=True)
-xlog.set_buffer(500)
+xlog.set_buffer(100)
 
 import sys_platform
 from config import config
@@ -52,6 +52,7 @@ import module_init
 import update
 import update_from_github
 import download_modules
+import global_var
 
 
 current_version = update_from_github.current_version()
@@ -159,13 +160,14 @@ def main():
     if config.show_systray:
         sys_platform.show_systray()
     else:
-        while True:
+        while global_var.running:
             time.sleep(1)
 
 
 try:
     main()
 except KeyboardInterrupt:  # Ctrl + C on console
+    global_var.running = False
     module_init.stop_all()
     os._exit(0)
     sys.exit()

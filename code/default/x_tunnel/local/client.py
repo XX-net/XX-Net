@@ -128,7 +128,7 @@ def load_config():
 
     config.set_var("network_timeout", 10)
 
-    config.set_var("windows_size", 16 * 1024 * 1024)
+    config.set_var("windows_size", 4 * 1024 * 1024)
 
     # reporter
     config.set_var("timeout_threshold", 2)
@@ -150,7 +150,7 @@ def load_config():
         xlog.log_to_file(os.path.join(data_path, "client.log"))
 
     xlog.setLevel(config.log_level)
-    xlog.set_buffer(500)
+    xlog.set_buffer(200)
     g.config = config
 
 

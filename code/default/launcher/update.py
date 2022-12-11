@@ -27,6 +27,7 @@ xlog = getLogger("launcher")
 from config import config, app_name
 import update_from_github
 import sys_platform
+import global_var
 
 
 update_url = "https://xxnet-update.appspot.com/update.json"
@@ -379,7 +380,7 @@ def check_loop():
     # update need gae_proxy as proxy
     time.sleep(500)
 
-    while True:
+    while global_var.running:
         check_update()
         time.sleep(3600 * 24)
 

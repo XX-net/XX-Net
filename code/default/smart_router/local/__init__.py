@@ -15,7 +15,7 @@ if not os.path.isdir(data_path):
 
 from xlog import getLogger
 xlog = getLogger("smart_router", log_path=data_path, save_start_log=200, save_warning_log=True)
-xlog.set_buffer(500)
+xlog.set_buffer(100)
 
 import xconfig
 import simple_http_server
