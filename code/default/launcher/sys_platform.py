@@ -10,7 +10,6 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
 import global_var
-from non_tray import sys_tray
 
 
 if sys.platform.startswith("linux"):
@@ -132,7 +131,9 @@ elif sys.platform == "ios":
     def show_systray():
         while global_var.running:
             time.sleep(30)
-            gc.collect()
+            count = gc.get_count()
+            c = gc.collect()
+            xlog.debug("GC: count: %d,%d,%d Collect:%d", count[0], count[1], count[2], c)
 
     def on_quit():
         sys_tray.on_quit()

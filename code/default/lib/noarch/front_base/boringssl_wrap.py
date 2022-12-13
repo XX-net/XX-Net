@@ -20,7 +20,6 @@ class SSLConnection(object):
         self._context = context
         self._sock = sock
         self._fileno = self._sock.fileno()
-        self._bio = None
         self.ip_str = utils.to_bytes(ip_str)
         self.sni = sni
         self._makefile_refs = 0
@@ -43,14 +42,14 @@ class SSLConnection(object):
             raise socket.error('conn %s fail, sni:%s, e:%r' % (self.ip_str, self.sni, e))
 
         fn = self._fileno
-        self._bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
+        bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
 
         self._connection = bssl.BSSL_SSL_new(self._context.ctx)
 
         if self.sni:
             bssl.BSSL_SSL_set_tlsext_host_name(self._connection, utils.to_bytes(self.sni))
 
-        bssl.BSSL_SSL_set_bio(self._connection, self._bio, self._bio)
+        bssl.BSSL_SSL_set_bio(self._connection, bio, bio)
 
         if self._context.support_http2:
             proto = b"h2"
@@ -233,9 +232,6 @@ class SSLConnection(object):
         if self._connection:
             bssl.BSSL_SSL_free(self._connection)
             self._connection = None
-        # if self._bio:
-        #     bssl.BSSL_BIO_free(self._bio)
-        #     self._bio = None
         self._sock = None
 
     def settimeout(self, t):

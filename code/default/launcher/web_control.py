@@ -222,12 +222,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             elif url_path == '/init_module':
                 self.req_init_module_handler()
             elif url_path == '/quit':
-                content = b'Exited successfully.'
+                content = b'System: %s Exited successfully.' % utils.to_bytes(sys_platform.platform)
                 self.send_response('text/html', content)
                 self.wfile.flush()
 
-                if sys_platform.platform == "android":
-                    simple_http_client.request("GET", "http://localhost:8084/quit/", timeout=0.2)
+                if sys_platform.platform in ["android", "ios"]:
+                    try:
+                        simple_http_client.request("GET", "http://localhost:8084/quit/", timeout=1)
+                    except:
+                        pass
 
                 sys_platform.on_quit()
             elif url_path == "/debug":
@@ -763,9 +766,15 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response(mimetype, data)
 
     def req_gc_handler(self):
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
+
         import gc
         count = gc.get_count()
-        gc.collect()
+
+        if "collect" in reqs:
+            gc.collect()
+
         self.send_response("text/plain", "gc collected, count:%d,%d,%d" % count)
 
     def req_debug_handler(self):

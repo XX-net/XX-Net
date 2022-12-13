@@ -26,7 +26,7 @@
             <input id="popup-webui" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
-    <div class="row-fluid">
+    <div class="row-fluid" id="allow_remote">
         <div class="config_label">{{ _( "Allow Remote" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="config_switch">
             <input id="allow-remote" type="checkbox" data-toggle="switch"/>
@@ -198,6 +198,11 @@
                     $("#show_systray").hide();
                     $("#run_as_green_software").hide();
                     $("#smart_router_model").hide();
+                }
+                if (result['platform'] == 'ios') {
+                    // currently not support,
+                    // listen to 0.0.0.0 lead to failed access from 127.0.0.1 in iOS.
+                    $("#allow_remote").hide();
                 }
                 if (result['platform'] != 'android') {
                     $("#show_android_notification_").hide();

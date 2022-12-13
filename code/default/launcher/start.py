@@ -75,6 +75,7 @@ running_file = os.path.join(data_launcher_path, "Running.Lck")
 def uncaught_exception_handler(etype, value, tb):
     if etype == KeyboardInterrupt:  # Ctrl + C on console
         xlog.warn("KeyboardInterrupt, exiting...")
+        global_var.running = False
         module_init.stop_all()
         os._exit(0)
 
@@ -89,6 +90,7 @@ sys.excepthook = uncaught_exception_handler
 
 def exit_handler():
     xlog.info('Stopping all modules before exit!')
+    global_var.running = False
     module_init.stop_all()
     web_control.stop()
 
