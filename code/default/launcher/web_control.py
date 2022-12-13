@@ -223,15 +223,21 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.req_init_module_handler()
             elif url_path == '/quit':
                 content = b'System: %s Exited successfully.' % utils.to_bytes(sys_platform.platform)
-                self.send_response('text/html', content)
-                self.wfile.flush()
+                try:
+                    self.send_response('text/html', content)
+                    self.wfile.flush()
+                except:
+                    pass
 
                 if sys_platform.platform in ["android", "ios"]:
                     try:
+                        xlog.info("request http://localhost:8084/quit/")
                         simple_http_client.request("GET", "http://localhost:8084/quit/", timeout=1)
-                    except:
+                    except Exception as e:
+                        xlog.warn("request http://localhost:8084/quit/ e:%r", e)
                         pass
 
+                xlog.info("start quit")
                 sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
