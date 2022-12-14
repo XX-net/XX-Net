@@ -1,9 +1,9 @@
 <ul class="nav nav-tabs">
     <li class="active"><a href="#info" data-toggle="tab">{{ _("Account") }}</a></li>
-    <li class="hide"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
-    <li class="hide"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
-    <li class="hide"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
-    <li class="hide"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
+    <li class="hide" id="li-setting"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
+    <li class="hide" id="li-plans"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
+    <li class="hide" id="li-history"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
+    <li class="hide" id="li-help"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
 </ul>
 <div class="tab-content">
     <div id="info" class="tab-pane fade in active">
@@ -98,12 +98,12 @@
         </form> <!-- #register-form -->
         <div id="account-information" class="hide">
             <div class="section">
-                <h4>{{ _("Summary") }}</h4>
+<!--                <h4>{{ _("Summary") }}</h4>-->
                 <div class="row-fluid">
-                    <div class="span4">
+                    <div class="span2">
                         <label for="login-account">{{ _("Account") }}</label>
                     </div> <!-- .span4 -->
-                    <div class="span8">
+                    <div class="span4">
                         <p>
                             <span id="login-account">N/a</span>
                             <a id="logout-trigger" href="javascript:void(0)">[{{ _("Logout") }}]</a>
@@ -111,10 +111,10 @@
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
                 <div class="row-fluid">
-                    <div class="span4">
+                    <div class="span2">
                         <label for="credit">{{ _("Credit") }}</label>
                     </div> <!-- .span4 -->
-                    <div class="span8">
+                    <div class="span4">
                         <p>
                             <span id="credit">N/a</span>
                             <!-- <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a> -->
@@ -124,17 +124,19 @@
                 </div> <!-- .row-fluid -->
             </div> <!-- .section -->
             <div class="section">
-                <h4>{{ _("Available Bandwidth") }}</h4>
-                <p id="no-bandwidth">{{ _("No bandwidth available.") }}</p>
-                <table id="available-bandwidth" class="table hide">
-                    <thead>
-                        <tr>
-                            <th>{{ _("Expire Time") }}</th>
-<!--                            <th>{{ _("Left Bandwidth") }}</th>-->
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <h4>{{ _("Available Plan") }}:</h4>
+                <p id="no-bandwidth">&nbsp;&nbsp;&nbsp;{{ _("No Valid Plan available.") }}</p>
+                <div id="available-plan">
+                    <table id="available-bandwidth" class="table hide">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Expire Time") }}</th>
+    <!--                            <th>{{ _("Left Bandwidth") }}</th>-->
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div> <!-- .section -->
         </div> <!-- #account-information -->
     </div> <!-- #info -->
@@ -394,6 +396,35 @@
     });
 </script>
 <script type="text/javascript">
+    var standalone = window.navigator.standalone,
+        userAgent = window.navigator.userAgent.toLowerCase(),
+        safari = /safari/.test( userAgent ),
+        ios = /iphone|ipod|ipad/.test( userAgent );
+    var uiwebview = false;
+
+    if( ios ) {
+        if ( !standalone && safari ) {
+            //browser
+        } else if ( standalone && !safari ) {
+            //standalone
+        } else if ( !standalone && !safari ) {
+            uiwebview = true;
+        };
+    } else {
+        if (typeof window.Android !== "undefined"){
+            uiwebview = true;
+        }
+    }
+
+    function show_menus() {
+        $('#li-setting').removeClass('hide');
+        if (!uiwebview) {
+            $('#li-plans').removeClass('hide');
+            $('#li-history').removeClass('hide');
+            $('#li-help').removeClass('hide');
+        }
+    }
+
     function getUserInfo(force) {
         var url = '/module/x_tunnel/control/info';
         if (force) {
@@ -439,7 +470,8 @@
                 tipClose();
                 window.refresh_timer.play();
 
-                $('.nav-tabs > li').removeClass('hide');
+<!--                $('.nav-tabs > li').removeClass('hide');-->
+                show_menus();
 
                 $('#register-form').addClass('hide');
                 $('#login-form').addClass('hide');
@@ -468,17 +500,27 @@
     function getAvailableBandwidth(bandwidthList) {
         $('#available-bandwidth tbody').empty();
 
+        var has_plan = false;
         if (bandwidthList['current']) {
             displayBandwidth(bandwidthList['current']);
+            has_plan = true;
         }
         if (bandwidthList['backup']) {
             bandwidthList['backup'].forEach(function (entry) {
                 displayBandwidth(entry);
+                has_plan = true;
             });
         }
 
-        $('#no-bandwidth').addClass('hide');
-        $('#available-bandwidth').removeClass('hide');
+        if (has_plan) {
+            $('#no-bandwidth').addClass('hide');
+            $('#available-plan').removeClass('hide');
+            $('#available-bandwidth').removeClass('hide');
+        }else{
+            $('#no-bandwidth').removeClass('hide');
+            $('#available-plan').addClass('hide');
+            $('#available-bandwidthn').addClass('hide');
+        }
     }
 
 </script>
@@ -1063,18 +1105,18 @@
         });
     }
 </script>
-<script type="text/javascript">
-    $('#available-bandwidth').delegate('a.transfer', 'click', function () {
-        var maxAvailableBandwidth = $('.bandwidth', $(this).parent()).html(),
-            expireTime            = $('.expire-time', $(this).parent().parent()).attr('data-value');
+<!--<script type="text/javascript">-->
+<!--    $('#available-bandwidth').delegate('a.transfer', 'click', function () {-->
+<!--        var maxAvailableBandwidth = $('.bandwidth', $(this).parent()).html(),-->
+<!--            expireTime            = $('.expire-time', $(this).parent().parent()).attr('data-value');-->
 
-        $('.alert', '#transfer-bandwidth-modal').addClass('hide');
-        $('#transfer-bandwidth-amount').attr('placeholder', '{{ _("Max Available Bandwidth: ") }}' + maxAvailableBandwidth);
-        $('#bandwidth-expire-time').val(expireTime);
+<!--        $('.alert', '#transfer-bandwidth-modal').addClass('hide');-->
+<!--        $('#transfer-bandwidth-amount').attr('placeholder', '{{ _("Max Available Bandwidth: ") }}' + maxAvailableBandwidth);-->
+<!--        $('#bandwidth-expire-time').val(expireTime);-->
 
-        $('#transfer-bandwidth-modal').modal();
-    });
-</script>
+<!--        $('#transfer-bandwidth-modal').modal();-->
+<!--    });-->
+<!--</script>-->
 <script type="text/javascript">
     $('.btn-primary', '#transfer-bandwidth-modal').click(function () {
         var transferAccount = $('#transfer-bandwidth-username').val(),

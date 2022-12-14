@@ -116,8 +116,11 @@ msgstr "充值"
 msgid "Transfer"
 msgstr "转让"
 
-msgid "Available Bandwidth"
-msgstr "可用流量"
+msgid "Available Plan"
+msgstr "有效套餐"
+
+msgid "No Valid Plan available."
+msgstr "无有效套餐。"
 
 msgid "No bandwidth available."
 msgstr "暂无可用流量。"
