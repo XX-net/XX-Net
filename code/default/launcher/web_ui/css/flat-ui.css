@@ -988,7 +988,8 @@ h6 {
 
 .navbar-inverse .navbar-inner {
 	background: #34495e;
-	filter: unquote("progid:DXImageTransform.Microsoft.gradient(enabled = false)")
+	filter: unquote("progid:DXImageTransform.Microsoft.gradient(enabled = false)");
+    padding: 5px;
 }
 
 .navbar-inverse .brand {
