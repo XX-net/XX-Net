@@ -980,7 +980,7 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         if g.config.update_cloudflare_domains:
             g.http_client.save_cloudflare_domain(info.get("cloudflare_domains"))
 
-        g.promote_code = info["promote_code"]
+        g.promote_code = utils.to_str(info["promote_code"])
         g.promoter = info["promoter"]
         g.balance = info["balance"]
         g.tls_relays = info["tls_relays"]
