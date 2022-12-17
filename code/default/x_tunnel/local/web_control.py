@@ -12,6 +12,7 @@ import time
 import hashlib
 import threading
 import json
+import base64
 
 import utils
 from xlog import getLogger
@@ -112,7 +113,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         xlog.debug('x-tunnel web_control %s %s %s ', self.address_string(), self.command, self.path)
 
         path = urlparse(self.path).path
-        if path == '/login':
+        if path == '/token_login':
+            return self.req_token_login_handler()
+        elif path == '/login':
             return self.req_login_handler()
         elif path == "/logout":
             return self.req_logout_handler()
@@ -236,6 +239,60 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "last_fail": g.last_api_error
             }
         self.response_json(res_arr)
+
+    def req_token_login_handler(self):
+        login_token = str(self.postvars['login_token'][0])
+        try:
+            login_str = base64.b64decode(login_token)
+            data = json.loads(utils.to_str(login_str))
+            username = data["login_account"]
+            password_hash = data["login_password"]
+            cloudflare_domains = data["cloudflare_domains"]
+            tls_relay = data["tls_relay"]
+        except Exception as e:
+            xlog.warn("token_login except:%r", e)
+            return self.response_json({
+                "res": "fail",
+                "reason": "token invalid"
+            })
+
+        pa = check_email(username)
+        if not pa:
+            xlog.warn("login with invalid email: %s", username)
+            return self.response_json({
+                "res": "fail",
+                "reason": "Invalid email."
+            })
+        elif len(password_hash) < 64:
+            return self.response_json({
+                "res": "fail",
+                "reason": "Password format fail"
+            })
+
+        if g.config.update_cloudflare_domains:
+            g.http_client.save_cloudflare_domain(cloudflare_domains)
+        if g.tls_relay_front and tls_relay.get("ips"):
+            g.tls_relay_front.set_ips(tls_relay["ips"])
+
+        res, reason = proxy_session.request_balance(username, password_hash, False,
+                                                    update_server=True, promoter="")
+        if res:
+            g.config.login_account  = username
+            g.config.login_password = password_hash
+            g.config.save()
+            res_arr = {
+                "res": "success",
+                "balance": float(g.balance)
+            }
+            g.last_refresh_time = time.time()
+            g.session.start()
+        else:
+            res_arr = {
+                "res": "fail",
+                "reason": reason
+            }
+
+        return self.response_json(res_arr)
 
     def req_login_handler(self):
         username    = str(self.postvars['username'][0])

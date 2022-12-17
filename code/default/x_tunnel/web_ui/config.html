@@ -1,13 +1,28 @@
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#info" data-toggle="tab">{{ _("Account") }}</a></li>
+    <li class="" id="li-token-login"><a href="#token-login-tab" data-toggle="tab">{{ _("Token Login") }}</a></li>
+    <li class="" id="li-password-login"><a href="#password-login-tab" data-toggle="tab">{{ _("Password Login") }}</a></li>
+    <li class="hide" id="li-info"><a href="#info" data-toggle="tab">{{ _("Account") }}</a></li>
     <li class="hide" id="li-setting"><a href="#advanced" data-toggle="tab">{{ _("Settings") }}</a></li>
     <li class="hide" id="li-plans"><a href="#plans" data-toggle="tab">{{ _("Plans") }}</a></li>
     <li class="hide" id="li-history"><a href="#history" data-toggle="tab">{{ _("History") }}</a></li>
     <li class="hide" id="li-help"><a href="#help" data-toggle="tab">{{ _("Help") }}</a></li>
 </ul>
 <div class="tab-content">
-    <div id="info" class="tab-pane fade in active">
-        <form id="login-form" onSubmit="onLoginSubmit(); return false;">
+    <div id="token-login-tab" class="tab-pane fade in hide">
+        <form id="token-login-form" onSubmit="onTokenLoginSubmit(); return false;">
+            <p >{{ _("Input login token from https://xx-net.com.") }}</p>
+            <p>
+                <label for="login-token">{{ _("Token") }}</label>
+                <input id="login-token" type="text"/>
+            </p>
+            <p>
+                <button class="btn btn-primary btn-block" type="submit">{{ _("Login") }}</button>
+            </p>
+        </form> <!-- #login-form -->
+    </div>
+
+    <div id="password-login-tab" class="tab-pane fade in ">
+        <form id="password-login-form" onSubmit="onLoginSubmit(); return false;">
             <h4>{{ _("Login") }}</h4>
             <p>
                 <label for="login-username">{{ _("Email") }}</label>
@@ -96,6 +111,8 @@
                 <a id="login-trigger" href="javascript:void(0);">{{ _("Already have an account?") }}</a>
             </p>
         </form> <!-- #register-form -->
+    </div>
+    <div id="info" class="tab-pane fade in active">
         <div id="account-information" class="hide">
             <div class="section">
 <!--                <h4>{{ _("Summary") }}</h4>-->
@@ -379,20 +396,20 @@
 <!-- Summary -->
 <script type="text/javascript">
     $('#register-trigger').click(function () {
-        $('#login-form').addClass('hide');
+        $('#password-login-form').addClass('hide');
         $('#register-form').removeClass('hide');
     });
     $('#reset-password-trigger').click(function () {
-        $('#login-form').addClass('hide');
+        $('#password-login-form').addClass('hide');
         $('#request-reset-form').removeClass('hide');
     });
     $('#login-trigger').click(function () {
         $('#register-form').addClass('hide');
-        $('#login-form').removeClass('hide');
+        $('#password-login-form').removeClass('hide');
     });
     $('#goto-login-trigger').click(function () {
         $('#password-reset-successful').addClass('hide');
-        $('#login-form').removeClass('hide');
+        $('#password-login-form').removeClass('hide');
     });
 </script>
 <script type="text/javascript">
@@ -416,7 +433,44 @@
         }
     }
 
-    function show_menus() {
+    function show_login_form(){
+        $('ul.nav-tabs > li').addClass('hide');
+        $('#li-token-login').removeClass('hide');
+        $('#li-password-login').removeClass('hide');
+
+        if(uiwebview) {
+            $('#li-token-login').addClass('active');
+
+            $('#password-login-tab').addClass('hide');
+
+            $('#token-login-tab').removeClass('hide');
+            $('#token-login-tab').addClass('active');
+        } else {
+            $('#li-password-login').addClass('active');
+
+            $('#token-login-tab').addClass('hide');
+
+            $('#password-login-tab').removeClass('hide');
+            $('#password-login-tab').addClass('active');
+        }
+
+        $('#account-information').addClass('hide');
+    }
+    show_login_form();
+
+    function show_uinfo_menus() {
+        $('#token-login-tab').removeClass('active');
+        $('#password-login-tab').removeClass('active');
+        $('#info').addClass('in');
+        $('#info').addClass('active');
+
+        $('#li-token-login').removeClass('active');
+        $('#li-password-login').removeClass('active');
+        $('#li-token-login').addClass('hide');
+        $('#li-password-login').addClass('hide');
+
+        $('#li-info').removeClass('hide');
+        $('#li-info').addClass('active');
         $('#li-setting').removeClass('hide');
         if (!uiwebview) {
             $('#li-plans').removeClass('hide');
@@ -470,11 +524,8 @@
                 tipClose();
                 window.refresh_timer.play();
 
-<!--                $('.nav-tabs > li').removeClass('hide');-->
-                show_menus();
+                show_uinfo_menus();
 
-                $('#register-form').addClass('hide');
-                $('#login-form').addClass('hide');
                 $('#account-information').removeClass('hide');
 
                 $('#login-account').html(result['login_account']);
@@ -660,6 +711,51 @@
     }
 </script>
 <script type="text/javascript">
+    function onTokenLoginSubmit() {
+        var login_token = $('#login-token').val();
+
+        if (!login_token){
+            tip('{{ _("Please input login token." )}}', 'error', false);
+            return;
+        }
+
+        tip('{{ _("Logining ...") }}', 'info', false);
+        $('button[type=submit]', '#token-login-form').html('{{ _("Please wait ...") }}');
+        $('button[type=submit]', '#token-login-form').attr('disabled', 'disabled');
+        return doTokenLoginAction(login_token);
+    }
+
+    function doTokenLoginAction(login_token) {
+        var postData = {
+            'login_token': login_token,
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/module/x_tunnel/control/token_login',
+            data: postData,
+            dataType: 'JSON',
+            success: function (result) {
+                if (result['res'] == 'success') {
+                    getUserInfo(0);
+                } else {
+                    if (result['reason'] == "status:'UNKNOWN'" || result['reason'] == "status:False") {
+                        tip('{{ _("Connect to server fail, check Front log first.") }}', 'warning', false);
+                    } else if (result['reason'] == "auth fail") {
+                        tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    } else if (result['reason'] == "token invalid") {
+                        tip('{{ _("Invalid token.") }}', 'error', false);
+                    } else {
+                        tip('{{ _("Login fail:") }}' + result['reason'], 'error', false);
+                    }
+
+                    $('button[type=submit]', '#token-login-form').html('{{ _("Login") }}');
+                    $('button[type=submit]', '#token-login-form').removeAttr('disabled');
+                }
+            }
+        });
+    }
+
     function onLoginSubmit() {
         var username = $('#login-username').val(),
             password = $('#login-password').val();
@@ -1028,9 +1124,8 @@
             dataType: 'JSON',
             success: function (result) {
                 window.refresh_timer.stop();
-                $('ul.nav-tabs > li').not(':first').addClass('hide');
-                $('#account-information').addClass('hide');
-                $('#login-form').removeClass('hide');
+
+                show_login_form();
 
                 $('button[type=submit]', '#login-form').html('{{ _("Login") }}');
                 // Fix bugs in Firefox

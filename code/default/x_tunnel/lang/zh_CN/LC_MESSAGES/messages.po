@@ -44,6 +44,18 @@ msgstr "帮助"
 msgid "Login"
 msgstr "登录"
 
+msgid "Token Login"
+msgstr "令牌登录"
+
+msgid "Input login token from https://xx-net.com."
+msgstr "请从 https://xx-net.com 获取令牌登录:"
+
+msgid "Token"
+msgstr "令牌"
+
+msgid "Password Login"
+msgstr "密码登录"
+
 msgid "Email"
 msgstr "电子邮件地址"
 
