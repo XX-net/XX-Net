@@ -193,7 +193,7 @@ def current_version():
 
 
 def get_github_versions():
-    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v4.txt"
+    readme_url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v5.txt"
     readme_target = os.path.join(download_path, "version.txt")
 
     if not download_file(readme_url, readme_target):
