@@ -18,10 +18,6 @@
       "title": "{{ _("Cloudflare") }}{{ _("Front") }}{{ _("Log") }}",
       "url": "cloudflare_front_logging"
     },
-    "6":{
-      "title": "{{ _("Heroku") }}{{ _("Front") }}{{ _("Log") }}",
-      "url": "heroku_front_logging"
-    },
     "7":{
       "title": "{{ _("TLS-Relay") }}{{ _("Front") }}{{ _("Log") }}",
       "url": "tls_relay_front_logging"
