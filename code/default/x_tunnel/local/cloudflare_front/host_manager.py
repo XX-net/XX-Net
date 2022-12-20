@@ -113,8 +113,11 @@ class HostManager(HostManagerBase):
         for top, subs in self.ns:
             ns.append(top)
 
-        if ns == self.ns:
+        if ns == domains:
+            self.logger.debug("save domains not changed, ignore")
             return
+        else:
+            self.logger.info("save domains:%s", domains)
 
         dat = {}
         for domain in domains:

@@ -67,6 +67,7 @@ def init():
 
 def save_cloudflare_domain(domains):
     if not domains or not g.config.enable_cloudflare:
+        xlog.warn("save_cloudflare_domain fail, domains:%s enable:%d", domains, g.config.enable_cloudflare)
         return
 
     for front in all_fronts:

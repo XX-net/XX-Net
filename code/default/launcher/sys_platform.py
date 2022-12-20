@@ -142,6 +142,7 @@ elif sys.platform == "ios":
             xlog.debug("GC: count: %d,%d,%d Collect:%d", count[0], count[1], count[2], c)
 
     def on_quit():
+        from non_tray import sys_tray
         sys_tray.on_quit()
 
 else:

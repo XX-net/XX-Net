@@ -298,7 +298,7 @@ class ConnectManager(object):
             return ssl_sock
         except socket.error as e:
             if not self.check_local_network.is_ok(ip_str):
-                self.logger.debug("connect %s network fail", ip_str)
+                self.logger.debug("connect %s network fail, %r", ip_str, e)
                 time.sleep(10)
             else:
                 self.logger.debug("connect %s network fail:%r", ip_str, e)
@@ -308,7 +308,7 @@ class ConnectManager(object):
         except Exception as e:
             self.logger.exception("connect except:%r", e)
             if not self.check_local_network.is_ok(ip_str):
-                self.logger.debug("connect %s network fail", ip_str)
+                self.logger.debug("connect %s network fail, %r", ip_str, e)
                 time.sleep(10)
             else:
                 self.logger.exception("connect %s fail:%r", ip_str, e)

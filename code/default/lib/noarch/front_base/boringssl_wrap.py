@@ -43,6 +43,8 @@ class SSLConnection(object):
         except Exception as e:
             raise socket.error('conn %s fail, sni:%s, e:%r' % (self.ip_str, self.sni, e))
 
+        self._sock.setblocking(True)
+
         fn = self._fileno
         bio = bssl.BSSL_BIO_new_socket(fn, self.BIO_CLOSE)
 
@@ -63,13 +65,23 @@ class SSLConnection(object):
                 error = bssl.BSSL_SSL_get_error(self._connection, ret)
                 raise socket.error("set alpn fail, error:%s" % error)
 
-        self._sock.setblocking(True)
         ret = bssl.BSSL_SSL_connect(self._connection)
         if ret == 1:
             return
 
         error = bssl.BSSL_SSL_get_error(self._connection, ret)
-        raise socket.error("SSL_connect fail: %s" % error)
+        if error == 1:
+            p = ffi.new("char[]", b"hello, worldhello, worldhello, worldhello, worldhello, world")  # p is a 'char *'
+            q = ffi.new("char **", p)  # q is a 'char **'
+            line_no = 0
+            line_no_p = ffi.new("int *", line_no)
+            error = bssl.BSSL_ERR_get_error_line(q, line_no_p)
+            filename = ffi.string(q[0])
+            # self._context.logger.error("error:%d file:%s, line:%s", error, filename, line_no_p[0])
+            raise socket.error("SSL_connect fail: %s, file:%s, line:%d, sni:%s" %
+                               (error, filename, line_no_p[0], self.sni))
+        else:
+            raise socket.error("SSL_connect fail: %s, sni:%s" % (error, self.sni))
 
     def do_handshake(self):
         if not self._connection:

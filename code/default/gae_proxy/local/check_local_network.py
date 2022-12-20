@@ -33,6 +33,9 @@ max_timeout = 5
 
 
 class CheckNetwork(object):
+    check_valid = 30
+    timeout = 5
+
     def __init__(self, type="IPv4"):
         self.type = type
         self.urls = []
@@ -53,7 +56,7 @@ class CheckNetwork(object):
         else:
             self.proxy = None
 
-        self.http_client = simple_http_client.Client(self.proxy, timeout=10)
+        self.http_client = simple_http_client.Client(self.proxy, timeout=self.timeout)
 
     def report_ok(self):
         self.network_stat = "OK"
@@ -65,12 +68,14 @@ class CheckNetwork(object):
         # don't record last_check_time here, it's not a real check
         # last_check_time = time.time()
 
-        if self.continue_fail_count > 10:
+        if self.continue_fail_count > 1:
             # don't set network_stat to "unknown", wait for check
             # network_stat = "unknown"
             xlog.debug("report_connect_fail %s continue_fail_count:%d",
                        self.type, self.continue_fail_count)
-            self.triger_check_network(True)
+
+            if time.time() - self.last_check_time > self.check_valid:
+                self.triger_check_network(True)
 
     def get_stat(self):
         if config.check_local_network_rules == "force_fail":
@@ -81,8 +86,14 @@ class CheckNetwork(object):
             return self.network_stat
 
     def is_ok(self):
+        if self.network_stat == "unknown" or time.time() - self.last_check_time > self.check_valid:
+            self.triger_check_network(True)
+
         if config.check_local_network_rules == "normal":
-            return self.network_stat == "OK"
+            if self.network_stat == "OK" and time.time() - self.last_check_time < self.check_valid + self.timeout:
+                return True
+            else:
+                return False
         elif config.check_local_network_rules == "force_fail":
             return False
         elif config.check_local_network_rules == "force_ok":
@@ -161,15 +172,18 @@ IPv4.urls = [
     "https://www.bing.com",
     "https://code.jquery.com",
     "https://cdn.bootcss.com",
-    "https://cdnjs.cloudflare.com"]
+    "https://upcdn.b0.upaiyun.com",
+    "https://cdn.bootcdn.net",
+    "https://cdn.staticfile.org",
+]
 # IPv4.triger_check_network()
 
 IPv6 = CheckNetwork("IPv6")
 IPv6.urls = [
     "https://ipv6.vm3.test-ipv6.com",
-    "http://[2001:470:1:18::115]",
-    "http://ipv6.lookup.test-ipv6.com",
-    "http://v6.myip.la"
+    "https://ipv6.lookup.test-ipv6.com",
+    "https://v6.myip.la",
+    "https://speed.neu6.edu.cn/"
 ]
 # IPv6.triger_check_network()
 
@@ -191,7 +205,7 @@ def report_fail(ip):
 def is_ok(ip=None):
     if not ip:
         return IPv4.is_ok() or IPv6.is_ok()
-    elif utils.check_ip_valid4(ip):
+    elif "." in ip:
         return IPv4.is_ok()
     else:
         return IPv6.is_ok()

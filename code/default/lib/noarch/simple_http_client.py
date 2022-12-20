@@ -424,7 +424,7 @@ class Client(object):
             if not sock:
                 return None
         else:
-            connect_timeout = 5
+            connect_timeout = self.timeout
 
             import socks
 
