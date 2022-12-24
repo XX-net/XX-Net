@@ -1,5 +1,5 @@
-import select
 
+import selectors2 as selectors
 from xlog import getLogger
 xlog = getLogger("simple_http_client")
 
@@ -126,6 +126,8 @@ class Response(BaseResponse):
         self.chunked = False
         self.version = None
         self.content_length = None
+        self.select2 = selectors.DefaultSelector()
+        self.select2.register(sock, selectors.EVENT_READ)
 
     def recv(self, to_read=8192, timeout=30.0):
         if timeout < 0:
@@ -142,7 +144,8 @@ class Response(BaseResponse):
                     if time_left < 0:
                         break
 
-                    select.select([self.sock], [], [self.sock], time_left)
+                    # select.select([self.sock], [], [self.sock], time_left)
+                    self.select2.select(timeout=time_left)
                     continue
                 else:
                     raise e
@@ -261,9 +264,11 @@ class Response(BaseResponse):
                 if time_left < 0:
                     raise socket.error
 
-                r, w, e = select.select([self.sock], [], [self.sock], time_left)
-                if e:
-                    raise socket.error
+                # r, w, e = select.select([self.sock], [], [self.sock], time_left)
+                events = self.select2.select(timeout=time_left)
+                for key, event in events:
+                    if not event & selectors.EVENT_READ:
+                        raise socket.error
 
         if read_len is not None and out_len < read_len:
             raise socket.timeout()
@@ -304,7 +309,8 @@ class Response(BaseResponse):
                     if time_left < 0:
                         raise socket.timeout
 
-                    select.select([self.sock], [], [self.sock], time_left)
+                    # select.select([self.sock], [], [self.sock], time_left)
+                    self.select2.select(timeout=time_left)
                     continue
                 else:
                     raise e

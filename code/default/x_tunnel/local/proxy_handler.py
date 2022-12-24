@@ -1,7 +1,6 @@
 import time
 import socket
 import struct
-import select
 
 try:
     from urllib.parse import urlparse
@@ -44,7 +43,6 @@ class Socks5Server():
     def handle(self):
         self.__class__.handle_num += 1
         try:
-            r, w, e = select.select([self.connection], [], [])
             socks_version = self.read_bytes(1)
             if not socks_version:
                 return

@@ -2,11 +2,10 @@
 # Which is used by  ip manager
 #  ip manager keep a connection number counter for every ip.
 
-import time
 import socket
 import threading
-import select
 
+import selectors2 as selectors
 import utils
 
 from boringssl import lib as bssl, ffi
@@ -30,6 +29,9 @@ class SSLConnection(object):
         self.running = True
         self._connection = None
         self.wrap()
+
+        self.select2 = selectors.DefaultSelector()
+        self.select2.register(sock, selectors.EVENT_WRITE)
 
     def wrap(self):
         ip, port = utils.get_ip_port(self.ip_str)
@@ -168,7 +170,7 @@ class SSLConnection(object):
                             raise e
                         else:
                             # self._context.logger.debug("send n:%d errno: %d ip:%s", ret, errno, self.ip_str)
-                            r = select.select([], [self.fileno()], [], self.timeout)
+                            self.select2.select(timeout=self.timeout)
                             continue
                     else:
                         break

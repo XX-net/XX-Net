@@ -1,10 +1,10 @@
 import threading
-import select
 import time
 import sys
 
 from xx_six import BlockingIOError
 import utils
+import selectors2 as selectors
 
 from . import global_var as g
 from xlog import getLogger
@@ -16,6 +16,7 @@ class PipeSocks(object):
         self.buf_size = buf_size
         self.sock_dict = {}
 
+        self.select2 = selectors.DefaultSelector()
         self.read_set = []
         self.write_set = []
         self.error_set = []
@@ -66,6 +67,8 @@ class PipeSocks(object):
         s2.setblocking(0)
 
         with self.sock_notify:
+            self.select2.register(s1, selectors.EVENT_READ)
+            self.select2.register(s2, selectors.EVENT_READ)
             self.read_set.append(s1)
             self.read_set.append(s2)
             self.error_set.append(s1)
@@ -78,9 +81,25 @@ class PipeSocks(object):
 
     def try_remove(self, l, s):
         try:
-            l.remove(s)
-        except:
-            pass
+            if l == self.read_set:
+                if s in self.read_set:
+                    if s in self.write_set:
+                        self.select2.modify(s, selectors.EVENT_WRITE)
+                    else:
+                        self.select2.unregister(s)
+                    self.read_set.remove(s)
+            elif l == self.write_set:
+                if s in self.write_set:
+                    if s in self.read_set:
+                        self.select2.modify(s, selectors.EVENT_READ)
+                    else:
+                        self.select2.unregister(s)
+                    self.write_set.remove(s)
+            else:
+                if s in self.error_set:
+                    self.error_set.remove(s)
+        except Exception as e:
+            xlog.exception("try_remove e:%r", e)
 
     def close(self, s1, e):
         # xlog.debug("%s close", s1)
@@ -149,148 +168,153 @@ class PipeSocks(object):
                     self.close(s1, "miss")
 
             try:
-                r, w, error_set = select.select(self.read_set, self.write_set, self.error_set, 0.1)
+                # r, w, error_set = select.select(self.read_set, self.write_set, self.error_set, 0.1)
+                events = self.select2.select(timeout=1)
             except ValueError as e:
                 xlog.exception("pipe select except:%r", e)
                 return
 
             try:
-                for s1 in list(r):
-                    if s1 not in self.read_set:
-                        xlog.warn("%s not in read list", s1)
-                        continue
-
-                    try:
-                        d = s1.recv(65535)
-                    except Exception as e:
-                        # xlog.debug("%s recv e:%r", e)
-                        self.close(s1, "r")
-                        continue
-
-                    if not d:
-                        # socket closed by peer.
-                        self.close(s1, "r")
-                        continue
-
-                    # xlog.debug("direct received %d bytes from:%s", len(d), s1)
-                    s1.recved_data += len(d)
-                    s1.recved_times += 1
-
-                    s2 = self.sock_dict[s1]
-                    if s2.is_closed():
-                        # xlog.debug("s2:%s is closed", s2)
-                        continue
-
-                    if g.config.direct_split_SNI and\
-                                    s1.recved_times == 1 and \
-                                    s2.port == 443 and \
-                                    d[0] == '\x16' and \
-                            g.gfwlist.in_block_list(s2.host):
-                        p1 = d.find(s2.host)
-                        if p1 > 1:
-                            if b"google" in s2.host:
-                                p2 = d.find(b"google") + 3
-                            else:
-                                p2 = p1 + len(s2.host) - 6
-
-                            d1 = d[:p2]
-                            d2 = d[p2:]
-
-                            try:
-                                flush_send_s(s2, d1)
-                                s2.sent_data += len(d1)
-                                s2.sent_times += 1
-                            except Exception as e:
-                                xlog.warn("send split SNI:%s fail:%r", s2.host, e)
-                                self.close(s2, "w")
-                                continue
-
-                            s2.add_dat(d2)
-                            d = b""
-                            xlog.debug("pipe send split SNI:%s", s2.host)
-
-                    if s2.buf_size == 0:
-                        try:
-                            sended = s2.send(d)
-                            s2.sent_data += sended
-                            s2.sent_times += 1
-                            # xlog.debug("direct send %d to %s from:%s", sended, s2, s1)
-                        except Exception as e:
-                            # xlog.debug("%s send e:%r", s2, e)
-                            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
-                                # This error happened on upload large file or speed test
-                                # Just ignore this error and will be fine
-                                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-                                sended = 0
-                            else:
-                                self.close(s2, "w")
-                                continue
-
-                        if sended == len(d):
+                # for s1 in list(r):
+                for key, event in events:
+                    s1 = key.fileobj
+                    if event & selectors.EVENT_READ:
+                        if s1 not in self.read_set:
+                            # xlog.warn("%s not in read list", s1)
                             continue
-                        else:
-                            d_view = memoryview(d)
-                            d = d_view[sended:]
-
-                    if d:
-                        if not isinstance(d, memoryview):
-                            d = memoryview(d)
-                        s2.add_dat(d)
-
-                    if s2 not in self.write_set:
-                        self.write_set.append(s2)
-                    if s2.buf_size > self.buf_size:
-                        self.try_remove(self.read_set, s1)
-
-                for s1 in list(w):
-                    if s1 not in self.write_set:
-                        xlog.warn("%s not in write list", s1)
-                        continue
-
-                    if s1.buf_num == 0:
-                        # xlog.warn("%s write event but no buf", s1)
-                        self.try_remove(self.write_set, s1)
-                        continue
-
-                    while s1.buf_num:
-                        dat = s1.get_dat()
-                        if not dat:
-                            xlog.error("%s get data fail", s1)
-                            self.close(s1, "n")
-                            break
 
                         try:
-                            sended = s1.send(dat)
-                            s1.sent_data += sended
-                            s1.sent_times += 1
-                            # xlog.debug("direct send %d bytes to %s", sended, s1)
+                            d = s1.recv(65535)
                         except Exception as e:
-                            if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
-                                # This error happened on upload large file or speed test
-                                # Just ignore this error and will be fine
-                                # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
-                                sended = 0
-                            else:
-                                self.close(s1, "w")
-                                break
-
-                        if len(dat) - sended > 0:
-                            s1.restore_dat(dat[sended:])
-                            break
-
-                    if s1.buf_size < self.buf_size:
-                        if s1 not in self.sock_dict:
-                            # xlog.debug("%s can send but removed", s1)
+                            # xlog.debug("%s recv e:%r", e)
+                            self.close(s1, "r")
                             continue
+
+                        if not d:
+                            # socket closed by peer.
+                            self.close(s1, "r")
+                            continue
+
+                        # xlog.debug("direct received %d bytes from:%s", len(d), s1)
+                        s1.recved_data += len(d)
+                        s1.recved_times += 1
 
                         s2 = self.sock_dict[s1]
-                        if s2 not in self.read_set and s2 in self.sock_dict:
-                            self.read_set.append(s2)
-                        elif s1.buf_size == 0 and s2.is_closed():
-                            self.close(s1, "n")
+                        if s2.is_closed():
+                            # xlog.debug("s2:%s is closed", s2)
+                            continue
 
-                for s1 in list(error_set):
-                    self.close(s1, "e")
+                        if g.config.direct_split_SNI and\
+                                        s1.recved_times == 1 and \
+                                        s2.port == 443 and \
+                                        d[0] == '\x16' and \
+                                g.gfwlist.in_block_list(s2.host):
+                            p1 = d.find(s2.host)
+                            if p1 > 1:
+                                if b"google" in s2.host:
+                                    p2 = d.find(b"google") + 3
+                                else:
+                                    p2 = p1 + len(s2.host) - 6
+
+                                d1 = d[:p2]
+                                d2 = d[p2:]
+
+                                try:
+                                    flush_send_s(s2, d1)
+                                    s2.sent_data += len(d1)
+                                    s2.sent_times += 1
+                                except Exception as e:
+                                    xlog.warn("send split SNI:%s fail:%r", s2.host, e)
+                                    self.close(s2, "w")
+                                    continue
+
+                                s2.add_dat(d2)
+                                d = b""
+                                xlog.debug("pipe send split SNI:%s", s2.host)
+
+                        if s2.buf_size == 0:
+                            try:
+                                sended = s2.send(d)
+                                s2.sent_data += sended
+                                s2.sent_times += 1
+                                # xlog.debug("direct send %d to %s from:%s", sended, s2, s1)
+                            except Exception as e:
+                                # xlog.debug("%s send e:%r", s2, e)
+                                if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
+                                    # This error happened on upload large file or speed test
+                                    # Just ignore this error and will be fine
+                                    # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
+                                    sended = 0
+                                else:
+                                    self.close(s2, "w")
+                                    continue
+
+                            if sended == len(d):
+                                continue
+                            else:
+                                d_view = memoryview(d)
+                                d = d_view[sended:]
+
+                        if d:
+                            if not isinstance(d, memoryview):
+                                d = memoryview(d)
+                            s2.add_dat(d)
+
+                        if s2 not in self.write_set:
+                            self.write_set.append(s2)
+                            self.select2.register(s2, selectors.EVENT_WRITE)
+                        if s2.buf_size > self.buf_size:
+                            self.try_remove(self.read_set, s1)
+
+                    elif event & selectors.EVENT_WRITE:
+                        if s1 not in self.write_set:
+                            xlog.warn("%s not in write list", s1)
+                            continue
+
+                        if s1.buf_num == 0:
+                            # xlog.warn("%s write event but no buf", s1)
+                            self.try_remove(self.write_set, s1)
+                            continue
+
+                        while s1.buf_num:
+                            dat = s1.get_dat()
+                            if not dat:
+                                xlog.error("%s get data fail", s1)
+                                self.close(s1, "n")
+                                break
+
+                            try:
+                                sended = s1.send(dat)
+                                s1.sent_data += sended
+                                s1.sent_times += 1
+                                # xlog.debug("direct send %d bytes to %s", sended, s1)
+                            except Exception as e:
+                                if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
+                                    # This error happened on upload large file or speed test
+                                    # Just ignore this error and will be fine
+                                    # self.logger.debug("%s _consume_single_frame BlockingIOError %r", self.ip_str, e)
+                                    sended = 0
+                                else:
+                                    self.close(s1, "w")
+                                    break
+
+                            if len(dat) - sended > 0:
+                                s1.restore_dat(dat[sended:])
+                                break
+
+                        if s1.buf_size < self.buf_size:
+                            if s1 not in self.sock_dict:
+                                # xlog.debug("%s can send but removed", s1)
+                                continue
+
+                            s2 = self.sock_dict[s1]
+                            if s2 not in self.read_set and s2 in self.sock_dict:
+                                self.read_set.append(s2)
+                                self.select2.register(s2, selectors.EVENT_READ)
+                            elif s1.buf_size == 0 and s2.is_closed():
+                                self.close(s1, "n")
+                    else:
+                        self.close(s1, "e")
             except Exception as e:
                 xlog.exception("pipe except:%r", e)
                 for s in list(self.error_set):

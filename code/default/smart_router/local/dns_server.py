@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-import json
 import os
 import sys
 import threading
 import socket
 import time
-import re
 import select
-import random
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))

@@ -10,7 +10,7 @@ allowing small reads from the network. This represents a potentially massive
 performance optimisation at the cost of burning some memory in the userspace
 process.
 """
-import select
+import selectors2 as selectors
 import socket
 from .exceptions import ConnectionResetError, LineTooLongError
 # import logging
@@ -88,6 +88,8 @@ class BufferedSocket(object):
         """
         # The wrapped socket.
         self._sck = sck
+        self.select2 = selectors.DefaultSelector()
+        self.select2.register(sck, selectors.EVENT_READ)
 
         # The buffer we're using.
         self._backing_buffer = bytearray(buffer_size)
@@ -148,9 +150,10 @@ class BufferedSocket(object):
         if self._bytes_in_buffer:
             return True
 
-        read = select.select([self._sck], [], [], 0)[0]
-        if read:
-            return True
+        events = self.select2.select(timeout=0)
+        for key, event in events:
+            if event & selectors.EVENT_READ:
+                return True
 
         return False
 
@@ -214,7 +217,11 @@ class BufferedSocket(object):
         # attempt will block. If it will, don't bother reading. If we need the
         # data, always do the read.
         if self._bytes_in_buffer >= amt:
-            should_read = select.select([self._sck], [], [], 0)[0]
+            should_read = False
+            events = self.select2.select(timeout=0)
+            for key, event in events:
+                if event & selectors.EVENT_READ:
+                    should_read = True
         else:
             should_read = True
 
@@ -230,7 +237,7 @@ class BufferedSocket(object):
                             # It is not necessary to read, just continue
                             break
                         else:
-                            select.select([self._sck], [], [], 10)
+                            self.select2.select(timeout=10)
                             continue
                     else:
                         raise e

@@ -2,7 +2,8 @@ import threading
 import time
 import socket
 import xstruct as struct
-import select
+
+import selectors2 as selectors
 
 import utils
 
@@ -617,7 +618,9 @@ class Conn(object):
 
     def recv_worker(self):
         sock = self.sock
-        fdset = [sock, ]
+
+        select2 = selectors.DefaultSelector()
+        select2.register(sock, selectors.EVENT_READ)
         while self.running:
 
             self.recv_notice.acquire()
@@ -629,29 +632,30 @@ class Conn(object):
             finally:
                 self.recv_notice.release()
 
-            r, w, e = select.select(fdset, [], [], 1)
-            if sock in r:
-                try:
-                    data = sock.recv(65535)
-                except:
-                    data = ""
+            events = select2.select(timeout=1.0)
+            for key, event in events:
+                if event & selectors.EVENT_READ:
+                    try:
+                        data = sock.recv(65535)
+                    except:
+                        data = ""
 
-                data_len = len(data)
-                if data_len == 0:
-                    self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id, self.conn_id)
-                    self.transfer_peer_close("recv closed")
+                    data_len = len(data)
+                    if data_len == 0:
+                        self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id, self.conn_id)
+                        self.transfer_peer_close("recv closed")
 
-                    sock.close()
-                    self.sock = None
+                        sock.close()
+                        self.sock = None
 
-                    self.recv_thread = None
-                    if self.is_client:
-                        self.do_stop(reason="recv fail.")
+                        self.recv_thread = None
+                        if self.is_client:
+                            self.do_stop(reason="recv fail.")
 
-                    return
+                        return
 
-                self.transfer_received_data(data)
-                # self.xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
-                #           self.session.session_id, self.conn_id, data_len, self.received_position)
+                    self.transfer_received_data(data)
+                    # self.xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
+                    #           self.session.session_id, self.conn_id, data_len, self.received_position)
 
-                # self.xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)
+                    # self.xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)

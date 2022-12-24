@@ -1,7 +1,6 @@
 import time
 import socket
 import struct
-import select
 
 try:
     from urllib.parse import urlparse
@@ -62,9 +61,7 @@ class ProxyServer():
         if self.try_redirect():
             return
 
-        sockets = [self.conn]
         try:
-            r, w, e = select.select(sockets, [], [])
             socks_version = self.conn.recv(1, socket.MSG_PEEK)
             if not socks_version:
                 return

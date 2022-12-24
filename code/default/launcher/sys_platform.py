@@ -71,7 +71,12 @@ if sys.platform.startswith("linux"):
         def show_systray():
             global sys_tray
             if has_desktop:
-                from gtk_tray import sys_tray
+                try:
+                    from gtk_tray import sys_tray
+                except:
+                    from non_tray import sys_tray
+            else:
+                from non_tray import sys_tray
 
             sys_tray.serve_forever()
 
@@ -113,6 +118,7 @@ elif sys.platform == "darwin":
             import mac_tray as sys_tray
         except Exception as e:
             xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
+            from non_tray import sys_tray
         sys_tray.serve_forever()
 
     def on_quit():
@@ -144,6 +150,7 @@ else:
     platform = "unknown"
     has_desktop = False
     platform_lib = ""
+    from non_tray import sys_tray
 
     def show_systray():
         sys_tray.serve_forever()
