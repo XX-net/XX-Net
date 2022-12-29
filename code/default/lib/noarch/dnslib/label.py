@@ -263,7 +263,7 @@ class DNSBuffer(Buffer):
             else:
                 self.names[tuple(name)] = self.offset
                 element = name.pop(0)
-                if len(element) > 63:
+                if len(element) > 256:
                     raise DNSLabelError("Label component too long: %r" % element)
                 self.pack("!B",len(element))
                 self.append(element)
