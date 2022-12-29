@@ -78,7 +78,7 @@ class ConnectCreator(object):
 
         # resize socket receive buffer ->64 above to improve browser related application performance
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, self.config.connect_receive_buffer)
-
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, self.config.connect_send_buffer)
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(self.timeout)
 

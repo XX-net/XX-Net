@@ -107,7 +107,9 @@ class ConnectManager(object):
         # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
         # resize socket recv buffer 8K->32K to improve browser releated application performance
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 128 * 1024)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 512 * 1024)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 512 * 1024)
+
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
         sock.settimeout(timeout)
 
