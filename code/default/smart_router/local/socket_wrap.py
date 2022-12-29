@@ -24,6 +24,10 @@ class SocketWrap(object):
         self.buf_size = 0
         self.buf_num = 0
 
+        self.can_read = False
+        self.can_write = False
+        self.pair_sock = None
+
     def __getattr__(self, attr):
         return getattr(self._sock, attr)
 
