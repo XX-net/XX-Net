@@ -197,7 +197,7 @@ class Logger():
                     self.start_log.close()
                     self.start_log = None
 
-            if self.warning_log and level in ["WARN", "ERROR", "CRITICAL"]:
+            if self.warning_log and level in ["WARN", "WARNING", "ERROR", "CRITICAL"]:
                 self.warning_log.write(string)
                 try:
                     self.warning_log.flush()

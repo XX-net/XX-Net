@@ -186,17 +186,7 @@ class MacTrayObject(AppKit.NSObject):
             service) != 'disable']  # Remove disabled services and empty lines
 
         if len(services) > 0:
-            try:
-                list(map(helperDisableAutoProxy, services))
-                list(map(helperDisableGlobalProxy, services))
-            except:
-                disableAutoProxyCommand = ';'.join(map(getDisableAutoProxyCommand, services))
-                disableGlobalProxyCommand = ';'.join(map(getDisableGlobalProxyCommand, services))
-                executeCommand = 'do shell script "%s;%s" with administrator privileges' % (
-                disableAutoProxyCommand, disableGlobalProxyCommand)
-
-                xlog.info("try disable proxy:%s", executeCommand)
-                subprocess.call(['osascript', '-e', executeCommand])
+            self.disableProxy_(services)
 
         module_init.stop_all()
         os._exit(0)

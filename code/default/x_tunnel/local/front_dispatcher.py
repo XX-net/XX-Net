@@ -1,6 +1,7 @@
 import time
 import threading
 import os
+import random
 
 all_fronts = []
 light_fronts = []
@@ -8,7 +9,7 @@ session_fronts = []
 cloudflare_front = None
 
 from . import global_var as g
-
+import utils
 from xlog import getLogger
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -158,7 +159,12 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
         if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
             # share the x-tunnel connection with dns.xx-net.org
             # x-tunnel server will forward the request to dns.xx-net.org
-            host = g.server_host
+            if g.server_host:
+                host = g.server_host
+
+        if len(data) < 84:
+            padding = utils.to_str(utils.generate_random_lowercase(random.randint(64, 256)))
+            headers["Padding"] = padding
 
         content, status, response = front.request(
             method, host=host, path=path, headers=dict(headers), data=data, timeout=timeout)

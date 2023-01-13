@@ -2,7 +2,6 @@ import os
 import threading
 import time
 import collections
-import operator
 
 from . import global_var as g
 
@@ -39,7 +38,7 @@ class DomainRecords(object):
         self.ttl = ttl
         self.cache = collections.OrderedDict()
         self.last_save_time = time.time()
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.last_update_time = 0
         self.need_save = False
         self.load()
@@ -160,17 +159,18 @@ class DomainRecords(object):
         if not ips:
             return ips
 
-        record = self._get(domain)
+        with self.lock:
+            record = self._get(domain)
 
-        if dns_type not in record["dns"]:
-            record["dns"][dns_type] = ips
-        else:
-            for ip in ips:
-                if ip in record["dns"][dns_type]:
-                    continue
-                record["dns"][dns_type].append(ip)
+            if dns_type not in record["dns"]:
+                record["dns"][dns_type] = set(ips)
+            else:
+                for ip in ips:
+                    if ip in record["dns"][dns_type]:
+                        continue
+                    record["dns"][dns_type].add(ip)
 
-        self._set(domain, record)
+            self._set(domain, record)
 
     def get_ips(self, domain, dns_type=None):
         if domain not in self.cache:

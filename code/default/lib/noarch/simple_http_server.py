@@ -207,7 +207,7 @@ class HttpServerHandler():
             self.logger.warn("parse req except:%r", e)
             self.close_connection = 1
         except socket.error as e:
-            # self.logger.warn("socket error:%r", e)
+            self.logger.warn("socket error:%r", e)
             self.close_connection = 1
         except IOError as e:
             if e.errno == errno.EPIPE:
@@ -337,7 +337,8 @@ class HttpServerHandler():
 
     def send_not_found(self):
         self.close_connection = 1
-        self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
+        content = b"File not found."
+        self.wfile.write(b'HTTP/1.1 404\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s' % (len(content), content))
 
     def send_error(self, code, message=None):
         self.close_connection = 1

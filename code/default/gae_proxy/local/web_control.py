@@ -660,6 +660,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_download_cert_handler(self):
         filename = cert_util.CertUtil.ca_keyfile
+        if not os.path.isfile(filename):
+            xlog.warn("CA file not exist, download cert failed.")
+            return self.send_not_found()
+
         with open(filename, 'rb') as fp:
             data = fp.read()
         mimetype = 'application/x-x509-ca-cert'

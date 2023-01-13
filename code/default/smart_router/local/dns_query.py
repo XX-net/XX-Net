@@ -112,6 +112,7 @@ class LocalDnsQuery():
                 b"8.8.8.8",
                 b"9.9.9.9",
                 b"208.67.222.222",
+                b"168.126.63.2"
             ]
 
         out_list = []
@@ -218,7 +219,7 @@ class LocalDnsQuery():
 
 
 class DnsOverTcpQuery():
-    def __init__(self, server_list=[b"114.114.114.114"], port=53):
+    def __init__(self, server_list=[b"223.5.5.5"], port=53):
         self.protocol = "Tcp"
         self.timeout = 3
         self.connection_timeout = 60
@@ -227,7 +228,7 @@ class DnsOverTcpQuery():
         self.connections = []
 
     def get_server(self):
-        return self.public_list[0]
+        return random.choice(self.public_list)
 
     def direct_connect(self, host, port):
         connect_timeout = 30
@@ -326,13 +327,12 @@ class DnsOverTcpQuery():
 
             p = DNSRecord.parse(response[2:])
             if len(p.rr) == 0:
-                xlog.warn("query_over_tcp for %s type:%d return none, cost:%f",
-                          domain, dns_type, t2-t0)
+                xlog.warn("query_over_tcp for %s type:%d return none, cost:%f", domain, dns_type, t2-t0)
 
             ips = []
             for r in p.rr:
                 ip = utils.to_bytes(str(r.rdata))
-                if not utils.check_ip_valid(ip):
+                if not utils.check_ip_valid(ip) and dns_type != 2:
                     if ip == domain:
                         continue
 
@@ -515,10 +515,20 @@ class CombineDnsQuery():
         return all(self.domain_allowed_pattern.match(x) for x in hostname.split(b"."))
 
     def query_blocked_domain(self, domain, dns_type):
-        return self.parallel_query.query(domain, dns_type, [self.https_query.query, self.tls_query.query, query_dns_from_xxnet])
+        return self.parallel_query.query(domain, dns_type, [
+            self.https_query.query,
+            self.tcp_query.query,
+            self.tls_query.query,
+            query_dns_from_xxnet,
+        ])
 
     def query_unknown_domain(self, domain, dns_type):
-        return self.parallel_query.query(domain, dns_type, [self.https_query.query, self.tls_query.query, self.tcp_query.query, query_dns_from_xxnet])
+        return self.parallel_query.query(domain, dns_type, [
+            self.https_query.query,
+            self.tls_query.query,
+            self.tcp_query.query,
+            query_dns_from_xxnet
+        ])
 
     def query(self, domain, dns_type=1, history=[]):
         domain = utils.to_bytes(domain)
@@ -581,7 +591,7 @@ class CombineDnsQuery():
         for dns_type in dns_types:
             ips = self.query(domain, dns_type)
             for ip in ips:
-                if utils.check_ip_valid(ip):
+                if dns_type == 2 or utils.check_ip_valid(ip):
                     ips_out.append(ip)
                 else:
                     ips_s = self.query_recursively(ip, dns_type)

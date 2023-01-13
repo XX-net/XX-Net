@@ -18,7 +18,7 @@ noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
 import utils
-from dnslib import DNSRecord, DNSHeader, A, AAAA, RR, DNSQuestion, QTYPE
+from dnslib import DNSRecord, DNSHeader, A, AAAA, RR, DNSQuestion, QTYPE, NS
 
 from . import global_var as g
 from xlog import getLogger
@@ -94,12 +94,12 @@ class DnsServer(object):
             if domain.endswith(b"."):
                 domain = domain[:-1]
 
-            type = request.questions[0].qtype
-            xlog.debug("DNS query:%s type:%d from %s", domain, type, addr)
+            dns_type = request.questions[0].qtype
+            xlog.debug("DNS query:%s type:%d from %s", domain, dns_type, addr)
 
-            ips = g.dns_query.query(domain, type)
+            ips = g.dns_query.query(domain, dns_type)
             if not ips:
-                xlog.debug("query:%s type:%d from:%s, get fail, cost:%d", domain, type, addr,
+                xlog.debug("query:%s type:%d from:%s, get fail, cost:%d", domain, dns_type, addr,
                            (time.time() - start_time) * 1000)
 
             reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1, auth=1), q=request.q)
@@ -107,14 +107,16 @@ class DnsServer(object):
             for ip_cn in ips:
                 ipcn_p = ip_cn.split(b"|")
                 ip = ipcn_p[0]
-                if utils.check_ip_valid4(ip) and type == 1:
+                if utils.check_ip_valid4(ip) and dns_type == 1:
                     reply.add_answer(RR(domain, ttl=60, rdata=A(ip)))
-                elif utils.check_ip_valid6(ip) and type == 28:
-                    reply.add_answer(RR(domain, rtype=type, ttl=60, rdata=AAAA(ip)))
+                elif utils.check_ip_valid6(ip) and dns_type == 28:
+                    reply.add_answer(RR(domain, rtype=dns_type, ttl=60, rdata=AAAA(ip)))
+                elif dns_type == 2:
+                    reply.add_answer(RR(domain, rtype=dns_type, ttl=60, rdata=NS(ip)))
             res_data = reply.pack()
 
             rsock.sendto(res_data, addr)
-            xlog.debug("query:%s type:%d from:%s, return ip num:%d cost:%d", domain, type, addr,
+            xlog.debug("query:%s type:%d from:%s, return ip num:%d cost:%d", domain, dns_type, addr,
                        len(reply.rr), (time.time()-start_time)*1000)
         except Exception as e:
             xlog.exception("on_query except:%r", e)

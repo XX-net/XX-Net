@@ -495,6 +495,7 @@ class CertUtil(object):
 
     @staticmethod
     def init_ca(no_mess_system=0):
+        import OpenSSL
         #xlog.debug("Initializing CA")
 
         #Check Certs Dir

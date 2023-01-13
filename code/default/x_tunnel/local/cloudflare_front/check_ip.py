@@ -68,7 +68,7 @@ class CheckAllIp(object):
         self.host = host
         self.lock = threading.Lock()
 
-        self.in_fd = open("good_ip.txt", "r")
+        self.in_fd = open(os.path.join(current_path, "good_ip.txt"), "r")
         self.out_fd = open(
             os.path.join(module_data_path, "cloudflare_checked_ip.txt"),
             "w"
@@ -82,20 +82,22 @@ class CheckAllIp(object):
                     raise Exception()
 
                 try:
-                    ip = line.split()[0]
-                    return ip
+                    ip_infos = line.split()
+                    ip = ip_infos[0]
+                    handshake_time = ip_infos[3]
+                    return ip, handshake_time
                 except:
                     continue
 
     def write_ip(self, ip, host, handshake):
         with self.lock:
-            self.out_fd.write("%s %s gws %d 0 0\n" % (ip, host, handshake))
+            self.out_fd.write("%s %s gws %s 0 0\n" % (ip, host, handshake))
             self.out_fd.flush()
 
     def checker(self):
         while True:
             try:
-                ip = self.get_ip()
+                ip, handshake_time = self.get_ip()
             except Exception as e:
                 xlog.info("no ip left")
                 return
@@ -110,7 +112,7 @@ class CheckAllIp(object):
                 xlog.debug("check fail:%s fail", ip)
                 continue
 
-            self.write_ip(ip, res.domain, res.handshake_time)
+            self.write_ip(ip, res.domain, handshake_time)
 
     def run(self):
         for i in range(0, 10):
@@ -119,8 +121,8 @@ class CheckAllIp(object):
 
 def check_all_ip(check_ip):
 
-    host_manager.HostManager(config, logger, default_domain_fn, domain_fn, front)
-    check = CheckAllIp(check_ip, "scan1.movistar.gq")
+    HostManager(config, logger, default_domain_fn, domain_fn, front)
+    check = CheckAllIp(check_ip, "scan1.half.autos")
     check.run()
 
 
