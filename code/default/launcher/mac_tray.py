@@ -2,10 +2,11 @@
 # coding:utf-8
 
 import os
+import shutil
 import sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-helper_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir, 'data', 'launcher', 'helper'))
+helper_path = os.path.join('/tmp', 'helper')
 
 if __name__ == "__main__":
     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -186,7 +187,7 @@ class MacTrayObject(AppKit.NSObject):
             service) != 'disable']  # Remove disabled services and empty lines
 
         if len(services) > 0:
-            self.disableProxy_(services)
+            self.disableProxy_(True)
 
         module_init.stop_all()
         os._exit(0)
@@ -264,7 +265,7 @@ class MacTrayObject(AppKit.NSObject):
         config.save()
         self.updateStatusBarMenu()
 
-    def disableProxy_(self, _):
+    def disableProxy_(self, is_quit=False):
         try:
             helperDisableAutoProxy(currentService)
             helperDisableGlobalProxy(currentService)
@@ -276,8 +277,11 @@ class MacTrayObject(AppKit.NSObject):
 
             xlog.info("try disable proxy:%s", executeCommand)
             subprocess.call(['osascript', '-e', executeCommand])
-        config.os_proxy_mode = "disable"
-        config.save()
+
+        if is_quit != True:
+            # in case "Disable proxy" trigger by menu, is_quit will be a {NSMenuItem}
+            config.os_proxy_mode = "disable"
+            config.save()
         self.updateStatusBarMenu()
 
 
@@ -286,12 +290,16 @@ def setupHelper():
         with open(os.devnull) as devnull:
             subprocess.check_call(helper_path, stderr=devnull)
     except:
-        rmCommand = "rm \\\"%s\\\"" % helper_path
-        cpCommand = "cp \\\"%s\\\" \\\"%s\\\"" % (os.path.join(current_path, 'mac_helper'), helper_path)
+        if os.path.exists(helper_path):
+            os.remove(helper_path)
+        shutil.copyfile(os.path.join(current_path, 'mac_helper'), helper_path)
+
         chownCommand = "chown root \\\"%s\\\"" % helper_path
         chmodCommand = "chmod 4755 \\\"%s\\\"" % helper_path
-        executeCommand = 'do shell script "%s;%s;%s;%s" with administrator privileges' % (
-        rmCommand, cpCommand, chownCommand, chmodCommand)
+        executeCommand = 'do shell script "%s;%s" with administrator privileges' % (
+            chownCommand,
+            chmodCommand
+        )
 
         xlog.info("try setup helper:%s", executeCommand)
         subprocess.call(['osascript', '-e', executeCommand])
