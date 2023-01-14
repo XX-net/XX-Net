@@ -377,7 +377,7 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
 
             elif rule == "direct":
                 if is_ipv6_ok():
-                    query_type = None
+                    query_type = 6
                 else:
                     query_type = 1
                 ips = g.dns_query.query(host, query_type)
