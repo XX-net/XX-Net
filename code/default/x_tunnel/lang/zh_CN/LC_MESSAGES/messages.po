@@ -117,7 +117,7 @@ msgid "Account"
 msgstr "账户"
 
 msgid "Logout"
-msgstr "登出"
+msgstr "退出登陆"
 
 msgid "Credit"
 msgstr "余额"
