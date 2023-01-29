@@ -247,7 +247,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             data = json.loads(utils.to_str(login_str))
             username = data["login_account"]
             password_hash = data["login_password"]
-            cloudflare_domains = data["cloudflare_domains"]
+            cloudflare_domains = data.get("cloudflare_domains")
             tls_relay = data["tls_relay"]
         except Exception as e:
             xlog.warn("token_login except:%r", e)
@@ -269,7 +269,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "Password format fail"
             })
 
-        if g.config.update_cloudflare_domains:
+        if g.config.update_cloudflare_domains and cloudflare_domains:
             g.http_client.save_cloudflare_domain(cloudflare_domains)
         if g.tls_relay_front and tls_relay.get("ips"):
             g.tls_relay_front.set_ips(tls_relay["ips"])
@@ -439,18 +439,18 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 server = str(self.postvars['server'][0])
                 server = '' if server == 'auto' else server
 
-                promoter = self.postvars.get("promoter", [""])[0]
-                if promoter != g.promoter:
-                    res, info = proxy_session.call_api("/set_config", {
-                        "account": g.config.login_account,
-                        "password": g.config.login_password,
-                        "promoter": promoter
-                    })
-                    if not res:
-                        xlog.warn("set_config fail:%s", info)
-                        return self.response_json({"res": "fail", "reason": info})
-                    else:
-                        g.promoter = promoter
+                # promoter = self.postvars.get("promoter", [""])[0]
+                # if promoter != g.promoter:
+                #     res, info = proxy_session.call_api("/set_config", {
+                #         "account": g.config.login_account,
+                #         "password": g.config.login_password,
+                #         "promoter": promoter
+                #     })
+                #     if not res:
+                #         xlog.warn("set_config fail:%s", info)
+                #         return self.response_json({"res": "fail", "reason": info})
+                #     else:
+                #         g.promoter = promoter
 
                 if is_server_available(server):
                     if server != g.config.server_host:
