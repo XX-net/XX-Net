@@ -211,7 +211,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.debug('launcher web_control %s %s %s ', self.address_string(), self.command, self.path)
             if url_path == '/config':
                 self.req_config_handler()
-            if url_path == "/log":
+            elif url_path == "/log":
                 return self.req_log_handler()
             elif url_path == '/update':
                 self.req_update_handler()
