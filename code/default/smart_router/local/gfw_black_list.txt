@@ -487,6 +487,7 @@ bignews.org
 bigsound.org
 biliworld.com
 billypan.com
+bing.com
 binux.me
 bipic.net
 bit.do
@@ -750,6 +751,7 @@ cftfc.com
 cgdepot.org
 cgst.edu
 ch.shvoong.com
+challenges.cloudflare.com
 change.org
 changeip.name
 changeip.net
@@ -3260,6 +3262,7 @@ opedialogue.org
 open.com.hk
 open.demonii.si
 openallweb.com
+openai.com
 opendemocracy.net
 opendn.xyz
 openervpn.in

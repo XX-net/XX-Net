@@ -103,6 +103,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
         if cmd == "get":
             data = {
+                "gae_enabled": g.gae_proxy is not None,
                 "pac_policy": g.config.pac_policy,
                 "country": g.config.country_code,
                 "auto_direct":g.config.auto_direct,

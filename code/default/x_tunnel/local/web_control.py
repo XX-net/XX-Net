@@ -454,6 +454,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
                 if is_server_available(server):
                     if server != g.config.server_host:
+                        xlog.info("change server to %s", server)
                         g.server_host = g.config.server_host = server
                         g.server_port = g.config.server_port = 443
                         g.config.save()

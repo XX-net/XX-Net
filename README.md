@@ -1,6 +1,7 @@
 # XX-Net (翻墙VPN)
 * 可靠稳定的的翻墙系统，已经连续8年可靠提供服务  
 * 支持Android/iOS/Windows/Mac/Linux  
+* 独有的流量混淆算法，保证网络稳定可靠不被识别
 
 <br>
 
@@ -14,12 +15,9 @@
 
 
 ### 最新公告：
- 2023-01-13
-* 新版 5.0.6，提升稳定性和性能，4.x.x 的需要重新下载安装，不能应用内升级。
-* 免费用户可以无限流量访问google, Wikipedia 和 twitter，但部分地区（比如上海、北京）封锁严重，需要购买套餐才能连接接。
-* GAE 模块需要手动开启.   
-  没有绑卡无法工作, 想使用GAE模块请手动启用, 老id需要重新部署。  
-  https://github.com/XX-net/XX-Net/tree/master/code/default/gae_proxy/server
+ 2023-02-11
+* 新版 5.0.7，支持openai/bing等网站，简化界面
+* 4.x.x 的需要重新下载安装，不能应用内升级。
 
   
 <br>

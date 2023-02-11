@@ -1078,26 +1078,26 @@
         $('button[type=submit]', '#adv-setting').attr('disabled', 'disabled');
 
         var server = $("#server-selector").val();
-        var promoter = $("#promoter").val();
-        if (promoter.length != 0 && promoter.length != 8) {
-            tip('{{ _("Promoter is invalid.") }}', 'error', false);
-            window.refresh_timer.stop();
-            return;
-        }
+<!--        var promoter = $("#promoter").val();-->
+<!--        if (promoter.length != 0 && promoter.length != 8) {-->
+<!--            tip('{{ _("Promoter is invalid.") }}', 'error', false);-->
+<!--            window.refresh_timer.stop();-->
+<!--            return;-->
+<!--        }-->
 
-        var promote_code = window.promote_code;
-        if (promoter == promote_code){
-            tip('{{ _("Can\'t promote yourself.") }}', 'error', false);
-            window.refresh_timer.stop();
-            return;
-        }
+<!--        var promote_code = window.promote_code;-->
+<!--        if (promoter == promote_code){-->
+<!--            tip('{{ _("Can\'t promote yourself.") }}', 'error', false);-->
+<!--            window.refresh_timer.stop();-->
+<!--            return;-->
+<!--        }-->
 
         $.ajax({
             type: 'POST',
             url: '/module/x_tunnel/control/config?cmd=set',
             data: {
                 'server': server,
-                'promoter': promoter
+<!--                'promoter': promoter-->
             },
             dataType: 'JSON',
             success: function (result) {

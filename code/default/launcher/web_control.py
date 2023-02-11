@@ -316,7 +316,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         else:
             right_content = b""
 
-        data = index_content % (menu_content, right_content)
+        data = index_content % (config.enable_gae_proxy, menu_content, right_content)
         self.send_response('text/html', data)
 
     def req_config_handler(self):
@@ -508,6 +508,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         module_init.start("gae_proxy")
                     else:
                         module_init.stop("gae_proxy")
+
+                    if config.enable_smart_router:
+                        module_init.stop("smart_router")
+                        module_init.start("smart_router")
+
                     self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'x_tunnel_enable' in reqs:

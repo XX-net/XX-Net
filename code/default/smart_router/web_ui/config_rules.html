@@ -9,7 +9,7 @@
         </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
+    <div class="row-fluid" id="gae-list-div" hidden>
         <div class="span2">
             <label for="gae-list">{{ _( "GAEProxy List" ) }}</label>
         </div> <!-- .span2 -->
@@ -27,7 +27,7 @@
         </div> <!-- .span10 -->
     </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
+    <div class="row-fluid" hidden>
         <div class="span2">
             <label for="redirect-https-list">{{ _( "Redirect HTTPS" ) }}</label>
         </div> <!-- .span2 -->
@@ -54,6 +54,10 @@
 </form> <!-- #import-export-ip -->
 
 <script type="text/javascript">
+
+    if (gae_enabled){
+        $("#gae-list-div").show();
+    }
     $.ajax({
         type: 'POST',
         url: '/module/smart_router/control/rules',

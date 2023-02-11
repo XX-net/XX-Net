@@ -103,6 +103,7 @@ def start(args):
         g.gae_proxy = proc_handler["gae_proxy"]["imp"].local
         g.gae_proxy_listen_port = g.gae_proxy.config.config.listen_port
     else:
+        g.gae_proxy = None
         xlog.debug("gae_proxy not running")
 
     if "x_tunnel" in proc_handler:

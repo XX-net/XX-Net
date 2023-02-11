@@ -20,8 +20,7 @@
         </div>
         <div class="span4">
             <select id="pac-policy">
-                <option value="black_GAE">{{ _("Black->GAEProxy" ) }}</option>
-                <option value="black_X-Tunnel">{{ _("Black->X-Tunnel" ) }}</option>
+<!--                <option value="black_X-Tunnel">{{ _("Black->X-Tunnel" ) }}</option>-->
                 <option value="smart-router">{{ _("All Smart-Router" ) }}</option>
                 <option value="all_X-Tunnel">{{ _("All->X-Tunnel" ) }}</option>
             </select>
@@ -42,14 +41,14 @@
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
+    <div class="row-fluid" id="auto_try_gae_proxy_div" hidden>
         <div class="config_label">{{ _( "Auto-Try GAEProxy" ) }}</div> <!-- .span4 -->
         <div class="config_switch">
             <input id="auto-gae" type="checkbox" data-toggle="switch"/>
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
 
-    <div class="row-fluid">
+    <div class="row-fluid" id="enable_fake_ca_div" hidden>
         <div class="config_label">{{ _( "Enable Fake CA" ) }}</div> <!-- .span4 -->
         <div class="config_switch">
             <input id="enable_fake_ca" type="checkbox" data-toggle="switch"/>
@@ -71,6 +70,15 @@
     });
 </script>
 <script type="text/javascript">
+    if (gae_enabled){
+        var new_option = document.getElementById("pac-policy").appendChild(document.createElement("option"));
+        new_option.value = "{{ _("Black->GAEProxy" ) }}";
+        new_option.text = "black_GAE";
+
+        $("#auto_try_gae_proxy_div").show();
+        $("#enable_fake_ca_div").show();
+    }
+
     function getSmartRouterConfig() {
         $.ajax({
             type: 'POST',
