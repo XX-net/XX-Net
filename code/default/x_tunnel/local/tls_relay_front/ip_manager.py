@@ -1,5 +1,6 @@
 import random
 
+import utils
 from front_base.ip_manager import IpManagerBase
 
 
@@ -29,7 +30,7 @@ class IpManager(IpManagerBase):
             return ip + ":" + str(port)
 
     def split_the_ip(self, ip_str):
-        ips = ip_str.split(":")[0:-1]
+        ips = utils.to_str(ip_str).split(":")[0:-1]
         ip = ":".join(ips)
         return ip
 

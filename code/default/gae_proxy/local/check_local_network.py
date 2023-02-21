@@ -203,6 +203,7 @@ def report_fail(ip):
 
 
 def is_ok(ip=None):
+    ip = utils.to_str(ip)
     if not ip:
         return IPv4.is_ok() or IPv6.is_ok()
     elif "." in ip:
