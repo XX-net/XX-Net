@@ -346,7 +346,7 @@ class ProxyServer():
             return handler.handle()
 
         sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
-        sock.replace_pattern = [url[:url_prex_len], ""]
+        sock.replace_pattern = [url[:url_prex_len], b""]
 
         xlog.debug("http %r connect to %s:%d %s %s", self.client_address, host, port, method, path)
         handle_domain_proxy(sock, host, port, self.client_address)
