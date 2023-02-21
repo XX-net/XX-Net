@@ -843,6 +843,8 @@
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
                     } else if (result['reason'] == "account not exist") {
                         tip('{{ _("Incorrect Email or password.") }}', 'error', false);
+                    } else if (result['reason'] == "status:602") {
+                        tip('{{ _("Login failed, please try login using token.") }}', 'error', false);
                     } else {
                         tip('{{ _("Login fail:") }}' + result['reason'], 'error', false);
                     }

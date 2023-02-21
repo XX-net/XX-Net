@@ -101,6 +101,9 @@ msgstr "您的密码已经复位成功。"
 msgid "Please use your new password to login."
 msgstr "请使用您的新密码登陆。"
 
+msgid "Login failed, please try login using token."
+msgstr "登陆失败，请尝试使用令牌登陆。"
+
 msgid "Register"
 msgstr "注册"
 
