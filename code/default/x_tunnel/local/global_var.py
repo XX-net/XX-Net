@@ -29,6 +29,8 @@ server_host = ""
 server_port = 0
 selectable = []
 balance = 0
+openai_balance = 0
+openai_proxies = []
 tls_relays = {}
 
 stat = {

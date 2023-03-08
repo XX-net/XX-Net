@@ -437,3 +437,9 @@ msgstr "指导"
 
 msgid " to troubleshoot."
 msgstr "去解决。"
+
+msgid "ChatGPT Manual"
+msgstr "ChatGPT指南 "
+
+msgid "https://github.com/XX-net/XX-Net/wiki/ChatGPT_EN"
+msgstr "https://github.com/XX-net/XX-Net/wiki/ChatGPT_CN "

@@ -13,6 +13,7 @@ xlog = getLogger("x_tunnel")
 
 from . import global_var as g
 from . import proxy_session
+from . import openai_handler
 
 
 def netloc_to_host_port(netloc, default_port=80):
@@ -351,15 +352,21 @@ class Socks5Server():
             lines = header_block.split(b"\r\n")
             path = url
             host = None
+            headers = {}
             for line in lines:
-                key, _, value = line.rpartition(b":")
-                if key.lower == b"host":
+                key, _, value = line.partition(b":")
+                headers[key] = value
+                if key.lower() == b"host":
                     host, port = netloc_to_host_port(value)
-                    break
             if host is None:
                 xlog.warn("http proxy host can't parsed. %s %s", req_line, header_block)
                 self.connection.send(b'HTTP/1.1 500 Fail\r\n\r\n')
                 return
+
+            if url.startswith(b"/openai/"):
+                content_length = int(headers.get(b"Content-Length", 0))
+                req_body = self.read_bytes(content_length)
+                return openai_handler.handle_openai(method, url, headers, req_body, self.connection)
 
         sock = self.connection
         conn_id = proxy_session.create_conn(sock, host, port)

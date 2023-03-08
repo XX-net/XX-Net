@@ -233,6 +233,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "paypal_button_id": g.paypal_button_id,
                 "plans": g.plans,
                 "balance": "%f" % (g.balance),
+                "openai_balance": float(g.openai_balance),
                 "quota": "%d" % (g.quota),
                 "quota_list": g.quota_list,
                 "traffic": g.session.traffic,
@@ -282,7 +283,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             g.config.save()
             res_arr = {
                 "res": "success",
-                "balance": float(g.balance)
+                "balance": float(g.balance),
+                "openai_balance": float(g.openai_balance)
             }
             g.last_refresh_time = time.time()
             g.session.start()
@@ -335,7 +337,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             g.config.save()
             res_arr = {
                 "res": "success",
-                "balance": float(g.balance)
+                "balance": float(g.balance),
+                "openai_balance": float(g.openai_balance)
             }
             g.last_refresh_time = time.time()
             g.session.start()

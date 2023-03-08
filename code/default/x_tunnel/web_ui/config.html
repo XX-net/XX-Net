@@ -139,6 +139,18 @@
                         </p>
                     </div> <!-- .span8 -->
                 </div> <!-- .row-fluid -->
+                <div class="row-fluid">
+                    <div class="span2">
+                        <label for="openai_balance">{{ _("OpenAI Credit") }}</label>
+                    </div> <!-- .span4 -->
+                    <div class="span4">
+                        <p>
+                            <span id="openai_balance">N/a</span>
+                            <!-- <a id="charge-trigger" href="javascript:void(0);">[{{ _("Charge") }}]</a> -->
+<!--                            <a id="transfer-credit-trigger" href="javascript:void(0);">[{{ _("Transfer") }}]</a>-->
+                        </p>
+                    </div> <!-- .span8 -->
+                </div> <!-- .row-fluid -->
             </div> <!-- .section -->
             <div class="section">
                 <h4>{{ _("Available Plan") }}:</h4>
@@ -534,6 +546,7 @@
                 window.promote_code = result['promote_code'];
                 $('#promoter').html(result['promoter']);
                 $('#credit').html(getCreditForHumanReading(result['balance']));
+                $('#openai_balance').html("$" + parseFloat(result['openai_balance']).toFixed(6));
 
                 $('#bandwidth').html(getBandwidthForHumanReading(result['quota']));
 

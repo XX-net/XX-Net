@@ -110,6 +110,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.postvars = json.loads(content)
             else:
                 self.postvars = {}
+                content = b''
         except Exception as e:
             xlog.exception("do_POST %s except:%r", self.path, e)
             self.postvars = {}
@@ -136,8 +137,13 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         elif url_path == "/set_proxy_applist":
             return self.set_proxy_applist()
 
-        self.send_not_found()
-        xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
+        elif url_path.startswith("/openai/"):
+            return module_init.proc_handler["x_tunnel"]["imp"].local.openai_handler.handle_openai(
+                "POST", url_path, self.headers, content, self.connection)
+
+        else:
+            self.send_not_found()
+            xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_GET(self):
         # self.headers = utils.to_str(self.headers)

@@ -1,0 +1,167 @@
+<div >
+
+    <div class="row-fluid">
+        <div class="span1"><strong>{{ _( "Help" ) }}</strong></div> <!-- .span4 -->
+        <div class="span7" id="about_current_version"> <a href="{{ _( "https://github.com/XX-net/XX-Net/wiki/ChatGPT_EN" ) }}" target="_blank">{{ _( "ChatGPT Manual" ) }}</a></div> <!-- .span8 -->
+    </div> <!-- .div.fluid -->
+
+    <div class="row-fluid" id="output-area">
+        <div id="output" class="span12"></div> <!-- #log -->
+    </div>
+
+    <div class="row-fluid" id="input-area">
+        <div class="span10" id="input-box">
+            <textarea id="prompt" rows="2"></textarea>
+        </div> <!-- .span10 -->
+        <div class="span2">
+            <button class="btn btn-primary btn-block ask-button" id="ask" type="submit">
+                <div id="submit-text" >
+                    {{ _( "Submit" ) }}
+                </div>
+                <div id="submit-loading" >
+                    <div class="lds-facebook">             <div></div><div></div><div></div></div>
+                </div>
+            </button>
+
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+
+</div> <!-- #log-container -->
+
+<script type="text/javascript">
+    title('{{ _("ChatGPT") }}');
+    $('#submit-loading').addClass('hide');
+</script>
+
+<script>
+    function append_output(text, text_class) {
+        text = text.replace(/\n/g, "<br>");
+        while (text.includes("```")){
+            text = text.replace("```", "</p><pre>");
+            text = text.replace("```", '</pre><p class="' + text_class + '">');
+        }
+        var newlines = document.createDocumentFragment();
+        var template = '<p class="%s">%s</p>\n';
+        var newline = $(template.format(text_class, text));
+        $(newlines).append(newline);
+        $('#output').append(newlines);
+    }
+
+    $('#ask').click(function () {
+        var prompt = $('#prompt').val();
+        console.log(prompt);
+        append_output(prompt, 'prompt_text');
+        $('#prompt').val('');
+
+        const req = {
+            model: "gpt-3.5-turbo",
+            // Submit only the role and content of the messages, provide the previous messages as well for context
+            messages: [
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        };
+        $('#submit-text').addClass('hide');
+        $('#submit-loading').removeClass('hide');
+
+        $.ajax({
+            type: 'POST',
+            url: '/openai/v1/chat/completions',
+            data: JSON.stringify(req),
+            dataType: 'JSON',
+            success: function (result) {
+                for (const choice of result['choices']) {
+                    const message = choice["message"];
+                    const content = message["content"];
+                    append_output(content, "complete_text");
+                }
+                $('#output').scrollTop($('#output')[0].scrollHeight);
+
+                $('#submit-text').removeClass('hide');
+                $('#submit-loading').addClass('hide');
+            },
+            error: function () {
+                tip('{{ _( "Call API failed." ) }}', 'error');
+                $('#submit-text').removeClass('hide');
+                $('#submit-loading').addClass('hide');
+            }
+        });
+    });
+</script>
+
+
+<style type="text/css">
+#output-area {
+}
+#output {
+    background-color: #f4f6f6;
+    border: 2px solid #d5dbdb;
+    border-radius: 6px;
+    color: #34495e;
+    font-size: 14.994px;
+    line-height: 24px;
+    max-width: 100%;
+    overflow-y: auto;
+    padding: 5px 11px;
+    text-indent: 0;
+    height: calc(100vh - 290px);
+}
+#input-area {
+}
+#input-box {
+    margin-top: 20px;
+}
+div#content textarea {
+    height: 60px;
+}
+.prompt_text {
+    color: blue;
+}
+.complete_text {
+    color: green;
+}
+.ask-button {
+    height: 80px;
+}
+#submit-loading{
+  margin-top: -10px;
+}
+.lds-facebook {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-facebook div {
+  display: inline-block;
+  position: absolute;
+  left: 8px;
+  width: 16px;
+  background: #fff;
+  animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+.lds-facebook div:nth-child(1) {
+  left: 8px;
+  animation-delay: -0.24s;
+}
+.lds-facebook div:nth-child(2) {
+  left: 32px;
+  animation-delay: -0.12s;
+}
+.lds-facebook div:nth-child(3) {
+  left: 56px;
+  animation-delay: 0;
+}
+@keyframes lds-facebook {
+  0% {
+    top: 8px;
+    height: 64px;
+  }
+  50%, 100% {
+    top: 24px;
+    height: 32px;
+  }
+}
+</style>
