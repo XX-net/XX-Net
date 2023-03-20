@@ -358,6 +358,9 @@ class HttpServerHandler():
         data.append(b'Content-Length: %d\r\n' % len(content))
         if len(headers):
             if isinstance(headers, dict):
+                headers = utils.to_bytes(headers)
+                if b'Content-Length' in headers:
+                    del headers[b'Content-Length']
                 for key in headers:
                     data.append(b"%s: %s\r\n" % (utils.to_bytes(key), utils.to_bytes(headers[key])))
             elif isinstance(headers, str):

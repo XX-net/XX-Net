@@ -83,6 +83,23 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         # for k,v in self.module_menus:
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
+    def do_OPTIONS(self):
+        try:
+            origin = utils.to_str(self.headers.get(b'Origin'))
+            # if origin not in self.config.allow_web_origins:
+            #     return
+
+            header = {
+                "Allow": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
+                "Access-Control-Allow-Headers": "Authorization,Content-Type",
+            }
+            return self.send_response(headers=header)
+        except Exception as e:
+            xlog.exception("options fail:%r", e)
+            return self.send_not_found()
+
     def do_POST(self):
         self.headers = utils.to_str(self.headers)
         self.path = utils.to_str(self.path)
@@ -138,8 +155,9 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             return self.set_proxy_applist()
 
         elif url_path.startswith("/openai/"):
-            return module_init.proc_handler["x_tunnel"]["imp"].local.openai_handler.handle_openai(
+            status, res_headers, res_body = module_init.proc_handler["x_tunnel"]["imp"].local.openai_handler.handle_openai(
                 "POST", url_path, self.headers, content, self.connection)
+            return self.send_response(content=res_body, headers=res_headers, status=status)
 
         else:
             self.send_not_found()

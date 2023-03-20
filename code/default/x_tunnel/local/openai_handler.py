@@ -59,7 +59,8 @@ def handle_openai(method, path, headers, req_body, sock):
 
     host = get_openai_proxy()
     if not host:
-        return sock.send(b'HTTP/1.1 401 Fail\r\n\r\n')
+        # return sock.send(b'HTTP/1.1 401 Fail\r\n\r\n')
+        return 401, {}, "Service not available at current status."
 
     path = utils.to_str(path[7:])
     headers = utils.to_str(headers)
@@ -85,8 +86,11 @@ def handle_openai(method, path, headers, req_body, sock):
         except Exception as e1:
             xlog.exception("cal tokens err:%r", e1)
 
-    sock.send(b'HTTP/1.1 %d OK\r\n' % (status))
+    res_headers = {
+        "Content-Type": "application/json"
+    }
     for key, value in response.headers.items():
-        sock.send(b'%s: %s\r\n' % (key, value))
-    sock.send(b'\r\n')
-    sock.send(content)
+        if key.startswith(b"Openai"):
+            res_headers[key] = value
+
+    return status, res_headers, content
