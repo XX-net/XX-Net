@@ -1,9 +1,7 @@
 # 规则：
 * 请不要只写标题，不写内容，请先清空或另起新行，不遵守规则的提问会被自动关闭。
 
-* X-Tunnel 支付后流量未及时到帐请直接向 xxnet.dev@gmail.com 发邮件，并附上帐号、交易单号等详细信息。
-
-* 是否试过[最新的版本](https://github.com/XX-net/XX-Net/releases )？
+* 登陆问题、602问题， 请发邮件到  xxnet.dev@gmail.com ，附上帐号，最好将data目录打包发附件供分析。
 
 * 是否查看过 [Wiki](https://github.com/XX-net/XX-Net/wiki )？
 
