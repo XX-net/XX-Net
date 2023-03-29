@@ -170,11 +170,17 @@ class HttpsDispatcher(object):
         while self.running:
             best_score = 99999999
             best_worker = None
+            good_worker = 0
             idle_num = 0
             now = time.time()
             for worker in self.workers:
-                if not worker.accept_task or worker.is_life_end():
+                if worker.is_life_end():
                     # self.logger.debug("not accept")
+                    continue
+
+                good_worker += 1
+
+                if not worker.accept_task:
                     continue
 
                 if worker.version == "1.1":
@@ -189,7 +195,7 @@ class HttpsDispatcher(object):
                     best_score = score
                     best_worker = worker
 
-            if len(self.workers) < self.config.dispather_max_workers and \
+            if good_worker < self.config.dispather_max_workers and \
                     (best_worker is None or
                     idle_num < self.config.dispather_min_idle_workers or
                     len(self.workers) < self.config.dispather_min_workers or
@@ -268,11 +274,15 @@ class HttpsDispatcher(object):
             if response and response.status == 200:
                 self.success_num += 1
                 self.continue_fail_num = 0
+                task.worker.continue_fail_tasks = 0
             else:
                 self.logger.warn("task %s %s %s timeout", method, host, path)
                 self.fail_num += 1
                 self.continue_fail_num += 1
                 self.last_fail_time = time.time()
+                task.worker.continue_fail_tasks += 1
+                if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
+                    self.trigger_create_worker_cv.notify()
 
             task.set_state("get_response")
             return response

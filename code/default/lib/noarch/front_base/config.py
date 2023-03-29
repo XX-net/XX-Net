@@ -20,6 +20,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("dispather_max_workers", 60)
         self.set_var("dispather_score_factor", 1)
         self.set_var("dispather_max_idle_workers", 30)
+        self.set_var("dispather_worker_max_continue_fail", 2)
 
         self.set_var("max_task_num", 100)
 

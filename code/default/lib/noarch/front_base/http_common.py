@@ -192,6 +192,7 @@ class HttpWorker(object):
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
+        self.continue_fail_tasks = 0
         self.speed_history = []
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
@@ -249,7 +250,12 @@ class HttpWorker(object):
             return self.ssl_sock.host
 
     def is_life_end(self):
-        if time.time() > self.life_end_time:
+        now = time.time()
+        if now > self.life_end_time:
+            return True
+        elif now - self.last_recv_time > 230:
+            return True
+        elif self.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
             return True
         else:
             return False

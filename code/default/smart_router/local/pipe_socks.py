@@ -60,10 +60,12 @@ class PipeSocks(object):
         with self.sock_notify:
             s1.pair_sock = s2
             s2.pair_sock = s1
-            self.select2.register(s1, selectors.EVENT_READ)
-            self.select2.register(s2, selectors.EVENT_READ)
-            self.read_set.add(s1)
-            self.read_set.add(s2)
+            # self.select2.register(s1, selectors.EVENT_READ)
+            # self.select2.register(s2, selectors.EVENT_READ)
+            # self.read_set.add(s1)
+            # self.read_set.add(s2)
+            self.try_add("READ", s1)
+            self.try_add("READ", s2)
 
             self.sock_notify.notify()
 
