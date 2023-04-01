@@ -632,7 +632,12 @@ class Conn(object):
             finally:
                 self.recv_notice.release()
 
-            events = select2.select(timeout=1.0)
+            try:
+                events = select2.select(timeout=1.0)
+            except Exception as e:
+                xlog.warn("Conn session:%s conn:%d select except:%r", self.session.session_id, self.conn_id, e)
+                break
+
             for key, event in events:
                 if event & selectors.EVENT_READ:
                     try:

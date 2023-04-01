@@ -132,8 +132,8 @@ def download_worker():
     sha256_fn = os.path.join(switchyomega_path, "Sha256.txt")
     download_file("https://raw.githubusercontent.com/XX-net/XX-Net/master/SwitchyOmega/Sha256.txt", sha256_fn)
     sha256_dict = get_sha256(sha256_fn)
-    download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/SwitchyOmega.crx",
-                  os.path.join(switchyomega_path, "SwitchyOmega.crx"), sha256_dict.get("SwitchyOmega.crx", None))
+    download_file("https://github.com/XX-net/XX-Net/releases/download/5.1.1/SwitchyOmega.zip",
+                  os.path.join(switchyomega_path, "SwitchyOmega.zip"), sha256_dict.get("SwitchyOmega.zip", None))
     download_file("https://github.com/XX-net/XX-Net/releases/download/3.15.0/AutoProxy.xpi",
                   os.path.join(switchyomega_path, "AutoProxy.xpi"), sha256_dict.get("AutoProxy.xpi", None))
 

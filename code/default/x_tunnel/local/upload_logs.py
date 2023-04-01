@@ -23,6 +23,9 @@ def sleep(t):
             return
 
         sleep_time = min(1, end_time - time.time())
+        if sleep_time < 0:
+            break
+
         time.sleep(sleep_time)
 
 

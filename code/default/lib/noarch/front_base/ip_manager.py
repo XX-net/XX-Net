@@ -8,7 +8,7 @@ import time
 import random
 
 import six
-
+import utils
 
 class IpManagerBase():
     def __init__(self, config, ip_source, logger):
@@ -579,6 +579,7 @@ class IpManager():
         # self.logger.debug("%s close:%s", ip, reason)
         self.ip_lock.acquire()
         try:
+            ip_str = utils.to_str(ip_str)
             if ip_str not in self.ip_dict:
                 return
 
@@ -604,6 +605,7 @@ class IpManager():
         # self.logger.debug("%s ssl_closed:%s", ip, reason)
         self.ip_lock.acquire()
         try:
+            ip_str = utils.to_str(ip_str)
             if ip_str in self.ip_dict:
                 if self.ip_dict[ip_str]['links']:
                     self.ip_dict[ip_str]['links'] -= 1
