@@ -9,22 +9,27 @@
 import sys
 
 error_str = ""
+
 try:
-    from .boringssl_wrap import SSLConnection, SSLContext, SSLCert
-    implementation = "BoringSSL"
+    from .pyutls_wrap import SSLConnection, SSLContext, SSLCert
+    implementation = "UTLS"
 except Exception as e:
-    error_str = "import boringssl except: %r;" % e
-
     try:
-        from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
-        implementation = "TLSLite, import boringssl except:" + error_str
+        from .boringssl_wrap import SSLConnection, SSLContext, SSLCert
+        implementation = "BoringSSL"
     except Exception as e:
-        error_str += "import tlslite except: %r;" % e
+        error_str = "import boringssl except: %r;" % e
 
-        if sys.version_info[0] == 3:
-            from .ssl_wrap import SSLConnection, SSLContext, SSLCert
+        try:
+            from .tlslite_wrap import SSLConnection, SSLContext, SSLCert
+            implementation = "TLSLite, import boringssl except:" + error_str
+        except Exception as e:
+            error_str += "import tlslite except: %r;" % e
 
-            implementation = "ssl, import tlslite except:" + error_str
-        else:
-            from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
-            implementation = "OpenSSL, import tlslite except:" + error_str
+            if sys.version_info[0] == 3:
+                from .ssl_wrap import SSLConnection, SSLContext, SSLCert
+
+                implementation = "ssl, import tlslite except:" + error_str
+            else:
+                from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
+                implementation = "OpenSSL, import tlslite except:" + error_str
