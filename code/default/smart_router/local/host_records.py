@@ -249,6 +249,7 @@ class IpRecord(object):
         self.running = True
 
     def get(self, ip):
+        ip = utils.to_str(ip)
         with self.lock:
             record = None
             try:
@@ -259,6 +260,7 @@ class IpRecord(object):
             return record
 
     def set(self, ip, record):
+        ip = utils.to_str(ip)
         with self.lock:
             try:
                 self.cache.pop(ip)
@@ -296,6 +298,8 @@ class IpRecord(object):
                         continue
 
                     ip = lp[0]
+                    if ip.startswith("b'"):
+                        ip = ip[2:-1]
                     rule = lp[1]
                     connect_time = int(lp[2])
                     update_time = int(lp[3])
@@ -323,6 +327,7 @@ class IpRecord(object):
         self.need_save = False
 
     def get_connect_time(self, ip, port=None):
+        ip = utils.to_str(ip)
         record = self.get(ip)
         if not record or time.time() - record["update"] > self.ttl:
             if utils.check_ip_valid4(ip):
@@ -333,6 +338,7 @@ class IpRecord(object):
             return record["c"]
 
     def update_rule(self, ip, port, rule):
+        ip = utils.to_str(ip)
         record = self.get(ip)
         if b"." in ip:
             connect_time = 6000
@@ -348,6 +354,7 @@ class IpRecord(object):
         return self.set(ip, record)
 
     def update_connect_time(self, ip, port, connect_time):
+        ip = utils.to_str(ip)
         record = self.get(ip)
         if not record:
             record = {"r": "direct", "c": connect_time}
@@ -357,6 +364,7 @@ class IpRecord(object):
         return self.set(ip, record)
 
     def report_connect_fail(self, ip, port):
+        ip = utils.to_str(ip)
         if not is_network_ok(ip):
             return
 

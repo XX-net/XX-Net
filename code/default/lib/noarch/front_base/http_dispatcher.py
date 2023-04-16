@@ -175,7 +175,8 @@ class HttpsDispatcher(object):
             now = time.time()
             for worker in self.workers:
                 if worker.is_life_end():
-                    # self.logger.debug("not accept")
+                    # self.logger.debug("close life end work %s", worker)
+                    # self.close_cb(worker)
                     continue
 
                 good_worker += 1

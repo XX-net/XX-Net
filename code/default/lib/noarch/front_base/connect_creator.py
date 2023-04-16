@@ -1,4 +1,3 @@
-
 import socket
 import struct
 import time
@@ -49,6 +48,7 @@ class ConnectCreator(object):
                                     password=self.config.PROXY_PASSWD)
 
     def connect_ssl(self, ip_str, sni=None, close_cb=None):
+        ip_str = utils.to_str(ip_str)
         if sni:
             host = sni
         else:
@@ -135,13 +135,15 @@ class ConnectCreator(object):
 
             if isinstance(self.config.check_sni, str):
                 if self.config.check_sni not in peer_cert["altName"]:
-                    raise socket.error('check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
+                    raise socket.error(
+                        'check sni fail:%s, alt_names:%s' % (self.config.check_sni, peer_cert["altName"]))
 
             elif self.config.check_sni:
                 alt_name = peer_cert["altName"]
                 if isinstance(alt_name, str):
                     if not ssl_sock.sni.endswith(alt_name):
-                        raise socket.error('check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, alt_name))
+                        raise socket.error(
+                            'check %s sni:%s fail, alt_names:%s' % (ssl_sock.ip_str, ssl_sock.sni, alt_name))
                 elif isinstance(alt_name, list):
                     for alt_name_n in alt_name:
                         if ssl_sock.sni.endswith(alt_name_n):
