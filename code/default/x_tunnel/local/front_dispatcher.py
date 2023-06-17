@@ -173,7 +173,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
         content, status, response = front.request(
             method, host=host, path=path, headers=dict(headers), data=data, timeout=timeout)
 
-        if status not in [200, 521]:
+        if status not in [200, 521, 400, 404]:
             xlog.warn("front retry %s%s", host, path)
             time.sleep(1)
             continue

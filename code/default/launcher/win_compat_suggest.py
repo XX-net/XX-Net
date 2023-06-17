@@ -222,7 +222,6 @@ _blacklist = {
         "rsmain",
     ],
     ("江民", "Jiangmin"): [
-        "UIHost",
         "KVMonXP",
         "kvsrvxp",
         "kvxp",

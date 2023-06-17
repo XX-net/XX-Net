@@ -65,7 +65,8 @@ if __name__ == '__main__':
     import traceback
 
     try:
-        post_data()
+        # post_data()
+        get_dns()
     except Exception:
         traceback.print_exc(file=sys.stdout)
     except KeyboardInterrupt:
