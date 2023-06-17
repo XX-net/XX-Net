@@ -526,47 +526,49 @@ class IpManager():
         self.ip_lock.acquire()
         try:
             time_now = time.time()
-            if not ip_str in self.ip_dict:
-                self.logger.debug("report_connect_fail %s not exist", ip_str)
+            ip, _ = utils.get_ip_port(ip_str)
+            ip = utils.to_str(ip)
+            if not ip in self.ip_dict:
+                self.logger.debug("report_connect_fail %s not exist", ip)
                 return
 
             if force_remove:
-                if self.ip_dict[ip_str]['fail_times'] == 0:
-                    self._add_ip_num(ip_str, -1)
-                del self.ip_dict[ip_str]
+                if self.ip_dict[ip]['fail_times'] == 0:
+                    self._add_ip_num(ip, -1)
+                del self.ip_dict[ip]
 
-                if ip_str in self.ip_list:
-                    self.ip_list.remove(ip_str)
+                if ip in self.ip_list:
+                    self.ip_list.remove(ip)
 
-                self.logger.info("remove ip:%s left amount:%d target_num:%d", ip_str, len(self.ip_dict),
+                self.logger.info("remove ip:%s left amount:%d target_num:%d", ip, len(self.ip_dict),
                                  len(self.ip_list))
                 return
 
-            if self.ip_dict[ip_str]['links'] > 0:
-                self.ip_dict[ip_str]['links'] -= 1
+            if self.ip_dict[ip]['links'] > 0:
+                self.ip_dict[ip]['links'] -= 1
 
-            self.check_local_network.report_fail(ip_str)
+            self.check_local_network.report_fail(ip)
             # ignore if system network is disconnected.
-            if not self.check_local_network.is_ok(ip_str):
+            if not self.check_local_network.is_ok(ip):
                 self.logger.debug("report_connect_fail network fail")
                 return
 
-            fail_time = self.ip_dict[ip_str]["fail_time"]
+            fail_time = self.ip_dict[ip]["fail_time"]
             if time_now - fail_time < 1:
-                self.logger.debug("fail time too near %s", ip_str)
+                self.logger.debug("fail time too near %s", ip)
                 return
 
-            if self.ip_dict[ip_str]['fail_times'] == 0:
-                self._add_ip_num(ip_str, -1)
-            self.ip_dict[ip_str]['fail_times'] += 1
-            self.append_ip_history(ip_str, "fail")
-            self.ip_dict[ip_str]["fail_time"] = time_now
+            if self.ip_dict[ip]['fail_times'] == 0:
+                self._add_ip_num(ip, -1)
+            self.ip_dict[ip]['fail_times'] += 1
+            self.append_ip_history(ip, "fail")
+            self.ip_dict[ip]["fail_time"] = time_now
 
             # self.to_check_ip_queue.put((ip, time_now + 10))
-            self.logger.debug("report_connect_fail:%s", ip_str)
+            self.logger.debug("report_connect_fail:%s", ip)
 
         except Exception as e:
-            self.logger.exception("report_connect_fail err:%s", e)
+            self.logger.exception("report_connect_fail %s err:%s", ip_str, e)
         finally:
             self.iplist_need_save = True
             self.ip_lock.release()
@@ -579,23 +581,25 @@ class IpManager():
         # self.logger.debug("%s close:%s", ip, reason)
         self.ip_lock.acquire()
         try:
-            ip_str = utils.to_str(ip_str)
-            if ip_str not in self.ip_dict:
+            ip, _ = utils.get_ip_port(ip_str)
+            ip = utils.to_str(ip)
+            if ip not in self.ip_dict:
+                self.logger.debug("report_connect_closed %s not exist", ip)
                 return
 
             time_now = time.time()
 
             if reason not in ["down fail", ] and not reason.startswith("status "):
-                self.ip_dict[ip_str]["last_active"] = time_now
+                self.ip_dict[ip]["last_active"] = time_now
                 return
 
-            if self.ip_dict[ip_str]['down_fail'] == 0:
-                self._add_ip_num(ip_str, -1)
+            if self.ip_dict[ip]['down_fail'] == 0:
+                self._add_ip_num(ip, -1)
 
-            self.ip_dict[ip_str]['down_fail'] += 1
-            self.append_ip_history(ip_str, reason)
-            self.ip_dict[ip_str]["down_fail_time"] = time_now
-            self.logger.debug("report_connect_closed %s, reason:%s", ip_str, reason)
+            self.ip_dict[ip]['down_fail'] += 1
+            self.append_ip_history(ip, reason)
+            self.ip_dict[ip]["down_fail_time"] = time_now
+            self.logger.debug("report_connect_closed %s, reason:%s", ip, reason)
         except Exception as e:
             self.logger.error("ssl_closed %s err:%s", ip_str, e)
         finally:
@@ -605,12 +609,16 @@ class IpManager():
         # self.logger.debug("%s ssl_closed:%s", ip, reason)
         self.ip_lock.acquire()
         try:
-            ip_str = utils.to_str(ip_str)
-            if ip_str in self.ip_dict:
-                if self.ip_dict[ip_str]['links']:
-                    self.ip_dict[ip_str]['links'] -= 1
-                    self.append_ip_history(ip_str, "C[%s]" % reason)
-                    # self.logger.debug("ssl_closed %s", ip)
+            ip, _ = utils.get_ip_port(ip_str)
+            ip = utils.to_str(ip)
+            if ip not in self.ip_dict:
+                self.logger.debug("ssl_closed %s not exist", ip)
+                return
+
+            if self.ip_dict[ip]['links']:
+                self.ip_dict[ip]['links'] -= 1
+                self.append_ip_history(ip, "C[%s]" % reason)
+                # self.logger.debug("ssl_closed %s", ip)
         except Exception as e:
             self.logger.error("ssl_closed %s err:%s", ip_str, e)
         finally:

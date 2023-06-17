@@ -19,9 +19,12 @@ class Config(ConfigBase):
 
         # connect_manager
         self.set_var("https_connection_pool_min", 0)
-        self.set_var("max_links_per_ip", 2)
+        self.set_var("max_links_per_ip", 1)
 
         # connect_creator
         self.set_var("connect_force_http2", 1)
+
+        # http 2 worker
+        self.set_var("http2_status_to_close", [500])
 
         self.load()

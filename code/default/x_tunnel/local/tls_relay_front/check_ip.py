@@ -38,6 +38,7 @@ from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
+from x_tunnel.local.tls_relay_front import front
 from x_tunnel.local.tls_relay_front.config import Config
 from x_tunnel.local.tls_relay_front.host_manager import HostManager
 
@@ -47,23 +48,28 @@ if __name__ == "__main__":
     # case 2: ip + domain
     #    connect use domain
 
-    top_domain = None
+    wait_time = 0
+    ip = "127.0.0.1:60000"
+    top_domain = "agentnobody.pics"
+    path = "/"
+    headers = {
+        "xx-account": "test@xx-net.com",
+        "X-Host": "scan1.xx-net.org",
+        "X-Path": "/"
+    }
 
     if len(sys.argv) > 1:
         ip = sys.argv[1]
+        if len(sys.argv) > 2:
+            top_domain = sys.argv[2]
+            if len(sys.argv) > 3:
+                path += sys.argv[3]
     else:
-        ip = "127.0.0.1:60000"
-        top_domain = "agentnobody.pics"
         print("Usage: check_ip.py [ip] [top_domain] [wait_time=0]")
+
     print(("test ip:%s" % ip))
-
-    if len(sys.argv) > 2:
-        top_domain = sys.argv[2]
-
-    if len(sys.argv) > 3:
-        wait_time = int(sys.argv[3])
-    else:
-        wait_time = 0
+    print("sni: %s" % top_domain)
+    print("path: %s" % path)
 
     config_path = os.path.join(module_data_path, "tls_relay.json")
     config = Config(config_path)
@@ -75,10 +81,13 @@ if __name__ == "__main__":
     connect_creator = ConnectCreator(logger, config, openssl_context, host_manager)
     check_ip = CheckIp(logger, config, connect_creator)
 
-    res = check_ip.check_ip(ip, sni=top_domain, host=top_domain, wait_time=wait_time)
+    res = check_ip.check_ip(ip, sni=top_domain, host=top_domain, wait_time=wait_time, path=path, headers=headers)
     if not res:
         print("connect fail")
     elif res.ok:
-        print(("success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time)))
+        print(("Check success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time)))
     else:
         print("not support")
+
+    front.stop()
+    sys.exit(0)

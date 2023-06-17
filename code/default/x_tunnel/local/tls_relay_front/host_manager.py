@@ -1,6 +1,7 @@
 import os
 import json
 
+import utils
 from front_base.host_manager import HostManagerBase
 
 
@@ -40,8 +41,8 @@ class HostManager(HostManagerBase):
         return self.info[ip]["sni"], ""
 
     def get_info(self, ip_str):
-        ipl = ip_str.split(":")[0:-1]
-        ip = ":".join(ipl)
+        ip, _ = utils.get_ip_port(ip_str)
+        ip = utils.to_str(ip)
         if ip not in self.info:
             raise Exception
 

@@ -178,6 +178,11 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
             time.sleep(1)
             continue
 
+        if len(content) != int(response.headers.get(b"Content-Length", 0)):
+            xlog.warn("response length incorrect, retry it")
+            time.sleep(1)
+            continue
+
         return content, status, response
 
     return content, status, response

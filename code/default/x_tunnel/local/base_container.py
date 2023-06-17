@@ -2,6 +2,7 @@ import threading
 import time
 import socket
 import xstruct as struct
+from datetime import datetime
 
 import selectors2 as selectors
 
@@ -355,6 +356,8 @@ class Conn(object):
         self.recv_thread = None
         self.cmd_thread = None
         self.xlog = xlog
+        self.create_time = time.time()
+        self.last_active = time.time()
 
         self.transfered_close_to_peer = False
         if sock:
@@ -385,9 +388,13 @@ class Conn(object):
         out_string += " next_cmd_seq:%d<br>\n" % self.next_cmd_seq
         out_string += " next_recv_seq:%d<br>\n" % self.next_recv_seq
         out_string += " status: running:%r<br>\n" % self.running
+        out_string += " cmd_thread:%r<br>\n" % self.cmd_thread
+        out_string += " recv_thread:%r<br>\n" % self.recv_thread
         out_string += " transfered_close_to_peer:%r<br>\n" % self.transfered_close_to_peer
         out_string += " sock:%r<br>\n" % (self.sock is not None)
-        out_string += " cmd_queue.len:%d " % len(self.cmd_queue)
+        out_string += " cmd_queue.len:%d<br> " % len(self.cmd_queue)
+        out_string += " create time: %s<br>" % datetime.fromtimestamp(self.create_time).strftime('%Y-%m-%d %H:%M:%S.%f')
+        out_string += " last active: %s<br>" % datetime.fromtimestamp(self.last_active).strftime('%Y-%m-%d %H:%M:%S.%f')
         for seq in self.cmd_queue:
             out_string += "[%d]," % seq
         out_string += "<br>\n"
@@ -504,6 +511,7 @@ class Conn(object):
             if not data:
                 break
 
+            self.last_active = time.time()
             cmd_id = struct.unpack("<B", data.get(1))[0]
             if cmd_id == 1:  # data
                 self.send_to_sock(data)
@@ -623,44 +631,56 @@ class Conn(object):
         select2.register(sock, selectors.EVENT_READ)
         while self.running:
 
-            self.recv_notice.acquire()
             try:
-                if self.received_position > self.remote_acked_position + self.windows_size:
-                    self.xlog.debug("Conn session:%s conn:%d recv blocked, rcv:%d, ack:%d", self.session.session_id, self.conn_id, self.received_position, self.remote_acked_position)
-                    self.recv_notice.wait()
-                    continue
-            finally:
-                self.recv_notice.release()
+                self.recv_notice.acquire()
+                try:
+                    if self.received_position > self.remote_acked_position + self.windows_size:
+                        self.xlog.debug("Conn session:%s conn:%d recv blocked, rcv:%d, ack:%d", self.session.session_id, self.conn_id, self.received_position, self.remote_acked_position)
+                        self.recv_notice.wait()
+                        continue
+                finally:
+                    self.recv_notice.release()
 
-            try:
-                events = select2.select(timeout=1.0)
+                try:
+                    events = select2.select(timeout=1.0)
+                    if not events:
+                        continue
+                except Exception as e:
+                    xlog.warn("Conn session:%s conn:%d select except:%r", self.session.session_id, self.conn_id, e)
+                    break
+
+                to_read = False
+                for key, event in events:
+                    if event & selectors.EVENT_READ:
+                        to_read = True
+
+                if not to_read:
+                    break
+
+                try:
+                    data = sock.recv(65535)
+                except:
+                    data = ""
+
+                data_len = len(data)
+                if data_len == 0:
+                    self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id, self.conn_id)
+                    break
+
+                self.last_active = time.time()
+                self.transfer_received_data(data)
+                # self.xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
+                #           self.session.session_id, self.conn_id, data_len, self.received_position)
+
+                # self.xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)
             except Exception as e:
-                xlog.warn("Conn session:%s conn:%d select except:%r", self.session.session_id, self.conn_id, e)
-                break
+                xlog.exception("recv_worker conn:%d e:%r", self.conn_id, e)
 
-            for key, event in events:
-                if event & selectors.EVENT_READ:
-                    try:
-                        data = sock.recv(65535)
-                    except:
-                        data = ""
+        self.transfer_peer_close("recv closed")
 
-                    data_len = len(data)
-                    if data_len == 0:
-                        self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id, self.conn_id)
-                        self.transfer_peer_close("recv closed")
+        sock.close()
+        self.sock = None
+        self.recv_thread = None
+        if self.is_client:
+            self.do_stop(reason="recv fail.")
 
-                        sock.close()
-                        self.sock = None
-
-                        self.recv_thread = None
-                        if self.is_client:
-                            self.do_stop(reason="recv fail.")
-
-                        return
-
-                    self.transfer_received_data(data)
-                    # self.xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
-                    #           self.session.session_id, self.conn_id, data_len, self.received_position)
-
-                    # self.xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)

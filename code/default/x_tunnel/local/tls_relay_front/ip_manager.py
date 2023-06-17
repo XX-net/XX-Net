@@ -27,21 +27,20 @@ class IpManager(IpManagerBase):
             self.logger.debug("get ip:%s", ip)
 
             port = self.host_manager.info[ip].get("port", 443)
+            if ":" in ip:
+                ip = "[" + ip + "]"
             return ip + ":" + str(port)
 
-    def split_the_ip(self, ip_str):
-        ips = utils.to_str(ip_str).split(":")[0:-1]
-        ip = ":".join(ips)
-        return ip
-
     def report_connect_fail(self, ip_str, reason=""):
-        ip = self.split_the_ip(ip_str)
+        ip, _ = utils.get_ip_port(ip_str)
+        ip = utils.to_str(ip)
         self.ip_dict[ip]["fail_times"] += 1
         self.ip_dict[ip]["links"] -= 1
         self.logger.debug("ip %s connect fail", ip)
 
     def update_ip(self, ip_str, handshake_time):
-        ip = self.split_the_ip(ip_str)
+        ip, _ = utils.get_ip_port(ip_str)
+        ip = utils.to_str(ip)
         self.ip_dict.setdefault(ip, {
             "fail_times": 0,
             "success_times": 0
@@ -50,8 +49,12 @@ class IpManager(IpManagerBase):
         self.logger.debug("ip %s connect success", ip)
 
     def ssl_closed(self, ip_str, reason=""):
-        ip = self.split_the_ip(ip_str)
-        self.ip_dict[ip]["links"] -= 1
+        ip, _ = utils.get_ip_port(ip_str)
+        ip = utils.to_str(ip)
+        try:
+            self.ip_dict[ip]["links"] -= 1
+        except Exception as e:
+            self.logger.exception("ssl_closed %s except:%r", ip_str, e)
         self.logger.debug("ip %s connect closed", ip)
 
     def recheck_ip(self, ip_str):

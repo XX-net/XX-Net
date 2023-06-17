@@ -183,7 +183,7 @@ class HttpWorker(object):
         self.ssl_sock = ssl_sock
         self.init_rtt = ssl_sock.handshake_time / 3
         self.rtt = self.init_rtt
-        self.speed = 1
+        self.speed = 200
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
@@ -199,12 +199,27 @@ class HttpWorker(object):
         self.life_end_time = self.ssl_sock.create_time + \
                              random.randint(self.config.connection_max_life, int(self.config.connection_max_life * 1.5))
 
+    def __str__(self):
+        o = ""
+        o += " ip_str: %s\r\n" % (self.ip_str)
+        o += " running: %s\r\n" % (self.keep_running)
+        o += " processed_tasks: %d\r\n" % (self.processed_tasks)
+        o += " continue_fail_tasks: %s\r\n" % (self.continue_fail_tasks)
+        o += " speed_history: %s\r\n" % (self.speed_history)
+        if self.version != "1.1":
+            o += "streams: %d\r\n" % len(self.streams)
+        o += " rtt: %f\r\n" % (self.rtt)
+        o += " speed: %f\r\n" % (self.speed)
+        o += " score: %f\r\n" % (self.get_score())
+        return o
+
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
-        self.speed = speed
         self.speed_history.append(speed)
-        if len(self.speed_history) > 20:
+        if len(self.speed_history) > 10:
             self.speed_history.pop(0)
+        self.speed = sum(self.speed_history) / len(self.speed_history)
+
         self.log_debug_data(rtt, sent, received)
 
     def close(self, reason):
@@ -220,26 +235,9 @@ class HttpWorker(object):
         self.close_cb(self)
 
     def get_score(self):
-        now = time.time()
-        inactive_time = now - self.last_recv_time
-
-        rtt = self.rtt
-        if inactive_time > 30:
-            if rtt > 1000:
-                rtt = 1000
-
-        if self.version == "1.1":
-            rtt += 100
-        else:
-            rtt += len(self.streams) * 500
-
-        if inactive_time > 1:
-            score = rtt
-        elif inactive_time < 0.1:
-            score = rtt + 1000
-        else:
-            # inactive_time < 2
-            score = rtt + (1 / inactive_time) * 1000
+        score = (50 - (self.speed/6.0)) + (self.rtt/30.0)
+        if self.version != "1.1":
+            score += len(self.streams) * 5
 
         return score
 

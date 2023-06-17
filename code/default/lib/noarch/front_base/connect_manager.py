@@ -299,7 +299,7 @@ class ConnectManager(object):
         except socket.error as e:
             if not self.check_local_network.is_ok(ip_str):
                 self.logger.debug("connect %s network fail, %r", ip_str, e)
-                time.sleep(10)
+                time.sleep(1)
             else:
                 self.logger.debug("connect %s network fail:%r", ip_str, e)
                 self.ip_manager.report_connect_fail(ip_str, str(e))

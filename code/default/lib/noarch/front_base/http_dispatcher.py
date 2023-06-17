@@ -173,10 +173,21 @@ class HttpsDispatcher(object):
             good_worker = 0
             idle_num = 0
             now = time.time()
+
+            # close life end works
+            to_close = []
+            for worker in self.workers:
+                if worker.is_life_end():
+                    to_close.append(worker)
+            for worker in to_close:
+                if worker.keep_running:
+                    worker.close("life end")
+                if worker in self.workers:
+                    self.workers.remove(worker)
+
             for worker in self.workers:
                 if worker.is_life_end():
                     # self.logger.debug("close life end work %s", worker)
-                    worker.close("life end")
                     # self.close_cb(worker)
                     continue
 
@@ -447,7 +458,7 @@ class HttpsDispatcher(object):
             return None
 
         now = time.time()
-        if now - self.last_fail_time < 60 and \
+        if now - self.last_fail_time < 10 and \
                 self.continue_fail_num > 10:
             return None
 

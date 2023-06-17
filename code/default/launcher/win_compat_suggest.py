@@ -67,7 +67,7 @@ class Win10PortReserveSolution(object):
         web_console_port = config.control_port
         smart_router_config_fn = os.path.join(data_path, "smart_router", "config.json")
         smart_router_socks_port = self.get_config_value(smart_router_config_fn, "proxy_port", 8086)
-        smart_router_dns_port = self.get_config_value(smart_router_config_fn, "dns_backup_port", 8083)
+        smart_router_dns_port = self.get_config_value(smart_router_config_fn, "dns_backup_port", 8053)
 
         x_tunnel_config_fn = os.path.join(data_path, "x_tunnel", "client.json")
         x_tunnel_port = self.get_config_value(x_tunnel_config_fn, "socks_port", 1080)

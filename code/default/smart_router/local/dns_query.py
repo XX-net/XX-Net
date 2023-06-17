@@ -219,7 +219,7 @@ class LocalDnsQuery():
 
 
 class DnsOverTcpQuery():
-    def __init__(self, server_list=[b"223.5.5.5"], port=53):
+    def __init__(self, server_list=[b"114.114.114.114"], port=53):
         self.protocol = "Tcp"
         self.timeout = 3
         self.connection_timeout = 60
@@ -517,7 +517,6 @@ class CombineDnsQuery():
     def query_blocked_domain(self, domain, dns_type):
         return self.parallel_query.query(domain, dns_type, [
             self.https_query.query,
-            self.tcp_query.query,
             self.tls_query.query,
             query_dns_from_xxnet,
         ])
@@ -572,7 +571,8 @@ class CombineDnsQuery():
                 if ip in history:
                     continue
 
-                ip_ips = self.query(ip, dns_type, history.append(ip))
+                history.append(ip)
+                ip_ips = self.query(ip, dns_type, history)
                 for ip in ip_ips:
                     out_ips.append(ip)
 

@@ -3,6 +3,7 @@ import os
 import json
 import time
 import threading
+import socket
 
 import simple_http_client
 
@@ -43,7 +44,7 @@ class HostManager(HostManagerBase):
     def get_sni_host(self, ip):
         ns_num = len(self.ns)
         if ns_num == 0:
-            return None, None
+            raise socket.error("no host")
 
         i = self.ns_idx % ns_num
         top_domain, subs = self.ns[i]

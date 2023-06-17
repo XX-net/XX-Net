@@ -274,7 +274,13 @@ class Socks5Server():
 
         xlog.info("socks5 %r connect to %s:%d conn_id:%d", self.client_address, addr, port, conn_id)
         reply = b"\x05\x00\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
-        sock.send(reply)
+        try:
+            sock.send(reply)
+        except Exception as e:
+            if conn_id in g.session.conn_list:
+                g.session.conn_list[conn_id].do_stop("close_on_Socks5_reply")
+            xlog.warn("socks5 %r connect to %s:%d conn_id:%d closed:%r", self.client_address, addr, port, conn_id, e)
+            return
 
         if len(self.read_buffer) - self.buffer_start:
             g.session.conn_list[conn_id].transfer_received_data(self.read_buffer[self.buffer_start:])
@@ -311,7 +317,7 @@ class Socks5Server():
             sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
             return
 
-        xlog.info("https %r connect to %s:%d conn_id:%d", self.client_address, host, port, conn_id)
+        xlog.info("https %r connect to %s:%d conn:%d", self.client_address, host, port, conn_id)
         try:
             sock.send(b'HTTP/1.1 200 OK\r\n\r\n')
         except:

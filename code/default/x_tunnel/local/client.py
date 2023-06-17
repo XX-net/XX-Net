@@ -82,6 +82,7 @@ def load_config():
     config.set_var("log_level", "DEBUG")
     config.set_var("upload_logs", True)
     config.set_var("write_log_file", 0)
+    config.set_var("save_start_log", 1500)
     config.set_var("show_debug", 0)
 
     config.set_var("encrypt_data", 0)
@@ -151,6 +152,7 @@ def load_config():
 
     xlog.setLevel(config.log_level)
     xlog.set_buffer(200)
+    xlog.save_start_log = config.save_start_log
     g.config = config
 
 
