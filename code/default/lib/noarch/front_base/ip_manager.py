@@ -201,9 +201,9 @@ class IpManager():
 
             self.logger.info("load ip_list %s num:%d, target num:%d", file_path, len(self.ip_dict), len(self.ip_list))
             if file_path == self.default_ip_list_fn and self.config.shuffle_ip_on_first_load:
-                self.logger.debug("first load, shuffle all ip")
+                # self.logger.debug("first load, shuffle all ip")
                 random.shuffle(self.ip_list)
-                self.logger.debug("ip:%s",self.ip_list)
+                # self.logger.debug("ip:%s",self.ip_list)
             else:
                 self.try_sort_ip(force=True)
 
