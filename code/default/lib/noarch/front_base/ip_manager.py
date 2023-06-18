@@ -180,7 +180,10 @@ class IpManager():
                     ip_str = str_l[0]
                     domain = str_l[1]
                     server = str_l[2]
-                    handshake_time = int(str_l[3])
+                    if file_path == self.default_ip_list_fn and self.config.shuffle_ip_on_first_load:
+                        handshake_time = random.randint(500, 800)
+                    else:
+                        handshake_time = int(str_l[3])
                     if len(str_l) > 4:
                         fail_times = int(str_l[4])
                     else:
@@ -197,10 +200,13 @@ class IpManager():
                     self.logger.exception("load_ip line:%s err:%s", line, e)
 
             self.logger.info("load ip_list %s num:%d, target num:%d", file_path, len(self.ip_dict), len(self.ip_list))
-            self.try_sort_ip(force=True)
-            # if file_path == self.default_good_ip_file:
-            #    self.logger.info("first run, rescan all exist ip")
-            #    self.start_scan_all_exist_ip()
+            if file_path == self.default_ip_list_fn and self.config.shuffle_ip_on_first_load:
+                self.logger.debug("first load, shuffle all ip")
+                random.shuffle(self.ip_list)
+                self.logger.debug("ip:%s",self.ip_list)
+            else:
+                self.try_sort_ip(force=True)
+
             return
 
     def save(self, force=False):

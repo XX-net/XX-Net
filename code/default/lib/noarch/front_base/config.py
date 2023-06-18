@@ -89,6 +89,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("long_fail_threshold", 300)
         self.set_var("long_fail_connect_interval", 180)
         self.set_var("short_fail_connect_interval", 10)
+        self.set_var("shuffle_ip_on_first_load", 0)
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6
