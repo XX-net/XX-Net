@@ -1268,6 +1268,7 @@ class CompressedCertificate(Certificate):
         compressed_content = parser.getFixBytes(compressed_length)
         parser.stopLengthCheck()
 
+        compressed_content = bytes(compressed_content)
         decompressed_content = brotli.decompress(compressed_content)
         if len(decompressed_content) != uncompressed_length:
             raise AssertionError()
