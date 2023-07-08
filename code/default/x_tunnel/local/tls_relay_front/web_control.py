@@ -53,10 +53,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             cmd = reqs["cmd"]
 
         if cmd == "get_last":
-            max_line = int(reqs["max_line"][0])
+            max_line = int(reqs["max_line"])
             data = front.logger.get_last_lines(max_line)
         elif cmd == "get_new":
-            last_no = int(reqs["last_no"][0])
+            last_no = int(reqs["last_no"])
             data = front.logger.get_new_lines(last_no)
         else:
             front.logger.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
