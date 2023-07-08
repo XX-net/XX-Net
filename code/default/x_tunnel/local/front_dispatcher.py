@@ -63,6 +63,9 @@ def init():
         session_fronts.append(direct_front)
         light_fronts.append(direct_front)
 
+    for front in all_fronts:
+        front.start()
+
     threading.Thread(target=debug_data_clearup_thread).start()
 
 
@@ -79,10 +82,7 @@ def save_cloudflare_domain(domains):
         if front.name != "cloudflare_front":
             continue
 
-        front.config.update_domains = False
-        front.config.save()
-
-        front.host_manager.save_domains(domains)
+        front.ip_manager.save_domains(domains)
 
 
 def debug_data_clearup_thread():
@@ -189,5 +189,12 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
 
 
 def stop():
+    global all_fronts, light_fronts, session_fronts, cloudflare_front
+
     for front in all_fronts:
         front.stop()
+
+    all_fronts = []
+    light_fronts = []
+    session_fronts = []
+    cloudflare_front = None

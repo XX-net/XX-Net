@@ -176,6 +176,15 @@ class HttpServerHandler():
 
         return True
 
+    def unpack_reqs(self, reqs):
+        query = {}
+        for key, val1 in reqs.items():
+            if isinstance(val1, list):
+                query[key] = val1[0]
+            else:
+                query[key] = val1
+        return query
+
     def handle_one_request(self):
         try:
             self.parse_request()
@@ -428,9 +437,9 @@ class HttpServerHandler():
             pass
             # self.logger.warn("download broken")
 
-    def response_json(self, res_arr):
+    def response_json(self, res_arr, headers=b""):
         data = json.dumps(utils.to_str(res_arr), indent=0, sort_keys=True)
-        self.send_response(b'application/json', data)
+        self.send_response(b'application/json', data, headers=headers)
 
 
 class HTTPServer():

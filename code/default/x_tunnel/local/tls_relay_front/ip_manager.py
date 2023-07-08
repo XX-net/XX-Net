@@ -10,7 +10,7 @@ class IpManager(IpManagerBase):
         self.host_manager = host_manager
         self.ip_dict = {}
 
-    def get_ip(self):
+    def get_ip_sni_host(self):
         ips = self.host_manager.ips
 
         for _ in range(len(ips)):
@@ -29,16 +29,18 @@ class IpManager(IpManagerBase):
             port = self.host_manager.info[ip].get("port", 443)
             if ":" in ip:
                 ip = "[" + ip + "]"
-            return ip + ":" + str(port)
+            return ip + ":" + str(port), None, None
 
-    def report_connect_fail(self, ip_str, reason=""):
+        return None, None, None
+
+    def report_connect_fail(self, ip_str, sni=None, reason=""):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         self.ip_dict[ip]["fail_times"] += 1
         self.ip_dict[ip]["links"] -= 1
         self.logger.debug("ip %s connect fail", ip)
 
-    def update_ip(self, ip_str, handshake_time):
+    def update_ip(self, ip_str, sni, handshake_time):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         self.ip_dict.setdefault(ip, {
@@ -48,7 +50,7 @@ class IpManager(IpManagerBase):
         self.ip_dict[ip]["success_times"] += 1
         self.logger.debug("ip %s connect success", ip)
 
-    def ssl_closed(self, ip_str, reason=""):
+    def ssl_closed(self, ip_str, sni=None, reason=""):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         try:

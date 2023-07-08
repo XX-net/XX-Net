@@ -125,6 +125,8 @@ def main():
 
     allow_remote = 0
     no_mess_system = 0
+    no_popup = 0
+    no_systray = 0
     if len(sys.argv) > 1:
         for s in sys.argv[1:]:
             xlog.info("command args:%s", s)
@@ -132,6 +134,10 @@ def main():
                 allow_remote = 1
             elif s == "-no_mess_system":
                 no_mess_system = 1
+            elif s == "-no_popup":
+                no_popup = 1
+            elif s == "-no_systray":
+                no_systray = 1
 
     if allow_remote or config.allow_remote_connect:
         xlog.info("start with allow remote connect.")
@@ -149,7 +155,7 @@ def main():
     module_init.start_all_auto()
     web_control.start(allow_remote)
 
-    if has_desktop and config.popup_webui == 1 and not restart_from_except:
+    if has_desktop and config.popup_webui == 1 and not restart_from_except and not no_popup:
         host_port = config.control_port
         import webbrowser
         webbrowser.open("http://localhost:%s/" % host_port)
@@ -159,7 +165,7 @@ def main():
         download_modules.start_download()
     update_from_github.cleanup()
 
-    if config.show_systray:
+    if config.show_systray and not no_systray:
         sys_platform.show_systray()
     else:
         while global_var.running:

@@ -239,7 +239,7 @@ class SSLConnection(object):
 
                 self.socket_closed = True
                 if self._on_close:
-                    self._on_close(self.ip_str)
+                    self._on_close(self.ip_str, self.sni)
 
     def __del__(self):
         self.close()

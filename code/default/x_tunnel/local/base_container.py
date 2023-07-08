@@ -117,22 +117,21 @@ class AckPool():
 
     def reset(self):
         # xlog.info("Ack_pool reset")
-        self.mutex.acquire()
-        self.ack_buffer = WriteBuffer()
-        self.mutex.release()
+        with self.mutex:
+            self.ack_buffer = WriteBuffer()
+
         # xlog.info("Ack_pool reset finished")
 
     def put(self, data):
         # xlog.debug("Ack_pool put len:%d", len(data))
-        self.mutex.acquire()
-        self.ack_buffer.append(data)
-        self.mutex.release()
+        with self.mutex:
+            self.ack_buffer.append(data)
 
     def get(self):
-        self.mutex.acquire()
-        data = self.ack_buffer
-        self.ack_buffer = WriteBuffer()
-        self.mutex.release()
+        with self.mutex:
+            data = self.ack_buffer
+            self.ack_buffer = WriteBuffer()
+
         # xlog.debug("Ack_pool get len:%d", len(data))
         return data
 

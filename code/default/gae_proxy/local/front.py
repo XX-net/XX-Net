@@ -66,7 +66,7 @@ class Front(object):
             self.ipv4_source, self.ipv6_source
         )
         self.ip_manager = IpManager(
-            logger, self.config, self.ip_source, check_local_network,
+            logger, self.config, self.ip_source, self.host_manager, check_local_network,
             self.check_ip,
             None,
             os.path.join(module_data_path, "good_ip.txt"),

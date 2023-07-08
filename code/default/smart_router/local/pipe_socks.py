@@ -45,6 +45,11 @@ class PipeSocks(object):
 
     def stop(self):
         self.running = False
+        with self.sock_notify:
+            for s in list(self.read_set) + list(self.write_set):
+                self.close(s, "stop")
+
+            self.sock_notify.notify()
 
     def add_socks(self, s1, s2):
         for s in [s1, s2]:
@@ -352,7 +357,8 @@ class PipeSocks(object):
             except Exception as e:
                 xlog.exception("pipe except:%r", e)
 
-        for s in list(self.read_set) + list(self.write_set):
-            self.close(s, "stop")
+        with self.sock_notify:
+            for s in list(self.read_set) + list(self.write_set):
+                self.close(s, "stop")
 
         xlog.info("pipe stopped.")

@@ -26,7 +26,7 @@ module_data_path = os.path.join(data_path, 'x_tunnel')
 class Front(object):
     name = "cloudfront_front"
 
-    def __init__(self):
+    def start(self):
         self.running = True
         self.last_host = "www.xx-net.org"
 

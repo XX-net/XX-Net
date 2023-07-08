@@ -167,19 +167,19 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_log_handler(self):
         req = urlparse(self.path).query
-        reqs = parse_qs(req, keep_blank_values=True)
+        reqs = self.unpack_reqs(parse_qs(req, keep_blank_values=True))
         data = ''
 
         if reqs["cmd"]:
-            cmd = reqs["cmd"][0]
+            cmd = reqs["cmd"]
         else:
             cmd = "get_last"
 
         if cmd == "get_last":
-            max_line = int(reqs["max_line"][0])
+            max_line = int(reqs["max_line"])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
-            last_no = int(reqs["last_no"][0])
+            last_no = int(reqs["last_no"])
             data = xlog.get_new_lines(last_no)
         else:
             xlog.error('xtunnel log cmd:%s', cmd)
@@ -242,7 +242,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json(res_arr)
 
     def req_token_login_handler(self):
-        login_token = str(self.postvars['login_token'][0])
+        login_token = str(self.postvars['login_token'])
         try:
             login_str = base64.b64decode(login_token)
             data = json.loads(utils.to_str(login_str))
@@ -297,11 +297,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         return self.response_json(res_arr)
 
     def req_login_handler(self):
-        username    = str(self.postvars['username'][0])
+        username    = str(self.postvars['username'])
         #username = utils.get_printable(username)
-        password    = str(self.postvars['password'][0])
-        promoter = self.postvars.get("promoter", [""])[0]
-        is_register = int(self.postvars['is_register'][0])
+        password    = str(self.postvars['password'])
+        promoter = self.postvars.get("promoter", [""])
+        is_register = int(self.postvars['is_register'])
 
         pa = check_email(username)
         if not pa:
@@ -352,9 +352,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_reset_password(self):
         app_name = proxy_session.get_app_name()
-        account = self.postvars.get('username', [""])[0]
-        stage = self.postvars.get('stage', [""])[0]
-        code = self.postvars.get('code', [""])[0]
+        account = self.postvars.get('username', [""])
+        stage = self.postvars.get('stage', [""])
+        code = self.postvars.get('code', [""])
         xlog.info("reset password, stage:%s", stage)
 
         if stage == "request_reset_password":
@@ -385,7 +385,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             self.response_json(info)
 
         elif stage == "change_password":
-            password = self.postvars.get('password', [""])[0]
+            password = self.postvars.get('password', [""])
             password_hash = str(hashlib.sha256(utils.to_bytes(password)).hexdigest())
             res, info = proxy_session.call_api("/change_password", {
                 "account": account,
@@ -439,21 +439,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             }
         elif reqs['cmd'] == ['set']:
             if 'server' in self.postvars:
-                server = str(self.postvars['server'][0])
+                server = str(self.postvars['server'])
                 server = '' if server == 'auto' else server
-
-                # promoter = self.postvars.get("promoter", [""])[0]
-                # if promoter != g.promoter:
-                #     res, info = proxy_session.call_api("/set_config", {
-                #         "account": g.config.login_account,
-                #         "password": g.config.login_password,
-                #         "promoter": promoter
-                #     })
-                #     if not res:
-                #         xlog.warn("set_config fail:%s", info)
-                #         return self.response_json({"res": "fail", "reason": info})
-                #     else:
-                #         g.promoter = promoter
 
                 if is_server_available(server):
                     if server != g.config.server_host:
@@ -476,7 +463,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         return self.response_json(res)
 
     def req_order_handler(self):
-        product = self.postvars['product'][0]
+        product = self.postvars['product']
         if product != 'x_tunnel':
             xlog.warn("x_tunnel order product %s not support", product)
             return self.response_json({
@@ -484,7 +471,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "product %s not support" % product
             })
 
-        plan = self.postvars['plan'][0]
+        plan = self.postvars['plan']
         if plan not in g.plans:
             xlog.warn("x_tunnel order plan %s not support", plan)
             return self.response_json({
@@ -506,9 +493,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json({"res": "success"})
 
     def req_transfer_handler(self):
-        to_account = self.postvars['to_account'][0]
-        amount = float(self.postvars['amount'][0])
-        transfer_type = self.postvars['transfer_type'][0]
+        to_account = self.postvars['to_account']
+        amount = float(self.postvars['amount'])
+        transfer_type = self.postvars['transfer_type']
         if transfer_type == 'balance':
             if amount > g.balance:
                 reason = "balance not enough"
@@ -516,7 +503,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 return self.response_json({"res": "fail", "reason": reason})
             end_time = 0
         elif transfer_type == "quota":
-            end_time = int(self.postvars['end_time'][0])
+            end_time = int(self.postvars['end_time'])
         else:
             reason = "transfer type not support:%s" % transfer_type
             xlog.warn("transfer fail:%s", reason)

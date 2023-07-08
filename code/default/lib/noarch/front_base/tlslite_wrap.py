@@ -66,7 +66,7 @@ class SSLConnection(object):
             self._connection.close()
             self.socket_closed = True
             if self._on_close:
-                self._on_close(self.ip_str)
+                self._on_close(self.ip_str, self.sni)
 
     def get_cert(self):
         if self.peer_cert:
@@ -134,7 +134,7 @@ class SSLConnection(object):
                 socket.socket.close(self._sock)
                 self.socket_closed = True
                 if self._on_close:
-                    self._on_close(self.ip_str)
+                    self._on_close(self.ip_str, self.sni)
         else:
             self._makefile_refs -= 1
 

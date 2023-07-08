@@ -82,7 +82,7 @@ class SSLConnection(object):
             self._connection.close()
             self.socket_closed = True
             if self._on_close:
-                self._on_close(self.ip_str)
+                self._on_close(self.ip_str, self.sni)
 
     def set_tlsext_host_name(self, hostname):
         self._connection.server_hostname = utils.to_str(hostname)
@@ -262,7 +262,7 @@ class SSLConnection(object):
                 socket.socket.close(self._sock)
                 self.socket_closed = True
                 if self._on_close:
-                    self._on_close(self.ip_str)
+                    self._on_close(self.ip_str, self.sni)
         else:
             self._makefile_refs -= 1
 

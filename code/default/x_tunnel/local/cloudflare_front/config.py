@@ -20,7 +20,6 @@ class Config(ConfigBase):
 
         # http 2 worker
         self.set_var("http2_status_to_close", [302, 400, 403, 404, 405])
-        self.set_var("http2_max_concurrent", 7)
 
         # connect_manager
         self.set_var("ssl_first_use_timeout", 5)
@@ -35,16 +34,13 @@ class Config(ConfigBase):
         # connect_creator
         self.set_var("check_sni", 1)
 
-        # host_manager
-        self.set_var("update_domains", 0)
-
         # ip_manager
         self.set_var("max_scan_ip_thread_num", 0)
         self.set_var("max_good_ip_num", 100)
         self.set_var("target_handshake_time", 500)
         self.set_var("active_connect_interval", 3*60)
         self.set_var("scan_ip_interval", 10)
-        self.set_var("shuffle_ip_on_first_load", 1)
+        self.set_var("max_connection_per_domain", 2)
 
         # ip source
         self.set_var("use_ipv6", "auto")  # force_ipv4/force_ipv6/auto

@@ -10,6 +10,7 @@ import random
 import six
 import utils
 
+
 class IpManagerBase():
     def __init__(self, config, ip_source, logger):
         self.scan_thread_lock = threading.Lock()
@@ -31,16 +32,16 @@ class IpManagerBase():
             return ""
         return random.choice(self.ips)
 
-    def update_ip(self, ip_str, handshake_time):
+    def update_ip(self, ip_str, sni, handshake_time):
         pass
 
-    def report_connect_fail(self, ip_str, reason=""):
+    def report_connect_fail(self, ip_str, sni=None, reason=""):
         pass
 
-    def report_connect_closed(self, ip_str, reason=""):
+    def report_connect_closed(self, ip_str, sni=None, reason=""):
         pass
 
-    def ssl_closed(self, ip_str, reason=""):
+    def ssl_closed(self, ip_str, sni=None, reason=""):
         pass
 
     def recheck_ip(self, ip_str):
@@ -70,11 +71,12 @@ class IpManager():
     #    stop scan ip thread then start 10 threads to scan all exist ip.
     #    called by web_control.
 
-    def __init__(self, logger, config, ip_source, check_local_network, check_ip,
+    def __init__(self, logger, config, ip_source, host_manager, check_local_network, check_ip,
                  default_ip_list_fn, ip_list_fn, scan_ip_log=None):
         self.logger = logger
         self.config = config
         self.ip_source = ip_source
+        self.host_manager = host_manager
         self.check_local_network = check_local_network
         self.check_ip = check_ip
         self.scan_ip_log = scan_ip_log
@@ -349,7 +351,7 @@ class IpManager():
     # if the ip is used in 5 seconds, try next ip;
     # if the ip is fail in 60 seconds, try next ip;
     # reset pointer to front every 3 seconds
-    def get_ip(self, to_recheck=False):
+    def get_ip_sni_host(self, to_recheck=False):
         if not to_recheck:
             self.try_sort_ip()
 
@@ -359,7 +361,7 @@ class IpManager():
             if ip_num == 0:
                 # self.logger.warning("no ip")
                 time.sleep(1)
-                return None
+                return None, None, None
 
             ip_connect_interval = ip_num * self.scan_recheck_interval + 200 if to_recheck else self.ip_connect_interval
 
@@ -419,11 +421,15 @@ class IpManager():
                 if not to_recheck:
                     self.ip_dict[ip_str]['links'] += 1
                 self.ip_pointer += 1
-                return ip_str
+
+                sni, host = self.host_manager.get_sni_host(ip_str)
+                return ip_str, sni, host
         except Exception as e:
             self.logger.exception("get_ip fail:%r", e)
         finally:
             self.ip_lock.release()
+
+        return None, None, None
 
     def add_ip(self, ip_str, handshake_time=100, domain=None, server='gws', fail_times=0, down_fail=0,
                scan_result=True):
@@ -484,9 +490,9 @@ class IpManager():
 
         return True
 
-    def update_ip(self, ip_str, handshake_time):
+    def update_ip(self, ip_str, sni, handshake_time):
         if not isinstance(ip_str, str):
-            self.logger.error("update_ip input error:%s", ip_str)
+            self.logger.error("update_ip input error:%s %s", ip_str, sni)
             return
 
         handshake_time = int(handshake_time)
@@ -528,7 +534,7 @@ class IpManager():
 
         self.save()
 
-    def report_connect_fail(self, ip_str, reason="", force_remove=False):
+    def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=False):
         self.ip_lock.acquire()
         try:
             time_now = time.time()
@@ -582,7 +588,7 @@ class IpManager():
         if not self.is_ip_enough():
             self.search_more_ip()
 
-    def report_connect_closed(self, ip_str, reason=""):
+    def report_connect_closed(self, ip_str, sni=None, reason=""):
         # if reason not in ["idle timeout"]:
         # self.logger.debug("%s close:%s", ip, reason)
         self.ip_lock.acquire()
@@ -611,7 +617,7 @@ class IpManager():
         finally:
             self.ip_lock.release()
 
-    def ssl_closed(self, ip_str, reason=""):
+    def ssl_closed(self, ip_str, sni=None, reason=""):
         # self.logger.debug("%s ssl_closed:%s", ip, reason)
         self.ip_lock.acquire()
         try:
@@ -736,7 +742,7 @@ class IpManager():
                         self.check_local_network.is_ok():
                     if self.good_ip_num >= self.max_good_ip_num * 0.6 and \
                             len(self.ip_list) >= self.max_good_ip_num * 0.9:
-                        ip_str = self.get_ip(to_recheck=True)
+                        ip_str, sni, host = self.get_ip_sni_host()
                         if ip_str and self.check_local_network.is_ok(ip_str):
                             self.recheck_ip(ip_str, first_report=False)
                             time.sleep(self.scan_recheck_interval)
@@ -885,7 +891,7 @@ class IpManager():
 
         self.try_sort_ip(True)
 
-    def update_ips(self, ips):
+    def update_ips(self, ips, sni):
         for ip_str in ips:
             if ip_str not in self.ip_dict:
                 self.add_ip(ip_str, scan_result=False)

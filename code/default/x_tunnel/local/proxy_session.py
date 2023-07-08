@@ -380,10 +380,10 @@ class ProxySession(object):
 
         self.target_on_roads = max(g.config.min_on_road, self.target_on_roads)
 
-        self.lock.acquire()
-        self.last_conn_id += 2
-        conn_id = self.last_conn_id
-        self.lock.release()
+        with self.lock:
+            self.last_conn_id += 2
+            conn_id = self.last_conn_id
+
         if isinstance(host, str):
             host = host.encode("ascii")
 
@@ -631,6 +631,9 @@ class ProxySession(object):
                 self.transfer_list[transfer_no] = {}
                 self.transfer_list[transfer_no]["stat"] = "request"
                 self.transfer_list[transfer_no]["start"] = start_time
+            lock_time = time.time() - start_time
+            if lock_time > 0.1:
+                xlog.warn("lock_time: %f", lock_time)
 
             # xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
             #           transfer_no, send_data_len, send_ack_len, server_timeout)
@@ -1023,6 +1026,9 @@ def login_process():
         if time.time() - g.session.last_send_time > 5 * 60 - 5:
             xlog.info("session timeout, reset it.")
             g.session.stop()
+
+        if g.tls_relay_front:
+            g.tls_relay_front.set_x_tunnel_account(g.config.login_account, g.config.login_password)
 
         if not g.session.running:
             return g.session.start()

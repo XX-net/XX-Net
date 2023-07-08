@@ -147,6 +147,9 @@ class Task(object):
         last_time = self.start_time
         for t, stat in self.trace_time:
             time_diff = int((t - last_time) * 1000)
+            if time_diff == 0 and "get_worker" not in stat:
+                continue
+
             last_time = t
             out_list.append("%d:%s" % (time_diff, stat))
         out_list.append(":%d" % ((time.time() - last_time) * 1000))
@@ -231,7 +234,7 @@ class HttpWorker(object):
             inactive_time = now - self.last_recv_time
             if inactive_time < self.config.http2_ping_min_interval:
                 self.logger.debug("%s worker close:%s inactive:%d", self.ip_str, reason, inactive_time)
-        self.ip_manager.report_connect_closed(self.ssl_sock.ip_str, reason)
+        self.ip_manager.report_connect_closed(self.ssl_sock.ip_str, self.ssl_sock.sni, reason)
         self.close_cb(self)
 
     def get_score(self):

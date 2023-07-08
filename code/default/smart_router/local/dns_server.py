@@ -38,7 +38,6 @@ class DnsServer(object):
         self.backup_port = backup_port
         self.ttl = ttl
         self.th = None
-        self.init_socket()
 
     def init_socket(self):
         ips = set(self.bind_ip)
@@ -139,6 +138,7 @@ class DnsServer(object):
         self.th = None
 
     def start(self):
+        self.init_socket()
         self.th = threading.Thread(target=self.server_forever)
         self.th.start()
 

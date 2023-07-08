@@ -10,10 +10,9 @@ logger = xlog.getLogger("cloudflare_front", log_path=module_data_path, save_star
 logger.set_buffer(300)
 
 from .config import Config
-from . import host_manager
+from . import ip_manager
 from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
-from front_base.ip_manager import IpManager
 from front_base.ip_source import Ipv4RangeSource, Ipv6PoolSource, IpCombineSource
 from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
@@ -25,7 +24,7 @@ from gae_proxy.local import check_local_network
 class Front(object):
     name = "cloudflare_front"
 
-    def __init__(self):
+    def start(self):
         self.running = True
         self.last_host = "center.xx-net.org"
 
@@ -42,10 +41,10 @@ class Front(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         default_domain_fn = os.path.join(current_path, "front_domains.json")
         domain_fn = os.path.join(module_data_path, "cloudflare_domains.json")
-        self.host_manager = host_manager.HostManager(self.config, logger, default_domain_fn, domain_fn, self)
+        self.ip_manager = ip_manager.IpManager(self.config, default_domain_fn, domain_fn, self.logger)
 
         openssl_context = SSLContext(logger, ca_certs=ca_certs)
-        self.connect_creator = ConnectCreator(logger, self.config, openssl_context, self.host_manager)
+        self.connect_creator = ConnectCreator(logger, self.config, openssl_context, None)
         self.check_ip = CheckIp(xlog.null, self.config, self.connect_creator)
 
         self.ipv4_source = Ipv4RangeSource(
@@ -61,12 +60,6 @@ class Front(object):
             logger, self.config,
             self.ipv4_source, self.ipv6_source
         )
-        self.ip_manager = IpManager(
-            logger, self.config, self.ip_source, check_local_network,
-            self.check_ip.check_ip,
-            os.path.join(current_path, "good_ip.txt"),
-            os.path.join(module_data_path, "cloudflare_ip_list.txt"),
-            scan_ip_log=None)
 
         self.connect_manager = ConnectManager(
             logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
@@ -117,7 +110,6 @@ class Front(object):
             dispatcher = self.dispatchs[host]
             dispatcher.stop()
         self.connect_manager.stop()
-        self.ip_manager.stop()
 
         self.running = False
 

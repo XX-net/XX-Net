@@ -47,40 +47,37 @@ class ConnectCreator(object):
                                     username=self.config.PROXY_USER,
                                     password=self.config.PROXY_PASSWD)
 
-    def connect_ssl(self, ip_str, sni=None, close_cb=None):
+    def connect_ssl(self, ip_str, sni, host, close_cb=None):
         ip_str = utils.to_str(ip_str)
-        if sni:
-            host = sni
-        else:
-            sni, host = self.host_manager.get_sni_host(ip_str)
-
-        host = str(host)
-        if isinstance(sni, str):
-            sni = utils.to_bytes(sni)
 
         if self.debug:
-            self.logger.debug("sni:%s", sni)
+            self.logger.debug("connect ip:%s sni:%s host:%s", ip_str, sni, host)
 
         ip, port = utils.get_ip_port(ip_str)
         if isinstance(ip, str):
             ip = utils.to_bytes(ip)
 
-        if int(self.config.PROXY_ENABLE):
-            sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
+        if openssl_wrap.implementation == "UTLS":
+            # currently UTLS will create TLS connection by itself.
+            # So will not support LAN proxy.
+            sock = None
         else:
-            sock = socket.socket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
+            if int(self.config.PROXY_ENABLE):
+                sock = socks.socksocket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
+            else:
+                sock = socket.socket(socket.AF_INET if b':' not in ip else socket.AF_INET6)
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
-        # Close the connection with a TCP RST instead of a TCP FIN.
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
+            # set struct linger{l_onoff=1,l_linger=0} to avoid 10048 socket error
+            # Close the connection with a TCP RST instead of a TCP FIN.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
 
-        # resize socket receive buffer ->64 above to improve browser related application performance
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, self.config.connect_receive_buffer)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, self.config.connect_send_buffer)
-        sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
-        sock.settimeout(self.timeout)
+            # resize socket receive buffer ->64 above to improve browser related application performance
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, self.config.connect_receive_buffer)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, self.config.connect_send_buffer)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
+            sock.settimeout(self.timeout)
 
         time_begin = time.time()
         ssl_sock = openssl_wrap.SSLConnection(self.openssl_context.context, sock,
@@ -109,7 +106,8 @@ class ConnectCreator(object):
 
         connect_time = int((time_connected - time_begin) * 1000)
         handshake_time = int((time_handshaked - time_begin) * 1000)
-        ssl_sock.fd = sock.fileno()
+        if sock:
+            ssl_sock.fd = sock.fileno()
         ssl_sock.create_time = time_begin
         ssl_sock.connect_time = connect_time
         ssl_sock.handshake_time = handshake_time

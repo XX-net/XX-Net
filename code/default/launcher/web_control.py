@@ -121,6 +121,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 length = int(self.headers.get('Content-Length'))
                 content = self.rfile.read(length)
                 self.postvars = parse_qs(content, keep_blank_values=True)
+                self.postvars = self.unpack_reqs(self.postvars)
             elif ctype == 'application/json':
                 length = int(self.headers.get('Content-Length'))
                 content = self.rfile.read(length)
@@ -346,9 +347,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
     def req_config_handler(self):
         req = urlparse(self.path).query
         reqs = parse_qs(req, keep_blank_values=True)
+        reqs = self.unpack_reqs(reqs)
         data = ''
 
-        if reqs['cmd'] == ['get_config']:
+        if reqs['cmd'] == 'get_config':
 
             if module_init.xargs.get("allow_remote", 0):
                 allow_remote_connect = 1
@@ -376,10 +378,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 "postUpdateStat": config.postUpdateStat,
             }
             data = json.dumps(dat)
-        elif reqs['cmd'] == ['set_config']:
+        elif reqs['cmd'] == 'set_config':
             if 'skip_version' in reqs:
-                skip_version = reqs['skip_version'][0]
-                skip_version_type = reqs['skip_version_type'][0]
+                skip_version = reqs['skip_version']
+                skip_version_type = reqs['skip_version_type']
                 if skip_version_type not in ["stable", "test"]:
                     data = '{"res":"fail"}'
                 else:
@@ -389,7 +391,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         update_from_github.update_info = ''
                     data = '{"res":"success"}'
             elif 'check_update' in reqs:
-                check_update = reqs['check_update'][0]
+                check_update = reqs['check_update']
                 if check_update not in ["dont-check", "stable", "notice-stable", "test", "notice-test"]:
                     data = '{"res":"fail, check_update:%s"}' % check_update
                 else:
@@ -400,7 +402,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'language' in reqs:
-                language = reqs['language'][0]
+                language = reqs['language']
 
                 if language not in valid_language:
                     data = '{"res":"fail, language:%s"}' % language
@@ -413,7 +415,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'popup_webui' in reqs:
-                popup_webui = int(reqs['popup_webui'][0])
+                popup_webui = int(reqs['popup_webui'])
                 if popup_webui != 0 and popup_webui != 1:
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
                 else:
@@ -422,7 +424,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'allow_remote_switch' in reqs:
-                allow_remote_switch = int(reqs['allow_remote_switch'][0])
+                allow_remote_switch = int(reqs['allow_remote_switch'])
                 if allow_remote_switch != 0 and allow_remote_switch != 1:
                     data = '{"res":"fail, allow_remote_connect:%s"}' % allow_remote_switch
                 else:
@@ -454,7 +456,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     xlog.debug("launcher web control restarted.")
                     data = '{"res":"success"}'
             elif 'show_systray' in reqs:
-                show_systray = int(reqs['show_systray'][0])
+                show_systray = int(reqs['show_systray'])
                 if show_systray != 0 and show_systray != 1:
                     data = '{"res":"fail, show_systray:%s"}' % show_systray
                 else:
@@ -463,7 +465,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'show_android_notification' in reqs:
-                show_android_notification = int(reqs['show_android_notification'][0])
+                show_android_notification = int(reqs['show_android_notification'])
                 if show_android_notification != 0 and show_android_notification != 1:
                     data = '{"res":"fail, show_systray:%s"}' % show_android_notification
                 else:
@@ -472,7 +474,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'show_compat_suggest' in reqs:
-                show_compat_suggest = int(reqs['show_compat_suggest'][0])
+                show_compat_suggest = int(reqs['show_compat_suggest'])
                 if show_compat_suggest != 0 and show_compat_suggest != 1:
                     data = '{"res":"fail, show_compat_suggest:%s"}' % show_compat_suggest
                 else:
@@ -481,7 +483,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'no_mess_system' in reqs:
-                no_mess_system = int(reqs['no_mess_system'][0])
+                no_mess_system = int(reqs['no_mess_system'])
                 if no_mess_system != 0 and no_mess_system != 1:
                     data = '{"res":"fail, no_mess_system:%s"}' % no_mess_system
                 else:
@@ -490,7 +492,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'keep_old_ver_num' in reqs:
-                keep_old_ver_num = int(reqs['keep_old_ver_num'][0])
+                keep_old_ver_num = int(reqs['keep_old_ver_num'])
                 if keep_old_ver_num < 0 or keep_old_ver_num > 99:
                     data = '{"res":"fail, keep_old_ver_num:%s not in range 0 to 99"}' % keep_old_ver_num
                 else:
@@ -499,7 +501,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'auto_start' in reqs:
-                auto_start = int(reqs['auto_start'][0])
+                auto_start = int(reqs['auto_start'])
                 if auto_start != 0 and auto_start != 1:
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
                 else:
@@ -513,7 +515,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'show_detail' in reqs:
-                show_detail = int(reqs['show_detail'][0])
+                show_detail = int(reqs['show_detail'])
                 if show_detail != 0 and show_detail != 1:
                     data = '{"res":"fail, show_detail:%s"}' % show_detail
                 else:
@@ -522,7 +524,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
                     data = '{"res":"success"}'
             elif 'gae_proxy_enable' in reqs:
-                gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
+                gae_proxy_enable = int(reqs['gae_proxy_enable'])
                 if gae_proxy_enable != 0 and gae_proxy_enable != 1:
                     data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
                 else:
@@ -540,7 +542,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'x_tunnel_enable' in reqs:
-                x_tunnel_enable = int(reqs['x_tunnel_enable'][0])
+                x_tunnel_enable = int(reqs['x_tunnel_enable'])
                 if x_tunnel_enable != 0 and x_tunnel_enable != 1:
                     data = '{"res":"fail, x_tunnel_enable:%s"}' % x_tunnel_enable
                 else:
@@ -553,7 +555,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'smart_router_enable' in reqs:
-                smart_router_enable = int(reqs['smart_router_enable'][0])
+                smart_router_enable = int(reqs['smart_router_enable'])
                 if smart_router_enable != 0 and smart_router_enable != 1:
                     data = '{"res":"fail, smart_router_enable:%s"}' % smart_router_enable
                 else:
@@ -566,7 +568,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     self.load_module_menus()
                     data = '{"res":"success"}'
             elif 'postUpdateStat' in reqs:
-                postUpdateStat = reqs['postUpdateStat'][0]
+                postUpdateStat = reqs['postUpdateStat']
                 if postUpdateStat not in ["noChange", "isNew", "isPostUpdate"]:
                     data = '{"res":"fail, postUpdateStat:%s"}' % postUpdateStat
                 else:
@@ -591,10 +593,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if data == '' or data[0] != '{':
                 data = '{"type":"%s"}' % data
         elif reqs['cmd'] == ['set_info']:
-            update_from_github.update_info = reqs['info'][0]
+            update_from_github.update_info = reqs['info']
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['start_check']:
-            update_from_github.init_update_info(reqs['check_update'][0])
+            update_from_github.init_update_info(reqs['check_update'])
             update.check_update()
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['get_progress']:
@@ -606,16 +608,16 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             github_versions[0][1], github_versions[1][1], current_version)
             xlog.info("%s", data)
         elif reqs['cmd'] == ['update_version']:
-            version = reqs['version'][0]
+            version = reqs['version']
 
             checkhash = 1
-            if 'checkhash' in reqs and reqs['checkhash'][0] == '0':
+            if 'checkhash' in reqs and reqs['checkhash'] == '0':
                 checkhash = 0
 
             update_from_github.start_update_version(version, checkhash)
             data = '{"res":"success"}'
         elif reqs['cmd'] == ['set_localversion']:
-            version = reqs['version'][0]
+            version = reqs['version']
 
             if update_from_github.update_current_version(version):
                 data = '{"res":"success"}'
@@ -631,7 +633,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 s += ' { "v":"%s" , "folder":"%s" } ' % (v[0], v[1])
             data = '[  %s  ]' % (s)
         elif reqs['cmd'] == ['del_localversion']:
-            if update_from_github.del_version(reqs['version'][0]):
+            if update_from_github.del_version(reqs['version']):
                 data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
@@ -654,12 +656,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             }
             data = json.dumps(data)
         elif reqs['cmd'] == ['set_config']:
-            enable = int(reqs['enable'][0])
-            type = reqs['type'][0]
-            host = reqs['host'][0]
-            port = int(reqs['port'][0])
-            user = reqs['user'][0]
-            passwd = reqs['passwd'][0]
+            enable = int(reqs['enable'])
+            type = reqs['type']
+            host = reqs['host']
+            port = int(reqs['port'])
+            user = reqs['user']
+            passwd = reqs['passwd']
 
             if int(enable) and not test_proxy(type, host, port, user, passwd):
                 return self.send_response('text/html', '{"res":"fail", "reason": "test proxy fail"}')
@@ -755,20 +757,20 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def req_init_module_handler(self):
         req = urlparse(self.path).query
-        reqs = parse_qs(req, keep_blank_values=True)
+        reqs = self.unpack_reqs(parse_qs(req, keep_blank_values=True))
         data = ''
 
         try:
-            module = reqs['module'][0]
+            module = reqs['module']
             config.load()
 
-            if reqs['cmd'] == ['start']:
+            if reqs['cmd'] == 'start':
                 result = module_init.start(module)
                 data = '{ "module": "%s", "cmd": "start", "result": "%s" }' % (module, result)
-            elif reqs['cmd'] == ['stop']:
+            elif reqs['cmd'] == 'stop':
                 result = module_init.stop(module)
                 data = '{ "module": "%s", "cmd": "stop", "result": "%s" }' % (module, result)
-            elif reqs['cmd'] == ['restart']:
+            elif reqs['cmd'] == 'restart':
                 result_stop = module_init.stop(module)
                 result_start = module_init.start(module)
                 data = '{ "module": "%s", "cmd": "restart", "stop_result": "%s", "start_result": "%s" }' % (
@@ -776,23 +778,23 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         except Exception as e:
             xlog.exception("init_module except:%s", e)
 
-        self.send_response("text/html", data)
+        self.send_response("text/html", data, headers={"Access-Control-Allow-Origin": "*"})
 
     def req_log_handler(self):
         req = urlparse(self.path).query
-        reqs = parse_qs(req, keep_blank_values=True)
+        reqs = self.unpack_reqs(parse_qs(req, keep_blank_values=True))
         data = ''
 
         if reqs["cmd"]:
-            cmd = reqs["cmd"][0]
+            cmd = reqs["cmd"]
         else:
             cmd = "get_last"
 
         if cmd == "get_last":
-            max_line = int(reqs["max_line"][0])
+            max_line = int(reqs["max_line"])
             data = xlog.get_last_lines(max_line)
         elif cmd == "get_new":
-            last_no = int(reqs["last_no"][0])
+            last_no = int(reqs["last_no"])
             data = xlog.get_new_lines(last_no)
         else:
             xlog.error('xtunnel log cmd:%s', cmd)

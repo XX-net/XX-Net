@@ -13,7 +13,7 @@ from front_base.connect_creator import ConnectCreator as ConnectCreatorBase
 
 class ConnectCreator(ConnectCreatorBase):
 
-    def connect_ssl(self, ip_str, sni="", close_cb=None):
+    def connect_ssl(self, ip_str, sni, host, close_cb=None):
         info = self.host_manager.get_info(ip_str)
         sni = str(info["sni"])
         url_path = info["url_path"]

@@ -260,7 +260,6 @@ class Http1Worker(HttpWorker):
             content = response.readall(timeout=5)
             self.record_active("head end")
             self.rtt = (time.time() - start_time) * 1000
-            #self.ip_manager.update_ip(self.ip, self.rtt)
             return True
         except Exception as e:
             self.logger.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip_str, e)

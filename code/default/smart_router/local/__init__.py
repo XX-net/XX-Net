@@ -159,7 +159,7 @@ def start(args):
         backup_port=g.config.dns_backup_port,
         ttl=g.config.dns_ttl)
     ready = True
-    g.dns_srv.server_forever()
+    g.dns_srv.start()
 
 
 def stop():

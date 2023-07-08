@@ -24,7 +24,7 @@ from gae_proxy.local import check_local_network
 class Front(object):
     name = "heroku_front"
 
-    def __init__(self):
+    def start(self):
         self.running = True
         self.logger = logger
         config_path = os.path.join(module_data_path, "heroku_front.json")

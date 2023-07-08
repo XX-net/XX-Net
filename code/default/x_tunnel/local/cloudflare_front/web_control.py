@@ -45,12 +45,12 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_log_handler(self):
         req = urlparse(self.path).query
-        reqs = parse_qs(req, keep_blank_values=True)
+        reqs = self.unpack_reqs(parse_qs(req, keep_blank_values=True))
         data = ''
 
         cmd = "get_last"
         if reqs["cmd"]:
-            cmd = reqs["cmd"][0]
+            cmd = reqs["cmd"]
 
         if cmd == "get_last":
             max_line = int(reqs["max_line"][0])

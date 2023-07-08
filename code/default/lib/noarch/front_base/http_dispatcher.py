@@ -187,7 +187,8 @@ class HttpsDispatcher(object):
 
             for worker in self.workers:
                 if worker.is_life_end():
-                    # self.logger.debug("close life end work %s", worker)
+                    if self.config.show_state_debug:
+                        self.logger.debug("life end worker: %s", worker)
                     # self.close_cb(worker)
                     continue
 
@@ -222,6 +223,9 @@ class HttpsDispatcher(object):
                     (best_worker and (now - best_worker.last_recv_time) >= self.config.dispather_work_min_idle_time):
                 # self.logger.debug("return worker")
                 return best_worker
+            elif self.config.show_state_debug:
+                self.logger.debug("get_worker best_worker:%s last recv time:%f",
+                                  best_worker, now - best_worker.last_recv_time)
 
             self.wait_a_worker_cv.wait(time.time() + 1)
             # self.logger.debug("get wait_a_worker_cv")
@@ -293,8 +297,11 @@ class HttpsDispatcher(object):
                 self.fail_num += 1
                 self.continue_fail_num += 1
                 self.last_fail_time = time.time()
-                task.worker.continue_fail_tasks += 1
-                if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
+                if task.worker:
+                    task.worker.continue_fail_tasks += 1
+                    if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
+                        self.trigger_create_worker_cv.notify()
+                else:
                     self.trigger_create_worker_cv.notify()
 
             task.set_state("get_response")
@@ -458,8 +465,7 @@ class HttpsDispatcher(object):
             return None
 
         now = time.time()
-        if now - self.last_fail_time < 10 and \
-                self.continue_fail_num > 10:
+        if now - self.last_fail_time < 10 and self.continue_fail_num > 10:
             return None
 
         worker = self.get_worker(nowait=True)

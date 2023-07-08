@@ -120,8 +120,8 @@ def _get_os_language():
             else:
                 return None
         except Exception as e:
-            xlog.exception("get lang except:%r", e)
-            return None
+            xlog.warn("get lang except:%r", e)
+            return "zh_CN"
     elif sys_platform.platform == "ios":
         lang_code = os.environ["IOS_LANG"]
         if 'zh' in lang_code:
