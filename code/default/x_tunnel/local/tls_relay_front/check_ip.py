@@ -38,7 +38,6 @@ from front_base.openssl_wrap import SSLContext
 from front_base.connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 
-from x_tunnel.local.tls_relay_front import front
 from x_tunnel.local.tls_relay_front.config import Config
 from x_tunnel.local.tls_relay_front.host_manager import HostManager
 
@@ -47,6 +46,7 @@ if __name__ == "__main__":
     # case 1: only ip
     # case 2: ip + domain
     #    connect use domain
+    # case 3: ip domain path
 
     wait_time = 0
     ip = "127.0.0.1:60000"
@@ -85,9 +85,8 @@ if __name__ == "__main__":
     if not res:
         print("connect fail")
     elif res.ok:
-        print(("Check success, domain:%s handshake:%d" % (res.top_domain, res.handshake_time)))
+        print(("Check success, domain:%s handshake:%d" % (res.host, res.handshake_time)))
     else:
         print("not support")
 
-    front.stop()
     sys.exit(0)

@@ -9,6 +9,7 @@ class Config(ConfigBase):
         # front
         self.set_var("front_continue_fail_num", 10)
         self.set_var("front_continue_fail_block", 10)
+        self.set_var("allow_set_ips", 1)
 
         # https_dispatcher
         self.set_var("dispather_min_idle_workers", 1)

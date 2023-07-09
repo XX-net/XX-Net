@@ -65,12 +65,11 @@ class IpManager(IpManagerBase):
             try:
                 ip = socket.gethostbyname(sni)
             except Exception as e:
-                self.logger.debug("get ip for sni:%s failed:%r", sni, e)
+                self.logger.warn("get ip for %s fail:%r", sni, e)
                 continue
 
-            info["links"] += 1
-
             self.logger.debug("get ip:%s sni:%s", ip, sni)
+            info["links"] += 1
             return ip, sni, top_domain
 
         return None, None, None
