@@ -74,21 +74,30 @@ class IpManager(IpManagerBase):
 
         return None, None, None
 
+    def _get_domain(self, top_domain):
+        self.domain_map.setdefault(top_domain, {
+                            "links": 0,
+                            "fail_times": 0
+                        })
+        return self.domain_map[top_domain]
+
     def report_connect_fail(self, ip_str, sni=None, reason=""):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         top_domain = ".".join(sni.split(".")[1:])
 
-        self.domain_map[top_domain]["fail_times"] += 1
-        self.domain_map[top_domain]["links"] -= 1
+        info = self._get_domain(top_domain)
+        info["fail_times"] += 1
+        info["links"] -= 1
         self.logger.debug("ip %s sni:%s connect fail, reason:%s", ip, sni, reason)
 
     def update_ip(self, ip_str, sni, handshake_time):
-        ip, _ = utils.get_ip_port(ip_str)
-        ip = utils.to_str(ip)
+        # ip, _ = utils.get_ip_port(ip_str)
+        # ip = utils.to_str(ip)
         top_domain = ".".join(sni.split(".")[1:])
 
-        self.domain_map[top_domain]["fail_times"] = 0
+        info = self._get_domain(top_domain)
+        info["fail_times"] = 0
         # self.logger.debug("ip %s sni:%s connect success, rtt:%f", ip, sni, handshake_time)
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
@@ -97,7 +106,8 @@ class IpManager(IpManagerBase):
         top_domain = ".".join(sni.split(".")[1:])
 
         try:
-            self.domain_map[top_domain]["links"] -= 1
+            info = self._get_domain(top_domain)
+            info["links"] -= 1
             self.logger.debug("ip %s sni:%s connect closed reason %s", ip, sni, reason)
         except Exception as e:
             self.logger.warn("ssl_closed %s sni:%s reason:%s except:%r", ip_str, sni, reason, e)

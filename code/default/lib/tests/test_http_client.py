@@ -18,7 +18,7 @@ class HttpClientTest(unittest.TestCase):
         print(data)
 
     def test_get2(self):
-        url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v4.txt"
+        url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v5.txt"
 
         client = simple_http_client.Client(timeout=10)
         res = client.request("GET", url)
@@ -34,14 +34,14 @@ class HttpClientTest(unittest.TestCase):
     def test_get_bulk(self):
         timeout = 5
         client = simple_http_client.Client(timeout=timeout)
-        url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v4.txt"
+        url = "https://raw.githubusercontent.com/XX-net/XX-Net/master/code/default/update_v5.txt"
 
         start_time = time.time()
         req = client.request("GET", url, read_payload=False)
         self.assertIsNotNone(req)
 
         tp = tempfile.gettempdir()
-        filename = os.path.join(tp, "v4.txt")
+        filename = os.path.join(tp, "v5.txt")
         if req.chunked:
             downloaded = 0
             with open(filename, 'wb') as fp:

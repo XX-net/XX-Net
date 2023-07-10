@@ -181,9 +181,9 @@ class ServiceTesting(object):
             "Content-Type": "application/json"
         }
         data = {
-            "username": [os.getenv("XTUNNEL_USER"),],
-            "password": [os.getenv("XTUNNEL_PASS"),],
-            "is_register": [0,]
+            "username": os.getenv("XTUNNEL_USER"),
+            "password": os.getenv("XTUNNEL_PASS"),
+            "is_register": 0
         }
         data = json.dumps(data)
         res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/login",

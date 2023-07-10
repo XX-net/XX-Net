@@ -772,7 +772,7 @@ class IpManager():
                     self.scan_fail_count = 0
                 else:
                     self.scan_fail_count += 1
-                    if self.scan_fail_count / self.scan_thread_count > 3:
+                    if self.scan_thread_count and self.scan_fail_count / self.scan_thread_count > 3:
                         self.scan_fail_count = 0
                         self.check_local_network.report_fail(ip_str)
                         recheck_ip = True
