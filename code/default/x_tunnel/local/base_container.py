@@ -531,6 +531,8 @@ class Conn(object):
                 self.xlog.debug("Conn session:%s conn:%d Peer Close:%s", self.session.session_id, self.conn_id, dat)
                 if self.is_client:
                     self.transfer_peer_close("finish")
+                    if b"exceed the max connection" in dat:
+                        self.session.reset()
                 self.stop("peer close")
 
             elif cmd_id == 0:  # Create connect

@@ -709,10 +709,8 @@ class ProxySession(object):
                             # session not exist
                             if self.session_id == request_session_id:
                                 xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
-                                self.reset()
-                                return
-                            else:
-                                return
+                            self.reset()
+                            return
                         else:
                             xlog.error("unknown error code:%d, message:%s", error_code, message)
                             time.sleep(sleep_time)
