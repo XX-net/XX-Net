@@ -74,7 +74,7 @@ class ServiceTesting(object):
         self.smart_route_proxy_socks4()
         self.smart_route_proxy_socks5()
 
-        self.xtunnel_login()
+        self.xtunnel_token_login()
         self.xtunnel_proxy_http()
         self.xtunnel_proxy_socks4()
         self.xtunnel_proxy_socks5()
@@ -175,18 +175,16 @@ class ServiceTesting(object):
             xlog.info("Finished testing SmartRouter DNS Query")
             return
 
-    def xtunnel_login(self):
+    def xtunnel_token_login(self):
         xlog.info("Start testing XTunnel login")
         headers = {
             "Content-Type": "application/json"
         }
         data = {
-            "username": os.getenv("XTUNNEL_USER"),
-            "password": os.getenv("XTUNNEL_PASS"),
-            "is_register": 0
+            "login_token": os.getenv("XTUNNEL_TOKEN"),
         }
         data = json.dumps(data)
-        res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/login",
+        res = simple_http_client.request("POST", "http://127.0.0.1:8085/module/x_tunnel/control/token_login",
                                          headers=headers, body=data, timeout=60)
         self.assertEqual(res.status, 200)
         self.xtunnel_login_status = True
@@ -197,9 +195,14 @@ class ServiceTesting(object):
         if not self.xtunnel_login_status:
             self.xtunnel_login()
         proxy = "http://localhost:1080"
-        res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=30)
+        for _ in range(3):
+            res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=30)
+            if not res:
+                continue
+            self.assertEqual(res.status, 200)
+            xlog.info("Finished testing XTunnel HTTP proxy protocol")
+
         self.assertEqual(res.status, 200)
-        xlog.info("Finished testing XTunnel HTTP proxy protocol")
 
     def xtunnel_proxy_socks4(self):
         xlog.info("Start testing XTunnel Socks4 proxy protocol")
