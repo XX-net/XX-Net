@@ -193,11 +193,12 @@ class ServiceTesting(object):
     def xtunnel_proxy_http(self):
         xlog.info("Start testing XTunnel HTTP proxy protocol")
         if not self.xtunnel_login_status:
-            self.xtunnel_login()
+            self.xtunnel_token_login()
         proxy = "http://localhost:1080"
         for _ in range(3):
             res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=30)
             if not res:
+                time.sleep(5)
                 continue
             self.assertEqual(res.status, 200)
             xlog.info("Finished testing XTunnel HTTP proxy protocol")
@@ -207,7 +208,7 @@ class ServiceTesting(object):
     def xtunnel_proxy_socks4(self):
         xlog.info("Start testing XTunnel Socks4 proxy protocol")
         if not self.xtunnel_login_status:
-            self.xtunnel_login()
+            self.xtunnel_token_login()
         proxy = "socks4://localhost:1080"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)
@@ -216,7 +217,7 @@ class ServiceTesting(object):
     def xtunnel_proxy_socks5(self):
         xlog.info("Start testing XTunnel Socks5 proxy protocol")
         if not self.xtunnel_login_status:
-            self.xtunnel_login()
+            self.xtunnel_token_login()
         proxy = "socks5://localhost:1080"
         res = simple_http_client.request("GET", "https://github.com/", proxy=proxy, timeout=15)
         self.assertEqual(res.status, 200)

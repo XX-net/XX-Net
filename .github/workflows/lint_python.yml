@@ -2,7 +2,7 @@ name: lint_python
 on:
   pull_request:
   push:
-  #  branches: [master]
+    branches: [test]
 jobs:
   testing_linux:
     runs-on: ubuntu-latest
