@@ -173,18 +173,6 @@ class HttpsDispatcher(object):
             good_worker = 0
             idle_num = 0
             now = time.time()
-
-            # close life end works
-            to_close = []
-            for worker in self.workers:
-                if worker.is_life_end():
-                    to_close.append(worker)
-            for worker in to_close:
-                if worker.keep_running:
-                    worker.close("life end")
-                if worker in self.workers:
-                    self.workers.remove(worker)
-
             for worker in self.workers:
                 if worker.is_life_end():
                     if self.config.show_state_debug:
@@ -224,6 +212,7 @@ class HttpsDispatcher(object):
                 # self.logger.debug("return worker")
                 return best_worker
             elif self.config.show_state_debug:
+
                 self.logger.debug("get_worker best_worker:%s last recv time:%f",
                                   best_worker, now - best_worker.last_recv_time)
 

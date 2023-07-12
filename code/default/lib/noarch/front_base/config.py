@@ -34,6 +34,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("http2_max_concurrent", 60)
         self.set_var("http2_target_concurrent", 60)
         self.set_var("http2_max_timeout_tasks", 5)
+        self.set_var("http2_max_process_tasks", 900)  # Nginx will GoAway after 1000 tasks.
         self.set_var("http2_timeout_active", 15)
         self.set_var("http2_status_to_close", [])
         self.set_var("http2_show_debug", 0)

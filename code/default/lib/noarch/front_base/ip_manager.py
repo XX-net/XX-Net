@@ -35,13 +35,16 @@ class IpManagerBase():
     def update_ip(self, ip_str, sni, handshake_time):
         pass
 
-    def report_connect_fail(self, ip_str, sni=None, reason=""):
+    def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=True):
+        # Report on connection failed.
         pass
 
     def report_connect_closed(self, ip_str, sni=None, reason=""):
+        # report on connection timeout of keep alive, or http close(life end/idle timeout)
         pass
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
+        # report from ssl_wrap, on connection closed.
         pass
 
     def recheck_ip(self, ip_str):

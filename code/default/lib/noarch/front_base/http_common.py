@@ -258,5 +258,7 @@ class HttpWorker(object):
             return True
         elif self.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
             return True
+        elif self.processed_tasks > self.config.http2_max_process_tasks:
+            return True
         else:
             return False

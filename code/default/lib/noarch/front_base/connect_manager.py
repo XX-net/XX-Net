@@ -307,8 +307,10 @@ class ConnectManager(object):
                 self.ip_manager.report_connect_fail(ip_str, sni, str(e))
         except NoRescourceException as e:
             self.logger.warning("create ssl for %s except:%r", ip_str, e)
+            self.ip_manager.report_connect_fail(ip_str, sni, str(e))
         except Exception as e:
             self.logger.exception("connect except:%r", e)
+            self.ip_manager.report_connect_fail(ip_str, sni, str(e))
             if not self.check_local_network.is_ok(ip_str):
                 self.logger.debug("connect %s network fail, %r", ip_str, e)
                 time.sleep(10)
