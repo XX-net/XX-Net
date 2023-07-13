@@ -184,8 +184,7 @@ class HttpWorker(object):
         self.ip_manager = ip_manager
         self.config = config
         self.ssl_sock = ssl_sock
-        self.init_rtt = ssl_sock.handshake_time / 3
-        self.rtt = self.init_rtt
+        self.rtt = ssl_sock.handshake_time
         self.speed = 200
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
@@ -218,14 +217,19 @@ class HttpWorker(object):
 
     def update_debug_data(self, rtt, sent, received, speed):
         self.rtt = rtt
-        self.speed_history.append(speed)
-        if len(self.speed_history) > 10:
-            self.speed_history.pop(0)
-        self.speed = sum(self.speed_history) / len(self.speed_history)
+        if sent + received > 10000:
+            self.speed_history.append(speed)
+            if len(self.speed_history) > 10:
+                self.speed_history.pop(0)
+            self.speed = sum(self.speed_history) / len(self.speed_history)
 
         self.log_debug_data(rtt, sent, received)
 
     def close(self, reason):
+        if not self.keep_running:
+            self.logger.warn("worker already closed %s", self.ip_str)
+            return
+
         self.accept_task = False
         self.keep_running = False
         self.ssl_sock.close()
@@ -238,9 +242,14 @@ class HttpWorker(object):
         self.close_cb(self)
 
     def get_score(self):
-        score = (50 - (self.speed/6.0)) + (self.rtt/30.0)
+        # The smaller, the better
+        score = (50 - (self.speed/6.0)) + (self.rtt/20.0)
         if self.version != "1.1":
-            score += len(self.streams) * 5
+            score += len(self.streams) * 3
+
+            if self.config.show_state_debug:
+                self.logger.debug("get_score %s, speed:%d rtt:%d stream_num:%d score:%d", self.ip_str,
+                              self.speed, self.rtt, len(self.streams), score)
 
         return score
 

@@ -1,6 +1,7 @@
 import os
 import json
 import socket
+import time
 
 import utils
 
@@ -28,7 +29,8 @@ class IpManager(IpManagerBase):
                     for top in ds:
                         domain_map[str(top)] = {
                             "links": 0,
-                            "fail_times": 0
+                            "fail_times": 0,
+                            "last_try": 0.0
                         }
                 self.logger.info("load %s success", fn)
                 break
@@ -57,8 +59,12 @@ class IpManager(IpManagerBase):
         self.domain_map = self.load_domains()
 
     def get_ip_sni_host(self):
+        now = time.time()
         for top_domain, info in self.domain_map.items():
             if info["links"] > self.config.max_connection_per_domain:
+                continue
+
+            if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
             sni = "www." + top_domain
@@ -70,6 +76,7 @@ class IpManager(IpManagerBase):
 
             self.logger.debug("get ip:%s sni:%s", ip, sni)
             info["links"] += 1
+            info["last_try"] = now
             return ip, sni, top_domain
 
         return None, None, None
@@ -77,27 +84,27 @@ class IpManager(IpManagerBase):
     def _get_domain(self, top_domain):
         self.domain_map.setdefault(top_domain, {
                             "links": 0,
-                            "fail_times": 0
+                            "fail_times": 0,
+                            "last_try": 0.0
                         })
         return self.domain_map[top_domain]
 
-    def report_connect_fail(self, ip_str, sni=None, reason=""):
+    def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=True):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         top_domain = ".".join(sni.split(".")[1:])
 
         info = self._get_domain(top_domain)
         info["fail_times"] += 1
-        info["links"] -= 1
+        info["last_try"] = time.time()
         self.logger.debug("ip %s sni:%s connect fail, reason:%s", ip, sni, reason)
 
     def update_ip(self, ip_str, sni, handshake_time):
-        # ip, _ = utils.get_ip_port(ip_str)
-        # ip = utils.to_str(ip)
         top_domain = ".".join(sni.split(".")[1:])
 
         info = self._get_domain(top_domain)
         info["fail_times"] = 0
+        info["last_try"] = 0.0
         # self.logger.debug("ip %s sni:%s connect success, rtt:%f", ip, sni, handshake_time)
 
     def ssl_closed(self, ip_str, sni=None, reason=""):

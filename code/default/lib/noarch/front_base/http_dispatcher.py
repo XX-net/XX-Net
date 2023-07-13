@@ -72,6 +72,9 @@ class HttpsDispatcher(object):
         self.task_count = 0
         self.running = True
 
+        # used by start_connect_all_ips() to control create_worker_thread()
+        self.connect_all_workers = False
+
         # for statistic
         self.success_num = 0
         self.fail_num = 0
@@ -105,9 +108,16 @@ class HttpsDispatcher(object):
         self.request_queue.put(None)
         self.close_all_worker("stop")
 
-    def on_ssl_created_cb(self, ssl_sock, check_free_work=True):
-        # self.logger.debug("on_ssl_created_cb %s", ssl_sock.ip)
+    def _debug_log(self, fmt, *args, **kwargs):
+        if not self.config.show_state_debug:
+            return
+        self.logger.debug(fmt, *args, **kwargs)
+
+    def on_ssl_created_cb(self, ssl_sock, remove_slowest_worker=True):
+        self._debug_log("on_ssl_created_cb %s", ssl_sock.ip_str)
+
         if not self.running:
+            self.logger.info("on_ssl_created_cb %s but stopped", ssl_sock.ip_str)
             ssl_sock.close()
             return
 
@@ -128,55 +138,90 @@ class HttpsDispatcher(object):
 
         self.workers.append(worker)
 
-        if check_free_work:
-            self.check_free_worker()
+        if remove_slowest_worker:
+            self._remove_slowest_worker()
 
     def _on_worker_idle_cb(self):
         self.wait_a_worker_cv.notify()
 
     def create_worker_thread(self):
         while self.running:
-            self.trigger_create_worker_cv.wait()
+            if not self.connect_all_workers:
+                self.trigger_create_worker_cv.wait()
+
+            if len(self.workers) == 0 and self.config.dispather_connect_all_workers_on_startup:
+                self._debug_log("create_worker_thread start connect_all_workers")
+                self.connect_all_workers = True
 
             try:
-                ssl_sock = self.connection_manager.get_ssl_connection()
+                ssl_sock = self.connection_manager.get_ssl_connection(timeout=10)
             except Exception as e:
-                continue
+                self._debug_log("create_worker_thread get_ssl_connection fail:%r", e)
+                ssl_sock = None
 
             if not ssl_sock:
-                # self.logger.warn("create_worker_thread get ssl_sock fail")
+                self._debug_log("create_worker_thread get ssl_sock fail")
+                self.connect_all_workers = False
                 continue
 
+            if self.connect_all_workers:
+                self._debug_log("connect_all_workers get %s", ssl_sock.ip_str)
+
             try:
-                self.on_ssl_created_cb(ssl_sock, check_free_work=False)
+                self.on_ssl_created_cb(ssl_sock, remove_slowest_worker=False)
             except Exception as e:
-                self.logger.exception("on_ssl_created_cb except:%r", e)
+                self.logger.exception("on_ssl_created_cb %s except:%r", ssl_sock.ip, e)
                 time.sleep(10)
 
-            idle_num = 0
-            acceptable_num = 0
-            for worker in self.workers:
-                if worker.accept_task:
-                    acceptable_num += 1
+    def start_connect_all_ips(self):
+        # trigger connect all ips
+        # used in tls relay.
+        self.connect_all_workers = True
+        self.trigger_create_worker_cv.notify()
 
-                if worker.version == "1.1":
-                    if worker.accept_task:
-                        idle_num += 1
-                else:
-                    if len(worker.streams) == 0:
-                        idle_num += 1
+    def _remove_life_end_workers(self):
+        to_close = []
+        for worker in self.workers:
+            if not worker.is_life_end():
+                continue
+
+            if worker.version == "1.1":
+                to_close.append(worker)
+                continue
+
+            now = time.time()
+            task_finished = True
+            for stream_id, stream in worker.streams.items():
+                if stream.task.start_time + stream.task.timeout > now:
+                    task_finished = False
+                    break
+
+            if task_finished:
+                to_close.append(worker)
+
+        for worker in to_close:
+            worker.close("life end")
+            if worker in self.workers:
+                try:
+                    self.workers.remove(worker)
+                except:
+                    pass
 
     def get_worker(self, nowait=False):
+        # self._debug_log("start get_worker")
+
         while self.running:
             best_score = 99999999
             best_worker = None
             good_worker = 0
             idle_num = 0
             now = time.time()
+
+            self._remove_life_end_workers()
+
             for worker in self.workers:
                 if worker.is_life_end():
-                    if self.config.show_state_debug:
-                        self.logger.debug("life end worker: %s", worker)
+                    self._debug_log("life end worker: %s", worker.ip_str)
                     # self.close_cb(worker)
                     continue
 
@@ -201,26 +246,20 @@ class HttpsDispatcher(object):
                     (best_worker is None or
                     idle_num < self.config.dispather_min_idle_workers or
                     len(self.workers) < self.config.dispather_min_workers or
-                    (now - best_worker.last_recv_time) < self.config.dispather_work_min_idle_time or
+                    abs(now - best_worker.last_recv_time) < self.config.dispather_work_min_idle_time or
                     best_score > self.config.dispather_work_max_score or
                      (best_worker.version == "2" and len(best_worker.streams) >= self.config.http2_target_concurrent)):
-                # self.logger.debug("trigger get more worker")
+
+                self._debug_log("trigger get more worker")
                 self.trigger_create_worker_cv.notify()
 
-            if nowait or \
-                    (best_worker and (now - best_worker.last_recv_time) >= self.config.dispather_work_min_idle_time):
-                # self.logger.debug("return worker")
+            if nowait or best_worker:
                 return best_worker
-            elif self.config.show_state_debug:
 
-                self.logger.debug("get_worker best_worker:%s last recv time:%f",
-                                  best_worker, now - best_worker.last_recv_time)
-
+            self._debug_log("wait a new worker")
             self.wait_a_worker_cv.wait(time.time() + 1)
-            # self.logger.debug("get wait_a_worker_cv")
-            #time.sleep(0.1)
 
-    def check_free_worker(self):
+    def _remove_slowest_worker(self):
         # close slowest worker,
         # give change for better worker
         while True:
@@ -249,6 +288,8 @@ class HttpsDispatcher(object):
 
             if slowest_worker is None:
                 return
+
+            self.logger.debug("remove_slowest_worker remove %s", slowest_worker.ip_str)
             self.close_cb(slowest_worker)
 
     def request(self, method, host, path, headers, body, url=b"", timeout=60):
@@ -267,9 +308,11 @@ class HttpsDispatcher(object):
             self.task_count += 1
 
         try:
-            # self.logger.debug("task start request")
             if not url:
                 url = b"%s %s%s" % (method, host, path)
+
+            self._debug_log("task start request %s" % url)
+
             self.last_request_time = time.time()
             q = simple_queue.Queue()
             task = http_common.Task(self.logger, self.config, method, host, path, headers, body, q, url, timeout)
@@ -287,6 +330,8 @@ class HttpsDispatcher(object):
                 self.continue_fail_num += 1
                 self.last_fail_time = time.time()
                 if task.worker:
+                    task.worker.rtt = (time.time() - task.worker.last_recv_time) * 1000
+
                     task.worker.continue_fail_tasks += 1
                     if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
                         self.trigger_create_worker_cv.notify()

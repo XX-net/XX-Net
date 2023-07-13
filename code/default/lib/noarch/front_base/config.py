@@ -21,6 +21,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("dispather_score_factor", 1)
         self.set_var("dispather_max_idle_workers", 30)
         self.set_var("dispather_worker_max_continue_fail", 8)
+        self.set_var("dispather_connect_all_workers_on_startup", 0)
 
         self.set_var("max_task_num", 100)
 
@@ -32,7 +33,7 @@ class ConfigBase(xconfig.Config):
 
         # http 2 worker
         self.set_var("http2_max_concurrent", 60)
-        self.set_var("http2_target_concurrent", 60)
+        self.set_var("http2_target_concurrent", 6)
         self.set_var("http2_max_timeout_tasks", 5)
         self.set_var("http2_max_process_tasks", 900)  # Nginx will GoAway after 1000 tasks.
         self.set_var("http2_timeout_active", 15)
@@ -47,7 +48,7 @@ class ConfigBase(xconfig.Config):
         # connect manager
         self.set_var("https_max_connect_thread", 1)
         self.set_var("max_connect_thread", 1)
-        self.set_var("connect_create_interval", 1)
+        self.set_var("connect_create_interval", 0.1)
         self.set_var("ssl_first_use_timeout", 10)
         self.set_var("connection_pool_min", 1)
         self.set_var("https_keep_alive", 15)  # time to pass created link to worker

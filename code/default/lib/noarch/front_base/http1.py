@@ -272,8 +272,6 @@ class Http1Worker(HttpWorker):
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
-        self.accept_task = False
-        self.keep_running = False
         self.task_queue.put(None)
 
         if self.task is not None:

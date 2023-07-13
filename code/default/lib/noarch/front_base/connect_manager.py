@@ -156,13 +156,11 @@ class ConnectManager(object):
 
         self.thread_num_lock = threading.Lock()
         self.timeout = 4
-        self.max_timeout = 60
         self.thread_num = 0
         self.running = True
-        self.connect_counter = 0
 
-        self.get_num_lock = threading.Lock()
-        self.https_get_num = 0
+        self._waiting_num_lock = threading.Lock()
+        self._connection_waiting_num = 0
         self.no_ip_lock = threading.Lock()
 
         # after new created ssl_sock timeout(50 seconds)
@@ -184,8 +182,6 @@ class ConnectManager(object):
             self.keep_conn_th.start()
         else:
             self.keep_conn_th = None
-
-        self.create_more_connection()
 
     def stop(self):
         self.running = False
@@ -219,71 +215,68 @@ class ConnectManager(object):
                 time.sleep(5)
                 continue
 
-            self.connect_process()
+            self._connect_process()
 
     def _need_more_ip(self):
-        if self.https_get_num:
+        if self._connection_waiting_num:
             return True
         else:
             return False
 
-    def create_more_connection(self):
+    def _create_more_connection(self):
         if not self.connecting_more_thread:
             with self.thread_num_lock:
-                self.connecting_more_thread = threading.Thread(target=self.create_more_connection_worker)
+                self.connecting_more_thread = threading.Thread(target=self._create_more_connection_worker)
                 self.connecting_more_thread.start()
 
-    def create_more_connection_worker(self):
-        while self.thread_num < self.config.https_max_connect_thread and \
-                self._need_more_ip():
+    def _create_more_connection_worker(self):
+        while self.thread_num < self.config.https_max_connect_thread and self._need_more_ip():
 
             self.thread_num_lock.acquire()
             self.thread_num += 1
             self.thread_num_lock.release()
-            p = threading.Thread(target=self.connect_thread)
+            p = threading.Thread(target=self._connect_thread)
             p.start()
-            time.sleep(0.5)
+            time.sleep(self.config.connect_create_interval)
 
         with self.thread_num_lock:
             self.connecting_more_thread = None
 
-    def connect_thread(self, sleep_time=0):
+    def _connect_thread(self, sleep_time=0):
         time.sleep(sleep_time)
         try:
             while self.running and self._need_more_ip():
                 if self.new_conn_pool.qsize() > self.config.https_connection_pool_max:
                     break
 
-                self.connect_process()
+                self._connect_process()
         finally:
             self.thread_num_lock.acquire()
             self.thread_num -= 1
             self.thread_num_lock.release()
 
-    def connect_process(self):
+    def _connect_process(self):
         try:
             ip_str, sni, host = self.ip_manager.get_ip_sni_host()
             if not ip_str:
                 with self.no_ip_lock:
                     # self.logger.warning("not enough ip")
                     time.sleep(10)
-                return
+                return None
 
             # self.logger.debug("create ssl conn %s", ip_str)
             ssl_sock = self._create_ssl_connection(ip_str, sni, host)
             if not ssl_sock:
                 time.sleep(1)
-                return
+                return None
 
             self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
-            self.connect_counter += 1
 
             if self.config.connect_create_interval > 0:
-                if self.connect_counter >= 2:
-                    sleep = random.randint(self.config.connect_create_interval, self.config.connect_create_interval*2)
-                    time.sleep(sleep)
-                else:
-                    time.sleep(1)
+                sleep = random.uniform(self.config.connect_create_interval, self.config.connect_create_interval*2)
+                time.sleep(sleep)
+
+            return ssl_sock
         except Exception as e:
             self.logger.exception("connect_process except:%r", e)
 
@@ -303,8 +296,8 @@ class ConnectManager(object):
                 self.logger.debug("connect %s network fail, %r", ip_str, e)
                 time.sleep(1)
             else:
-                self.logger.debug("connect %s network fail:%r", ip_str, e)
-                self.ip_manager.report_connect_fail(ip_str, sni, str(e))
+                self.logger.debug("connect %s fail:%r", ip_str, e)
+            self.ip_manager.report_connect_fail(ip_str, sni, str(e))
         except NoRescourceException as e:
             self.logger.warning("create ssl for %s except:%r", ip_str, e)
             self.ip_manager.report_connect_fail(ip_str, sni, str(e))
@@ -318,12 +311,11 @@ class ConnectManager(object):
                 self.logger.exception("connect %s fail:%r", ip_str, e)
                 time.sleep(1)
 
-    def get_ssl_connection(self):
-        with self.get_num_lock:
-            self.https_get_num += 1
+    def get_ssl_connection(self, timeout=30):
+        with self._waiting_num_lock:
+            self._connection_waiting_num += 1
 
-        start_time = time.time()
-        self.create_more_connection()
+        end_time = time.time() + timeout
         try:
             while self.running:
                 ret = self.new_conn_pool.get(block=True, timeout=1)
@@ -336,11 +328,12 @@ class ConnectManager(object):
                         # self.logger.debug("new_conn_pool.get:%s handshake:%d timeout.", ssl_sock.ip, handshake_time)
                         self.ip_manager.report_connect_closed(ssl_sock.ip_str, ssl_sock.sni, "get_timeout")
                         ssl_sock.close()
-                        continue
                 else:
-                    if time.time() - start_time > self.max_timeout:
-                        self.logger.debug("create ssl timeout fail.")
+                    if time.time() > end_time:
+                        self.logger.debug("get_ssl_connection timeout")
                         return None
+
+                self._create_more_connection()
         finally:
-            with self.get_num_lock:
-                self.https_get_num -= 1
+            with self._waiting_num_lock:
+                self._connection_waiting_num -= 1

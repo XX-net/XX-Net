@@ -115,10 +115,13 @@ def get_front(host, timeout):
 
             dispatcher = front.get_dispatcher(host)
             if not dispatcher:
+                xlog.warn("get dispatcher from %s fail for %s", front.name, host)
                 continue
 
             score = dispatcher.get_score()
             if not score:
+                if front.config.show_state_debug:
+                    xlog.warn("get_front get_score failed for %s ", front.name)
                 continue
 
             if score < best_score:

@@ -87,6 +87,8 @@ class Front(object):
         self.host_manager.set_host(host_info)
         self.logger.debug("set_ips:%s", ips)
 
+        self.http_dispatcher.start_connect_all_ips()
+
     def request(self, method, host, path="/", headers={}, data="", timeout=120):
         headers = dict(headers)
         headers["XX-Account"] = self.account

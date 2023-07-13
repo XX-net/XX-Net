@@ -341,12 +341,18 @@ class Stream(object):
 
     def close(self, reason="close"):
         if not self.task.responsed:
+            # self.task.set_state("stream close: %s, call retry" % reason)
             self.connection.retry_task_cb(self.task, reason)
         else:
+            # self.task.set_state("stream close: %s, finished" % reason)
             self.task.finish()
             # empty block means fail or closed.
+
         self._close_remote()
+        # self.task.set_state("stream close: %s, closed remote" % reason)
+
         self._close_cb(self.stream_id, reason)
+        # self.task.set_state("stream close: %s, called close_cb" % reason)
 
     @property
     def _local_closed(self):

@@ -1,3 +1,5 @@
+import time
+
 from six.moves import queue
 import threading
 import socket
@@ -220,8 +222,6 @@ class Http2Worker(HttpWorker):
         return self.rtt + len(self.streams) * 3000
 
     def close(self, reason="conn close"):
-        self.keep_running = False
-        self.accept_task = False
         # Notify loop to exit
         # This function may be call by out side http2
         # When gae_proxy found the appid or ip is wrong
@@ -286,9 +286,9 @@ class Http2Worker(HttpWorker):
             self.idle_cb()
 
     def _send_cb(self, frame):
-        # can called by stream
+        # can be called by stream
         # put to send_blocked if connection window not allow,
-        if frame.type == DataFrame.type:
+        if frame.type in [HeadersFrame.type, DataFrame.type]:
             if len(frame.data) > self.remote_window_size:
                 self.blocked_send_frames.append(frame)
                 self.accept_task = False
@@ -512,9 +512,11 @@ class Http2Worker(HttpWorker):
                 stream.max_frame_size += new_size
 
     def get_trace(self):
+        now = time.time()
         out_list = []
         out_list.append(" continue_timeout:%d" % self.continue_timeout)
         out_list.append(" processed:%d" % self.processed_tasks)
+        out_list.append(" inactive:%d, %d" % (now - self.last_send_time, now - self.last_recv_time))
         out_list.append(" h2.stream_num:%d" % len(self.streams))
         out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))
         return ",".join(out_list)
