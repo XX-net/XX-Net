@@ -179,13 +179,15 @@ class Task(object):
 
 
 class HttpWorker(object):
+    max_payload = 128 * 1024
+
     def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
         self.logger = logger
         self.ip_manager = ip_manager
         self.config = config
         self.ssl_sock = ssl_sock
-        self.rtt = ssl_sock.handshake_time
-        self.speed = 200
+        self.rtt = ssl_sock.handshake_time * 0.001
+        self.speed = 5000000
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
@@ -195,7 +197,8 @@ class HttpWorker(object):
         self.keep_running = True
         self.processed_tasks = 0
         self.continue_fail_tasks = 0
-        self.speed_history = []
+        self.rtt_history = [self.rtt,]
+        self.speed_history = [self.speed, self.speed, self.speed]
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
@@ -207,6 +210,7 @@ class HttpWorker(object):
         o += " running: %s\r\n" % (self.keep_running)
         o += " processed_tasks: %d\r\n" % (self.processed_tasks)
         o += " continue_fail_tasks: %s\r\n" % (self.continue_fail_tasks)
+        o += " rtt_history: %s\r\n" % (self.rtt_history)
         o += " speed_history: %s\r\n" % (self.speed_history)
         if self.version != "1.1":
             o += "streams: %d\r\n" % len(self.streams)
@@ -215,13 +219,26 @@ class HttpWorker(object):
         o += " score: %f\r\n" % (self.get_score())
         return o
 
+    def update_rtt(self, rtt):
+        self.rtt_history.append(rtt)
+        if len(self.rtt_history) > 10:
+            self.rtt_history.pop(0)
+        # self.rtt = sum(self.rtt_history) / len(self.rtt_history)
+
+    def update_speed(self, speed):
+        self.speed_history.append(speed)
+        if len(self.speed_history) > 10:
+            self.speed_history.pop(0)
+        self.speed = sum(self.speed_history) / len(self.speed_history)
+
     def update_debug_data(self, rtt, sent, received, speed):
-        self.rtt = rtt
-        if sent + received > 10000:
-            self.speed_history.append(speed)
-            if len(self.speed_history) > 10:
-                self.speed_history.pop(0)
-            self.speed = sum(self.speed_history) / len(self.speed_history)
+        # if sent + received > 10000:
+        #     self.speed_history.append(speed)
+        #     if len(self.speed_history) > 10:
+        #         self.speed_history.pop(0)
+        #     self.speed = sum(self.speed_history) / len(self.speed_history)
+        # else:
+        #     self.rtt = rtt
 
         self.log_debug_data(rtt, sent, received)
 
@@ -243,13 +260,20 @@ class HttpWorker(object):
 
     def get_score(self):
         # The smaller, the better
-        score = (50 - (self.speed/6.0)) + (self.rtt/20.0)
+
+        score = self.rtt
         if self.version != "1.1":
-            score += len(self.streams) * 3
+            response_body_len = self.max_payload
+            for _, stream in self.streams.items():
+                if stream.response_body_len == 0:
+                    response_body_len += self.max_payload
+                else:
+                    response_body_len += stream.response_body_len - stream.task.body_len
+            score += response_body_len / self.speed
 
             if self.config.show_state_debug:
-                self.logger.debug("get_score %s, speed:%d rtt:%d stream_num:%d score:%d", self.ip_str,
-                              self.speed, self.rtt, len(self.streams), score)
+                self.logger.debug("get_score %s, speed:%f rtt:%d stream_num:%d score:%f", self.ip_str,
+                              self.speed * 0.000001, self.rtt * 1000, len(self.streams), score)
 
         return score
 

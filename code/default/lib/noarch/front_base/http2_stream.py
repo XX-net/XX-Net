@@ -70,6 +70,8 @@ class Stream(object):
         self.task = task
         self.state = STATE_IDLE
         self.get_head_time = None
+        self.start_connection_point = self.connection._sock.bytes_received
+        self.get_head_stream_num = 0
 
         # There are two flow control windows: one for data we're sending,
         # one for data being sent to us.
@@ -292,6 +294,7 @@ class Stream(object):
             self.response_header_datas = None
 
             self.get_head_time = time.time()
+            self.get_head_stream_num = len(self.connection.streams)
 
             length = self.response_headers.get("Content-Length", None)
             if isinstance(length, list):
@@ -305,13 +308,37 @@ class Stream(object):
             if self.config.http2_show_debug:
                 self.logger.debug("%s Closing remote side of stream:%d", self.connection.ssl_sock.ip_str, self.stream_id)
 
+            xcost = self.response_headers.get("X-Cost", -1)
+            if isinstance(xcost, list):
+                xcost = float(xcost[0])
+            rcost = self.response_headers.get("R-Cost", -1)
+            if isinstance(rcost, list):
+                rcost = float(rcost[0])
+
             time_now = time.time()
-            time_cost = time_now - self.get_head_time
-            if time_cost > 0 and \
-                    isinstance(self.task.content_length, int) and \
-                    not self.task.finished:
-                speed = self.task.content_length / time_cost
+            whole_cost = time_now - self.start_time
+            receive_cost = time_now - self.get_head_time
+            bytes_received = self.connection._sock.bytes_received - self.start_connection_point
+            if receive_cost > 0 and bytes_received > 10000 and not self.task.finished and receive_cost > 0.001:
+                # speed = bytes_received / receive_cost
+                speed = (len(self.request_body) + bytes_received) / (whole_cost - xcost)
+                self.connection.update_speed(speed)
                 self.task.set_state("h2_finish[SP:%d]" % speed)
+
+                send_cost = len(self.request_body) / speed
+                streams_cost = ((self.connection.max_payload /2) * self.get_head_stream_num) / speed
+
+                if xcost >= 0:
+                    rtt = whole_cost - xcost - send_cost - receive_cost  # - streams_cost
+                    if self.config.http2_show_debug:
+                        self.logger.debug("%s RTT:%f rtt:%f send_len:%d recv_len:%d "
+                                          "whole_Cost:%f xcost:%f rcost:%f send_cost:%f recv_cost:%f "
+                                          "streams_cost:%f Speed: %f",
+                                          self.connection.ssl_sock.ip_str,
+                                          self.connection.rtt * 1000, rtt * 1000,
+                                          len(self.request_body), bytes_received,
+                                          whole_cost, xcost, rcost, send_cost, receive_cost, streams_cost, speed)
+                    self.connection.update_rtt(rtt)
 
             self._close_remote()
 

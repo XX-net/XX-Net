@@ -104,6 +104,9 @@ class BufferedSocket(object):
         # The number of bytes in the buffer.
         self._bytes_in_buffer = 0
 
+        # record all bytes received from beginning
+        self.bytes_received = 0
+
         # following is define for send buffer
         # all send will be cache and send when flush called,
         # combine data to reduce the api call
@@ -247,6 +250,7 @@ class BufferedSocket(object):
             if not count and amt > self._bytes_in_buffer:
                 raise ConnectionResetError()
             self._bytes_in_buffer += count
+            self.bytes_received += count
 
         # Read out the bytes and update the index.
         amt = min(amt, self._bytes_in_buffer)

@@ -94,6 +94,10 @@ def request(method, host, schema="http", path="/", headers={}, data="", timeout=
     return response.text, response.status, response
 
 
+def start():
+    pass
+
+
 def stop():
     pass
 

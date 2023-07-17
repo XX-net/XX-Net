@@ -613,7 +613,7 @@ class ProxySession(object):
 
             request_session_id = self.session_id
             upload_data_head = struct.pack("<cBB8sIBIH", magic, g.protocol_version, pack_type,
-                                           bytes(self.session_id), transfer_no,
+                                           utils.to_bytes(self.session_id), transfer_no,
                                            server_timeout, send_data_len, send_ack_len)
             upload_post_buf = base_container.WriteBuffer(upload_data_head)
             upload_post_buf.append(data)
@@ -727,12 +727,13 @@ class ProxySession(object):
                     rtt = max(100, rtt)
                     speed = (send_data_len + len(content) + 400) / rtt
                     # speed = (send_data_len + len(content)) / (roundtrip_time - (time_cost / 1000.0))
+                    rcost = response.headers.get(b"R-Cost", b"")
                     xlog.debug(
                         "worker:%d no:%d "
-                        "cost_time:%f server_time:%f server_timeout:%d "
+                        "cost_time:%f rcost:%s server_time:%f server_timeout:%d "
                         "snd:%d rcv:%d s_pool:%d on_road:%d target_worker:%d speed:%d",
                         work_id, transfer_no,
-                        roundtrip_time, time_cost / 1000.0, server_timeout,
+                        roundtrip_time, rcost, time_cost / 1000.0, server_timeout,
                         send_data_len, len(content), server_send_pool_size,
                         self.on_road_num,
                         self.target_on_roads,

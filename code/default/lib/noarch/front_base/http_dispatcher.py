@@ -154,7 +154,7 @@ class HttpsDispatcher(object):
                 self.connect_all_workers = True
 
             try:
-                ssl_sock = self.connection_manager.get_ssl_connection(timeout=10)
+                ssl_sock = self.connection_manager.get_ssl_connection(timeout=60)
             except Exception as e:
                 self._debug_log("create_worker_thread get_ssl_connection fail:%r", e)
                 ssl_sock = None

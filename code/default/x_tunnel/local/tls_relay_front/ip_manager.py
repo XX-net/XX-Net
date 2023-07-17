@@ -29,7 +29,7 @@ class IpManager(IpManagerBase):
         ips = self.host_manager.ips
 
         best_info = None
-        best_rtt = 2000
+        best_rtt = 99999
 
         for ip in ips:
             info = self._get_ip_info(ip)
@@ -72,6 +72,7 @@ class IpManager(IpManagerBase):
         ip = utils.to_str(ip)
         info = self._get_ip_info(ip)
         info["fail_times"] += 1
+        info["rtt"] = 2000
         self.logger.debug("ip %s connect fail:%s", ip, reason)
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
