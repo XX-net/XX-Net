@@ -96,7 +96,6 @@ class IpManager(IpManagerBase):
 
         info = self._get_domain(top_domain)
         info["fail_times"] += 1
-        info["last_try"] = time.time()
         self.logger.debug("ip %s sni:%s connect fail, reason:%s", ip, sni, reason)
 
     def update_ip(self, ip_str, sni, handshake_time):

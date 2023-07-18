@@ -1,4 +1,4 @@
-import random
+import time
 import json
 
 import utils
@@ -22,10 +22,12 @@ class IpManager(IpManagerBase):
             "fail_times": 0,
             "links": 0,
             "rtt": 1000,
+            "last_try": 0.0
         })
         return self.ip_dict[ip]
 
     def get_ip_sni_host(self):
+        now = time.time()
         ips = self.host_manager.ips
 
         best_info = None
@@ -39,7 +41,7 @@ class IpManager(IpManagerBase):
             if info["links"] >= self.config.max_links_per_ip:
                 continue
 
-            if info["fail_times"] > 5 and random.randint(0, 10) < 9:
+            if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
             if info["rtt"] < best_rtt:
@@ -50,6 +52,7 @@ class IpManager(IpManagerBase):
             return None, None, None
 
         best_info["links"] += 1
+        best_info["last_try"] = now
         # self.logger.debug("get ip:%s", ip)
 
         ip = best_info["ip"]
@@ -65,6 +68,7 @@ class IpManager(IpManagerBase):
         info = self._get_ip_info(ip)
         info["fail_times"] = 0
         info["rtt"] = handshake_time
+        info["last_try"] = 0.0
         # self.logger.debug("ip %s connect success", ip)
 
     def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=False):
