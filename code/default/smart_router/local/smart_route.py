@@ -478,6 +478,15 @@ def handle_ip_proxy(sock, ip, port, client_address):
     if not isinstance(sock, SocketWrap):
         sock = SocketWrap(sock, client_address[0], client_address[1])
 
+    if port == 443:
+        try:
+            host = get_sni(sock)
+            if host and not utils.check_ip_valid(host):
+                xlog.debug("ip connect to %s:%d translate to %s", ip, port, host)
+                return handle_domain_proxy(sock, host, port, client_address)
+        except SniNotExist as e:
+            xlog.debug("ip:%s:%d get sni fail", ip, port)
+
     if g.config.pac_policy == "all_X-Tunnel":
         rule = "socks"
     else:
@@ -489,15 +498,6 @@ def handle_ip_proxy(sock, ip, port, client_address):
 
     if rule:
         return try_loop("ip user", [rule], sock, ip, port, client_address)
-
-    if port == 443:
-        try:
-            host = get_sni(sock)
-            if host and not utils.check_ip_valid(host):
-                xlog.debug("ip connect to %s:%d translate to %s", ip, port, host)
-                return handle_domain_proxy(sock, host, port, client_address)
-        except SniNotExist as e:
-            xlog.debug("ip:%s:%d get sni fail", ip, port)
 
     record = g.ip_cache.get(ip)
     if record and record["r"] != "unknown":

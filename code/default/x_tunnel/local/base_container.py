@@ -481,7 +481,7 @@ class Conn(object):
                                seq, self.next_cmd_seq)
                 return
 
-            # xlog.debug("conn:%d put data seq:%d len:%d", self.conn_id, seq, len(data))
+            self._debug_log("conn:%d put data seq:%d len:%d", self.conn_id, seq, len(data))
             self.cmd_queue[seq] = data.get_buf()
 
             if seq == self.next_cmd_seq:
@@ -504,6 +504,11 @@ class Conn(object):
             self.cmd_notice.release()
         return False
 
+    def _debug_log(self, fmt, *args, **kwargs):
+        if not self.session.config.show_debug:
+            return
+        self.xlog.debug(fmt, *args, **kwargs)
+
     def cmd_processor(self):
         while self.running:
             data = self.get_cmd_data()
@@ -513,11 +518,12 @@ class Conn(object):
             self.last_active = time.time()
             cmd_id = struct.unpack("<B", data.get(1))[0]
             if cmd_id == 1:  # data
+                self._debug_log("conn:%d download len:%d pos:%d", self.conn_id, len(data), self.sended_position)
                 self.send_to_sock(data)
 
             elif cmd_id == 3:  # ack:
                 position = struct.unpack("<Q", data.get(8))[0]
-                # self.xlog.debug("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
+                self._debug_log("Conn session:%s conn:%d ACK:%d", self.session.session_id, self.conn_id, position)
                 if position > self.remote_acked_position:
                     self.remote_acked_position = position
                     self.recv_notice.acquire()
@@ -669,11 +675,10 @@ class Conn(object):
                     break
 
                 self.last_active = time.time()
-                self.transfer_received_data(data)
-                # self.xlog.debug("Conn session:%s conn:%d Recv len:%d rcv_pos:%d",
-                #           self.session.session_id, self.conn_id, data_len, self.received_position)
+                self._debug_log("Conn session:%s conn:%d upload len:%d pos:%d",
+                                self.session.session_id, self.conn_id, data_len, self.received_position)
 
-                # self.xlog.debug("Conn session:%s conn:%d Recv worker stopped", self.session.session_id, self.conn_id)
+                self.transfer_received_data(data)
             except Exception as e:
                 xlog.exception("recv_worker conn:%d e:%r", self.conn_id, e)
 

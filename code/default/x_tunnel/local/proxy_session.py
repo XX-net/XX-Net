@@ -46,6 +46,7 @@ def sleep(t):
 
 class ProxySession(object):
     def __init__(self):
+        self.config = g.config
         self.wait_queue = base_container.WaitQueue()
         self.send_buffer = base_container.SendBuffer(max_payload=g.config.max_payload)
         self.receive_process = base_container.BlockReceivePool(self.download_data_processor)
