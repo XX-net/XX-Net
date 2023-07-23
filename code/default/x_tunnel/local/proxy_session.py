@@ -99,7 +99,6 @@ class ProxySession(object):
             self.conn_list = {}
             self.transfer_list = {}
             self.last_send_time = time.time()
-            self.on_road_num = 0
             self.last_receive_time = 0
             self.traffic = 0
 
@@ -666,6 +665,7 @@ class ProxySession(object):
                 if status == 521:
                     xlog.warn("X-tunnel server is down, try get new server.")
                     g.server_host = None
+                    self.on_road_num -= 1
                     self.stop()
                     login_process()
                     return
@@ -676,10 +676,11 @@ class ProxySession(object):
                     time.sleep(sleep_time)
                     continue
 
+                content_length = int(response.headers.get(b"Content-Length", b"0"))
                 recv_len = len(content)
-                if recv_len < 6:
-                    xlog.warn("roundtrip time:%f transfer_no:%d send:%d recv:%d Head",
-                              roundtrip_time, transfer_no, send_data_len, recv_len)
+                if recv_len < 6 or recv_len != content_length:
+                    xlog.warn("roundtrip time:%f transfer_no:%d send:%d recv:%d Head:%d",
+                              roundtrip_time, transfer_no, send_data_len, recv_len, content_length)
                     continue
 
                 try:
@@ -699,6 +700,7 @@ class ProxySession(object):
                         if error_code == 1:
                             # no quota
                             xlog.warn("x_server error:no quota")
+                            self.on_road_num -= 1
                             self.stop()
                             return
                         elif error_code == 2:
@@ -710,6 +712,7 @@ class ProxySession(object):
                             # session not exist
                             if self.session_id == request_session_id:
                                 xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
+                            self.on_road_num -= 1
                             self.reset()
                             return
                         else:

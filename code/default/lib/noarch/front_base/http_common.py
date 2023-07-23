@@ -179,7 +179,7 @@ class Task(object):
 
 
 class HttpWorker(object):
-    max_payload = 128 * 1024
+    max_payload = 32 * 1024
 
     def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
         self.logger = logger

@@ -278,7 +278,6 @@ class SSLContext(object):
 
         cmd = b"ALL:!aPSK:!ECDSA+SHA1:!3DES"
         bssl.BSSL_SSL_CTX_set_cipher_list(self.ctx, cmd)
-        bssl.BSSL_SSL_CTX_set_num_tickets(self.ctx, 0)
 
         if support_http2:
             alpn = b""
@@ -303,7 +302,12 @@ class SSLContext(object):
         bssl.BSSL_SSL_CTX_set_verify_algorithm_prefs(self.ctx, cdata_ptr, len(algs))
 
         bssl.BSSL_SSL_CTX_set_min_proto_version(self.ctx, 0x0303)
-        bssl.BSSL_SSL_CTX_set_permute_extensions(self.ctx, 1)
+
+        try:
+            bssl.BSSL_SSL_CTX_set_num_tickets(self.ctx, 0)
+            bssl.BSSL_SSL_CTX_set_permute_extensions(self.ctx, 1)
+        except:
+            self.logger.info("boringsssl not support permute extension")
 
         bssl.SetCompression(self.ctx)
 

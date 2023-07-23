@@ -41,6 +41,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 data_root = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
 
+should_create_desktop_shortcut = True
+
 
 def get_opener():
     autoproxy = '127.0.0.1:8086'
@@ -368,7 +370,7 @@ def check_new_machine():
         if sys.platform == "win32" and platform.release() == "XP":
             notify_install_tcpz_for_winXp()
 
-        if sys_platform.has_desktop and os.getenv("XXNET_NO_MESS_SYSTEM", "0") == "0":
+        if sys_platform.has_desktop and should_create_desktop_shortcut:
             xlog.info("generate desktop shortcut")
             create_desktop_shortcut()
 

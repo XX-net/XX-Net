@@ -144,8 +144,9 @@ def main():
         module_init.xargs["allow_remote"] = 1
 
     if os.getenv("NOT_MESS_SYSTEM", "0") != "0" or no_mess_system or config.no_mess_system:
-        xlog.info("start with no_mess_system, no CA will be imported to system.")
+        xlog.info("start with no_mess_system, no CA will be imported to system, not create desktop.")
         module_init.xargs["no_mess_system"] = 1
+        update.should_create_desktop_shortcut = False
 
     if os.path.isfile(running_file):
         restart_from_except = True

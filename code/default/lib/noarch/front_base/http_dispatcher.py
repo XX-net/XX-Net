@@ -455,6 +455,8 @@ class HttpsDispatcher(object):
 
     def log_debug_data(self, rtt, sent, received):
         self.rtts.append(rtt)
+        if len(self.rtts) > 30:
+            self.rtts.pop(0)
         self.total_sent += sent
         self.total_received += received
 

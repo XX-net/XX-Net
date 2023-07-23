@@ -13,7 +13,8 @@ import global_var
 
 
 if sys.platform.startswith("linux"):
-    if os.path.isfile("/system/bin/dalvikvm") or os.path.isfile("/system/bin/dalvikvm64"):
+    if os.path.isfile("/system/bin/dalvikvm") or os.path.isfile("/system/bin/dalvikvm64") or \
+            "android.googlesource.com" in sys.version:
         xlog.info("This is Android")
         has_desktop = False
         platform = "android"
