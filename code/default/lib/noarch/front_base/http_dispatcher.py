@@ -350,7 +350,7 @@ class HttpsDispatcher(object):
         self.fail_num += 1
         self.continue_fail_num += 1
         self.last_fail_time = time.time()
-        self.logger.warn("retry_task_cb: %s", task.url)
+        self.logger.warn("retry_task_cb: %s, trace:%s", task.url, task.get_trace())
 
         if task.responsed:
             self.logger.warn("retry but responses. %s", task.url)
