@@ -48,7 +48,7 @@ class Front(object):
             os.path.join(module_data_path, "cloudfront_ip_range.txt")
         )
         self.ip_manager = IpManager(
-            logger, self.config, ip_source, check_local_network,
+            logger, self.config, ip_source, self.host_manager, check_local_network,
             self.check_ip,
             os.path.join(current_path, "good_ip.txt"),
             os.path.join(module_data_path, "cloudfront_ip_list.txt"),
