@@ -22,6 +22,7 @@ class Config(ConfigBase):
         self.set_var("https_connection_pool_min", 0)
         self.set_var("max_links_per_ip", 1)
         self.set_var("https_connection_pool_max", 20)
+        self.set_var("connect_create_interval", 0)
 
         # connect_creator
         self.set_var("socket_timeout", 2)

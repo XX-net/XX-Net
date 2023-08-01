@@ -186,6 +186,7 @@ class SSLConnection(object):
                             self.select2.select(timeout=self.timeout)
                             continue
                     else:
+                        # self._context.logger.debug("send:%d ip:%s", ret, self.ip_str)
                         break
 
                 return ret

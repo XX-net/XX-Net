@@ -363,7 +363,7 @@ class IpManager():
             ip_num = len(self.ip_list)
             if ip_num == 0:
                 # self.logger.warning("no ip")
-                time.sleep(1)
+                time.sleep(5)
                 return None, None, None
 
             ip_connect_interval = ip_num * self.scan_recheck_interval + 200 if to_recheck else self.ip_connect_interval

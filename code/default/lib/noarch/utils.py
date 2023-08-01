@@ -186,9 +186,9 @@ class SimpleCondition(object):
         self.lock.notify()
         self.lock.release()
 
-    def wait(self):
+    def wait(self, timeout=None):
         self.lock.acquire()
-        self.lock.wait()
+        self.lock.wait(timeout)
         self.lock.release()
 
 

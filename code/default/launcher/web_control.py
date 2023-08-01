@@ -873,6 +873,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         continue
                     dat += "%s => %d\n\n" % (path, n)
 
+            dat += "thread num:%d<br>" % threading.active_count()
+
             self.send_response("text/plain", dat)
         except Exception as e:
             xlog.exception("debug:%r", e)

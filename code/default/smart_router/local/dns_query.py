@@ -23,7 +23,7 @@ python_path = root_path
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)
 
-import simple_queue
+from queue import Queue
 import lru_cache
 import utils
 import simple_http_client
@@ -194,7 +194,7 @@ class LocalDnsQuery():
             if id not in self.waiters:
                 break
 
-        que = simple_queue.Queue()
+        que = Queue()
         que.domain = domain
 
         for server_ip in self.dns_server:
@@ -205,7 +205,11 @@ class LocalDnsQuery():
             self.waiters[id] = que
             self.send_request(id, server_ip, domain, dns_type)
 
-        ips = que.get(self.timeout) or []
+        try:
+            ips = que.get(timeout=self.timeout)
+        except:
+            ips = []
+
         if ips:
             ips = list(set(ips))
 
@@ -480,15 +484,16 @@ class ParallelQuery():
             task.put(ips)
 
     def query(self, domain, dns_type, funcs):
-        task = simple_queue.Queue()
+        task = Queue()
         task.domain = domain
         task.dns_type = dns_type
 
         for func in funcs:
             threading.Thread(target=self.query_worker, args=(task, func)).start()
 
-        ips = task.get(5)
-        if not ips:
+        try:
+            ips = task.get(timeout=5)
+        except:
             ips = []
 
         return ips
@@ -549,13 +554,15 @@ class CombineDnsQuery():
             xlog.debug("DNS query:%s in black", domain)
             return ips
 
-        elif b"." not in domain or g.gfwlist.in_white_list(domain):
+        elif b"." not in domain or g.gfwlist.in_white_list(domain) or rule in ["direct"]:
             ips = self.local_dns_resolve.query(domain, timeout=1)
             g.domain_cache.set_ips(domain, ips, dns_type)
             return ips
 
         elif g.gfwlist.in_block_list(domain) or rule in ["gae", "socks"] or g.config.pac_policy == "all_X-Tunnel":
             ips = self.query_blocked_domain(domain, dns_type)
+        elif g.gfwlist.in_white_list(domain):
+            ips = self.local_dns_resolve.query(domain, dns_type, timeout=1)
         else:
             ips = self.query_unknown_domain(domain, dns_type)
 

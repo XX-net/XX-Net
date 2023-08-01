@@ -20,7 +20,7 @@ class None_tray():
 
     def serve_forever(self):
         while global_var.running:
-            time.sleep(1)
+            time.sleep(10)
 
 
 sys_tray = None_tray()

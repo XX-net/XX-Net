@@ -3,6 +3,7 @@ import time
 import json
 import threading
 import xstruct as struct
+import hashlib
 
 from xlog import getLogger
 xlog = getLogger("x_tunnel")
@@ -40,7 +41,7 @@ def sleep(t):
         if time.time() > end_time:
             return
 
-        sleep_time = min(1, end_time - time.time())
+        sleep_time = min(5, end_time - time.time())
         time.sleep(sleep_time)
 
 
@@ -50,6 +51,7 @@ class ProxySession(object):
         self.wait_queue = base_container.WaitQueue()
         self.send_buffer = base_container.SendBuffer(max_payload=g.config.max_payload)
         self.receive_process = base_container.BlockReceivePool(self.download_data_processor)
+        self.connection_receiver = base_container.ConnectionReceiving(self, xlog)
         self.lock = threading.Lock()  # lock for conn_id, sn generation, on_road_num change,
 
         self.send_delay = g.config.send_delay / 1000.0
@@ -122,7 +124,7 @@ class ProxySession(object):
                 self.round_trip_thread[i].daemon = True
                 self.round_trip_thread[i].start()
 
-            threading.Thread(target=self.timer).start()
+            self.connection_receiver.start()
             xlog.info("session started.")
             return True
 
@@ -143,6 +145,7 @@ class ProxySession(object):
             self.send_buffer.reset()
             self.receive_process.reset()
             self.wait_queue.stop()
+            self.connection_receiver.stop()
 
             xlog.debug("session stopped.")
 
@@ -154,11 +157,12 @@ class ProxySession(object):
     def is_idle(self):
         return time.time() - self.last_send_time > 60
 
-    def timer(self):
-        while self.running:
-            if self.send_buffer.pool_size > 0 and time.time() - self.oldest_received_time > self.send_delay:
-                self.wait_queue.notify()
-            time.sleep(self.send_delay)
+    def check_upload(self):
+        # xlog.debug("check_upload send_buffer.pool_size:%d", self.send_buffer.pool_size)
+        if self.send_buffer.pool_size > 0:
+            # xlog.debug("wait_queue notify")
+            self.wait_queue.notify()
+            return True
 
     def reporter(self):
         sleep(5)
@@ -170,7 +174,7 @@ class ProxySession(object):
             sleep(g.config.report_interval)
 
     def check_report_status(self):
-        if self.is_idle():
+        if self.is_idle() or not g.config.api_server:
             return
 
         good_ip_num = 0
@@ -281,7 +285,7 @@ class ProxySession(object):
 
     def status(self):
         out_string = "session_id:%s<br>\n" % self.session_id
-
+        out_string += "thread num:%d<br>" % threading.active_count()
         out_string += "running:%d<br>\n" % self.running
         out_string += "last_send_time:%f<br>\n" % (time.time() - self.last_send_time)
         out_string += "last_receive_time:%f<br>\n" % (time.time() - self.last_receive_time)
@@ -378,8 +382,6 @@ class ProxySession(object):
             time.sleep(1)
             return None
 
-        self.target_on_roads = max(g.config.min_on_road, self.target_on_roads)
-
         with self.lock:
             self.last_conn_id += 2
             conn_id = self.last_conn_id
@@ -395,6 +397,11 @@ class ProxySession(object):
 
         self.conn_list[conn_id] = base_container.Conn(self, conn_id, sock, host, port, g.config.windows_size,
                                                       g.config.windows_ack, True, xlog)
+
+        self.target_on_roads = \
+            min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 5)
+        self.trigger_more()
+
         return conn_id
 
     # Called by stop
@@ -436,8 +443,7 @@ class ProxySession(object):
 
         if self.oldest_received_time == 0:
             self.oldest_received_time = time.time()
-        elif self.send_buffer.pool_size > g.config.max_payload or \
-                time.time() - self.oldest_received_time > self.send_delay:
+        elif self.send_buffer.pool_size > g.config.max_payload:
             # xlog.debug("notify on send conn data")
             self.wait_queue.notify()
 
@@ -466,7 +472,8 @@ class ProxySession(object):
 
             if self.send_buffer.pool_size > g.config.max_payload or \
                     (self.send_buffer.pool_size > 0 and
-                     (time.time() - self.oldest_received_time > self.send_delay or work_id < self.target_on_roads)):
+                     time.time() - self.oldest_received_time > self.send_delay
+                    ):
                 payload, sn = self.send_buffer.get()
                 self.wait_ack_send_list[sn] = (payload, time_now)
                 buf.append(self.sn_payload_head(sn, payload))
@@ -477,6 +484,9 @@ class ProxySession(object):
 
                 if len(buf) > g.config.max_payload:
                     return buf
+            # else:
+            #     xlog.debug("pool_size:%d work_id:%d target_on_road:%d",
+            #                self.send_buffer.pool_size, work_id, self.target_on_roads)
 
         return buf
 
@@ -603,6 +613,7 @@ class ProxySession(object):
 
             if self.send_buffer.pool_size > g.config.max_payload or \
                     (self.send_buffer.pool_size and len(self.wait_queue.waiters) < g.config.min_on_road):
+                # xlog.debug("pool_size:%s waiters:%d", self.send_buffer.pool_size, len(self.wait_queue.waiters))
                 server_timeout = 0
             elif work_id > g.config.concurent_thread_num * 0.9:
                 server_timeout = 1
@@ -635,8 +646,9 @@ class ProxySession(object):
             if lock_time > 0.1:
                 xlog.warn("lock_time: %f", lock_time)
 
-            # xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-            #           transfer_no, send_data_len, send_ack_len, server_timeout)
+            if g.config.show_debug:
+                xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+                          transfer_no, send_data_len, send_ack_len, server_timeout)
             while self.running:
                 try:
                     content, status, response = g.http_client.request(method="POST", host=g.server_host,
@@ -678,7 +690,7 @@ class ProxySession(object):
 
                 content_length = int(response.headers.get(b"Content-Length", b"0"))
                 recv_len = len(content)
-                if recv_len < 6 or recv_len != content_length:
+                if recv_len < 6 or (content_length and content_length != recv_len):
                     xlog.warn("roundtrip time:%f transfer_no:%d send:%d recv:%d Head:%d",
                               roundtrip_time, transfer_no, send_data_len, recv_len, content_length)
                     continue
@@ -722,10 +734,15 @@ class ProxySession(object):
 
                     if pack_type != 2:  # normal download traffic pack
                         xlog.error("pack type:%d", pack_type)
-                        time.sleep(100)
+                        time.sleep(1)
                         continue
 
                     time_cost, server_send_pool_size, data_len, ack_len = struct.unpack("<IIIH", payload.get(14))
+                    head_len = (recv_len - data_len - ack_len)
+                    if head_len < 17:
+                        xlog.warn("no:%d recv_len:%d data:%d ack:%d head:%d",
+                                  transfer_no, recv_len, data_len, ack_len, head_len)
+                        continue
 
                     rtt = roundtrip_time * 1000 - time_cost
                     rtt = max(100, rtt)
@@ -749,7 +766,7 @@ class ProxySession(object):
                     elif len(content) >= g.config.max_payload:
                         self.target_on_roads = \
                             min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 10)
-                    elif len(content) <= 21:
+                    elif len(content) <= 53:
                         self.target_on_roads = max(g.config.min_on_road, self.target_on_roads - 5)
                     self.trigger_more()
                     # xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
@@ -762,6 +779,18 @@ class ProxySession(object):
 
                     data = payload.get_buf(data_len)
                     ack = payload.get_buf(ack_len)
+                    if len(data) != data_len or len(ack) != ack_len:
+                        xlog.warn("left data error:%d data_len:%d/%d ack_len:%d/%d", len(payload), len(data), data_len,
+                                  len(ack), ack_len)
+                        continue
+
+                    if len(payload) >= 32:
+                        checksum_str = utils.to_str(payload.get(32).tobytes())
+                        checksum = hashlib.md5(bytes(content[:-32])).hexdigest()
+                        if checksum != checksum_str:
+                            xlog.warn("checksum error:%s %s", checksum_str, checksum)
+                            continue
+
                 except Exception as e:
                     xlog.warn("trip:%d no:%d data not enough %r", work_id, transfer_no, e)
                     continue

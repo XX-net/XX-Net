@@ -193,7 +193,7 @@ class Http2Worker(HttpWorker):
                     continue
 
                 # wait for payload frame
-                time.sleep(0.01)
+                # time.sleep(0.01)
                 # combine header and payload in one tcp package.
                 if not self.send_queue._qsize():
                     self._sock.flush()
@@ -429,7 +429,7 @@ class Http2Worker(HttpWorker):
                 rtt = (time_now - ping_time) * 1000
                 if rtt < 0:
                     self.logger.error("rtt:%f ping_time:%f now:%f", rtt, ping_time, time_now)
-                self.rtt = rtt
+                self.update_rtt(rtt)
                 self.ping_on_way -= 1
                 #self.logger.debug("RTT:%d, on_way:%d", self.rtt, self.ping_on_way)
                 if self.keep_running and self.ping_on_way == 0:
@@ -525,10 +525,11 @@ class Http2Worker(HttpWorker):
         if not self.keep_running:
             return
 
-        if len(self.streams) == 0:
-            if self.is_life_end():
-                return self.close("life end")
+        if len(self.streams):
+            return
 
-            if now - self.last_send_time > self.config.http2_idle_ping_min_interval:
-                self.send_ping()
-        return
+        if self.is_life_end():
+            return self.close("life end")
+
+        if now - self.last_send_time > self.config.http2_idle_ping_min_interval:
+            self.send_ping()

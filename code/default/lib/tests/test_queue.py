@@ -1,7 +1,8 @@
 import time
 import threading
 from unittest import TestCase
-from simple_queue import Queue
+# from simple_queue import Queue
+from  queue import Queue
 
 
 class TestSimpleQueue(TestCase):

@@ -170,7 +170,7 @@ def main():
         sys_platform.show_systray()
     else:
         while global_var.running:
-            time.sleep(1)
+            time.sleep(10)
 
 
 try:

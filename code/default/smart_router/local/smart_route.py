@@ -155,12 +155,12 @@ def get_sni(sock, left_buf=b""):
         raise SniNotExist
 
     leaddata = b""
-    for _ in range(2):
+    for _ in range(20):
         leaddata = left_buf + sock.recv(65535, socket.MSG_PEEK)
         if leaddata:
             break
         else:
-            time.sleep(0.1)
+            time.sleep(0.01)
             continue
     if not leaddata:
         raise SniNotExist
@@ -487,14 +487,12 @@ def handle_ip_proxy(sock, ip, port, client_address):
         except SniNotExist as e:
             xlog.debug("ip:%s:%d get sni fail", ip, port)
 
-    if g.config.pac_policy == "all_X-Tunnel":
-        rule = "socks"
-    else:
-        rule = g.user_rules.check_host(ip, port)
-
+    rule = g.user_rules.check_host(ip, port)
     if not rule:
         if utils.is_private_ip(ip):
             rule = "direct"
+        elif g.config.pac_policy == "all_X-Tunnel":
+            rule = "socks"
 
     if rule:
         return try_loop("ip user", [rule], sock, ip, port, client_address)
@@ -509,9 +507,10 @@ def handle_ip_proxy(sock, ip, port, client_address):
         else:
             rule_list = ["direct", "gae", "socks"]
     elif g.ip_region.check_ip(ip):
+        # China IP
         rule_list = ["direct", "socks"]
     else:
-        rule_list = ["direct", "gae", "socks"]
+        rule_list = ["gae", "socks", "direct"]
 
     if not g.config.auto_direct:
         for rule in ["direct", "redirect_https"]:

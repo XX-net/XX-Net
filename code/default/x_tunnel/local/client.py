@@ -129,7 +129,7 @@ def load_config():
 
     config.set_var("network_timeout", 10)
 
-    config.set_var("windows_size", 4 * 1024 * 1024)
+    config.set_var("windows_size", 10 * 1024 * 1024)  # will recalulate based on: max_payload * concurent_thread_num *2
 
     # reporter
     config.set_var("timeout_threshold", 2)
@@ -145,6 +145,7 @@ def load_config():
     config.load()
 
     config.windows_ack = 0.05 * config.windows_size
+    config.windows_size = config.max_payload * config.concurent_thread_num * 2
     xlog.info("X-Tunnel window:%d", config.windows_size)
 
     if config.write_log_file:

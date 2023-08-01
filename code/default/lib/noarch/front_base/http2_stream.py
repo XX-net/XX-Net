@@ -319,26 +319,35 @@ class Stream(object):
             whole_cost = time_now - self.start_time
             receive_cost = time_now - self.get_head_time
             bytes_received = self.connection._sock.bytes_received - self.start_connection_point
-            if receive_cost > 0 and bytes_received > 10000 and not self.task.finished and receive_cost > 0.001:
-                # speed = bytes_received / receive_cost
-                speed = (len(self.request_body) + bytes_received) / (whole_cost - xcost)
+            if receive_cost > 0 and bytes_received > 10000 and not self.task.finished and receive_cost > 0.001 \
+                and xcost >= 0:
+                rtt = whole_cost - xcost
+                t_road = rtt
+                if t_road <= self.connection.handshake:
+                    # adjust handshake
+                    self.connection.handshake = t_road
+                else:
+                    t_road -= self.connection.handshake
+
+                speed = (len(self.request_body) + bytes_received) / t_road
                 self.connection.update_speed(speed)
                 self.task.set_state("h2_finish[SP:%d]" % speed)
 
                 send_cost = len(self.request_body) / speed
                 streams_cost = ((self.connection.max_payload /2) * self.get_head_stream_num) / speed
 
-                if xcost >= 0:
-                    rtt = whole_cost - xcost - send_cost - receive_cost  # - streams_cost
-                    if self.config.http2_show_debug:
-                        self.logger.debug("%s RTT:%f rtt:%f send_len:%d recv_len:%d "
-                                          "whole_Cost:%f xcost:%f rcost:%f send_cost:%f recv_cost:%f "
-                                          "streams_cost:%f Speed: %f",
-                                          self.connection.ssl_sock.ip_str,
-                                          self.connection.rtt * 1000, rtt * 1000,
-                                          len(self.request_body), bytes_received,
-                                          whole_cost, xcost, rcost, send_cost, receive_cost, streams_cost, speed)
-                    self.connection.update_rtt(rtt)
+                if self.config.http2_show_debug:
+                    self.logger.debug("%s RTT:%f rtt:%f send_len:%d recv_len:%d "
+                                      "whole_Cost:%f xcost:%f rcost:%f send_cost:%f recv_cost:%f "
+                                      "streams_cost:%f Speed: %f",
+                                      self.connection.ssl_sock.ip_str,
+                                      self.connection.rtt * 1000, rtt * 1000,
+                                      len(self.request_body), bytes_received,
+                                      whole_cost, xcost, rcost, send_cost, receive_cost, streams_cost, speed)
+                self.connection.update_rtt(rtt, self.task.predict_rtt)
+                self.logger.debug("%s handshake:%f stream:%d up:%d down:%d rtt:%f", self.connection.ip_str,
+                                  self.connection.handshake,
+                                  len(self.connection.streams), len(self.request_body), bytes_received, rtt)
 
             self._close_remote()
 

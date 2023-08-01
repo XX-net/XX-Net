@@ -17,6 +17,11 @@ class IpManager(IpManagerBase):
         self.domain_map = self.load_domains()
         # top_domain -> {}
 
+    def __str__(self):
+        o = ""
+        o += " domain_map: \r\n%s\r\n" % json.dumps(self.domain_map, indent=2)
+        return o
+
     def load_domains(self):
         domain_map = {}  # top_domain -> {}
         for fn in [self.domain_fn, self.default_domain_fn]:
@@ -61,7 +66,7 @@ class IpManager(IpManagerBase):
     def get_ip_sni_host(self):
         now = time.time()
         for top_domain, info in self.domain_map.items():
-            if info["links"] > self.config.max_connection_per_domain:
+            if info["links"] >= self.config.max_connection_per_domain:
                 continue
 
             if info["fail_times"] and now - info["last_try"] < 60:

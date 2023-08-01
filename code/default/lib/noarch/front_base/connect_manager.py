@@ -191,7 +191,7 @@ class ConnectManager(object):
 
     def keep_alive_thread(self):
         while self.running:
-            to_keep_live_list = self.new_conn_pool.get_need_keep_alive(maxtime=self.config.https_keep_alive-3)
+            to_keep_live_list = self.new_conn_pool.get_need_keep_alive(maxtime=self.config.https_keep_alive-6)
 
             for ssl_sock in to_keep_live_list:
                 inactive_time = time.time() - ssl_sock.last_use_time
@@ -207,7 +207,7 @@ class ConnectManager(object):
                         # no appid avaiable
                         pass
 
-            time.sleep(1)
+            time.sleep(5)
 
     def keep_connection_daemon(self):
         while self.running:
@@ -243,7 +243,9 @@ class ConnectManager(object):
             self.connecting_more_thread = None
 
     def _connect_thread(self, sleep_time=0):
-        time.sleep(sleep_time)
+        if sleep_time > 0.1:
+            time.sleep(sleep_time)
+
         try:
             while self.running and self._need_more_ip():
                 if self.new_conn_pool.qsize() > self.config.https_connection_pool_max:
@@ -272,7 +274,7 @@ class ConnectManager(object):
 
             self.new_conn_pool.put((ssl_sock.handshake_time, ssl_sock))
 
-            if self.config.connect_create_interval > 0:
+            if self.config.connect_create_interval > 0.1:
                 sleep = random.uniform(self.config.connect_create_interval, self.config.connect_create_interval*2)
                 time.sleep(sleep)
 

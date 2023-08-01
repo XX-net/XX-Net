@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 
 from .socket_wrap import SocketWrap
-import simple_queue
+from queue import Queue
 import socks
 from . import global_var as g
 from xlog import getLogger
@@ -72,7 +72,7 @@ class ConnectManager(object):
                     except:
                         pass
 
-            time.sleep(1)
+            time.sleep(10)
 
     def add_sock(self, host_port, sock):
         with self.lock:
@@ -150,16 +150,16 @@ class ConnectManager(object):
         ip_time = sorted(list(ip_rate.items()), key=operator.itemgetter(1))
         ordered_ips = [ip for ip, rate in ip_time]
 
-        wait_queue = simple_queue.Queue()
+        wait_queue = Queue()
         wait_t = 0.2
         for ip in ordered_ips:
             threading.Thread(target=self.create_connect, args=(wait_queue, host, ip, port)).start()
-            status = wait_queue.get(wait_t)
-            if status:
+            try:
+                status = wait_queue.get(timeout=wait_t)
                 sock = self.get_sock_from_cache(host_port)
                 if sock:
                     return sock
-            else:
+            except:
                 time.sleep(wait_t)
                 wait_t += 0.1
 
@@ -168,8 +168,10 @@ class ConnectManager(object):
             if time_left <= 0:
                 return self.get_sock_from_cache(host_port)
 
-            status = wait_queue.get(time_left)
-            if status:
+            try:
+                status = wait_queue.get(timeout=time_left)
                 sock = self.get_sock_from_cache(host_port)
                 if sock:
                     return sock
+            except:
+                pass

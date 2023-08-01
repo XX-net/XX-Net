@@ -70,20 +70,20 @@ class Http1Worker(HttpWorker):
             if not self.keep_running:
                 self.close("exit ")
                 return
-            time.sleep(1)
+            time.sleep(3)
 
         if self.config.http1_first_ping_wait and self.processed_tasks == 0:
             self.task_queue.put("ping")
 
         if self.config.http1_ping_interval:
             while self.keep_running:
-                time_to_ping = max(self.config.http1_ping_interval - (time.time() - self.last_recv_time), 0.2)
+                time_to_ping = max(self.config.http1_ping_interval - (time.time() - self.last_recv_time), 3)
                 time.sleep(time_to_ping)
 
                 if not self.request_onway and \
-                        time.time() - self.last_recv_time > self.config.http1_ping_interval - 1:
+                        time.time() - self.last_recv_time > self.config.http1_ping_interval - 3:
                     self.task_queue.put("ping")
-                    time.sleep(1)
+                    time.sleep(3)
 
         elif self.config.http1_idle_time:
             while self.keep_running:
@@ -259,7 +259,8 @@ class Http1Worker(HttpWorker):
 
             content = response.readall(timeout=5)
             self.record_active("head end")
-            self.rtt = (time.time() - start_time) * 1000
+            rtt = (time.time() - start_time) * 1000
+            self.update_rtt(rtt)
             return True
         except Exception as e:
             self.logger.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip_str, e)

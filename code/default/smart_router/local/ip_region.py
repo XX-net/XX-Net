@@ -165,8 +165,16 @@ class IpRegion(object):
         iplist = []
         fdi = open(self.cn_ipv4_range,"r")
         for line in fdi.readlines():
-            lp = line.split()
-            iplist.append((utils.ip_string_to_num(lp[0]), mask_dict[lp[1]]))
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            if "/" in line:
+                lp = line.split("/")
+                iplist.append((utils.ip_string_to_num(lp[0]), int(lp[1])))
+            else:
+                lp = line.split()
+                iplist.append((utils.ip_string_to_num(lp[0]), mask_dict[lp[1]]))
 
         iplist.extend(keeplist)
         # 排序，不然无法处理
@@ -268,5 +276,5 @@ class UpdateIpRange(object):
 if __name__ == '__main__':
     up = UpdateIpRange()
     ipr = IpRegion()
-    xlog.info((ipr.check_ip("8.8.8.8")))
-    xlog.info((ipr.check_ip("114.111.114.114")))
+    xlog.info("8.8.8.8: %s", ipr.check_ip("8.8.8.8"))
+    xlog.info("114.114.114.114: %s", ipr.check_ip("114.111.114.114"))

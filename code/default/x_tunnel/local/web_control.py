@@ -558,5 +558,4 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.response_json({
             "res": "success",
             "status": res
-
         })

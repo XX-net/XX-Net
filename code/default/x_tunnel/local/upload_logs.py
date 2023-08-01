@@ -22,7 +22,7 @@ def sleep(t):
         if time.time() > end_time:
             return
 
-        sleep_time = min(1, end_time - time.time())
+        sleep_time = min(10, end_time - time.time())
         if sleep_time < 0:
             break
 
@@ -97,7 +97,7 @@ def upload_logs_thread():
     sleep(3 * 60)
     while g.running:
         if not g.running or not g.server_host or not g.session or g.session.last_receive_time == 0:
-            time.sleep(1)
+            time.sleep(10)
         else:
             break
 

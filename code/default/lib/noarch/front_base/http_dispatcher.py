@@ -24,7 +24,7 @@ import time
 import traceback
 
 from utils import SimpleCondition
-import simple_queue
+from queue import Queue
 import utils
 
 from . import http_common
@@ -62,7 +62,7 @@ class HttpsDispatcher(object):
         else:
             self.http2stream_class = Stream
 
-        self.request_queue = queue.Queue()
+        self.request_queue = Queue()
         self.workers = []
         self.working_tasks = {}
         self.h1_num = 0
@@ -97,7 +97,7 @@ class HttpsDispatcher(object):
         }
 
         self.trigger_create_worker_cv = SimpleCondition()
-        self.wait_a_worker_cv = simple_queue.Queue()
+        self.wait_a_worker_cv = SimpleCondition()
 
         threading.Thread(target=self.dispatcher).start()
         threading.Thread(target=self.create_worker_thread).start()
@@ -257,7 +257,7 @@ class HttpsDispatcher(object):
                 return best_worker
 
             self._debug_log("wait a new worker")
-            self.wait_a_worker_cv.wait(time.time() + 1)
+            self.wait_a_worker_cv.wait(1)
 
     def _remove_slowest_worker(self):
         # close slowest worker,
@@ -314,12 +314,16 @@ class HttpsDispatcher(object):
             self._debug_log("task start request %s" % url)
 
             self.last_request_time = time.time()
-            q = simple_queue.Queue()
+            q = Queue()
             task = http_common.Task(self.logger, self.config, method, host, path, headers, body, q, url, timeout)
             task.set_state("start_request")
             self.request_queue.put(task)
 
-            response = q.get(timeout=timeout)
+            try:
+                response = q.get(timeout=timeout)
+            except:
+                response = None
+
             if response and response.status == 200:
                 self.success_num += 1
                 self.continue_fail_num = 0
@@ -330,7 +334,7 @@ class HttpsDispatcher(object):
                 self.continue_fail_num += 1
                 self.last_fail_time = time.time()
                 if task.worker:
-                    task.worker.rtt = (time.time() - task.worker.last_recv_time) * 1000
+                    # task.worker.rtt = (time.time() - task.worker.last_recv_time) * 1000
 
                     task.worker.continue_fail_tasks += 1
                     if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
@@ -380,13 +384,14 @@ class HttpsDispatcher(object):
         while self.running:
             start_time = time.time()
             try:
-                task = self.request_queue.get(True)
-                if task is None:
-                    # exit
-                    break
-            except Exception as e:
-                self.logger.exception("http_dispatcher dispatcher request_queue.get fail:%r", e)
-                continue
+                task = self.request_queue.get()
+            except:
+                task = None
+
+            if task is None:
+                # exit
+                break
+
             get_time = time.time()
             get_cost = get_time - start_time
 
@@ -408,6 +413,7 @@ class HttpsDispatcher(object):
             get_cost = get_worker_time - get_time
             task.set_state("get_worker(%d):%s" % (get_cost, worker.ip_str))
             task.worker = worker
+            task.predict_rtt = worker.get_score()
             try:
                 worker.request(task)
             except Exception as e:
@@ -429,7 +435,7 @@ class HttpsDispatcher(object):
             except Exception as e:
                 self.logger.exception("check worker except:%r", e)
 
-            time.sleep(1)
+            time.sleep(5)
 
     def is_idle(self):
         return time.time() - self.last_request_time > self.idle_time
@@ -488,7 +494,7 @@ class HttpsDispatcher(object):
             "sent": self.total_sent - self.last_sent,
             "received": self.total_received - self.last_received
         }
-        self.rtts = []
+        # self.rtts = []
         self.last_sent = self.total_sent
         self.last_received = self.total_received
         self.second_stats.append(self.second_stat)

@@ -62,7 +62,8 @@ class CheckIp(object):
             host = ssl_sock.host
         self.logger.info("host:%s", host)
 
-        time.sleep(wait_time)
+        if wait_time:
+            time.sleep(wait_time)
         start_time = time.time()
 
         if not ssl_sock.h2:

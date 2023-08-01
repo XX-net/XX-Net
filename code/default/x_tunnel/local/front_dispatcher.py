@@ -169,6 +169,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
             if g.server_host:
                 host = g.server_host
 
+        headers["X-Async"] = "1"
         if len(data) < 84:
             padding = utils.to_str(utils.generate_random_lowercase(random.randint(64, 256)))
             headers["Padding"] = padding
@@ -181,8 +182,9 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
             time.sleep(1)
             continue
 
-        if len(content) != int(response.headers.get(b"Content-Length", 0)):
-            xlog.warn("response length incorrect, retry it")
+        header_len = int(response.headers.get(b"Content-Length", 0))
+        if header_len and len(content) != header_len:
+            xlog.warn("response length incorrect, head len:%s, content len:%d retry it", header_len, len(content))
             time.sleep(1)
             continue
 
