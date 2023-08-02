@@ -198,6 +198,7 @@ class HttpWorker(object):
         self.handshake = ssl_sock.handshake_time * 0.001
         self.rtt = ssl_sock.handshake_time * 0.001
         self.speed = 15000000
+        self.streams = []
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb

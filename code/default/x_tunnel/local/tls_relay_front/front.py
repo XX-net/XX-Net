@@ -27,12 +27,13 @@ module_data_path = os.path.join(data_path, 'x_tunnel')
 class Front(object):
     name = "tls_relay_front"
 
-    def start(self):
-        self.running = True
-
+    def __init__(self):
         self.logger = logger
         config_path = os.path.join(module_data_path, "tls_relay.json")
         self.config = Config(config_path)
+
+    def start(self):
+        self.running = True
 
         self.openssl_context = SSLContext(logger)
 

@@ -24,19 +24,19 @@ from gae_proxy.local import check_local_network
 class Front(object):
     name = "cloudflare_front"
 
-    def start(self):
-        self.running = True
-        self.last_host = "center.xx-net.org"
-
+    def __init__(self):
         self.logger = logger
         config_path = os.path.join(module_data_path, "cloudflare_front.json")
         self.config = Config(config_path)
-
         self.light_config = Config(config_path)
         self.light_config.dispather_min_idle_workers = 0
         self.light_config.dispather_min_workers = 1
         self.light_config.dispather_max_workers = 1
         self.light_config.max_good_ip_num = 10
+
+    def start(self):
+        self.running = True
+        self.last_host = "center.xx-net.org"
 
         ca_certs = os.path.join(current_path, "cacert.pem")
         default_domain_fn = os.path.join(current_path, "front_domains.json")
