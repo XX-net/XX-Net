@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # xx_net init script
 #
@@ -18,16 +18,9 @@
 set -e
 
 PACKAGE_NAME=xx_net
-PACKAGE_DESC="xx_net proxy server"
+PACKAGE_DESC="XX-Net proxy server"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH}
 
-if ! type python > /dev/null 2>&1; then
-    PYTHON="python3"
-elif python -V 2>&1| grep -q "Python 3" ;then
-    PYTHON="python"
-else
-    PYTHON="python3"
-fi
 
 if [ -L $0 ];then
        PACKAGE_PATH="$(dirname $(readlink -n $0))/"                                         
@@ -36,33 +29,26 @@ else
 fi
 cd $PACKAGE_PATH
 PACKAGE_PATH="`pwd `/"
-PACKAGE_VER_FILE="${PACKAGE_PATH}code/version.txt"
-PACKAGE_VER="default"
-if [ -f "${PACKAGE_VER_FILE}" ];then
-       PACKAGE_VER=$(cat $PACKAGE_VER_FILE)
-fi
-PACKAGE_START="${PACKAGE_PATH}code/${PACKAGE_VER}/launcher/start.py"
+PACKAGE_START="${PACKAGE_PATH}start"
 
-if ! [ -f $PACKAGE_START ];then
-PACKAGE_START="${PACKAGE_PATH}code/default/launcher/start.py"
-fi
 
 start() {
     echo -n "Starting ${PACKAGE_DESC}: "
-    nohup "${PYTHON}" ${PACKAGE_START} >/dev/null 2>&1 &
+    nohup ${PACKAGE_START} >/dev/null 2>&1 &
     echo "${PACKAGE_NAME}."
 }
 
 stop() {
     echo -n "Stopping ${PACKAGE_DESC}: "
-    kill -9 `ps aux | grep "${PYTHON} ${PACKAGE_START}" | grep -v grep | awk '{print $2}'` || true
+    kill -9 `ps aux | grep "${PACKAGE_START}" | grep -v grep | awk '{print $2}'` || true
+    kill -9 `ps aux | grep "launcher/start.py" | grep -v grep | awk '{print $2}'` || true
     echo "${PACKAGE_NAME}."
 }
 
 status() {
-    pid="PID`ps aux | grep "${PYTHON} ${PACKAGE_START}" | grep -v grep | awk '{print $2}'`"
-    if [ $pid == "PID" ];then
-        echo "xx-net stoped"
+    pid="PID`ps aux | grep "${PACKAGE_START}" | grep -v grep | awk '{print $2}'`"
+    if [[ "$pid" == "PID" ]];then
+        echo "xx-net stopped"
     else
         echo "xx-net running,pid: ${pid##"PID"}"
     fi
