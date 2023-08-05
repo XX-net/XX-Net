@@ -66,6 +66,9 @@ class IpManager(IpManagerBase):
     def get_ip_sni_host(self):
         now = time.time()
         for top_domain, info in self.domain_map.items():
+            if info["links"] < 0:
+                info["links"] = 0
+
             if info["links"] >= self.config.max_connection_per_domain:
                 continue
 

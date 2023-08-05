@@ -36,7 +36,7 @@ class IpManager(IpManagerBase):
         for ip in ips:
             info = self._get_ip_info(ip)
             if info["links"] < 0:
-                self.logger.error("ip %s link:%d", ip, info["links"])
+                # self.logger.error("ip %s link:%d", ip, info["links"])
                 info["links"] = 0
 
             if info["links"] >= self.config.max_links_per_ip:
