@@ -80,8 +80,10 @@ class ProxyServer():
 
         except socket.error as e:
             xlog.warn('socks handler read error:%r', e)
+            self.conn.close()
         except Exception as e:
             xlog.exception("any err:%r", e)
+            self.conn.close()
 
     def read_null_end_line(self):
         sock = self.conn

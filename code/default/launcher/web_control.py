@@ -266,6 +266,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
+            elif url_path == "/mem_info":
+                self.req_mem_info_handler()
             elif url_path == "/gc":
                 self.req_gc_handler()
             elif url_path == '/restart':
@@ -577,7 +579,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     data = '{"res":"success"}'
             else:
                 data = '{"res":"fail"}'
-        elif reqs['cmd'] == ['get_version']:
+        elif reqs['cmd'] == 'get_version':
             current_version = update_from_github.current_version()
             data = '{"current_version":"%s"}' % current_version
 
@@ -815,6 +817,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response("text/plain", "gc collected, count:%d,%d,%d" % count)
 
     def req_debug_handler(self):
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
+
+        dat = ""
+        try:
+            dat += "thread num:%d<br>" % threading.active_count()
+
+        except Exception as e:
+            xlog.exception("debug:%r", e)
+
+        self.send_response("text/plain", dat)
+
+    def req_mem_info_handler(self):
         global mem_stat
         req = urlparse(self.path).query
         reqs = parse_qs(req, keep_blank_values=True)

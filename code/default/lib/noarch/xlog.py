@@ -6,6 +6,7 @@ import traceback
 import threading
 import json
 import shutil
+from os.path import join
 
 from six import string_types
 
@@ -49,6 +50,12 @@ class Logger():
         else:
             self.start_log = None
 
+        if log_path and os.path.exists(join(log_path, "keep_log.txt")):
+            self.info("keep log")
+            self.keep_log = True
+        else:
+            self.keep_log = False
+
         if log_path and save_warning_log:
             self.warning_log_fn = os.path.join(log_path, "%s_warning.log" % (name))
             self.warning_log = open(self.warning_log_fn, "a")
@@ -68,6 +75,9 @@ class Logger():
                         pass
 
     def reset_log_files(self):
+        if self.keep_log:
+            return
+
         if self.start_log:
             self.start_log.close()
             self.start_log = None
@@ -193,7 +203,7 @@ class Logger():
                     pass
                 self.start_log_num += 1
 
-                if self.start_log_num > self.save_start_log:
+                if self.start_log_num > self.save_start_log and not self.keep_log:
                     self.start_log.close()
                     self.start_log = None
 

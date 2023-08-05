@@ -353,7 +353,7 @@ class ConnectionReceiving(object):
         if sock in self.sock_conn_map:
             return
 
-        self.xlog.debug("add sock conn:%d", conn.conn_id)
+        # self.xlog.debug("add sock conn:%d", conn.conn_id)
         self.sock_conn_map[sock] = conn
         try:
             self.select2.register(sock, selectors.EVENT_READ, conn)
@@ -371,8 +371,8 @@ class ConnectionReceiving(object):
 
         try:
             self.select2.unregister(sock)
-            conn = self.sock_conn_map[sock]
-            self.xlog.debug("remove sock conn:%d", conn.conn_id)
+            # conn = self.sock_conn_map[sock]
+            # self.xlog.debug("remove sock conn:%d", conn.conn_id)
             del self.sock_conn_map[sock]
         except Exception as e:
             self.xlog.warn("ConnectionReceiving remove sock e:%r", e)

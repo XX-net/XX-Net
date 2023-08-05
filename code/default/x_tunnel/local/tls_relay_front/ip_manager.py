@@ -36,6 +36,7 @@ class IpManager(IpManagerBase):
         for ip in ips:
             info = self._get_ip_info(ip)
             if info["links"] < 0:
+                self.logger.error("ip %s link:%d", ip, info["links"])
                 info["links"] = 0
 
             if info["links"] >= self.config.max_links_per_ip:
@@ -56,7 +57,7 @@ class IpManager(IpManagerBase):
         # self.logger.debug("get ip:%s", ip)
 
         ip = best_info["ip"]
-        port = best_info.get("port", 443)
+        port = int(self.host_manager.info[ip].get("port", 443))
         if ":" in ip:
             ip = "[" + ip + "]"
         return ip + ":" + str(port), None, None
@@ -77,6 +78,7 @@ class IpManager(IpManagerBase):
         info = self._get_ip_info(ip)
         info["fail_times"] += 1
         info["rtt"] = 2000
+        info["links"] -= 1
         self.logger.debug("ip %s connect fail:%s", ip, reason)
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
