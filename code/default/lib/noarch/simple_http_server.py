@@ -461,8 +461,8 @@ class HTTPServer():
         # self.logger.info("server %s:%d started.", address[0], address[1])
 
     def start(self):
-        self.http_thread = threading.Thread(target=self.serve_forever)
-        self.http_thread.setDaemon(True)
+        self.http_thread = threading.Thread(target=self.serve_forever, name="serve_%s" % self.server_address)
+        self.http_thread.daemon = True
         self.http_thread.start()
 
     def init_socket(self):
@@ -605,13 +605,13 @@ class HTTPServer():
 
     def process_connect(self, sock, address):
         # self.logger.debug("connect from %s:%d", address[0], address[1])
-        if threading.activeCount() > self.max_thread:
+        if threading.active_count() > self.max_thread:
             self.logger.warn("thread num exceed the limit. drop request from %s.", address)
             sock.close()
             return
 
         client_obj = self.handler(sock, address, self.args)
-        client_thread = threading.Thread(target=client_obj.handle)
+        client_thread = threading.Thread(target=client_obj.handle, name="handle_%s:%d" % address)
         client_thread.start()
 
     def shutdown(self):

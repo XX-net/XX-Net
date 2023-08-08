@@ -857,10 +857,10 @@ class RangeFetch2(object):
             (data_left_to_fetch + front.config.AUTORANGE_MAXSIZE - 1) / front.config.AUTORANGE_MAXSIZE)
         thread_num = min(front.config.AUTORANGE_THREADS, fetch_times)
         for i in range(0, thread_num):
-            threading.Thread(target=self.fetch_worker).start()
+            threading.Thread(target=self.fetch_worker, name="gae_fetch_work").start()
 
         threading.Thread(target=self.fetch, args=(
-            res_begin, res_end, self.response)).start()
+            res_begin, res_end, self.response), name="gae_fetch").start()
 
         ok = "ok"
         while self.keep_running and \

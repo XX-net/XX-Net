@@ -66,7 +66,7 @@ def init():
     for front in all_fronts:
         front.start()
 
-    threading.Thread(target=debug_data_clearup_thread).start()
+    threading.Thread(target=front_staticstic_thread, name="front_statistic_thread").start()
 
 
 def save_cloudflare_domain(domains):
@@ -85,7 +85,7 @@ def save_cloudflare_domain(domains):
         front.ip_manager.save_domains(domains)
 
 
-def debug_data_clearup_thread():
+def front_staticstic_thread():
     while g.running:
         for front in all_fronts:
             dispatcher = front.get_dispatcher()

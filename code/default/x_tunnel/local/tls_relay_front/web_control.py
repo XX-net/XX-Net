@@ -140,6 +140,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     for item in sub_obj:
                         data += "      %s\r\n" % item
                     data += "\r\n"
+                elif hasattr(sub_obj, "to_string"):
+                    data += "    %s:\r\n" % (attr)
+                    data += sub_obj.to_string()
                 else:
                     data += "    %s = %s\r\n" % (attr, sub_obj)
             if hasattr(obj, "to_string"):

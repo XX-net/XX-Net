@@ -139,6 +139,6 @@ def download_worker():
 
 
 def start_download():
-    th = threading.Thread(target=download_worker)
+    th = threading.Thread(target=download_worker, name="file_downloader")
     th.start()
     return True

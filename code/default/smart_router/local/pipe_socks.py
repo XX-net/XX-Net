@@ -40,7 +40,7 @@ class PipeSocks(object):
         return "\n".join(outs)
 
     def run(self):
-        self.down_th = threading.Thread(target=self.pipe)
+        self.down_th = threading.Thread(target=self.pipe, name="pipe")
         self.down_th.start()
 
     def stop(self):

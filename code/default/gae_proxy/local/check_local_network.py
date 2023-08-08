@@ -164,7 +164,7 @@ class CheckNetwork(object):
                     return
 
         self.last_check_time = time_now
-        threading.Thread(target=self._simple_check_worker).start()
+        threading.Thread(target=self._simple_check_worker, name="network_checker").start()
 
 
 IPv4 = CheckNetwork("IPv4")

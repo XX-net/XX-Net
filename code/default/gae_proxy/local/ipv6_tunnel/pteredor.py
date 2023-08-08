@@ -264,7 +264,7 @@ class teredo_prober(object):
         elif len(self.server_ip_list) < 2:
             print(('Need input more teredo servers, now is %d.'
                    % len(self.server_ip_list)))
-        threading.Thread(target=self.receive_loop).start()
+        threading.Thread(target=self.receive_loop, name="teredo_recieve_loop").start()
         if probe_nat:
             self.nat_type = self.nat_type_probe()
 
@@ -413,7 +413,7 @@ class teredo_prober(object):
         eval_list = []
         queue_obj = Queue.Queue()
         for server_ip in self.server_ip_list:
-            threading.Thread(target=self._eval_servers, args=(server_ip, queue_obj)).start()
+            threading.Thread(target=self._eval_servers, args=(server_ip, queue_obj), name="teredor_eval").start()
         for _ in self.server_ip_list:
             eval_list.append(queue_obj.get())
         return eval_list

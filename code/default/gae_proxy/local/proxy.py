@@ -121,7 +121,7 @@ def main(args):
 
     log_info()
 
-    threading.Thread(target=CertUtil.init_ca, args=(no_mess_system,)).start()
+    threading.Thread(target=CertUtil.init_ca, args=(no_mess_system,), name="init_ca").start()
 
     listen_ips = front.config.listen_ip
     if isinstance(listen_ips, str):

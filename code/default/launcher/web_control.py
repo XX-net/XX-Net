@@ -15,6 +15,7 @@ import time
 import threading
 import json
 import cgi
+import traceback
 
 try:
     from urllib.parse import urlparse, urlencode, parse_qs
@@ -823,6 +824,13 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         dat = ""
         try:
             dat += "thread num:%d<br>" % threading.active_count()
+            for thread in threading.enumerate():
+                dat += "\nThread: %s \r\n" % (thread.name)
+                # dat += traceback.format_exc(sys._current_frames()[thread.ident])
+                stack = sys._current_frames()[thread.ident]
+                st = traceback.extract_stack(stack)
+                stl = traceback.format_list(st)
+                dat += " \n".join(stl)
 
         except Exception as e:
             xlog.exception("debug:%r", e)

@@ -361,7 +361,7 @@ class ConnectionReceiving(object):
             pass
 
         if not self.th:
-            self.th = threading.Thread(target=self.recv_worker)
+            self.th = threading.Thread(target=self.recv_worker, name="x_tunnel_recv_worker")
             self.th.start()
             self.xlog.debug("ConnectionReceiving start")
 
@@ -493,7 +493,8 @@ class Conn(object):
             self.cmd_thread = None
             self.cmd_processor()
         else:
-            self.cmd_thread = threading.Thread(target=self.cmd_processor)
+            self.cmd_thread = threading.Thread(target=self.cmd_processor,
+                                               name="cmd_processor_%s:%d" % (self.host, self.port))
             self.cmd_thread.start()
 
     def status(self):
@@ -517,7 +518,8 @@ class Conn(object):
         return out_string
 
     def stop(self, reason=""):
-        threading.Thread(target=self.do_stop, args=(reason,)).start()
+        threading.Thread(target=self.do_stop, args=(reason,),
+                         name="do_stop_%s:%d" % (self.host, self.port)).start()
 
     def do_stop(self, reason="unknown"):
         self.xlog.debug("Conn session:%s conn:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id, reason)
@@ -671,8 +673,7 @@ class Conn(object):
                     self.xlog.info("Conn session:%s conn:%d %s:%d", self.session.session_id, self.conn_id, self.host,
                               self.port)
                     self.sock = sock
-                    self.recv_thread = threading.Thread(target=self.recv_worker)
-                    self.recv_thread.start()
+                    self.connection_receiver.add_sock(self.sock, self)
             else:
                 self.xlog.error("Conn session:%s conn:%d unknown cmd_id:%d",
                                 self.session.session_id, self.conn_id, cmd_id)

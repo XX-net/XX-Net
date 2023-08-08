@@ -127,7 +127,7 @@ class Ipv4PoolSource(object):
         self.dest_bin_fn = dest_bin_fn
 
         self.bin_fd = None
-        threading.Thread(target=self.init).start()
+        threading.Thread(target=self.init, name="%s_ipv4PoolSource_init" % self.logger.name).start()
 
     def init(self):
         if not self.check_bin():

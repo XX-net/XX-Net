@@ -82,10 +82,10 @@ class ProxySession(object):
             "timeout": 0,
         }
         if g.config.enable_tls_relay:
-            threading.Thread(target=self.reporter).start()
+            threading.Thread(target=self.reporter, name="reporter").start()
 
         if g.config.upload_logs:
-            threading.Thread(target=upload_logs_thread).start()
+            threading.Thread(target=upload_logs_thread, name="upload_logs").start()
 
     def start(self):
         with self.lock:
@@ -121,7 +121,8 @@ class ProxySession(object):
                 if i in self.round_trip_thread:
                     continue
 
-                self.round_trip_thread[i] = threading.Thread(target=self.normal_round_trip_worker, args=(i,))
+                self.round_trip_thread[i] = threading.Thread(target=self.normal_round_trip_worker, args=(i,),
+                                                             name="roundtrip_%d" % i)
                 self.round_trip_thread[i].daemon = True
                 self.round_trip_thread[i].start()
 

@@ -172,12 +172,14 @@ class ConnectManager(object):
 
         self.connecting_more_thread = None
 
-        self.keep_alive_th = threading.Thread(target=self.keep_alive_thread)
+        self.keep_alive_th = threading.Thread(target=self.keep_alive_thread,
+                                              name="%s_conn_manager_keep_alive" % self.logger.name)
         self.keep_alive_th.daemon = True
         self.keep_alive_th.start()
 
         if self.config.connection_pool_min:
-            self.keep_conn_th = threading.Thread(target=self.keep_connection_daemon)
+            self.keep_conn_th = threading.Thread(target=self.keep_connection_daemon,
+                                                 name="%s_conn_manager_keep_conn" % self.logger.name)
             self.keep_conn_th.daemon = True
             self.keep_conn_th.start()
         else:
@@ -226,7 +228,8 @@ class ConnectManager(object):
     def _create_more_connection(self):
         if not self.connecting_more_thread:
             with self.thread_num_lock:
-                self.connecting_more_thread = threading.Thread(target=self._create_more_connection_worker)
+                self.connecting_more_thread = threading.Thread(target=self._create_more_connection_worker,
+                                                               name="%s_conn_manager__create_more_conn" % self.logger.name)
                 self.connecting_more_thread.start()
 
     def _create_more_connection_worker(self):
@@ -235,7 +238,7 @@ class ConnectManager(object):
             self.thread_num_lock.acquire()
             self.thread_num += 1
             self.thread_num_lock.release()
-            p = threading.Thread(target=self._connect_thread)
+            p = threading.Thread(target=self._connect_thread, name="%s_conn_manager__connect_th" % self.logger.name)
             p.start()
             time.sleep(self.config.connect_create_interval)
 

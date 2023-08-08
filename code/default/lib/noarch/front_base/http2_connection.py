@@ -139,8 +139,8 @@ class Http2Worker(HttpWorker):
         # send Setting frame before accept task.
         self._send_preamble()
 
-        threading.Thread(target=self.send_loop).start()
-        threading.Thread(target=self.recv_loop).start()
+        threading.Thread(target=self.h2_send_loop, name="h2_send_%s" % self.ip_str).start()
+        threading.Thread(target=self.h2_recv_loop, name="h2_recv_%s" % self.ip_str).start()
 
     # export api
     def request(self, task):
@@ -174,7 +174,7 @@ class Http2Worker(HttpWorker):
             self.streams[stream_id] = stream
             stream.start_request()
 
-    def send_loop(self):
+    def h2_send_loop(self):
         while self.keep_running:
             frame = self.send_queue.get(True)
             if not frame:
@@ -210,7 +210,7 @@ class Http2Worker(HttpWorker):
                 self.logger.debug("http2 %s send error:%r", self.ip_str, e)
                 self.close("send fail:%r" % e)
 
-    def recv_loop(self):
+    def h2_recv_loop(self):
         while self.keep_running:
             try:
                 self._consume_single_frame()
@@ -234,8 +234,8 @@ class Http2Worker(HttpWorker):
         self.send_queue.put(None)
 
         for stream in list(self.streams.values()):
-            if stream.task.responsed:
-                # response have send to client
+            if stream.task.responsed or stream.task.start_time + stream.task.timeout < time.time():
+                # response have sent to client, or timeout
                 # can't retry
                 stream.close(reason=reason)
             else:

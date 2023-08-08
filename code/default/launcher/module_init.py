@@ -53,7 +53,7 @@ def start(module):
                 proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local'], 0)
 
             _local = proc_handler[module]["imp"].local
-            p = threading.Thread(target=_local.start, args=([xargs]))
+            p = threading.Thread(target=_local.start, args=([xargs]), name="%s_start" % module)
             p.daemon = True
             p.start()
             proc_handler[module]["proc"] = p

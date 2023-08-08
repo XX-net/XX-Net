@@ -24,7 +24,7 @@ class HostManager(HostManagerBase):
         self.load()
 
         if self.config.update_domains:
-            threading.Thread(target=self.update_front_domains).start()
+            threading.Thread(target=self.update_front_domains, name="update_heroku_domains").start()
 
     def load(self):
         for fn in [self.fn, self.default_fn]:

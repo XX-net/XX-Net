@@ -417,7 +417,7 @@ def start_update_version(version, checkhash=1):
         return progress["update_status"]
 
     progress["update_status"] = "Start update"
-    th = threading.Thread(target=update_version, args=(version, checkhash))
+    th = threading.Thread(target=update_version, args=(version, checkhash), name="update_version")
     th.start()
     return True
 

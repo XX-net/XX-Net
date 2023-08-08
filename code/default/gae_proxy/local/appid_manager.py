@@ -75,7 +75,7 @@ class AppidManager(object):
 
     def report_not_exist(self, appid, ip):
         self.logger.debug("report_not_exist:%s %s", appid, ip)
-        th = threading.Thread(target=self.process_appid_not_exist, args=(appid, ip))
+        th = threading.Thread(target=self.process_appid_not_exist, args=(appid, ip), name="process_appid_not_exist")
         th.start()
 
     def process_appid_not_exist(self, appid, ip):

@@ -375,7 +375,7 @@ def check_new_machine():
             create_desktop_shortcut()
 
 
-def check_loop():
+def update_check_loop():
     check_new_machine()
 
     # wait gae_proxy to start
@@ -388,8 +388,8 @@ def check_loop():
 
 
 def start():
-    p = threading.Thread(target=check_loop)
-    p.setDaemon(True)
+    p = threading.Thread(target=update_check_loop, name="check_update")
+    p.daemon = True
     p.start()
 
 

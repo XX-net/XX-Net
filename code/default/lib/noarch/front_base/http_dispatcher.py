@@ -99,9 +99,9 @@ class HttpsDispatcher(object):
         self.trigger_create_worker_cv = SimpleCondition()
         self.wait_a_worker_cv = SimpleCondition()
 
-        threading.Thread(target=self.dispatcher).start()
-        threading.Thread(target=self.create_worker_thread).start()
-        threading.Thread(target=self.connection_checker).start()
+        threading.Thread(target=self.dispatcher, name="%s_dispatch" % self.logger.name).start()
+        threading.Thread(target=self.create_worker_thread, name="%s_worker_creator" % self.logger.name).start()
+        threading.Thread(target=self.connection_checker, name="%s_conn_checker" % self.logger.name).start()
 
     def stop(self):
         self.running = False

@@ -81,10 +81,10 @@ class LocalDnsQuery():
         self.sock6.settimeout(1)
 
         self.running = True
-        self.th = threading.Thread(target=self.recv_worker, args=(self.sock,))
+        self.th = threading.Thread(target=self.dns_recv_worker, args=(self.sock,), name="dns_ipv4_receiver")
         self.th.start()
 
-        self.th6 = threading.Thread(target=self.recv_worker, args=(self.sock6,))
+        self.th6 = threading.Thread(target=self.dns_recv_worker, args=(self.sock6,), name="dns_ipv6_receiver")
         self.th6.start()
 
     def get_local_dns_server(self):
@@ -128,7 +128,7 @@ class LocalDnsQuery():
         self.running = False
         self.sock.close()
 
-    def recv_worker(self, sock):
+    def dns_recv_worker(self, sock):
         while self.running:
             try:
                 try:
@@ -489,7 +489,7 @@ class ParallelQuery():
         task.dns_type = dns_type
 
         for func in funcs:
-            threading.Thread(target=self.query_worker, args=(task, func)).start()
+            threading.Thread(target=self.query_worker, args=(task, func), name="ParalleQuery_%s" % domain).start()
 
         try:
             ips = task.get(timeout=5)

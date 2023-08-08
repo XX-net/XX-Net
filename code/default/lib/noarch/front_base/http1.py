@@ -32,13 +32,13 @@ class Http1Worker(HttpWorker):
         self.record_active("init")
 
         self.task_queue = Queue()
-        threading.Thread(target=self.work_loop).start()
+        threading.Thread(target=self.work_loop, name="%s_http1_work_loop" % self.logger.name).start()
         self.idle_cb()
 
         if self.config.http1_first_ping_wait or \
             self.config.http1_ping_interval or \
             self.config.http1_idle_time:
-            threading.Thread(target=self.keep_alive_thread).start()
+            threading.Thread(target=self.keep_alive_thread, name="%s_http1_keep_alive" % self.logger.name).start()
 
     def record_active(self, active=""):
         self.trace_time.append([time.time(), active])

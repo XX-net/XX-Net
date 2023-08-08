@@ -53,12 +53,12 @@ class ConnectManager(object):
         self.connect_threads = connect_threads
 
         self.running = True
-        threading.Thread(target=self.check_thread).start()
+        threading.Thread(target=self.connection_check_worker, name="smart_router_conn_checker").start()
 
     def stop(self):
         self.running = False
 
-    def check_thread(self):
+    def connection_check_worker(self):
         while self.running:
             time_now = time.time()
             with self.lock:
@@ -153,7 +153,8 @@ class ConnectManager(object):
         wait_queue = Queue()
         wait_t = 0.2
         for ip in ordered_ips:
-            threading.Thread(target=self.create_connect, args=(wait_queue, host, ip, port)).start()
+            threading.Thread(target=self.create_connect, args=(wait_queue, host, ip, port),
+                             name="smart_router_create_conn_%s" % ip).start()
             try:
                 status = wait_queue.get(timeout=wait_t)
                 sock = self.get_sock_from_cache(host_port)

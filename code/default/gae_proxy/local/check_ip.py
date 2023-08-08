@@ -143,7 +143,7 @@ class CheckAllIp(object):
 
     def run(self):
         for i in range(0, 100):
-            threading.Thread(target=self.checker).start()
+            threading.Thread(target=self.checker, name="gae_ip_checker").start()
 
 
 def check_all():

@@ -91,7 +91,7 @@ class IpManager():
         self.ip_lock = threading.Lock()
         self.reset()
 
-        self.check_ip_thread = threading.Thread(target=self.check_ip_process)
+        self.check_ip_thread = threading.Thread(target=self.check_ip_process, name="%s_ip_manager_check_ip" % self.logger.name)
         self.check_ip_thread.daemon = True
         self.check_ip_thread.start()
 
@@ -816,7 +816,7 @@ class IpManager():
             self.scan_thread_count += 1
             self.scan_thread_lock.release()
 
-            p = threading.Thread(target=self.scan_ip_worker)
+            p = threading.Thread(target=self.scan_ip_worker, name="%s_ip_manager_scan_ip" % self.logger.name)
             p.start()
 
     def scan_all_exist_ip(self):
@@ -830,7 +830,8 @@ class IpManager():
         self.keep_scan_all_exist_ip = True
         scan_threads = []
         for i in range(0, 50):
-            th = threading.Thread(target=self.scan_exist_ip_worker, )
+            th = threading.Thread(target=self.scan_exist_ip_worker,
+                                  name="%s_ip_manager_scan_exist_ip" % self.logger.name)
             th.start()
             scan_threads.append(th)
 
@@ -849,7 +850,8 @@ class IpManager():
             self.logger.warn("scan all exist ip is running")
             return
 
-        self.scan_all_ip_thread = threading.Thread(target=self.scan_all_exist_ip)
+        self.scan_all_ip_thread = threading.Thread(target=self.scan_all_exist_ip,
+                                                   name="%s_ip_manager_scan_all_exist_ip" % self.logger.name)
         self.scan_all_ip_thread.start()
 
     def stop_scan_all_exist_ip(self):

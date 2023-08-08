@@ -133,13 +133,13 @@ class DnsServer(object):
                     xlog.warn("recv except: %r", e)
                     break
 
-                threading.Thread(target=self.on_udp_query, args=(rsock, data, addr)).start()
+                threading.Thread(target=self.on_udp_query, args=(rsock, data, addr), name="DNSServer_udp_handler").start()
 
         self.th = None
 
     def start(self):
         self.init_socket()
-        self.th = threading.Thread(target=self.server_forever)
+        self.th = threading.Thread(target=self.server_forever, name="DNSServer")
         self.th.start()
 
     def stop(self):

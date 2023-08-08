@@ -16,6 +16,8 @@ the stream by the endpoint that initiated the stream.
 
 
 import threading
+import time
+
 from hyper.common.headers import HTTPHeaderMap
 from hyper.packages.hyperframe.frame import (
     FRAME_MAX_LEN, FRAMES, HeadersFrame, DataFrame, PushPromiseFrame,
@@ -378,7 +380,8 @@ class Stream(object):
     def close(self, reason="close"):
         if not self.task.responsed:
             # self.task.set_state("stream close: %s, call retry" % reason)
-            self.connection.retry_task_cb(self.task, reason)
+            if self.task.start_time + self.task.timeout > time.time():
+                self.connection.retry_task_cb(self.task, reason)
         else:
             # self.task.set_state("stream close: %s, finished" % reason)
             self.task.finish()
