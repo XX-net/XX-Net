@@ -1049,6 +1049,9 @@ login_lock = threading.Lock()
 
 
 def login_process():
+    if not g.session:
+        return
+
     with login_lock:
         if not (g.config.login_account and g.config.login_password):
             xlog.debug("x-tunnel no account")
