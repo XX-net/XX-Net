@@ -156,6 +156,7 @@ class ConnectManager(object):
 
         self.thread_num_lock = threading.Lock()
         self.timeout = 4
+        self.start_connect_time = 0
         self.thread_num = 0
         self.running = True
 
@@ -233,6 +234,12 @@ class ConnectManager(object):
                 self.connecting_more_thread.start()
 
     def _create_more_connection_worker(self):
+        if self.start_connect_time and self.start_connect_time + 30 < time.time():
+            self.start_connect_time = 0
+            self.config.https_max_connect_thread += 1
+            self.logger.warning("Connect creating process blocked, max connect thread increase to %d",
+                                self.config.https_max_connect_thread)
+
         while self.thread_num < self.config.https_max_connect_thread and self._need_more_ip():
 
             self.thread_num_lock.acquire()
@@ -254,7 +261,9 @@ class ConnectManager(object):
                 if self.new_conn_pool.qsize() > self.config.https_connection_pool_max:
                     break
 
+                self.start_connect_time = time.time()
                 self._connect_process()
+                self.start_connect_time = 0
         finally:
             self.thread_num_lock.acquire()
             self.thread_num -= 1

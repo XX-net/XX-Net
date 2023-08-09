@@ -1907,6 +1907,7 @@ googleplus.com
 googlescholar.com
 googlesile.com
 googlesource.com
+googlesyndication.com
 googletagservices.com
 googleusercontent.com
 googlevideo.com

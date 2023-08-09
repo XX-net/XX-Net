@@ -562,7 +562,7 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
     #ips = g.dns_query.query(host)
     #if check_local_network.IPv6.is_ok() and have_ipv6(ips) and port == 443:
     #    rule_list = ["direct", "gae", "socks", "redirect_https"]
-    # gae is more faster then direct.
+    # gae is fast then direct.
 
     rule = g.domain_cache.get_rule(host)
     if rule != "unknown":
@@ -586,9 +586,9 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         else:
             ips = g.dns_query.query_recursively(host, 1)
             if g.ip_region.check_ips(ips):
-                rule_list = ["direct", "socks", "redirect_https"]
+                rule_list = ["direct", "redirect_https", "socks", "gae"]
             else:
-                rule_list = ["direct", "gae", "socks", "redirect_https"]
+                rule_list = ["gae", "socks", "direct", "redirect_https"]
     else:
         rule_list = ["direct", "socks", "gae", "redirect_https"]
 

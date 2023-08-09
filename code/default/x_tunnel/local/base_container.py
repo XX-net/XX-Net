@@ -694,7 +694,7 @@ class Conn(object):
             try:
                 sended = sock.send(buf[start:start + send_size])
             except Exception as e:
-                self.xlog.info("%s conn:%d send closed", self.session.session_id, self.conn_id)
+                self.xlog.info("%s conn:%d send closed: %r", self.session.session_id, self.conn_id, e)
                 sock.close()
                 self.sock = None
                 if self.is_client:

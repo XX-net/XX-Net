@@ -89,6 +89,7 @@ class IpRegion(object):
         return lo & 1
 
     def check_ips(self, ips):
+        # return True if any ip in China
         ips = utils.to_str(ips)
         for ip in ips:
             try:
