@@ -13,7 +13,6 @@ import re
 import ssl
 import random
 import struct
-import fcntl
 import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +38,7 @@ xlog = getLogger("smart_router")
 
 def get_local_ips():
     def get_ip_address(NICname):
+        import fcntl
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(
             s.fileno(),
@@ -71,6 +71,11 @@ def get_local_ips():
             ips = [b'127.0.0.1']
     elif sys.platform == "ios":
         ips = [b'127.0.0.1']
+    elif sys.platform == "win32":
+        ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]]
+        ips = utils.to_bytes(ips)
+        if b"127.0.0.1" not in ips:
+            ips.append(b"127.0.0.1")
     else:
         ips = []
         try:
@@ -82,7 +87,7 @@ def get_local_ips():
             xlog.warn("get ip address e:%r", e)
             ips = [b'127.0.0.1']
 
-    xlog.debug("ips: %s", ips)
+    xlog.debug("local ips: %s", ips)
     return ips
 
 
