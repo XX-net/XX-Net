@@ -255,6 +255,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 except:
                     pass
 
+                xlog.info("start quit")
                 if sys_platform.platform in ["android", "ios"]:
                     try:
                         xlog.info("request http://localhost:8084/quit/")
@@ -263,7 +264,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                         xlog.warn("request http://localhost:8084/quit/ e:%r", e)
                         pass
 
-                xlog.info("start quit")
                 sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
@@ -975,7 +975,7 @@ def start(allow_remote=0):
 
     addresses = [(listen_ip, host_port) for listen_ip in listen_ips]
 
-    xlog.info("begin to start web control")
+    xlog.info("begin to start web control:%s", addresses)
 
     server = simple_http_server.HTTPServer(addresses, Http_Handler, logger=xlog)
     server.start()
@@ -1004,11 +1004,11 @@ def http_request(url, method="GET"):
 def confirm_xxnet_not_running():
     # if xxnet is already running, try exit it
     is_xxnet_exit = False
-    xlog.debug("start confirm_xxnet_exit")
+    host_port = config.control_port
+    req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
+    xlog.debug("start confirm_xxnet_exit url:%s", req_url)
 
     for i in range(30):
-        host_port = config.control_port
-        req_url = "http://127.0.0.1:{port}/quit".format(port=host_port)
         if http_request(req_url) == False:
             xlog.debug("good, xxnet:%s clear!" % host_port)
             is_xxnet_exit = True

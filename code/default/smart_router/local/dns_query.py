@@ -13,6 +13,8 @@ import re
 import ssl
 import random
 import struct
+import fcntl
+import subprocess
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
@@ -33,6 +35,51 @@ from . import global_var as g
 
 from xlog import getLogger
 xlog = getLogger("smart_router")
+
+
+def get_local_ips():
+    def get_ip_address(NICname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', NICname[:15].encode("UTF-8"))
+        )[20:24])
+
+    if sys.platform.startswith("linux"):
+
+        if os.path.isfile("/system/bin/dalvikvm") or os.path.isfile("/system/bin/dalvikvm64") or \
+                "android.googlesource.com" in sys.version:
+            ips = [b'127.0.0.1']
+        else:
+            try:
+                proc = subprocess.Popen(["ip addr show | egrep inet | awk '{{print $2}}' | awk -F'/' '{{print $1}}'"],
+                                        stdout=subprocess.PIPE, shell=True)
+                x = proc.communicate()[0]
+                ips = x.strip().split(b"\n")
+            except Exception as e:
+                ips = [b'127.0.0.1']
+    elif sys.platform == "darwin":
+        try:
+            proc = subprocess.Popen(["ifconfig | egrep inet | awk '{{print $2}}' | awk -F'/' '{{print $1}}'"],
+                                    stdout=subprocess.PIPE, shell=True)
+            x = proc.communicate()[0]
+            ips = x.strip().split(b"\n")
+        except Exception as e:
+            ips = [b'127.0.0.1']
+    else:
+        ips = []
+        try:
+            for ix in socket.if_nameindex():
+                name = ix[1]
+                ip = get_ip_address(name)
+                ips.append(ip)
+        except Exception as e:
+            xlog.warn("get ip addres e:%r", e)
+            ips = [b'127.0.0.1']
+
+    xlog.debug("ips: %s", ips)
+    return ips
 
 
 def query_dns_from_xxnet(domain, dns_type=None):
@@ -97,7 +144,6 @@ class LocalDnsQuery():
                                                 ctypes.byref(ctypes.wintypes.DWORD(len(buf))))
             ipcount = struct.unpack('I', buf[0:4])[0]
 
-            # iplist = [socket.inet_ntoa(buf[i:i + 4]) for i in range(4, ipcount * 4 + 4, 4)]
             iplist = []
             for i in range(4, ipcount * 4 + 4, 4):
                 ip = socket.inet_ntoa(buf[i:i + 4])
@@ -106,7 +152,17 @@ class LocalDnsQuery():
         elif os.path.isfile('/etc/resolv.conf'):
             with open('/etc/resolv.conf', 'rb') as fp:
                 iplist = re.findall(br'(?m)^nameserver\s+(\S+)', fp.read())
-        else:
+
+            xlog.debug("DNS resolve servers:%s", iplist)
+
+            xlog.debug("DNS server port %d", g.dns_srv.listen_port)
+            local_ips = g.local_ips
+            for ip in local_ips:
+                if ip in iplist:
+                    xlog.warn("remove local DNS server %s from upstream", ip)
+                    iplist.remove(ip)
+
+        if not iplist:
             iplist = [
                 b"1.1.1.1",
                 b"8.8.8.8",

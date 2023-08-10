@@ -28,6 +28,7 @@ xlog = getLogger("smart_router")
 class DnsServer(object):
     def __init__(self, bind_ip="127.0.0.1", port=53, backup_port=8053, ttl=24*3600):
         self.sockets = []
+        self.listen_port = port
         self.running = False
         if isinstance(bind_ip, str):
             self.bind_ip = [bind_ip]
@@ -70,6 +71,7 @@ class DnsServer(object):
             sock.bind((bind_ip, self.backup_port))
             xlog.info("start DNS server at %s:%d", bind_ip, self.backup_port)
             self.running = True
+            self.listen_port = self.backup_port
             self.sockets.append(sock)
             return
         except Exception as e:

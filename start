@@ -84,29 +84,28 @@ if [ $os_name = 'Linux' ]; then
     echo "Linux using embedded python."
     PYTHON="$PYTHON3"
   else
-    if ! ${PYTHON} -c 'import brotli' 2> /dev/null; then
-        echo 'Installing brotli for your system... Please type in your password if requested'
+    if ! ${PYTHON} --version 2> /dev/null; then
+        echo 'Installing python3 for your system... Please type in your password if requested'
         if has_command zypper; then
             # openSUSE
-            sudo zypper in -y python3-brotli
+            sudo zypper in -y python3
         elif has_command apt-get; then
             # Debian or Debian-like
-            sudo apt-get install -y python3-brotli
+            sudo apt-get install -y python3
         elif has_command dnf; then
             # Fedora
-            sudo dnf install -y python3-brotli
+            sudo dnf install -y python3
         elif has_command yum; then
             # RedHat
-            sudo yum install -y pybrotli
+            sudo yum install -y python3
         elif has_command pacman; then
             # ArchLinux
-            sudo pacman -S --noconfirm python-brotli
+            sudo pacman -S --noconfirm python3
         elif has_command opkg; then
             # OpenWrt
             echo "install python"
-            opkg install python3 python3-brotli
+            opkg install python3 python3
         fi
-        pip install brotli
     fi
   fi
 elif [ $os_name = 'Darwin' ]; then
@@ -142,6 +141,12 @@ start
 
  -no_mess_system
    Don't mess the system, include not install CA to browser, not add shortcut to desktop automatically.
+
+ -no_popup
+   Don't popup Browser window when start.
+
+ -no_systray
+   Don't show systray in task bar.
 
  -f
    Run in foreground, in Mac will run in background as default.
@@ -194,6 +199,15 @@ unset_iptables(){
     fi
 
     iptables -t nat -D PREROUTING --in-interface $INF -p tcp -j REDSOCKS
+    iptables -t nat -D REDSOCKS -d 0.0.0.0/8 -j RETURN
+    iptables -t nat -D REDSOCKS -d 10.0.0.0/8 -j RETURN
+    iptables -t nat -D REDSOCKS -d 127.0.0.0/8 -j RETURN
+    iptables -t nat -D REDSOCKS -d 169.254.0.0/16 -j RETURN
+    iptables -t nat -D REDSOCKS -d 172.16.0.0/12 -j RETURN
+    iptables -t nat -D REDSOCKS -d 192.168.0.0/16 -j RETURN
+    iptables -t nat -D REDSOCKS -d 224.0.0.0/4 -j RETURN
+    iptables -t nat -D REDSOCKS -d 240.0.0.0/4 -j RETURN
+    iptables -t nat -D REDSOCKS -p tcp -j REDIRECT --to-ports 8086
     iptables -t nat -X REDSOCKS
 }
 
@@ -217,14 +231,18 @@ case $1 in
 
 -no_mess_system)shift 1;;
 
+-no_popup)shift 1;;
+
+-no_systray)shift 1;;
+
 -f)HANGUP='0'; shift 1;;
 -hungup)HANGUP='1';shift 1;;
 
-set_iptables) set_iptables $2;;
+set_iptables) set_iptables $2;shift 1;;
 
-unset_iptables) unset_iptables $2;;
+unset_iptables) unset_iptables $2;exit 1;;
 
-*) echo "unknown option $1."; shift 1;;
+*) echo "unknown option $1."; exit 1;;
 esac
 done
 

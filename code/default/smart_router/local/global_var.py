@@ -21,3 +21,4 @@ dns_query = None
 
 gae_proxy_listen_port = None
 x_tunnel_socks_port = None
+local_ips = []

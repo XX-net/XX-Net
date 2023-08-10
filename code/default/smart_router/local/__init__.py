@@ -127,7 +127,6 @@ def start(args):
     g.connect_manager = connect_manager.ConnectManager()
     g.pipe_socks = pipe_socks.PipeSocks(g.config.pip_cache_size)
     g.pipe_socks.run()
-    g.dns_query = dns_query.CombineDnsQuery()
 
     allow_remote = args.get("allow_remote", 0)
 
@@ -158,8 +157,12 @@ def start(args):
         bind_ip=listen_ips, port=g.config.dns_port,
         backup_port=g.config.dns_backup_port,
         ttl=g.config.dns_ttl)
-    ready = True
     g.dns_srv.start()
+
+    g.local_ips = dns_query.get_local_ips()
+    g.dns_query = dns_query.CombineDnsQuery()
+
+    ready = True
 
 
 def stop():
