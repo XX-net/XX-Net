@@ -58,6 +58,7 @@ def get_local_ips():
                 x = proc.communicate()[0]
                 ips = x.strip().split(b"\n")
             except Exception as e:
+                xlog.warn("get ip address e:%r", e)
                 ips = [b'127.0.0.1']
     elif sys.platform == "darwin":
         try:
@@ -66,7 +67,10 @@ def get_local_ips():
             x = proc.communicate()[0]
             ips = x.strip().split(b"\n")
         except Exception as e:
+            xlog.warn("get ip address e:%r", e)
             ips = [b'127.0.0.1']
+    elif sys.platform == "ios":
+        ips = [b'127.0.0.1']
     else:
         ips = []
         try:
@@ -75,7 +79,7 @@ def get_local_ips():
                 ip = get_ip_address(name)
                 ips.append(ip)
         except Exception as e:
-            xlog.warn("get ip addres e:%r", e)
+            xlog.warn("get ip address e:%r", e)
             ips = [b'127.0.0.1']
 
     xlog.debug("ips: %s", ips)

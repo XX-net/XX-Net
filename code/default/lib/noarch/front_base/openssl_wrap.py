@@ -23,10 +23,10 @@ def init():
     if sys.version_info[0] == 3:
         from .ssl_wrap import SSLConnection, SSLContext, SSLCert
 
-        implementation = "ssl, import tlslite except:" + error_str
+        implementation = "ssl, " + error_str
     else:
         from .pyopenssl_wrap import SSLConnection, SSLContext, SSLCert
-        implementation = "OpenSSL, import tlslite except:" + error_str
+        implementation = "OpenSSL, " + error_str
 
     return SSLConnection, SSLContext, SSLCert
 
