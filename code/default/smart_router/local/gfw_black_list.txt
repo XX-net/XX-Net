@@ -3433,6 +3433,7 @@ piraattilahti.org
 piring.com
 pixelqi.com
 pixiv.net
+pixiv.org
 pixnet.net
 pk.com
 placemix.com
@@ -3552,6 +3553,7 @@ putlocker.com
 putty.org
 puuko.com
 pwned.com
+pximg.net
 python.com
 python.com.tw
 pythonhackers.com
