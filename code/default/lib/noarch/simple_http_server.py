@@ -538,69 +538,76 @@ class HTTPServer():
 
             while self.running:
                 try:
-                    events = p.poll(timeout=1)
-                except IOError as e:
-                    if e.errno != 4:  # EINTR:
-                        raise
-                    else:
-                        time.sleep(1)
-                        continue
-
-                if not self.running:
-                    break
-
-                for fn, event in events:
-                    if fn not in fn_map:
-                        self.logger.error("p.poll get fn:%d", fn)
-                        continue
-
-                    sock = fn_map[fn]
                     try:
-                        (sock, address) = sock.accept()
+                        events = p.poll(timeout=1)
                     except IOError as e:
-                        if e.args[0] == 11:
-                            # Resource temporarily unavailable is EAGAIN
-                            # and that's not really an error.
-                            # It means "I don't have answer for you right now and
-                            # you have told me not to wait,
-                            # so here I am returning without answer."
+                        if e.errno != 4:  # EINTR:
+                            raise
+                        else:
+                            time.sleep(1)
                             continue
 
-                        if e.args[0] == 24:
-                            self.logger.warn("max file opened when sock.accept")
-                            time.sleep(30)
+                    if not self.running:
+                        break
+
+                    for fn, event in events:
+                        if fn not in fn_map:
+                            self.logger.error("p.poll get fn:%d", fn)
                             continue
 
-                        self.logger.warn("socket accept fail(errno: %s).", e.args[0])
-                        continue
+                        sock = fn_map[fn]
+                        try:
+                            (sock, address) = sock.accept()
+                        except IOError as e:
+                            self.logger.warn("socket accept fail %r.", e)
+                            if e.args[0] == 11:
+                                # Resource temporarily unavailable is EAGAIN
+                                # and that's not really an error.
+                                # It means "I don't have answer for you right now and
+                                # you have told me not to wait,
+                                # so here I am returning without answer."
+                                continue
 
-                    try:
-                        self.process_connect(sock, address)
-                    except Exception as e:
-                        self.logger.exception("process connect error:%r", e)
+                            if e.args[0] == 24:
+                                self.logger.warn("max file opened when sock.accept")
+                                time.sleep(30)
+                                continue
+
+                            self.logger.warn("socket accept fail(errno: %s).", e.args[0])
+                            continue
+
+                        try:
+                            self.process_connect(sock, address)
+                        except Exception as e:
+                            self.logger.exception("process connect error:%r", e)
+                except Exception as e:
+                    self.logger.exception("serve except:%r", e)
 
         else:
             while self.running:
                 try:
-                    r, w, e = select.select(self.sockets, [], [], 1)
-                except Exception as e:
-                    continue
-
-                if not self.running:
-                    break
-
-                for rsock in r:
                     try:
-                        (sock, address) = rsock.accept()
-                    except IOError as e:
-                        self.logger.warn("socket accept fail(errno: %s).", e.args[0])
-                        if e.args[0] == 10022:
-                            self.logger.info("restart socket server.")
-                            self.server_close()
-                            self.init_socket()
+                        r, w, e = select.select(self.sockets, [], [], 1)
+                    except Exception as e:
+                        continue
+
+                    if not self.running:
                         break
 
-                    self.process_connect(sock, address)
+                    for rsock in r:
+                        try:
+                            (sock, address) = rsock.accept()
+                        except IOError as e:
+                            self.logger.warn("socket accept fail(errno: %s).", e.args[0])
+                            if e.args[0] == 10022:
+                                self.logger.info("restart socket server.")
+                                self.server_close()
+                                self.init_socket()
+                            break
+
+                        self.process_connect(sock, address)
+                except Exception as e:
+                    self.logger.exception("serve except:%r", e)
         self.server_close()
 
     def process_connect(self, sock, address):
@@ -615,10 +622,12 @@ class HTTPServer():
         client_thread.start()
 
     def shutdown(self):
+        self.logger.info("shutdown")
         self.running = False
         self.server_close()
 
     def server_close(self):
+        self.logger.info("server_close")
         for sock in self.sockets:
             sock.close()
         self.sockets = []

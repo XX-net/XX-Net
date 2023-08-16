@@ -310,13 +310,12 @@ class BlockReceivePool():
             else:
                 # xlog.debug("recv_pool put sn:%d in order", sn)
                 self.process_callback(data)
-                self.next_sn = sn + 1
+                self.next_sn += 1
 
-                while sn + 1 in self.block_list:
-                    sn += 1
+                while self.next_sn in self.block_list:
                     # xlog.debug("recv_pool sn:%d processed", sn)
-                    self.block_list.remove(sn)
-                    self.next_sn = sn + 1
+                    self.block_list.remove(self.next_sn)
+                    self.next_sn += 1
                 return True
         except Exception as e:
             raise Exception("recv_pool put sn:%d len:%d error:%r" % (sn, len(data), e))
