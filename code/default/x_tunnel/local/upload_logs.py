@@ -5,15 +5,16 @@ import json
 import zipfile
 import operator
 
+import env_info
 import utils
-from . import global_var as g
 from xlog import getLogger, reset_log_files
 xlog = getLogger("x_tunnel")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_path = env_info.data_path
 data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
+g = None
 
 
 def sleep(t):
@@ -51,29 +52,27 @@ def list_files():
             if extension not in ["log",]:
                 continue
 
-            file_size = os.path.getsize(src_file)
-            if file_size == 0:
-                continue
-
             mtime = os.path.getmtime(src_file)
             log_files[src_file] = mtime
 
-    files = sorted(list(log_files.items()), key=operator.itemgetter(1))
+    # pack new log first, skip old log if size exceed.
+    files = sorted(list(log_files.items()), key=operator.itemgetter(1), reverse=True)
     log_files_list = [src_file for src_file, mtime in files]
+
+    # always pack other files(.json and .txt).
     return other_files + log_files_list
 
 
-def pack_logs():
-    max_upload_size = 800 * 1024
+def pack_logs(max_size=800 * 1024):
     content_size = 0
     try:
+        files = list_files()
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode="w") as zfd:
-            files = list_files()
             for src_file in files:
                 file_size = os.path.getsize(src_file)
                 content_size += file_size
-                if content_size > max_upload_size:
+                if content_size > max_size:
                     break
 
                 relate_path = src_file[len(data_path) + 1:]
@@ -85,7 +84,7 @@ def pack_logs():
                 else:
                     zfd.write(src_file, arcname=relate_path)
 
-                if content_size > max_upload_size:
+                if content_size > max_size:
                     break
         return zip_buffer.getvalue()
     except Exception as e:
@@ -94,6 +93,12 @@ def pack_logs():
 
 
 def upload_logs_thread():
+    global g
+
+    if not g:
+        from . import global_var
+        g = global_var
+
     sleep(3 * 60)
     while g.running:
         if not g.running or not g.server_host or not g.session or g.session.last_receive_time == 0:

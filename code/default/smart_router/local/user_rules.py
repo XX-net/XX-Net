@@ -7,11 +7,12 @@ import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
 
+import env_info
 import utils
 from xlog import getLogger
 xlog = getLogger("smart_router")
+data_path = os.path.join(env_info.data_path, "smart_router")
 
 
 class Config(object):

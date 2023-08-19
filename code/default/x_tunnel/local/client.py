@@ -12,7 +12,8 @@ sys.path.append(noarch_lib)
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 sys.path.append(root_path)
 
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+import env_info
+data_path = env_info.data_path
 data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
 
 lib_path = os.path.abspath(os.path.join(current_path, os.pardir, 'common'))
@@ -157,7 +158,7 @@ def load_config():
     g.config = config
 
 
-def main(args):
+def start(args):
     global ready
 
     g.xxnet_version = xxnet_version()
@@ -210,7 +211,7 @@ def main(args):
     g.socks5_server.serve_forever()
 
 
-def terminate():
+def stop():
     global ready
     g.running = False
     g.http_client.stop()
@@ -218,7 +219,6 @@ def terminate():
 
     if g.socks5_server:
         xlog.info("Close Socks5 server ")
-        g.socks5_server.server_close()
         g.socks5_server.shutdown()
         g.socks5_server = None
 
@@ -231,9 +231,9 @@ def terminate():
 
 if __name__ == '__main__':
     try:
-        main({})
+        start({})
     except KeyboardInterrupt:
-        terminate()
+        stop()
         import sys
 
         sys.exit()

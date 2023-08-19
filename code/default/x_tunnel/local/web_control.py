@@ -28,6 +28,9 @@ default_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 root_path = os.path.abspath(os.path.join(default_path, os.pardir, os.pardir))
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
+import env_info
+data_path = os.path.join(env_info.data_path, 'smart_router')
+
 
 def check_email(email):
     import re
@@ -38,7 +41,7 @@ def check_email(email):
 
 
 def get_lang():
-    app_info_file = os.path.join(root_path, "data", "launcher", "config.json")
+    app_info_file = os.path.join(env_info.data_path, "launcher", "config.json")
     try:
         with open(app_info_file, "r") as fd:
             dat = json.load(fd)

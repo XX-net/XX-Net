@@ -11,10 +11,11 @@ cloudflare_front = None
 from . import global_var as g
 import utils
 from xlog import getLogger
+import env_info
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_path = env_info.data_path
 data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
 
 xlog = getLogger("x_tunnel", log_path=data_xtunnel_path, save_start_log=500, save_warning_log=True)

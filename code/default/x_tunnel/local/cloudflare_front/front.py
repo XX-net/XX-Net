@@ -2,12 +2,9 @@ import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 
+import env_info
 import xlog
-logger = xlog.getLogger("cloudflare_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
-logger.set_buffer(300)
 
 from .config import Config
 from . import ip_manager
@@ -19,6 +16,12 @@ from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 from .http2_connection import CloudflareHttp2Worker
 from gae_proxy.local import check_local_network
+
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
+
+logger = xlog.getLogger("cloudflare_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
+logger.set_buffer(300)
 
 
 class Front(object):
@@ -96,7 +99,7 @@ class Front(object):
         status = response.status
         content = response.task.read_all()
         if status == 200:
-            self.logger.debug("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,
+            logger.debug("%s %s%s send:%d recv:%d trace:%s", method, host, path, len(data), len(content),
                        response.task.get_trace())
         else:
             self.logger.warn("%s %s%s status:%d trace:%s", method, response.worker.ssl_sock.host, path, status,

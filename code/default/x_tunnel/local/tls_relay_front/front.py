@@ -1,12 +1,9 @@
 import os
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 
 import xlog
-logger = xlog.getLogger("tls_relay", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
-logger.set_buffer(100)
+import env_info
 
 from .config import Config
 from . import host_manager
@@ -19,9 +16,11 @@ from gae_proxy.local import check_local_network
 from . import http2_stream
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_path = env_info.data_path
 module_data_path = os.path.join(data_path, 'x_tunnel')
+
+logger = xlog.getLogger("tls_relay", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
+logger.set_buffer(100)
 
 
 class Front(object):
@@ -104,7 +103,7 @@ class Front(object):
 
         content = response.task.read_all()
         if status == 200:
-            logger.debug("%s %s%s status:%d trace:%s", method, host, path, status,
+            logger.debug("%s %s%s send:%d recv:%d trace:%s", method, host, path, len(data), len(content),
                        response.task.get_trace())
         else:
             logger.warn("%s %s%s status:%d trace:%s", method, host, path, status,

@@ -190,6 +190,9 @@ class SSLConnection(object):
                         break
 
                 return ret
+            except OSError:
+                self._context.logger.warn("ssl send:%r", e)
+                raise e
             except Exception as e:
                 self._context.logger.exception("ssl send:%r", e)
                 raise e

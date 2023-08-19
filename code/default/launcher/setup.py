@@ -14,6 +14,7 @@ try:
 except ImportError:
     from urllib2 import build_opener, ProxyHandler
 
+import env_info
 from xlog import getLogger
 xlog = getLogger("launcher")
 
@@ -25,7 +26,7 @@ sys.path.append(noarch_lib)
 opener = build_opener()
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-download_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', 'downloads'))
+download_path = os.path.join(env_info.data_path, 'downloads')
 
 xxnet_unzip_path = ""
 

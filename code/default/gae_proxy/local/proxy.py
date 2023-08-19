@@ -44,12 +44,15 @@ import threading
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 gae_proxy_path = os.path.join(root_path, "gae_proxy")
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-python_path = root_path
 
+python_path = root_path
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+import env_info
+data_path = env_info.data_path
+data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+
 
 if sys.platform == "win32":
     win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))

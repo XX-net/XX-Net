@@ -9,7 +9,7 @@ except ImportError:
     from urlparse import urlparse
 
 import simple_http_server
-
+import env_info
 from . import global_var as g
 from xlog import getLogger
 xlog = getLogger("smart_router")
@@ -19,12 +19,12 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
-data_path = os.path.join(top_path, 'data', "smart_router")
+data_path = os.path.join(env_info.data_path, "smart_router")
 
 default_pacfile = os.path.join(current_path, "proxy.pac")
 user_pacfile = os.path.join(data_path, "proxy.pac")
 
-gae_ca_file = os.path.join(top_path, 'data', "gae_proxy", "CA.crt")
+gae_ca_file = os.path.join(env_info.data_path, "gae_proxy", "CA.crt")
 
 
 allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router", "all_X-Tunnel"]

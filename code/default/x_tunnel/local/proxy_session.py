@@ -752,21 +752,24 @@ class ProxySession(object):
                               transfer_no, recv_len, data_len, ack_len, head_len)
                     continue
 
+                # speed = (send_data_len + len(content)) / (roundtrip_time - (time_cost / 1000.0))
                 rtt = roundtrip_time * 1000 - time_cost
                 rtt = max(100, rtt)
                 speed = (send_data_len + len(content) + 400) / rtt
-                # speed = (send_data_len + len(content)) / (roundtrip_time - (time_cost / 1000.0))
-                rcost = response.headers.get(b"R-Cost", b"")
+
                 xlog.debug(
-                    "worker:%d no:%d "
-                    "cost_time:%f rcost:%s server_time:%f server_timeout:%d "
-                    "snd:%d rcv:%d s_pool:%d on_road:%d target_worker:%d speed:%d",
-                    work_id, transfer_no,
-                    roundtrip_time, rcost, time_cost / 1000.0, server_timeout,
-                    send_data_len, len(content), server_send_pool_size,
+                    "worker:%d no:%d %s "
+                    "road_time:%f "
+                    "snd:%d rcv:%d "
+                    "s_pool:%d on_road:%d target_worker:%d speed:%d "
+                    "roundtrip_time:%f server_timeout:%d ",
+                    work_id, transfer_no, response.worker.ip_str,
+                    roundtrip_time - time_cost / 1000.0,
+                    send_data_len, len(content),
+                    server_send_pool_size,
                     self.on_road_num,
                     self.target_on_roads,
-                    speed
+                    speed, roundtrip_time, server_timeout
                 )
 
                 if len(self.conn_list) == 0:

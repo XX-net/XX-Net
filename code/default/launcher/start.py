@@ -20,10 +20,12 @@ except:
 current_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_path)
 default_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
-data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.pardir, 'data'))
-data_launcher_path = os.path.join(data_path, 'launcher')
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+import env_info
+data_path = env_info.data_path
+data_launcher_path = os.path.join(data_path, 'launcher')
 
 
 def create_data_path():
@@ -60,6 +62,7 @@ current_version = update_from_github.current_version()
 xlog.info("start Version %s", current_version)
 xlog.info("Python version: %s", sys.version)
 xlog.info("System: %s|%s|%s", platform.system(), platform.version(), platform.architecture())
+xlog.info("data path: %s", data_path)
 
 from front_base import openssl_wrap
 xlog.info("TLS implementation: %s", openssl_wrap.implementation)

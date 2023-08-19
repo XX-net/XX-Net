@@ -7,8 +7,6 @@ import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
 
 sys.path.append(root_path)
@@ -29,7 +27,7 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
-
+import env_info
 import xlog
 logger = xlog.getLogger("tls_relay")
 logger.set_buffer(500)
@@ -40,6 +38,9 @@ from front_base.check_ip import CheckIp
 
 from x_tunnel.local.tls_relay_front.config import Config
 from x_tunnel.local.tls_relay_front.host_manager import HostManager
+
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 if __name__ == "__main__":

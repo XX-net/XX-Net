@@ -2,13 +2,9 @@ import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 
+import env_info
 import xlog
-
-logger = xlog.getLogger("heroku_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
-logger.set_buffer(100)
 
 from .config import Config
 from . import host_manager
@@ -19,6 +15,12 @@ from front_base.http_dispatcher import HttpsDispatcher
 from front_base.connect_manager import ConnectManager
 from front_base.check_ip import CheckIp
 from gae_proxy.local import check_local_network
+
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
+
+logger = xlog.getLogger("heroku_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
+logger.set_buffer(100)
 
 
 class Front(object):

@@ -14,7 +14,9 @@ xlog = getLogger("launcher")
 current_path = os.path.dirname(os.path.abspath(__file__))
 version_path = os.path.abspath(os.path.join(current_path, os.pardir))
 root_path = os.path.abspath(os.path.join(version_path, os.pardir, os.pardir))
-data_path = os.path.join(root_path, 'data')
+
+import env_info
+data_path = env_info.data_path
 config_path = os.path.join(data_path, 'launcher', 'config.json')
 
 

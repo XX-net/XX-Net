@@ -5,7 +5,10 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 launcher_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, "launcher"))
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
+
+import env_info
+data_path = os.path.join(env_info.data_path, "smart_router")
+
 if launcher_path not in sys.path:
     sys.path.append(launcher_path)
 
@@ -141,7 +144,9 @@ def start(args):
     addresses = [(listen_ip, g.config.proxy_port) for listen_ip in listen_ips]
 
     g.proxy_server = simple_http_server.HTTPServer(addresses,
-                                                   proxy_handler.ProxyServer, logger=xlog)
+                                                   proxy_handler.ProxyServer,
+                                                   logger=xlog,
+                                                   check_listen_interval=60)
     g.proxy_server.start()
     xlog.info("Proxy server listen:%s:%d.", listen_ips, g.config.proxy_port)
 

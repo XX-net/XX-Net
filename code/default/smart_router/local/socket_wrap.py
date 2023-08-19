@@ -33,7 +33,10 @@ class SocketWrap(object):
 
     def close(self):
         # xlog.debug("%s close", self)
-        self._sock.close()
+        try:
+            self._sock.close()
+        except Exception as e:
+            xlog.error("close _sock:%s e:%r", self._sock, e)
         self.closed = True
 
     def is_closed(self):

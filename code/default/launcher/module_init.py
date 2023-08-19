@@ -18,8 +18,8 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 if root_path not in sys.path:
     sys.path.append(root_path)
 
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-data_launcher_path = os.path.join(data_path, 'launcher')
+import env_info
+data_launcher_path = os.path.join(env_info.data_path, 'launcher')
 running_file = os.path.join(data_launcher_path, "Running.Lck")
 
 

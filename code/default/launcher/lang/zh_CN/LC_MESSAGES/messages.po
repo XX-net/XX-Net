@@ -299,6 +299,9 @@ msgstr "CA 证书状态"
 msgid "Download"
 msgstr "下载"
 
+msgid "Collect debug info"
+msgstr "收集调试信息"
+
 msgid "System Proxy"
 msgstr "系统代理"
 

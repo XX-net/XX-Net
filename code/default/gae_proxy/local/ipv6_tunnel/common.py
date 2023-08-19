@@ -1,15 +1,16 @@
 import os
 import shlex
 import subprocess
-from .pteredor import teredo_prober
 
+from .pteredor import teredo_prober
+import env_info
 import utils
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "gae_proxy"))
+data_path = os.path.join(env_info.data_path, "gae_proxy")
 if not os.path.isdir(data_path):
     data_path = current_path
 

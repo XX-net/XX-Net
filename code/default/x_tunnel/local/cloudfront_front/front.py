@@ -15,11 +15,11 @@ from .connect_creator import ConnectCreator
 from .config import Config
 from . import host_manager
 from gae_proxy.local import check_local_network
-
+import env_info
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_path = env_info.data_path
 module_data_path = os.path.join(data_path, 'x_tunnel')
 
 

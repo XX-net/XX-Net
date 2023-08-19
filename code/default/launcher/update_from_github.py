@@ -13,7 +13,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
 code_path = os.path.abspath(os.path.join(root_path, os.pardir))
-data_root = os.path.join(top_path, 'data')
+import env_info
+data_root = env_info.data_path
 python_path = root_path
 noarch_lib = os.path.join(python_path, 'lib', 'noarch')
 sys.path.append(noarch_lib)

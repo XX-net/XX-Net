@@ -11,8 +11,8 @@ def is_ready():
 
 
 def start(args):
-    client.main(args)
+    client.start(args)
 
 
 def stop():
-    client.terminate()
+    client.stop()

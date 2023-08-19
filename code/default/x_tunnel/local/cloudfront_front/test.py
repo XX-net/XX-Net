@@ -8,8 +8,6 @@ import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
 
 sys.path.append(root_path)
@@ -30,10 +28,14 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
+import env_info
 from .front import front
 from xlog import getLogger
 xlog = getLogger("cloudfront_front")
 xlog.set_buffer(2000)
+
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 def get():

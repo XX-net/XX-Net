@@ -28,7 +28,7 @@ from config import config, app_name
 import update_from_github
 import sys_platform
 import global_var
-
+import env_info
 
 update_url = "https://xxnet-update.appspot.com/update.json"
 
@@ -39,7 +39,7 @@ gae_proxy_path = ""
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
-data_root = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
+data_root = env_info.data_path
 
 should_create_desktop_shortcut = True
 

@@ -6,6 +6,8 @@ import sys
 import time
 import socket
 import platform
+
+import env_info
 from .common import *
 from . import win32runas
 from .pteredor import local_ip_startswith
@@ -13,7 +15,7 @@ from .pteredor import local_ip_startswith
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "gae_proxy"))
+data_path = os.path.join(env_info.data_path, "gae_proxy")
 if not os.path.isdir(data_path):
     data_path = current_path
 

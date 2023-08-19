@@ -5,7 +5,7 @@ import zipfile
 import shutil
 
 from update_from_github import request, xlog, hash_file_sum
-
+import env_info
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
@@ -87,7 +87,7 @@ def download_unzip(url, extract_path):
     if os.path.isdir(extract_path):
         return True
 
-    data_root = os.path.join(top_path, 'data')
+    data_root = env_info.data_path
     download_path = os.path.join(data_root, 'downloads')
     if not os.path.isdir(download_path):
         os.mkdir(download_path)

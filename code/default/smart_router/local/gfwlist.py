@@ -12,17 +12,19 @@ except ImportError:
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data', "smart_router"))
 
 if __name__ == '__main__':
     python_path = root_path
     noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
     sys.path.append(noarch_lib)
 
+
+import env_info
 import utils
 from xlog import getLogger
 xlog = getLogger("smart_router")
 
+data_path = os.path.join(env_info.data_path, "smart_router")
 
 class GfwList(object):
     def __init__(self):

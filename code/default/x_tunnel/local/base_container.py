@@ -352,13 +352,15 @@ class ConnectionReceiving(object):
         if sock in self.sock_conn_map:
             return
 
-        # self.xlog.debug("add sock conn:%d", conn.conn_id)
-        self.sock_conn_map[sock] = conn
+        # self.xlog.debug("add sock %s conn:%d", sock, conn.conn_id)
         try:
             self.select2.register(sock, selectors.EVENT_READ, conn)
         except Exception as e:
-            pass
+            if "is already registered" not in str(e):
+                self.xlog.exception("add_sock %s conn:%d e:%r", sock, conn.conn_id, e)
+                return
 
+        self.sock_conn_map[sock] = conn
         if not self.th:
             self.th = threading.Thread(target=self.recv_worker, name="x_tunnel_recv_worker")
             self.th.start()
@@ -375,6 +377,19 @@ class ConnectionReceiving(object):
             del self.sock_conn_map[sock]
         except Exception as e:
             self.xlog.warn("ConnectionReceiving remove sock e:%r", e)
+
+    def reset_all_connections(self):
+        for sock, conn in dict(self.sock_conn_map).items():
+            try:
+                self.select2.unregister(sock)
+            except Exception as e:
+                xlog.warn("unregister %s e:%r", sock, e)
+
+            conn.transfer_peer_close("recv closed")
+            sock.close()
+            conn.do_stop(reason="recv closed.")
+        self.sock_conn_map = {}
+        self.select2 = selectors.DefaultSelector()
 
     def recv_worker(self):
         # random_id = utils.to_str(utils.generate_random_lowercase(6))
@@ -403,7 +418,9 @@ class ConnectionReceiving(object):
                         timeout = 0.001
                 except Exception as e:
                     self.xlog.warn("Conn session:%s select except:%r", self.session.session_id, e)
-                    time.sleep(3)
+                    if "Invalid argument" in str(e):
+                        self.reset_all_connections()
+                    time.sleep(1)
                     continue
 
                 now = time.time()

@@ -6,6 +6,7 @@ import collections
 import locale
 import subprocess
 
+import env_info
 from launcher.config import get_language
 from config import app_name, config
 from xlog import getLogger
@@ -14,7 +15,7 @@ xlog = getLogger("launcher")
 current_path = os.path.dirname(os.path.abspath(__file__))
 version_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
 root_path = os.path.abspath(os.path.join(version_path, os.path.pardir, os.path.pardir))
-data_path = os.path.join(root_path, 'data')
+data_path = env_info.data_path
 
 
 class Win10PortReserveSolution(object):

@@ -2,13 +2,7 @@
 # coding:utf-8
 
 import os, sys
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-if __name__ == "__main__":
-    python_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    noarch_lib = os.path.abspath(os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-
+import errno
 import re
 import socket, ssl
 import time
@@ -16,6 +10,8 @@ import threading
 import json
 import cgi
 import traceback
+import zipfile
+import operator
 
 try:
     from urllib.parse import urlparse, urlencode, parse_qs
@@ -33,7 +29,13 @@ except ImportError:
     from urllib2 import ProxyHandler
     from urllib2 import build_opener
 
-root_path = os.path.abspath(os.path.join(current_path, os.pardir))
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+if __name__ == "__main__":
+    noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
+    sys.path.append(noarch_lib)
+
 
 import sys_platform
 from xlog import getLogger
@@ -48,6 +50,7 @@ import simple_http_client
 import simple_http_server
 import utils
 from simple_i18n import SimpleI18N
+import env_info
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -70,12 +73,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             if getattr(config, "enable_" + module) != 1:
                 continue
 
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.json")  # launcher & gae_proxy modules
+            menu_path = os.path.join(default_path, module, "web_ui", "menu.json")  # launcher & gae_proxy modules
             if not os.path.isfile(menu_path):
                 continue
 
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
-            locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+            locale_dir = os.path.abspath(os.path.join(default_path, module, 'lang'))
             stream = i18n_translator.render(locale_dir, menu_path)
             module_menu = json.loads(utils.to_str(stream))
             new_module_menus[module] = module_menu
@@ -208,12 +211,12 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 return
             else:
                 relate_path = '/'.join(url_path_list[3:])
-                file_path = os.path.join(root_path, module, "web_ui", relate_path)
+                file_path = os.path.join(default_path, module, "web_ui", relate_path)
                 if not os.path.isfile(file_path):
                     return self.send_not_found()
 
                 # i18n code lines (Both the locale dir & the template dir are module-dependent)
-                locale_dir = os.path.abspath(os.path.join(root_path, module, 'lang'))
+                locale_dir = os.path.abspath(os.path.join(default_path, module, 'lang'))
                 content = i18n_translator.render(locale_dir, file_path)
                 return self.send_response('text/html', content)
         else:
@@ -267,6 +270,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 sys_platform.on_quit()
             elif url_path == "/debug":
                 self.req_debug_handler()
+            elif url_path == "/log_files":
+                self.req_log_files()
             elif url_path == "/mem_info":
                 self.req_mem_info_handler()
             elif url_path == "/gc":
@@ -335,11 +340,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     menu_content += b'<li %s><a href="%s">%s</a></li>\n' % utils.to_bytes(
                         (list_meta, api_url, sub_title))
 
-        right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + ".html")
+        right_content_file = os.path.join(default_path, target_module, "web_ui", target_menu + ".html")
         if os.path.isfile(right_content_file):
             # i18n code lines (Both the locale dir & the template dir are module-dependent)
-            locale_dir = os.path.abspath(os.path.join(root_path, target_module, 'lang'))
-            right_content = i18n_translator.render(locale_dir, os.path.join(root_path, target_module, "web_ui",
+            locale_dir = os.path.abspath(os.path.join(default_path, target_module, 'lang'))
+            right_content = i18n_translator.render(locale_dir, os.path.join(default_path, target_module, "web_ui",
                                                                             target_menu + ".html"))
         else:
             right_content = b""
@@ -817,13 +822,37 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         self.send_response("text/plain", "gc collected, count:%d,%d,%d" % count)
 
-    def req_debug_handler(self):
-        req = urlparse(self.path).query
-        reqs = parse_qs(req, keep_blank_values=True)
+    @staticmethod
+    def list_fds():
+        """List process currently open FDs and their target """
+        if not sys.platform.startswith('linux'):
+            return ""
 
         dat = ""
+        base = '/proc/self/fd'
+        of = list(os.listdir(base))
+        dat += "Num: %d\r\n" % (len(of))
+        for num in of:
+            path = None
+            try:
+                path = os.readlink(os.path.join(base, num))
+            except OSError as err:
+                # Last FD is always the "listdir" one (which may be closed)
+                if err.errno != errno.ENOENT:
+                    path = str(err)
+            except Exception as e:
+                path = str(e)
+            dat += " [%s]: %s\r\n" % (num, path)
+
+        return dat
+
+    def req_debug_handler(self):
+        dat = ""
+
         try:
-            dat += "thread num:%d<br>" % threading.active_count()
+            dat += "Opened files: \r\n%s \r\n" % self.list_fds()
+
+            dat += "thread num:%d\r\n" % threading.active_count()
             for thread in threading.enumerate():
                 dat += "\nThread: %s \r\n" % (thread.name)
                 # dat += traceback.format_exc(sys._current_frames()[thread.ident])
@@ -836,6 +865,54 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.exception("debug:%r", e)
 
         self.send_response("text/plain", dat)
+
+    def req_log_files(self):
+        # collect debug info and save to folders
+        debug_infos = {
+            "system_info": "http://localhost:8085/debug",
+            "xtunnel_info": "http://127.0.0.1:8085/module/x_tunnel/control/debug",
+            "xtunnel_status": "http://127.0.0.1:8085/module/x_tunnel/control/status",
+            "cloudflare_info": "http://127.0.0.1:8085/module/x_tunnel/control/cloudflare_front/debug",
+            "tls_info": "http://127.0.0.1:8085/module/x_tunnel/control/tls_relay_front/debug",
+            "cloudflare_log": "http://localhost:8085/module/x_tunnel/control/cloudflare_front/log?cmd=get_new&last_no=1",
+            "tls_log": "http://localhost:8085/module/x_tunnel/control/tls_relay_front/log?cmd=get_new&last_no=1",
+            "xtunnel_log": "http://localhost:8085/module/x_tunnel/control/log?cmd=get_new&last_no=1",
+            "smartroute_log": "http://localhost:8085/module/smart_router/control/log?cmd=get_new&last_no=1",
+            "launcher_log": "http://localhost:8085/log?cmd=get_new&last_no=1"
+        }
+
+        download_path = os.path.join(env_info.data_path, "downloads")
+        if not os.path.isdir(download_path):
+            os.mkdir(download_path)
+
+        for name, url in debug_infos.items():
+            # xlog.debug("fetch %s %s", name, url)
+            try:
+                res = simple_http_client.request("GET", url, timeout=1)
+                if name.endswith("log"):
+                    dat = json.loads(res.text)
+                    no_line = list(dat.items())
+                    no_line = [[int(line[0]), line[1]] for line in no_line]
+                    no_line = sorted(no_line, key=operator.itemgetter(0))
+                    lines = [line[1] for line in no_line]
+                    data = "".join(lines)
+                    data = utils.to_bytes(data)
+                else:
+                    data = res.text
+
+                fn = os.path.join(download_path, name + ".txt")
+                with open(fn, "wb") as fd:
+                    fd.write(data)
+            except Exception as e:
+                xlog.exception("fetch info %s fail:%r", url, e)
+
+        # pack data folder and response
+        x_tunnel_local = os.path.abspath(os.path.join(default_path, 'x_tunnel', 'local'))
+        sys.path.append(x_tunnel_local)
+        from upload_logs import pack_logs
+
+        data = pack_logs(10 * 1024 * 1024)
+        self.send_response("application/zip", data)
 
     def req_mem_info_handler(self):
         global mem_stat
@@ -879,7 +956,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                     if not line.startswith("  File"):
                         pl = line
                         continue
-                    if not line[8:].startswith(root_path):
+                    if not line[8:].startswith(default_path):
                         break
                     ll = line[8:] + "\n" + pl
 

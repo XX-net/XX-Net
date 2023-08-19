@@ -24,7 +24,7 @@ import simple_http_client
 import env_info
 import utils
 
-
+import env_info
 from xlog import getLogger
 xlog = getLogger("gae_proxy")
 from .config import config, direct_config
@@ -38,7 +38,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 top_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir))
-data_path = os.path.abspath( os.path.join(top_path, 'data', 'gae_proxy'))
+data_path = os.path.join(env_info.data_path, 'gae_proxy')
 web_ui_path = os.path.join(current_path, os.path.pardir, "web_ui")
 
 

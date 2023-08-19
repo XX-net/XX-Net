@@ -443,9 +443,9 @@ class HttpServerHandler():
 
 
 class HTTPServer():
-    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=3024):
+    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=3024,
+                 check_listen_interval=None):
         self.sockets = []
-        self.running = True
         if isinstance(address, tuple):
             self.server_address = [address]
         else:
@@ -456,11 +456,12 @@ class HTTPServer():
         self.args = args
         self.use_https = use_https
         self.cert = cert
-        self.init_socket()
         self.max_thread = max_thread
+        self.check_listen_interval = check_listen_interval
         # self.logger.info("server %s:%d started.", address[0], address[1])
 
     def start(self):
+        self.init_socket()
         self.http_thread = threading.Thread(target=self.serve_forever, name="serve_%s" % self.server_address)
         self.http_thread.daemon = True
         self.http_thread.start()
@@ -517,17 +518,13 @@ class HTTPServer():
         self.sockets.append(sock)
         self.logger.info("server %s:%d started.", addr[0], addr[1])
 
-    def dopoll(self, poller):
-        while True:
-            try:
-                return poller.poll()
-            except IOError as e:
-                if e.errno != 4:  # EINTR:
-                    raise
-
     def serve_forever(self):
-        if hasattr(select, 'epoll'):
+        self.running = True
+        if not self.sockets:
+            self.init_socket()
 
+        last_connect_time = time.time()
+        if hasattr(select, 'epoll'):
             fn_map = {}
             p = select.epoll()
             for sock in self.sockets:
@@ -541,6 +538,7 @@ class HTTPServer():
                     try:
                         events = p.poll(timeout=1)
                     except IOError as e:
+                        self.logger.exception("poll except:%r", e)
                         if e.errno != 4:  # EINTR:
                             raise
                         else:
@@ -576,13 +574,17 @@ class HTTPServer():
                             self.logger.warn("socket accept fail(errno: %s).", e.args[0])
                             continue
 
+                        last_connect_time = time.time()
                         try:
                             self.process_connect(sock, address)
                         except Exception as e:
                             self.logger.exception("process connect error:%r", e)
+
+                    if self.check_listen_interval and last_connect_time + self.check_listen_interval < time.time():
+                        self.check_listen_port_or_reset()
+                        last_connect_time = time.time()
                 except Exception as e:
                     self.logger.exception("serve except:%r", e)
-
         else:
             while self.running:
                 try:
@@ -605,7 +607,12 @@ class HTTPServer():
                                 self.init_socket()
                             break
 
+                        last_connect_time = time.time()
                         self.process_connect(sock, address)
+
+                    if self.check_listen_interval and last_connect_time + self.check_listen_interval < time.time():
+                        self.check_listen_port_or_reset()
+                        last_connect_time = time.time()
                 except Exception as e:
                     self.logger.exception("serve except:%r", e)
         self.server_close()
@@ -620,6 +627,41 @@ class HTTPServer():
         client_obj = self.handler(sock, address, self.args)
         client_thread = threading.Thread(target=client_obj.handle, name="handle_%s:%d" % address)
         client_thread.start()
+
+    def check_listen_port(self, ip, port):
+        if ':' in ip:
+            info = [(socket.AF_INET6, socket.SOCK_STREAM, 0, "", (ip, port, 0, 0))]
+        else:
+            if "0.0.0.0" in ip:
+                ip = "127.0.0.1"
+
+            info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (ip, port))]
+
+        for res in info:
+            af, socktype, proto, canonname, sa = res
+            ip_port = (sa[0], sa[1])
+            s = None
+            try:
+                s = socket.socket(af, socktype, proto)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.settimeout(1)
+                s.connect(ip_port)
+                return s
+            except socket.error as e:
+                xlog.warn("connect %s except:%r", sa, e)
+                if s:
+                    s.close()
+
+    def check_listen_port_or_reset(self):
+        for ip, port in self.server_address:
+            res = self.check_listen_port(ip, port)
+            if res:
+                return
+
+            self.logger.warn("Listen %s:%d check failed", ip, port)
+            self.shutdown()
+            self.start()
+            return
 
     def shutdown(self):
         self.logger.info("shutdown")

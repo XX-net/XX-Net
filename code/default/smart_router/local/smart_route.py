@@ -454,7 +454,11 @@ def try_loop(scense, rule_list, sock, host, port, client_address, left_buf=""):
                     continue
 
                 xlog.info("%s %s:%d forward to socks", scense, host, port)
-                do_socks(sock, host, port, client_address, left_buf)
+                if isinstance(sock, SocketWrap):
+                    _sock = sock._sock
+                else:
+                    _sock = sock
+                do_socks(_sock, host, port, client_address, left_buf)
                 return
             elif rule == "black":
                 xlog.info("%s to:%s:%d black", scense, host, port)

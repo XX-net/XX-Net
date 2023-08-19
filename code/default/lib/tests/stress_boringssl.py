@@ -4,8 +4,6 @@ import os
 current_path = os.path.dirname(os.path.abspath(__file__))
 local_path = os.path.abspath(os.path.join(current_path, os.pardir))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
 
 sys.path.append(root_path)
@@ -26,8 +24,8 @@ elif sys.platform == "darwin":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
     sys.path.append(extra_lib)
 
+import env_info
 import xlog
-
 logger = xlog.getLogger("stress")
 
 from front_base.openssl_wrap import SSLContext
@@ -38,6 +36,8 @@ from front_base.check_ip import CheckIp
 from x_tunnel.local.tls_relay_front.front import front
 from x_tunnel.local.tls_relay_front.config import Config
 from x_tunnel.local.tls_relay_front.host_manager import HostManager
+
+module_data_path = os.path.join(env_info.data_path, 'x_tunnel')
 
 
 def round():

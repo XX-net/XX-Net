@@ -1,7 +1,16 @@
+import os
 import platform
 import sys
+from pathlib import Path
+import json
 
 import utils
+
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+default_path = os.path.abspath(os.path.join(current_path, os.path.pardir, os.path.pardir))
+data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.pardir, 'data'))
+
 
 def win32_version():
     import ctypes
@@ -11,12 +20,13 @@ def win32_version():
                     ('dwMinorVersion', ctypes.c_ulong),
                     ('dwBuildNumber', ctypes.c_ulong),
                     ('dwPlatformId', ctypes.c_ulong),
-                    ('szCSDVersion', ctypes.c_wchar*128),
+                    ('szCSDVersion', ctypes.c_wchar * 128),
                     ('wServicePackMajor', ctypes.c_ushort),
                     ('wServicePackMinor', ctypes.c_ushort),
                     ('wSuiteMask', ctypes.c_ushort),
                     ('wProductType', ctypes.c_byte),
                     ('wReserved', ctypes.c_byte)]
+
     """
     Get's the OS major and minor versions.  Returns a tuple of
     (OS_MAJOR, OS_MINOR).
@@ -38,12 +48,13 @@ def win32_version_string():
                     ('dwMinorVersion', ctypes.c_ulong),
                     ('dwBuildNumber', ctypes.c_ulong),
                     ('dwPlatformId', ctypes.c_ulong),
-                    ('szCSDVersion', ctypes.c_wchar*128),
+                    ('szCSDVersion', ctypes.c_wchar * 128),
                     ('wServicePackMajor', ctypes.c_ushort),
                     ('wServicePackMinor', ctypes.c_ushort),
                     ('wSuiteMask', ctypes.c_ushort),
                     ('wProductType', ctypes.c_byte),
                     ('wReserved', ctypes.c_byte)]
+
     """
     Get's the OS major and minor versions.  Returns a tuple of
     (OS_MAJOR, OS_MINOR).
@@ -54,7 +65,7 @@ def win32_version_string():
     if retcode != 0:
         raise Exception("Failed to get OS version")
 
-    version_string = "Version:%d-%d; Build:%d; Platform:%d; CSD:%s; ServicePack:%d-%d; Suite:%d; ProductType:%d" %  (
+    version_string = "Version:%d-%d; Build:%d; Platform:%d; CSD:%s; ServicePack:%d-%d; Suite:%d; ProductType:%d" % (
         os_version.dwMajorVersion, os_version.dwMinorVersion,
         os_version.dwBuildNumber,
         os_version.dwPlatformId,
@@ -100,3 +111,36 @@ def os_detail():
         return "Release:%s; Version:%s Machine:%s" % (release, versioninfo, machine)
     else:
         return "None"
+
+
+def get_system_date_path():
+    home = Path.home()
+    if sys.platform == "win32":
+        return os.environ.get("APPDATA")
+    elif sys.platform == "darwin":
+        return os.path.join(home, "Library", "Application Support")
+    else:
+        return os.path.join(home, ".local", "share")
+
+
+def get_app_name():
+    app_info_file = os.path.join(default_path, os.path.pardir, "app_info.json")
+    try:
+        with open(app_info_file, "r") as fd:
+            dat = json.load(fd)
+        return dat["app_name"]
+    except Exception as e:
+        print("get app name fail:%r", e)
+    return "XX-Net"
+
+
+app_name = get_app_name()
+
+# check and update data path
+if not os.path.isdir(data_path):
+    try:
+        os.mkdir(data_path)
+    except Exception as e:
+        data_path = os.path.join(get_system_date_path(), app_name)
+        if not os.path.isdir(data_path):
+            os.mkdir(data_path)

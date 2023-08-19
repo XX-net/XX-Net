@@ -313,9 +313,6 @@ class Stream(object):
             xcost = self.response_headers.get("X-Cost", -1)
             if isinstance(xcost, list):
                 xcost = float(xcost[0])
-            rcost = self.response_headers.get("R-Cost", -1)
-            if isinstance(rcost, list):
-                rcost = float(rcost[0])
 
             time_now = time.time()
             whole_cost = time_now - self.start_time
@@ -340,12 +337,12 @@ class Stream(object):
 
                 if self.config.http2_show_debug:
                     self.logger.debug("%s RTT:%f rtt:%f send_len:%d recv_len:%d "
-                                      "whole_Cost:%f xcost:%f rcost:%f send_cost:%f recv_cost:%f "
+                                      "whole_Cost:%f xcost:%f send_cost:%f recv_cost:%f "
                                       "streams_cost:%f Speed: %f",
                                       self.connection.ssl_sock.ip_str,
                                       self.connection.rtt * 1000, rtt * 1000,
                                       len(self.request_body), bytes_received,
-                                      whole_cost, xcost, rcost, send_cost, receive_cost, streams_cost, speed)
+                                      whole_cost, xcost, send_cost, receive_cost, streams_cost, speed)
                 self.connection.update_rtt(rtt, self.task.predict_rtt)
                 self.logger.debug("%s handshake:%f stream:%d up:%d down:%d rtt:%f", self.connection.ip_str,
                                   self.connection.handshake,

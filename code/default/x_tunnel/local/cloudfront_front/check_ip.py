@@ -7,8 +7,6 @@ import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(root_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'x_tunnel')
 python_path = root_path
 
 sys.path.append(root_path)
@@ -29,6 +27,7 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
 
+import env_info
 import utils
 import xlog
 logger = xlog.getLogger("cloudfront_front")
@@ -38,8 +37,10 @@ from front_base.openssl_wrap import SSLContext
 from .connect_creator import ConnectCreator
 from front_base.check_ip import CheckIp
 from front_base.host_manager import HostManagerBase
-
 from .config import Config
+
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
 
 
 class CheckAllIp(object):

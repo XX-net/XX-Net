@@ -7,8 +7,6 @@ import threading
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
-data_path = os.path.abspath(os.path.join(default_path, os.pardir, os.pardir, 'data'))
-module_data_path = os.path.join(data_path, 'gae_proxy')
 
 if __name__ == "__main__":
     sys.path.append(default_path)
@@ -28,6 +26,10 @@ if __name__ == "__main__":
         extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python"
         sys.path.append(extra_lib)
 
+
+import env_info
+
+module_data_path = os.path.join(env_info.data_path, 'gae_proxy')
 import xlog
 logger = xlog.getLogger("gae_proxy")
 

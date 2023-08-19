@@ -20,7 +20,9 @@ import threading
 import operator
 import socket
 import random
+from queue import Queue
 
+from .openssl_wrap import SSLConnection
 
 class NoRescourceException(Exception):
     pass
@@ -294,9 +296,28 @@ class ConnectManager(object):
         except Exception as e:
             self.logger.exception("connect_process except:%r", e)
 
+    def _connect_ssl(self, ip_str, sni, host, close_cb, queue):
+        try:
+            ssl_sock = self.connect_creator.connect_ssl(ip_str, sni, host, close_cb=close_cb)
+            queue.put(ssl_sock)
+        except Exception as e:
+            queue.put(e)
+
     def _create_ssl_connection(self, ip_str, sni, host):
         try:
-            ssl_sock = self.connect_creator.connect_ssl(ip_str, sni, host, close_cb=self.ip_manager.ssl_closed)
+            # ssl_sock = self.connect_creator.connect_ssl(ip_str, sni, host, close_cb=self.ip_manager.ssl_closed)
+
+            q = Queue()
+            fn_args = (ip_str, sni, host, self.ip_manager.ssl_closed, q)
+            t = threading.Thread(target=self._connect_ssl, args=fn_args, name="connect_ssl_%s" % ip_str)
+            t.start()
+            try:
+                ssl_sock = q.get(timeout=3)
+            except:
+                raise socket.error("timeout")
+
+            if not isinstance(ssl_sock, SSLConnection):
+                raise ssl_sock
 
             self.ip_manager.update_ip(ip_str, sni, ssl_sock.handshake_time)
             self.logger.debug("create_ssl update ip:%s time:%d h2:%d sni:%s, host:%s",
@@ -304,7 +325,7 @@ class ConnectManager(object):
 
             return ssl_sock
         except socket.error as e:
-            if str(e) == "no host":
+            if str(e) in ["no host", "timeout"]:
                 time.sleep(3)
             elif not self.check_local_network.is_ok(ip_str):
                 self.logger.debug("connect %s network fail, %r", ip_str, e)
