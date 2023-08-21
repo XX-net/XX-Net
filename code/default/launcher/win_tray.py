@@ -163,7 +163,9 @@ class Win_tray():
 
     def show_control_web(self, widget=None, data=None):
         host_port = config.control_port
-        webbrowser.open("http://127.0.0.1:%s/" % host_port)
+        url = "http://127.0.0.1:%s/" % host_port
+        xlog.debug("Popup %s by tray", url)
+        webbrowser.open(url)
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget=None, data=None):

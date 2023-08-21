@@ -165,7 +165,9 @@ def main():
     if has_desktop and config.popup_webui == 1 and not restart_from_except and not no_popup:
         host_port = config.control_port
         import webbrowser
-        webbrowser.open("http://localhost:%s/" % host_port)
+        url = "http://localhost:%s/" % host_port
+        xlog.debug("Popup %s on startup", url)
+        webbrowser.open(url)
 
     if has_desktop:
         download_modules.start_download()
