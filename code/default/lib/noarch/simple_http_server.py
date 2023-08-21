@@ -660,6 +660,7 @@ class HTTPServer():
 
             self.logger.warn("Listen %s:%d check failed", ip, port)
             self.shutdown()
+            time.sleep(3)
             self.start()
             return
 

@@ -331,7 +331,7 @@ class BlockReceivePool():
         return out_string
 
 
-class ConnectionReceiving(object):
+class ConnectionPipe(object):
     def __init__(self, session, xlog):
         self.session = session
         self.xlog = xlog
@@ -339,6 +339,7 @@ class ConnectionReceiving(object):
         self.th = None
         self.select2 = selectors.DefaultSelector()
         self.sock_conn_map = {}
+        self._lock = threading.RLock()
 
     def start(self):
         self.running = True
@@ -346,56 +347,89 @@ class ConnectionReceiving(object):
 
     def stop(self):
         self.running = False
-        self.xlog.debug("ConnectionReceiving stop")
+        self.xlog.debug("ConnectionPipe stop")
 
-    def add_sock(self, sock, conn):
-        if sock in self.sock_conn_map:
+    def _debug_log(self, fmt, *args, **kwargs):
+        if not self.session.config.show_debug:
+            return
+        self.xlog.debug(fmt, *args, **kwargs)
+
+    def add_sock_event(self, sock, conn, event):
+        # this function can repeat without through an error.
+
+        if not sock:
             return
 
-        # self.xlog.debug("add sock %s conn:%d", sock, conn.conn_id)
-        try:
-            self.select2.register(sock, selectors.EVENT_READ, conn)
-        except Exception as e:
-            if "is already registered" not in str(e):
-                self.xlog.exception("add_sock %s conn:%d e:%r", sock, conn.conn_id, e)
+        with self._lock:
+            self._debug_log("add_sock_event conn:%d event:%s", conn.conn_id, event)
+            self.sock_conn_map[sock] = conn
+            try:
+                self.select2.register_event(sock, event, conn)
+            except Exception as e:
+                self.xlog.warn("add_sock_event %s conn:%d e:%r", sock, conn.conn_id, e)
+                self.close_sock(sock, str(e) + "_when_add_sock_event")
                 return
 
-        self.sock_conn_map[sock] = conn
-        if not self.th:
-            self.th = threading.Thread(target=self.recv_worker, name="x_tunnel_recv_worker")
-            self.th.start()
-            self.xlog.debug("ConnectionReceiving start")
+            if not self.th:
+                self.th = threading.Thread(target=self.pipe_worker, name="x_tunnel_pipe_worker")
+                self.th.start()
+                self.xlog.debug("ConnectionPipe start")
+
+    def remove_sock_event(self, sock, event):
+        # this function can repeat without through an error.
+
+        with self._lock:
+            if sock not in self.sock_conn_map:
+                return
+
+            try:
+                conn = self.sock_conn_map[sock]
+                self._debug_log("remove_sock_event conn:%d event:%s", conn.conn_id, event)
+                res = self.select2.unregister_event(sock, event)
+                if not res:
+                    # self.xlog.debug("remove_sock_event %s conn:%d event:%s removed all", sock, conn.conn_id, event)
+                    del self.sock_conn_map[sock]
+            except Exception as e:
+                self.xlog.exception("remove_sock_event %s event:%s e:%r", sock, event, e)
 
     def remove_sock(self, sock):
+        with self._lock:
+            if sock not in self.sock_conn_map:
+                return
+
+            try:
+                conn = self.sock_conn_map[sock]
+                self._debug_log("remove_sock all events conn:%d", conn.conn_id)
+                del self.sock_conn_map[sock]
+                self.select2.unregister(sock)
+            except Exception as e:
+                # error will happen when sock closed
+                self.xlog.warn("ConnectionPipe remove sock e:%r", e)
+
+    def close_sock(self, sock, reason):
         if sock not in self.sock_conn_map:
             return
 
         try:
-            self.select2.unregister(sock)
-            # conn = self.sock_conn_map[sock]
-            # self.xlog.debug("remove sock conn:%d", conn.conn_id)
-            del self.sock_conn_map[sock]
+            conn = self.sock_conn_map[sock]
+            self.xlog.info("close conn:%d", conn.conn_id)
+            self.remove_sock(sock)
+
+            conn.transfer_peer_close(reason)
+            conn.do_stop(reason=reason)
         except Exception as e:
-            self.xlog.warn("ConnectionReceiving remove sock e:%r", e)
+            self.xlog.exception("close_sock %s e:%r", sock, e)
 
     def reset_all_connections(self):
         for sock, conn in dict(self.sock_conn_map).items():
-            try:
-                self.select2.unregister(sock)
-            except Exception as e:
-                xlog.warn("unregister %s e:%r", sock, e)
+            self.close_sock(sock, "reset_all")
 
-            conn.transfer_peer_close("recv closed")
-            sock.close()
-            conn.do_stop(reason="recv closed.")
         self.sock_conn_map = {}
         self.select2 = selectors.DefaultSelector()
 
-    def recv_worker(self):
-        # random_id = utils.to_str(utils.generate_random_lowercase(6))
+    def pipe_worker(self):
         timeout = 0.001
         while self.running:
-
             if not self.sock_conn_map:
                 break
 
@@ -411,7 +445,6 @@ class ConnectionReceiving(object):
                             timeout = 3.0
 
                         # self.xlog.debug("%s recv select timeout switch to %f", random_id, timeout)
-
                         continue
                     else:
                         # self.xlog.debug("%s recv select timeout switch to 0.001", random_id)
@@ -430,27 +463,28 @@ class ConnectionReceiving(object):
                     if event & selectors.EVENT_READ:
                         try:
                             data = sock.recv(65535)
-                        except:
+                        except Exception as e:
+                            self._debug_log("conn:%d recv e:%r", conn.conn_id, e)
                             data = ""
+
+                        data_len = len(data)
+                        if data_len == 0:
+                            self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id,
+                                            conn.conn_id)
+                            self.close_sock(sock, "receive")
+                            continue
+                        else:
+                            conn.last_active = now
+                            self._debug_log("Conn session:%s conn:%d local recv len:%d pos:%d",
+                                            self.session.session_id, conn.conn_id, data_len, conn.received_position)
+
+                            conn.transfer_received_data(data)
+                    elif event & selectors.EVENT_WRITE:
+                        conn.blocked = False
+                        conn.process_cmd()
                     else:
                         self.xlog.debug("no event for conn:%d", conn.conn_id)
-                        data = ""
-
-                    data_len = len(data)
-                    if data_len == 0:
-                        self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id, conn.conn_id)
-                        self.remove_sock(sock)
-                        conn.transfer_peer_close("recv closed")
-                        sock.close()
-                        conn.do_stop(reason="recv closed.")
-                        continue
-
-                    conn.last_active = now
-                    # if self.session.config.show_debug:
-                    #     self.xlog.debug("Conn session:%s conn:%d local recv len:%d pos:%d",
-                    #                     self.session.session_id, conn.conn_id, data_len, conn.received_position)
-
-                    conn.transfer_received_data(data)
+                        self.close_sock(sock, "no_event")
 
             except Exception as e:
                 xlog.exception("recv_worker e:%r", e)
@@ -461,7 +495,7 @@ class ConnectionReceiving(object):
             except Exception as e:
                 xlog.warn("unregister %s e:%r", sock, e)
         self.sock_conn_map = {}
-        self.xlog.debug("ConnectionReceiving stop")
+        self.xlog.debug("ConnectionPipe stop")
         self.th = None
         self.session.check_upload()
 
@@ -472,28 +506,28 @@ class Conn(object):
         self.host = host
         self.port = port
         self.session = session
-        self.connection_receiver = session.connection_receiver
         self.conn_id = conn_id
         self.sock = sock
         self.windows_size = windows_size
         self.windows_ack = windows_ack
         self.is_client = is_client
 
+        self.connection_pipe = session.connection_pipe
+        self.xlog = xlog
+
         self.cmd_queue = {}
-        self.cmd_notice = threading.Condition()
-        self.recv_notice = threading.Condition()
         self.running = True
+        self.blocked = False
+        self.send_buffer = b""
         self.received_position = 0
         self.remote_acked_position = 0
         self.sended_position = 0
-        self.sended_window_position = 0
-        self.recv_thread = None
-        self.cmd_thread = None
-        self.xlog = xlog
+        self.sent_window_position = 0
         self.create_time = time.time()
         self.last_active = time.time()
+        self._lock = threading.Lock()
 
-        self.transfered_close_to_peer = False
+        self.transferred_close_to_peer = False
         if sock:
             self.next_cmd_seq = 1
         else:
@@ -503,26 +537,19 @@ class Conn(object):
 
     def start(self, block):
         if self.sock:
-            self.connection_receiver.add_sock(self.sock, self)
-
-        if block:
-            self.cmd_thread = None
-            self.cmd_processor()
-        else:
-            self.cmd_thread = threading.Thread(target=self.cmd_processor,
-                                               name="cmd_processor_%s:%d" % (self.host, self.port))
-            self.cmd_thread.start()
+            self.connection_pipe.add_sock_event(self.sock, self, selectors.EVENT_READ)
 
     def status(self):
         out_string = "Conn[%d]: %s:%d<br>\r\n" % (self.conn_id, self.host, self.port)
         out_string += " received_position:%d/ Ack:%d <br>\n" % (self.received_position, self.remote_acked_position)
-        out_string += " sended_position:%d/ win:%d<br>\n" % (self.sended_position, self.sended_window_position)
+        out_string += " sended_position:%d/ win:%d<br>\n" % (self.sended_position, self.sent_window_position)
         out_string += " next_cmd_seq:%d<br>\n" % self.next_cmd_seq
         out_string += " next_recv_seq:%d<br>\n" % self.next_recv_seq
         out_string += " status: running:%r<br>\n" % self.running
-        out_string += " cmd_thread:%r<br>\n" % self.cmd_thread
-        out_string += " recv_thread:%r<br>\n" % self.recv_thread
-        out_string += " transfered_close_to_peer:%r<br>\n" % self.transfered_close_to_peer
+        out_string += " blocked: %s<br>\n" % self.blocked
+        if self.send_buffer:
+            out_string += " send_buffer: %d<br>\n" % len(self.send_buffer)
+        out_string += " transferred_close_to_peer:%r<br>\n" % self.transferred_close_to_peer
         out_string += " sock:%r<br>\n" % (self.sock is not None)
         out_string += " cmd_queue.len:%d<br> " % len(self.cmd_queue)
         out_string += " create time: %s<br>" % datetime.fromtimestamp(self.create_time).strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -541,20 +568,16 @@ class Conn(object):
         self.xlog.debug("Conn session:%s conn:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id, reason)
         self.running = False
 
-        self.cmd_notice.acquire()
-        self.cmd_notice.notify()
-        self.cmd_notice.release()
-
-        self.connection_receiver.remove_sock(self.sock)
-
-        if self.cmd_thread:
-            self.cmd_thread.join()
-            self.cmd_thread = None
+        self.connection_pipe.remove_sock(self.sock)
 
         self.cmd_queue = {}
 
         if self.sock is not None:
-            self.sock.close()
+            if self.sock.fileno() != -1:
+                try:
+                    self.sock.close()
+                except:
+                    pass
             self.sock = None
 
         # self.xlog.debug("Conn session:%s conn:%d stopped", self.session.session_id, self.conn_id)
@@ -602,53 +625,64 @@ class Conn(object):
             return e, False
 
     def put_cmd_data(self, data):
-        with self.cmd_notice:
-            seq = struct.unpack("<I", data.get(4))[0]
-            if seq < self.next_cmd_seq:
-                self.xlog.warn("put_send_data %s conn:%d seq:%d next:%d",
-                               self.session.session_id, self.conn_id,
-                               seq, self.next_cmd_seq)
-                return
+        if not self.running:
+            return
 
-            self._debug_log("conn:%d put data seq:%d len:%d", self.conn_id, seq, len(data))
+        seq = struct.unpack("<I", data.get(4))[0]
+        if seq < self.next_cmd_seq:
+            self.xlog.warn("put_send_data %s conn:%d seq:%d next:%d",
+                           self.session.session_id, self.conn_id,
+                           seq, self.next_cmd_seq)
+            return
+
+        self._debug_log("conn:%d put data seq:%d len:%d", self.conn_id, seq, len(data))
+
+        with self._lock:
             self.cmd_queue[seq] = data.get_buf()
-
             if seq == self.next_cmd_seq:
-                self.cmd_notice.notify()
+                if self.sock:
+                    self.connection_pipe.add_sock_event(self.sock, self, selectors.EVENT_WRITE)
+                else:
+                    self.process_cmd()
 
     def get_cmd_data(self):
-        self.cmd_notice.acquire()
-        try:
-            while self.running:
-                if self.next_cmd_seq in self.cmd_queue:
-                    payload = self.cmd_queue[self.next_cmd_seq]
-                    del self.cmd_queue[self.next_cmd_seq]
-                    # self.xlog.debug("Conn session:%s conn:%d get data sn:%d len:%d ",
-                    #                self.session.session_id, self.conn_id, self.next_cmd_seq, len(payload))
-                    self.next_cmd_seq += 1
-                    return payload
-                else:
-                    self.cmd_notice.wait()
-        finally:
-            self.cmd_notice.release()
-        return False
+        if self.next_cmd_seq not in self.cmd_queue:
+            self._debug_log("get_cmd_data conn:%d no data, next_cmd_seq:%d", self.conn_id, self.next_cmd_seq)
+            return None
+
+        payload = self.cmd_queue[self.next_cmd_seq]
+        del self.cmd_queue[self.next_cmd_seq]
+        # self.xlog.debug("Conn session:%s conn:%d get data sn:%d len:%d ",
+        #                self.session.session_id, self.conn_id, self.next_cmd_seq, len(payload))
+        self.next_cmd_seq += 1
+        return payload
 
     def _debug_log(self, fmt, *args, **kwargs):
         if not self.session.config.show_debug:
             return
         self.xlog.debug(fmt, *args, **kwargs)
 
-    def cmd_processor(self):
+    def process_cmd(self):
         while self.running:
-            data = self.get_cmd_data()
-            if not data:
-                break
+            if self.blocked:
+                return
+
+            if self.send_buffer:
+                if not self.send_to_sock(self.send_buffer):
+                    return
+
+            with self._lock:
+                data = self.get_cmd_data()
+                if not data:
+                    self._debug_log("conn:%d no data", self.conn_id)
+                    self.connection_pipe.remove_sock_event(self.sock, selectors.EVENT_WRITE)
+                    break
 
             self.last_active = time.time()
             cmd_id = struct.unpack("<B", data.get(1))[0]
             if cmd_id == 1:  # data
                 self._debug_log("conn:%d download len:%d pos:%d", self.conn_id, len(data), self.sended_position)
-                self.send_to_sock(data)
+                self.send_to_sock(data.get())
 
             elif cmd_id == 3:  # ack:
                 position = struct.unpack("<Q", data.get(8))[0]
@@ -656,7 +690,7 @@ class Conn(object):
                 if position > self.remote_acked_position:
                     self.remote_acked_position = position
 
-                    self.connection_receiver.add_sock(self.sock, self)
+                    self.connection_pipe.add_sock_event(self.sock, self, selectors.EVENT_READ)
 
             elif cmd_id == 2:  # Closed
                 dat = data.get()
@@ -689,76 +723,84 @@ class Conn(object):
                     self.xlog.info("Conn session:%s conn:%d %s:%d", self.session.session_id, self.conn_id, self.host,
                               self.port)
                     self.sock = sock
-                    self.connection_receiver.add_sock(self.sock, self)
+                    self.connection_pipe.add_sock_event(self.sock, self, selectors.EVENT_READ)
             else:
                 self.xlog.error("Conn session:%s conn:%d unknown cmd_id:%d",
                                 self.session.session_id, self.conn_id, cmd_id)
                 raise Exception("put_send_data unknown cmd_id:%d" % cmd_id)
 
     def send_to_sock(self, data):
-        # self.xlog.debug("Conn send_to_sock conn:%d len:%d", self.conn_id, len(data))
+        # return True when not blocked, can send more data
+
+        self._debug_log("Conn send_to_sock conn:%d len:%d", self.conn_id, len(data))
         sock = self.sock
         if not sock:
-            return
+            return False
 
         payload_len = len(data)
-        buf = data.buf
-        start = data.begin
-        end = data.begin + payload_len
+        start = 0
+        end = payload_len
         while start < end:
             send_size = min(end - start, 65535)
             try:
-                sended = sock.send(buf[start:start + send_size])
+                sended = sock.send(data[start:start + send_size])
             except Exception as e:
                 self.xlog.info("%s conn:%d send closed: %r", self.session.session_id, self.conn_id, e)
-                sock.close()
-                self.sock = None
                 if self.is_client:
                     self.do_stop(reason="send fail.")
-                return
+                return False
 
             start += sended
 
-        self.sended_position += payload_len
-        if self.sended_position - self.sended_window_position > self.windows_ack:
-            self.sended_window_position = self.sended_position
+            if sended == 0:
+                self.connection_pipe.add_sock_event(sock, self, selectors.EVENT_WRITE)
+                self.send_buffer = data[start:]
+                self.blocked = True
+                break
+
+        if start == end:
+            self.send_buffer = None
+
+        self.sended_position += start
+        if self.sended_position - self.sent_window_position > self.windows_ack:
+            self.sent_window_position = self.sended_position
             self.transfer_ack(self.sended_position)
-            # self.xlog.debug("Conn:%d ack:%d", self.conn_id, self.sended_window_position)
+            self._debug_log("Conn:%d ack:%d", self.conn_id, self.sent_window_position)
+
+        return not self.blocked
 
     def transfer_peer_close(self, reason=""):
-        with self.recv_notice:
-            if self.transfered_close_to_peer:
-                return
-            self.transfered_close_to_peer = True
+        if self.transferred_close_to_peer:
+            return
 
-            cmd = struct.pack("<IB", self.next_recv_seq, 2)
-            if isinstance(reason, str):
-                reason = reason.encode("utf-8")
-            self.session.send_conn_data(self.conn_id, cmd + reason)
-            self.next_recv_seq += 1
+        self.transferred_close_to_peer = True
+
+        cmd = struct.pack("<IB", self.next_recv_seq, 2)
+        if isinstance(reason, str):
+            reason = reason.encode("utf-8")
+        self.session.send_conn_data(self.conn_id, cmd + reason)
+        self.next_recv_seq += 1
 
     def transfer_received_data(self, data):
-        with self.recv_notice:
-            if self.transfered_close_to_peer:
-                return
+        if self.transferred_close_to_peer:
+            return
 
-            buf = WriteBuffer(struct.pack("<IB", self.next_recv_seq, 1))
-            buf.append(data)
-            self.next_recv_seq += 1
-            self.received_position += len(data)
+        buf = WriteBuffer(struct.pack("<IB", self.next_recv_seq, 1))
+        buf.append(data)
+        self.next_recv_seq += 1
+        self.received_position += len(data)
 
-            self.session.send_conn_data(self.conn_id, buf)
+        self.session.send_conn_data(self.conn_id, buf)
 
-            if self.received_position > self.remote_acked_position + self.windows_size:
-                self.xlog.debug("Conn session:%s conn:%d recv blocked, rcv:%d, ack:%d", self.session.session_id,
-                                self.conn_id, self.received_position, self.remote_acked_position)
-                self.connection_receiver.remove_sock(self.sock)
+        if self.received_position > self.remote_acked_position + self.windows_size:
+            self.xlog.debug("Conn session:%s conn:%d recv blocked, rcv:%d, ack:%d", self.session.session_id,
+                            self.conn_id, self.received_position, self.remote_acked_position)
+            self.connection_pipe.remove_sock_event(self.sock, selectors.EVENT_READ)
 
     def transfer_ack(self, position):
-        with self.recv_notice:
-            if self.transfered_close_to_peer:
-                return
+        if self.transferred_close_to_peer:
+            return
 
-            cmd_position = struct.pack("<IBQ", self.next_recv_seq, 3, position)
-            self.session.send_conn_data(self.conn_id, cmd_position)
-            self.next_recv_seq += 1
+        cmd_position = struct.pack("<IBQ", self.next_recv_seq, 3, position)
+        self.session.send_conn_data(self.conn_id, cmd_position)
+        self.next_recv_seq += 1

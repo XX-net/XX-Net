@@ -198,6 +198,43 @@ class BaseSelector(object):
 
         return key
 
+    def register_event(self, fileobj, event, data):
+        try:
+            key = self._fd_to_key[self._fileobj_lookup(fileobj)]
+        except KeyError:
+            # not registered any event before, register
+            return self.register(fileobj, event, data)
+
+        if key.events & event:
+            # event already registered
+            return
+        else:
+            events = (key.events | event)
+            self.unregister(fileobj)
+            self.register(fileobj, events, data)
+
+    def unregister_event(self, fileobj, event):
+        # Return None if fileobj is removed or not exists
+
+        try:
+            key = self._fd_to_key[self._fileobj_lookup(fileobj)]
+        except KeyError:
+            # not exists
+            return
+
+        if not key.events & event:
+            # this event is not registered
+            return key
+
+        if key.events == event:
+            self.unregister(fileobj)
+            return
+        else:
+            events = (key.events & ~(event))
+            data = key.data
+            self.unregister(fileobj)
+            return self.register(fileobj, events, data)
+
     def select(self, timeout=None):
         """ Perform the actual selection until some monitored file objects
         are ready or the timeout expires. """

@@ -388,6 +388,7 @@ def update_check_loop():
 
 
 def start():
+    get_uuid()
     p = threading.Thread(target=update_check_loop, name="check_update")
     p.daemon = True
     p.start()

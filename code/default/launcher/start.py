@@ -156,6 +156,9 @@ def main():
     else:
         restart_from_except = False
 
+    update.start()
+    # put update before start all modules, generate uuid for x-tunnel.
+
     module_init.start_all_auto()
     web_control.start(allow_remote)
 
@@ -164,7 +167,6 @@ def main():
         import webbrowser
         webbrowser.open("http://localhost:%s/" % host_port)
 
-    update.start()
     if has_desktop:
         download_modules.start_download()
     update_from_github.cleanup()

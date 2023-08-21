@@ -20,6 +20,9 @@ def init():
 
 
 class FakeWorker(object):
+    def __init__(self):
+        self.ip_str = "127.0.0.1"
+
     def update_debug_data(self, rtt, send_data_len, dlen, speed):
         pass
 

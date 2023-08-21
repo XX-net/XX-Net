@@ -51,7 +51,7 @@ class ProxySession(object):
         self.wait_queue = base_container.WaitQueue()
         self.send_buffer = base_container.SendBuffer(max_payload=g.config.max_payload)
         self.receive_process = base_container.BlockReceivePool(self.download_data_processor)
-        self.connection_receiver = base_container.ConnectionReceiving(self, xlog)
+        self.connection_pipe = base_container.ConnectionPipe(self, xlog)
         self.lock = threading.Lock()  # lock for conn_id, sn generation, on_road_num change,
 
         self.send_delay = g.config.send_delay / 1000.0
@@ -126,7 +126,7 @@ class ProxySession(object):
                 self.round_trip_thread[i].daemon = True
                 self.round_trip_thread[i].start()
 
-            self.connection_receiver.start()
+            self.connection_pipe.start()
             xlog.info("session started.")
             return True
 
@@ -147,7 +147,7 @@ class ProxySession(object):
             self.send_buffer.reset()
             self.receive_process.reset()
             self.wait_queue.stop()
-            self.connection_receiver.stop()
+            self.connection_pipe.stop()
 
             xlog.debug("session stopped.")
 
@@ -314,8 +314,17 @@ class ProxySession(object):
 
         return out_string
 
+    @staticmethod
+    def get_login_extra_info():
+        data = {
+            "version": g.xxnet_version,
+            "system": g.system,
+            "device": g.client_uuid
+        }
+        return json.dumps(data)
+
     def login_session(self):
-        if len(g.server_host) == 0:
+        if not g.server_host or len(g.server_host) == 0:
             return False
 
         start_time = time.time()
@@ -329,6 +338,8 @@ class ProxySession(object):
                                                int(g.config.windows_ack), g.config.resend_timeout, g.config.ack_delay)
                 upload_data_head += struct.pack("<H", len(g.config.login_account)) + utils.to_bytes(g.config.login_account)
                 upload_data_head += struct.pack("<H", len(g.config.login_password)) + utils.to_bytes(g.config.login_password)
+                extra_info = self.get_login_extra_info()
+                upload_data_head += struct.pack("<H", len(extra_info)) + utils.to_bytes(extra_info)
 
                 upload_post_data = encrypt_data(upload_data_head)
 
