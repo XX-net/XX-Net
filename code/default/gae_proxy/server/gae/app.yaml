@@ -2,35 +2,6 @@ instance_class: F1
 automatic_scaling:
   max_instances: 1
 
-runtime: python27
-api_version: 1
-threadsafe: true
+runtime: python311
 
-handlers:
-- url: /_gh/.*
-  script: gae.application
-  secure: optional
-
-- url: /2
-  script: wsgi.gae_application
-  secure: optional
-
-- url: /tasks/reset
-  script: gae.reset
-  secure: optional
-
-- url: /traffic
-  script: gae.traffic
-  secure: optional
-
-- url: /favicon.ico
-  script: gae.application
-  secure: optional
-
-- url: /.*
-  script: legacy.application
-  secure: optional
-
-libraries:
-- name: pycrypto
-  version: "latest"
+# entrypoint: gunicorn -b :$PORT main:app
