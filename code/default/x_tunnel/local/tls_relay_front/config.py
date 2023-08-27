@@ -12,7 +12,7 @@ class Config(ConfigBase):
         self.set_var("allow_set_ips", 1)
 
         # https_dispatcher
-        self.set_var("dispather_min_idle_workers", 1)
+        self.set_var("dispather_min_idle_workers", 0)
         self.set_var("dispather_work_max_score", 20000)
         self.set_var("dispather_min_workers", 1)
         self.set_var("dispather_max_workers", 60)

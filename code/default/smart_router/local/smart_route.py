@@ -580,13 +580,13 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         if not g.domain_cache.accept_gae(host):
             rule_list.remove("gae")
     elif g.config.country_code == "CN":
-        if g.gfwlist.in_white_list(host):
-            rule_list = ["direct", "gae", "socks", "redirect_https"]
-        elif g.gfwlist.in_block_list(host):
+        if g.gfwlist.in_block_list(host):
             if g.config.pac_policy == "black_X-Tunnel":
                 rule_list = ["socks", "redirect_https", "direct", "gae"]
             else:
                 rule_list = ["gae", "socks", "redirect_https", "direct"]
+        elif g.gfwlist.in_white_list(host):
+            rule_list = ["direct", "gae", "socks", "redirect_https"]
         else:
             ips = g.dns_query.query_recursively(host, 1)
             if g.ip_region.check_ips(ips):

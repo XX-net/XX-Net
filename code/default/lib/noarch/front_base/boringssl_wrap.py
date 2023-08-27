@@ -19,6 +19,7 @@ class SSLConnection(object):
         self._context = context
         self._sock = sock
         self._fileno = self._sock.fileno()
+        # self._context.logger.debug("sock %s init fd:%d", ip_str, self._fileno)
         self.ip_str = utils.to_bytes(ip_str)
         self.sni = sni
         self._makefile_refs = 0
@@ -240,18 +241,49 @@ class SSLConnection(object):
             self.running = False
             if not self.socket_closed:
                 if self._connection:
-                    bssl.BSSL_SSL_shutdown(self._connection)
+                    res = bssl.BSSL_SSL_shutdown(self._connection)
+                    # res == 0: close_notify sent but not recv, means you need to call SSL_shutdown again if you want a full bidirectional shutdown.
+                    # res == 1: success, mean you previously received a close_notify alert from the other peer, and you're totally done
+                    # res == -1: failed
+                    # self._context.logger.debug("sock %s SSL_shutdown fd:%d res:%d", self.ip_str, self._fileno, res)
+
+                    if res < 0:
+                        error = bssl.BSSL_SSL_get_error(self._connection, res)
+                        # self._context.logger.debug("sock %s shutdown fd:%d error:%d", self.ip_str, self._fileno, error)
+                        if error == 1:
+                            p = ffi.new("char[]",
+                                        b"hello, worldhello, worldhello, worldhello, worldhello, world")  # p is a 'char *'
+                            q = ffi.new("char **", p)  # q is a 'char **'
+                            line_no = 0
+                            line_no_p = ffi.new("int *", line_no)
+                            error = bssl.BSSL_ERR_get_error_line(q, line_no_p)
+                            filename = ffi.string(q[0])
+                            # self._context.logger.error("error:%d file:%s, line:%s", error, filename, line_no_p[0])
+                            self._context.logger.debug("sock %s shutdown error: %s, file:%s, line:%d, sni:%s" %
+                                               (self.ip_str, error, filename, line_no_p[0], self.sni))
+                        else:
+                            self._context.logger.debug("sock %s shutdown error:%s" % (self.ip_str, error))
+
+                    bssl.BSSL_SSL_free(self._connection)
+                    self._connection = None
+
+                if self._sock:
+                    try:
+                        self._sock.close()
+                        # self._context.logger.debug("sock %s sock_close fd:%d", self.ip_str, self._fileno)
+                    except Exception as e:
+                        # self._context.logger.debug("sock %s sock_close fd:%d e:%r", self.ip_str, self._fileno, e)
+                        pass
+                    self._sock = None
 
                 self.socket_closed = True
+
                 if self._on_close:
                     self._on_close(self.ip_str, self.sni)
+                    self._on_close = None
 
     def __del__(self):
         self.close()
-        if self._connection:
-            bssl.BSSL_SSL_free(self._connection)
-            self._connection = None
-        self._sock = None
 
     def settimeout(self, t):
         if not self.running:

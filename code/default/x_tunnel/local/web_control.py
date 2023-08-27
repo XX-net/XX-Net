@@ -66,7 +66,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             return self.req_log_handler()
         elif path == "/debug":
             data = g.session.status()
-            return self.send_response('text/html', data)
+            return self.send_response('text/plain', data)
         elif path == "/info":
             return self.req_info_handler()
         elif path == "/config":
@@ -240,7 +240,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "openai_balance": float(g.openai_balance),
                 "quota": "%d" % (g.quota),
                 "quota_list": g.quota_list,
-                "traffic": g.session.traffic,
+                "traffic": g.session.traffic_upload + g.session.traffic_download,
                 "last_fail": g.last_api_error
             }
         self.response_json(res_arr)

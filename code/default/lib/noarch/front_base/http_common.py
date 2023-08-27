@@ -1,3 +1,4 @@
+import threading
 import time
 import random
 
@@ -204,6 +205,8 @@ class HttpWorker(object):
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
         self.log_debug_data = log_debug_data
+
+        self._lock = threading.Lock()
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
@@ -215,6 +218,7 @@ class HttpWorker(object):
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
                              random.randint(self.config.connection_max_life, int(self.config.connection_max_life * 1.5))
+        # self.logger.debug("worker.init %s", self.ip_str)
 
     def __str__(self):
         o = ""
@@ -260,24 +264,30 @@ class HttpWorker(object):
         # else:
         #     self.rtt = rtt
 
-        # self.log_debug_data(rtt, sent, received)
+        self.log_debug_data(rtt, sent, received)
         return
 
     def close(self, reason):
-        if not self.keep_running:
-            self.logger.warn("worker already closed %s", self.ip_str)
-            return
+        with self._lock:
+            if not self.keep_running:
+                # self.logger.warn("worker %s already closed %s", self.ip_str, reason)
+                return
 
-        self.accept_task = False
-        self.keep_running = False
-        self.ssl_sock.close()
-        if reason not in ["idle timeout", "life end"]:
-            now = time.time()
-            inactive_time = now - self.last_recv_time
-            if inactive_time < self.config.http2_ping_min_interval:
-                self.logger.debug("%s worker close:%s inactive:%d", self.ip_str, reason, inactive_time)
-        self.ip_manager.report_connect_closed(self.ssl_sock.ip_str, self.ssl_sock.sni, reason)
-        self.close_cb(self)
+            # self.logger.debug("worker.close %s reason:%s", self.ip_str, reason)
+            self.accept_task = False
+            self.keep_running = False
+            self.ssl_sock.close()
+            if reason not in ["idle timeout", "life end"]:
+                now = time.time()
+                inactive_time = now - self.last_recv_time
+                if inactive_time < self.config.http2_ping_min_interval:
+                    self.logger.debug("%s worker close:%s inactive:%d", self.ip_str, reason, inactive_time)
+            self.ip_manager.report_connect_closed(self.ssl_sock.ip_str, self.ssl_sock.sni, reason)
+            self.close_cb(self)
+
+    def __del__(self):
+        # self.logger.debug("__del__ %s", self.ip_str)
+        self.close("__del__")
 
     def get_score(self):
         # The smaller, the better

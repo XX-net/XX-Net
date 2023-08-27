@@ -312,8 +312,9 @@ class ConnectManager(object):
             t = threading.Thread(target=self._connect_ssl, args=fn_args, name="connect_ssl_%s" % ip_str)
             t.start()
             try:
-                ssl_sock = q.get(timeout=3)
+                ssl_sock = q.get(timeout=30)
             except:
+                self.logger.warn("connect_ssl_timeout %s", ip_str)
                 raise socket.error("timeout")
 
             if not isinstance(ssl_sock, SSLConnection):

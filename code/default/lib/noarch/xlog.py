@@ -27,7 +27,7 @@ class Logger():
                  log_path=None, save_start_log=0, save_warning_log=False):
         self.name = str(name)
         self.file_max_size = 1024 * 1024
-        self.buffer_lock = threading.Lock()
+        self.buffer_lock = threading.RLock()
         self.buffer = {}  # id => line
         self.buffer_size = buffer_size
         self.last_no = 0

@@ -855,7 +855,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             dat += "thread num:%d\r\n" % threading.active_count()
             for thread in threading.enumerate():
                 dat += "\nThread: %s \r\n" % (thread.name)
-                # dat += traceback.format_exc(sys._current_frames()[thread.ident])
                 stack = sys._current_frames()[thread.ident]
                 st = traceback.extract_stack(stack)
                 stl = traceback.format_list(st)

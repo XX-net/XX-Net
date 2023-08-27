@@ -129,6 +129,17 @@ class Response(BaseResponse):
         self.select2 = selectors.DefaultSelector()
         self.select2.register(sock, selectors.EVENT_READ)
 
+    def __del__(self):
+        try:
+            self.select2.unregister(self.sock)
+        except:
+            pass
+
+        try:
+            socket.socket.close(self.sock)
+        except:
+            pass
+
     def recv(self, to_read=8192, timeout=30.0):
         if timeout < 0:
             raise Exception("recv timeout")

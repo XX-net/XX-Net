@@ -136,7 +136,7 @@ class AckPool():
         return data
 
     def status(self):
-        out_string = "Ack_pool:len %d<br>\r\n" % len(self.ack_buffer)
+        out_string = "Ack_pool:len %d\r\n" % len(self.ack_buffer)
         return out_string
 
 
@@ -168,19 +168,19 @@ class WaitQueue():
         except:
             pass
 
-    def wait(self, end_time):
+    def wait(self, wait_order):
         with self.lock:
             lock = threading.Lock()
             lock.acquire()
 
             if len(self.waiters) == 0:
-                self.waiters.append((end_time, lock))
+                self.waiters.append((wait_order, lock))
             else:
                 is_max = True
                 for i in range(0, len(self.waiters)):
                     try:
-                        iend_time, ilock = self.waiters[i]
-                        if iend_time > end_time:
+                        i_wait_order, ilock = self.waiters[i]
+                        if i_wait_order > wait_order:
                             is_max = False
                             break
                     except Exception as e:
@@ -190,17 +190,17 @@ class WaitQueue():
                         continue
 
                 if is_max:
-                    self.waiters.append((end_time, lock))
+                    self.waiters.append((wait_order, lock))
                 else:
-                    self.waiters.insert(i, (end_time, lock))
+                    self.waiters.insert(i, (wait_order, lock))
 
         lock.acquire()
 
     def status(self):
-        out_string = "waiters[%d]:<br>\n" % len(self.waiters)
+        out_string = "waiters[%d]:\n" % len(self.waiters)
         for i in range(0, len(self.waiters)):
             end_time, lock = self.waiters[i]
-            out_string += "%d<br>\r\n" % (end_time)
+            out_string += "%d\r\n" % (end_time)
 
         return out_string
 
@@ -268,15 +268,15 @@ class SendBuffer():
         return "", 0
 
     def status(self):
-        out_string = "SendBuffer:<br>\n"
-        out_string += " size:%d<br>\n" % self.pool_size
-        out_string += " last_put_time:%f<br>\n" % (time.time() - self.last_put_time)
-        out_string += " head_sn:%d<br>\n" % self.head_sn
-        out_string += " tail_sn:%d<br>\n" % self.tail_sn
-        out_string += "block_list:[%d]<br>\n" % len(self.block_list)
+        out_string = "SendBuffer:\n"
+        out_string += " size:%d\n" % self.pool_size
+        out_string += " last_put_time:%f\n" % (time.time() - self.last_put_time)
+        out_string += " head_sn:%d\n" % self.head_sn
+        out_string += " tail_sn:%d\n" % self.tail_sn
+        out_string += "block_list:[%d]\n" % len(self.block_list)
         for sn in sorted(self.block_list.keys()):
             data = self.block_list[sn]
-            out_string += "[%d] len:%d<br>\r\n" % (sn, len(data))
+            out_string += "[%d] len:%d\r\n" % (sn, len(data))
 
         return out_string
 
@@ -323,10 +323,10 @@ class BlockReceivePool():
             self.lock.release()
 
     def status(self):
-        out_string = "Block_receive_pool:<br>\r\n"
-        out_string += " next_sn:%d<br>\r\n" % self.next_sn
+        out_string = "Block_receive_pool:\r\n"
+        out_string += " next_sn:%d\r\n" % self.next_sn
         for sn in sorted(self.block_list):
-            out_string += "[%d] <br>\r\n" % (sn)
+            out_string += "[%d] \r\n" % (sn)
 
         return out_string
 
@@ -340,6 +340,17 @@ class ConnectionPipe(object):
         self.select2 = selectors.DefaultSelector()
         self.sock_conn_map = {}
         self._lock = threading.RLock()
+
+    def status(self):
+        out_string = "ConnectionPipe:\r\n"
+        out_string += " running: %s\r\n" % self.running
+        out_string += " thread: %s\r\n" % self.th
+        out_string += " conn: "
+        for conn in self.sock_conn_map.values():
+            out_string += "%d," % (conn.conn_id)
+        out_string += "\r\n"
+
+        return out_string
 
     def start(self):
         self.running = True
@@ -469,12 +480,18 @@ class ConnectionPipe(object):
 
                         data_len = len(data)
                         if data_len == 0:
-                            self.xlog.debug("Conn session:%s conn:%d recv socket closed", self.session.session_id,
-                                            conn.conn_id)
-                            self.close_sock(sock, "receive")
+                            self.xlog.debug("Conn conn:%d recv zero", conn.conn_id)
+                            if conn.recv_zero:
+                                self.xlog.debug("Conn conn:%d recv zero again", conn.conn_id)
+                                self.close_sock(sock, "receive")
+                            else:
+                                conn.recv_zero = True
                             continue
                         else:
                             conn.last_active = now
+                            if conn.recv_zero:
+                                self.xlog.error("recv_zero restored conn:%d", conn.conn_id)
+                            conn.recv_zero = False
                             self._debug_log("Conn session:%s conn:%d local recv len:%d pos:%d",
                                             self.session.session_id, conn.conn_id, data_len, conn.received_position)
 
@@ -489,7 +506,7 @@ class ConnectionPipe(object):
             except Exception as e:
                 xlog.exception("recv_worker e:%r", e)
 
-        for sock in self.sock_conn_map:
+        for sock in dict(self.sock_conn_map):
             try:
                 self.select2.unregister(sock)
             except Exception as e:
@@ -518,6 +535,7 @@ class Conn(object):
         self.cmd_queue = {}
         self.running = True
         self.blocked = False
+        self.recv_zero = False  # will close when continue recv zero
         self.send_buffer = b""
         self.received_position = 0
         self.remote_acked_position = 0
@@ -530,6 +548,8 @@ class Conn(object):
         self.transferred_close_to_peer = False
         if sock:
             self.next_cmd_seq = 1
+            self._fd = sock.fileno()
+            # self.xlog.debug("conn:%d init fd:%d", conn_id, self._fd)
         else:
             self.next_cmd_seq = 0
 
@@ -540,23 +560,24 @@ class Conn(object):
             self.connection_pipe.add_sock_event(self.sock, self, selectors.EVENT_READ)
 
     def status(self):
-        out_string = "Conn[%d]: %s:%d<br>\r\n" % (self.conn_id, self.host, self.port)
-        out_string += " received_position:%d/ Ack:%d <br>\n" % (self.received_position, self.remote_acked_position)
-        out_string += " sended_position:%d/ win:%d<br>\n" % (self.sended_position, self.sent_window_position)
-        out_string += " next_cmd_seq:%d<br>\n" % self.next_cmd_seq
-        out_string += " next_recv_seq:%d<br>\n" % self.next_recv_seq
-        out_string += " status: running:%r<br>\n" % self.running
-        out_string += " blocked: %s<br>\n" % self.blocked
+        out_string = "Conn[%d]: %s:%d\n" % (self.conn_id, self.host, self.port)
+        out_string += " received_position:%d/ Ack:%d \n" % (self.received_position, self.remote_acked_position)
+        out_string += " sended_position:%d/ win:%d\n" % (self.sended_position, self.sent_window_position)
+        out_string += " next_cmd_seq:%d\n" % self.next_cmd_seq
+        out_string += " next_recv_seq:%d\n" % self.next_recv_seq
+        out_string += " status: running:%r\n" % self.running
+        out_string += " blocked: %s\n" % self.blocked
+        out_string += " recv_zero: %s\n" % self.recv_zero
         if self.send_buffer:
-            out_string += " send_buffer: %d<br>\n" % len(self.send_buffer)
-        out_string += " transferred_close_to_peer:%r<br>\n" % self.transferred_close_to_peer
-        out_string += " sock:%r<br>\n" % (self.sock is not None)
-        out_string += " cmd_queue.len:%d<br> " % len(self.cmd_queue)
-        out_string += " create time: %s<br>" % datetime.fromtimestamp(self.create_time).strftime('%Y-%m-%d %H:%M:%S.%f')
-        out_string += " last active: %s<br>" % datetime.fromtimestamp(self.last_active).strftime('%Y-%m-%d %H:%M:%S.%f')
+            out_string += " send_buffer: %d\n" % len(self.send_buffer)
+        out_string += " transferred_close_to_peer:%r\n" % self.transferred_close_to_peer
+        out_string += " sock:%r\n" % (self.sock is not None)
+        out_string += " cmd_queue.len:%d\n" % len(self.cmd_queue)
+        out_string += " create time: %s\n" % datetime.fromtimestamp(self.create_time).strftime('%Y-%m-%d %H:%M:%S.%f')
+        out_string += " last active: %s\n" % datetime.fromtimestamp(self.last_active).strftime('%Y-%m-%d %H:%M:%S.%f')
         for seq in self.cmd_queue:
             out_string += "[%d]," % seq
-        out_string += "<br>\n"
+        out_string += "\n"
 
         return out_string
 
@@ -565,7 +586,8 @@ class Conn(object):
                          name="do_stop_%s:%d" % (self.host, self.port)).start()
 
     def do_stop(self, reason="unknown"):
-        self.xlog.debug("Conn session:%s conn:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id, reason)
+        self.xlog.debug("Conn session:%s conn:%d fd:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id,
+                        self._fd, reason)
         self.running = False
 
         self.connection_pipe.remove_sock(self.sock)
@@ -573,11 +595,10 @@ class Conn(object):
         self.cmd_queue = {}
 
         if self.sock is not None:
-            if self.sock.fileno() != -1:
-                try:
-                    self.sock.close()
-                except:
-                    pass
+            try:
+                self.sock.close()
+            except:
+                pass
             self.sock = None
 
         # self.xlog.debug("Conn session:%s conn:%d stopped", self.session.session_id, self.conn_id)

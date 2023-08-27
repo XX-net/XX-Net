@@ -34,6 +34,14 @@ def decrypt_data(data):
     else:
         return data
 
+def traffic_readable(num, units=('B', 'KB', 'MB', 'GB')):
+    for unit in units:
+        if num >= 1024:
+            num /= 1024.0
+        else:
+            break
+    return '{:.1f} {}'.format(num, unit)
+
 
 def sleep(t):
     end_time = time.time() + t
@@ -42,7 +50,8 @@ def sleep(t):
             return
 
         sleep_time = min(5, end_time - time.time())
-        time.sleep(sleep_time)
+        if sleep_time > 0.01:
+            time.sleep(sleep_time)
 
 
 class ProxySession(object):
@@ -68,9 +77,17 @@ class ProxySession(object):
         self.on_road_num = 0
         self.last_receive_time = 0
         self.last_send_time = 0
-        self.traffic = 0
         self.server_send_buf_size = 0
         self.target_on_roads = 0
+
+        # speed calculation
+        self.traffic_upload = 0
+        self.traffic_download = 0
+        self.last_traffic_upload = 0
+        self.last_traffic_download = 0
+        self.last_traffic_reset_time = time.time()
+        self.upload_speed = 0.0
+        self.download_speed = 0.0
 
         # the receive time of the tail of the socket receive buffer
         # if now - oldest_received_time > delay, then send.
@@ -100,7 +117,13 @@ class ProxySession(object):
             self.transfer_list = {}
             self.last_send_time = time.time()
             self.last_receive_time = 0
-            self.traffic = 0
+
+            # speed calculation
+            self.traffic_upload = 0
+            self.traffic_download = 0
+            self.last_traffic_upload = 0
+            self.last_traffic_download = 0
+            self.last_traffic_reset_time = time.time()
 
             # sn => (payload, send_time)
             # sn => ack
@@ -129,6 +152,22 @@ class ProxySession(object):
             self.connection_pipe.start()
             xlog.info("session started.")
             return True
+
+    def traffic_speed_calculation(self):
+        now = time.time()
+        time_go = now - self.last_traffic_reset_time
+        if time_go > 0.5:
+            self.upload_speed = (self.traffic_upload - self.last_traffic_upload) / time_go
+            self.download_speed = (self.traffic_download - self.last_traffic_download) / time_go
+
+            self.last_traffic_reset_time = now
+            self.last_traffic_upload = self.traffic_upload
+            self.last_traffic_download = self.traffic_download
+
+            # xlog.debug("upload speed:%s download speed:%s",
+            #            convert_data_size_easy_read(self.upload_speed),
+            #            convert_data_size_easy_read(self.download_speed)
+            #            )
 
     def stop(self):
         if not self.running:
@@ -214,15 +253,8 @@ class ProxySession(object):
         data = info["data"]
         g.tls_relay_front.set_ips(data["ips"])
 
-    @staticmethod
-    def get_stat(type="second"):
-        def convert(num, units=('B', 'KB', 'MB', 'GB')):
-            for unit in units:
-                if num >= 1024:
-                    num /= 1024.0
-                else:
-                    break
-            return '{:.1f} {}'.format(num, unit)
+    def get_stat(self, type="second"):
+        self.traffic_speed_calculation()
 
         res = {}
         rtt = 0
@@ -270,7 +302,7 @@ class ProxySession(object):
                 "fail_num": dispatcher.fail_num,
                 "worker_num": dispatcher.worker_num(),
                 "total_traffics": "Up: %s / Down: %s" % (
-                    convert(dispatcher.total_sent), convert(dispatcher.total_received))
+                    traffic_readable(dispatcher.total_sent), traffic_readable(dispatcher.total_received))
             }
 
         res["global"] = {
@@ -280,37 +312,47 @@ class ProxySession(object):
             "slow_roundtrip": g.stat["slow_roundtrip"],
             "timeout_roundtrip": g.stat["timeout_roundtrip"],
             "resend": g.stat["resend"],
-            "speed": "Up: %s/s / Down: %s/s" % (convert(recent_sent), convert(recent_received)),
-            "total_traffics": "Up: %s / Down: %s" % (convert(total_sent), convert(total_received))
+            "speed": "Up: %s/s / Down: %s/s" % (traffic_readable(self.upload_speed), traffic_readable(self.download_speed)),
+            "total_traffics": "Up: %s / Down: %s" % (traffic_readable(self.traffic_upload), traffic_readable(self.traffic_download))
         }
         return res
 
     def status(self):
-        out_string = "session_id:%s<br>\n" % self.session_id
-        out_string += "thread num:%d<br>" % threading.active_count()
-        out_string += "running:%d<br>\n" % self.running
-        out_string += "last_send_time:%f<br>\n" % (time.time() - self.last_send_time)
-        out_string += "last_receive_time:%f<br>\n" % (time.time() - self.last_receive_time)
-        out_string += "last_conn:%d<br>\n" % self.last_conn_id
-        out_string += "last_transfer_no:%d<br>\n" % self.last_transfer_no
-        out_string += "traffic:%d<br>\n" % self.traffic
+        self.traffic_speed_calculation()
 
-        out_string += "on_road_num:%d<br>\n" % self.on_road_num
-        out_string += "transfer_list: %d<br>\r\n" % len(self.transfer_list)
+        out_string = "session_id: %s\n" % self.session_id
+        out_string += "extra_info: %s\n" % json.dumps(json.loads(self.get_login_extra_info()), indent=2)
+        out_string += "thread num: %d\n" % threading.active_count()
+        out_string += "running: %d\n" % self.running
+        out_string += "last_send_time: %f\n" % (time.time() - self.last_send_time)
+        out_string += "last_receive_time: %f ago\n" % (time.time() - self.last_receive_time)
+        out_string += "last_conn: %d\n" % self.last_conn_id
+        out_string += "last_transfer_no: %d\n" % self.last_transfer_no
+        out_string += "traffic_upload: %d\n" % self.traffic_upload
+        out_string += "traffic_download: %d\n" % self.traffic_download
+        out_string += "last_traffic_upload: %d\n" % self.last_traffic_upload
+        out_string += "last_traffic_download: %d\n" % self.last_traffic_download
+        out_string += "upload_speed: %f\n" % self.upload_speed
+        out_string += "download_speed: %f\n" % self.download_speed
+        out_string += "last_traffic_reset_time %f ago\n" % (time.time() - self.last_traffic_reset_time )
+
+        out_string += "on_road_num:%d\n" % self.on_road_num
+        out_string += "transfer_list: %d\n" % len(self.transfer_list)
         for transfer_no in sorted(self.transfer_list.keys()):
             transfer = self.transfer_list[transfer_no]
             if "start" in self.transfer_list[transfer_no]:
                 time_way = " t:" + str((time.time() - self.transfer_list[transfer_no]["start"]))
             else:
                 time_way = ""
-            out_string += "[%d] %s %s<br>\r\n" % (transfer_no, json.dumps(transfer), time_way)
+            out_string += "[%d] %s %s\n" % (transfer_no, json.dumps(transfer), time_way)
 
-        out_string += "<br>\n" + self.wait_queue.status()
-        out_string += "<br>\n" + self.send_buffer.status()
-        out_string += "<br>\n" + self.receive_process.status()
+        out_string += "\n" + self.wait_queue.status()
+        out_string += "\n" + self.send_buffer.status()
+        out_string += "\n" + self.receive_process.status()
+        out_string += "\n" + self.connection_pipe.status()
 
         for conn_id in self.conn_list:
-            out_string += "<br>\n" + self.conn_list[conn_id].status()
+            out_string += "\n" + self.conn_list[conn_id].status()
 
         return out_string
 
@@ -525,7 +567,7 @@ class ProxySession(object):
         while self.running:
             data = self.get_data(work_id)
             # xlog.debug("get_send_data work_id:%d len:%d", work_id, len(data))
-            if data or work_id < self.target_on_roads:
+            if data or self.on_road_num < self.target_on_roads:
                 # xlog.debug("got data, force get ack")
                 force = True
 
@@ -606,6 +648,9 @@ class ProxySession(object):
         if action_num <= 0:
             return
 
+        # xlog.debug("running_num:%d on_road:%d target:%d action:%d",
+        #            running_num, self.on_road_num,
+        #            self.target_on_roads, action_num)
         for _ in range(0, action_num):
             self.wait_queue.notify()
 
@@ -631,13 +676,9 @@ class ProxySession(object):
         pack_type = 2
 
         if self.send_buffer.pool_size > g.config.max_payload or \
-                (self.send_buffer.pool_size and len(self.wait_queue.waiters) < g.config.min_on_road):
+                 len(self.wait_queue.waiters) < g.config.min_on_road:
             # xlog.debug("pool_size:%s waiters:%d", self.send_buffer.pool_size, len(self.wait_queue.waiters))
             server_timeout = 0
-        elif work_id > g.config.concurent_thread_num * 0.9:
-            server_timeout = 1
-        elif work_id > g.config.concurent_thread_num * 0.7:
-            server_timeout = 3
         else:
             server_timeout = g.config.roundtrip_timeout
 
@@ -665,9 +706,14 @@ class ProxySession(object):
         if lock_time > 0.1:
             xlog.warn("lock_time: %f", lock_time)
 
-        if g.config.show_debug:
-            xlog.debug("start trip transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-                      transfer_no, send_data_len, send_ack_len, server_timeout)
+        # if g.config.show_debug:
+        # self.traffic_speed_calculation()
+        # xlog.debug("start trip work_id:%d transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
+        #               work_id, transfer_no, send_data_len, send_ack_len, server_timeout)
+        # xlog.debug("start trip, work_id:%d target:%d running:%d timeout:%d up:%f down:%f",
+        #            work_id, self.target_on_roads, self.on_road_num, server_timeout,
+        #            self.upload_speed, self.download_speed)
+
         while self.running:
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
@@ -679,7 +725,8 @@ class ProxySession(object):
                                                                   timeout=server_timeout + g.config.network_timeout)
 
                 traffic = len(upload_post_data) + len(content) + 645
-                self.traffic += traffic
+                self.traffic_upload += len(upload_post_data) + 645
+                self.traffic_download += len(content)
                 g.quota -= traffic
                 if g.quota < 0:
                     g.quota = 0

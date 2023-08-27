@@ -62,11 +62,10 @@ class Socks5Server():
                 return
 
         except socket.error as e:
-            xlog.exception('socks handler read error %r', e)
+            xlog.exception('proxy handler read error %r', e)
             self.connection.close()
-            return
         except Exception as e:
-            xlog.exception("any err:%r", e)
+            xlog.exception("proxy handler err:%r", e)
             self.connection.close()
 
     def read_null_end_line(self):

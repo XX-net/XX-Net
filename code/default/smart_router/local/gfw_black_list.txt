@@ -1838,6 +1838,7 @@ google.ca
 google.calstate.edu
 google.cd
 google.ci
+google.cn
 google.co.id
 google.co.jp
 google.co.kr
