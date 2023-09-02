@@ -706,13 +706,11 @@ class ProxySession(object):
         if lock_time > 0.1:
             xlog.warn("lock_time: %f", lock_time)
 
-        # if g.config.show_debug:
-        # self.traffic_speed_calculation()
-        # xlog.debug("start trip work_id:%d transfer_no:%d send_data_len:%d ack_len:%d timeout:%d",
-        #               work_id, transfer_no, send_data_len, send_ack_len, server_timeout)
-        # xlog.debug("start trip, work_id:%d target:%d running:%d timeout:%d up:%f down:%f",
-        #            work_id, self.target_on_roads, self.on_road_num, server_timeout,
-        #            self.upload_speed, self.download_speed)
+        if g.config.show_debug:
+            self.traffic_speed_calculation()
+            xlog.debug("start trip, tid:%d target:%d running:%d timeout:%d send:%d",
+                       transfer_no, self.target_on_roads, self.on_road_num, server_timeout,
+                       len(upload_post_data))
 
         while self.running:
             try:

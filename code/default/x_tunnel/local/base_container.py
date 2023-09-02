@@ -1,3 +1,5 @@
+import os
+import sys
 import threading
 import time
 import socket
@@ -341,6 +343,12 @@ class ConnectionPipe(object):
         self.sock_conn_map = {}
         self._lock = threading.RLock()
 
+        if sys.platform == "win32":
+            self.slow_wait = 0.05
+        else:
+            self.slow_wait = 3
+            # self.slow_wait = 0.05
+
     def status(self):
         out_string = "ConnectionPipe:\r\n"
         out_string += " running: %s\r\n" % self.running
@@ -373,13 +381,17 @@ class ConnectionPipe(object):
 
         with self._lock:
             self._debug_log("add_sock_event conn:%d event:%s", conn.conn_id, event)
-            self.sock_conn_map[sock] = conn
             try:
                 self.select2.register_event(sock, event, conn)
             except Exception as e:
                 self.xlog.warn("add_sock_event %s conn:%d e:%r", sock, conn.conn_id, e)
                 self.close_sock(sock, str(e) + "_when_add_sock_event")
                 return
+
+            # if sys.platform == "win32" and (sock not in self.sock_conn_map or event == selectors.EVENT_WRITE):
+            #     self.notice_select()
+
+            self.sock_conn_map[sock] = conn
 
             if not self.th:
                 self.th = threading.Thread(target=self.pipe_worker, name="x_tunnel_pipe_worker")
@@ -438,6 +450,12 @@ class ConnectionPipe(object):
         self.sock_conn_map = {}
         self.select2 = selectors.DefaultSelector()
 
+    def notice_select(self):
+        self.xlog.debug("notice select")
+
+    def read_notify(self):
+        self.xlog.debug("read_notify")
+
     def pipe_worker(self):
         timeout = 0.001
         while self.running:
@@ -453,7 +471,7 @@ class ConnectionPipe(object):
                         if has_data:
                             timeout = 0.01
                         else:
-                            timeout = 3.0
+                            timeout = self.slow_wait
 
                         # self.xlog.debug("%s recv select timeout switch to %f", random_id, timeout)
                         continue
@@ -461,7 +479,7 @@ class ConnectionPipe(object):
                         # self.xlog.debug("%s recv select timeout switch to 0.001", random_id)
                         timeout = 0.001
                 except Exception as e:
-                    self.xlog.warn("Conn session:%s select except:%r", self.session.session_id, e)
+                    self.xlog.exception("Conn session:%s select except:%r", self.session.session_id, e)
                     if "Invalid argument" in str(e):
                         self.reset_all_connections()
                     time.sleep(1)
@@ -471,6 +489,11 @@ class ConnectionPipe(object):
                 for key, event in events:
                     sock = key.fileobj
                     conn = key.data
+                    if not conn:
+                        self.xlog.debug("get notice")
+                        self.read_notify()
+                        continue
+
                     if event & selectors.EVENT_READ:
                         try:
                             data = sock.recv(65535)
