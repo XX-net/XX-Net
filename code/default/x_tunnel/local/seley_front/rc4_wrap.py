@@ -3,7 +3,11 @@ import time
 import struct
 import json
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+try:
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+except:
+    algorithms = None
+
 
 import utils
 
@@ -20,6 +24,9 @@ class SSLConnection(object):
         self.timeout = self._sock.gettimeout() or 0.1
         self.running = True
         self.h2 = False
+
+        if not algorithms:
+            raise socket.error('no cryptography')
 
         algorithm = algorithms.AES(self.sni)
         iv = b'\x00' * 16
