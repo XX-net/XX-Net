@@ -254,6 +254,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             password_hash = data["login_password"]
             cloudflare_domains = data.get("cloudflare_domains")
             tls_relay = data["tls_relay"]
+            seleys = data.get("seleys", {})
         except Exception as e:
             xlog.warn("token_login except:%r", e)
             return self.response_json({
@@ -278,6 +279,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
             g.http_client.save_cloudflare_domain(cloudflare_domains)
         if g.tls_relay_front and tls_relay.get("ips"):
             g.tls_relay_front.set_ips(tls_relay["ips"])
+        if g.seley_front:
+            g.seley_front.set_hosts(seleys.get("hosts", {}))
 
         res, reason = proxy_session.request_balance(username, password_hash, False,
                                                     update_server=True, promoter="")
