@@ -1086,8 +1086,11 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         g.openai_balance = info["openai_balance"]
         g.openai_proxies = info["openai_proxies"]
         g.tls_relays = info["tls_relays"]
-        if g.tls_relay_front and g.tls_relays.get("ips"):
+        seleys = info.get("seleys", {})
+        if g.tls_relay_front:
             g.tls_relay_front.set_ips(g.tls_relays["ips"])
+        if g.seley_front:
+            g.seley_front.set_hosts(seleys.get("hosts", {}))
         xlog.info("request_balance host:%s port:%d balance:%f quota:%f", g.server_host, g.server_port,
                   g.balance, g.quota)
         return True, "success"

@@ -114,7 +114,7 @@ def get_front(host, timeout):
 
             dispatcher = front.get_dispatcher(host)
             if not dispatcher:
-                xlog.warn("get dispatcher from %s fail for %s", front.name, host)
+                # xlog.warn("get dispatcher from %s fail for %s", front.name, host)
                 continue
 
             score = dispatcher.get_score()
