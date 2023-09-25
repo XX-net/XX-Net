@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
 
 import sys_platform
-from xlog import getLogger
+from xlog import getLogger, keep_log
 
 xlog = getLogger("launcher")
 import module_init
@@ -242,6 +242,8 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 self.req_config_handler()
             elif url_path == "/log":
                 return self.req_log_handler()
+            elif url_path == "/keep_log":
+                return self.req_keep_log_handler()
             elif url_path == '/update':
                 self.req_update_handler()
             elif url_path == '/config_proxy':
@@ -788,6 +790,13 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         self.send_response("text/html", data, headers={"Access-Control-Allow-Origin": "*"})
 
+    def req_keep_log_handler(self):
+        keep_log()
+        data = "Keep log success."
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+
     def req_log_handler(self):
         req = urlparse(self.path).query
         reqs = self.unpack_reqs(parse_qs(req, keep_blank_values=True))
@@ -873,8 +882,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             "xtunnel_status": "http://127.0.0.1:8085/module/x_tunnel/control/status",
             "cloudflare_info": "http://127.0.0.1:8085/module/x_tunnel/control/cloudflare_front/debug",
             "tls_info": "http://127.0.0.1:8085/module/x_tunnel/control/tls_relay_front/debug",
+            "seley_info": "http://127.0.0.1:8085/module/x_tunnel/control/seley_front/debug",
             "cloudflare_log": "http://localhost:8085/module/x_tunnel/control/cloudflare_front/log?cmd=get_new&last_no=1",
             "tls_log": "http://localhost:8085/module/x_tunnel/control/tls_relay_front/log?cmd=get_new&last_no=1",
+            "seley_log": "http://localhost:8085/module/x_tunnel/control/seley_front/log?cmd=get_new&last_no=1",
             "xtunnel_log": "http://localhost:8085/module/x_tunnel/control/log?cmd=get_new&last_no=1",
             "smartroute_log": "http://localhost:8085/module/smart_router/control/log?cmd=get_new&last_no=1",
             "launcher_log": "http://localhost:8085/log?cmd=get_new&last_no=1"

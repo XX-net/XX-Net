@@ -60,7 +60,7 @@ class Front(object):
         self.password = password
 
     def set_ips(self, ips):
-        if not ips or not self.config.allow_set_ips:
+        if not self.config.allow_set_ips:
             return
 
         host_info = {}

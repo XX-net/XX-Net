@@ -73,10 +73,14 @@ def get_local_ips():
     elif sys.platform == "ios":
         ips = [b'127.0.0.1']
     elif sys.platform == "win32":
-        ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]]
-        ips = utils.to_bytes(ips)
-        if b"127.0.0.1" not in ips:
-            ips.append(b"127.0.0.1")
+        try:
+            ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]]
+            ips = utils.to_bytes(ips)
+            if b"127.0.0.1" not in ips:
+                ips.append(b"127.0.0.1")
+        except Exception as e:
+            xlog.warn("get local ip fail:%r", e)
+            ips = [b"127.0.0.1"]
     else:
         ips = []
         try:
@@ -165,7 +169,6 @@ class LocalDnsQuery():
 
             xlog.debug("DNS resolve servers:%s", iplist)
 
-            xlog.debug("DNS server port %d", g.dns_srv.listen_port)
             local_ips = g.local_ips
             for ip in local_ips:
                 if ip in iplist:
@@ -538,7 +541,7 @@ class DnsOverHttpsQuery(object):
         except Exception as e:
             t1 = time.time()
             t = t1 - t0
-            xlog.exception("DnsOverHttpsQuery query %s cost:%f fail:%r", domain, t, e)
+            xlog.warn("DnsOverHttpsQuery query %s cost:%f fail:%r", domain, t, e)
             return []
 
 

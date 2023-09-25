@@ -25,6 +25,10 @@
     "70":{
       "title": "{{ _("TLS-Relay") }}{{ _("Front") }}{{ _("Log") }}",
       "url": "tls_relay_front_logging"
+    },
+    "80":{
+      "title": "{{ _("Seley") }}{{ _("Front") }}{{ _("Log") }}",
+      "url": "seley_front_logging"
     }
   }
 }

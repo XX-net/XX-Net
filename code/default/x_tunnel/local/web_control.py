@@ -94,10 +94,10 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                              self.command, path,
                              self.rfile, self.wfile)
             controler.do_GET()
-        elif path.startswith("/heroku_front/"):
-            path = self.path[13:]
-            from .heroku_front import web_control as heroku_web
-            controler = heroku_web.ControlHandler(self.client_address,
+        elif path.startswith("/seley_front/"):
+            path = self.path[12:]
+            from .seley_front import web_control as seley_web
+            controler = seley_web.ControlHandler(self.client_address,
                              self.headers,
                              self.command, path,
                              self.rfile, self.wfile)
@@ -148,11 +148,11 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                                                       self.command, path,
                                                       self.rfile, self.wfile)
             controler.do_POST()
-        elif path.startswith("/heroku_front/"):
+        elif path.startswith("/seley_front/"):
             path = path[13:]
 
-            from .heroku_front import web_control as heroku_web
-            controler = heroku_web.ControlHandler(self.client_address,
+            from .seley_front import web_control as seley_web
+            controler = seley_web.ControlHandler(self.client_address,
                                                       self.headers,
                                                       self.command, path,
                                                       self.rfile, self.wfile)

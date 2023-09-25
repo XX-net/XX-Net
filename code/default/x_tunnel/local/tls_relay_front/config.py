@@ -31,5 +31,6 @@ class Config(ConfigBase):
         # http 2 worker
         self.set_var("http2_status_to_close", [500])
         self.set_var("http2_idle_ping_min_interval", 110)
+        self.set_var("http2_max_process_tasks", 9900)
 
         self.load()

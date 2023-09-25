@@ -3,7 +3,7 @@
 </div> <!-- #log-container -->
 
 <script type="text/javascript">
-    title('{{ _("Heroku") }}{{ _("Front") }} {{ _("Log") }}');
+    title('{{ _("Seley") }}{{ _("Front") }} {{ _("Log") }}');
 </script>
 <style type="text/css">
     .DUMMY { color: black }
@@ -84,7 +84,7 @@
         };
         $.ajax({
             type: 'GET',
-            url: '/module/x_tunnel/control/heroku_front/log',
+            url: '/module/x_tunnel/control/seley_front/log',
             data: pageRequests,
             dataType: 'JSON',
             success: function (result) {

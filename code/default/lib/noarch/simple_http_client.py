@@ -514,22 +514,25 @@ class Client(object):
 
         body = utils.to_bytes(body)
 
-        if len(request_data) + len(body) < 1300:
-            body = request_data + body
-        else:
-            sock.send(request_data)
+        try:
+            if len(request_data) + len(body) < 1300:
+                body = request_data + body
+            else:
+                sock.send(request_data)
 
-        payload_len = len(body)
-        start = 0
-        while start < payload_len:
-            send_size = min(payload_len - start, 65535)
-            sended = sock.send(body[start:start + send_size])
-            start += sended
+            payload_len = len(body)
+            start = 0
+            while start < payload_len:
+                send_size = min(payload_len - start, 65535)
+                sended = sock.send(body[start:start + send_size])
+                start += sended
 
-        sock.settimeout(self.timeout)
-        response = Response(sock)
+            sock.settimeout(self.timeout)
+            response = Response(sock)
 
-        response.begin(timeout=self.timeout)
+            response.begin(timeout=self.timeout)
+        except Exception as e:
+            return None
 
         if response.status != 200:
             # logging.warn("status:%r", response.status)

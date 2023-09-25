@@ -46,10 +46,12 @@ def init():
         light_fronts.append(cloudfront_front)
         g.cloudfront_front = cloudfront_front
 
-    if g.config.enable_heroku:
-        from .heroku_front.front import front as heroku_front
-        # all_fronts.append(heroku_front)
-        light_fronts.append(heroku_front)
+    if g.config.enable_seley:
+        from .seley_front.front import front as seley_front
+        all_fronts.append(seley_front)
+        session_fronts.append(seley_front)
+        light_fronts.append(seley_front)
+        g.seley_front = seley_front
 
     if g.config.enable_tls_relay:
         from .tls_relay_front.front import front as tls_relay_front
@@ -73,10 +75,6 @@ def init():
 def save_cloudflare_domain(domains):
     if not g.config.enable_cloudflare:
         xlog.warn("save_cloudflare_domain but cloudflare front not enabled")
-        return
-
-    if not domains:
-        xlog.warn("save_cloudflare_domain fail, domains:%s enable:%d", domains, g.config.enable_cloudflare)
         return
 
     for front in all_fronts:

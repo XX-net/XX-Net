@@ -503,18 +503,11 @@ class ConnectionPipe(object):
 
                         data_len = len(data)
                         if data_len == 0:
-                            self.xlog.debug("Conn conn:%d recv zero", conn.conn_id)
-                            if conn.recv_zero:
-                                self.xlog.debug("Conn conn:%d recv zero again", conn.conn_id)
-                                self.close_sock(sock, "receive")
-                            else:
-                                conn.recv_zero = True
+                            # self.xlog.debug("Conn conn:%d recv zero", conn.conn_id)
+                            self.close_sock(sock, "receive")
                             continue
                         else:
                             conn.last_active = now
-                            if conn.recv_zero:
-                                self.xlog.error("recv_zero restored conn:%d", conn.conn_id)
-                            conn.recv_zero = False
                             self._debug_log("Conn session:%s conn:%d local recv len:%d pos:%d",
                                             self.session.session_id, conn.conn_id, data_len, conn.received_position)
 
@@ -558,7 +551,6 @@ class Conn(object):
         self.cmd_queue = {}
         self.running = True
         self.blocked = False
-        self.recv_zero = False  # will close when continue recv zero
         self.send_buffer = b""
         self.received_position = 0
         self.remote_acked_position = 0
@@ -588,9 +580,8 @@ class Conn(object):
         out_string += " sended_position:%d/ win:%d\n" % (self.sended_position, self.sent_window_position)
         out_string += " next_cmd_seq:%d\n" % self.next_cmd_seq
         out_string += " next_recv_seq:%d\n" % self.next_recv_seq
-        out_string += " status: running:%r\n" % self.running
+        out_string += " running:%r\n" % self.running
         out_string += " blocked: %s\n" % self.blocked
-        out_string += " recv_zero: %s\n" % self.recv_zero
         if self.send_buffer:
             out_string += " send_buffer: %d\n" % len(self.send_buffer)
         out_string += " transferred_close_to_peer:%r\n" % self.transferred_close_to_peer

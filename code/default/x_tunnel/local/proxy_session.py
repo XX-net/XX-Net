@@ -814,12 +814,12 @@ class ProxySession(object):
                 speed = (send_data_len + len(content) + 400) / rtt
 
                 xlog.debug(
-                    "worker:%d no:%d %s "
+                    "no:%d %s "
                     "road_time:%f "
                     "snd:%d rcv:%d "
                     "s_pool:%d on_road:%d target_worker:%d speed:%d "
                     "roundtrip_time:%f server_timeout:%d ",
-                    work_id, transfer_no, response.worker.ip_str,
+                    transfer_no, response.worker.ip_str,
                     roundtrip_time - time_cost / 1000.0,
                     send_data_len, len(content),
                     server_send_pool_size,
@@ -1053,6 +1053,8 @@ def request_balance(account=None, password=None, is_register=False, update_serve
         center_login_process = True
         if g.tls_relay_front:
             g.tls_relay_front.set_x_tunnel_account(account, password)
+        if g.seley_front:
+            g.seley_front.set_x_tunnel_account(account, password)
 
         res, info = call_api(login_path, req_info)
         if not res:
@@ -1129,6 +1131,8 @@ def login_process():
 
         if g.tls_relay_front:
             g.tls_relay_front.set_x_tunnel_account(g.config.login_account, g.config.login_password)
+        if g.seley_front:
+            g.seley_front.set_x_tunnel_account(g.config.login_account, g.config.login_password)
 
         if not g.session.running:
             return g.session.start()

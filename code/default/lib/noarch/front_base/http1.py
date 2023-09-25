@@ -35,9 +35,7 @@ class Http1Worker(HttpWorker):
         threading.Thread(target=self.work_loop, name="%s_http1_work_loop" % self.logger.name).start()
         self.idle_cb()
 
-        if self.config.http1_first_ping_wait or \
-            self.config.http1_ping_interval or \
-            self.config.http1_idle_time:
+        if self.config.http1_first_ping_wait or self.config.http1_ping_interval:
             threading.Thread(target=self.keep_alive_thread, name="%s_http1_keep_alive" % self.logger.name).start()
 
     def record_active(self, active=""):
@@ -154,7 +152,7 @@ class Http1Worker(HttpWorker):
             start = 0
             while start < payload_len:
                 send_size = min(payload_len - start, 65535)
-                sended = self.ssl_sock.send(task.body[start:start+send_size])
+                sended = self.ssl_sock.send(task.body[start:start + send_size])
                 start += sended
 
             task.set_state("h1_req_sended")
@@ -165,7 +163,7 @@ class Http1Worker(HttpWorker):
             task.set_state("response_begin")
 
         except Exception as e:
-            self.logger.exception("%s h1_request:%r inactive_time:%d task.timeout:%d",
+            self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
                              self.ip_str, e, time.time() - self.last_recv_time, task.timeout)
             self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
 

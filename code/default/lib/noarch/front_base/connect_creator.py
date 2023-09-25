@@ -11,7 +11,7 @@ from pyasn1.codec.der import decoder as der_decoder
 
 
 class ConnectCreator(object):
-    def __init__(self, logger, config, openssl_context, host_manager,
+    def __init__(self, logger, config, openssl_context=None, host_manager=None,
                  timeout=5, debug=False,
                  check_cert=None):
         self.logger = logger

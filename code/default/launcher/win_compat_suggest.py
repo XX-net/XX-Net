@@ -45,10 +45,14 @@ class Win10PortReserveSolution(object):
 
     @staticmethod
     def run_cmd(cmd):
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out = proc.stdout
-        lines = out.readlines()
-        return lines
+        try:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = proc.stdout
+            lines = out.readlines()
+            return lines
+        except Exception as e:
+            xlog.warn("Win10PortReserveSolution run cmd %s error:%r", cmd, e)
+            return []
 
     @staticmethod
     def get_config_value(fn, key, default_value):

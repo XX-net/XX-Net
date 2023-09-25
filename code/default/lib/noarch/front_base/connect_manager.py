@@ -301,6 +301,7 @@ class ConnectManager(object):
             ssl_sock = self.connect_creator.connect_ssl(ip_str, sni, host, close_cb=close_cb)
             queue.put(ssl_sock)
         except Exception as e:
+            self.logger.warn("_connect_ssl %s sni:%s host:%s fail:%r", ip_str, sni, host, e)
             queue.put(e)
 
     def _create_ssl_connection(self, ip_str, sni, host):
@@ -317,8 +318,8 @@ class ConnectManager(object):
                 self.logger.warn("connect_ssl_timeout %s", ip_str)
                 raise socket.error("timeout")
 
-            if not isinstance(ssl_sock, SSLConnection):
-                raise ssl_sock
+            if not ssl_sock or isinstance(ssl_sock, ValueError) or isinstance(ssl_sock, OSError) or not hasattr(ssl_sock, "handshake_time"):
+                raise socket.error("timeout")
 
             self.ip_manager.update_ip(ip_str, sni, ssl_sock.handshake_time)
             self.logger.debug("create_ssl update ip:%s time:%d h2:%d sni:%s, host:%s",

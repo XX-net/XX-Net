@@ -79,7 +79,7 @@ def load_config():
     config.set_var("enable_gae_proxy", 0)
     config.set_var("enable_cloudflare", 1)
     config.set_var("enable_cloudfront", 0)
-    config.set_var("enable_heroku", 0)
+    config.set_var("enable_seley", 1)
     config.set_var("enable_tls_relay", 1)
     config.set_var("enable_direct", 0)
 
@@ -89,10 +89,11 @@ def load_config():
     config.windows_size = config.max_payload * config.concurent_thread_num * 2
     xlog.info("X-Tunnel window:%d", config.windows_size)
 
-    if "localhost" in config.server_host:
+    if "localhost" in config.server_host or "127.0.0.1" in config.server_host:
         config.enable_cloudflare = 0
         config.enable_tls_relay = 0
-        config.enable_direct = 1
+        config.enable_seley = 1
+        config.enable_direct = 0
         xlog.info("Only enable Direct front for localhost")
 
     if config.write_log_file:

@@ -158,14 +158,15 @@ def start(args):
     if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
         listen_ips.append("0.0.0.0")
 
+    g.local_ips = dns_query.get_local_ips()
+    g.dns_query = dns_query.CombineDnsQuery()
+
     g.dns_srv = dns_server.DnsServer(
         bind_ip=listen_ips, port=g.config.dns_port,
         backup_port=g.config.dns_backup_port,
         ttl=g.config.dns_ttl)
     g.dns_srv.start()
-
-    g.local_ips = dns_query.get_local_ips()
-    g.dns_query = dns_query.CombineDnsQuery()
+    xlog.debug("DNS server port %d", g.dns_srv.listen_port)
 
     ready = True
 

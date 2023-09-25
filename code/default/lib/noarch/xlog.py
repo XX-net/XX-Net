@@ -100,6 +100,20 @@ class Logger():
         if self.warning_log_fn:
             self.warning_log = open(self.warning_log_fn, "a")
 
+    def keep_logs(self):
+        self.keep_log = True
+        if not self.log_path:
+            return
+
+        with open(join(self.log_path, "keep_log.txt"), "w") as fd:
+            fd.write(" ")
+
+        if not self.start_log:
+            now = datetime.now()
+            time_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+            log_fn = os.path.join(self.log_path, "start_log_%s_%s.log" % (self.name, time_str))
+            self.start_log = open(log_fn, "w")
+
     def setLevel(self, level):
         if level == "DEBUG":
             self.min_level = DEBUG
@@ -341,6 +355,11 @@ def getLogger(name=None, buffer_size=0, file_name=None, roll_num=1,
 def reset_log_files():
     for name, log in loggerDict.items():
         log.reset_log_files()
+
+
+def keep_log():
+    for name, log in loggerDict.items():
+        log.keep_logs()
 
 
 default_log = getLogger()
