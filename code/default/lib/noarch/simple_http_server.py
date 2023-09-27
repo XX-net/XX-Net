@@ -658,7 +658,7 @@ class HTTPServer():
             if res:
                 return
 
-            self.logger.warn("Listen %s:%d check failed", ip, port)
+            self.logger.warn("Listen %s:%d check failed, try restart listening", ip, port)
             self.shutdown()
             time.sleep(3)
             self.start()

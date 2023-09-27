@@ -431,7 +431,7 @@ class ProxySession(object):
 
         return False
 
-    def create_conn(self, sock, host, port):
+    def create_conn(self, sock, host, port, log=False):
         if not self.running:
             xlog.debug("session not running, try to connect")
             time.sleep(1)
@@ -457,6 +457,8 @@ class ProxySession(object):
             min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 5)
         self.trigger_more()
 
+        if log:
+            xlog.info("Connect to %s:%d conn:%d", host, port, conn_id)
         return conn_id
 
     # Called by stop
@@ -1143,7 +1145,7 @@ def login_process():
     return True
 
 
-def create_conn(sock, host, port):
+def create_conn(sock, host, port, log=False):
     if not (g.config.login_account and g.config.login_password):
         time.sleep(1)
         return False
@@ -1154,7 +1156,7 @@ def create_conn(sock, host, port):
         else:
             time.sleep(1)
 
-    return g.session.create_conn(sock, host, port)
+    return g.session.create_conn(sock, host, port, log)
 
 
 def update_quota_loop():

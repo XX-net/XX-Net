@@ -61,6 +61,13 @@ i18n_translator.add_translate(b"APP_VERSION", current_version)
 module_menus = {}
 
 
+class FakeHttpHandler(simple_http_server.HttpServerHandler):
+    def handle_one_request(self):
+        # This function will replace simple_http_server HttpHandler.handle_one_request to hold all http requests.
+        # Doing this is to simulate bug.
+        self.close_connection = 0
+
+
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
 
@@ -244,6 +251,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 return self.req_log_handler()
             elif url_path == "/keep_log":
                 return self.req_keep_log_handler()
+            elif url_path == "/suck_threads":
+                return self.req_suck_threads()
+            elif url_path == "/hold_8085":
+                return self.req_hold_8085()
             elif url_path == '/update':
                 self.req_update_handler()
             elif url_path == '/config_proxy':
@@ -796,6 +807,16 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
+
+    def req_suck_threads(self):
+        self.send_response('text/plain', "Start suck threads")
+        while True:
+            threading.Thread(target=time.sleep, args=(1000,)).start()
+
+    def req_hold_8085(self):
+        global server
+        self.send_response('text/plain', "Hold 8085")
+        server.handler = FakeHttpHandler
 
     def req_log_handler(self):
         req = urlparse(self.path).query

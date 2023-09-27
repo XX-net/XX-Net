@@ -165,6 +165,7 @@ class ConnectManager(object):
         self._waiting_num_lock = threading.Lock()
         self._connection_waiting_num = 0
         self.no_ip_lock = threading.Lock()
+        self.no_ip_time = 0
 
         # after new created ssl_sock timeout(50 seconds)
         # call the callback.
@@ -259,7 +260,7 @@ class ConnectManager(object):
             time.sleep(sleep_time)
 
         try:
-            while self.running and self._need_more_ip():
+            while self.running and self._need_more_ip() and time.time() - self.no_ip_time > 10:
                 if self.new_conn_pool.qsize() > self.config.https_connection_pool_max:
                     break
 
@@ -275,6 +276,7 @@ class ConnectManager(object):
         try:
             ip_str, sni, host = self.ip_manager.get_ip_sni_host()
             if not ip_str:
+                self.no_ip_time = time.time()
                 with self.no_ip_lock:
                     # self.logger.warning("not enough ip")
                     time.sleep(10)

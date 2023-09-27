@@ -239,7 +239,7 @@ def do_socks(sock, host, port, client_address, left_buf=b""):
         raise XTunnelNotRunning()
 
     try:
-        conn_id = g.x_tunnel.proxy_session.create_conn(sock, host, port)
+        conn_id = g.x_tunnel.proxy_session.create_conn(sock, host, port, True)
     except Exception as e:
         xlog.warn("do_sock to %s:%d, x_tunnel fail:%r", host, port, e)
         raise XTunnelNotRunning()
