@@ -27,6 +27,7 @@ class Front(object):
     name = "tls_relay_front"
 
     def __init__(self):
+        self.running = False
         self.logger = logger
         config_path = os.path.join(module_data_path, "tls_relay.json")
         self.config = Config(config_path)
@@ -44,7 +45,8 @@ class Front(object):
 
         self.connect_creator = connect_creator.ConnectCreator(logger, self.config, self.openssl_context, self.host_manager)
 
-        self.ip_manager = ip_manager.IpManager(self.config, self.host_manager, logger)
+        ip_speed_fn = os.path.join(module_data_path, "relay_speed.json")
+        self.ip_manager = ip_manager.IpManager(self.config, self.host_manager, logger, ip_speed_fn)
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager, check_local_network)
         self.http_dispatcher = HttpsDispatcher(logger, self.config, self.ip_manager, self.connect_manager,
                                                http2stream_class=http2_stream.Stream)
@@ -58,6 +60,7 @@ class Front(object):
     def set_x_tunnel_account(self, account, password):
         self.account = account
         self.password = password
+        self.http_dispatcher.account = account
 
     def set_ips(self, ips):
         if not self.config.allow_set_ips:

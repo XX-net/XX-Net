@@ -96,6 +96,14 @@ def get_ip_port(ip_str, port=443):
     return ip, int(port)
 
 
+def get_ip_str(ip, port=443):
+    ip = to_str(ip)
+    if ":" in ip:
+        ip = "[" + ip + "]"
+    ip_str = ip + ":" + str(port)
+    return ip_str
+
+
 domain_allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
 
 

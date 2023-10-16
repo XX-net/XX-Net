@@ -6,8 +6,8 @@ from front_base.ip_manager import IpManagerBase
 
 
 class IpManager(IpManagerBase):
-    def __init__(self, config, host_manager, logger):
-        super(IpManager, self).__init__(config, None, logger)
+    def __init__(self, config, host_manager, logger, speed_fn):
+        super(IpManager, self).__init__(config, None, logger, speed_fn)
         self.host_manager = host_manager
         self.ip_dict = {}
 
@@ -31,9 +31,12 @@ class IpManager(IpManagerBase):
         ips = self.host_manager.ips
 
         best_info = None
-        best_rtt = 99999
+        best_speed = 0
 
         for ip in ips:
+            port = int(self.host_manager.info[ip].get("port", 443))
+            ip_str = utils.get_ip_str(ip, port)
+
             info = self._get_ip_info(ip)
             if info["links"] < 0:
                 # self.logger.error("ip %s link:%d", ip, info["links"])
@@ -45,8 +48,9 @@ class IpManager(IpManagerBase):
             if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
-            if info["rtt"] < best_rtt:
-                best_rtt = info["rtt"]
+            speed = self.get_speed(ip_str)
+            if speed > best_speed:
+                best_speed = speed
                 best_info = info
 
         if not best_info:
@@ -58,10 +62,8 @@ class IpManager(IpManagerBase):
 
         ip = best_info["ip"]
         port = int(self.host_manager.info[ip].get("port", 443))
-        if ":" in ip:
-            ip = "[" + ip + "]"
-        return ip + ":" + str(port), None, None
-
+        ip_str = utils.get_ip_str(ip, port)
+        return ip_str, None, None
 
     def update_ip(self, ip_str, sni, handshake_time):
         ip, _ = utils.get_ip_port(ip_str)

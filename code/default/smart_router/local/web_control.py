@@ -107,6 +107,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "auto_direct6":g.config.auto_direct6,
                 "auto_gae": g.config.auto_gae,
                 "enable_fake_ca": g.config.enable_fake_ca,
+                "bypass_speedtest": g.config.bypass_speedtest,
                 "block_advertisement": g.config.block_advertisement
             }
             return self.response_json(data)
@@ -127,6 +128,8 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 g.config.auto_gae = int(reqs["auto_gae"])
             if "enable_fake_ca" in reqs:
                 g.config.enable_fake_ca = int(reqs["enable_fake_ca"])
+            if "bypass_speedtest" in reqs:
+                g.config.bypass_speedtest = int(reqs["bypass_speedtest"])
             if "block_advertisement" in reqs:
                 g.config.block_advertisement = int(reqs["block_advertisement"])
             g.config.save()

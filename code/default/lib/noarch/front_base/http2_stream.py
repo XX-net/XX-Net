@@ -316,11 +316,13 @@ class Stream(object):
 
             time_now = time.time()
             whole_cost = time_now - self.start_time
+            rtt = whole_cost - xcost
             receive_cost = time_now - self.get_head_time
             bytes_received = self.connection._sock.bytes_received - self.start_connection_point
-            if receive_cost > 0 and bytes_received > 10000 and not self.task.finished and receive_cost > 0.001 \
-                and xcost >= 0:
-                rtt = whole_cost - xcost
+            if b"ping" in self.task.path and self.config.http2_show_debug:
+                self.logger.debug("got pong for %s", self.connection.ip_str)
+
+            if rtt > 0 and bytes_received >= 10000 and not self.task.finished and xcost >= 0.0:
                 t_road = rtt
                 if t_road <= self.connection.handshake:
                     # adjust handshake
@@ -367,10 +369,13 @@ class Stream(object):
         response.ssl_sock = self.connection.ssl_sock
         response.worker = self.connection
         response.task = self.task
-        if self.config.http2_show_debug:
-            self.logger.debug("self.task.queue.put(response)")
 
-        self.task.queue.put(response)
+        if self.task.queue:
+            self.task.queue.put(response)
+        else:
+            if self.config.http2_show_debug:
+                self.logger.debug("got pong for %s status:%d", self.connection.ip_str, status)
+
         if status in self.config.http2_status_to_close:
             self.connection.close("status %d" % status)
 

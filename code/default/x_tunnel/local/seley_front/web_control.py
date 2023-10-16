@@ -64,6 +64,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_debug_handler(self):
+        if not front.running:
+            return self.send_response_nc('text/plain', "Not running")
+
         data = ""
         for obj in [front.connect_manager, front.http_dispatcher]:
             data += "%s\r\n" % obj.__class__
@@ -73,7 +76,17 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 sub_obj = getattr(obj, attr)
                 if callable(sub_obj):
                     continue
-                data += "    %s = %s\r\n" % (attr, sub_obj)
+
+                if isinstance(sub_obj, list):
+                    data += "    %s:\r\n" % (attr)
+                    for item in sub_obj:
+                        data += "      %s\r\n" % item
+                    data += "\r\n"
+                elif hasattr(sub_obj, "to_string"):
+                    data += "    %s:\r\n" % (attr)
+                    data += sub_obj.to_string()
+                else:
+                    data += "    %s = %s\r\n" % (attr, sub_obj)
             if hasattr(obj, "to_string"):
                 data += obj.to_string()
 

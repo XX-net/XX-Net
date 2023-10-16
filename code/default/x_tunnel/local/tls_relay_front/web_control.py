@@ -125,6 +125,9 @@ class ControlHandler(simple_http_server.HttpServerHandler):
         self.send_response_nc(mimetype, data)
 
     def req_debug_handler(self):
+        if not front.running:
+            return self.send_response_nc('text/plain', "Not running")
+
         data = ""
         for obj in [front.connect_manager, front.http_dispatcher]:
             data += "%s\r\n" % obj.__class__

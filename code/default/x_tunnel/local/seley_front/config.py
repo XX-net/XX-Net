@@ -12,7 +12,7 @@ class Config(ConfigBase):
         self.set_var("allow_set_hosts", 1)
 
         # http_dispatcher
-        self.set_var("dispather_min_idle_workers", 0)
+        # self.set_var("dispather_min_idle_workers", 0)
         self.set_var("dispather_work_min_idle_time", 0)
         self.set_var("dispather_work_max_score", 20000)
         self.set_var("dispather_max_workers", 20)
@@ -26,8 +26,8 @@ class Config(ConfigBase):
         self.set_var("http2_status_to_close", [404])
 
         # connect_manager
-        self.set_var("connection_pool_min", 0)
-        self.set_var("https_new_connect_num", 0)
-        self.set_var("max_links_per_ip", 20)
+        self.set_var("connection_pool_min", 1)
+        self.set_var("max_links_per_ip", 17)
+        self.set_var("connect_create_interval", 0)
 
         self.load()

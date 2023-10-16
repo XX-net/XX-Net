@@ -22,6 +22,9 @@ class ConfigBase(xconfig.Config):
         self.set_var("dispather_max_idle_workers", 30)
         self.set_var("dispather_worker_max_continue_fail", 8)
         self.set_var("dispather_connect_all_workers_on_startup", 0)
+        self.set_var("dispather_ping_check_speed_interval", 300)
+        self.set_var("dispather_ping_upload_size", 1024)
+        self.set_var("dispather_ping_download_size", 10240)
 
         self.set_var("max_task_num", 100)
 
@@ -30,6 +33,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("http1_ping_interval", 300)
         self.set_var("http1_idle_time", 360)
         self.set_var("http1_max_process_tasks", 99999999)
+        self.set_var("http1_trace_size", 20)
 
         # http 2 worker
         self.set_var("http2_max_concurrent", 60)
@@ -92,6 +96,9 @@ class ConfigBase(xconfig.Config):
         self.set_var("long_fail_connect_interval", 180)
         self.set_var("short_fail_connect_interval", 10)
         self.set_var("shuffle_ip_on_first_load", 0)
+        self.set_var("ip_speed_history_size", 10)
+        self.set_var("ip_initial_speed", 1000000)
+        self.set_var("ip_speed_save_interval", 60)
 
         # ip source
         self.set_var("use_ipv6", "auto") #force_ipv4/force_ipv6

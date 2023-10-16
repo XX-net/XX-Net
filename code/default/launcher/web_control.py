@@ -896,47 +896,6 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         self.send_response("text/plain", dat)
 
     def req_log_files(self):
-        # collect debug info and save to folders
-        debug_infos = {
-            "system_info": "http://localhost:8085/debug",
-            "xtunnel_info": "http://127.0.0.1:8085/module/x_tunnel/control/debug",
-            "xtunnel_status": "http://127.0.0.1:8085/module/x_tunnel/control/status",
-            "cloudflare_info": "http://127.0.0.1:8085/module/x_tunnel/control/cloudflare_front/debug",
-            "tls_info": "http://127.0.0.1:8085/module/x_tunnel/control/tls_relay_front/debug",
-            "seley_info": "http://127.0.0.1:8085/module/x_tunnel/control/seley_front/debug",
-            "cloudflare_log": "http://localhost:8085/module/x_tunnel/control/cloudflare_front/log?cmd=get_new&last_no=1",
-            "tls_log": "http://localhost:8085/module/x_tunnel/control/tls_relay_front/log?cmd=get_new&last_no=1",
-            "seley_log": "http://localhost:8085/module/x_tunnel/control/seley_front/log?cmd=get_new&last_no=1",
-            "xtunnel_log": "http://localhost:8085/module/x_tunnel/control/log?cmd=get_new&last_no=1",
-            "smartroute_log": "http://localhost:8085/module/smart_router/control/log?cmd=get_new&last_no=1",
-            "launcher_log": "http://localhost:8085/log?cmd=get_new&last_no=1"
-        }
-
-        download_path = os.path.join(env_info.data_path, "downloads")
-        if not os.path.isdir(download_path):
-            os.mkdir(download_path)
-
-        for name, url in debug_infos.items():
-            # xlog.debug("fetch %s %s", name, url)
-            try:
-                res = simple_http_client.request("GET", url, timeout=1)
-                if name.endswith("log"):
-                    dat = json.loads(res.text)
-                    no_line = list(dat.items())
-                    no_line = [[int(line[0]), line[1]] for line in no_line]
-                    no_line = sorted(no_line, key=operator.itemgetter(0))
-                    lines = [line[1] for line in no_line]
-                    data = "".join(lines)
-                    data = utils.to_bytes(data)
-                else:
-                    data = res.text
-
-                fn = os.path.join(download_path, name + ".txt")
-                with open(fn, "wb") as fd:
-                    fd.write(data)
-            except Exception as e:
-                xlog.exception("fetch info %s fail:%r", url, e)
-
         # pack data folder and response
         x_tunnel_local = os.path.abspath(os.path.join(default_path, 'x_tunnel', 'local'))
         sys.path.append(x_tunnel_local)

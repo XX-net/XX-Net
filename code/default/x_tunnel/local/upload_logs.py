@@ -5,16 +5,18 @@ import json
 import zipfile
 import operator
 
+import simple_http_client
 import env_info
 import utils
 from xlog import getLogger, reset_log_files
 xlog = getLogger("x_tunnel")
 
+from x_tunnel.local import global_var as g
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir))
 data_path = env_info.data_path
 data_xtunnel_path = os.path.join(data_path, 'x_tunnel')
-g = None
 
 
 def sleep(t):
@@ -36,6 +38,51 @@ def mask_x_tunnel_password(fp):
         del dat["login_password"]
         dat_str = json.dumps(dat)
         return dat_str
+
+
+def collect_debug_and_log():
+    # collect debug info and save to folders
+    debug_infos = {
+        "system_info": "http://127.0.0.1:8085/debug",
+        "gae_info": "http://127.0.0.1:8085/module/gae_proxy/control/debug",
+        "gae_log": "http://127.0.0.1:8085/module/gae_proxy/control/log?cmd=get_new&last_no=1",
+        "xtunnel_info": "http://127.0.0.1:8085/module/x_tunnel/control/debug",
+        "xtunnel_status": "http://127.0.0.1:8085/module/x_tunnel/control/status",
+        "cloudflare_info": "http://127.0.0.1:8085/module/x_tunnel/control/cloudflare_front/debug",
+        "tls_info": "http://127.0.0.1:8085/module/x_tunnel/control/tls_relay_front/debug",
+        "seley_info": "http://127.0.0.1:8085/module/x_tunnel/control/seley_front/debug",
+        "cloudflare_log": "http://127.0.0.1:8085/module/x_tunnel/control/cloudflare_front/log?cmd=get_new&last_no=1",
+        "tls_log": "http://127.0.0.1:8085/module/x_tunnel/control/tls_relay_front/log?cmd=get_new&last_no=1",
+        "seley_log": "http://127.0.0.1:8085/module/x_tunnel/control/seley_front/log?cmd=get_new&last_no=1",
+        "xtunnel_log": "http://127.0.0.1:8085/module/x_tunnel/control/log?cmd=get_new&last_no=1",
+        "smartroute_log": "http://127.0.0.1:8085/module/smart_router/control/log?cmd=get_new&last_no=1",
+        "launcher_log": "http://127.0.0.1:8085/log?cmd=get_new&last_no=1"
+    }
+
+    download_path = os.path.join(env_info.data_path, "downloads")
+    if not os.path.isdir(download_path):
+        os.mkdir(download_path)
+
+    for name, url in debug_infos.items():
+        # xlog.debug("fetch %s %s", name, url)
+        try:
+            res = simple_http_client.request("GET", url, timeout=1)
+            if name.endswith("log"):
+                dat = json.loads(res.text)
+                no_line = list(dat.items())
+                no_line = [[int(line[0]), line[1]] for line in no_line]
+                no_line = sorted(no_line, key=operator.itemgetter(0))
+                lines = [line[1] for line in no_line]
+                data = "".join(lines)
+                data = utils.to_bytes(data)
+            else:
+                data = res.text
+
+            fn = os.path.join(download_path, name + ".txt")
+            with open(fn, "wb") as fd:
+                fd.write(data)
+        except Exception as e:
+            xlog.warn("fetch info %s fail:%r", url, e)
 
 
 def list_files():
@@ -65,6 +112,9 @@ def list_files():
 
 def pack_logs(max_size=800 * 1024):
     content_size = 0
+
+    collect_debug_and_log()
+
     try:
         files = list_files()
         zip_buffer = io.BytesIO()
@@ -93,12 +143,6 @@ def pack_logs(max_size=800 * 1024):
 
 
 def upload_logs_thread():
-    global g
-
-    if not g:
-        from . import global_var
-        g = global_var
-
     sleep(3 * 60)
     while g.running:
         if not g.running or not g.server_host or not g.session or g.session.last_receive_time == 0:

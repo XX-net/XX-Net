@@ -454,7 +454,7 @@ class ProxySession(object):
                                                       g.config.windows_ack, True, xlog)
 
         self.target_on_roads = \
-            min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 5)
+            min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 10)
         self.trigger_more()
 
         if log:

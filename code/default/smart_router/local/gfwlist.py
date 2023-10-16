@@ -26,10 +26,12 @@ xlog = getLogger("smart_router")
 
 data_path = os.path.join(env_info.data_path, "smart_router")
 
+
 class GfwList(object):
     def __init__(self):
         self.gfw_black_list = utils.to_bytes(self.load("gfw_black_list.txt"))
         self.gfw_white_list = utils.to_bytes(self.load("gfw_white_list.txt"))
+        self.speedtest_whitelist = utils.to_bytes(self.load("speedtest_whitelist.txt"))
         self.advertisement_list = utils.to_bytes(self.load("advertisement_list.txt"))
         # xlog.debug("white_list size:%d mem:%d", len(self.gfw_white_list), sys.getsizeof(self.gfw_white_list))
         # xlog.debug("black_list size:%d mem:%d", len(self.gfw_black_list), sys.getsizeof(self.gfw_black_list))
@@ -66,6 +68,13 @@ class GfwList(object):
     def in_white_list(self, host):
         dot_host = b"." + host
         if dot_host.endswith(self.gfw_white_list):
+            return True
+        else:
+            return False
+
+    def in_speedtest_whitelist(self, host):
+        dot_host = b"." + host
+        if dot_host.endswith(self.speedtest_whitelist):
             return True
         else:
             return False

@@ -17,7 +17,7 @@ performance:
  sorted by rtt and pipeline task on load.
 """
 from six.moves import queue
-
+import random
 import operator
 import threading
 import time
@@ -65,6 +65,8 @@ class HttpsDispatcher(object):
         self.request_queue = Queue()
         self.workers = []
         self.working_tasks = {}
+        self.account = ""
+        self.last_host = None
         self.h1_num = 0
         self.h2_num = 0
         self.last_request_time = time.time()
@@ -95,6 +97,7 @@ class HttpsDispatcher(object):
             "sent": 0,
             "received": 0
         }
+        self.ping_speed_ip_str_last_active = {}  # ip_str => last_active
 
         self.trigger_create_worker_cv = SimpleCondition()
         self.wait_a_worker_cv = SimpleCondition()
@@ -138,8 +141,33 @@ class HttpsDispatcher(object):
 
         self.workers.append(worker)
 
-        if remove_slowest_worker:
+        if time.time() - self.ping_speed_ip_str_last_active.get(worker.ip_str, 0) > self.config.dispather_ping_check_speed_interval:
+            self.ping_speed(worker)
+            self.ping_speed_ip_str_last_active[worker.ip_str] = time.time()
+
+        elif remove_slowest_worker:
             self._remove_slowest_worker()
+
+    def ping_speed(self, worker):
+        if not self.last_host:
+            return
+
+        method = b"POST"
+        path = b"/ping?content_length=%d" % self.config.dispather_ping_download_size
+        body = utils.to_bytes(utils.generate_random_lowercase(self.config.dispather_ping_upload_size))
+        headers = {
+            b"Padding": utils.to_str(utils.generate_random_lowercase(random.randint(64, 256))),
+            b"Xx-Account": self.account,
+            b"X-Host": self.last_host,
+            b"X-Path": path
+        }
+
+        task = http_common.Task(self.logger, self.config, method, self.last_host, path,
+                                headers, body, None, "/ping", 5)
+        task.set_state("start_ping_request")
+        # self.logger.debug("send ping for %s", worker.ip_str)
+
+        worker.request(task)
 
     def _on_worker_idle_cb(self):
         self.wait_a_worker_cv.notify()
@@ -261,7 +289,7 @@ class HttpsDispatcher(object):
 
     def _remove_slowest_worker(self):
         # close slowest worker,
-        # give change for better worker
+        # give chance for better worker
         while True:
             slowest_score = 9999
             slowest_worker = None
@@ -306,6 +334,8 @@ class HttpsDispatcher(object):
 
         with self.task_count_lock:
             self.task_count += 1
+
+        self.last_host = host
 
         try:
             if not url:
@@ -411,6 +441,7 @@ class HttpsDispatcher(object):
 
             get_worker_time = time.time()
             get_cost = get_worker_time - get_time
+            self.ping_speed_ip_str_last_active[worker.ip_str] = get_worker_time
             task.set_state("get_worker(%d):%s" % (get_cost, worker.ip_str))
             task.worker = worker
             task.predict_rtt = worker.get_score()
@@ -524,7 +555,7 @@ class HttpsDispatcher(object):
 
         w_r = sorted(list(worker_rate.items()), key=operator.itemgetter(1))
 
-        out_str = 'thread num:%d\r\n' % threading.activeCount()
+        out_str = 'thread num:%d\r\n' % threading.active_count()
         for w, r in w_r:
             out_str += "%s score:%d rtt:%d running:%d accept:%d live:%d inactive:%d processed:%d" % \
                        (w.ip_str, w.get_score(), w.rtt, w.keep_running,  w.accept_task,
@@ -535,10 +566,6 @@ class HttpsDispatcher(object):
 
             elif w.version == "1.1":
                 out_str += " Trace:%s" % w.get_trace()
-
-            out_str += "\r\n Speed:"
-            for speed in w.speed_history:
-               out_str += "%d," % speed
 
             out_str += "\r\n"
 

@@ -40,6 +40,8 @@ class Http1Worker(HttpWorker):
 
     def record_active(self, active=""):
         self.trace_time.append([time.time(), active])
+        if len(self.trace_time) > self.config.http1_trace_size:
+            self.trace_time.pop(0)
         # self.logger.debug("%s stat:%s", self.ip, active)
 
     def get_trace(self):
@@ -141,7 +143,8 @@ class Http1Worker(HttpWorker):
 
         task.headers[b'Host'] = self.get_host(task.host)
 
-        task.headers[b"Content-Length"] = len(task.body)
+        request_len = len(task.body)
+        task.headers[b"Content-Length"] = request_len
         request_data = b'%s %s HTTP/1.1\r\n' % (task.method, task.path)
         request_data += pack_headers(task.headers)
         request_data += b'\r\n'
@@ -184,7 +187,11 @@ class Http1Worker(HttpWorker):
         response.worker = self
         task.content_length = response.content_length
         task.responsed = True
-        task.queue.put(response)
+        if task.queue:
+            task.queue.put(response)
+        else:
+            if self.config.http2_show_debug:
+                self.logger.debug("got pong for %s status:%d", self.ip_str, response.status)
 
         try:
             read_target = int(response.content_length)
@@ -219,9 +226,19 @@ class Http1Worker(HttpWorker):
         task.finish()
 
         self.ssl_sock.received_size += data_len
-        time_cost = (time.time() - start_time)
-        if time_cost != 0:
-            speed = data_len / time_cost
+
+        time_now = time.time()
+        time_cost = (time_now - start_time)
+        xcost = float(response.headers.get(b"X-Cost", 0))
+        if isinstance(xcost, list):
+            xcost = float(xcost[0])
+
+        total_len = (request_len + data_len)
+        road_time = time_cost - xcost
+        if xcost and total_len > 10000 and road_time:
+            speed = total_len / road_time
+            self.update_speed(speed)
+
             task.set_state("h1_finish[SP:%d]" % speed)
 
         self.transfered_size += len(request_data) + data_len

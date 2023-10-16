@@ -1,6 +1,7 @@
 import time
 import os
 import json
+import socket
 
 from front_base.ip_manager import IpManagerBase
 import utils
@@ -9,8 +10,8 @@ xlog = getLogger("seley_front")
 
 
 class IpManager(IpManagerBase):
-    def __init__(self, config, logger, config_fn):
-        super().__init__(config, None, logger)
+    def __init__(self, config, logger, config_fn, speed_fn):
+        super().__init__(config, None, logger, speed_fn)
         self.config_fn = config_fn
         self.hosts = {}
         self.ip_dict = {}
@@ -18,14 +19,16 @@ class IpManager(IpManagerBase):
 
     def __str__(self):
         o = ""
+        o += " seley_host: \r\n%s\r\n" % json.dumps(self.hosts, indent=2)
         o += " seley_dict: \r\n%s\r\n" % json.dumps(self.ip_dict, indent=2)
+        o += " speed_info: \r\n%s\r\n" % json.dumps(self.speed_info, indent=2)
         return o
 
     def set_hosts(self, hosts):
         self.hosts = hosts
         try:
             with open(self.config_fn, "w") as fd:
-                json.dump(self.hosts, fd)
+                json.dump(self.hosts, fd, indent=2)
         except Exception as e:
             xlog.error("save hosts %s e:%r", self.config_fn, e)
 
@@ -35,9 +38,27 @@ class IpManager(IpManagerBase):
 
         try:
             with open(self.config_fn, "r") as fd:
-                self.hosts = json.load(fd)
+                domain_hosts = json.load(fd)
         except Exception as e:
             xlog.warn("load hosts %s e:%r", self.config_fn, e)
+            return
+
+        ip_hosts = {}
+        for domain_port, host_info in domain_hosts.items():
+            ip, port = utils.get_ip_port(domain_port)
+            if not utils.check_ip_valid(ip):
+                try:
+                    info = socket.getaddrinfo(ip, port, socket.AF_UNSPEC,
+                                              socket.SOCK_STREAM)
+
+                    af, socktype, proto, canonname, sa = info[0]
+                    ip = sa[0]
+                except socket.gaierror:
+                    pass
+
+            ip_str = utils.get_ip_str(ip, port)
+            ip_hosts[ip_str] = host_info
+        self.hosts = ip_hosts
 
     def _get_ip_info(self, ip_str):
         ip_str = utils.to_str(ip_str)
@@ -54,7 +75,7 @@ class IpManager(IpManagerBase):
         now = time.time()
 
         best_info = None
-        best_rtt = 99999
+        best_speed = 0
 
         for ip_str, params in self.hosts.items():
             if not params.get("key"):
@@ -71,16 +92,23 @@ class IpManager(IpManagerBase):
             if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
-            if info["rtt"] < best_rtt:
-                best_rtt = info["rtt"]
+            if now - info["last_try"] > 30 * 60:
                 best_info = info
+                xlog.debug("get_ip_sni_host last_try %s", ip_str)
+                break
+
+            speed = self.get_speed(ip_str)
+            if speed > best_speed:
+                best_speed = speed
+                best_info = info
+                xlog.debug("get_ip_sni_host best speed %s", ip_str)
 
         if not best_info:
             return None, None, None
 
-        best_info["links"] += 1
-        best_info["last_try"] = now
         ip_str = best_info["ip_str"]
+        self.ip_dict[ip_str]["links"] += 1
+        self.ip_dict[ip_str]["last_try"] = now
         key = self.hosts[ip_str]["key"]
 
         return best_info["ip_str"], key, ip_str
@@ -89,7 +117,6 @@ class IpManager(IpManagerBase):
         info = self._get_ip_info(ip_str)
         info["fail_times"] = 0
         info["rtt"] = handshake_time
-        info["last_try"] = 0.0
         # self.logger.debug("ip %s connect success", ip)
 
     def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=False):

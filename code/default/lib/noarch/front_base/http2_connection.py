@@ -462,8 +462,8 @@ class Http2Worker(HttpWorker):
             # code registry otherwise use the frame's additional data.
             error_string = frame._extra_info()
             time_cost = time.time() - self.last_recv_time
-            if frame.additional_data != b"session_timed_out":
-                self.logger.warn("goaway:%s, t:%d", error_string, time_cost)
+            # if frame.additional_data != b"session_timed_out":
+            #     self.logger.warn("goaway:%s, t:%d", error_string, time_cost)
 
             self.close("GoAway:%s inactive time:%d" % (error_string, time_cost))
 

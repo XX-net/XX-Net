@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 from six.moves import queue
 import operator
 import os
@@ -12,7 +13,7 @@ import utils
 
 
 class IpManagerBase():
-    def __init__(self, config, ip_source, logger):
+    def __init__(self, config, ip_source, logger, speed_fn=None):
         self.scan_thread_lock = threading.Lock()
         self.ip_lock = threading.Lock()
 
@@ -20,6 +21,48 @@ class IpManagerBase():
         self.ip_source = ip_source
         self.logger = logger
         self.ips = []
+        self.speed_fn = speed_fn
+        self.speed_info = self.load_speed_info()
+        self.speed_info_last_save_time = time.time()
+
+    def load_speed_info(self):
+        if not self.speed_fn or not os.path.isfile(self.speed_fn):
+            return {}
+
+        try:
+            with open(self.speed_fn, "r") as fd:
+                info = json.load(fd)
+                return info
+        except Exception as e:
+            self.logger.exception("load speed info %s failed:%r", self.speed_fn, e)
+            return {}
+
+    def save_speed_info(self):
+        if not self.speed_fn:
+            return
+
+        try:
+            with open(self.speed_fn, "w") as fd:
+                json.dump(self.speed_info, fd, indent=2)
+        except Exception as e:
+            self.logger.exception("save speed info %s fail:%r", self.speed_fn, e)
+
+    def update_speed(self, ip_str, speed):
+        ip_str = utils.to_str(ip_str)
+        ip_info = self.speed_info.setdefault(ip_str, {})
+        ip_info.setdefault("history", []).append(speed)
+        if len(ip_info["history"]) > self.config.ip_speed_history_size:
+            ip_info["history"].pop(0)
+        ip_info["speed"] = sum(ip_info["history"]) / len(ip_info["history"])
+        # self.logger.debug("update speed %s %d", ip_str, ip_info["speed"])
+
+        if time.time() - self.speed_info_last_save_time > self.config.ip_speed_save_interval:
+            self.save_speed_info()
+            self.speed_info_last_save_time = time.time()
+
+    def get_speed(self, ip_str):
+        ip_str = utils.to_str(ip_str)
+        return self.speed_info.get(ip_str, {}).get("speed", self.config.ip_initial_speed)
 
     def load_config(self):
         pass
@@ -62,7 +105,7 @@ class IpManagerBase():
 # good case is 60ms
 # bad case is 1300ms and more.
 
-class IpManager():
+class IpManager(IpManagerBase):
     # Functions:
     # 1. Scan ip in back ground
     # 2. sort ip by RTT and fail times
@@ -76,9 +119,7 @@ class IpManager():
 
     def __init__(self, logger, config, ip_source, host_manager, check_local_network, check_ip,
                  default_ip_list_fn, ip_list_fn, scan_ip_log=None):
-        self.logger = logger
-        self.config = config
-        self.ip_source = ip_source
+        super().__init__(config, ip_source, logger)
         self.host_manager = host_manager
         self.check_local_network = check_local_network
         self.check_ip = check_ip

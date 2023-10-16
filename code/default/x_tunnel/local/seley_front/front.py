@@ -12,7 +12,6 @@ from gae_proxy.local import check_local_network
 
 from .config import Config
 from .connect_creator import ConnectCreator
-from .ip_manager import IpManager
 
 data_path = env_info.data_path
 module_data_path = os.path.join(data_path, 'x_tunnel')
@@ -20,11 +19,14 @@ module_data_path = os.path.join(data_path, 'x_tunnel')
 logger = xlog.getLogger("seley_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
 logger.set_buffer(300)
 
+from .ip_manager import IpManager
+
 
 class Front(object):
     name = "seley_front"
 
     def __init__(self):
+        self.running = False
         self.account = ""
         self.password = ""
         self.logger = logger
@@ -36,7 +38,8 @@ class Front(object):
         self.connect_creator = ConnectCreator(logger, self.config)
 
         hosts_fn = os.path.join(module_data_path, "seley_host.json")
-        self.ip_manager = IpManager(self.config, logger, hosts_fn)
+        ip_speed_fn = os.path.join(module_data_path, "seley_speed.json")
+        self.ip_manager = IpManager(self.config, logger, hosts_fn, ip_speed_fn)
 
         self.connect_manager = ConnectManager(logger, self.config, self.connect_creator, self.ip_manager,
                                               check_local_network)
@@ -45,6 +48,7 @@ class Front(object):
     def set_x_tunnel_account(self, account, password):
         self.account = account
         self.password = password
+        self.http_dispatcher.account = account
 
     def set_hosts(self, hosts):
         if not self.config.allow_set_hosts:

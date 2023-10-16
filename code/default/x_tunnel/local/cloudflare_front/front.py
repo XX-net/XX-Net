@@ -28,6 +28,7 @@ class Front(object):
     name = "cloudflare_front"
 
     def __init__(self):
+        self.running = False
         self.logger = logger
         config_path = os.path.join(module_data_path, "cloudflare_front.json")
         self.config = Config(config_path)
@@ -44,7 +45,8 @@ class Front(object):
         ca_certs = os.path.join(current_path, "cacert.pem")
         default_domain_fn = os.path.join(current_path, "front_domains.json")
         domain_fn = os.path.join(module_data_path, "cloudflare_domains.json")
-        self.ip_manager = ip_manager.IpManager(self.config, default_domain_fn, domain_fn, self.logger)
+        ip_speed_fn = os.path.join(module_data_path, "cloudflare_speed.json")
+        self.ip_manager = ip_manager.IpManager(self.config, default_domain_fn, domain_fn, ip_speed_fn, self.logger)
 
         openssl_context = SSLContext(logger, ca_certs=ca_certs)
         self.connect_creator = ConnectCreator(logger, self.config, openssl_context, None)

@@ -1,0 +1,13 @@
+cdnst.net
+cellmaps.com
+ekahau.cloud
+ekahau.com
+ookla.com
+ooklaserver.net
+pingtest.net
+speedtest.co
+speedtest.net
+speedtestcustom.com
+webtest.net
+measurement-lab.org
+measurementlab.net

@@ -9,8 +9,8 @@ from front_base.ip_manager import IpManagerBase
 
 
 class IpManager(IpManagerBase):
-    def __init__(self, config, default_domain_fn, domain_fn, logger):
-        super(IpManager, self).__init__(config, None, logger)
+    def __init__(self, config, default_domain_fn, domain_fn, speed_fn, logger):
+        super(IpManager, self).__init__(config, None, logger, speed_fn)
         self.default_domain_fn = default_domain_fn
         self.domain_fn = domain_fn
 

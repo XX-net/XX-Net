@@ -177,7 +177,8 @@ class Task(object):
         res = simple_http_client.BaseResponse(body=err_text)
         res.task = self
         res.worker = self.worker
-        self.queue.put(res)
+        if self.queue:
+            self.queue.put(res)
         self.finish()
 
     def finish(self):
@@ -198,7 +199,6 @@ class HttpWorker(object):
         self.ssl_sock = ssl_sock
         self.handshake = ssl_sock.handshake_time * 0.001
         self.rtt = ssl_sock.handshake_time * 0.001
-        self.speed = 15000000
         self.streams = []
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
@@ -213,7 +213,6 @@ class HttpWorker(object):
         self.continue_fail_tasks = 0
         self.rtt_history = [self.rtt,]
         self.adjust_history = []
-        self.speed_history = [self.speed, self.speed, self.speed]
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
@@ -228,12 +227,11 @@ class HttpWorker(object):
         o += " continue_fail_tasks: %s\r\n" % (self.continue_fail_tasks)
         o += " handshake: %f \r\n" % self.handshake
         o += " rtt_history: %s\r\n" % (self.rtt_history)
-        o += " speed_history: %s\r\n" % (self.speed_history)
         o += " adjust_history: %s\r\n" % (self.adjust_history)
         if self.version != "1.1":
             o += "streams: %d\r\n" % len(self.streams)
         o += " rtt: %f\r\n" % (self.rtt)
-        o += " speed: %f\r\n" % (self.speed)
+        o += " speed: %f\r\n" % (self.ip_manager.get_speed(self.ip_str))
         o += " score: %f\r\n" % (self.get_score())
         return o
 
@@ -250,20 +248,9 @@ class HttpWorker(object):
                 self.adjust_history.pop(0)
 
     def update_speed(self, speed):
-        self.speed_history.append(speed)
-        if len(self.speed_history) > 10:
-            self.speed_history.pop(0)
-        self.speed = sum(self.speed_history) / len(self.speed_history)
+        self.ip_manager.update_speed(self.ip_str, speed)
 
     def update_debug_data(self, rtt, sent, received, speed):
-        # if sent + received > 10000:
-        #     self.speed_history.append(speed)
-        #     if len(self.speed_history) > 10:
-        #         self.speed_history.pop(0)
-        #     self.speed = sum(self.speed_history) / len(self.speed_history)
-        # else:
-        #     self.rtt = rtt
-
         self.log_debug_data(rtt, sent, received)
         return
 
@@ -296,23 +283,23 @@ class HttpWorker(object):
         if self.processed_tasks == 0 and len(self.streams) == 0:
             score /= 3
 
+        speed = self.ip_manager.get_speed(self.ip_str)
         if self.version == "1.1":
-            score += self.max_payload / self.speed
-            return score
+            score += self.max_payload / speed
+        else:
+            response_body_len = self.max_payload
+            for _, stream in self.streams.items():
+                if stream.response_body_len == 0:
+                    response_body_len += self.max_payload
+                else:
+                    response_body_len += stream.response_body_len - stream.task.body_len
+            score += response_body_len / speed
 
-        response_body_len = self.max_payload
-        for _, stream in self.streams.items():
-            if stream.response_body_len == 0:
-                response_body_len += self.max_payload
-            else:
-                response_body_len += stream.response_body_len - stream.task.body_len
-        score += response_body_len / self.speed
-
-        score += len(self.streams) * 0.06
+            score += len(self.streams) * 0.06
 
         if self.config.show_state_debug:
             self.logger.debug("get_score %s, speed:%f rtt:%d stream_num:%d score:%f", self.ip_str,
-                          self.speed * 0.000001, self.rtt * 1000, len(self.streams), score)
+                          speed * 0.000001, self.rtt * 1000, len(self.streams), score)
 
         return score
 
