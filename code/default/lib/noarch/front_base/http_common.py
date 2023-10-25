@@ -263,7 +263,7 @@ class HttpWorker(object):
             # self.logger.debug("worker.close %s reason:%s", self.ip_str, reason)
             self.accept_task = False
             self.keep_running = False
-            self.ssl_sock.close()
+            self.ssl_sock.close(reason)
             if reason not in ["idle timeout", "life end"]:
                 now = time.time()
                 inactive_time = now - self.last_recv_time
@@ -318,6 +318,8 @@ class HttpWorker(object):
         elif self.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
             return True
         elif self.processed_tasks > self.config.http2_max_process_tasks:
+            return True
+        elif self.version == "1.1" and now - self.last_recv_time > self.config.http1_idle_time:
             return True
         else:
             return False

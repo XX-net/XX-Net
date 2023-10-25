@@ -159,20 +159,28 @@ class Http1Worker(HttpWorker):
                 start += sended
 
             task.set_state("h1_req_sended")
-
-            response = simple_http_client.Response(self.ssl_sock)
-
-            response.begin(timeout=timeout)
-            task.set_state("response_begin")
-
         except Exception as e:
-            self.logger.warn("%s h1_request:%r inactive_time:%d task.timeout:%d",
+            self.logger.exception("%s h1_request send:%r inactive_time:%d task.timeout:%d",
                              self.ip_str, e, time.time() - self.last_recv_time, task.timeout)
             self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
 
             self.retry_task_cb(task)
             self.task = None
-            self.close("down fail")
+            self.close("send fail")
+            return
+
+        try:
+            response = simple_http_client.Response(self.ssl_sock)
+            response.begin(timeout=timeout)
+            task.set_state("response_begin")
+        except Exception as e:
+            self.logger.exception("%s h1_request recv:%r inactive_time:%d task.timeout:%d",
+                             self.ip_str, e, time.time() - self.last_recv_time, task.timeout)
+            self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
+
+            self.retry_task_cb(task)
+            self.task = None
+            self.close("recv fail")
             return
 
         task.set_state("h1_get_head")
@@ -208,7 +216,7 @@ class Http1Worker(HttpWorker):
                 self.logger.warn("read fail, ip:%s, chunk:%d url:%s task.timeout:%d e:%r",
                                  self.ip_str, response.chunked, task.url, task.timeout, e)
                 self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
-                self.close("down fail")
+                self.close("read fail")
                 return
 
             task.put_data(data)

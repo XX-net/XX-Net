@@ -149,7 +149,7 @@ class Response(BaseResponse):
         while time.time() < end_time:
             try:
                 return self.sock.recv(to_read)
-            except socket.error as e:
+            except (BlockingIOError, socket.error) as e:
                 if e.errno in [2, 11, 35, 10035]:
                     time_left = end_time - time.time()
                     if time_left < 0:
@@ -314,7 +314,7 @@ class Response(BaseResponse):
 
             try:
                 nbytes = self.sock.recv_into(view[out_len:], to_read)
-            except socket.error as e:
+            except (BlockingIOError, socket.error) as e:
                 if e.errno in [2, 11, 35, 10035]:
                     time_left = start_time + timeout - time.time()
                     if time_left < 0:

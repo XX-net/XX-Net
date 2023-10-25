@@ -189,14 +189,14 @@ class SSLConnection(object):
     def write(self, buf, flags=0):
         return self.sendall(buf, flags)
 
-    def close(self):
+    def close(self, reason=""):
         if self._makefile_refs < 1:
             self.running = False
             if not self.socket_closed:
                 socket.socket.close(self._sock)
                 self.socket_closed = True
                 if self._on_close:
-                    self._on_close(self.ip_str, self.sni)
+                    self._on_close(self.ip_str, self.sni, reason=reason)
         else:
             self._makefile_refs -= 1
 

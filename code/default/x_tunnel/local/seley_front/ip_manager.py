@@ -45,19 +45,25 @@ class IpManager(IpManagerBase):
 
         ip_hosts = {}
         for domain_port, host_info in domain_hosts.items():
+            if not host_info.get("key"):
+                continue
+
             ip, port = utils.get_ip_port(domain_port)
             if not utils.check_ip_valid(ip):
                 try:
                     info = socket.getaddrinfo(ip, port, socket.AF_UNSPEC,
                                               socket.SOCK_STREAM)
 
-                    af, socktype, proto, canonname, sa = info[0]
-                    ip = sa[0]
-                except socket.gaierror:
-                    pass
+                    for af, socktype, proto, canonname, sa in info:
+                        ip = sa[0]
 
-            ip_str = utils.get_ip_str(ip, port)
-            ip_hosts[ip_str] = host_info
+                        ip_str = utils.get_ip_str(ip, port)
+                        ip_hosts[ip_str] = host_info
+                except socket.gaierror:
+                    ip_hosts[domain_port] = host_info
+            else:
+                ip_hosts[domain_port] = host_info
+
         self.hosts = ip_hosts
 
     def _get_ip_info(self, ip_str):
@@ -74,6 +80,7 @@ class IpManager(IpManagerBase):
     def get_ip_sni_host(self):
         now = time.time()
 
+        ip_str = None
         best_info = None
         best_speed = 0
 
@@ -94,14 +101,14 @@ class IpManager(IpManagerBase):
 
             if now - info["last_try"] > 30 * 60:
                 best_info = info
-                xlog.debug("get_ip_sni_host last_try %s", ip_str)
+                # xlog.debug("get_ip_sni_host last_try %s", ip_str)
                 break
 
             speed = self.get_speed(ip_str)
             if speed > best_speed:
                 best_speed = speed
                 best_info = info
-                xlog.debug("get_ip_sni_host best speed %s", ip_str)
+                # xlog.debug("get_ip_sni_host best speed %s", ip_str)
 
         if not best_info:
             return None, None, None

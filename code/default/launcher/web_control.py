@@ -1057,11 +1057,11 @@ def stop():
     xlog.info("launcher web control exited.")
 
 
-def http_request(url, method="GET"):
+def http_request(url, method="GET", timeout=30):
     proxy_handler = ProxyHandler({})
     opener = build_opener(proxy_handler)
     try:
-        req = opener.open(url, timeout=30)
+        req = opener.open(url, timeout=timeout)
         return req
     except Exception as e:
         # xlog.exception("web_control http_request:%s fail:%s", url, e)
@@ -1076,7 +1076,7 @@ def confirm_xxnet_not_running():
     xlog.debug("start confirm_xxnet_exit url:%s", req_url)
 
     for i in range(30):
-        if http_request(req_url) == False:
+        if http_request(req_url, timeout=5) == False:
             xlog.debug("good, xxnet:%s clear!" % host_port)
             is_xxnet_exit = True
             break

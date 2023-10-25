@@ -435,7 +435,7 @@ class ConnectionPipe(object):
 
         try:
             conn = self.sock_conn_map[sock]
-            self.xlog.info("close conn:%d", conn.conn_id)
+            # self.xlog.info("close conn:%d", conn.conn_id)
             self.remove_sock(sock)
 
             conn.transfer_peer_close(reason)

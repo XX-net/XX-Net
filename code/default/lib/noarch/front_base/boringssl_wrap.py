@@ -236,7 +236,7 @@ class SSLConnection(object):
     def write(self, buf, flags=0):
         return self.send(buf, flags)
 
-    def close(self):
+    def close(self, reason=""):
         with self._lock:
             self.running = False
             if not self.socket_closed:
@@ -279,7 +279,7 @@ class SSLConnection(object):
                 self.socket_closed = True
 
                 if self._on_close:
-                    self._on_close(self.ip_str, self.sni)
+                    self._on_close(self.ip_str, self.sni, reason=reason)
                     self._on_close = None
 
     def __del__(self):
