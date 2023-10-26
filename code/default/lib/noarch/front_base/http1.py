@@ -137,6 +137,7 @@ class Http1Worker(HttpWorker):
         timeout = task.timeout
         self.request_onway = True
         start_time = time.time()
+        self.last_recv_time = start_time
 
         self.record_active("request")
         task.set_state("h1_req")

@@ -213,7 +213,7 @@ class HttpsDispatcher(object):
             if not worker.is_life_end():
                 continue
 
-            if worker.version == "1.1":
+            if worker.version == "1.1" and not worker.request_onway:
                 to_close.append(worker)
                 continue
 
