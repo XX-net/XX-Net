@@ -228,7 +228,8 @@ class HttpsDispatcher(object):
                 to_close.append(worker)
 
         for worker in to_close:
-            worker.close("life end")
+            reason = worker.is_life_end()
+            worker.close("life end:" + reason)
             if worker in self.workers:
                 try:
                     self.workers.remove(worker)

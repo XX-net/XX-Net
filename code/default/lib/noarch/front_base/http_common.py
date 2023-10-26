@@ -312,14 +312,19 @@ class HttpWorker(object):
     def is_life_end(self):
         now = time.time()
         if now > self.life_end_time:
-            return True
+            return "life_end_time"
         elif now - self.last_recv_time > 230:
-            return True
+            return "last_recv_time"
         elif self.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
-            return True
+            return "continue_fail"
         elif self.processed_tasks > self.config.http2_max_process_tasks:
-            return True
-        elif self.version == "1.1" and now - self.last_recv_time > self.config.http1_idle_time:
-            return True
+            return "processed_tasks"
+        elif self.version == "1.1":
+            if self.processed_tasks > self.config.http1_max_process_tasks:
+                return "http1 max_process_tasks"
+            elif now - self.last_recv_time > self.config.http1_idle_time:
+                return "http1 last_recv_time"
+            else:
+                return False
         else:
             return False

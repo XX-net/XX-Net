@@ -20,7 +20,7 @@ class Config(ConfigBase):
         # http1
         self.set_var("http1_first_ping_wait", 0)
         self.set_var("http1_ping_interval", 0)
-        self.set_var("http1_idle_time", 240)
+        self.set_var("http1_idle_time", 230)
         self.set_var("http1_max_process_tasks", 999999)
         self.set_var("http2_max_process_tasks", 999999)
         self.set_var("http2_status_to_close", [404])
