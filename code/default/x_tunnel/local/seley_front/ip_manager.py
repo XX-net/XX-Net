@@ -25,10 +25,11 @@ class IpManager(IpManagerBase):
         return o
 
     def set_hosts(self, hosts):
-        self.hosts = hosts
         try:
             with open(self.config_fn, "w") as fd:
-                json.dump(self.hosts, fd, indent=2)
+                json.dump(hosts, fd, indent=2)
+
+            self.load()
         except Exception as e:
             xlog.error("save hosts %s e:%r", self.config_fn, e)
 
