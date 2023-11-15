@@ -80,9 +80,8 @@ def handle_openai(method, path, headers, req_body, sock):
                 data = content
 
             dat = json.loads(data)
-            total_tokens = dat["usage"]["total_tokens"]
-            cost = total_tokens * openai_chat_token_price
-            g.openai_balance -= cost
+            consumed_balance = dat["usage"]["consumed_balance"]
+            g.openai_balance -= consumed_balance
         except Exception as e1:
             xlog.exception("cal tokens err:%r", e1)
 
