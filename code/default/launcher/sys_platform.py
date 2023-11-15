@@ -123,6 +123,7 @@ elif sys.platform == "darwin":
         sys_tray.serve_forever()
 
     def on_quit():
+        global sys_tray
         sys_tray.on_quit()
 
 elif sys.platform == "ios":

@@ -2,11 +2,28 @@ import socket
 import time
 import struct
 import json
+import os
+
+import env_info
+import xlog
+data_path = env_info.data_path
+module_data_path = os.path.join(data_path, 'x_tunnel')
+
+logger = xlog.getLogger("seley_front", log_path=module_data_path, save_start_log=1500, save_warning_log=True)
+logger.set_buffer(300)
 
 try:
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-except:
-    algorithms = None
+    from py_aes_cfb import lib as aes
+    logger.debug("load py_aes_cfb success")
+except Exception as e:
+    aes = None
+
+    try:
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        logger.debug("load cryptography success")
+    except:
+        logger.warn("load cryptography failed:%r", e)
+        algorithms = None
 
 
 import utils
@@ -25,15 +42,36 @@ class SSLConnection(object):
         self.running = True
         self.h2 = False
 
-        if not algorithms:
-            raise socket.error('no cryptography')
+        if not aes and not algorithms:
+            raise socket.error('no cryptography 7')
 
-        algorithm = algorithms.AES(self.sni)
+        key = self.sni
         iv = b'\x00' * 16
-        self.cipher = Cipher(algorithm, mode=modes.CFB(iv))
-        self.decryptor = self.cipher.decryptor()
-        self.encryptor = self.cipher.encryptor()
+        if aes:
+            self.encryptor = aes.encryptor_create(key, len(key), iv, len(iv))
+            self.decryptor = aes.decryptor_create(key, len(key), iv, len(iv))
+        else:
+            algorithm = algorithms.AES(key)
+            self.cipher = Cipher(algorithm, mode=modes.CFB(iv))
+            self.decryptor = self.cipher.decryptor()
+            self.encryptor = self.cipher.encryptor()
         self.wrap()
+
+    def encode(self, input):
+        if aes:
+            out = bytes(input)
+            aes.encryptor_update(self.encryptor, input, len(input), out)
+            return out
+        else:
+            return self.encryptor.update(input)
+
+    def decode(self, input):
+        if aes:
+            out = bytes(input)
+            aes.decryptor_update(self.decryptor, input, len(input), out)
+            return out
+        else:
+            return self.decryptor.update(input)
 
     def wrap(self):
         ip, port = utils.get_ip_port(self.ip_str)
@@ -53,17 +91,17 @@ class SSLConnection(object):
         data = json.dumps(info)
         data_len = len(data)
         dat = magic + struct.pack("I", data_len) + utils.to_bytes(data)
-        dat = self.encryptor.update(dat)
+        dat = self.encode(dat)
         sended = self._sock.send(dat)
 
         res = self._sock.recv(6)
-        res = self.decryptor.update(res)
+        res = self.decode(res)
         if res[0:2] != b"SE":
             raise Exception("handshake failed")
 
         data_len = struct.unpack("I", res[2:])[0]
         res = self._sock.recv(data_len)
-        res = self.decryptor.update(res)
+        res = self.decode(res)
         info = json.loads(res)
 
     def is_support_h2(self):
@@ -88,6 +126,10 @@ class SSLConnection(object):
             if self._on_close:
                 self._on_close(self.ip_str, self.sni)
 
+        if aes:
+            aes.encryptor_destroy(self.encryptor)
+            aes.decryptor_destroy(self.decryptor)
+
     def get_cert(self):
         self.peer_cert = {
             "cert": "",
@@ -101,7 +143,7 @@ class SSLConnection(object):
         return
 
     def send(self, data, flags=0):
-        data = self.encryptor.update(data)
+        data = self.encode(data)
         try:
             return self._sock.send(data)
         except Exception as e:
@@ -110,7 +152,7 @@ class SSLConnection(object):
 
     def recv(self, bufsiz, flags=0):
         data = self._sock.recv(bufsiz)
-        data = self.decryptor.update(data)
+        data = self.decode(data)
         return data
 
     def recv_into(self, buf, nbytes=None):
@@ -121,8 +163,7 @@ class SSLConnection(object):
         if not data:
             return None
 
-
-        data = self.decryptor.update(data)
+        data = self.decode(data)
         buf[:len(data)] = data
         return len(data)
 

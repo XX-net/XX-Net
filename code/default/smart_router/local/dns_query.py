@@ -164,16 +164,19 @@ class LocalDnsQuery():
                 iplist.append(ip)
 
         elif os.path.isfile('/etc/resolv.conf'):
-            with open('/etc/resolv.conf', 'rb') as fp:
-                iplist = re.findall(br'(?m)^nameserver\s+(\S+)', fp.read())
+            try:
+                with open('/etc/resolv.conf', 'rb') as fp:
+                    iplist = re.findall(br'(?m)^nameserver\s+(\S+)', fp.read())
 
-            xlog.debug("DNS resolve servers:%s", iplist)
+                xlog.debug("DNS resolve servers:%s", iplist)
 
-            local_ips = g.local_ips
-            for ip in local_ips:
-                if ip in iplist:
-                    xlog.warn("remove local DNS server %s from upstream", ip)
-                    iplist.remove(ip)
+                local_ips = g.local_ips
+                for ip in local_ips:
+                    if ip in iplist:
+                        xlog.warn("remove local DNS server %s from upstream", ip)
+                        iplist.remove(ip)
+            except Exception as e:
+                xlog.warn("load /etc/resolv.conf fail:%r", e)
 
         if not iplist:
             iplist = [
