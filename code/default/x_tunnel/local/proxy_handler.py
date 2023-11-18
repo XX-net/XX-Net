@@ -62,7 +62,7 @@ class Socks5Server():
                 return
 
         except socket.error as e:
-            xlog.exception('proxy handler read error %r', e)
+            xlog.warn('proxy handler read error %r', e)
             self.connection.close()
         except Exception as e:
             xlog.exception("proxy handler err:%r", e)

@@ -43,7 +43,7 @@ class SSLConnection(object):
         self.h2 = False
 
         if not aes and not algorithms:
-            raise socket.error('no cryptography 7')
+            raise socket.error('no cryptography')
 
         key = self.sni
         iv = b'\x00' * 16
