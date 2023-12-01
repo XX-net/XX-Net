@@ -1,6 +1,6 @@
 ## 设置使用密码：
 如果你担心流量被别人使用，可以设置使用密码。  
-编辑gae.py 里的 __password__  
+编辑main.py 里的 __password____
 注意在客户端中也需要设置一样的密码才能访问。  
 一般你不泄露appid，别人是无法使用你的流量的。  
 
@@ -20,6 +20,9 @@ https://cloud.google.com/sdk/docs/install
   登陆并选择需要部署的appid：  
  `gcloud init`  
   
+
+## 未绑定信用卡的需要绑定:
+  https://console.cloud.google.com/billing/enable
 
 ## 部署：
 `cd XX-Net/code/default/gae_proxy/server/gae`  

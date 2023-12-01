@@ -1,2 +1,4 @@
-Flask==2.1.0
-pycrypto
+Flask==3.0.0
+requests
+gunicorn
+gevent

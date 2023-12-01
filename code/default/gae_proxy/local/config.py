@@ -36,7 +36,7 @@ class Config(ConfigBase):
 
         # gae
         self.set_var("GAE_PASSWORD", "")
-        self.set_var("GAE_VALIDATE", 0)
+        self.set_var("GAE_VALIDATE", 1)
 
         # host rules
         self.set_var("hosts_direct", [
