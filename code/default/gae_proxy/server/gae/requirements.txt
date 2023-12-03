@@ -1,0 +1,6 @@
+Flask==3.0.0
+requests
+gunicorn
+google-cloud-storage
+appengine-python-standard
+psutil
