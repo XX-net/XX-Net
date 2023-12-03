@@ -63,9 +63,13 @@ class Conf(object):
 config = Conf()
 
 
-def pack_request(method, url, headers, body, timeout):
-    headers = dict(headers)
-    if isinstance(body, bytes) and body:
+def pack_request(method, url, headers, body, kwargs):
+    method = utils.to_bytes(method)
+    url = utils.to_bytes(url)
+    headers = utils.to_bytes(headers)
+    body = utils.to_bytes(body)
+    kwargs = utils.to_bytes(kwargs)
+    if body:
         if len(body) < 10 * 1024 * 1024 and b'Content-Encoding' not in headers:
             # 可以压缩
             zbody = deflate(body)
@@ -73,14 +77,13 @@ def pack_request(method, url, headers, body, timeout):
                 body = zbody
                 headers[b'Content-Encoding'] = b'deflate'
         if len(body) > 10 * 1024 * 1024:
-            xlog.warn("body len:%d %s %s", len(body), method, url)
+            xlog.warn("body len:%d %s %s", len(body), utils.to_bytes(method), utils.to_bytes(url))
         headers[b'Content-Length'] = utils.to_bytes(str(len(body)))
 
     # GAE don't allow set `Host` header
     if b'Host' in headers:
         del headers[b'Host']
 
-    kwargs = {}
     # gae 用的参数
     if config.GAE_PASSWORD:
         kwargs[b'password'] = config.GAE_PASSWORD
@@ -91,7 +94,6 @@ def pack_request(method, url, headers, body, timeout):
         kwargs[b'maxsize'] = config.JS_MAXSIZE
     else:
         kwargs[b'maxsize'] = config.AUTORANGE_MAXSIZE
-    kwargs[b'timeout'] = str(timeout)
     # gae 用的参数　ｅｎｄ
 
     payload = b'%s %s HTTP/1.1\r\n' % (method, url)
@@ -260,23 +262,19 @@ class TestProtocol(TestCase):
         print(f"res_headers:{res_headers}")
         logging.debug(f"body:{body}")
 
-    def test_req_local(self):
-        method = b"GET"
-        url = b"http://www.github.com/"
-        # info = {
-        #     "User-Agent": "python"
-        # }
-        # body = utils.to_bytes(json.dumps(info))
-        body = b""
+    def test_req_local(self, url="http://speedtest.ftp.otenet.gr/files/test10Mb.db"):
+        method = "GET"
+        body = ""
         headers = {
             # "Content-Length": str(len(body)),
             # "Content-Type": "application/json"
             "Accept-Encoding": "gzip, br"
         }
-        headers = utils.to_bytes(headers)
-        timeout = 30
+        kwargs = {
+            "timeout": "30"
+        }
 
-        request_headers, payload = pack_request(method, url, headers, body, timeout)
+        request_headers, payload = pack_request(method, url, headers, body, kwargs)
 
         res = requests.post("http://localhost:8080/_gh/", data=payload)
 
@@ -287,3 +285,7 @@ class TestProtocol(TestCase):
         logging.debug(f"res_headers:{json.dumps(res_headers, indent=2)}")
         logging.debug(f"body_len:{len(body)}")
         logging.debug(f"body_100:{body[:100]}")
+
+    def test_local_req(self):
+        url = "http://github.com"
+        self.test_req_local(url)

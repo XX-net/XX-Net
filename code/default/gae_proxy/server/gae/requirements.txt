@@ -1,4 +1,6 @@
 Flask==3.0.0
 requests
 gunicorn
-gevent
+google-cloud-storage
+appengine-python-standard
+psutil
