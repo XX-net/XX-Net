@@ -33,6 +33,7 @@ config.set_var("show_android_notification", 1)
 config.set_var("no_mess_system", 0)
 config.set_var("auto_start", 0)
 config.set_var("popup_webui", 1)
+config.set_var("webui_auth", {})
 
 config.set_var("gae_show_detail", 0)
 config.set_var("show_compat_suggest", 1)

@@ -92,8 +92,8 @@ def load_config():
     if "localhost" in config.server_host or "127.0.0.1" in config.server_host:
         config.enable_cloudflare = 0
         config.enable_tls_relay = 0
-        config.enable_seley = 1
-        config.enable_direct = 0
+        config.enable_seley = 0
+        config.enable_direct = 1
         xlog.info("Only enable Direct front for localhost")
 
     if config.write_log_file:

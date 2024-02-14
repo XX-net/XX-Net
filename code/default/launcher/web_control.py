@@ -10,8 +10,7 @@ import threading
 import json
 import cgi
 import traceback
-import zipfile
-import operator
+import base64
 
 try:
     from urllib.parse import urlparse, urlencode, parse_qs
@@ -176,7 +175,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             xlog.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
 
     def do_GET(self):
-        # self.headers = utils.to_str(self.headers)
+        self.headers = utils.to_str(self.headers)
         self.path = utils.to_str(self.path)
 
         refer = self.headers.get('Referer')
@@ -192,6 +191,28 @@ class Http_Handler(simple_http_server.HttpServerHandler):
             self.wfile.write(b'HTTP/1.1 404\r\n\r\n')
             xlog.warn('%s %s %s haking', self.address_string(), self.command, self.path)
             return
+
+        if config.webui_auth:
+            auth = self.headers.get("Authorization")
+            if not auth or not auth.startswith("Basic "):
+                return self.send_response(content="", headers={
+                    "WWW-Authenticate": 'Basic realm="Access to admin"'
+                }, status=401)
+
+            try:
+                user_pass = base64.b64decode(auth[6:])
+                user_pass = utils.to_str(user_pass)
+                user, password = user_pass.split(":")[0:2]
+            except Exception as e:
+                xlog.warn("decode auth fail:%r", e)
+                return self.send_response(content="", headers={
+                    "WWW-Authenticate": 'Basic realm="Access to admin"'
+                }, status=401)
+
+            if config.webui_auth.get(user) != password:
+                return self.send_response(content="", headers={
+                    "WWW-Authenticate": 'Basic realm="Access to admin"'
+                }, status=401)
 
         url_path = urlparse(self.path).path
         if url_path == '/':
@@ -764,9 +785,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         return self.send_response("text/html", content)
 
     def set_proxy_applist(self):
+        self.postvars = utils.to_str(self.postvars)
         xlog.debug("set_proxy_applist %r", self.postvars)
-        config.proxy_by_app = int(self.postvars.get(b'proxy_by_app') == [b"true"])
-        config.enabled_app_list = utils.to_str(self.postvars.get(b"enabled_app_list[]", []))
+        config.proxy_by_app = int(self.postvars.get('proxy_by_app') == "true")
+        config.enabled_app_list = self.postvars.get("enabled_app_list[]", [])
         xlog.debug("set_proxy_applist proxy_by_app:%s", config.proxy_by_app)
         xlog.debug("set_proxy_applist enabled_app_list:%s", config.enabled_app_list)
         config.save()

@@ -179,13 +179,24 @@ class LocalDnsQuery():
                 xlog.warn("load /etc/resolv.conf fail:%r", e)
 
         if not iplist:
-            iplist = [
-                b"1.1.1.1",
-                b"8.8.8.8",
-                b"9.9.9.9",
-                b"208.67.222.222",
-                b"168.126.63.2"
-            ]
+            if g.config.country_code == "CN":
+                iplist = [
+                    b"114.114.114.114",
+                    b"114.114.115.115",
+                    b"119.29.29.29",
+                    b"182.254.118.118",
+                    b"223.5.5.5",
+                    b"223.6.6.6",
+                    b"180.76.76.76"
+                ]
+            else:
+                iplist = [
+                    b"1.1.1.1",
+                    b"8.8.8.8",
+                    b"9.9.9.9",
+                    b"208.67.222.222",
+                    b"168.126.63.2"
+                ]
 
         out_list = []
         for ip in iplist:
@@ -258,7 +269,24 @@ class LocalDnsQuery():
         except Exception as e:
             xlog.warn("send_request except:%r", e)
 
+    def query_by_system(self, domain, dns_type):
+        ips = []
+        try:
+            t0 = time.time()
+            ip = socket.gethostbyname(domain)
+            t1 = time.time()
+            ips.append(ip)
+
+            xlog.debug("query_by_system, %s %d cost:%f, return:%s", domain, dns_type, t1 - t0, ips)
+        except Exception as e:
+            xlog.warn("query_by_system %s %d e:%r", domain, dns_type, e)
+
+        return ips
+
     def query(self, domain, dns_type=1, timeout=3):
+        if sys.platform == "ios":
+            return self.query_by_system(domain, dns_type)
+
         t0 = time.time()
         end_time = t0 + timeout
         while True:
@@ -453,7 +481,8 @@ class DnsOverHttpsQuery(object):
     def __init__(self, timeout=6):
         self.protocol = "DoH"
         self.timeout = timeout
-        self.server = "https://1.1.1.1/dns-query"
+        self.cn_servers = ["https://1.12.12.12/dns-query", "https://223.5.5.5/dns-query"]
+        self.other_servers = ["https://1.1.1.1/dns-query"]
         self.connection_timeout = 60
         self.connections = []
 
@@ -476,6 +505,13 @@ class DnsOverHttpsQuery(object):
             }, timeout=self.timeout)
         else:
             return simple_http_client.Client(timeout=self.timeout)
+
+    @property
+    def server(self):
+        if g.config.country_code == "CN":
+            return random.choice(self.cn_servers)
+        else:
+            return random.choice(self.other_servers)
 
     def query_json(self, domain, dns_type=1):
         try:

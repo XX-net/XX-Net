@@ -513,8 +513,10 @@ def handle_ip_proxy(sock, ip, port, client_address):
     elif g.ip_region.check_ip(ip):
         # China IP
         rule_list = ["direct", "socks"]
+    elif g.gfwlist.in_block_list(ip):
+        rule_list = ["gae", "socks"]
     else:
-        rule_list = ["gae", "socks", "direct"]
+        rule_list = ["direct", "gae", "socks", ]
 
     if not g.config.auto_direct:
         for rule in ["direct", "redirect_https"]:

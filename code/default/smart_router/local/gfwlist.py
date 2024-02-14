@@ -5,6 +5,9 @@
 import os
 import sys
 import base64
+import re
+import socket
+import struct
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -27,9 +30,52 @@ xlog = getLogger("smart_router")
 data_path = os.path.join(env_info.data_path, "smart_router")
 
 
+class IpMask(object):
+    def __init__(self, ip_masks):
+        self.masks = self.generate_masks(ip_masks)
+
+    def makeMask(self, n):
+        # return a mask of n bits as a long integer
+        return (2 << int(n) - 1) - 1
+
+    def dottedQuadToNum(self, ip):
+        # convert decimal dotted quad string to long integer
+        try:
+            i = socket.inet_aton(ip)
+        except Exception as e:
+            xlog.exception("inet_aton e:%r", e)
+
+        return struct.unpack('I', i)[0]
+
+    def networkMask(self, ip, bits):
+        # Convert a network address to a long integer
+        return self.dottedQuadToNum(ip) & self.makeMask(bits)
+
+    def generate_masks(self, ip_masks):
+        masks = []
+        for ip_mask in ip_masks:
+            ip, m = ip_mask.split("/")
+            mask = self.networkMask(ip, m)
+            masks.append(mask)
+
+        return tuple(masks)
+
+    def check_ip(self, ip):
+        address = self.dottedQuadToNum(ip)
+        for mask in self.masks:
+            if address & mask == mask:
+                return True
+
+        return False
+
+
 class GfwList(object):
     def __init__(self):
-        self.gfw_black_list = utils.to_bytes(self.load("gfw_black_list.txt"))
+        # self.gfw_black_list = utils.to_bytes(self.load("gfw_black_list.txt"))
+        # https://johnshall.github.io/Shadowrocket-ADBlock-Rules-Forever/sr_top500_banlist.conf
+        self.gfw_black_list, ip_masks, keywords = self.load_banlist("sr_top500_banlist.conf")
+        self.keyword_re = re.compile("|".join(keywords))
+        self.black_subnets = IpMask(ip_masks)
         self.gfw_white_list = utils.to_bytes(self.load("gfw_white_list.txt"))
         self.speedtest_whitelist = utils.to_bytes(self.load("speedtest_whitelist.txt"))
         self.advertisement_list = utils.to_bytes(self.load("advertisement_list.txt"))
@@ -46,24 +92,56 @@ class GfwList(object):
 
         xlog.info("Load file:%s", list_file)
 
-        fd = open(list_file, "r")
-        gfwdict = {}
-        for line in fd.readlines():
-            line = line.strip()
-            if not line:
-                continue
+        with open(list_file, "r") as fd:
+            gfwdict = {}
+            for line in fd.readlines():
+                line = line.strip()
+                if not line:
+                    continue
 
-            gfwdict["." + line] = 1
+                gfwdict["." + line] = 1
 
         gfwlist = [h for h in gfwdict]
         return tuple(gfwlist)
 
+    def load_banlist(self, fn):
+        gfwdict = {}
+        ip_masks = []
+        keywords = []
+        list_file = os.path.join(current_path, fn)
+        with open(list_file, "r") as fd:
+            for line in fd.readlines():
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("["):
+                    continue
+
+                if line.startswith("DOMAIN-SUFFIX,"):
+                    suffix = line.split(",")[1]
+                    gfwdict["." + suffix] = 1
+
+                if line.startswith("IP-CIDR,"):
+                    ip_mask = line.split(",")[1]
+                    if ":" not in ip_mask:
+                        ip_masks.append(ip_mask)
+
+                if line.startswith("DOMAIN-KEYWORD,"):
+                    keyword = line.split(",")[1]
+                    keywords.append(keyword)
+
+        gfwlist = [h for h in gfwdict]
+        return tuple(utils.to_bytes(gfwlist)), ip_masks, keywords
+
+    def ip_in_black_list(self, ip):
+        return self.black_subnets.check_ip(ip)
+
     def in_block_list(self, host):
-        dot_host = b"." + host
+        dot_host = b"." + utils.to_bytes(host)
         if dot_host.endswith(self.gfw_black_list):
             return True
-
-        return False
+        elif self.keyword_re.search(utils.to_str(host)):
+            return True
+        else:
+            return False
 
     def in_white_list(self, host):
         dot_host = b"." + host
