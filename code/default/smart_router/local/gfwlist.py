@@ -109,9 +109,9 @@ class GfwList(object):
         ip_masks = []
         keywords = []
         list_file = os.path.join(current_path, fn)
-        with open(list_file, "r") as fd:
+        with open(list_file, "rb") as fd:
             for line in fd.readlines():
-                line = line.strip()
+                line = utils.to_str(line.strip())
                 if not line or line.startswith("#") or line.startswith("["):
                     continue
 
