@@ -1,6 +1,8 @@
 import threading
 import time
 import sys
+import socket
+import errno
 
 from xx_six import BlockingIOError
 import utils
@@ -214,18 +216,21 @@ class PipeSocks(object):
 
                     try:
                         d = s1.recv(65535)
+                    except BlockingIOError as e:
+                        xlog.debug("%s recv BlockingIOError:%r", s1, e)
+                        continue
                     except Exception as e:
-                        # xlog.debug("%s recv e:%r", s1, e)
+                        xlog.debug("%s recv e:%r", s1, e)
                         self.close(s1, "r")
                         continue
 
                     if not d:
                         # socket closed by peer.
-                        # xlog.debug("%s recv empty, close", s1)
+                        xlog.debug("%s recv empty, close", s1)
                         self.close(s1, "r")
                         continue
 
-                    # xlog.debug("direct received %d bytes from:%s", len(d), s1)
+                    xlog.debug("direct received %d bytes from:%s", len(d), s1)
                     s1.recved_data += len(d)
                     s1.recved_times += 1
 
@@ -253,6 +258,10 @@ class PipeSocks(object):
                                 flush_send_s(s2, d1)
                                 s2.sent_data += len(d1)
                                 s2.sent_times += 1
+                            except BlockingIOError as e:
+                                xlog.warn("Except %s flush_send_s BlockingIOError %r", s2, e)
+                                self.close(s2, "w")
+                                continue
                             except Exception as e:
                                 xlog.warn("send split SNI:%s fail:%r", s2.host, e)
                                 self.close(s2, "w")
@@ -268,12 +277,24 @@ class PipeSocks(object):
                             s2.sent_data += sent
                             s2.sent_times += 1
                             # xlog.debug("direct send %d to %s from:%s total:%d", sent, s2, s1, len(d))
+                        except BlockingIOError as e:
+                            xlog.warn("Except %s send BlockingIOError %r", s2, e)
+                            sent = 0
+                        except socket.error as e:
+                            if e.errno == errno.EAGAIN:
+                                # if str(e) == "[Errno 35] Resource temporarily unavailable":
+                                xlog.warn("%s send errno.EAGAIN %r", s2, e)
+                                time.sleep(0.1)
+                                sent = 0
+                            else:
+                                self.close(s2, "w")
+                                continue
                         except Exception as e:
                             # xlog.debug("%s send e:%r", s2, e)
                             if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
                                 # This error happened on upload large file or speed test
                                 # Just ignore this error and will be fine
-                                # xlog.warn("%s send BlockingIOError %r", s2, e)
+                                xlog.warn("%s send BlockingIOError %r", s2, e)
                                 sent = 0
                             else:
                                 # xlog.warn("%s send except:%r", s2, e)
@@ -320,11 +341,23 @@ class PipeSocks(object):
                             s1.sent_data += sent
                             s1.sent_times += 1
                             # xlog.debug("send buffered %d bytes to %s", sent, s1)
+                        except BlockingIOError as e:
+                            xlog.warn("Except %s send BlockingIOError %r", s1, e)
+                            sent = 0
+                        except socket.error as e:
+                            if e.errno == errno.EAGAIN:
+                                # if str(e) == "[Errno 35] Resource temporarily unavailable":
+                                xlog.warn("%s send errno.EAGAIN %r", s1, e)
+                                time.sleep(0.1)
+                                sent = 0
+                            else:
+                                self.close(s1, "w")
+                                continue
                         except Exception as e:
                             if sys.version_info[0] == 3 and isinstance(e, BlockingIOError):
                                 # This error happened on upload large file or speed test
                                 # Just ignore this error and will be fine
-                                # xlog.debug("%s sent BlockingIOError %r", s1, e)
+                                xlog.debug("%s sent BlockingIOError %r", s1, e)
                                 sent = 0
                             else:
                                 # xlog.debug("%s sent e:%r", s1, e)

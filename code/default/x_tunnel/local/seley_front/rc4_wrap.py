@@ -3,6 +3,7 @@ import time
 import struct
 import json
 import os
+import errno
 
 import env_info
 import xlog
@@ -110,6 +111,9 @@ class SSLConnection(object):
     def setblocking(self, block):
         self._sock.setblocking(block)
 
+    def getsockname(self):
+        self._sock.getsockname()
+
     def __getattr__(self, attr):
         if attr == "socket_closed":
             # work around in case close before finished init.
@@ -144,11 +148,19 @@ class SSLConnection(object):
 
     def send(self, data, flags=0):
         data = self.encode(data)
-        try:
-            return self._sock.send(data)
-        except Exception as e:
-            #self.logger.exception("ssl send:%r", e)
-            raise e
+        while True:
+            try:
+                bytes_sent = self._sock.send(data)
+                return bytes_sent
+            except BlockingIOError as e:
+                time.sleep(0.1)
+                continue
+            except socket.error as e:
+                if e.errno == errno.EAGAIN:
+                    # if str(e) == "[Errno 35] Resource temporarily unavailable":
+                    time.sleep(0.1)
+                else:
+                    raise e
 
     def recv(self, bufsiz, flags=0):
         data = self._sock.recv(bufsiz)

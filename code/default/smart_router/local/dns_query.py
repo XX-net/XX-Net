@@ -635,6 +635,10 @@ class CombineDnsQuery():
         ])
 
     def query_unknown_domain(self, domain, dns_type):
+        res = self.local_dns_resolve.query(domain, dns_type)
+        if res:
+            return res
+
         return self.parallel_query.query(domain, dns_type, [
             self.https_query.query,
             self.tls_query.query,
@@ -662,7 +666,7 @@ class CombineDnsQuery():
             xlog.debug("DNS query:%s in black", domain)
             return ips
 
-        elif b"." not in domain or g.gfwlist.in_white_list(domain) or rule in ["direct"]:
+        elif b"." not in domain or g.gfwlist.in_white_list(domain) or rule in ["direct"] or g.config.pac_policy == "all_Direct":
             ips = self.local_dns_resolve.query(domain, timeout=1)
             g.domain_cache.set_ips(domain, ips, dns_type)
             return ips

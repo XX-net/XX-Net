@@ -275,6 +275,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                 "reason": "Password format fail"
             })
 
+        g.config.api_server = g.config.default_config["api_server"]
         if g.config.update_cloudflare_domains and cloudflare_domains:
             g.http_client.save_cloudflare_domain(cloudflare_domains)
         if g.tls_relay_front and tls_relay.get("ips"):

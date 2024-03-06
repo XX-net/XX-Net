@@ -923,7 +923,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         sys.path.append(x_tunnel_local)
         from upload_logs import pack_logs
 
-        data = pack_logs(10 * 1024 * 1024)
+        data = pack_logs(200 * 1024 * 1024)
         self.send_response("application/zip", data)
 
     def req_mem_info_handler(self):

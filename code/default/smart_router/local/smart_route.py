@@ -497,6 +497,8 @@ def handle_ip_proxy(sock, ip, port, client_address):
             rule = "direct"
         elif g.config.pac_policy == "all_X-Tunnel":
             rule = "socks"
+        elif g.config.pac_policy == "all_Direct":
+            rule = "direct"
 
     if rule:
         return try_loop("ip user", [rule], sock, ip, port, client_address)
@@ -555,6 +557,8 @@ def handle_domain_proxy(sock, host, port, client_address, left_buf=""):
         if host == fake_host:
             rule = "gae"
         elif utils.check_ip_valid(host) and utils.is_private_ip(host):
+            rule = "direct"
+        elif g.config.pac_policy == "all_Direct":
             rule = "direct"
 
     if not rule and (g.config.bypass_speedtest and g.gfwlist.in_speedtest_whitelist(host)):

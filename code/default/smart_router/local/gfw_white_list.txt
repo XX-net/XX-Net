@@ -6,6 +6,7 @@
 178.com
 2345.com
 360safe.com
+51.la
 56.com
 5eplay.com
 5ewin.com
@@ -26,6 +27,7 @@ alipay.com
 alipayobjects.com
 alivecdn.com
 aliyuncs.com
+aliyunddos1030.com
 allrace.com
 amap.com
 amemv.com
@@ -53,6 +55,10 @@ bokecs.net
 bootcss.com
 btigroup.io
 bytedance.com
+bytedns1.com
+bytefcdn.com
+byteimg.com
+bytegecko.co
 cccpan.com
 cdncl.net
 chiphell.com
@@ -76,6 +82,8 @@ douyin.com
 douyincdn.com
 douyinliving.com
 douyinpic.com
+douyinstatic.com.w.cdngslb.com
+douyinstatic.com.queniuuf.com
 douyinvod.com
 douyu.com
 duoduocdn.com
@@ -125,6 +133,7 @@ kmf.com
 ksyungslb.com
 kugou.com
 kuiniuca.com
+kunluncan.com
 le.com
 lecloud.com
 leisu.com
@@ -174,6 +183,7 @@ qq-zuidazy.com
 qq.com
 qqmail.com
 qtlglb.com
+queniusy.com
 remuxhdr.com
 ruioushang.com
 sandai.net
@@ -207,6 +217,7 @@ ubuntu.com
 uniqueway.com
 umeng.com
 videocc.net
+volcfcdndvs.com
 vzan.cc
 vzuu.com
 wangyuan.com

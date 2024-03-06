@@ -27,7 +27,7 @@ user_pacfile = os.path.join(data_path, "proxy.pac")
 gae_ca_file = os.path.join(env_info.data_path, "gae_proxy", "CA.crt")
 
 
-allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router", "all_X-Tunnel"]
+allow_policy = ["black_GAE", "black_X-Tunnel", "smart-router", "all_X-Tunnel", "all_Direct"]
 
 
 def get_serving_pacfile():
@@ -50,6 +50,10 @@ class PacHandler(simple_http_server.HttpServerHandler):
 
         proxy = host + ":" + str(port)
         content = content.replace(self.PROXY_LISTEN, proxy)
+        return content
+
+    def policy_all_to_direct(self):
+        content = """function FindProxyForURL(url, host) { return 'DIRECT';}"""
         return content
 
     def policy_blacklist_to_proxy(self, host, port):
@@ -89,6 +93,8 @@ class PacHandler(simple_http_server.HttpServerHandler):
             content = self.policy_blacklist_to_proxy(host, "%s" % g.x_tunnel_socks_port)
         elif g.config.pac_policy == "all_X-Tunnel":
             content = self.policy_all_to_proxy(host, "%s" % g.x_tunnel_socks_port)
+        elif g.config.pac_policy == "all_Direct":
+            content = self.policy_all_to_direct()
         else:
             content = self.policy_all_to_proxy(host, g.config.proxy_port)
 

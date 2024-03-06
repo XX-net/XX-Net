@@ -268,7 +268,7 @@ class Socks5Server():
 
         conn_id = proxy_session.create_conn(sock, addr, port)
         if not conn_id:
-            xlog.warn("create conn fail")
+            xlog.warn("socks5 create conn to %s:%d fail", addr, port)
             reply = b"\x05\x01\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)
             sock.send(reply)
             return
@@ -314,7 +314,7 @@ class Socks5Server():
         sock = self.connection
         conn_id = proxy_session.create_conn(sock, host, port)
         if not conn_id:
-            xlog.warn("create conn fail")
+            xlog.warn("https create conn to %s:%d fail", host, port)
             sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
             return
 
@@ -378,7 +378,7 @@ class Socks5Server():
         sock = self.connection
         conn_id = proxy_session.create_conn(sock, host, port)
         if not conn_id:
-            xlog.warn("create conn fail")
+            xlog.warn("http create conn to %s:%d fail", host, port)
             sock.send(b'HTTP/1.1 500 Fail\r\n\r\n')
             return
 

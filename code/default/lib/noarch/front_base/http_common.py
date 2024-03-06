@@ -217,7 +217,7 @@ class HttpWorker(object):
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
                              random.randint(self.config.connection_max_life, int(self.config.connection_max_life * 1.5))
-        # self.logger.debug("worker.init %s", self.ip_str)
+        # self.logger.debug("worker.init %s %s", self.ip_str, self.ssl_sock.getsockname())
 
     def __str__(self):
         o = ""
