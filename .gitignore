@@ -18,3 +18,9 @@ desktop.ini
 .pytest_cache
 *.log
 code/version.txt
+
+
+# Babel files
+messages.po-e
+messages.pot
+translated.po

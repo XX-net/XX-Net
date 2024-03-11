@@ -84,7 +84,7 @@ config.set_var("global_proxy_password", "")
 config.load()
 
 app_name = "XX-Net"
-valid_language = ['en_US', 'fa_IR', 'zh_CN']
+valid_language = ['en_US', 'fa_IR', 'zh_CN', 'ru_RU']
 try:
     fp = os.path.join(root_path, "code", "app_info.json")
     with open(fp, "r") as fd:
@@ -106,6 +106,9 @@ def _get_os_language():
                 return 'en_US'
             elif b'fa' in lang_code:
                 return 'fa_IR'
+            elif b'ru' in lang_code:
+                return 'ru_RU'
+
         except:
             pass
     elif sys_platform.platform == "android":
@@ -120,6 +123,8 @@ def _get_os_language():
                 return 'en_US'
             elif 'fa' in lang_code:
                 return 'fa_IR'
+            elif 'ru' in lang_code:
+                return 'ru_RU'
             else:
                 return None
         except Exception as e:
@@ -133,6 +138,8 @@ def _get_os_language():
             return 'en_US'
         elif 'fa' in lang_code:
             return 'fa_IR'
+        elif 'ru' in lang_code:
+            return 'ru_RU'
         else:
             return None
     else:

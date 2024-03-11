@@ -230,7 +230,7 @@ class PipeSocks(object):
                         self.close(s1, "r")
                         continue
 
-                    xlog.debug("direct received %d bytes from:%s", len(d), s1)
+                    # xlog.debug("direct received %d bytes from:%s", len(d), s1)
                     s1.recved_data += len(d)
                     s1.recved_times += 1
 

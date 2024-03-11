@@ -1,0 +1,105 @@
+#
+msgid ""
+msgstr ""
+
+msgid "General"
+msgstr "Общий"
+
+msgid "Rules"
+msgstr "Правила"
+
+msgid "Cache"
+msgstr "Кеш"
+
+msgid "Smart Router Configuration"
+msgstr "Умный маршрутизатор конфигурация"
+
+msgid "Clean Cache"
+msgstr "Чистый кеш"
+
+msgid "Domain Cache"
+msgstr "Доменный кеш"
+
+msgid "IP Cache"
+msgstr "Ip cache"
+
+msgid "Clean Cache successfully."
+msgstr "Чистый кэш успешно."
+
+msgid "Country"
+msgstr "Страна"
+
+msgid "China"
+msgstr "Китай"
+
+msgid "Other"
+msgstr "Другой"
+
+msgid "Route Policy"
+msgstr "Политика маршрута"
+
+msgid "Black->GAEProxy"
+msgstr "Black-> GaeProxy"
+
+msgid "Black->X-Tunnel"
+msgstr "Черный-> X-Tunnel"
+
+msgid "All Smart-Router"
+msgstr "Весь интеллектуальный маршрут"
+
+msgid "All->X-Tunnel"
+msgstr "All-> X-Tunnel"
+
+msgid "Auto-Try Direct"
+msgstr "Auto-Cetr Direct"
+
+msgid "Use IPv6 preferentially when Auto-Try Direct"
+msgstr "Используйте IPv6 преимущественно, когда Auto-Ctry Direct"
+
+msgid "Auto-Try GAEProxy"
+msgstr "Auto-tore GaeProxy"
+
+msgid "Enable Fake CA"
+msgstr "Включить поддельный ок"
+
+msgid "Block Advertisement"
+msgstr "Блок рекламы"
+
+msgid "Settings saved successfully."
+msgstr "Настройки успешно сохранились."
+
+msgid "https://github.com/XX-net/XX-Net/wiki/SmartRouter_rules_en"
+msgstr ""
+
+msgid "Help documents"
+msgstr "Помогите документы"
+
+msgid "Direct List"
+msgstr "Прямой список"
+
+msgid "GAEProxy List"
+msgstr "Список GaeProxy"
+
+msgid "X-Tunnel List"
+msgstr "Список X-Tunnel"
+
+msgid "Redirect HTTPS"
+msgstr "Перенаправить https"
+
+msgid "Advertisement Black List"
+msgstr "Реклама черного списка"
+
+msgid "Submit"
+msgstr "Представлять на рассмотрение"
+
+msgid "Smart Router Log"
+msgstr "Умный маршрутизатор журнал"
+
+msgid "Log"
+msgstr "Бревно"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Smart Router"
+msgstr "Умный маршрутизатор"

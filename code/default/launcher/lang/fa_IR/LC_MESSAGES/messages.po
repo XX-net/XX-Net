@@ -12,13 +12,37 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.14.0\n"
+
+msgid "Hello!"
+msgstr "سلام!"
+
+msgid "You seem to be on your first visit."
+msgstr "به نظر می رسد شما در اولین دیدار خود هستید."
+
+msgid "Learn more"
+msgstr "بیشتر بدانید"
+
+msgid "Notice"
+msgstr "توجه کنید"
+
+msgid "click to view"
+msgstr "برای مشاهده کلیک کنید"
 
 msgid "Version"
-msgstr ""
+msgstr "نسخه"
 
 msgid "Project main page"
 msgstr "صفحه اصلی پروژه"
+
+msgid "Official Web Site"
+msgstr "وب سایت رسمی"
+
+msgid "Telegram group"
+msgstr "گروه تلگرام"
+
+msgid "Telegram Channel"
+msgstr "کانال تلگرام"
 
 msgid "Bug feedback"
 msgstr "بازخورد اشکال"
@@ -38,26 +62,35 @@ msgstr "صفحه ورود به سیستم "
 msgid "contents"
 msgstr "فهرست"
 
+msgid "Collect debug info"
+msgstr "اطلاعات اشکال زدایی را جمع آوری کنید"
+
+msgid "Download"
+msgstr "دانلود کنید"
+
 msgid "Thanks to the following projects"
 msgstr "تشکر از پروژه های زیر"
 
-msgid "About "
+msgid "About"
 msgstr "در باره"
 
-msgid "APP_NAME"
-msgstr ""
-
 msgid "General Settings"
-msgstr ""
+msgstr "تنظیمات عمومی"
 
 msgid "System Version"
 msgstr "نسخه آزمایشی"
 
 msgid "LAN Proxy Setting"
-msgstr ""
+msgstr "تنظیم پروکسی LAN"
+
+msgid "App List"
+msgstr "فهرست برنامه"
 
 msgid "System Configuration"
 msgstr "گزینه های پیکربندی سیستم"
+
+msgid "Configuration"
+msgstr "پیکربندی"
 
 msgid "Configuring the service[%s]. This page will refresh within %s seconds."
 msgstr "پیکربندی سرویس [٪ s] را. این صفحه را در عرض٪ s ثانیه تازه کردن."
@@ -69,7 +102,30 @@ msgid "X-Tunnel"
 msgstr ""
 
 msgid "Smart Router"
-msgstr ""
+msgstr "روتر هوشمند"
+
+msgid "Proxy by APP"
+msgstr "پروکسی توسط APP"
+
+msgid ""
+"Select which APP should be proxied. You need to restart VPN after change "
+"this."
+msgstr "انتخاب کنید کدام APP باید پروکسی باشد. "
+
+msgid "Select All"
+msgstr "همه را انتخاب کنید"
+
+msgid "Save"
+msgstr "ذخیره کنید"
+
+msgid "Settings saved successfully, Please restart VPN."
+msgstr "تنظیمات با موفقیت ذخیره شده است."
+
+msgid "Failed saving settings: "
+msgstr "تنظیمات ذخیره نشد:"
+
+msgid "Failed saving settings."
+msgstr "تنظیمات ذخیره نشد."
 
 msgid "Language"
 msgstr "زبان"
@@ -80,8 +136,8 @@ msgstr "خودکار راه اندازی"
 msgid "Popup Status Page on Startup"
 msgstr "پنجره وضعیت صفحه در راه اندازی"
 
-msgid "Allow Remote"
-msgstr ""
+msgid "Allow remote"
+msgstr "اجازه دسترسی از راه دور"
 
 msgid "Help"
 msgstr "کمک"
@@ -89,14 +145,17 @@ msgstr "کمک"
 msgid "Display System Tray(Restarting APP Required)"
 msgstr "نمایش سینی سیستم (شروع مجدد __ مورد نیاز)"
 
+msgid "Display Notification"
+msgstr "نمایش اعلان"
+
 msgid "Display Windows software compatibility suggestions"
-msgstr ""
+msgstr "نمایش پیشنهادات سازگاری نرم افزار ویندوز"
 
 msgid "Feedback"
 msgstr "بازخورد اشکال"
 
 msgid "Run as Green Software"
-msgstr ""
+msgstr "به عنوان نرم افزار سبز اجرا شود"
 
 msgid "Module management"
 msgstr "ماژول مدیریت"
@@ -105,7 +164,7 @@ msgid "Enable"
 msgstr "فعال کردن"
 
 msgid "Restarting all remote, wait to refresh."
-msgstr ""
+msgstr "راه‌اندازی مجدد تمام ریموت‌ها، منتظر بمانید تا بازخوانی شود."
 
 msgid "Auto-Upgrade to"
 msgstr "خودکار ارتقا به"
@@ -114,13 +173,13 @@ msgid "Do not upgrade"
 msgstr "ارتقاء نکنید"
 
 msgid "Notice stable version"
-msgstr ""
+msgstr "به نسخه پایدار توجه کنید"
 
 msgid "Stable version"
 msgstr "نسخه پایدار"
 
 msgid "Notice test version"
-msgstr ""
+msgstr "نسخه آزمایشی توجه کنید"
 
 msgid "Test version"
 msgstr "نسخه آزمایشی"
@@ -141,46 +200,43 @@ msgid "Version of the stable one"
 msgstr "نسخه از یکی از با ثبات"
 
 msgid "Keep old versions count"
-msgstr ""
+msgstr "تعداد نسخه های قدیمی را نگه دارید"
 
 msgid "keep all"
-msgstr ""
-
-msgid "Save"
-msgstr ""
+msgstr "همه را نگه دارید"
 
 msgid "Manually Manage"
-msgstr ""
+msgstr "مدیریت دستی"
 
 msgid "Advanced"
-msgstr ""
+msgstr "پیشرفته"
 
 msgid "All versions download page"
-msgstr ""
+msgstr "صفحه دانلود همه نسخه ها"
 
 msgid "Released version"
 msgstr "نسخه آزمایشی"
 
 msgid "Released"
-msgstr ""
+msgstr "منتشر شد"
 
 msgid "Download & Change to"
-msgstr ""
+msgstr "دانلود کنید"
 
 msgid "no hash check"
-msgstr ""
+msgstr "بدون هش چک"
 
 msgid "Local version"
 msgstr "نسخه پایدار"
 
 msgid "Local"
-msgstr ""
+msgstr "محلی"
 
 msgid "Change to this version"
 msgstr "بررسی آخرین نسخه"
 
 msgid "Delete"
-msgstr ""
+msgstr "حذف"
 
 msgid "Settings saved successfully."
 msgstr "تنظیمات با موفقیت ذخیره شده است."
@@ -192,46 +248,35 @@ msgid "Deleted successfully."
 msgstr "موفقیت خارج"
 
 msgid "Deleting local version fail."
-msgstr ""
+msgstr "حذف نسخه محلی انجام نشد."
 
 msgid "Failed getting local versions."
-msgstr ""
+msgstr "دریافت نسخه های محلی ناموفق بود."
+
 
 msgid "Failed getting released versions."
-msgstr ""
+msgstr "نسخه های منتشر نشد."
 
 msgid "(Remote Web Control Enabled)"
-msgstr ""
+msgstr "(کنترل وب از راه دور فعال شده)"
 
 msgid "Adaptive width"
-msgstr ""
+msgstr "عرض تطبیقی"
 
-msgid "Exit the program"
-msgstr ""
+msgid "Exit"
+msgstr "خروج"
 
-msgid "Hello!"
-msgstr ""
-
-msgid "You seem to be on your first visit."
-msgstr ""
-
-msgid "Learn more"
-msgstr ""
-
-msgid "Notice"
-msgstr ""
-
-msgid "click to view"
-msgstr ""
+msgid "Menu"
+msgstr "منو"
 
 msgid "Remind me later"
-msgstr ""
+msgstr "بعدا به من یادآوری کن"
 
 msgid "Do not remind me this version"
-msgstr ""
+msgstr "این نسخه را به من یادآوری نکنید"
 
 msgid "View changes"
-msgstr ""
+msgstr "مشاهده تغییرات"
 
 msgid "Exited successfully."
 msgstr "موفقیت خارج"
@@ -252,214 +297,196 @@ msgid "Updating in progress ..."
 msgstr "به روز رسانی در حال انجام ..."
 
 msgid "New "
-msgstr ""
+msgstr "جدید"
 
 msgid "Finished."
-msgstr ""
+msgstr "تمام شده."
 
 msgid "Downloading ..."
-msgstr ""
+msgstr "بارگیری ..."
 
 msgid "Download completed."
-msgstr ""
+msgstr "بارگیری کامل"
 
-msgid "Info"
-msgstr "اطلاعات و "
+msgid "Log"
+msgstr "ورود به سیستم"
 
 msgid "Your browser is obsolete. Partial functionality will not be available."
-msgstr ""
+msgstr "مرورگر شما منسوخ است.عملکرد جزئی در دسترس نخواهد بود."
+
 
 msgid "The latest Chrome browser is recommended."
-msgstr ""
+msgstr "آخرین مرورگر Chrome توصیه می شود."
 
 msgid "Search"
-msgstr ""
+msgstr "جستجو کردن"
 
 msgid "Search all issues"
-msgstr ""
+msgstr "همه موضوعات را جستجو کنید"
 
 msgid "Status"
-msgstr ""
+msgstr "وضعیت"
 
 msgid "Property"
-msgstr ""
+msgstr "ویژگی"
 
 msgid "Value"
-msgstr ""
+msgstr "ارزش"
 
 msgid "Browser Proxy Setting"
-msgstr ""
+msgstr "تنظیم پروکسی مرورگر"
 
 msgid "CA status"
-msgstr ""
-
-msgid "Download"
-msgstr ""
+msgstr "وضعیت CA"
 
 msgid "System Proxy"
-msgstr ""
+msgstr "پروکسی سیستم"
 
 msgid "Modules"
-msgstr ""
+msgstr "ماژول"
 
 msgid "Launcher Web UI"
-msgstr ""
+msgstr "UI Launcher Web UI"
 
 msgid "LAN proxy"
-msgstr ""
+msgstr "پروکسی LAN"
 
 msgid "System Info"
-msgstr ""
+msgstr "اطلاعات سیستم"
 
 msgid "Diagnostic Info"
-msgstr ""
+msgstr "اطلاعات تشخیصی"
 
 msgid "Check"
-msgstr ""
+msgstr "بررسی کنید"
 
 msgid "GitHub issues"
-msgstr ""
+msgstr "مشکلات GitHub"
 
 msgid "or"
-msgstr ""
+msgstr "یا"
 
 msgid "Google Group Discussions"
-msgstr ""
+msgstr "بحث های گروهی گوگل"
 
 msgid "Show Details"
-msgstr ""
+msgstr "نمایش جزئیات"
 
 msgid "Post to Github issue needs to sign in your Github account"
-msgstr ""
+msgstr "مسئله ارسال به Github باید وارد حساب Github شما شود"
 
 msgid "Status Info"
-msgstr ""
+msgstr "اطلاعات وضعیت"
 
 msgid ""
 "-----------%0AProblem Description:%0APlease describe your problem, "
 "running logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
-msgstr ""
+msgstr "-----------%0توضیحات مشکل:%0APلطفاً مشکل خود را شرح دهید، ممکن است به اجرای گزارش‌ها نیاز باشد.%0A%0A-----------%0ADاطلاعات تشخیصی:%0A"
 
 msgid "disable"
 msgstr "فعال کردن"
 
 msgid "idle"
-msgstr ""
+msgstr "بیکار"
 
 msgid "working"
-msgstr ""
+msgstr "کار کردن"
 
 msgid "The status page is empty. Highly likely that "
-msgstr ""
+msgstr "صفحه وضعیت خالی است. "
 
 msgid " failed getting started. Please follow "
-msgstr ""
+msgstr "شروع ناموفق. "
 
 msgid "guide"
-msgstr ""
+msgstr "راهنما"
 
 msgid " to troubleshoot."
-msgstr ""
+msgstr "عیب یابی."
 
 msgid "Your local network failed, please check your network and firewall."
-msgstr ""
+msgstr "شبکه محلی شما ناموفق بود، لطفاً شبکه و فایروال خود را بررسی کنید."
 
 msgid "Force-IPv6"
-msgstr ""
+msgstr "نیرو-IPV6"
 
 msgid " not available, Please check."
-msgstr ""
+msgstr "در دسترس نیست، لطفا بررسی کنید."
 
 msgid "Force-IPv4"
-msgstr ""
+msgstr "نیرو-IPV4"
 
 msgid "You may want to $1turn on IP scaner$2."
-msgstr ""
+msgstr "ممکن است بخواهید $1 را در IP scaner$2 روشن کنید."
 
 msgid ""
 "You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-"
 "on-IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>."
-msgstr ""
+msgstr "می‌توانید <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-IPv6\">IPv6 را روشن کنید</a> یا < "
 
 msgid "XX-Net is scanning IP. Please wait about half an hour."
-msgstr ""
+msgstr "XX-Net در حال اسکن IP است. "
 
 msgid ""
 "Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own "
 "AppID</a>."
-msgstr ""
+msgstr "Public AppID خارج از سهمیه، لطفا <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\ "
 
 msgid ""
 "Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
 "Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more "
 "AppID</a>."
-msgstr ""
+msgstr "شناسه برنامه شما خارج از حد نصاب است، لطفا <a href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" target=\"_blank\ "
 
 msgid "No working AppID. Please check."
-msgstr ""
+msgstr "AppID کار نمی کند. "
 
 msgid "System is Idle."
-msgstr ""
+msgstr "سیستم بیکار است."
 
 msgid "Connection not established yet."
-msgstr ""
+msgstr "هنوز اتصال برقرار نشده است."
 
 msgid "Please check your browser proxy setting."
-msgstr ""
+msgstr "لطفاً تنظیمات پروکسی مرورگر خود را بررسی کنید."
 
 msgid "Detecting ..."
-msgstr ""
+msgstr "تشخیص ..."
 
 msgid "Please import certificates to your browser."
-msgstr ""
+msgstr "لطفاً گواهی ها را به مرورگر خود وارد کنید."
 
 msgid ""
 "You are using public AppIDs. You are recommended to <a "
 "href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" "
 "target=\"_blank\">deploy your own AppID</a>."
-msgstr ""
+msgstr "شما از AppID های عمومی استفاده می کنید. "
 
 msgid ", Everything is OK. Welcome to the FREE Internet."
-msgstr ""
+msgstr "، همه چیز اوکی است. "
 
 msgid "No response from process: "
-msgstr ""
+msgstr "بدون پاسخ از فرآیند:"
 
 msgid ". It might have already exited."
-msgstr ""
+msgstr "بشرممکن است قبلاً خارج شده باشد."
 
 msgid "Global PAC Proxy set"
-msgstr ""
+msgstr "مجموعه پروکسی جهانی PAC"
 
 msgid "Global GAEProxy Proxy set"
-msgstr ""
+msgstr "مجموعه پروکسی جهانی GAEProxy"
 
 msgid "Global X-Tunnel Proxy set"
-msgstr ""
+msgstr "مجموعه پروکسی تونل ایکس جهانی"
 
 msgid "Global Smart-Router Proxy set"
-msgstr ""
+msgstr "مجموعه پروکسی روتر هوشمند جهانی"
 
 msgid "Global Proxy disabled"
-msgstr ""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+msgstr "پروکسی جهانی غیرفعال است"
 
 
 
