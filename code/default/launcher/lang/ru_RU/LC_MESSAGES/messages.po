@@ -1,0 +1,499 @@
+#
+msgid ""
+msgstr ""
+
+msgid "Hello!"
+msgstr "Привет!"
+
+msgid "You seem to be on your first visit."
+msgstr "Вы, кажется, находитесь в своем первом визите."
+
+msgid "Learn more"
+msgstr "Узнать больше"
+
+msgid "Notice"
+msgstr "Уведомление"
+
+msgid "click to view"
+msgstr "Нажмите, чтобы просмотреть"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Project main page"
+msgstr "Главная страница проекта"
+
+msgid "Official Web Site"
+msgstr "Официальный веб-сайт"
+
+msgid "Telegram group"
+msgstr "Telegram Group"
+
+msgid "Telegram Channel"
+msgstr "Телеграмма канал"
+
+msgid "Bug feedback"
+msgstr "Обратная связь с ошибкой"
+
+msgid "When submitting a bug, please attach "
+msgstr "При отправке ошибки, пожалуйста, прикрепите"
+
+msgid "the status page "
+msgstr "страница статуса"
+
+msgid "info and "
+msgstr "Информация и"
+
+msgid "the log page "
+msgstr "страница журнала"
+
+msgid "contents"
+msgstr "содержимое"
+
+msgid "Collect debug info"
+msgstr "Соберите информацию отладки"
+
+msgid "Download"
+msgstr "Скачать"
+
+msgid "Thanks to the following projects"
+msgstr "Спасибо следующим проектам"
+
+msgid "About"
+msgstr "О"
+
+msgid "General Settings"
+msgstr "общие настройки"
+
+msgid "System Version"
+msgstr "Системная версия"
+
+msgid "LAN Proxy Setting"
+msgstr "Настройка прокси -сервера LAN"
+
+msgid "App List"
+msgstr "Список приложений"
+
+msgid "System Configuration"
+msgstr "Конфигурация системы"
+
+msgid "Configuring the service[%s]. This page will refresh within %s seconds."
+msgstr ""
+"Настройка службы [%s].Эта страница будет освежаться в течение %с секунд."
+
+msgid "GAE Proxy"
+msgstr "GAE Proxy"
+
+msgid "X-Tunnel"
+msgstr "X-Tunnel"
+
+msgid "Smart Router"
+msgstr "Умный маршрутизатор"
+
+msgid "Proxy by APP"
+msgstr "Прокси от приложения"
+
+msgid ""
+"Select which APP should be proxied. You need to restart VPN after change "
+"this."
+msgstr ""
+"Выберите, какое приложение должно быть прокси.Вам нужно перезапустить VPN "
+"после изменения."
+
+msgid "Select All"
+msgstr "Выбрать все"
+
+msgid "Save"
+msgstr "Сохранять"
+
+msgid "Settings saved successfully, Please restart VPN."
+msgstr "Настройки успешно сохранились, пожалуйста, перезапустите VPN."
+
+msgid "Failed saving settings: "
+msgstr "Неудачные настройки сохранения:"
+
+msgid "Failed saving settings."
+msgstr "Неудачные настройки сохранения."
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Auto-Startup"
+msgstr "Auto-Startup"
+
+msgid "Popup Status Page on Startup"
+msgstr "Страница статуса всплывающего окна в стартапе"
+
+msgid "Allow Remote"
+msgstr "Разрешить удаленное"
+
+msgid "Help"
+msgstr "Помощь"
+
+msgid "Display System Tray(Restarting APP Required)"
+msgstr "Показать системный лоток (приложение перезагрузки требуется)"
+
+msgid "Display Notification"
+msgstr "Отображение уведомления"
+
+msgid "Display Windows software compatibility suggestions"
+msgstr ""
+"Показать предложения по совместимости программного обеспечения Windows"
+
+msgid "Feedback"
+msgstr "Обратная связь"
+
+msgid "Run as Green Software"
+msgstr "Работать как зеленое программное обеспечение"
+
+msgid "Module management"
+msgstr "Управление модулем"
+
+msgid "Enable"
+msgstr "Давать возможность"
+
+msgid "Restarting all remote, wait to refresh."
+msgstr "Перезапустив все удаленные, подождите, чтобы обновить."
+
+msgid "Auto-Upgrade to"
+msgstr "Автоматическое обновление до"
+
+msgid "Do not upgrade"
+msgstr "Не обновляйтесь"
+
+msgid "Notice stable version"
+msgstr "Обратите внимание на стабильную версию"
+
+msgid "Stable version"
+msgstr "Стабильная версия"
+
+msgid "Notice test version"
+msgstr "Обратите внимание на тестовую версию"
+
+msgid "Test version"
+msgstr "Тестовая версия"
+
+msgid "Check the latest version"
+msgstr "Проверьте последнюю версию"
+
+msgid "Current version"
+msgstr "Текущая версия"
+
+msgid "Version of the test one"
+msgstr "Версия тестирования"
+
+msgid "Update now"
+msgstr "Обновить сейчас"
+
+msgid "Version of the stable one"
+msgstr "Версия стабильного"
+
+msgid "Keep old versions count"
+msgstr "Сохраняйте старые версии"
+
+msgid "keep all"
+msgstr "сохранить все"
+
+msgid "Manually Manage"
+msgstr "Вручную управлять"
+
+msgid "Advanced"
+msgstr "Передовой"
+
+msgid "All versions download page"
+msgstr "Страница загрузки всех версий"
+
+msgid "Released version"
+msgstr "Выпущенная версия"
+
+msgid "Released"
+msgstr "Выпущенный"
+
+msgid "Download & Change to"
+msgstr "Скачать и изменить на"
+
+msgid "no hash check"
+msgstr "НЕТ ХАШКА"
+
+msgid "Local version"
+msgstr "Местная версия"
+
+msgid "Local"
+msgstr "Местный"
+
+msgid "Change to this version"
+msgstr "Изменить эту версию"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Settings saved successfully."
+msgstr "Настройки успешно сохранились."
+
+msgid "Settings save fail:"
+msgstr "Настройки Сохранить"
+
+msgid "Deleted successfully."
+msgstr "Удален успешно."
+
+msgid "Deleting local version fail."
+msgstr "Удаление локальной версии не удастся."
+
+msgid "Failed getting local versions."
+msgstr "Не удалось получить местные версии."
+
+msgid "Failed getting released versions."
+msgstr "Не удалось получить выпущенные версии."
+
+msgid "(Remote Web Control Enabled)"
+msgstr "(Удаленный веб -управление включен)"
+
+msgid "Adaptive width"
+msgstr "Адаптивная ширина"
+
+msgid "Exit"
+msgstr "Выход"
+
+msgid "Menu"
+msgstr "Меню"
+
+msgid "Remind me later"
+msgstr "Напомни мне позже"
+
+msgid "Do not remind me this version"
+msgstr "Не напоминайте мне эту версию"
+
+msgid "View changes"
+msgstr "Просмотреть изменения"
+
+msgid "Exited successfully."
+msgstr "Вышел успешно."
+
+msgid "Exitting failed."
+msgstr "Выпуск не удался."
+
+msgid "Exitting failed. A network error occurred."
+msgstr "Выпуск не удался.Произошла сетевая ошибка."
+
+msgid "new to this version?"
+msgstr "новичок в этой версии?"
+
+msgid "Unkown error occured. Please refresh the page and try again."
+msgstr ""
+"Произошла неизвестная ошибка.Пожалуйста, обновите страницу и попробуйте еще "
+"раз."
+
+msgid "Updating in progress ..."
+msgstr "Обновление в процессе ..."
+
+msgid "New "
+msgstr "Новый"
+
+msgid "Finished."
+msgstr "Законченный."
+
+msgid "Downloading ..."
+msgstr "Загрузка ..."
+
+msgid "Download completed."
+msgstr "Загрузка завершена."
+
+msgid "Info"
+msgstr "Информация"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Log"
+msgstr "Бревно"
+
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr "Ваш браузер устарел.Частичная функциональность не будет доступна."
+
+msgid "The latest Chrome browser is recommended."
+msgstr "Рекомендуется последний Chrome Browser."
+
+msgid "Search"
+msgstr "Поиск"
+
+msgid "Search all issues"
+msgstr "Ищите все проблемы"
+
+msgid "Status"
+msgstr "Положение дел"
+
+msgid "Property"
+msgstr "Свойство"
+
+msgid "Value"
+msgstr "Ценить"
+
+msgid "Browser Proxy Setting"
+msgstr "Настройка прокси браузера"
+
+msgid "CA status"
+msgstr "Статус CA"
+
+msgid "System Proxy"
+msgstr "Системный прокси"
+
+msgid "Modules"
+msgstr "Модули"
+
+msgid "Launcher Web UI"
+msgstr "Интернет -пользовательский интерфейс"
+
+msgid "LAN proxy"
+msgstr "LAN Proxy"
+
+msgid "System Info"
+msgstr "Системная информация"
+
+msgid "Diagnostic Info"
+msgstr "Диагностическая информация"
+
+msgid "Check"
+msgstr "Проверять"
+
+msgid "GitHub issues"
+msgstr "GitHub выпуски"
+
+msgid "or"
+msgstr "или"
+
+msgid "Google Group Discussions"
+msgstr "Google Group обсуждения"
+
+msgid "Show Details"
+msgstr "Показать детали"
+
+msgid "Post to Github issue needs to sign in your Github account"
+msgstr "Размещение в GitHub. Выпуск должен войти в свою учетную запись GitHub"
+
+msgid "Status Info"
+msgstr "Информация о статусе"
+
+msgid ""
+"-----------%0AProblem Description:%0APlease describe your problem, running "
+"logs may be needed.%0A%0A-----------%0ADiagnostic information:%0A"
+msgstr ""
+"-----------%0a Описание проблемы:%0a, пожалуйста, опишите свою проблему, "
+"необходимы журналы.%0a%0a -----------%0a Диагностическая информация:%0A"
+
+msgid "disable"
+msgstr "запрещать"
+
+msgid "idle"
+msgstr "праздный"
+
+msgid "working"
+msgstr "работающий"
+
+msgid "The status page is empty. Highly likely that "
+msgstr "Страница статуса пуста.Весьма вероятно, что"
+
+msgid " failed getting started. Please follow "
+msgstr "Не удалось начать.Пожалуйста, следуйте"
+
+msgid "guide"
+msgstr "гид"
+
+msgid " to troubleshoot."
+msgstr "Устранение неполадок."
+
+msgid "Your local network failed, please check your network and firewall."
+msgstr ""
+"Ваша локальная сеть потерпела неудачу, пожалуйста, проверьте свою сеть и "
+"брандмауэр."
+
+msgid "Force-IPv6"
+msgstr "Force-Ipv6"
+
+msgid " not available, Please check."
+msgstr "Недоступно, пожалуйста, проверьте."
+
+msgid "Force-IPv4"
+msgstr "Force-Ipv4"
+
+msgid "You may want to $1turn on IP scaner$2."
+msgstr "Вы можете захотеть провести 1 доллар на IP Scanner $ 2."
+
+msgid ""
+"You can try <a href=\"https://github.com/XX-net/XX-Net/wiki/How-to-turn-on-"
+"IPv6\">turn on IPv6</a> or <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/How-to-use-XTunnel\">use X-Tunnel</a>."
+msgstr ""
+"Вы можете попробовать <a href=\"https://github.com/xx-net/xx-net/wiki/how-"
+"to-turn-on-ipv6\"> включить ipv6 </a> или <href = \"https://github.com/xx-"
+"net/xx-net/wiki/how-to-use-xtunnel\"> x-tunnel </a>."
+
+msgid "XX-Net is scanning IP. Please wait about half an hour."
+msgstr "XX-сеть-это сканирование IP.Пожалуйста, подождите около получаса."
+
+msgid ""
+"Public AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy your own "
+"AppID</a>."
+msgstr ""
+"Публичная приложение из квоты, пожалуйста, <a href=\"https://github.com/xx-"
+"net/xx-net/wiki/how-to-create-my-appids\" target=\"_blank\"> развернуть свой"
+" собственный Appid</a>."
+
+msgid ""
+"Your AppID out of quota, Please <a href=\"https://github.com/XX-net/XX-"
+"Net/wiki/how-to-create-my-appids\" target=\"_blank\">deploy more AppID</a>."
+msgstr ""
+"Ваша приложение из квоты, пожалуйста, <a href=\"https://github.com/xx-"
+"net/xx-net/wiki/how-to-create-my-appids\" target=\"_blank\"> развернуть "
+"более аппликацию </a>."
+
+msgid "No working AppID. Please check."
+msgstr "Нет рабочей Аппид.Пожалуйста, проверьте."
+
+msgid "System is Idle."
+msgstr "Система бездействует."
+
+msgid "Connection not established yet."
+msgstr "Соединение еще не установлено."
+
+msgid "Please check your browser proxy setting."
+msgstr "Пожалуйста, проверьте настройку прокси браузера."
+
+msgid "Detecting ..."
+msgstr "Обнаружение ..."
+
+msgid "Please import certificates to your browser."
+msgstr "Пожалуйста, импортируйте сертификаты в ваш браузер."
+
+msgid ""
+"You are using public AppIDs. You are recommended to <a "
+"href=\"https://github.com/XX-net/XX-Net/wiki/how-to-create-my-appids\" "
+"target=\"_blank\">deploy your own AppID</a>."
+msgstr ""
+"Вы используете публичные приставки.Вас рекомендуется <a "
+"href=\"https://github.com/xx-net/xx-net/wiki/how-to-create-my-appids\" "
+"target=\"_blank\"> развернуть свое собственное Appid </a>."
+
+msgid ", Everything is OK. Welcome to the FREE Internet."
+msgstr ", Все в порядке.Добро пожаловать в бесплатный интернет."
+
+msgid "No response from process: "
+msgstr "Нет ответа от процесса:"
+
+msgid ". It might have already exited."
+msgstr "ПолемЭто могло бы уже выйти."
+
+msgid "Global PAC Proxy set"
+msgstr "Global PAC Proxy Set"
+
+msgid "Global GAEProxy Proxy set"
+msgstr "Глобальный набор GaeProxy Proxy"
+
+msgid "Global X-Tunnel Proxy set"
+msgstr "Глобальный набор прокси X-Tunnel"
+
+msgid "Global Smart-Router Proxy set"
+msgstr "Глобальный набор прокси-карт с интеллектуальными маркировками"
+
+msgid "Global Proxy disabled"
+msgstr "Global Proxy отключен"

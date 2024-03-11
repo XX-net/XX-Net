@@ -1,0 +1,102 @@
+
+msgid "General"
+msgstr "عمومی"
+
+msgid "Rules"
+msgstr "قاعده"
+
+msgid "Cache"
+msgstr "مخازن"
+
+msgid "Smart Router Configuration"
+msgstr "پیکربندی روتر هوشمند"
+
+msgid "Clean Cache"
+msgstr "حافظه پنهان"
+
+msgid "Domain Cache"
+msgstr "حافظه نهان"
+
+msgid "IP Cache"
+msgstr "حافظه نهان"
+
+msgid "Clean Cache successfully."
+msgstr "حافظه پنهان را با موفقیت تمیز کنید."
+
+msgid "Country"
+msgstr "کشور"
+
+msgid "China"
+msgstr "چین"
+
+msgid "Other"
+msgstr "دیگر"
+
+msgid "Route Policy"
+msgstr "خط مشی مسیر"
+
+msgid "Black->GAEProxy"
+msgstr "سیاه-> gaeproxy"
+
+msgid "Black->X-Tunnel"
+msgstr "سیاه-> x-tunnel"
+
+msgid "All Smart-Router"
+msgstr "همه روتر هوشمند"
+
+msgid "All->X-Tunnel"
+msgstr "All-> X-Tunnel"
+
+msgid "Auto-Try Direct"
+msgstr "کارگردانی مستقیم"
+
+msgid "Use IPv6 preferentially when Auto-Try Direct"
+msgstr "هنگام مستقیم کار خودکار از IPv6 استفاده کنید"
+
+msgid "Auto-Try GAEProxy"
+msgstr "گای پروکسی"
+
+msgid "Enable Fake CA"
+msgstr "CA جعلی را فعال کنید"
+
+msgid "Block Advertisement"
+msgstr "تبلیغات مسدود"
+
+msgid "Settings saved successfully."
+msgstr "تنظیمات با موفقیت ذخیره شد."
+
+msgid "https://github.com/XX-net/XX-Net/wiki/SmartRouter_rules_en"
+msgstr ""
+
+msgid "Help documents"
+msgstr "به اسناد کمک کنید"
+
+msgid "Direct List"
+msgstr "لیست مستقیم"
+
+msgid "GAEProxy List"
+msgstr "لیست"
+
+msgid "X-Tunnel List"
+msgstr "لیست تونل ایکس"
+
+msgid "Redirect HTTPS"
+msgstr "تغییر مسیر HTTPS"
+
+msgid "Advertisement Black List"
+msgstr "لیست سیاه تبلیغات"
+
+msgid "Submit"
+msgstr "ارسال"
+
+msgid "Smart Router Log"
+msgstr "ورود به سیستم روتر هوشمند"
+
+msgid "Log"
+msgstr "ورود به سیستم"
+
+msgid "Configuration"
+msgstr "پیکربندی"
+
+msgid "Smart Router"
+msgstr "روتر هوشمند"

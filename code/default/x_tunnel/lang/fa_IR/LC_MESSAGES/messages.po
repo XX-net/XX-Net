@@ -1,0 +1,432 @@
+
+
+msgid "Cloudflare"
+msgstr "ابری"
+
+msgid "Front"
+msgstr "جلو"
+
+msgid "Log"
+msgstr "ورود به سیستم"
+
+msgid "Cloudfront"
+msgstr "خطوط ابری"
+
+msgid "Account"
+msgstr "حساب"
+
+msgid "Settings"
+msgstr "تنظیمات"
+
+msgid "Plans"
+msgstr "برنامه"
+
+msgid "History"
+msgstr "تاریخ"
+
+msgid "Help"
+msgstr "کمک"
+
+msgid "Login"
+msgstr "وارد شدن"
+
+msgid "Token Login"
+msgstr "ورود به سیستم"
+
+msgid "Input login token from https://xx-net.com."
+msgstr "نشانه ورود به سیستم از https://xx-net.com."
+
+msgid "Token"
+msgstr "نشانه"
+
+msgid "Password Login"
+msgstr "ورود رمز عبور"
+
+msgid "Email"
+msgstr "پست الکترونیک"
+
+msgid "Password"
+msgstr "کلمه عبور"
+
+msgid "Haven't an account?"
+msgstr "حساب کاربری ندارید؟"
+
+msgid "Forget password?"
+msgstr "فراموشی رمز عبور؟"
+
+msgid "Reset password"
+msgstr "رمزعبور بازنشانی"
+
+msgid "Next"
+msgstr "بعد"
+
+msgid "Input confirmation code"
+msgstr "کد تأیید ورودی"
+
+msgid ""
+"The confirmation code has sent to your email, please check your email box."
+msgstr ""
+"کد تأیید به ایمیل شما ارسال شده است ، لطفاً کادر ایمیل خود را بررسی کنید."
+
+msgid "Confirmation Code"
+msgstr "کد تایید"
+
+msgid "Set new password"
+msgstr "تنظیم رمز جدید"
+
+msgid "Please input your new password."
+msgstr "لطفا رمز ورود جدید خود را وارد کنید."
+
+msgid "Confirm your password"
+msgstr "رمز ورود خود را تأیید کنید"
+
+msgid "Submit"
+msgstr "ارسال"
+
+msgid "Your password has reset successfully."
+msgstr "رمز عبور شما با موفقیت تنظیم مجدد شده است."
+
+msgid "Please use your new password to login."
+msgstr "لطفاً برای ورود به سیستم از رمز عبور جدید خود استفاده کنید."
+
+msgid "Login failed, please try login using token."
+msgstr ""
+"ورود به سیستم انجام نشد ، لطفاً با استفاده از Token ورود را امتحان کنید."
+
+msgid "Register"
+msgstr "ثبت نام"
+
+msgid "Promoter(Optional)"
+msgstr "پروموتر (اختیاری)"
+
+msgid "Already have an account?"
+msgstr "در حال حاضر یک حساب کاربری دارید؟"
+
+msgid "Summary"
+msgstr "خلاصه"
+
+msgid "Account"
+msgstr "حساب"
+
+msgid "Logout"
+msgstr "خروج"
+
+msgid "Credit"
+msgstr "اعتبار"
+
+msgid "Charge"
+msgstr "شارژ"
+
+msgid "Transfer"
+msgstr "انتقال"
+
+msgid "Available Plan"
+msgstr "برنامه موجود"
+
+msgid "No Valid Plan available."
+msgstr "هیچ برنامه معتبری در دسترس نیست."
+
+msgid "No bandwidth available."
+msgstr "پهنای باند موجود نیست."
+
+msgid "Expire Time"
+msgstr "تاریخ انقضاء"
+
+msgid "Left Bandwidth"
+msgstr "پهنای باند سمت چپ"
+
+msgid "server"
+msgstr "سرور"
+
+msgid "AUTO"
+msgstr "خودکار"
+
+msgid ""
+"Promoter (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-Promote-"
+"Plan'>Help</a>)"
+msgstr ""
+"مروج (<a href='https://github.com/xx-net/xx-net/wiki/x-tunnel-promote-plan'>"
+" راهنما </a>)"
+
+msgid "Plans and Pricing"
+msgstr "برنامه ها و قیمت گذاری"
+
+msgid "Billing History"
+msgstr "تاریخچه صورتحساب"
+
+msgid "No billing history."
+msgstr "بدون سابقه صورتحساب."
+
+msgid "Time"
+msgstr "زمان"
+
+msgid "Description"
+msgstr "شرح"
+
+msgid "Get"
+msgstr "گرفتن"
+
+msgid "Action"
+msgstr "عمل"
+
+msgid "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel"
+msgstr ""
+
+msgid ""
+"Promote Code (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-"
+"Promote-Plan'>Help</a>)"
+msgstr ""
+"تبلیغ کد (<a href='https://github.com/xx-net/xx-net/wiki/x-tunnel-promote-"
+"plan'> راهنما </a>)"
+
+msgid "You haven't enough credit. Please charge first."
+msgstr "شما اعتبار کافی نداریدلطفا ابتدا شارژ کنید."
+
+msgid "Plan"
+msgstr "طرح"
+
+msgid "Close"
+msgstr "بستن"
+
+msgid "Buy Now"
+msgstr "هم اکنون خریداری کنید"
+
+msgid "Transfer Credit"
+msgstr "اعتبار انتقال"
+
+msgid "Username transfer to"
+msgstr "انتقال نام کاربری به"
+
+msgid "Email Address"
+msgstr "آدرس ایمیل"
+
+msgid "Credit to transfer"
+msgstr "اعتبار برای انتقال"
+
+msgid "Transfer Bandwidth"
+msgstr "پهنای باند"
+
+msgid "Bandwidth to transfer"
+msgstr "پهنای باند برای انتقال"
+
+msgid "X-Tunnel Configuration"
+msgstr "پیکربندی X-Tunnel"
+
+msgid "Configuration"
+msgstr "پیکربندی"
+
+msgid "Status"
+msgstr "وضعیت"
+
+msgid "Logining ..."
+msgstr "گودال"
+
+msgid "Please wait ..."
+msgstr "لطفا صبر کنید ..."
+
+msgid "Promote Code copied to Clipboard."
+msgstr "کد کپی شده در کلیپ بورد را تبلیغ کنید."
+
+msgid "Connect to server fail:"
+msgstr "اتصال به سرور شکست:"
+
+msgid "Per Month"
+msgstr "هر ماه"
+
+msgid "Months"
+msgstr "ماه ها"
+
+msgid "Total"
+msgstr "جمع"
+
+msgid "Email seems invalid."
+msgstr "ایمیل نامعتبر به نظر می رسد."
+
+msgid "Password needs at least 6 characters, and no more than 20."
+msgstr "رمز عبور حداقل به 6 نویسه و بیش از 20 نیاز ندارد."
+
+msgid "Loading ..."
+msgstr "بارگذاری ..."
+
+msgid "Please input invalid confirmation code."
+msgstr "لطفاً کد تأیید نامعتبر را وارد کنید."
+
+msgid "Passwords are not match."
+msgstr "رمزهای عبور مطابقت ندارند."
+
+msgid "Connect to server fail, check Front log first."
+msgstr "به سرور متصل شوید ، ابتدا ورود به سیستم جلو را بررسی کنید."
+
+msgid "Incorrect Email or password."
+msgstr "کلمه عبور یا ایمیل اشتباه است."
+
+msgid "Login fail:"
+msgstr "ورود به سیستم شکست:"
+
+msgid "Account not exist."
+msgstr "حساب وجود ندارد"
+
+msgid "Try again later."
+msgstr "بعدا دوباره تلاش کنید."
+
+msgid "Request fail:"
+msgstr "درخواست شکست:"
+
+msgid "Confirmation code expired, please restart again."
+msgstr "کد تأیید منقضی شد ، لطفاً دوباره مجدداً راه اندازی کنید."
+
+msgid "You have exceeded the retry limitation."
+msgstr "شما از محدودیت آزمایش مجدد فراتر رفته اید."
+
+msgid "The code is not match, please check your code."
+msgstr "کد مطابقت ندارد ، لطفاً کد خود را بررسی کنید."
+
+msgid "Do NOT use Chinese-service-provider's Email!"
+msgstr "از ایمیل ارائه دهنده خدمات چینی استفاده نکنید!"
+
+msgid "Password needs at least 6 charactors, and no more than 20."
+msgstr "رمز عبور حداقل به 6 نویسه و بیش از 20 نیاز ندارد."
+
+msgid "Password seems invalid."
+msgstr "رمز عبور نامعتبر به نظر می رسد."
+
+msgid "Promoter is invalid."
+msgstr "مروج نامعتبر است."
+
+msgid "Registered successfully, "
+msgstr "با موفقیت ثبت شد،"
+
+msgid "Email has been taken by another user."
+msgstr "ایمیل توسط کاربر دیگری گرفته شده است."
+
+msgid "Promoter not exist, check it or keep it empty."
+msgstr "مروج وجود ندارد ، آن را بررسی کنید یا آن را خالی نگه دارید."
+
+msgid "Unknown error occurred."
+msgstr "خطای ناشناخته رخ داده است."
+
+msgid "previously selected server nolonger available, automatically try "
+msgstr "سرور انتخاب شده قبلی دیگر در دسترس نیست ، به طور خودکار امتحان کنید"
+
+msgid "Can't promote yourself."
+msgstr "نمی تواند خود را تبلیغ کند."
+
+msgid "Settings saved successfully."
+msgstr "تنظیمات با موفقیت ذخیره شد."
+
+msgid "Failed saving settings: "
+msgstr "تنظیمات ذخیره ناموفق:"
+
+msgid "Failed to log out."
+msgstr "ورود به سیستم انجام نشد."
+
+msgid "Please refresh page."
+msgstr "لطفا صفحه را تازه کنید."
+
+msgid "Transfer username seems not a valid Email address."
+msgstr "به نظر می رسد نام کاربری انتقال یک آدرس ایمیل معتبر نیست."
+
+msgid "Error occurred: "
+msgstr "خطا رخ داده است:"
+
+msgid "Max Available Bandwidth: "
+msgstr "پهنای باند موجود:"
+
+msgid "Unit should be M or G."
+msgstr "واحد باید M یا G باشد."
+
+msgid "Transfer amount should not more than 2 decimal places."
+msgstr "مقدار انتقال نباید بیش از 2 مکان اعشاری باشد."
+
+msgid "Failed to order: "
+msgstr "سفارش انجام نشد:"
+
+msgid "Order successfully complete."
+msgstr "سفارش را با موفقیت کامل کنید."
+
+msgid "Get Fail:"
+msgstr "FAIL:"
+
+msgid "Heroku"
+msgstr "هروکو"
+
+msgid "X-Tunnel"
+msgstr "تونل ایکس"
+
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr "مرورگر شما منسوخ است.عملکرد جزئی در دسترس نخواهد بود."
+
+msgid "The latest Chrome browser is recommended."
+msgstr "آخرین مرورگر Chrome توصیه می شود."
+
+msgid "Global"
+msgstr "جهانی"
+
+msgid "Property"
+msgstr "ویژگی"
+
+msgid "Value"
+msgstr "ارزش"
+
+msgid "Handle num"
+msgstr "رسیدگی به تعداد"
+
+msgid "Response time"
+msgstr "زمان پاسخ"
+
+msgid "Roundtrip num"
+msgstr "گردباد شماره"
+
+msgid "Slow roundtrip"
+msgstr "دورگرد آهسته"
+
+msgid "Resend"
+msgstr "ارسال مجدد"
+
+msgid "Timeout roundtrip"
+msgstr "میزگرد تایم"
+
+msgid "Speed"
+msgstr "سرعت"
+
+msgid "Total use"
+msgstr "کل استفاده"
+
+msgid "GAE"
+msgstr "گود"
+
+msgid "Score"
+msgstr "نمره"
+
+msgid "Success num"
+msgstr "شماره موفقیت"
+
+msgid "Fail num"
+msgstr "NUM"
+
+msgid "Worker num"
+msgstr "شماره کارگر"
+
+msgid "TLS_Relay"
+msgstr "tls_reelay"
+
+msgid "X-Tunnel Status Info"
+msgstr "اطلاعات وضعیت تونل ایکس"
+
+msgid "The status page is empty. Highly likely that "
+msgstr "صفحه وضعیت خالی است.بسیار محتمل که"
+
+msgid " failed getting started. Please follow "
+msgstr "شروع به کار نشدلطفا دنبال کنید"
+
+msgid "guide"
+msgstr "راهنما"
+
+msgid " to troubleshoot."
+msgstr "عیب یابی"
+
+msgid "ChatGPT Manual"
+msgstr "کتابچه راهنمای chatgpt"
+
+msgid "https://github.com/XX-net/XX-Net/wiki/ChatGPT_EN"
+msgstr ""

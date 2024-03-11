@@ -1,0 +1,436 @@
+#
+msgid ""
+msgstr ""
+
+msgid "Cloudflare"
+msgstr "Cloudflare"
+
+msgid "Front"
+msgstr "Передний"
+
+msgid "Log"
+msgstr "Бревно"
+
+msgid "Cloudfront"
+msgstr "Cloudfront"
+
+msgid "Account"
+msgstr "Счет"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Plans"
+msgstr "Планы"
+
+msgid "History"
+msgstr "История"
+
+msgid "Help"
+msgstr "Помощь"
+
+msgid "Login"
+msgstr "Авторизоваться"
+
+msgid "Token Login"
+msgstr "Вход в знак токена"
+
+msgid "Input login token from https://xx-net.com."
+msgstr "Токен ввода ввода от https://xx-net.com."
+
+msgid "Token"
+msgstr "Токен"
+
+msgid "Password Login"
+msgstr "Вход в систему пароля"
+
+msgid "Email"
+msgstr "Электронная почта"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Haven't an account?"
+msgstr "Нет аккаунта?"
+
+msgid "Forget password?"
+msgstr "Забыть пароль?"
+
+msgid "Reset password"
+msgstr "Сброс пароля"
+
+msgid "Next"
+msgstr "Следующий"
+
+msgid "Input confirmation code"
+msgstr "Код подтверждения ввода"
+
+msgid ""
+"The confirmation code has sent to your email, please check your email box."
+msgstr ""
+"Код подтверждения отправился на ваше электронное письмо, пожалуйста, "
+"ознакомьтесь с вашим письмом."
+
+msgid "Confirmation Code"
+msgstr "Код подтверждения"
+
+msgid "Set new password"
+msgstr "Установите новый пароль"
+
+msgid "Please input your new password."
+msgstr "Пожалуйста, введите свой новый пароль."
+
+msgid "Confirm your password"
+msgstr "Подтвердите ваш пароль"
+
+msgid "Submit"
+msgstr "Представлять на рассмотрение"
+
+msgid "Your password has reset successfully."
+msgstr "Ваш пароль успешно сброшен."
+
+msgid "Please use your new password to login."
+msgstr "Пожалуйста, используйте свой новый пароль для входа в систему."
+
+msgid "Login failed, please try login using token."
+msgstr "Вход не удался, попробуйте войти в систему с помощью токена."
+
+msgid "Register"
+msgstr "регистр"
+
+msgid "Promoter(Optional)"
+msgstr "Промоутер (необязательно)"
+
+msgid "Already have an account?"
+msgstr "Уже есть аккаунт?"
+
+msgid "Summary"
+msgstr "Краткое содержание"
+
+msgid "Account"
+msgstr "Счет"
+
+msgid "Logout"
+msgstr "Выйти"
+
+msgid "Credit"
+msgstr "Кредит"
+
+msgid "Charge"
+msgstr "Заряжать"
+
+msgid "Transfer"
+msgstr "Передача"
+
+msgid "Available Plan"
+msgstr "Доступный план"
+
+msgid "No Valid Plan available."
+msgstr "Нет достоверного плана."
+
+msgid "No bandwidth available."
+msgstr "Нет пропускной способности."
+
+msgid "Expire Time"
+msgstr "Истекает время"
+
+msgid "Left Bandwidth"
+msgstr "Левая полоса пропускания"
+
+msgid "server"
+msgstr "сервер"
+
+msgid "AUTO"
+msgstr ""
+
+msgid ""
+"Promoter (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-Promote-"
+"Plan'>Help</a>)"
+msgstr ""
+"Промотор (<a href='https://github.com/xx-net/xx-net/wiki/x-tunnel-promote-"
+"plan'> help </a>)"
+
+msgid "Plans and Pricing"
+msgstr ""
+
+msgid "Billing History"
+msgstr "Биллинг История"
+
+msgid "No billing history."
+msgstr "Нет истории выставления счетов."
+
+msgid "Time"
+msgstr "Время"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Get"
+msgstr "Получать"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "https://github.com/XX-net/XX-Net/wiki/How-to-use-XTunnel"
+msgstr ""
+
+msgid ""
+"Promote Code (<a href='https://github.com/XX-net/XX-Net/wiki/X-Tunnel-"
+"Promote-Plan'>Help</a>)"
+msgstr ""
+"PROMOTE CODE (<a href='https://github.com/xx-net/xx-net/wiki/x-tunnel-"
+"promote-plan'> справка </a>)"
+
+msgid "You haven't enough credit. Please charge first."
+msgstr "Вам не хватает кредита.Пожалуйста, зарядите первым."
+
+msgid "Plan"
+msgstr "План"
+
+msgid "Close"
+msgstr "Закрывать"
+
+msgid "Buy Now"
+msgstr "Купить сейчас"
+
+msgid "Transfer Credit"
+msgstr "Трансферный кредит"
+
+msgid "Username transfer to"
+msgstr "Перенос имени пользователя в"
+
+msgid "Email Address"
+msgstr "Адрес электронной почты"
+
+msgid "Credit to transfer"
+msgstr "Кредит на передачу"
+
+msgid "Transfer Bandwidth"
+msgstr "Перевод полосы пропускания"
+
+msgid "Bandwidth to transfer"
+msgstr "Пропускная способность передачи"
+
+msgid "X-Tunnel Configuration"
+msgstr "Конфигурация X-Tunnel"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Status"
+msgstr "Положение дел"
+
+msgid "Logining ..."
+msgstr "Логика"
+
+msgid "Please wait ..."
+msgstr "Пожалуйста, подождите ..."
+
+msgid "Promote Code copied to Clipboard."
+msgstr "Продвигайте код, скопированный в буфер обмена."
+
+msgid "Connect to server fail:"
+msgstr "Подключиться к отказу от сервера:"
+
+msgid "Per Month"
+msgstr "В месяц"
+
+msgid "Months"
+msgstr "Месяцы"
+
+msgid "Total"
+msgstr "Общий"
+
+msgid "Email seems invalid."
+msgstr "Электронная почта кажется недействительной."
+
+msgid "Password needs at least 6 characters, and no more than 20."
+msgstr "Пароль требует не менее 6 символов и не более 20."
+
+msgid "Loading ..."
+msgstr "Загрузка ..."
+
+msgid "Please input invalid confirmation code."
+msgstr "Пожалуйста, введите недопустимый код подтверждения."
+
+msgid "Passwords are not match."
+msgstr "Пароли не совпадают."
+
+msgid "Connect to server fail, check Front log first."
+msgstr "Сначала подключитесь к серверу, сначала проверьте фронт."
+
+msgid "Incorrect Email or password."
+msgstr "Неверный адрес электронной почты или пароль."
+
+msgid "Login fail:"
+msgstr "Неверный логин:"
+
+msgid "Account not exist."
+msgstr "Аккаунт не существует."
+
+msgid "Try again later."
+msgstr "Попробуйте позже."
+
+msgid "Request fail:"
+msgstr "Запрос неудачный:"
+
+msgid "Confirmation code expired, please restart again."
+msgstr ""
+"Срок действия кода подтверждения истек, пожалуйста, перезапустите снова."
+
+msgid "You have exceeded the retry limitation."
+msgstr "Вы превзошли ограничение повторной попытки."
+
+msgid "The code is not match, please check your code."
+msgstr "Код не соответствует, пожалуйста, проверьте свой код."
+
+msgid "Do NOT use Chinese-service-provider's Email!"
+msgstr "Не используйте электронную почту Китая-Сервиса-Провидера!"
+
+msgid "Password needs at least 6 charactors, and no more than 20."
+msgstr "Пароль требует не менее 6 символов и не более 20."
+
+msgid "Password seems invalid."
+msgstr "Пароль кажется недействительным."
+
+msgid "Promoter is invalid."
+msgstr "Промоутер недействителен."
+
+msgid "Registered successfully, "
+msgstr "Регистрация прошла успешно,"
+
+msgid "Email has been taken by another user."
+msgstr "Электронная почта была взята другим пользователем."
+
+msgid "Promoter not exist, check it or keep it empty."
+msgstr "Промоутер не существует, проверьте его или оставьте его пустым."
+
+msgid "Unknown error occurred."
+msgstr "Произошла неизвестная ошибка."
+
+msgid "previously selected server nolonger available, automatically try "
+msgstr "Ранее выбранный сервер больше не доступен, автоматически попробуйте"
+
+msgid "Can't promote yourself."
+msgstr "Не могу продвигать себя."
+
+msgid "Settings saved successfully."
+msgstr "Настройки успешно сохранились."
+
+msgid "Failed saving settings: "
+msgstr "Неудачные настройки сохранения:"
+
+msgid "Failed to log out."
+msgstr "Не удалось выйти."
+
+msgid "Please refresh page."
+msgstr "Пожалуйста, обновите страницу."
+
+msgid "Transfer username seems not a valid Email address."
+msgstr ""
+"Передача пользователя не является действительным адресом электронной почты."
+
+msgid "Error occurred: "
+msgstr "Возникла ошибка:"
+
+msgid "Max Available Bandwidth: "
+msgstr "Максимальный доступный пропускная способность:"
+
+msgid "Unit should be M or G."
+msgstr "Единица должна быть M или G."
+
+msgid "Transfer amount should not more than 2 decimal places."
+msgstr "Сумма передачи должна не более 2 десятичных знаков."
+
+msgid "Failed to order: "
+msgstr "Не удалось заказать:"
+
+msgid "Order successfully complete."
+msgstr "Заказ успешно завершен."
+
+msgid "Get Fail:"
+msgstr "Получите неудачу:"
+
+msgid "Heroku"
+msgstr "Хероку"
+
+msgid "X-Tunnel"
+msgstr "X-Tunnel"
+
+msgid "Your browser is obsolete. Partial functionality will not be available."
+msgstr "Ваш браузер устарел.Частичная функциональность не будет доступна."
+
+msgid "The latest Chrome browser is recommended."
+msgstr "Рекомендуется последний Chrome Browser."
+
+msgid "Global"
+msgstr "Глобальный"
+
+msgid "Property"
+msgstr "Свойство"
+
+msgid "Value"
+msgstr "Ценить"
+
+msgid "Handle num"
+msgstr "Обрабатывать num"
+
+msgid "Response time"
+msgstr "Время отклика"
+
+msgid "Roundtrip num"
+msgstr "Обратная полет"
+
+msgid "Slow roundtrip"
+msgstr "Медленная обработка"
+
+msgid "Resend"
+msgstr "Отправить"
+
+msgid "Timeout roundtrip"
+msgstr "Тайм -аут"
+
+msgid "Speed"
+msgstr "Скорость"
+
+msgid "Total use"
+msgstr "Общее использование"
+
+msgid "GAE"
+msgstr "Газо"
+
+msgid "Score"
+msgstr "Счет"
+
+msgid "Success num"
+msgstr "Номер успеха"
+
+msgid "Fail num"
+msgstr "Неудача num"
+
+msgid "Worker num"
+msgstr "Работник num"
+
+msgid "TLS_Relay"
+msgstr "TLS_RELAY"
+
+msgid "X-Tunnel Status Info"
+msgstr "Информация о статусе X-Tunnel"
+
+msgid "The status page is empty. Highly likely that "
+msgstr "Страница статуса пуста.Весьма вероятно, что"
+
+msgid " failed getting started. Please follow "
+msgstr "Не удалось начать.Пожалуйста, следуйте"
+
+msgid "guide"
+msgstr "гид"
+
+msgid " to troubleshoot."
+msgstr "Устранение неполадок."
+
+msgid "ChatGPT Manual"
+msgstr "Руководство по чате"
+
+msgid "https://github.com/XX-net/XX-Net/wiki/ChatGPT_EN"
+msgstr ""
