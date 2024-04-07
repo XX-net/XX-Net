@@ -24,6 +24,7 @@ config = xconfig.Config(config_path)
 
 config.set_var("control_ip", "127.0.0.1")
 config.set_var("control_port", 8085)
+config.set_var("allowed_refers", [""])
 
 # System config
 config.set_var("language", "")  # en_US,

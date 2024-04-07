@@ -67,6 +67,15 @@ class FakeHttpHandler(simple_http_server.HttpServerHandler):
         self.close_connection = 0
 
 
+CORS_header = {
+    "Allow": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization,Content-Type",
+    "Connection": "close",
+    "Content-Type": "text/html",
+}
+
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
 
@@ -95,17 +104,24 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
     def do_OPTIONS(self):
         try:
-            origin = utils.to_str(self.headers.get(b'Origin'))
+            # origin = utils.to_str(self.headers.get(b'Origin'))
             # if origin not in self.config.allow_web_origins:
             #     return
 
-            header = {
-                "Allow": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
-                "Access-Control-Allow-Headers": "Authorization,Content-Type",
-            }
-            return self.send_response(headers=header)
+            self.headers = utils.to_str(self.headers)
+            self.path = utils.to_str(self.path)
+
+            refer = self.headers.get('Referer')
+            if refer:
+                refer_loc = urlparse(refer).netloc
+                host = self.headers.get('Host')
+                if refer_loc != host and refer_loc not in config.allowed_refers:
+                    xlog.warn("web control ref:%s host:%s", refer_loc, host)
+                    return
+
+                self.set_CORS(CORS_header)
+
+            return self.send_response()
         except Exception as e:
             xlog.exception("options fail:%r", e)
             return self.send_not_found()
@@ -118,9 +134,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         if refer:
             refer_loc = urlparse(refer).netloc
             host = self.headers.get('Host')
-            if refer_loc != host:
+            if refer_loc != host and refer_loc not in config.allowed_refers:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
+
+            self.set_CORS(CORS_header)
 
         try:
             content_type = self.headers.get('Content-Type', "")
