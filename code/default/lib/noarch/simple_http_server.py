@@ -49,6 +49,8 @@ class HttpServerHandler():
     rbufsize = 32 * 1024
     wbufsize = 32 * 1024
 
+    res_headers = {}
+
     def __init__(self, sock, client, args, logger=None):
         self.connection = sock
         sock.setblocking(1)
@@ -64,6 +66,9 @@ class HttpServerHandler():
         # self.logger.debug("new connect from:%s", self.address_string())
 
         self.setup()
+
+    def set_CORS(self, headers):
+        self.res_headers = headers
 
     def setup(self):
         pass
@@ -364,7 +369,10 @@ class HttpServerHandler():
 
         content = utils.to_bytes(content)
 
+        for key in self.res_headers:
+            data.append(b"%s: %s\r\n" % (utils.to_bytes(key), utils.to_bytes(self.res_headers[key])))
         data.append(b'Content-Length: %d\r\n' % len(content))
+
         if len(headers):
             if isinstance(headers, dict):
                 headers = utils.to_bytes(headers)
