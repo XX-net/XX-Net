@@ -173,6 +173,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 path = '/' + '/'.join(url_path_list[4:])
                 controler = module_init.proc_handler[module]["imp"].local.web_control. \
                     ControlHandler(self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler.set_CORS(self.res_headers)
                 controler.postvars = utils.to_str(self.postvars)
                 try:
                     controler.do_POST()
