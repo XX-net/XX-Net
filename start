@@ -120,9 +120,10 @@ elif [ $os_name = 'Darwin' ]; then
     fi
   fi
 
-  if [ ! -d "data/launcher" ]; then
+  if [ ! -d "data/launcher/installed" ]; then
     # remove the mask for download file warning
     xattr -c -r *
+    touch "data/launcher/installed"
   fi
 fi
 
