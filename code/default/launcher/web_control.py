@@ -201,9 +201,11 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         if refer:
             refer_loc = urlparse(refer).netloc
             host = self.headers.get('Host')
-            if refer_loc != host:
+            if refer_loc != host and refer_loc not in config.allowed_refers:
                 xlog.warn("web control ref:%s host:%s", refer_loc, host)
                 return
+
+            self.set_CORS(CORS_header)
 
         # check for '..', which will leak file
         if re.search(r'(\.{2})', self.path) is not None:
@@ -254,6 +256,7 @@ class Http_Handler(simple_http_server.HttpServerHandler):
                 path = '/' + '/'.join(url_path_list[4:])
                 controler = module_init.proc_handler[module]["imp"].local.web_control.ControlHandler(
                     self.client_address, self.headers, self.command, path, self.rfile, self.wfile)
+                controler.set_CORS(self.res_headers)
                 controler.do_GET()
                 return
             else:
