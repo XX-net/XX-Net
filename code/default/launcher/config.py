@@ -82,7 +82,10 @@ config.set_var("global_proxy_port", 0)
 config.set_var("global_proxy_username", "")
 config.set_var("global_proxy_password", "")
 
-config.load()
+try:
+    config.load()
+except Exception as e:
+    xlog.warn("loading config e:%r", e)
 
 app_name = "XX-Net"
 valid_language = ['en_US', 'fa_IR', 'zh_CN', 'ru_RU']

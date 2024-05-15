@@ -68,6 +68,7 @@ def load_config():
     config.set_var("dns_bind_ip", "127.0.0.1")
     config.set_var("dns_port", 53)
     config.set_var("dns_backup_port", 8053)
+    config.set_var("udp_relay_port", 8086)
 
     config.set_var("proxy_bind_ip", "127.0.0.1")
     config.set_var("proxy_port", 8086)

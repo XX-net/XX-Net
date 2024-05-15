@@ -21,6 +21,11 @@ INFO = 20
 DEBUG = 10
 NOTSET = 0
 
+# full_log set by server, upload full log for debug (maybe next time start session), remove old log file on reset log
+full_log = False
+
+# keep log set by UI, keep all logs, never delete old log, also upload log to server.
+
 
 class Logger():
     def __init__(self, name, buffer_size=0, file_name=None, roll_num=1,
@@ -45,8 +50,8 @@ class Logger():
         if log_path and save_start_log:
             now = datetime.now()
             time_str = now.strftime("%Y-%m-%d_%H-%M-%S")
-            log_fn = os.path.join(log_path, "start_log_%s_%s.log" % (name, time_str))
-            self.start_log = open(log_fn, "w")
+            self.log_fn = os.path.join(log_path, "start_log_%s_%s.log" % (name, time_str))
+            self.start_log = open(self.log_fn, "w")
         else:
             self.start_log = None
 
@@ -75,33 +80,32 @@ class Logger():
                         pass
 
     def reset_log_files(self):
-        if self.keep_log:
-            return
+        if not (self.keep_log or full_log):
+            if self.start_log:
+                self.start_log.close()
+                self.start_log = None
 
-        if self.start_log:
-            self.start_log.close()
-            self.start_log = None
+            if self.warning_log:
+                self.warning_log.close()
+                self.warning_log = None
 
-        if self.warning_log:
-            self.warning_log.close()
-            self.warning_log = None
-
-        if self.log_path:
+        if self.log_path and not self.keep_log:
             for filename in os.listdir(self.log_path):
-                if not filename.endswith(".log"):
+                fp = os.path.join(self.log_path, filename)
+                if not filename.endswith(".log") or fp == self.log_fn or not filename.startswith("start_log_%s" % self.name):
                     continue
 
-                fp = os.path.join(self.log_path, filename)
                 try:
                     os.remove(fp)
                 except:
                     pass
 
-        if self.warning_log_fn:
+        if self.warning_log_fn and not self.keep_log:
             self.warning_log = open(self.warning_log_fn, "a")
 
     def keep_logs(self):
         self.keep_log = True
+        # self.debug("keep log for %s", self.name)
         if not self.log_path:
             return
 
@@ -217,7 +221,7 @@ class Logger():
                     pass
                 self.start_log_num += 1
 
-                if self.start_log_num > self.save_start_log and not self.keep_log:
+                if self.start_log_num > self.save_start_log and not self.keep_log and not full_log:
                     self.start_log.close()
                     self.start_log = None
 
@@ -357,9 +361,13 @@ def reset_log_files():
         log.reset_log_files()
 
 
-def keep_log():
-    for name, log in loggerDict.items():
-        log.keep_logs()
+def keep_log(temp=False):
+    global full_log
+    if temp:
+        full_log = True
+    else:
+        for name, log in loggerDict.items():
+            log.keep_logs(temp)
 
 
 default_log = getLogger()

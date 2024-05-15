@@ -233,6 +233,15 @@ class ProxyServer():
         else:
             handle_ip_proxy(sock, addr, port, self.client_address)
 
+    def handle_udp_associate(self, sock, addr, port, addrtype_pack, addr_pack):
+        udp_relay_port = g.dns_srv.udp_relay_port
+        xlog.debug("socks5 from:%r udp associate to %s:%d use udp_relay_port:%d", self.client_address, addr, port, udp_relay_port)
+        reply = b"\x05\x00\x00" + addrtype_pack + addr_pack + struct.pack(">H", udp_relay_port)
+        sock.send(reply)
+
+        self.rfile.read(1)
+        xlog.debug("socks5 from:%r udp associate to %s:%d closed", self.client_address, addr, port)
+
     def socks5_handler(self):
         sock = self.conn
         socks_version = ord(self.read_bytes(1))
@@ -253,11 +262,6 @@ class ProxyServer():
             return
 
         command = ord(data[1:2])
-        if command != 1:  # 1. Tcp connect
-            xlog.warn("request not supported command mode:%d", command)
-            sock.send(b"\x05\x07\x00\x01")  # Command not supported
-            return
-
         addrtype_pack = data[3:4]
         addrtype = ord(addrtype_pack)
         if addrtype == 1:  # IPv4
@@ -276,8 +280,15 @@ class ProxyServer():
             xlog.warn("request address type unknown:%d", addrtype)
             sock.send(b"\x05\x07\x00\x01")  # Command not supported
             return
-
         port = struct.unpack('>H', self.rfile.read(2))[0]
+
+        if command == 3:  # 3. UDP associate
+            return self.handle_udp_associate(sock, addr, port, addrtype_pack, addr_pack)
+
+        if command != 1:  # 1. Tcp connect
+            xlog.warn("request not supported command mode:%d", command)
+            sock.send(b"\x05\x07\x00\x01")  # Command not supported
+            return
 
         # xlog.debug("socks5 %r connect to %s:%d", self.client_address, addr, port)
         reply = b"\x05\x00\x00" + addrtype_pack + addr_pack + struct.pack(">H", port)

@@ -24,7 +24,7 @@ class Config(object):
     def load(self):
         self.last_load_time = time.time()
         if os.path.isfile(self.config_path):
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
                 content = f.read()
                 content = content.strip()
                 content = content.replace("\r", "")
@@ -51,8 +51,8 @@ class Config(object):
             else:
                 self.file_config[var_name] = getattr(self, var_name)
 
-        with open(self.config_path, "w") as f:
-            f.write(json.dumps(self.file_config, indent=2))
+        with open(self.config_path, "w", encoding='utf-8') as f:
+            f.write(json.dumps(self.file_config, indent=2, ensure_ascii=False))
 
     def set_var(self, var_name, default_value):
         self.default_config[var_name] = default_value

@@ -25,6 +25,8 @@ def load_config():
     config.set_var("write_log_file", 0)
     config.set_var("save_start_log", 1500)
     config.set_var("show_debug", 0)
+    config.set_var("delay_collect_log", 3 * 60)
+    config.set_var("delay_collect_log2", 30)
 
     config.set_var("encrypt_data", 0)
     config.set_var("encrypt_password", "encrypt_pass")

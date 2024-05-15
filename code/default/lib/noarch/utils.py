@@ -117,8 +117,8 @@ def check_domain_valid(hostname):
 
 
 def str2hex(data):
-    data = to_str(data)
-    return ":".join("{:02x}".format(ord(c)) for c in data)
+    data = to_bytes(data)
+    return data.hex(':')
 
 
 def get_ip_maskc(ip_str):

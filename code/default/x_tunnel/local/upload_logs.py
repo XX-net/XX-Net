@@ -110,7 +110,7 @@ def list_files():
     return other_files + log_files_list
 
 
-def pack_logs(max_size=800 * 1024):
+def pack_logs(max_size=4 * 1024 * 1024):
     content_size = 0
 
     collect_debug_and_log()
@@ -118,11 +118,10 @@ def pack_logs(max_size=800 * 1024):
     try:
         files = list_files()
         zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, mode="w") as zfd:
+        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zfd:
             for src_file in files:
                 file_size = os.path.getsize(src_file)
-                content_size += file_size
-                if content_size > max_size:
+                if content_size + file_size > max_size:
                     break
 
                 relate_path = src_file[len(data_path) + 1:]
@@ -133,30 +132,32 @@ def pack_logs(max_size=800 * 1024):
                     zfd.writestr(relate_path, content)
                 else:
                     zfd.write(src_file, arcname=relate_path)
+                content_size += file_size
 
-                if content_size > max_size:
-                    break
-        return zip_buffer.getvalue()
+        compressed_data = zip_buffer.getvalue()
+        xlog.debug("compress log size:%d to %d", content_size, len(compressed_data))
+        return compressed_data
     except Exception as e:
         xlog.exception("packing logs except:%r", e)
         return None
 
 
 def upload_logs_thread():
-    sleep(3 * 60)
+    sleep(g.config.delay_collect_log)
     while g.running:
         if not g.running or not g.server_host or not g.session or g.session.last_receive_time == 0:
             time.sleep(10)
         else:
             break
 
-    sleep(30)
+    sleep(g.config.delay_collect_log2)
     if not g.running:
         return
 
     session_id = utils.to_str(g.session.session_id)
     data = pack_logs()
-    upload(session_id, data)
+    if data:
+        upload(session_id, data)
 
 
 def upload(session_id, data):
