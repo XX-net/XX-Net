@@ -71,10 +71,10 @@ CORS_header = {
     "Allow": "GET,POST,OPTIONS",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization,Content-Type",
+    "Access-Control-Allow-Headers": "Authorization,Content-Type,Sec-Fetch-Site,Sec-Fetch-Mode,Sec-Fetch-Dest",
     "Connection": "close",
-    "Content-Type": "text/html",
 }
+
 
 class Http_Handler(simple_http_server.HttpServerHandler):
     deploy_proc = None
@@ -103,25 +103,19 @@ class Http_Handler(simple_http_server.HttpServerHandler):
         #    xlog.debug("m:%s id:%d", k, v['menu_sort_id'])
 
     def do_OPTIONS(self):
+        # xlog.debug('%s "%s headers:%s from:%s', self.command, self.path, self.headers, self.address_string())
         try:
-            # origin = utils.to_str(self.headers.get(b'Origin'))
+            origin = utils.to_str(self.headers.get(b'Origin'))
             # if origin not in self.config.allow_web_origins:
             #     return
 
-            self.headers = utils.to_str(self.headers)
-            self.path = utils.to_str(self.path)
-
-            refer = self.headers.get('Referer')
-            if refer:
-                refer_loc = urlparse(refer).netloc
-                host = self.headers.get('Host')
-                if refer_loc != host and refer_loc not in config.allowed_refers:
-                    xlog.warn("web control ref:%s host:%s", refer_loc, host)
-                    return
-
-                self.set_CORS(CORS_header)
-
-            return self.send_response()
+            header = {
+                "Allow": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS",
+                "Access-Control-Allow-Headers": "Authorization,Content-Type",
+            }
+            return self.send_response(headers=header)
         except Exception as e:
             xlog.exception("options fail:%r", e)
             return self.send_not_found()

@@ -367,7 +367,7 @@ def keep_log(temp=False):
         full_log = True
     else:
         for name, log in loggerDict.items():
-            log.keep_logs(temp)
+            log.keep_logs()
 
 
 default_log = getLogger()

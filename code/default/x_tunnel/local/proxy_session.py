@@ -34,6 +34,7 @@ def decrypt_data(data):
     else:
         return data
 
+
 def traffic_readable(num, units=('B', 'KB', 'MB', 'GB')):
     for unit in units:
         if num >= 1024:
