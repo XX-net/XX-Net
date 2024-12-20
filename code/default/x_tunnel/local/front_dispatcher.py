@@ -157,10 +157,16 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
 
     content, status, response = "", 603, {}
     while time.time() - start_time < timeout:
+        start_get_front = time.time()
         front = get_front(host, timeout)
         if not front:
             xlog.warn("get_front fail")
             return "", 602, {}
+
+        finished_get_front = time.time()
+        get_front_time = finished_get_front - start_get_front
+        if get_front_time > 0.1:
+            xlog.warn("get_front_time: %f for %s %s %s", get_front_time, method, host, path)
 
         if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
             # share the x-tunnel connection with dns.xx-net.org

@@ -3,7 +3,7 @@ client_uuid = ""
 system = ""
 
 running = True
-protocol_version = 2
+protocol_version = 4
 last_refresh_time = 0
 login_process = False
 data_path = None

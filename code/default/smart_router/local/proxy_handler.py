@@ -1,9 +1,11 @@
 import time
 import socket
 import struct
+import json
 
 try:
     from urllib.parse import urlparse
+    from urllib.parse import parse_qs
 except ImportError:
     from urlparse import urlparse
 
@@ -354,13 +356,53 @@ class ProxyServer():
                 url_prex_len = len(url)
                 path = b"/"
         else:
-            # not proxy request, should be PAC
-            xlog.debug("PAC %s %s from:%s", method, url, self.client_address)
-            handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
-            return handler.handle()
+            # not proxy request
+            parsed_url = urlparse(utils.to_str(url))
+            kv = parse_qs(parsed_url.query)
+            if parsed_url.path == "/dns-query":
+                return self.DoH_handler(kv)
+            else:
+                xlog.debug("PAC %s %s from:%s", method, url, self.client_address)
+                handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
+                return handler.handle()
 
         sock = SocketWrap(self.conn, self.client_address[0], self.client_address[1])
         sock.replace_pattern = [url[:url_prex_len], b""]
 
         xlog.debug("http %r connect to %s:%d %s %s", self.client_address, host, port, method, path)
         handle_domain_proxy(sock, host, port, self.client_address)
+
+    def DoH_handler(self, kv):
+        handler = pac_server.PacHandler(self.conn, self.client_address, None, xlog)
+        name = kv.get("name", [None])[0]
+        if not name:
+            xlog.warn("DoH request no name")
+            return handler.send_response(content=b'{"error":"no name"}', status=400)
+
+        dns_type = kv.get("type", ["1"])[0]
+        if dns_type.isnumeric():
+            dns_type = int(dns_type)
+
+        ips = utils.to_str(g.dns_query.query(name, dns_type))
+        info = {
+            "Status": 0,
+            "Answer": [
+            ]
+        }
+        for ip in ips:
+            if dns_type == 1 and not utils.check_ip_valid4(ip):
+                continue
+            if dns_type == 16 and not utils.check_ip_valid6(ip):
+                continue
+
+            info["Answer"].append({
+                "name": name,
+                "type": dns_type,
+                "data": ip
+            })
+        res = json.dumps(info)
+        headers = {
+            "Content-Type": "application/dns-json",
+            "Access-Control-Allow-Origin": "*"
+        }
+        return handler.send_response(content=res, headers=headers, status=200)

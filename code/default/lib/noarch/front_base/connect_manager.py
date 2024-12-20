@@ -278,8 +278,8 @@ class ConnectManager(object):
 
     def _connect_process(self):
         try:
-            ip_str, sni, host = self.ip_manager.get_ip_sni_host()
-            if not ip_str:
+            host_info = self.ip_manager.get_ip_sni_host()
+            if not host_info:
                 self.no_ip_time = time.time()
                 with self.no_ip_lock:
                     # self.logger.warning("not enough ip")
@@ -287,7 +287,7 @@ class ConnectManager(object):
                 return None
 
             # self.logger.debug("create ssl conn %s", ip_str)
-            ssl_sock = self._create_ssl_connection(ip_str, sni, host)
+            ssl_sock = self._create_ssl_connection(host_info)
             if not ssl_sock:
                 time.sleep(1)
                 return None
@@ -310,10 +310,12 @@ class ConnectManager(object):
             self.logger.warn("_connect_ssl %s sni:%s host:%s fail:%r", ip_str, sni, host, e)
             queue.put(e)
 
-    def _create_ssl_connection(self, ip_str, sni, host):
-        try:
-            # ssl_sock = self.connect_creator.connect_ssl(ip_str, sni, host, close_cb=self.ip_manager.ssl_closed)
+    def _create_ssl_connection(self, host_info):
+        ip_str = host_info["ip_str"]
+        sni = host_info["sni"]
+        host = host_info["host"]
 
+        try:
             q = Queue()
             fn_args = (ip_str, sni, host, self.ip_manager.ssl_closed, q)
             t = threading.Thread(target=self._connect_ssl, args=fn_args, name="connect_ssl_%s" % ip_str)
@@ -330,6 +332,7 @@ class ConnectManager(object):
             self.ip_manager.update_ip(ip_str, sni, ssl_sock.handshake_time)
             self.logger.debug("create_ssl update ip:%s time:%d h2:%d sni:%s, host:%s",
                               ip_str, ssl_sock.handshake_time, ssl_sock.h2, ssl_sock.sni, ssl_sock.host)
+            ssl_sock.host_info = host_info
 
             return ssl_sock
         except socket.error as e:

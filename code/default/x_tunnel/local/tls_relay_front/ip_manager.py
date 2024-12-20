@@ -28,13 +28,15 @@ class IpManager(IpManagerBase):
 
     def get_ip_sni_host(self):
         now = time.time()
-        ips = self.host_manager.ips
 
         best_info = None
         best_speed = 0
 
-        for ip in ips:
-            port = int(self.host_manager.info[ip].get("port", 443))
+        for ip, ip_info in self.host_manager.info.items():
+            if "sni" not in ip_info:
+                continue
+
+            port = int(ip_info.get("port", 443))
             ip_str = utils.get_ip_str(ip, port)
 
             info = self._get_ip_info(ip)
@@ -54,7 +56,7 @@ class IpManager(IpManagerBase):
                 best_info = info
 
         if not best_info:
-            return None, None, None
+            return None
 
         best_info["links"] += 1
         best_info["last_try"] = now
@@ -63,7 +65,11 @@ class IpManager(IpManagerBase):
         ip = best_info["ip"]
         port = int(self.host_manager.info[ip].get("port", 443))
         ip_str = utils.get_ip_str(ip, port)
-        return ip_str, None, None
+        return {
+            "ip_str": ip_str,
+            "sni": None,
+            "host": None,
+        }
 
     def update_ip(self, ip_str, sni, handshake_time):
         ip, _ = utils.get_ip_port(ip_str)

@@ -2,6 +2,7 @@ import time
 import os
 import json
 import socket
+import threading
 
 from front_base.ip_manager import IpManagerBase
 import utils
@@ -16,6 +17,7 @@ class IpManager(IpManagerBase):
         self.hosts = {}
         self.ip_dict = {}
         self.load()
+        threading.Thread(target=self.resolve_domains, name="seley_resolve_domain", daemon=False).start()
 
     def __str__(self):
         o = ""
@@ -44,8 +46,11 @@ class IpManager(IpManagerBase):
             xlog.warn("load hosts %s e:%r", self.config_fn, e)
             return
 
+        self.hosts = domain_hosts
+
+    def resolve_domains(self):
         ip_hosts = {}
-        for domain_port, host_info in domain_hosts.items():
+        for domain_port, host_info in self.hosts.items():
             if not host_info.get("key"):
                 continue
 
@@ -81,8 +86,8 @@ class IpManager(IpManagerBase):
     def get_ip_sni_host(self):
         now = time.time()
 
-        ip_str = None
         best_info = None
+        best_params = {}
         best_speed = 0
 
         for ip_str, params in self.hosts.items():
@@ -102,6 +107,7 @@ class IpManager(IpManagerBase):
 
             if now - info["last_try"] > 30 * 60:
                 best_info = info
+                best_params = params
                 # xlog.debug("get_ip_sni_host last_try %s", ip_str)
                 break
 
@@ -109,17 +115,23 @@ class IpManager(IpManagerBase):
             if speed > best_speed:
                 best_speed = speed
                 best_info = info
+                best_params = params
                 # xlog.debug("get_ip_sni_host best speed %s", ip_str)
 
         if not best_info:
-            return None, None, None
+            return None
 
         ip_str = best_info["ip_str"]
         self.ip_dict[ip_str]["links"] += 1
         self.ip_dict[ip_str]["last_try"] = now
         key = self.hosts[ip_str]["key"]
 
-        return best_info["ip_str"], key, ip_str
+        return {
+            "ip_str": best_info["ip_str"],
+            "sni": key,
+            "host": ip_str,
+            "adjust": best_params.get("adjust", 0),
+        }
 
     def update_ip(self, ip_str, sni, handshake_time):
         info = self._get_ip_info(ip_str)

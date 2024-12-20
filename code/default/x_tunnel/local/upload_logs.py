@@ -43,7 +43,7 @@ def mask_x_tunnel_password(fp):
 def get_launcher_port():
     launcher_config_fn = os.path.join(data_path, "launcher", "config.json")
     try:
-        with open(launcher_config_fn, "r") as fd:
+        with open(launcher_config_fn, "r", encoding='utf-8') as fd:
             info = json.load(fd)
             return info.get("control_port", 8085)
     except Exception as e:

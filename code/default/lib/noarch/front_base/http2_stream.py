@@ -271,9 +271,6 @@ class Stream(object):
             pass
 
         if b'END_HEADERS' in frame.flags:
-            if self.config.http2_show_debug:
-                self.logger.debug("END_HEADERS")
-
             if self.response_headers is not None:
                 raise ProtocolError("Too many header blocks.")
 
@@ -307,8 +304,6 @@ class Stream(object):
                 self.send_response()
 
         if b'END_STREAM' in frame.flags:
-            if self.config.http2_show_debug:
-                self.logger.debug("%s Closing remote side of stream:%d", self.connection.ssl_sock.ip_str, self.stream_id)
 
             xcost = self.response_headers.get("X-Cost", -1)
             if isinstance(xcost, list):
@@ -319,6 +314,10 @@ class Stream(object):
             rtt = whole_cost - xcost
             receive_cost = time_now - self.get_head_time
             bytes_received = self.connection._sock.bytes_received - self.start_connection_point
+            if self.config.http2_show_debug:
+                self.logger.debug("%s stream:%d END_STREAM %s%s", self.connection.ssl_sock.ip_str,
+                                  self.stream_id, self.task.host, self.task.path)
+
             if b"ping" in self.task.path and self.config.http2_show_debug:
                 self.logger.debug("got pong for %s", self.connection.ip_str)
 

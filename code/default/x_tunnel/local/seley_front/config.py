@@ -27,7 +27,7 @@ class Config(ConfigBase):
 
         # connect_manager
         self.set_var("connection_pool_min", 1)
-        self.set_var("max_links_per_ip", 17)
+        self.set_var("max_links_per_ip", 20)
         self.set_var("connect_create_interval", 0)
 
         self.load()

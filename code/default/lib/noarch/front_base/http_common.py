@@ -199,6 +199,7 @@ class HttpWorker(object):
         self.ssl_sock = ssl_sock
         self.handshake = ssl_sock.handshake_time * 0.001
         self.rtt = ssl_sock.handshake_time * 0.001
+        self.adjust = float(ssl_sock.host_info.get("adjust", 0))
         self.streams = {}
         self.ip_str = ssl_sock.ip_str
         self.close_cb = close_cb
@@ -226,6 +227,7 @@ class HttpWorker(object):
         o += " processed_tasks: %d\r\n" % (self.processed_tasks)
         o += " continue_fail_tasks: %s\r\n" % (self.continue_fail_tasks)
         o += " handshake: %f \r\n" % self.handshake
+        o += " adjust: %f \r\n" % self.adjust
         o += " rtt_history: %s\r\n" % (self.rtt_history)
         o += " adjust_history: %s\r\n" % (self.adjust_history)
         if self.version != "1.1":
@@ -301,7 +303,7 @@ class HttpWorker(object):
             self.logger.debug("get_score %s, speed:%f rtt:%d stream_num:%d score:%f", self.ip_str,
                           speed * 0.000001, self.rtt * 1000, len(self.streams), score)
 
-        return score
+        return score + self.adjust
 
     def get_host(self, task_host):
         if task_host:

@@ -284,19 +284,25 @@ class SendBuffer():
 
 
 class BlockReceivePool():
-    def __init__(self, process_callback):
+    def __init__(self, process_callback, logger):
         self.lock = threading.Lock()
         self.process_callback = process_callback
+        self.logger = logger
         self.reset()
 
     def reset(self):
         # xlog.info("recv_pool reset")
         self.next_sn = 1
         self.block_list = []
+        self.timeout_sn_list = {}
 
     def put(self, sn, data):
+        # xlog.debug("recv_pool put sn:%d len:%d", sn, len(data))
         self.lock.acquire()
         try:
+            if sn in self.timeout_sn_list:
+                del self.timeout_sn_list[sn]
+
             if sn < self.next_sn:
                 # xlog.warn("recv_pool put timeout sn:%d", sn)
                 return False
@@ -323,6 +329,44 @@ class BlockReceivePool():
             raise Exception("recv_pool put sn:%d len:%d error:%r" % (sn, len(data), e))
         finally:
             self.lock.release()
+
+    def mark_sn_timeout(self, sn, t, server_time):
+        # xlog.warn("mark_sn_timeout down_sn:%d", sn)
+        with self.lock:
+            if sn not in self.timeout_sn_list:
+                self.logger.warn("mark_sn_timeout sn:%d t:%f", sn, server_time - t)
+                self.timeout_sn_list[sn] = {
+                    "server_send_time": t,
+                }
+            elif t > self.timeout_sn_list[sn]["server_send_time"]:
+                self.logger.warn("mark_sn_timeout renew sn:%d t:%f", sn, server_time - t)
+                self.timeout_sn_list[sn]["server_send_time"] = t
+
+    def get_timeout_list(self, server_time, timeout):
+        sn_list = []
+        with self.lock:
+            for sn, info in self.timeout_sn_list.items():
+                if server_time - info["server_send_time"] < timeout:
+                    continue
+
+                if server_time - info.get("retry_time", server_time) < timeout:
+                    continue
+
+                self.logger.warn("get_timeout_list sn:%d sent:%f retry:%f", sn, server_time - info["server_send_time"],
+                                 server_time - info.get("retry_time", server_time))
+                info["retry_time"] = server_time
+                sn_list.append(sn)
+
+        return sn_list
+
+    def is_received(self, sn):
+        if sn < self.next_sn:
+            return True
+
+        if sn in self.block_list:
+            return True
+
+        return False
 
     def status(self):
         out_string = "Block_receive_pool:\r\n"
@@ -600,8 +644,8 @@ class Conn(object):
                          name="do_stop_%s:%d" % (self.host, self.port)).start()
 
     def do_stop(self, reason="unknown"):
-        self.xlog.debug("Conn session:%s conn:%d fd:%d stop:%s", utils.to_str(self.session.session_id), self.conn_id,
-                        self._fd, reason)
+        self.xlog.debug("Conn session:%s %s:%d conn:%d fd:%d stop:%s", utils.to_str(self.session.session_id),
+                        self.host, self.port, self.conn_id, self._fd, reason)
         self.running = False
 
         self.connection_pipe.remove_sock(self.sock)
@@ -782,6 +826,7 @@ class Conn(object):
             except Exception as e:
                 self.xlog.info("%s conn:%d send closed: %r", self.session.session_id, self.conn_id, e)
                 if self.is_client:
+                    self.transfer_peer_close("send fail.")
                     self.do_stop(reason="send fail.")
                 return False
 

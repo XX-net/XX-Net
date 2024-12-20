@@ -60,7 +60,7 @@ class ProxySession(object):
         self.config = g.config
         self.wait_queue = base_container.WaitQueue()
         self.send_buffer = base_container.SendBuffer(max_payload=g.config.max_payload)
-        self.receive_process = base_container.BlockReceivePool(self.download_data_processor)
+        self.receive_process = base_container.BlockReceivePool(self.download_data_processor, xlog)
         self.connection_pipe = base_container.ConnectionPipe(self, xlog)
         self.lock = threading.Lock()  # lock for conn_id, sn generation, on_road_num change,
 
@@ -90,6 +90,10 @@ class ProxySession(object):
         self.upload_speed = 0.0
         self.download_speed = 0.0
 
+        # server time logic like NTP
+        self.server_time_offset = 0
+        self.server_time_deviation = 9999
+
         # the receive time of the tail of the socket receive buffer
         # if now - oldest_received_time > delay, then send.
         # set only no data in receive buffer
@@ -104,6 +108,9 @@ class ProxySession(object):
 
         if g.config.upload_logs:
             threading.Thread(target=upload_logs_thread, name="upload_logs").start()
+
+        self.timeout_check_th = threading.Thread(target=self.timeout_checker, name="timeout_check")
+        self.timeout_check_th.start()
 
     def start(self):
         with self.lock:
@@ -134,6 +141,8 @@ class ProxySession(object):
             self.received_sn = []
             self.receive_next_sn = 1
             self.target_on_roads = 0
+            self.server_time_offset = 0
+            self.server_time_deviation = 9999
 
             if not self.login_session():
                 xlog.warn("x-tunnel login_session fail, session not start")
@@ -147,12 +156,29 @@ class ProxySession(object):
 
                 self.round_trip_thread[i] = threading.Thread(target=self.normal_round_trip_worker, args=(i,),
                                                              name="roundtrip_%d" % i)
-                self.round_trip_thread[i].daemon = True
                 self.round_trip_thread[i].start()
 
             self.connection_pipe.start()
             xlog.info("session started.")
             return True
+
+    def timeout_checker(self):
+        while self.running:
+            timeout_num = 0
+            with self.lock:
+                time_now = time.time()
+                for sn, data_info in self.transfer_list.items():
+                    if data_info["stat"] != "timeout" and time_now - (data_info["start_time"] + data_info["server_timeout"]) > g.config.send_timeout_retry:
+                        data_info["stat"] = "timeout"
+                        xlog.warn("timeout_checker found transfer_no:%d timeout:%f", sn, time_now - data_info["start_time"])
+                        timeout_num += 1
+
+            if timeout_num:
+                self.target_on_roads = \
+                    min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + timeout_num)
+                self.trigger_more()
+
+            time.sleep(1)
 
     def traffic_speed_calculation(self):
         now = time.time()
@@ -175,15 +201,14 @@ class ProxySession(object):
             # xlog.warn("session stop but not running")
             return
 
+        self.running = False
+        self.session_id = ""
+        self.target_on_roads = 0
         with self.lock:
-            self.running = False
-            self.target_on_roads = 0
             for i in range(0, g.config.concurent_thread_num):
                 self.wait_queue.notify()
 
-            self.session_id = ""
             self.close_all_connection()
-
             self.send_buffer.reset()
             self.receive_process.reset()
             self.wait_queue.stop()
@@ -321,7 +346,8 @@ class ProxySession(object):
     def status(self):
         self.traffic_speed_calculation()
 
-        out_string = "session_id: %s\n" % self.session_id
+        out_string = "session_id: %s\n" % utils.to_str(self.session_id)
+        out_string += "server: %s\n" % g.server_host
         out_string += "extra_info: %s\n" % json.dumps(json.loads(self.get_login_extra_info()), indent=2)
         out_string += "thread num: %d\n" % threading.active_count()
         out_string += "running: %d\n" % self.running
@@ -336,16 +362,15 @@ class ProxySession(object):
         out_string += "upload_speed: %f\n" % self.upload_speed
         out_string += "download_speed: %f\n" % self.download_speed
         out_string += "last_traffic_reset_time %f ago\n" % (time.time() - self.last_traffic_reset_time )
-
+        out_string += "server_time_offset: %f\n" % self.server_time_offset
+        out_string += "server_time_deviation: %f\n" % self.server_time_deviation
+        out_string += "target_on_roads: %d\n" % self.target_on_roads
         out_string += "on_road_num:%d\n" % self.on_road_num
         out_string += "transfer_list: %d\n" % len(self.transfer_list)
-        for transfer_no in sorted(self.transfer_list.keys()):
-            transfer = self.transfer_list[transfer_no]
-            if "start" in self.transfer_list[transfer_no]:
-                time_way = " t:" + str((time.time() - self.transfer_list[transfer_no]["start"]))
-            else:
-                time_way = ""
-            out_string += "[%d] %s %s\n" % (transfer_no, json.dumps(transfer), time_way)
+        for sn in sorted(self.transfer_list.keys()):
+            data_info = self.transfer_list[sn]
+            time_way = " t:" + str((time.time() - self.transfer_list[sn]["start_time"]))
+            out_string += f'[{sn}] stat:{data_info["stat"]} server_timeout:{data_info["server_timeout"]} retry:{data_info["retry"]} {time_way}\n'
 
         out_string += "\n" + self.wait_queue.status()
         out_string += "\n" + self.send_buffer.status()
@@ -489,7 +514,7 @@ class ProxySession(object):
         try:
             if conn_id in self.conn_list:
                 conn = self.conn_list[conn_id]
-                xlog.debug("remove conn:%d %s:%d", conn_id, conn.host, conn.port)
+                # xlog.debug("remove conn:%d %s:%d", conn_id, conn.host, conn.port)
                 del self.conn_list[conn_id]
         except Exception as e:
             xlog.warn("remove conn:%d except:%r", conn_id, e)
@@ -574,24 +599,37 @@ class ProxySession(object):
 
         return ""
 
+    def get_down_sn_timeout_list_pack(self):
+        buf = base_container.WriteBuffer()
+        if self.server_time_deviation > g.config.server_time_max_deviation:
+            return buf
+
+        server_time = int(time.time() + self.server_time_offset)
+        timeout_list = self.receive_process.get_timeout_list(server_time, g.config.server_download_timeout_retry)
+        for sn in timeout_list:
+            buf.append(struct.pack("<I", sn))
+        buf.insert(struct.pack("<I", len(timeout_list)))
+        return buf
+
     def get_send_data(self, work_id):
         force = False
         while self.running:
             data = self.get_data(work_id)
+            down_sn_timeout_list_pack = self.get_down_sn_timeout_list_pack()
             # xlog.debug("get_send_data work_id:%d len:%d", work_id, len(data))
-            if data or self.on_road_num < self.target_on_roads:
+            if data or len(down_sn_timeout_list_pack) > 4 or self.on_road_num < self.target_on_roads:
                 # xlog.debug("got data, force get ack")
                 force = True
 
             ack = self.get_ack(force=force)
-            if data or ack or force:
+            if force or ack:
                 # xlog.debug("get_send_data work_id:%d data_len:%d ack_len:%d force:%d", work_id, len(data), len(ack), force)
-                return data, ack
+                return data, ack, down_sn_timeout_list_pack
 
             self.wait_queue.wait(work_id)
 
         xlog.debug("get_send_data on stop")
-        return b"", b""
+        return b"", b"", b""
 
     def ack_process(self, ack):
         self.lock.acquire()
@@ -637,15 +675,99 @@ class ProxySession(object):
         except Exception as e:
             xlog.exception("download_data_processor:%r", e)
 
-    def round_trip_process(self, data, ack):
+    def check_upload_not_acked(self, server_time):
+        server_local_time = server_time - self.server_time_offset
+        if self.server_time_deviation > g.config.server_time_max_deviation:
+            return
+
+        timeout_num = 0
+        entry_time = time.time()
+        with self.lock:
+            now = time.time()
+            if now - entry_time > 0.1:
+                xlog.error("check_upload_not_acked lock time:%f", now - entry_time)
+                return
+
+            for no, data_info in self.transfer_list.items():
+                if data_info["stat"] == "timeout":
+                    continue
+
+                if data_info["server_received"] == False and server_local_time - data_info["start_time"] > g.config.send_timeout_retry:
+                    data_info["stat"] = "timeout"
+                    xlog.warn("check_upload_not_acked found transfer_no:%d upload timeout:%f", no,
+                              server_local_time - data_info["start_time"])
+                    timeout_num += 1
+                    continue
+
+                if data_info["server_sent"] and server_time - data_info["server_sent"] > g.config.send_timeout_retry:
+                    data_info["stat"] = "timeout"
+                    xlog.warn("check_upload_not_acked found transfer_no:%d down timeout:%f", no,
+                              server_time - data_info["server_sent"])
+                    timeout_num += 1
+                    continue
+
+        if timeout_num:
+            self.target_on_roads = \
+                min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + timeout_num)
+            self.trigger_more()
+
+    def process_server_received_transfer_no(self, server_received_no_list, server_sent_no_list, server_time):
+        server_received_next_no = struct.unpack("<I", server_received_no_list.get(4))[0]
+        server_sent_next_no = struct.unpack("<I", server_sent_no_list.get(4))[0]
+        with self.lock:
+            for no, info in self.transfer_list.items():
+                if no < server_received_next_no:
+                    info["server_received"] = True
+
+                if no < server_sent_next_no:
+                    info["server_sent"] = server_time
+
+            server_unordered_received_no_num = struct.unpack("<I", server_received_no_list.get(4))[0]
+            for i in range(0, server_unordered_received_no_num):
+                no, t = struct.unpack("<Id", server_received_no_list.get(12))
+                if no in self.transfer_list:
+                    # xlog.debug("server unordered confirmed transfer_no:%d", sn)
+                    self.transfer_list[no]["server_received"] = t
+
+            server_unordered_sent_no_num = struct.unpack("<I", server_sent_no_list.get(4))[0]
+            for i in range(0, server_unordered_sent_no_num):
+                no, t = struct.unpack("<Id", server_sent_no_list.get(12))
+                if no in self.transfer_list:
+                    # xlog.debug("server unordered confirmed transfer_no:%d", sn)
+                    self.transfer_list[no]["server_sent"] = t
+
+    def process_server_unacked_sent_sn(self, data):
+        if self.server_time_deviation > g.config.server_time_max_deviation:
+            return
+
+        server_time = time.time() + self.server_time_offset
+
+        sn_num = struct.unpack("<I", data.get(4))[0]
+        timeout_num = 0
+        for i in range(0, sn_num):
+            sn, t = struct.unpack("<Id", data.get(12))
+            if self.receive_process.is_received(sn):
+                continue
+
+            if server_time - t > g.config.server_download_timeout_retry:
+                # xlog.warn("server unacked sn:%d timeout:%f", sn, server_time - t)
+                self.receive_process.mark_sn_timeout(sn, t, server_time)
+                timeout_num += 1
+
+    def round_trip_process(self, data, ack, server_rcvd_no_list, server_sent_no_list, server_unack_snd_sn, server_time):
         while len(data):
             sn, plen = struct.unpack("<II", data.get(8))
             pdata = data.get_buf(plen)
-            # xlog.debug("download sn:%d len:%d", sn, plen)
+            if g.config.show_debug:
+                xlog.debug("download sn:%d len:%d", sn, plen)
 
             self.receive_process.put(sn, pdata)
 
         self.ack_process(ack)
+
+        self.process_server_received_transfer_no(server_rcvd_no_list, server_sent_no_list, server_time)
+
+        self.process_server_unacked_sent_sn(server_unack_snd_sn)
 
     def get_transfer_no(self):
         with self.lock:
@@ -674,49 +796,103 @@ class ProxySession(object):
             del self.round_trip_thread[work_id]
             xlog.info("roundtrip thread %d exit", work_id)
 
-    def roundtrip_task(self, work_id):
-        data, ack = self.get_send_data(work_id)
+    def get_upload_data(self, work_id):
         if not self.running:
             return
 
-        send_data_len = len(data)
-        send_ack_len = len(ack)
+        # Get a timeout request to retry
+        time_now = time.time()
+        with self.lock:
+            wrong_sn = []
+            for sn, data_info in self.transfer_list.items():
+                if data_info["session_id"] != self.session_id:
+                    wrong_sn.append(sn)
+                    continue
+
+                if data_info["stat"] == "timeout":
+                    xlog.warn("retry transfer_no:%d t:%f", sn, time_now - data_info["start_time"])
+                    data_info["stat"] = "retry"
+                    data_info["retry"] += 1
+                    data_info["start_time"] = time_now
+
+                    return data_info
+
+            for sn in wrong_sn:
+                del self.transfer_list[sn]
+
+        # Generate a new request
+        data, ack, download_timeout = self.get_send_data(work_id)
         transfer_no = self.get_transfer_no()
         # xlog.debug("trip:%d no:%d send data:%s", work_id, transfer_no, parse_data(data))
 
-        magic = b"P"
-        pack_type = 2
+        start_time = time.time()
+        info = {
+            "session_id": self.session_id,
+            "transfer_no": transfer_no,
+            "stat": "request",
+            "server_received": False,
+            "server_sent": False,
+            "start_time": start_time,
+            "server_timeout": g.config.roundtrip_timeout,
+            "send_data": data,
+            "send_ack": ack,
+            "download_timeout": download_timeout,
+            "request_session_id": self.session_id,
+            "retry": 0,
+        }
+
+        with self.lock:
+            self.transfer_list[transfer_no] = info
+
+        return info
+
+    def roundtrip_task(self, work_id):
+        data_info = self.get_upload_data(work_id)
+        request_session_id = data_info["request_session_id"]
+        if request_session_id != self.session_id:
+            return
+
+        transfer_no = data_info["transfer_no"]
+        start_time = data_info["start_time"]
+        send_data = data_info["send_data"]
+        send_ack = data_info["send_ack"]
+        download_timeout = data_info["download_timeout"]
+        request_session_id = data_info["request_session_id"]
+
+        # Generate upload data package
+        send_data_len = len(send_data)
+        send_ack_len = len(send_ack)
+        download_timeout_len = len(download_timeout)
 
         if self.send_buffer.pool_size > g.config.max_payload or \
-                 len(self.wait_queue.waiters) < g.config.min_on_road:
+                len(self.wait_queue.waiters) < g.config.min_on_road or \
+                self.server_time_deviation > g.config.server_time_max_deviation or \
+                data_info["stat"] == "retry":
             # xlog.debug("pool_size:%s waiters:%d", self.send_buffer.pool_size, len(self.wait_queue.waiters))
             server_timeout = 0
         else:
             server_timeout = g.config.roundtrip_timeout
 
-        request_session_id = self.session_id
-        upload_data_head = struct.pack("<cBB8sIBIH", magic, g.protocol_version, pack_type,
+        with self.lock:
+            if transfer_no not in self.transfer_list:
+                xlog.warn("roundtrip transfer_no not found:%d", transfer_no)
+                return
+
+            self.on_road_num += 1
+            self.transfer_list[transfer_no]["server_timeout"] = server_timeout
+
+        magic = b"P"
+        pack_type = 2
+        upload_data_head = struct.pack("<cBB8sIBIHH", magic, g.protocol_version, pack_type,
                                        utils.to_bytes(self.session_id), transfer_no,
-                                       server_timeout, send_data_len, send_ack_len)
+                                       server_timeout, send_data_len, send_ack_len, download_timeout_len)
         upload_post_buf = base_container.WriteBuffer(upload_data_head)
-        upload_post_buf.append(data)
-        upload_post_buf.append(ack)
+        upload_post_buf.append(send_data)
+        upload_post_buf.append(send_ack)
+        upload_post_buf.append(download_timeout)
         upload_post_data = upload_post_buf.to_bytes()
         upload_post_data = encrypt_data(upload_post_data)
         self.last_send_time = time.time()
-
-        sleep_time = 1
-
-        start_time = time.time()
-
-        with self.lock:
-            self.on_road_num += 1
-            self.transfer_list[transfer_no] = {}
-            self.transfer_list[transfer_no]["stat"] = "request"
-            self.transfer_list[transfer_no]["start"] = start_time
-        lock_time = time.time() - start_time
-        if lock_time > 0.1:
-            xlog.warn("lock_time: %f", lock_time)
 
         if g.config.show_debug:
             self.traffic_speed_calculation()
@@ -724,18 +900,21 @@ class ProxySession(object):
                        transfer_no, self.target_on_roads, self.on_road_num, server_timeout,
                        len(upload_post_data))
 
-        while self.running:
+        sleep_time = 1
+        # Use one time loop for easy quit and clean up.
+        for _ in range(1):
+            upload_post_data2 = bytearray(upload_post_data)
             try:
                 content, status, response = g.http_client.request(method="POST", host=g.server_host,
                                                                   path="/data?tid=%d" % transfer_no,
-                                                                  data=upload_post_data,
+                                                                  data=upload_post_data2,
                                                                   headers={
-                                                                      "Content-Length": str(len(upload_post_data)),
+                                                                      "Content-Length": str(len(upload_post_data2)),
                                                                   },
                                                                   timeout=server_timeout + g.config.network_timeout)
 
-                traffic = len(upload_post_data) + len(content) + 645
-                self.traffic_upload += len(upload_post_data) + 645
+                traffic = len(upload_post_data2) + len(content) + 645
+                self.traffic_upload += len(upload_post_data2) + 645
                 self.traffic_download += len(content)
                 g.quota -= traffic
                 if g.quota < 0:
@@ -744,31 +923,39 @@ class ProxySession(object):
                 if self.running:
                     xlog.exception("request except:%r ", e)
 
+                data_info["stat"] = "timeout"
                 time.sleep(sleep_time)
                 continue
+            finally:
+                with self.lock:
+                    self.on_road_num -= 1
 
             g.stat["roundtrip_num"] += 1
-            roundtrip_time = (time.time() - start_time)
+            time_now = time.time()
+            roundtrip_time = (time_now - start_time)
 
             if status == 521:
                 xlog.warn("X-tunnel server is down, try get new server.")
                 g.server_host = None
-                self.on_road_num -= 1
                 self.stop()
                 login_process()
                 return
 
             if status != 200:
-                xlog.warn("roundtrip time:%f transfer_no:%d send:%d status:%r ",
-                          roundtrip_time, transfer_no, send_data_len, status)
+                head = upload_post_data2[:3]
+                xlog.warn("roundtrip time:%f transfer_no:%d send:%d head:%s status:%r ",
+                          roundtrip_time, transfer_no, send_data_len, utils.str2hex(head), status)
+                data_info["stat"] = "timeout"
                 time.sleep(sleep_time)
                 continue
 
             content_length = int(response.headers.get(b"Content-Length", b"0"))
-            recv_len = len(content)
-            if recv_len < 6 or (content_length and content_length != recv_len):
+            content_len = len(content)
+            if content_len < 6 or (content_length and content_length != content_len):
                 xlog.warn("roundtrip time:%f transfer_no:%d send:%d recv:%d Head:%d",
-                          roundtrip_time, transfer_no, send_data_len, recv_len, content_length)
+                          roundtrip_time, transfer_no, send_data_len, content_len, content_length)
+
+                data_info["stat"] = "timeout"
                 continue
 
             try:
@@ -776,8 +963,9 @@ class ProxySession(object):
                 payload = base_container.ReadBuffer(content)
 
                 magic, version, pack_type = struct.unpack("<cBB", payload.get(3))
-                if magic != b"P" or version != g.protocol_version:
+                if magic != b"P" or version != g.protocol_version or pack_type not in [2, 3]:
                     xlog.warn("get data head:%s", utils.str2hex(content[:2]))
+                    data_info["stat"] = "timeout"
                     time.sleep(sleep_time)
                     continue
 
@@ -788,42 +976,44 @@ class ProxySession(object):
                     if error_code == 1:
                         # no quota
                         xlog.warn("x_server error:no quota")
-                        self.on_road_num -= 1
                         self.stop()
                         return
                     elif error_code == 2:
                         # unpack error
                         xlog.warn("roundtrip time:%f transfer_no:%d send:%d recv:%d unpack_error:%s",
                                   roundtrip_time, transfer_no, send_data_len, len(content), message)
+                        data_info["stat"] = "timeout"
                         continue
                     elif error_code == 3:
                         # session not exist
                         if self.session_id == request_session_id:
                             xlog.warn("server session_id:%s not exist, reset session.", request_session_id)
-                        self.on_road_num -= 1
-                        self.reset()
+                            self.reset()
                         return
                     else:
                         xlog.error("unknown error code:%d, message:%s", error_code, message)
                         time.sleep(sleep_time)
                         continue
 
-                if pack_type != 2:  # normal download traffic pack
-                    xlog.error("pack type:%d", pack_type)
-                    time.sleep(1)
-                    continue
-
-                time_cost, server_send_pool_size, data_len, ack_len = struct.unpack("<IIIH", payload.get(14))
-                head_len = (recv_len - data_len - ack_len)
-                if head_len < 17:
+                server_time, time_cost, server_send_pool_size, data_len, ack_len, rcvd_no_len, sent_no_len, unack_snd_sn_len, ext_len \
+                    = struct.unpack("<dIIIIIIII", payload.get(40))
+                head_len = (content_len - data_len - ack_len - rcvd_no_len - sent_no_len - unack_snd_sn_len - ext_len)
+                if head_len < 3 + 40:
                     xlog.warn("no:%d recv_len:%d data:%d ack:%d head:%d",
-                              transfer_no, recv_len, data_len, ack_len, head_len)
+                              transfer_no, content_len, data_len, ack_len, head_len)
+                    data_info["stat"] = "timeout"
                     continue
 
-                # speed = (send_data_len + len(content)) / (roundtrip_time - (time_cost / 1000.0))
                 rtt = roundtrip_time * 1000 - time_cost
                 rtt = max(100, rtt)
                 speed = (send_data_len + len(content) + 400) / rtt
+
+                if roundtrip_time < self.server_time_deviation:
+                    new_offset = server_time - time_now
+                    xlog.info("adjust server time offset:%f->%f, deviation:%f->%f", self.server_time_offset, new_offset,
+                               self.server_time_deviation, roundtrip_time)
+                    self.server_time_offset = new_offset
+                    self.server_time_deviation = roundtrip_time
 
                 xlog.debug(
                     "no:%d %s "
@@ -839,13 +1029,15 @@ class ProxySession(object):
                     self.target_on_roads,
                     speed, roundtrip_time, server_timeout
                 )
+                if g.config.show_debug:
+                    xlog.debug("data:%d ack:%d rcvd_no:%d sent_no:%d unack_sent_no:%d", data_len, ack_len, rcvd_no_len, sent_no_len, unack_snd_sn_len)
 
                 if len(self.conn_list) == 0:
                     self.target_on_roads = 0
                 elif len(content) >= g.config.max_payload:
                     self.target_on_roads = \
                         min(g.config.concurent_thread_num - g.config.min_on_road, self.target_on_roads + 10)
-                elif len(content) <= 53:
+                elif data_len <= 200:
                     self.target_on_roads = max(g.config.min_on_road, self.target_on_roads - 5)
                 self.trigger_more()
                 # xlog.debug("target roundtrip: %d, on_road: %d", self.target_on_roads, self.on_road_num)
@@ -858,39 +1050,40 @@ class ProxySession(object):
 
                 data = payload.get_buf(data_len)
                 ack = payload.get_buf(ack_len)
-                if len(data) != data_len or len(ack) != ack_len:
-                    xlog.warn("left data error:%d data_len:%d/%d ack_len:%d/%d", len(payload), len(data), data_len,
-                              len(ack), ack_len)
+                rcvd_no_list = payload.get_buf(rcvd_no_len)
+                sent_no_list = payload.get_buf(sent_no_len)
+                unack_snd_sn = payload.get_buf(unack_snd_sn_len)
+                ext = payload.get_buf(ext_len)
+
+                checksum_str = utils.to_str(payload.get(32).tobytes())
+                checksum = hashlib.md5(bytes(content[:-32])).hexdigest()
+                if checksum != checksum_str:
+                    xlog.warn("checksum error:%s %s", checksum_str, checksum)
+
+                    data_info["stat"] = "timeout"
                     continue
 
-                if len(payload) >= 32:
-                    checksum_str = utils.to_str(payload.get(32).tobytes())
-                    checksum = hashlib.md5(bytes(content[:-32])).hexdigest()
-                    if checksum != checksum_str:
-                        xlog.warn("checksum error:%s %s", checksum_str, checksum)
-                        continue
+                self.last_receive_time = time.time()
 
+                with self.lock:
+                    if transfer_no in self.transfer_list:
+                        del self.transfer_list[transfer_no]
+
+                self.round_trip_process(data, ack, rcvd_no_list, sent_no_list, unack_snd_sn, server_time)
+                self.check_upload_not_acked(server_time)
+
+                return
             except Exception as e:
-                xlog.warn("trip:%d no:%d data not enough %r", work_id, transfer_no, e)
+                xlog.exception("trip:%d no:%d data not enough %r", work_id, transfer_no, e)
+
+                data_info["stat"] = "timeout"
                 continue
 
-            # xlog.debug("trip:%d no:%d recv data:%s", work_id, transfer_no, parse_data(data))
+                # xlog.debug("trip:%d no:%d recv data:%s", work_id, transfer_no, parse_data(data))
 
-            try:
-                self.round_trip_process(data, ack)
-
-                self.last_receive_time = time.time()
-                break
-            except Exception as e:
-                xlog.exception("data process:%r", e)
-
-        with self.lock:
-            self.on_road_num -= 1
-            try:
-                if transfer_no in self.transfer_list:
-                    del self.transfer_list[transfer_no]
-            except:
-                pass
+        xlog.warn("roundtrip failed, no:%d target:%d on_road:%d timeout:%d send:%d",
+                   transfer_no, self.target_on_roads, self.on_road_num, server_timeout,
+                   len(upload_post_data))
 
 
 def parse_data(data):

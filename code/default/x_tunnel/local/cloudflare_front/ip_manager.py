@@ -85,9 +85,13 @@ class IpManager(IpManagerBase):
             self.logger.debug("get ip:%s sni:%s", ip, sni)
             info["links"] += 1
             info["last_try"] = now
-            return ip, sni, top_domain
+            return {
+                "ip_str": ip,
+                "sni": sni,
+                "host": top_domain,
+            }
 
-        return None, None, None
+        return None
 
     def _get_domain(self, top_domain):
         self.domain_map.setdefault(top_domain, {

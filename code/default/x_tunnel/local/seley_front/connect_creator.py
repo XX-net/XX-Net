@@ -55,7 +55,7 @@ class ConnectCreator(ConnectCreatorBase):
                                               ip_str=ip_str,
                                               sni=sni,
                                               on_close=close_cb)
-
+        ssl_sock.ip = ip
         ssl_sock.sni = utils.to_str(sni)
 
         time_connected = time.time()
@@ -76,6 +76,9 @@ class ConnectCreator(ConnectCreatorBase):
         ssl_sock.last_use_time = time_handshaked
         ssl_sock.host = host
         ssl_sock.received_size = 0
+
+        if self.debug:
+            self.logger.debug("connect ip:%s sni:%s host:%s success", ip_str, sni, host)
 
         return ssl_sock
 

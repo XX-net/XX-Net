@@ -405,7 +405,7 @@ class IpManager(IpManagerBase):
             if ip_num == 0:
                 # self.logger.warning("no ip")
                 time.sleep(5)
-                return None, None, None
+                return None
 
             ip_connect_interval = ip_num * self.scan_recheck_interval + 200 if to_recheck else self.ip_connect_interval
 
@@ -467,7 +467,11 @@ class IpManager(IpManagerBase):
                 self.ip_pointer += 1
 
                 sni, host = self.host_manager.get_sni_host(ip_str)
-                return ip_str, sni, host
+                return {
+                    "ip_str": ip_str,
+                    "sni": sni,
+                    "host": host,
+                }
         except Exception as e:
             self.logger.exception("get_ip fail:%r", e)
         finally:
@@ -786,7 +790,8 @@ class IpManager(IpManagerBase):
                         self.check_local_network.is_ok():
                     if self.good_ip_num >= self.max_good_ip_num * 0.6 and \
                             len(self.ip_list) >= self.max_good_ip_num * 0.9:
-                        ip_str, sni, host = self.get_ip_sni_host()
+                        host_info = self.get_ip_sni_host()
+                        ip_str = host_info["ip_str"]
                         if ip_str and self.check_local_network.is_ok(ip_str):
                             self.recheck_ip(ip_str, first_report=False)
                             time.sleep(self.scan_recheck_interval)

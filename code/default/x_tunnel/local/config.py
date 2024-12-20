@@ -55,6 +55,12 @@ def load_config():
     # min roundtrip on road if connectoin exist
     config.set_var("min_on_road", 3)
 
+    config.set_var("server_time_max_deviation", 0.6)
+
+    config.set_var("send_timeout_retry", 4)
+
+    config.set_var("server_download_timeout_retry", 4)
+
     # range 1 - 1000, ms
     config.set_var("send_delay", 10)
 
@@ -84,6 +90,7 @@ def load_config():
     config.set_var("enable_seley", 1)
     config.set_var("enable_tls_relay", 1)
     config.set_var("enable_direct", 0)
+    config.set_var("local_auto_front", 1)
 
     config.load()
 
@@ -91,12 +98,13 @@ def load_config():
     config.windows_size = config.max_payload * config.concurent_thread_num * 2
     xlog.info("X-Tunnel window:%d", config.windows_size)
 
-    if "localhost" in config.server_host or "127.0.0.1" in config.server_host:
-        config.enable_cloudflare = 0
-        config.enable_tls_relay = 0
-        config.enable_seley = 0
-        config.enable_direct = 1
-        xlog.info("Only enable Direct front for localhost")
+    if config.local_auto_front:
+        if "localhost" in config.server_host or "127.0.0.1" in config.server_host:
+            config.enable_cloudflare = 0
+            config.enable_tls_relay = 0
+            config.enable_seley = 0
+            config.enable_direct = 1
+            xlog.info("Only enable Direct front for localhost")
 
     if config.write_log_file:
         xlog.log_to_file(os.path.join(data_path, "client.log"))

@@ -482,7 +482,11 @@ class DnsOverHttpsQuery(object):
         self.protocol = "DoH"
         self.timeout = timeout
         self.cn_servers = ["https://1.12.12.12/dns-query", "https://223.5.5.5/dns-query"]
-        self.other_servers = ["https://1.1.1.1/dns-query"]
+        self.other_servers = [
+            "https://1.1.1.1/dns-query",
+            "https://dns10.quad9.net/dns-query",
+            "https://dns.aa.net.uk/dns-query",
+        ]
         self.connection_timeout = 60
         self.connections = []
 
@@ -508,10 +512,7 @@ class DnsOverHttpsQuery(object):
 
     @property
     def server(self):
-        if g.config.country_code == "CN":
-            return random.choice(self.cn_servers)
-        else:
-            return random.choice(self.other_servers)
+        return random.choice(self.other_servers)
 
     def query_json(self, domain, dns_type=1):
         try:
@@ -540,12 +541,14 @@ class DnsOverHttpsQuery(object):
             xlog.warn("DNSOverHttpsQuery query fail:%r", e)
             return []
 
-    def query(self, domain, dns_type=1):
+    def query(self, domain, dns_type=1, url=None):
         t0 = time.time()
         try:
             client = self.get_connection()
 
-            url = self.server
+            if not url:
+                url = self.server
+            # xlog.debug("DoH use %s", url)
 
             d = DNSRecord(DNSHeader())
             d.add_question(DNSQuestion(domain, dns_type))

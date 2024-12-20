@@ -62,7 +62,7 @@ def xxnet_version():
 def get_launcher_uuid():
     launcher_config_fn = os.path.join(data_path, "launcher", "config.json")
     try:
-        with open(launcher_config_fn, "r") as fd:
+        with open(launcher_config_fn, "r", encoding='utf-8') as fd:
             info = json.load(fd)
             return info.get("update_uuid")
     except Exception as e:

@@ -185,6 +185,9 @@ class DnsServer(object):
                 return
 
             xlog.debug("UDP relay from %s size:%d to:%s:%d", from_addr, len(data), addr, port)
+            if port != 53:
+                return
+
             head_length = len(req_data) - len(data)
             head = req_data[:head_length]
             res_data = self.dns_query(data, from_addr)
