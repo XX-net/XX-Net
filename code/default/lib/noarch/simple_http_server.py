@@ -633,7 +633,7 @@ class HTTPServer():
             return
 
         client_obj = self.handler(sock, address, self.args)
-        client_thread = threading.Thread(target=client_obj.handle, name="handle_%s:%d" % address)
+        client_thread = threading.Thread(target=client_obj.handle, name="handle:{}".format(address))
         client_thread.start()
 
     def check_listen_port(self, ip, port):
