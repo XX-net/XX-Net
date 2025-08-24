@@ -9,6 +9,7 @@ import time
 import random
 
 import six
+
 import utils
 
 
@@ -21,48 +22,133 @@ class IpManagerBase():
         self.ip_source = ip_source
         self.logger = logger
         self.ips = []
-        self.speed_fn = speed_fn
-        self.speed_info = self.load_speed_info()
-        self.speed_info_last_save_time = time.time()
 
-    def load_speed_info(self):
+        self.ip_str_states = {}  # will not save state to disk
+
+        self.speed_fn = speed_fn
+        self.ip_str_info = self.load_ip_str_info()  # will save info to disk.
+        self.ip_str_info_last_save_time = time.time()
+        self.default_info = {
+                "score": self.config.ip_initial_score,
+                "rtt": self.config.ip_initial_rtt,
+                "speed": self.config.ip_initial_speed
+            }
+
+    def __str__(self):
+        o = ""
+        o += " ip_str_info: \r\n%s\r\n" % json.dumps(self.ip_str_info, indent=2)
+        o += " ip_str_states: \r\n%s\r\n" % json.dumps(self.ip_str_states, indent=2)
+        return o
+
+    def load_ip_str_info(self):
         if not self.speed_fn or not os.path.isfile(self.speed_fn):
             return {}
 
         try:
             with open(self.speed_fn, "r") as fd:
-                info = json.load(fd)
-                return info
+                ip_str_info = json.load(fd)
+
+            for ip_str, info in ip_str_info.items():
+                if "rtt" not in info:
+                    return {}
+            return ip_str_info
         except Exception as e:
             self.logger.exception("load speed info %s failed:%r", self.speed_fn, e)
             return {}
 
-    def save_speed_info(self):
+    def save_ip_str_info(self):
         if not self.speed_fn:
             return
 
         try:
             with open(self.speed_fn, "w") as fd:
-                json.dump(self.speed_info, fd, indent=2)
+                json.dump(self.ip_str_info, fd, indent=2)
         except Exception as e:
             self.logger.exception("save speed info %s fail:%r", self.speed_fn, e)
 
-    def update_speed(self, ip_str, speed):
-        ip_str = utils.to_str(ip_str)
-        ip_info = self.speed_info.setdefault(ip_str, {})
-        ip_info.setdefault("history", []).append(speed)
-        if len(ip_info["history"]) > self.config.ip_speed_history_size:
-            ip_info["history"].pop(0)
-        ip_info["speed"] = sum(ip_info["history"]) / len(ip_info["history"])
-        # self.logger.debug("update speed %s %d", ip_str, ip_info["speed"])
+    def _get_state(self, ip_str):
+        state = self.ip_str_states.setdefault(ip_str, {
+            "traffic_cost_history":[],
+            "traffic_history":[],
+            "speed_history": [],
+            "score_history": [],
+            "rtt_history": [],
+            "last_use": time.time()
+        })
+        return state
 
-        if time.time() - self.speed_info_last_save_time > self.config.ip_speed_save_interval:
-            self.save_speed_info()
-            self.speed_info_last_save_time = time.time()
+    def _get_info(self, ip_str):
+        if ip_str not in self.ip_str_info:
+            self.ip_str_info[ip_str] = dict(self.default_info)
+        return self.ip_str_info[ip_str]
+
+    def report_traffic_timecost(self, ip_str, timecost, traffic):
+        state = self._get_state(ip_str)
+        state["last_use"] = time.time()
+
+        if traffic < self.config.ip_cal_rtt_max_package_size:
+            state["rtt_history"].append(timecost)
+            if len(state["rtt_history"]) > self.config.http_query_history_size:
+                state["rtt_history"].pop(0)
+                # self.logger.debug("update speed %s %d", ip_str, ip_info["speed"])
+
+        info = self._get_info(ip_str)
+        if len(state["rtt_history"]):
+            min_rtt = min(state["rtt_history"])
+            mean_rtt = sum(state["rtt_history"]) / len(state["rtt_history"])
+        else:
+            min_rtt = min(info["rtt"], timecost)
+            mean_rtt = min_rtt
+
+        info["rtt"] = min_rtt
+
+        if traffic > self.config.ip_cal_speed_min_package_size:
+            traffic_cost = timecost - min_rtt
+            state["traffic_cost_history"].append(traffic_cost)
+            if len(state["traffic_cost_history"]) > self.config.http_query_history_size:
+                state["traffic_cost_history"].pop(0)
+
+            state["traffic_history"].append(traffic)
+            if len(state["traffic_history"]) > self.config.http_query_history_size:
+                state["traffic_history"].pop(0)
+
+        last_speed = info["speed"]
+        virtual_traffic_cost = self.config.ip_cal_expect_time_package_size / last_speed
+        all_traffic = sum(state["traffic_history"]) + self.config.ip_cal_expect_time_package_size
+        all_traffic_cost = sum(state["traffic_cost_history"]) + virtual_traffic_cost
+        speed = all_traffic / all_traffic_cost
+        info["speed"] = speed
+
+        state["speed_history"].append(speed)
+        if len(state["speed_history"]) > self.config.http_query_history_size:
+            state["speed_history"].pop(0)
+
+        if time.time() - self.ip_str_info_last_save_time > self.config.ip_speed_save_interval:
+            self.save_ip_str_info()
+            self.ip_str_info_last_save_time = time.time()
+
+        if self.config.show_state_debug:
+            self.logger.debug("report_traffic_timecost %s cost:%f traffic:%d mean_rtt:%f speed:%d", ip_str, timecost, traffic, mean_rtt, speed)
+
+        return mean_rtt, speed
+
+    def update_score(self, ip_str, score):
+        state = self._get_state(ip_str)
+
+        info = self._get_info(ip_str)
+        info["score"] = score
+
+        state["score_history"].append(score)
+        if len(state["score_history"]) > self.config.http_query_history_size:
+            state["score_history"].pop(0)
+
+    def get_score(self, ip_str):
+        info = self._get_info(ip_str)
+        return info["score"]
 
     def get_speed(self, ip_str):
-        ip_str = utils.to_str(ip_str)
-        return self.speed_info.get(ip_str, {}).get("speed", self.config.ip_initial_speed)
+        info = self._get_info(ip_str)
+        return info["speed"], info["rtt"]
 
     def load_config(self):
         pass
@@ -79,16 +165,21 @@ class IpManagerBase():
         pass
 
     def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=True):
-        # Report on connection failed.
+        # Report a connection failed.
         pass
 
     def report_connect_closed(self, ip_str, sni=None, reason=""):
         # report on connection timeout of keep alive, or http close(life end/idle timeout)
+        # Reason: alive_timeout, get_ssl_timeout, %from worker.close(reason):
+        #   HTTP1: __del__, read fail, down fail, send fail, recv fail, life_end:xxx, inactive timeout, keep alive,
+        #    idle timeout, exit
+        #   HTTP2: status, RESET, bad max frame size, GoAway, ConnectionReset, recv.timeout, recv.error, life end,
+        #    recv fail, send fail
         pass
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
-        # report from ssl_wrap, on connection closed.
-        pass
+        if self.config.show_state_debug:
+            self.logger.debug("ip_str:%s sni:%s ssl_closed:%s", ip_str, sni, reason)
 
     def recheck_ip(self, ip_str):
         pass
@@ -661,12 +752,12 @@ class IpManager(IpManagerBase):
             self.ip_dict[ip]["down_fail_time"] = time_now
             self.logger.debug("report_connect_closed %s, reason:%s", ip, reason)
         except Exception as e:
-            self.logger.error("ssl_closed %s err:%s", ip_str, e)
+            self.logger.error("report_connect_closed %s err:%s", ip_str, e)
         finally:
             self.ip_lock.release()
 
     def ssl_closed(self, ip_str, sni=None, reason=""):
-        # self.logger.debug("%s ssl_closed:%s", ip, reason)
+        self.logger.debug("%s ssl_closed:%s", ip_str, reason)
         self.ip_lock.acquire()
         try:
             ip, _ = utils.get_ip_port(ip_str)
@@ -675,10 +766,8 @@ class IpManager(IpManagerBase):
                 self.logger.debug("ssl_closed %s not exist", ip)
                 return
 
-            if self.ip_dict[ip]['links']:
-                self.ip_dict[ip]['links'] -= 1
-                self.append_ip_history(ip, "C[%s]" % reason)
-                # self.logger.debug("ssl_closed %s", ip)
+            self.append_ip_history(ip, "C[%s]" % reason)
+            # self.logger.debug("ssl_closed %s", ip)
         except Exception as e:
             self.logger.error("ssl_closed %s err:%s", ip_str, e)
         finally:

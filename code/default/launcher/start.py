@@ -120,6 +120,12 @@ def main():
         ports_resolve_solution = win_compat_suggest.Win10PortReserveSolution()
         if not ports_resolve_solution.check_and_resolve():
             return
+    elif sys.platform == "darwin":
+        import resource
+        new_soft_limit = 4096
+        new_hard_limit = 4096
+        resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft_limit, new_hard_limit))
+        xlog.info(f"New open file limits set to: Soft={new_soft_limit}, Hard={new_hard_limit}")
 
     web_control.confirm_xxnet_not_running()
 

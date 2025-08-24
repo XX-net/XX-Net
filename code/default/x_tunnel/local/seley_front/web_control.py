@@ -78,7 +78,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
                     continue
 
                 if isinstance(sub_obj, list):
-                    data += "    %s:\r\n" % (attr)
+                    data += "    %s:[%d]\r\n" % (attr, len(sub_obj))
                     for item in sub_obj:
                         data += "      %s\r\n" % item
                     data += "\r\n"

@@ -18,14 +18,12 @@ def pack_headers(headers):
 
 
 class Http1Worker(HttpWorker):
-    version = "1.1"
-
     def __init__(self, logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data):
         super(Http1Worker, self).__init__(logger, ip_manager, config, ssl_sock,
                                           close_cb, retry_task_cb, idle_cb, log_debug_data)
 
+        self.version = "1.1"
         self.task = None
-        self.request_onway = False
         self.transfered_size = 0
         self.trace_time = []
         self.trace_time.append([ssl_sock.create_time, "connect"])
@@ -56,9 +54,6 @@ class Http1Worker(HttpWorker):
         out_list.append(" transfered:%d" % self.transfered_size)
         out_list.append(" sni:%s" % self.ssl_sock.sni)
         return ",".join(out_list)
-
-    def get_rtt_rate(self):
-        return self.rtt + 100
 
     def request(self, task):
         self.accept_task = False
@@ -199,8 +194,8 @@ class Http1Worker(HttpWorker):
         task.responsed = True
         if task.queue:
             task.queue.put(response)
-        else:
-            if self.config.http2_show_debug:
+
+        if self.config.http2_show_debug:
                 self.logger.debug("got res for %s status:%d", self.ip_str, response.status)
 
         try:
@@ -239,17 +234,15 @@ class Http1Worker(HttpWorker):
 
         time_now = time.time()
         time_cost = (time_now - start_time)
-        xcost = float(response.headers.get(b"X-Cost", 0))
+        xcost = float(response.headers.get(b"X-Cost", -1))
         if isinstance(xcost, list):
             xcost = float(xcost[0])
 
-        total_len = (request_len + data_len)
         road_time = time_cost - xcost
-        if xcost and total_len > 10000 and road_time:
-            speed = total_len / road_time
-            self.update_speed(speed)
+        if xcost != -1 and road_time > 0:
+            self.update_speed(road_time, request_len, data_len)
 
-            task.set_state("h1_finish[SP:%d]" % speed)
+        task.set_state("h1_finish[RTT:%d]" % (road_time * 1000))
 
         self.transfered_size += len(request_data) + data_len
         self.task = None
@@ -267,7 +260,7 @@ class Http1Worker(HttpWorker):
         # for keep alive, not work now.
         self.request_onway = True
         self.record_active("head")
-        start_time = time.time()
+        # start_time = time.time()
         # self.logger.debug("head request %s", self.ip)
         request_data = b'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % utils.to_bytes(self.ssl_sock.host)
 
@@ -282,26 +275,24 @@ class Http1Worker(HttpWorker):
             response.begin(timeout=5)
 
             status = response.status
-            if status != 200:
+            if status not in [200, 404]:
                 self.logger.warn("%s host:%s head fail status:%d", self.ip_str, self.ssl_sock.host, status)
                 return False
 
             content = response.readall(timeout=5)
             self.record_active("head end")
-            rtt = (time.time() - start_time) * 1000
-            self.update_rtt(rtt)
             self.last_recv_time = time.time()
             return True
         except Exception as e:
             self.logger.warn("h1 %s HEAD keep alive request fail:%r", self.ssl_sock.ip_str, e)
             self.logger.warn('%s trace:%s', self.ip_str, self.get_trace())
-            self.close("down fail")
+            return False
         finally:
             self.request_onway = False
 
     def close(self, reason=""):
         # Notify loop to exit
-        # This function may be call by out side http2
+        # This function may be call by outside http2
         # When gae_proxy found the appid or ip is wrong
         self.task_queue.put(None)
 

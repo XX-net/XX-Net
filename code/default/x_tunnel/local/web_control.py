@@ -562,6 +562,7 @@ class ControlHandler(simple_http_server.HttpServerHandler):
 
     def req_status(self):
         res = g.session.get_stat()
+        res["bind_port"] = g.bind_port
 
         self.response_json({
             "res": "success",

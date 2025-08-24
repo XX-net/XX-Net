@@ -33,7 +33,7 @@ import utils
 class SSLConnection(object):
     def __init__(self, sock, ip_str=None, sni=None, on_close=None):
         self._sock = sock
-        self.ip_str = utils.to_bytes(ip_str)
+        self.ip_str = ip_str
         self.sni = utils.to_bytes(sni)
         self._makefile_refs = 0
         self._on_close = on_close

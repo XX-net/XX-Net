@@ -50,7 +50,7 @@ class IpManager(IpManagerBase):
             if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
-            speed = self.get_speed(ip_str)
+            speed, rtt = self.get_speed(ip_str)
             if speed > best_speed:
                 best_speed = speed
                 best_info = info
@@ -85,13 +85,21 @@ class IpManager(IpManagerBase):
         ip = utils.to_str(ip)
         info = self._get_ip_info(ip)
         info["fail_times"] += 1
-        info["rtt"] = 2000
-        info["links"] -= 1
+        if info["links"] <= 0:
+            self.logger.error("report_connect_fail %s sni:%s links:%d reason:%s", ip, sni, info["links"], reason)
+        else:
+            info["links"] -= 1
         self.logger.debug("ip %s connect fail:%s", ip, reason)
 
-    def ssl_closed(self, ip_str, sni=None, reason=""):
-        ip, _ = utils.get_ip_port(ip_str)
-        ip = utils.to_str(ip)
-        info = self._get_ip_info(ip)
-        info["links"] -= 1
-        self.logger.debug("ip %s ssl_closed:%s", ip, reason)
+    def report_connect_closed(self, ip_str, sni=None, reason=""):
+        try:
+            ip, _ = utils.get_ip_port(ip_str)
+            ip = utils.to_str(ip)
+            info = self._get_ip_info(ip)
+            if info["links"] <= 0:
+                self.logger.error("report_connect_closed %s sni:%s links:%d reason:%s", ip, sni, info["links"], reason)
+            else:
+                info["links"] -= 1
+            self.logger.debug("ip %s sni:%s connect closed reason %s", ip, sni, reason)
+        except Exception as e:
+            self.logger.warn("report_connect_closed %s sni:%s reason:%s except:%r", ip_str, sni, reason, e)

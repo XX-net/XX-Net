@@ -451,7 +451,7 @@ class HttpServerHandler():
 
 
 class HTTPServer():
-    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=3024,
+    def __init__(self, address, handler, args=(), use_https=False, cert="", logger=xlog, max_thread=1024,
                  check_listen_interval=None):
         self.sockets = []
         if isinstance(address, tuple):

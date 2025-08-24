@@ -410,10 +410,10 @@ class ConnectionPipe(object):
 
     def stop(self):
         self.running = False
-        self.xlog.debug("ConnectionPipe stop")
+        self._debug_log("ConnectionPipe stop")
 
     def _debug_log(self, fmt, *args, **kwargs):
-        if not self.session.config.show_debug:
+        if not self.session or not self.session.config.show_debug:
             return
         self.xlog.debug(fmt, *args, **kwargs)
 
@@ -440,7 +440,7 @@ class ConnectionPipe(object):
             if not self.th:
                 self.th = threading.Thread(target=self.pipe_worker, name="x_tunnel_pipe_worker")
                 self.th.start()
-                self.xlog.debug("ConnectionPipe start")
+                self._debug_log("ConnectionPipe start")
 
     def remove_sock_event(self, sock, event):
         # this function can repeat without through an error.
@@ -572,7 +572,7 @@ class ConnectionPipe(object):
             except Exception as e:
                 xlog.warn("unregister %s e:%r", sock, e)
         self.sock_conn_map = {}
-        self.xlog.debug("ConnectionPipe stop")
+        self._debug_log("ConnectionPipe stop")
         self.th = None
         self.session.check_upload()
 

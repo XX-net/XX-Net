@@ -110,13 +110,15 @@ def start(args):
     if allow_remote and ("0.0.0.0" not in listen_ips or "::" not in listen_ips):
         listen_ips = [("0.0.0.0"),]
 
-    for port in range(g.config.socks_port, g.config.socks_port + 10):
+    for port in range(g.config.socks_port, g.config.socks_port + 2000):
         addresses = [(listen_ip, port) for listen_ip in listen_ips]
         try:
             g.socks5_server = simple_http_server.HTTPServer(addresses, Socks5Server, logger=xlog)
+            g.socks5_server.init_socket()
+            g.bind_port = port
         except:
             continue
-        xlog.info("Socks5 server listen:%s:%d.", g.config.socks_host, g.config.socks_port)
+        xlog.info("Socks5 server listen:%s:%d.", g.config.socks_host, port)
         break
 
     ready = True

@@ -1082,7 +1082,7 @@ def start(allow_remote=0):
 
     xlog.info("begin to start web control:%s", addresses)
 
-    server = simple_http_server.HTTPServer(addresses, Http_Handler, logger=xlog)
+    server = simple_http_server.HTTPServer(addresses, Http_Handler, logger=xlog, max_thread=2048)
     server.start()
 
     xlog.info("launcher web control started.")

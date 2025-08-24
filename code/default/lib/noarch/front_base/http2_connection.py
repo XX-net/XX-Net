@@ -78,6 +78,7 @@ class Http2Worker(HttpWorker):
                  stream_class=None):
         super(Http2Worker, self).__init__(
             logger, ip_manager, config, ssl_sock, close_cb, retry_task_cb, idle_cb, log_debug_data)
+        self.version = "2"
 
         self.network_buffer_size = 65535
         if stream_class:
@@ -218,9 +219,6 @@ class Http2Worker(HttpWorker):
                 self.logger.exception("recv fail:%r", e)
                 self.close("recv fail:%r" % e)
 
-    def get_rtt_rate(self):
-        return self.rtt + len(self.streams) * 3000
-
     def close(self, reason="conn close"):
         # Notify loop to exit
         # This function may be call by out side http2
@@ -323,7 +321,8 @@ class Http2Worker(HttpWorker):
         try:
             header = self._sock.recv(9)
         except SSLError as e:
-            return self.close("recv.ssl error:%r" % e)
+            self.close("recv.ssl error:%r" % e)
+            return
         except socket.timeout as e:
             self.logger.debug("%s _consume_single_frame:%r, inactive time:%d", self.ip_str, e,
                                   time.time() - self.last_recv_time)
@@ -429,7 +428,6 @@ class Http2Worker(HttpWorker):
                 rtt = (time_now - ping_time) * 1000
                 if rtt < 0:
                     self.logger.error("rtt:%f ping_time:%f now:%f", rtt, ping_time, time_now)
-                self.update_rtt(rtt)
                 self.ping_on_way -= 1
                 #self.logger.debug("RTT:%d, on_way:%d", self.rtt, self.ping_on_way)
                 if self.keep_running and self.ping_on_way == 0:
@@ -513,23 +511,10 @@ class Http2Worker(HttpWorker):
 
     def get_trace(self):
         now = time.time()
-        out_list = []
-        out_list.append(" continue_timeout:%d" % self.continue_timeout)
-        out_list.append(" processed:%d" % self.processed_tasks)
-        out_list.append(" inactive:%d, %d" % (now - self.last_send_time, now - self.last_recv_time))
-        out_list.append(" h2.stream_num:%d" % len(self.streams))
-        out_list.append(" sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host))
+        out_list = [
+            " continue_timeout:%d" % self.continue_timeout, " processed:%d" % self.processed_tasks,
+            " inactive:%d, %d" % (now - self.last_send_time, now - self.last_recv_time),
+            " h2.stream_num:%d" % len(self.streams),
+            " sni:%s, host:%s" % (self.ssl_sock.sni, self.ssl_sock.host)
+        ]
         return ",".join(out_list)
-
-    def check_active(self, now):
-        if not self.keep_running:
-            return
-
-        if len(self.streams):
-            return
-
-        if self.is_life_end():
-            return self.close("life end")
-
-        if now - self.last_send_time > self.config.http2_idle_ping_min_interval:
-            self.send_ping()

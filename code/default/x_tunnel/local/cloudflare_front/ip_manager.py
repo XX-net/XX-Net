@@ -18,7 +18,7 @@ class IpManager(IpManagerBase):
         # top_domain -> {}
 
     def __str__(self):
-        o = ""
+        o = super().__str__()
         o += " domain_map: \r\n%s\r\n" % json.dumps(self.domain_map, indent=2)
         return o
 
@@ -101,16 +101,6 @@ class IpManager(IpManagerBase):
                         })
         return self.domain_map[top_domain]
 
-    def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=True):
-        ip, _ = utils.get_ip_port(ip_str)
-        ip = utils.to_str(ip)
-        top_domain = ".".join(sni.split(".")[1:])
-
-        info = self._get_domain(top_domain)
-        info["fail_times"] += 1
-        info["links"] -= 1
-        self.logger.debug("ip %s sni:%s connect fail, reason:%s", ip, sni, reason)
-
     def update_ip(self, ip_str, sni, handshake_time):
         top_domain = ".".join(sni.split(".")[1:])
 
@@ -119,14 +109,30 @@ class IpManager(IpManagerBase):
         info["last_try"] = 0.0
         # self.logger.debug("ip %s sni:%s connect success, rtt:%f", ip, sni, handshake_time)
 
-    def ssl_closed(self, ip_str, sni=None, reason=""):
+    def report_connect_fail(self, ip_str, sni=None, reason="", force_remove=True):
+        ip, _ = utils.get_ip_port(ip_str)
+        ip = utils.to_str(ip)
+        top_domain = ".".join(sni.split(".")[1:])
+
+        info = self._get_domain(top_domain)
+        info["fail_times"] += 1
+        if info["links"] <= 0:
+            self.logger.error("report_connect_fail %s sni:%s links:%d reason:%s", ip, sni, info["links"], reason)
+        else:
+            info["links"] -= 1
+        self.logger.debug("ip %s sni:%s connect fail, reason:%s", ip, sni, reason)
+
+    def report_connect_closed(self, ip_str, sni=None, reason=""):
         ip, _ = utils.get_ip_port(ip_str)
         ip = utils.to_str(ip)
         top_domain = ".".join(sni.split(".")[1:])
 
         try:
             info = self._get_domain(top_domain)
-            info["links"] -= 1
+            if info["links"] <= 0:
+                self.logger.error("report_connect_closed %s sni:%s links:%d reason:%s", ip, sni, info["links"], reason)
+            else:
+                info["links"] -= 1
             self.logger.debug("ip %s sni:%s connect closed reason %s", ip, sni, reason)
         except Exception as e:
-            self.logger.warn("ssl_closed %s sni:%s reason:%s except:%r", ip_str, sni, reason, e)
+            self.logger.warn("report_connect_closed %s sni:%s reason:%s except:%r", ip_str, sni, reason, e)

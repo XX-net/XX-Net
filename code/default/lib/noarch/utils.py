@@ -104,7 +104,7 @@ def get_ip_str(ip, port=443):
     return ip_str
 
 
-domain_allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$")
+domain_allowed = re.compile("(?!-)[A-Z\\d-]{1,63}(?<!-)$")
 
 
 def check_domain_valid(hostname):
