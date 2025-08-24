@@ -9,7 +9,7 @@ import zipfile
 import sys
 import platform
 import uuid
-from distutils.version import LooseVersion
+
 
 try:
     from urllib.request import build_opener, HTTPSHandler, ProxyHandler
@@ -64,6 +64,27 @@ def get_opener():
 
 def version_to_bin(s):
     return reduce(lambda a, b: a << 8 | b, list(map(int, s.split("."))))
+
+
+def compare_versions(v1, v2):
+      """Compare two version strings and return -1, 0, or 1."""
+      def parse_version(version):
+          return [int(x) for x in version.split('.')]
+
+      parts1 = parse_version(v1)
+      parts2 = parse_version(v2)
+
+      # Pad with zeros to make lengths equal
+      max_len = max(len(parts1), len(parts2))
+      parts1 += [0] * (max_len - len(parts1))
+      parts2 += [0] * (max_len - len(parts2))
+
+      if parts1 < parts2:
+          return -1
+      elif parts1 > parts2:
+          return 1
+      else:
+          return 0
 
 
 def download_file(url, file):
@@ -262,20 +283,20 @@ def check_update():
         test_version, stable_version = versions[0][1], versions[1][1]
         if test_version != config.skip_test_version:
             if update_rule == "notice-test":
-                if LooseVersion(current_version) < LooseVersion(test_version):
+                if compare_versions(current_version, test_version) < 0:
                     xlog.info("checked new test version %s", test_version)
                     update_from_github.update_info = '{"type":"test", "version":"%s"}' % test_version
             elif update_rule == "test":
-                if LooseVersion(current_version) < LooseVersion(test_version):
+                if compare_versions(current_version, test_version) < 0:
                     xlog.info("update to test version %s", test_version)
                     update_from_github.update_version(test_version)
         if stable_version != config.skip_stable_version:
             if update_rule == "notice-stable":
-                if LooseVersion(current_version) < LooseVersion(stable_version):
+                if compare_versions(current_version, stable_version) < 0:
                     xlog.info("checked new stable version %s", stable_version)
                     update_from_github.update_info = '{"type":"stable", "version":"%s"}' % stable_version
             elif update_rule == "stable":
-                if LooseVersion(current_version) < LooseVersion(stable_version):
+                if compare_versions(current_version, stable_version) < 0:
                     xlog.info("update to stable version %s", stable_version)
                     update_from_github.update_version(stable_version)
     except IOError as e:
@@ -421,4 +442,5 @@ if __name__ == "__main__":
     #get_uuid()
     #check_update()
     #sys_tray.serve_forever()
-    create_desktop_shortcut()
+    # create_desktop_shortcut()
+    print(compare_versions("2.1.1", "2.1.0"))
