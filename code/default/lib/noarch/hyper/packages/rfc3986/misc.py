@@ -30,11 +30,11 @@ important_characters = {
     'generic_delimiters': ":/?#[]@",
     'sub_delimiters': "!$&'()*+,;=",
     # We need to escape the '*' in this case
-    're_sub_delimiters': "!$&'()\*+,;=",
+    're_sub_delimiters': "!$&'()\\*+,;=",
     'unreserved_chars': ('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
                          '0123456789._~-'),
     # We need to escape the '-' in this case:
-    're_unreserved': 'A-Za-z0-9._~\-',
+    're_unreserved': 'A-Za-z0-9._~\\-',
     }
 # For details about delimiters and reserved characters, see:
 # http://tools.ietf.org/html/rfc3986#section-2.2
@@ -61,7 +61,7 @@ component_pattern_dict = {
 # modified to ignore other matches that are not important to the parsing of
 # the reference so we can also simply use SRE_Match#groups.
 expression = ('(?:(?P<scheme>{scheme}):)?(?://(?P<authority>{authority}))?'
-              '(?P<path>{path})(?:\?(?P<query>{query}))?'
+              '(?P<path>{path})(?:\\?(?P<query>{query}))?'
               '(?:#(?P<fragment>{fragment}))?'
               ).format(**component_pattern_dict)
 
@@ -79,7 +79,7 @@ reg_name = '(({0})*|[{1}]*)'.format(
     important_characters['re_unreserved']
     )
 # The pattern for an IPv4 address, e.g., 192.168.255.255, 127.0.0.1,
-ipv4 = '(\d{1,3}.){3}\d{1,3}'
+ipv4 = '(\\d{1,3}.){3}\\d{1,3}'
 # Hexadecimal characters used in each piece of an IPv6 address
 hexdig = '[0-9A-Fa-f]{1,4}'
 # Least-significant 32 bits of an IPv6 address
@@ -118,15 +118,15 @@ ipv_future = 'v[0-9A-Fa-f]+.[%s]+' % (
     important_characters['re_sub_delimiters'] +
     ':')
 
-ip_literal = '\[({0}|{1})\]'.format(ipv6, ipv_future)
+ip_literal = '\\[({0}|{1})\\]'.format(ipv6, ipv_future)
 
 # Pattern for matching the host piece of the authority
 HOST_PATTERN = '({0}|{1}|{2})'.format(reg_name, ipv4, ip_literal)
 
 SUBAUTHORITY_MATCHER = re.compile((
-    '^(?:(?P<userinfo>[A-Za-z0-9_.~\-%:]+)@)?'  # userinfo
+    '^(?:(?P<userinfo>[A-Za-z0-9_.~\\-%:]+)@)?'  # userinfo
     '(?P<host>{0}?)'  # host
-    ':?(?P<port>\d+)?$'  # port
+    ':?(?P<port>\\d+)?$'  # port
     ).format(HOST_PATTERN))
 
 IPv4_MATCHER = re.compile('^' + ipv4 + '$')
@@ -177,7 +177,7 @@ QUERY_MATCHER = re.compile(
 FRAGMENT_MATCHER = QUERY_MATCHER
 
 # Scheme validation, see: http://tools.ietf.org/html/rfc3986#section-3.1
-SCHEME_MATCHER = re.compile('^[A-Za-z][A-Za-z0-9+.\-]*$')
+SCHEME_MATCHER = re.compile('^[A-Za-z][A-Za-z0-9+.\\-]*$')
 
 # Relative reference matcher
 
@@ -187,7 +187,7 @@ relative_part = '(//%s%s|%s|%s|%s)' % (
     path_noscheme, path_empty
     )
 
-RELATIVE_REF_MATCHER = re.compile('^%s(\?%s)?(#%s)?$' % (
+RELATIVE_REF_MATCHER = re.compile('^%s(\\?%s)?(#%s)?$' % (
     relative_part, QUERY_MATCHER.pattern, FRAGMENT_MATCHER.pattern
     ))
 
@@ -198,7 +198,7 @@ hier_part = '(//%s%s|%s|%s|%s)' % (
     )
 
 # See http://tools.ietf.org/html/rfc3986#section-4.3
-ABSOLUTE_URI_MATCHER = re.compile('^%s:%s(\?%s)?$' % (
+ABSOLUTE_URI_MATCHER = re.compile('^%s:%s(\\?%s)?$' % (
     component_pattern_dict['scheme'], hier_part, QUERY_MATCHER.pattern[1:-1]
     ))
 

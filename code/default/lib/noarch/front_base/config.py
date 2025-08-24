@@ -14,17 +14,19 @@ class ConfigBase(xconfig.Config):
 
         # http_dispatcher
         self.set_var("dispather_min_idle_workers", 0)
+        self.set_var("dispather_worker_idle_time", 300)
         self.set_var("dispather_work_min_idle_time", 0)
-        self.set_var("dispather_work_max_score", 20000)
+        self.set_var("dispather_work_max_score", 1)
         self.set_var("dispather_min_workers", 0)
         self.set_var("dispather_max_workers", 60)
         self.set_var("dispather_score_factor", 1)
         self.set_var("dispather_max_idle_workers", 30)
         self.set_var("dispather_worker_max_continue_fail", 8)
         self.set_var("dispather_connect_all_workers_on_startup", 0)
-        self.set_var("dispather_ping_check_speed_interval", 300)
+        self.set_var("dispather_ping_check_speed_interval", 60 * 5)
         self.set_var("dispather_ping_upload_size", 1024)
-        self.set_var("dispather_ping_download_size", 10240)
+        self.set_var("dispather_ping_rtt_download_size", 512)
+        self.set_var("dispather_ping_speed_download_size", 1024 * 100)
 
         self.set_var("max_task_num", 100)
 
@@ -48,6 +50,7 @@ class ConfigBase(xconfig.Config):
 
         # worker_base
         self.set_var("show_state_debug", 0)
+        self.set_var("http_query_history_size", 30)  # for calculating rtt and speed.
 
         # connect manager
         self.set_var("https_max_connect_thread", 1)
@@ -70,7 +73,7 @@ class ConfigBase(xconfig.Config):
         self.set_var("check_ip_content", "OK")
 
         # connect_creator
-        self.set_var("socket_timeout", 5)
+        self.set_var("socket_timeout", 1)
         self.set_var("connect_receive_buffer", 1024 * 512)
         self.set_var("connect_send_buffer", 1024 * 512)
         self.set_var("connect_force_http1", 0)
@@ -96,8 +99,13 @@ class ConfigBase(xconfig.Config):
         self.set_var("long_fail_connect_interval", 180)
         self.set_var("short_fail_connect_interval", 10)
         self.set_var("shuffle_ip_on_first_load", 0)
-        self.set_var("ip_speed_history_size", 10)
-        self.set_var("ip_initial_speed", 1000000)
+        self.set_var("ip_speed_history_size", 30)
+        self.set_var("ip_initial_rtt", 0.03)
+        self.set_var("ip_initial_speed", 129000)
+        self.set_var("ip_initial_score", 0.1)
+        self.set_var("ip_cal_rtt_max_package_size", 10000)
+        self.set_var("ip_cal_speed_min_package_size", 100000)
+        self.set_var("ip_cal_expect_time_package_size", 40000)
         self.set_var("ip_speed_save_interval", 60)
 
         # ip source

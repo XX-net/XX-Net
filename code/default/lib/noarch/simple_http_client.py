@@ -373,6 +373,7 @@ class Client(object):
         self.host = None
         self.port = None
         self.tls = None
+        self.ssl_context = None
 
         if isinstance(proxy, str):
             proxy_sp = urlsplit(proxy)
@@ -456,10 +457,13 @@ class Client(object):
             # xlog.debug("proxy:%s tcp conn:%s time:%d", proxy["host"], host, conn_time * 1000)
 
         if tls:
+            if not self.ssl_context:
+                self.ssl_context = ssl.create_default_context()
+                self.ssl_context.check_hostname = False
+                self.ssl_context.verify_mode = ssl.CERT_REQUIRED
+
             if os.path.isfile(self.cert):
-                sock = ssl.wrap_socket(sock, ca_certs=self.cert)
-            else:
-                sock = ssl.wrap_socket(sock)
+                sock = self.ssl_context.wrap_socket(sock, server_hostname=host)
 
         self.sock = sock
         self.host = host

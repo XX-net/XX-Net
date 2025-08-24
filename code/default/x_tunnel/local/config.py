@@ -76,7 +76,7 @@ def load_config():
     # range 1 - 30
     config.set_var("roundtrip_timeout", 25)
 
-    config.set_var("network_timeout", 10)
+    config.set_var("network_timeout", 5)
 
     config.set_var("windows_size", 10 * 1024 * 1024)  # will recalulate based on: max_payload * concurent_thread_num *2
 

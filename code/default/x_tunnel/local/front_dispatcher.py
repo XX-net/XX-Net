@@ -2,6 +2,7 @@ import time
 import threading
 import os
 import random
+from threading import Lock
 
 all_fronts = []
 light_fronts = []
@@ -95,6 +96,7 @@ def front_staticstic_thread():
 
         time.sleep(3)
 
+get_front_lock = Lock()
 
 def get_front(host, timeout):
     start_time = time.time()
@@ -103,34 +105,36 @@ def get_front(host, timeout):
     else:
         fronts = session_fronts
 
-    while time.time() - start_time < timeout:
-        best_front = None
-        best_score = 999999999
-        for front in fronts:
-            if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
-                # share the x-tunnel connection with dns.xx-net.org
-                # x-tunnel server will forward the request to dns.xx-net.org
-                host = g.server_host
+    with get_front_lock:
+        while time.time() - start_time < timeout:
+            best_front = None
+            best_score = 999999999
+            for front in fronts:
+                if host == "dns.xx-net.org" and front == cloudflare_front and g.server_host:
+                    # share the x-tunnel connection with dns.xx-net.org
+                    # x-tunnel server will forward the request to dns.xx-net.org
+                    host = g.server_host
 
-            dispatcher = front.get_dispatcher(host)
-            if not dispatcher:
-                # xlog.warn("get dispatcher from %s fail for %s", front.name, host)
-                continue
+                dispatcher = front.get_dispatcher(host)
+                if not dispatcher:
+                    # xlog.warn("get dispatcher from %s fail for %s", front.name, host)
+                    continue
 
-            score = dispatcher.get_score()
-            if not score:
-                if front.config.show_state_debug:
-                    xlog.warn("get_front get_score failed for %s ", front.name)
-                continue
+                score = dispatcher.get_score()
+                if not score:
+                    if front.config.show_state_debug:
+                        xlog.warn("get_front get_score failed for %s ", front.name)
+                    continue
 
-            if score < best_score:
-                best_score = score
-                best_front = front
+                if score < best_score:
+                    best_score = score
+                    best_front = front
 
-        if best_front is not None:
-            return best_front
+            if best_front is not None:
+                return best_front
 
-        time.sleep(1)
+            time.sleep(0.005)
+
     g.stat["timeout_roundtrip"] += 5
     return None
 
@@ -176,7 +180,7 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
 
         headers["X-Async"] = "1"
         if len(data) < 84:
-            padding = utils.to_str(utils.generate_random_lowercase(random.randint(64, 256)))
+            padding = utils.to_str(utils.generate_random_lowercase(random.randint(8, 64)))
             headers["Padding"] = padding
 
         content, status, response = front.request(
@@ -196,6 +200,16 @@ def request(method, host, path="/", headers={}, data="", timeout=100):
         return content, status, response
 
     return content, status, response
+
+
+def set_session_host(host):
+    global session_fronts
+    for front in session_fronts:
+        dispatcher = front.get_dispatcher(host)
+        if not dispatcher:
+            continue
+
+        dispatcher.set_session_host(host)
 
 
 def stop():

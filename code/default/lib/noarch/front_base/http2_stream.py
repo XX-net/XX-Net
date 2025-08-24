@@ -262,7 +262,7 @@ class Stream(object):
             self.connection.close("RESET")
         elif frame.type in FRAMES:
             # This frame isn't valid at this point.
-            #raise ValueError("Unexpected frame %s." % frame)
+            # Raise ValueError("Unexpected frame %s." % frame)
             self.logger.error("%s Unexpected frame %s.", self.ip_str, frame)
         else:  # pragma: no cover
             # Unknown frames belong to extensions. Just drop it on the
@@ -304,7 +304,6 @@ class Stream(object):
                 self.send_response()
 
         if b'END_STREAM' in frame.flags:
-
             xcost = self.response_headers.get("X-Cost", -1)
             if isinstance(xcost, list):
                 xcost = float(xcost[0])
@@ -312,7 +311,6 @@ class Stream(object):
             time_now = time.time()
             whole_cost = time_now - self.start_time
             rtt = whole_cost - xcost
-            receive_cost = time_now - self.get_head_time
             bytes_received = self.connection._sock.bytes_received - self.start_connection_point
             if self.config.http2_show_debug:
                 self.logger.debug("%s stream:%d END_STREAM %s%s", self.connection.ssl_sock.ip_str,
@@ -321,33 +319,15 @@ class Stream(object):
             if b"ping" in self.task.path and self.config.http2_show_debug:
                 self.logger.debug("got pong for %s", self.connection.ip_str)
 
-            if rtt > 0 and bytes_received >= 10000 and not self.task.finished and xcost >= 0.0:
-                t_road = rtt
-                if t_road <= self.connection.handshake:
-                    # adjust handshake
-                    self.connection.handshake = t_road
-                else:
-                    t_road -= self.connection.handshake
-
-                speed = (len(self.request_body) + bytes_received) / t_road
-                self.connection.update_speed(speed)
-                self.task.set_state("h2_finish[SP:%d]" % speed)
-
-                send_cost = len(self.request_body) / speed
-                streams_cost = ((self.connection.max_payload /2) * self.get_head_stream_num) / speed
-
+            if rtt > 0 and not self.task.finished and xcost >= 0.0:
+                self.connection.update_speed(rtt, len(self.request_body), bytes_received)
+                self.task.set_state("h2_finish[RTT:%d]" % (rtt * 1000))
                 if self.config.http2_show_debug:
-                    self.logger.debug("%s RTT:%f rtt:%f send_len:%d recv_len:%d "
-                                      "whole_Cost:%f xcost:%f send_cost:%f recv_cost:%f "
-                                      "streams_cost:%f Speed: %f",
-                                      self.connection.ssl_sock.ip_str,
-                                      self.connection.rtt * 1000, rtt * 1000,
+                    self.logger.debug("%s rtt:%f send_len:%d recv_len:%d "
+                                      "whole_Cost:%f xcost:%f",
+                                      self.connection.ssl_sock.ip_str, rtt * 1000,
                                       len(self.request_body), bytes_received,
-                                      whole_cost, xcost, send_cost, receive_cost, streams_cost, speed)
-                self.connection.update_rtt(rtt, self.task.predict_rtt)
-                self.logger.debug("%s handshake:%f stream:%d up:%d down:%d rtt:%f", self.connection.ip_str,
-                                  self.connection.handshake,
-                                  len(self.connection.streams), len(self.request_body), bytes_received, rtt)
+                                      whole_cost, xcost)
 
             self._close_remote()
 

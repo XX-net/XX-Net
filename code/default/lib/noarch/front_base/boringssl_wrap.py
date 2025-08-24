@@ -20,7 +20,7 @@ class SSLConnection(object):
         self._sock = sock
         self._fileno = self._sock.fileno()
         # self._context.logger.debug("sock %s init fd:%d", ip_str, self._fileno)
-        self.ip_str = utils.to_bytes(ip_str)
+        self.ip_str = ip_str
         self.sni = sni
         self._makefile_refs = 0
         self._on_close = on_close

@@ -13,7 +13,7 @@ class Config(ConfigBase):
 
         # https_dispatcher
         self.set_var("dispather_min_idle_workers", 0)
-        self.set_var("dispather_work_max_score", 20000)
+        self.set_var("dispather_work_max_score", 1)
         self.set_var("dispather_min_workers", 1)
         self.set_var("dispather_max_workers", 60)
         self.set_var("dispather_connect_all_workers_on_startup", 1)
@@ -25,11 +25,10 @@ class Config(ConfigBase):
         self.set_var("connect_create_interval", 0)
 
         # connect_creator
-        self.set_var("socket_timeout", 2)
         self.set_var("connect_force_http2", 1)
 
         # http 2 worker
-        self.set_var("http2_status_to_close", [500])
+        self.set_var("http2_status_to_close", [400, 404, 500])
         self.set_var("http2_idle_ping_min_interval", 110)
         self.set_var("http2_max_process_tasks", 9900)
 

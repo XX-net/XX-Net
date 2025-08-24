@@ -5,6 +5,8 @@ import random
 from queue import Queue
 import simple_http_client
 
+import utils
+
 
 class Task(object):
     def __init__(self, logger, config, method, host, path, headers, body, queue, url, timeout):
@@ -19,10 +21,11 @@ class Task(object):
         self.url = url
         self.timeout = timeout
         self.start_time = time.time()
-        self.unique_id = "%s:%f" % (url, self.start_time)
+        if path == b'/':
+            path = headers.get(b"X-Path", b"/")
+        self.unique_id = "%s%s:%f" % (url, path, self.start_time)
         self.trace_time = []
         self.body_queue = Queue()
-        self.predict_rtt = 0.5
         self.body_len = 0
         self.body_readed = 0
         self.content_length = None
@@ -197,28 +200,33 @@ class HttpWorker(object):
         self.ip_manager = ip_manager
         self.config = config
         self.ssl_sock = ssl_sock
-        self.handshake = ssl_sock.handshake_time * 0.001
-        self.rtt = ssl_sock.handshake_time * 0.001
+        self.handshake = ssl_sock.handshake_time * 0.001  # client to front
         self.adjust = float(ssl_sock.host_info.get("adjust", 0))
-        self.streams = {}
-        self.ip_str = ssl_sock.ip_str
+        self.ip_str = utils.to_str(ssl_sock.ip_str)
         self.close_cb = close_cb
         self.retry_task_cb = retry_task_cb
         self.idle_cb = idle_cb
         self.log_debug_data = log_debug_data
 
+        self.version = "0"
         self._lock = threading.Lock()
+        self.request_onway = False
         self.accept_task = True
         self.keep_running = True
         self.processed_tasks = 0
+        self.score = 0
         self.continue_fail_tasks = 0
-        self.rtt_history = [self.rtt,]
-        self.adjust_history = []
+        self.streams = {}
+
+        self.last_request_time = self.ssl_sock.create_time
         self.last_recv_time = self.ssl_sock.create_time
         self.last_send_time = self.ssl_sock.create_time
         self.life_end_time = self.ssl_sock.create_time + \
                              random.randint(self.config.connection_max_life, int(self.config.connection_max_life * 1.5))
         # self.logger.debug("worker.init %s %s", self.ip_str, self.ssl_sock.getsockname())
+
+        speed, rtt = self.ip_manager.get_speed(self.ip_str)
+        self.calculate_score(rtt, speed)
 
     def __str__(self):
         o = ""
@@ -228,33 +236,52 @@ class HttpWorker(object):
         o += " continue_fail_tasks: %s\r\n" % (self.continue_fail_tasks)
         o += " handshake: %f \r\n" % self.handshake
         o += " adjust: %f \r\n" % self.adjust
-        o += " rtt_history: %s\r\n" % (self.rtt_history)
-        o += " adjust_history: %s\r\n" % (self.adjust_history)
         if self.version != "1.1":
             o += "streams: %d\r\n" % len(self.streams)
-        o += " rtt: %f\r\n" % (self.rtt)
-        o += " speed: %f\r\n" % (self.ip_manager.get_speed(self.ip_str))
+        speed, min_rtt = self.ip_manager.get_speed(self.ip_str)
+        o += " speed: %f\r\n" % (speed)
+        o += " min_rtt: %f\r\n" % (min_rtt)
         o += " score: %f\r\n" % (self.get_score())
+        o += " last_recv_time: %f\r\n" % (time.time() - self.last_recv_time)
+        o += " last_request_time: %f\r\n" % (time.time() - self.last_request_time)
         return o
 
-    def update_rtt(self, rtt, predict_rtt=None):
-        self.rtt_history.append(rtt)
-        if len(self.rtt_history) > 10:
-            self.rtt_history.pop(0)
-        # self.rtt = sum(self.rtt_history) / len(self.rtt_history)
+    def update_speed(self, timecost, sent, received):
+        mean_rtt, speed = self.ip_manager.report_traffic_timecost(self.ip_str, timecost, sent + received)
+        self.calculate_score(mean_rtt, speed)
 
-        if predict_rtt:
-            adjust = rtt - predict_rtt
-            self.adjust_history.append(adjust)
-            if len(self.adjust_history) > 10:
-                self.adjust_history.pop(0)
+        self.log_debug_data(timecost, sent, received)
 
-    def update_speed(self, speed):
-        self.ip_manager.update_speed(self.ip_str, speed)
+    def calculate_score(self, rtt, speed):
+        mean_traffic_size = self.config.ip_cal_expect_time_package_size
+        # calculate score
+        # the meaning of the score is the expected timecost
+        if self.version == "1.1":
+            score = rtt + (mean_traffic_size / speed)
+        else:
+            response_body_len = mean_traffic_size
+            for _, stream in self.streams.items():
+                if stream.response_body_len == 0:
+                    response_body_len += mean_traffic_size
+                else:
+                    response_body_len += stream.response_body_len - stream.task.body_len
+            score = rtt + (response_body_len / speed)
 
-    def update_debug_data(self, rtt, sent, received, speed):
-        self.log_debug_data(rtt, sent, received)
-        return
+        if self.config.show_state_debug:
+            self.logger.debug("cal score %s, speed:%f rtt:%d stream_num:%d score:%f", self.ip_str,
+                              speed, rtt * 1000, len(self.streams), score * 1000)
+
+        self.score = score + self.adjust
+
+        if self.version == "1.1":
+            self.ip_manager.update_score(self.ip_str, self.score)
+
+    def get_score(self):
+        # The smaller, the better
+        if self.version == "1.1":
+            return self.ip_manager.get_score(self.ip_str)
+        else:
+            return self.score
 
     def close(self, reason):
         with self._lock:
@@ -277,33 +304,6 @@ class HttpWorker(object):
     def __del__(self):
         # self.logger.debug("__del__ %s", self.ip_str)
         self.close("__del__")
-
-    def get_score(self):
-        # The smaller, the better
-
-        score = self.handshake
-        if self.processed_tasks == 0 and len(self.streams) == 0:
-            score /= 3
-
-        speed = self.ip_manager.get_speed(self.ip_str)
-        if self.version == "1.1":
-            score += self.max_payload / speed
-        else:
-            response_body_len = self.max_payload
-            for _, stream in self.streams.items():
-                if stream.response_body_len == 0:
-                    response_body_len += self.max_payload
-                else:
-                    response_body_len += stream.response_body_len - stream.task.body_len
-            score += response_body_len / speed
-
-            score += len(self.streams) * 0.06
-
-        if self.config.show_state_debug:
-            self.logger.debug("get_score %s, speed:%f rtt:%d stream_num:%d score:%f", self.ip_str,
-                          speed * 0.000001, self.rtt * 1000, len(self.streams), score)
-
-        return score + self.adjust
 
     def get_host(self, task_host):
         if task_host:

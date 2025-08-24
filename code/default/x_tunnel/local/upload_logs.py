@@ -33,11 +33,17 @@ def sleep(t):
 
 
 def mask_x_tunnel_password(fp):
+    # xlog.debug("mask_x_tunnel_password:%s", fp)
     with open(fp, "r") as fd:
-        dat = json.load(fd)
-        del dat["login_password"]
-        dat_str = json.dumps(dat)
-        return dat_str
+        content = fd.read()
+        try:
+            dat = json.loads(content)
+            del dat["login_password"]
+            dat_str = json.dumps(dat)
+            return dat_str
+        except Exception as e:
+            xlog.exception("mask_x_tunnel_password fail, %s, content:%s e:%r", fp, content, e)
+            return content
 
 
 def get_launcher_port():

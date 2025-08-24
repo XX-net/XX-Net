@@ -32,6 +32,7 @@ class Win10PortReserveSolution(object):
                                   "The service ports was reserved by system, Do you want to change the served port?")
 
             if res == 1:  # Clicked "Yes"
+                xlog.info("User click Yes, start change reserve port range")
                 self.change_reserved_port_range()
 
                 if language == "zh_CN":
@@ -40,6 +41,8 @@ class Win10PortReserveSolution(object):
                     self.notify("Computer Restart Required",
                                 "System port reserve range changed, please restart your computer to make chage.")
                 return False
+            else:
+                xlog.info("User click No")
 
         return True
 
@@ -97,6 +100,7 @@ class Win10PortReserveSolution(object):
             # xlog.debug("range:%d - %d", p0, p1)
             for port in self.service_ports:
                 if p0 < port < p1:
+                    xlog.info("found port reserved range:%d - %d, expect %d", p0, p1, port)
                     return True
 
         return False

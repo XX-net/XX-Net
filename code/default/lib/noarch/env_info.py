@@ -6,7 +6,6 @@ import json
 
 import utils
 
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 default_path = os.path.abspath(os.path.join(current_path, os.path.pardir, os.path.pardir))
 data_path = os.path.abspath(os.path.join(default_path, os.path.pardir, os.path.pardir, 'data'))
@@ -122,6 +121,59 @@ def get_system_date_path():
     else:
         return os.path.join(home, ".local", "share")
 
+def get_user_data_path():
+    """
+    获取用户数据目录路径
+
+    Returns:
+        Path: 用户数据目录的 Path 对象
+
+    Raises:
+        OSError: 当无法确定用户目录时
+    """
+    try:
+        home = Path.home()
+    except RuntimeError:
+        raise OSError("无法确定用户主目录")
+
+    if sys.platform == "win32":
+        # Windows: %APPDATA%
+        appdata = os.environ.get("APPDATA")
+        if appdata and Path(appdata).exists():
+            return Path(appdata)
+        # Fallback
+        fallback = home / "AppData" / "Roaming"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+    elif sys.platform == "darwin":
+        # macOS: ~/Library/Application Support
+        app_support = home / "Library" / "Application Support"
+        app_support.mkdir(parents=True, exist_ok=True)
+        return app_support
+
+    else:
+        # Linux/Unix: 遵循 XDG Base Directory Specification
+        xdg_data_home = os.environ.get("XDG_DATA_HOME")
+        if xdg_data_home:
+            data_dir = Path(xdg_data_home)
+        else:
+            data_dir = home / ".local" / "share"
+
+        data_dir.mkdir(parents=True, exist_ok=True)
+        return data_dir
+
+
+def is_in_system_application_path(p):
+    if sys.platform == "win32":
+        if "Program Files" in p:
+            return True
+    elif sys.platform == "darwin":
+        if "Contents" in p:
+            return True
+    else:
+        return False
+
 
 def get_app_name():
     app_info_file = os.path.join(default_path, os.path.pardir, "app_info.json")
@@ -131,16 +183,25 @@ def get_app_name():
         return dat["app_name"]
     except Exception as e:
         print("get app name fail:%r", e)
-    return "XX-Net"
+    return "Dashboard"
+
+
+def use_default_data_path():
+    if os.path.isdir(data_path):
+        return True
+
+    try:
+        os.mkdir(data_path)
+        return True
+    except Exception as e:
+        return False
 
 
 app_name = get_app_name()
 
 # check and update data path
-if not os.path.isdir(data_path):
-    try:
+if not os.path.isdir(data_path) and \
+        (is_in_system_application_path(data_path) or not use_default_data_path() or app_name not in ["XX-Net"]):
+    data_path = os.path.join(get_user_data_path(), app_name)
+    if not os.path.isdir(data_path):
         os.mkdir(data_path)
-    except Exception as e:
-        data_path = os.path.join(get_system_date_path(), app_name)
-        if not os.path.isdir(data_path):
-            os.mkdir(data_path)

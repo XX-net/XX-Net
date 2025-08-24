@@ -4,6 +4,7 @@ system = ""
 
 running = True
 protocol_version = 4
+bind_port = 0
 last_refresh_time = 0
 login_process = False
 data_path = None

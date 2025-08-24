@@ -67,14 +67,15 @@ class HttpsDispatcher(object):
         self.working_tasks = {}
         self.account = ""
         self.last_host = None
+        self.session_host = None
         self.h1_num = 0
         self.h2_num = 0
         self.last_request_time = time.time()
+        self.last_get_score_time = 0
         self.task_count_lock = threading.Lock()
         self.task_count = 0
         self.running = True
 
-        # used by start_connect_all_ips() to control create_worker_thread()
         self.connect_all_workers = False
 
         # for statistic
@@ -102,9 +103,12 @@ class HttpsDispatcher(object):
         self.trigger_create_worker_cv = SimpleCondition()
         self.wait_a_worker_cv = SimpleCondition()
 
-        threading.Thread(target=self.dispatcher, name="%s_dispatch" % self.logger.name).start()
-        threading.Thread(target=self.create_worker_thread, name="%s_worker_creator" % self.logger.name).start()
-        threading.Thread(target=self.connection_checker, name="%s_conn_checker" % self.logger.name).start()
+        threading.Thread(target=self.dispatcher, name="%s_dispatcher" % self.logger.name).start()
+        threading.Thread(target=self.create_worker_thread, name="%s_create_worker_thread" % self.logger.name).start()
+        threading.Thread(target=self.connection_checker, name="%s_connection_checker" % self.logger.name).start()
+
+        if self.config.dispather_connect_all_workers_on_startup:
+            self.start_connect_all_ips()
 
     def stop(self):
         self.running = False
@@ -142,29 +146,29 @@ class HttpsDispatcher(object):
         self.workers.append(worker)
 
         if time.time() - self.ping_speed_ip_str_last_active.get(worker.ip_str, 0) > self.config.dispather_ping_check_speed_interval:
-            self.ping_speed(worker)
+            self.ping_speed(worker, self.config.dispather_ping_rtt_download_size)
+            self.ping_speed(worker, self.config.dispather_ping_speed_download_size)
             self.ping_speed_ip_str_last_active[worker.ip_str] = time.time()
-
         elif remove_slowest_worker:
             self._remove_slowest_worker()
 
-    def ping_speed(self, worker):
-        if not self.last_host:
+    def ping_speed(self, worker, size):
+        if not self.session_host:
             return
 
         method = b"POST"
-        path = b"/ping?content_length=%d" % self.config.dispather_ping_download_size
+        path = b"/ping?content_length=%d" % size
         body = utils.to_bytes(utils.generate_random_lowercase(self.config.dispather_ping_upload_size))
         headers = {
-            b"Padding": utils.to_str(utils.generate_random_lowercase(random.randint(64, 256))),
+            b"Padding": utils.to_str(utils.generate_random_lowercase(random.randint(32, 128))),
             b"Xx-Account": self.account,
-            b"X-Host": self.last_host,
+            b"X-Host": self.session_host,
             b"X-Path": path
         }
 
-        task = http_common.Task(self.logger, self.config, method, self.last_host, path,
+        task = http_common.Task(self.logger, self.config, method, self.session_host, path,
                                 headers, body, None, "/ping", 5)
-        task.set_state("start_ping_request")
+        task.set_state("start_ping_request(%s)" % worker.ip_str)
         # self.logger.debug("send ping for %s", worker.ip_str)
 
         worker.request(task)
@@ -173,13 +177,11 @@ class HttpsDispatcher(object):
         self.wait_a_worker_cv.notify()
 
     def create_worker_thread(self):
+        self.logger.info("%s create_worker_thread start", self.logger.name)
         while self.running:
-            if not self.connect_all_workers:
+            if not self.connect_all_workers or (len(self.workers) > self.config.dispather_max_workers):
                 self.trigger_create_worker_cv.wait()
-
-            if len(self.workers) == 0 and self.config.dispather_connect_all_workers_on_startup:
-                self._debug_log("create_worker_thread start connect_all_workers")
-                self.connect_all_workers = True
+                self._debug_log("got a trigger_create_worker_cv notify")
 
             try:
                 ssl_sock = self.connection_manager.get_ssl_connection(timeout=60)
@@ -192,17 +194,19 @@ class HttpsDispatcher(object):
                 self.connect_all_workers = False
                 continue
 
-            if self.connect_all_workers:
-                self._debug_log("connect_all_workers get %s", ssl_sock.ip_str)
-
             try:
                 self.on_ssl_created_cb(ssl_sock, remove_slowest_worker=False)
             except Exception as e:
                 self.logger.exception("on_ssl_created_cb %s except:%r", ssl_sock.ip, e)
                 time.sleep(10)
 
+            if self.connect_all_workers and len(self.workers) >= self.config.dispather_min_workers:
+                self.connect_all_workers = False
+
+        self.logger.info("%s create_worker_thread exit", self.logger.name)
+
     def start_connect_all_ips(self):
-        # trigger connect all ips
+        # trigger to connect all ips
         # used in tls relay.
         self.connect_all_workers = True
         self.trigger_create_worker_cv.notify()
@@ -240,6 +244,7 @@ class HttpsDispatcher(object):
         # self._debug_log("start get_worker")
 
         while self.running:
+            top_score = 99999999
             best_score = 99999999
             best_worker = None
             good_worker = 0
@@ -249,6 +254,10 @@ class HttpsDispatcher(object):
             self._remove_life_end_workers()
 
             for worker in self.workers:
+                score = worker.get_score()
+                if top_score > score:
+                    top_score = score
+
                 if worker.is_life_end():
                     self._debug_log("life end worker: %s", worker.ip_str)
                     # self.close_cb(worker)
@@ -265,8 +274,6 @@ class HttpsDispatcher(object):
                     if len(worker.streams) == 0:
                         idle_num += 1
 
-                score = worker.get_score()
-
                 if best_score > score:
                     best_score = score
                     best_worker = worker
@@ -277,8 +284,8 @@ class HttpsDispatcher(object):
                     len(self.workers) < self.config.dispather_min_workers or
                     abs(now - best_worker.last_recv_time) < self.config.dispather_work_min_idle_time or
                     best_score > self.config.dispather_work_max_score or
-                     (best_worker.version == "2" and len(best_worker.streams) >= self.config.http2_target_concurrent)):
-
+                     (best_worker.version == "2" and len(best_worker.streams) >= self.config.http2_target_concurrent) or
+                     (best_score > top_score and best_worker.version == "1.1")):
                 self._debug_log("trigger get more worker")
                 self.trigger_create_worker_cv.notify()
 
@@ -312,7 +319,7 @@ class HttpsDispatcher(object):
 
             if idle_num < self.config.dispather_max_idle_workers or \
                     idle_num < int(len(self.workers) * 0.3) or \
-                    len(self.workers) < self.config.dispather_max_workers:
+                    len(self.workers) < self.config.dispather_min_workers:
                 return
 
             if slowest_worker is None:
@@ -360,13 +367,15 @@ class HttpsDispatcher(object):
                 self.continue_fail_num = 0
                 task.worker.continue_fail_tasks = 0
             else:
-                self.logger.warn("task %s %s %s timeout", method, host, path)
+                if not response:
+                    self.logger.warn("task %s %s %s timeout", method, host, path)
+                else:
+                    self.logger.warn("task %s %s %s status:%d", method, host, path, response.status)
+
                 self.fail_num += 1
                 self.continue_fail_num += 1
                 self.last_fail_time = time.time()
                 if task.worker:
-                    # task.worker.rtt = (time.time() - task.worker.last_recv_time) * 1000
-
                     task.worker.continue_fail_tasks += 1
                     if task.worker.continue_fail_tasks > self.config.dispather_worker_max_continue_fail:
                         self.trigger_create_worker_cv.notify()
@@ -381,6 +390,9 @@ class HttpsDispatcher(object):
             with self.task_count_lock:
                 self.task_count -= 1
 
+    def set_session_host(self, host):
+        self.session_host = host
+
     def retry_task_cb(self, task, reason=""):
         self.fail_num += 1
         self.continue_fail_num += 1
@@ -389,9 +401,9 @@ class HttpsDispatcher(object):
 
         if task.responsed:
             self.logger.warn("retry but responses. %s", task.url)
-            st = traceback.extract_stack()
-            stl = traceback.format_list(st)
-            self.logger.warn("stack:%r", repr(stl))
+            # st = traceback.extract_stack()
+            # stl = traceback.format_list(st)
+            # self.logger.warn("stack:%r", repr(stl))
             task.finish()
             return
 
@@ -443,9 +455,10 @@ class HttpsDispatcher(object):
             get_worker_time = time.time()
             get_cost = get_worker_time - get_time
             self.ping_speed_ip_str_last_active[worker.ip_str] = get_worker_time
-            task.set_state("get_worker(%d):%s" % (get_cost, worker.ip_str))
+            task.set_state("get_worker(%d):%s, score:%f" % (get_cost, worker.ip_str, worker.get_score()))
             task.worker = worker
             task.predict_rtt = worker.get_score()
+            worker.last_request_time = get_worker_time
             try:
                 worker.request(task)
             except Exception as e:
@@ -460,10 +473,34 @@ class HttpsDispatcher(object):
             now = time.time()
             try:
                 for worker in list(self.workers):
-                    if worker.version == "1.1":
+                    if not worker.keep_running:
                         continue
 
-                    worker.check_active(now)
+                    if worker.is_life_end():
+                        worker.close("life end")
+                        continue
+
+                    if now - worker.last_request_time > self.config.dispather_worker_idle_time and \
+                            len(self.workers) > self.config.dispather_min_workers:
+                        worker.close("idle too long")
+                        continue
+
+                    last_active_time = self.ping_speed_ip_str_last_active.get(worker.ip_str, 0)
+                    if now - last_active_time > self.config.dispather_ping_check_speed_interval and \
+                        self.last_get_score_time > last_active_time:
+
+                        self.ping_speed(worker, self.config.dispather_ping_rtt_download_size)
+                        self.ping_speed(worker, self.config.dispather_ping_speed_download_size)
+                        self.ping_speed_ip_str_last_active[worker.ip_str] = time.time()
+                        continue
+
+                    if worker.version == "2":
+                        if len(worker.streams):
+                            continue
+
+                        if now - worker.last_send_time > self.config.http2_idle_ping_min_interval:
+                            worker.send_ping()
+
             except Exception as e:
                 self.logger.exception("check worker except:%r", e)
 
@@ -526,7 +563,6 @@ class HttpsDispatcher(object):
             "sent": self.total_sent - self.last_sent,
             "received": self.total_received - self.last_received
         }
-        # self.rtts = []
         self.last_sent = self.total_sent
         self.last_received = self.total_received
         self.second_stats.append(self.second_stat)
@@ -539,37 +575,19 @@ class HttpsDispatcher(object):
             return None
 
         now = time.time()
+        self.last_get_score_time = now
         if now - self.last_fail_time < 10 and self.continue_fail_num > 10:
             return None
 
         worker = self.get_worker(nowait=True)
         if not worker:
+            self.start_connect_all_ips()
             return None
 
         return worker.get_score() * self.config.dispather_score_factor
 
     def to_string(self):
-        now = time.time()
-        worker_rate = {}
-        for w in self.workers:
-            worker_rate[w] = w.get_rtt_rate()
-
-        w_r = sorted(list(worker_rate.items()), key=operator.itemgetter(1))
-
         out_str = 'thread num:%d\r\n' % threading.active_count()
-        for w, r in w_r:
-            out_str += "%s score:%d rtt:%d running:%d accept:%d live:%d inactive:%d processed:%d" % \
-                       (w.ip_str, w.get_score(), w.rtt, w.keep_running,  w.accept_task,
-                        (now-w.ssl_sock.create_time), (now-w.last_recv_time), w.processed_tasks)
-            if w.version == "2":
-                out_str += " continue_timeout:%d streams:%d ping_on_way:%d remote_win:%d send_queue:%d\r\n" % \
-                   (w.continue_timeout, len(w.streams), w.ping_on_way, w.remote_window_size, w.send_queue.qsize())
-
-            elif w.version == "1.1":
-                out_str += " Trace:%s" % w.get_trace()
-
-            out_str += "\r\n"
-
         out_str += "\r\n working_tasks:\r\n"
         for unique_id in self.working_tasks:
             task = self.working_tasks[unique_id]

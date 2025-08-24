@@ -24,6 +24,10 @@ SO_ORIGINAL_DST = 80
 
 fake_host = ""
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_REQUIRED
+
 
 class DontFakeCA(Exception):
     pass
@@ -141,7 +145,7 @@ def get_sni(sock, left_buf=b""):
     if leadbyte in (b'\x80', b'\x16'):
         if leadbyte == b'\x16':
             for _ in range(2):
-                leaddata = left_buf + sock.recv(1024, socket.MSG_PEEK)
+                leaddata = left_buf + sock.recv(4096, socket.MSG_PEEK)
                 if is_clienthello(leaddata):
                     try:
                         server_name = extract_sni_name(leaddata)
@@ -221,7 +225,7 @@ def do_redirect_https(sock, host, ips, port, client_address, left_buf=b""):
         raise RedirectHttpsFail()
 
     try:
-        ssl_sock = ssl.wrap_socket(remote_sock._sock)
+        ssl_sock = ssl_context.wrap_socket(remote_sock._sock, server_hostname=host)
     except Exception as e:
         raise RedirectHttpsFail()
 
@@ -269,8 +273,7 @@ def do_unwrap_socks(sock, host, port, client_address, req, left_buf=b""):
 
     if isinstance(req.connection, ssl.SSLSocket):
         try:
-            # TODO: send SNI
-            remote_ssl_sock = ssl.wrap_socket(remote_sock)
+            remote_ssl_sock = ssl_context.wrap_socket(remote_sock, server_hostname=host)
         except:
             xlog.warn("do_unwrap_socks ssl_wrap for %s:%d proxy fail.", host, port)
             return

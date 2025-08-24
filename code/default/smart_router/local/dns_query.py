@@ -368,21 +368,9 @@ class DnsOverTcpQuery():
 
         return None
 
-    def get_connection(self):
-        while len(self.connections):
-            try:
-                [sock, last_query_time] = self.connections.pop()
-                if time.time() - last_query_time < self.connection_timeout:
-                    return sock
-            except:
-                pass
-
-        server_ip = self.get_server()
-        if not server_ip:
-            return None
-
+    def connect(self, host, port):
         if not g.config.PROXY_ENABLE:
-            sock = self.direct_connect(server_ip, self.port)
+            sock = self.direct_connect(host, self.port)
         else:
             connect_timeout = 5
 
@@ -400,8 +388,24 @@ class DnsOverTcpQuery():
             sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
             sock.settimeout(connect_timeout)
 
-            sock.connect((server_ip, self.port))
+            sock.connect((host, self.port))
 
+        return sock
+
+    def get_connection(self):
+        while len(self.connections):
+            try:
+                [sock, last_query_time] = self.connections.pop()
+                if time.time() - last_query_time < self.connection_timeout:
+                    return sock
+            except:
+                pass
+
+        server_ip = self.get_server()
+        if not server_ip:
+            return None
+
+        sock = self.connect(server_ip, self.port)
         return sock
 
     def query(self, domain, dns_type=1):
@@ -460,20 +464,13 @@ class DnsOverTlsQuery(DnsOverTcpQuery):
     def __init__(self, server_list=[b"1.1.1.1", b"9.9.9.9"]):
         DnsOverTcpQuery.__init__(self, server_list=server_list, port=853)
         self.protocol = "DoT"
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_REQUIRED
 
-    def get_connection(self):
-        try:
-            s = DnsOverTcpQuery.get_connection(self)
-            if isinstance(s, ssl.SSLSocket) or s is None:
-                return s
-
-            sock = ssl.wrap_socket(s, ca_certs=os.path.join(current_path, "cloudflare_cert.pem"))
-        except Exception as e:
-            xlog.warn("DNSOverTlsQuery wrap_socket fail %r", e)
-            return None
-
-        sock.settimeout(self.timeout)
-
+    def connect(self, host, port):
+        s = super(DnsOverTlsQuery, self).connect(host, port)
+        sock = self.ssl_context.wrap_socket(s, server_hostname=host)
         return sock
 
 
