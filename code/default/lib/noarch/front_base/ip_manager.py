@@ -549,8 +549,7 @@ class IpManager(IpManagerBase):
                     self.ip_pointer += 1
                     continue
 
-                handshake_time = self.ip_dict[ip_str]["handshake_time"]
-                # self.logger.debug("get ip:%s t:%d", ip, handshake_time)
+                # self.logger.debug("get ip:%s t:%d", ip, self.ip_dict[ip_str]["handshake_time"])
                 self.append_ip_history(ip_str, "get")
                 self.ip_dict[ip_str]['get_time'] = time_now
                 if not to_recheck:
@@ -568,7 +567,7 @@ class IpManager(IpManagerBase):
         finally:
             self.ip_lock.release()
 
-        return None, None, None
+        return None
 
     def add_ip(self, ip_str, handshake_time=100, domain=None, server='gws', fail_times=0, down_fail=0,
                scan_result=True):

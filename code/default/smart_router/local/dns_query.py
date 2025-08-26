@@ -461,7 +461,19 @@ class DnsOverTcpQuery():
 
 
 class DnsOverTlsQuery(DnsOverTcpQuery):
-    def __init__(self, server_list=[b"1.1.1.1", b"9.9.9.9"]):
+    def __init__(self, server_list=None):
+        if not server_list:
+            server_list = [
+                {
+                    "domain": "one.one.one.one",
+                    "ipv4s": [b"1.1.1.1", b"1.0.0.1"],
+                },
+                {
+                    "domain": "dns.quad9.net",
+                    "ipv4s": [b"9.9.9.9", b"149.112.112.112"],
+                }
+            ]
+
         DnsOverTcpQuery.__init__(self, server_list=server_list, port=853)
         self.protocol = "DoT"
         self.ssl_context = ssl.create_default_context()
@@ -469,9 +481,15 @@ class DnsOverTlsQuery(DnsOverTcpQuery):
         self.ssl_context.verify_mode = ssl.CERT_REQUIRED
 
     def connect(self, host, port):
-        s = super(DnsOverTlsQuery, self).connect(host, port)
-        sock = self.ssl_context.wrap_socket(s, server_hostname=host)
-        return sock
+        domain = host["domain"]
+        ipv4 =  random.choice(host["ipv4s"])
+        try:
+            s = super(DnsOverTlsQuery, self).connect(ipv4, port)
+            sock = self.ssl_context.wrap_socket(s, server_hostname=domain)
+            return sock
+        except Exception as e:
+            xlog.warn("DnsOverTlsQuery connect %s %s:%d fail:%r", ipv4, domain, port, e)
+            return None
 
 
 class DnsOverHttpsQuery(object):
