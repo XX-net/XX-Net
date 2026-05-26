@@ -10,6 +10,12 @@ import json
 import base64
 import hashlib
 import struct
+import weakref
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 try:
     from urllib.parse import urlparse, urlencode, parse_qs
@@ -692,6 +698,129 @@ class HTTPServer():
         for sock in self.sockets:
             sock.close()
         self.sockets = []
+
+
+class Event:
+    def __init__(self, name, data=None):
+        self.name = name
+        self.data = data
+
+
+class WeakCallback:
+    def __init__(self, callback):
+        if hasattr(callback, '__self__') and callback.__self__ is not None:
+            self._obj = weakref.ref(callback.__self__)
+            self._func = callback.__func__
+            self.is_method = True
+        else:
+            self._func = weakref.ref(callback)
+            self.is_method = False
+
+    def __call__(self):
+        if self.is_method:
+            obj = self._obj()
+            if obj is None:
+                return None
+            return getattr(obj, self._func.__name__)
+        else:
+            return self._func()
+
+
+class EventBus:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super(EventBus, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.subscribers = {}
+            self.async_queue = queue.Queue()
+            self.lock = threading.RLock()
+            self.running = True
+            self.worker_thread = threading.Thread(target=self._process_async_events)
+            self.worker_thread.daemon = True
+            self.worker_thread.start()
+            self.initialized = True
+            self.retry_limit = 3
+            self.retry_delay = 1.0
+
+    def subscribe(self, event_name, callback):
+        with self.lock:
+            if event_name not in self.subscribers:
+                self.subscribers[event_name] = []
+            
+            ref = WeakCallback(callback)
+            self.subscribers[event_name].append(ref)
+
+    def unsubscribe(self, event_name, callback):
+        with self.lock:
+            if event_name in self.subscribers:
+                self.subscribers[event_name] = [
+                    ref for ref in self.subscribers[event_name]
+                    if ref() is not None and ref() != callback
+                ]
+
+    def publish_sync(self, event_name, data=None):
+        event = Event(event_name, data)
+        self._dispatch(event)
+
+    def publish_async(self, event_name, data=None, retry_count=0):
+        event = Event(event_name, data)
+        self.async_queue.put((event, retry_count))
+
+    def _dispatch(self, event):
+        callbacks_to_call = []
+        with self.lock:
+            if event.name in self.subscribers:
+                valid_refs = []
+                for ref in self.subscribers[event.name]:
+                    callback = ref()
+                    if callback is not None:
+                        valid_refs.append(ref)
+                        callbacks_to_call.append(callback)
+                self.subscribers[event.name] = valid_refs
+
+        errors = []
+        for callback in callbacks_to_call:
+            try:
+                callback(event)
+            except Exception as e:
+                errors.append(e)
+                xlog.warn("Error processing event %s: %s", event.name, e)
+        
+        if errors:
+            raise Exception("Errors occurred during sync dispatch: %s" % errors)
+
+    def _process_async_events(self):
+        while self.running:
+            try:
+                event, retry_count = self.async_queue.get(timeout=1.0)
+                try:
+                    self._dispatch(event)
+                except Exception as e:
+                    xlog.warn("Async dispatch failed for %s: %s", event.name, e)
+                    if retry_count < self.retry_limit:
+                        xlog.info("Retrying event %s (Attempt %d/%d)", event.name, retry_count + 1, self.retry_limit)
+                        time.sleep(self.retry_delay)
+                        self.async_queue.put((event, retry_count + 1))
+                    else:
+                        xlog.warn("Event %s dropped after %d retries.", event.name, self.retry_limit)
+                finally:
+                    self.async_queue.task_done()
+            except queue.Empty:
+                continue
+            except Exception as e:
+                xlog.warn("Event bus worker error: %s", e)
+
+    def stop(self):
+        self.running = False
+        if self.worker_thread.is_alive():
+            self.worker_thread.join()
 
 
 class TestHttpServer(HttpServerHandler):
