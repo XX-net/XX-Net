@@ -122,14 +122,15 @@ class Encryptor(object):
         return m[2](method, key, iv, op)
 
     def encrypt(self, buf):
-        if len(buf) == 0:
+        if not buf:
             return buf
 
         if not self.iv_sent:
             head = self.cipher_iv
             self.iv_sent = True
         else:
-            head = ""
+            head = b""
+            
         return head + self.cipher.update(buf)
 
     def decrypt(self, buf):
