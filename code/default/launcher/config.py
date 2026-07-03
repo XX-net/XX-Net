@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# coding:utf-8
 
 import os
 import subprocess
@@ -6,6 +7,7 @@ import locale
 import json
 
 import sys_platform
+import time
 from simple_http_client import request
 import xconfig
 from xlog import getLogger
@@ -18,6 +20,7 @@ root_path = os.path.abspath(os.path.join(version_path, os.pardir, os.pardir))
 import env_info
 data_path = env_info.data_path
 config_path = os.path.join(data_path, 'launcher', 'config.json')
+backup_config_path = os.path.join(data_path, 'launcher', 'config.json.bak')
 
 
 config = xconfig.Config(config_path)
@@ -84,8 +87,60 @@ config.set_var("global_proxy_password", "")
 
 try:
     config.load()
+    validate_and_migrate_config()
 except Exception as e:
     xlog.warn("loading config e:%r", e)
+
+
+CONFIG_VERSION = "2.0"
+
+
+def backup_config():
+    if os.path.isfile(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            with open(backup_config_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            xlog.debug("Config backed up to %s", backup_config_path)
+        except Exception as e:
+            xlog.warning(f"Failed to backup config: {e}")
+
+
+def validate_and_migrate_config():
+    if not os.path.isfile(config_path):
+        xlog.info("Config file not found, creating new one")
+        return
+
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        xlog.error(f"Config file corrupted: {e}, restoring from backup")
+        if os.path.isfile(backup_config_path):
+            try:
+                with open(backup_config_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                with open(config_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                xlog.info("Config restored from backup")
+            except Exception as e2:
+                xlog.error(f"Failed to restore from backup: {e2}")
+                return
+        return
+
+    old_version = data.get("_config_version", "1.0")
+    if old_version != CONFIG_VERSION:
+        xlog.info(f"Migrating config from version {old_version} to {CONFIG_VERSION}")
+        data["_config_version"] = CONFIG_VERSION
+        try:
+            backup_config()
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            xlog.info("Config migration completed")
+        except Exception as e:
+            xlog.error(f"Config migration failed: {e}")
+
 
 app_name = "XX-Net"
 valid_language = ['en_US', 'fa_IR', 'zh_CN', 'ru_RU']

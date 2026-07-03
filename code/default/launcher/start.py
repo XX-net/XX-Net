@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # coding:utf-8
 
+import signal
+import socket
 import platform
 import os
 import sys
@@ -13,7 +15,7 @@ import atexit
 import threading
 try:
     threading.stack_size(64 * 1024)
-except:
+except Exception:
     pass
 
 
@@ -29,15 +31,27 @@ data_launcher_path = os.path.join(data_path, 'launcher')
 
 
 def create_data_path():
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
+    try:
+        if not os.path.isdir(data_path):
+            os.makedirs(data_path, exist_ok=True)
 
-    if not os.path.isdir(data_launcher_path):
-        os.mkdir(data_launcher_path)
+        if not os.path.isdir(data_launcher_path):
+            os.makedirs(data_launcher_path, exist_ok=True)
 
-    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-    if not os.path.isdir(data_gae_proxy_path):
-        os.mkdir(data_gae_proxy_path)
+        data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+        if not os.path.isdir(data_gae_proxy_path):
+            os.makedirs(data_gae_proxy_path, exist_ok=True)
+
+        data_x_tunnel_path = os.path.join(data_path, 'x_tunnel')
+        if not os.path.isdir(data_x_tunnel_path):
+            os.makedirs(data_x_tunnel_path, exist_ok=True)
+
+        data_smart_router_path = os.path.join(data_path, 'smart_router')
+        if not os.path.isdir(data_smart_router_path):
+            os.makedirs(data_smart_router_path, exist_ok=True)
+    except Exception as e:
+        print(f"Failed to create data directories: {e}")
+        sys.exit(1)
 
 
 create_data_path()
@@ -55,6 +69,23 @@ import update
 import update_from_github
 import download_modules
 import global_var
+
+
+def setup_signal_handlers():
+    def signal_handler(signum, frame):
+        signal_name = signal.Signals(signum).name if hasattr(signal, 'Signals') else f"signal {signum}"
+        xlog.warn(f"Received {signal_name}, shutting down...")
+        global_var.running = False
+        module_init.stop_all()
+        web_control.stop()
+        time.sleep(1)
+        os._exit(0)
+
+    try:
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+    except Exception as e:
+        xlog.debug(f"Failed to set signal handlers: {e}")
 
 
 current_version = update_from_github.current_version()
@@ -76,26 +107,44 @@ running_file = os.path.join(data_launcher_path, "Running.Lck")
 
 
 def uncaught_exception_handler(etype, value, tb):
-    if etype == KeyboardInterrupt:  # Ctrl + C on console
-        xlog.warn("KeyboardInterrupt, exiting...")
+    if etype == KeyboardInterrupt:
+        xlog.warn("KeyboardInterrupt, exiting gracefully...")
         global_var.running = False
         module_init.stop_all()
+        web_control.stop()
         os._exit(0)
 
     exc_info = ''.join(traceback.format_exception(etype, value, tb))
-    print(("uncaught Exception:\n" + exc_info))
-    xlog.error("uncaught Exception, type=%s value=%s traceback:%s", etype, value, exc_info)
-    # sys.exit(1)
+    print(f"Uncaught Exception:\n{exc_info}")
+    xlog.error(f"Uncaught Exception - type: {etype}, value: {value}, traceback:\n{exc_info}")
+    try:
+        global_var.running = False
+        module_init.stop_all()
+        web_control.stop()
+    except Exception:
+        pass
 
 
 sys.excepthook = uncaught_exception_handler
 
 
 def exit_handler():
-    xlog.info('Stopping all modules before exit!')
-    global_var.running = False
-    module_init.stop_all()
-    web_control.stop()
+    try:
+        xlog.info('Initiating graceful shutdown...')
+        global_var.running = False
+        
+        web_control.stop()
+        
+        module_init.stop_all()
+        
+        try:
+            if os.path.isfile(running_file):
+                os.remove(running_file)
+                xlog.debug("Removed Running.Lck")
+        except Exception as e:
+            xlog.debug(f"Failed to remove Running.Lck: {e}")
+    except Exception as e:
+        xlog.error(f"Error during shutdown: {e}")
 
 
 atexit.register(exit_handler)
