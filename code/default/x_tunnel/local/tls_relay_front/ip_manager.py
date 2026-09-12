@@ -30,7 +30,7 @@ class IpManager(IpManagerBase):
         now = time.time()
 
         best_info = None
-        best_speed = 0
+        best_score = 99999999
 
         for ip, ip_info in self.host_manager.info.items():
             if "sni" not in ip_info:
@@ -50,9 +50,11 @@ class IpManager(IpManagerBase):
             if info["fail_times"] and now - info["last_try"] < 60:
                 continue
 
+            # Same as HttpWorker.calculate_score: expected time cost plus the adjust from center.
             speed, rtt = self.get_speed(ip_str)
-            if speed > best_speed:
-                best_speed = speed
+            score = rtt + self.config.ip_cal_expect_time_package_size / speed + float(ip_info.get("adjust", 0))
+            if score < best_score:
+                best_score = score
                 best_info = info
 
         if not best_info:
@@ -63,12 +65,14 @@ class IpManager(IpManagerBase):
         # self.logger.debug("get ip:%s", ip)
 
         ip = best_info["ip"]
-        port = int(self.host_manager.info[ip].get("port", 443))
+        host_info = self.host_manager.info[ip]
+        port = int(host_info.get("port", 443))
         ip_str = utils.get_ip_str(ip, port)
         return {
             "ip_str": ip_str,
             "sni": None,
             "host": None,
+            "adjust": host_info.get("adjust", 0),
         }
 
     def update_ip(self, ip_str, sni, handshake_time):
