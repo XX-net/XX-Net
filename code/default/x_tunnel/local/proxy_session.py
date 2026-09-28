@@ -1333,7 +1333,9 @@ login_lock = threading.Lock()
 
 
 def login_process():
-    if not g.session:
+    # g.session is set to None by client.stop() on exit, keep our own reference.
+    session = g.session
+    if not session:
         return
 
     with login_lock:
@@ -1348,17 +1350,17 @@ def login_process():
                 xlog.warn("x-tunnel request_balance fail when create_conn:%s", reason)
                 return False
 
-        if time.time() - g.session.last_send_time > 5 * 60 - 5:
+        if time.time() - session.last_send_time > 5 * 60 - 5:
             xlog.info("session timeout, reset it.")
-            g.session.stop()
+            session.stop()
 
         if g.tls_relay_front:
             g.tls_relay_front.set_x_tunnel_account(g.config.login_account, g.config.login_password)
         if g.seley_front:
             g.seley_front.set_x_tunnel_account(g.config.login_account, g.config.login_password)
 
-        if not g.session.running:
-            return g.session.start()
+        if not session.running:
+            return session.start()
 
     return True
 
@@ -1374,7 +1376,10 @@ def create_conn(sock, host, port, log=False):
         else:
             time.sleep(1)
 
-    return g.session.create_conn(sock, host, port, log)
+    session = g.session
+    if not session:
+        return False
+    return session.create_conn(sock, host, port, log)
 
 
 def update_quota_loop():

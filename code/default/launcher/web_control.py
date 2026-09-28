@@ -8,9 +8,36 @@ import socket, ssl
 import time
 import threading
 import json
-import cgi
+import email.message
+import email.parser
+import email.policy
 import traceback
 import base64
+
+def parse_content_type(value):
+    # Replacement of cgi.parse_header, cgi was removed in Python 3.13.
+    if not value:
+        return '', {}
+    msg = email.message.Message()
+    msg['content-type'] = value
+    return msg.get_content_type(), dict(msg.get_params()[1:])
+
+
+def parse_multipart(fp, content_type, length):
+    # Replacement of cgi.parse_multipart: {name: [value, ...]},
+    # str for form fields and bytes for uploaded files.
+    body = fp.read(length)
+    msg = email.parser.BytesParser(policy=email.policy.HTTP).parsebytes(
+        b'Content-Type: ' + content_type.encode('latin-1') + b'\r\n\r\n' + body)
+    result = {}
+    for part in msg.iter_parts():
+        name = part.get_param('name', header='content-disposition')
+        value = part.get_payload(decode=True) or b''
+        if part.get_filename() is None:
+            value = value.decode(part.get_content_charset() or 'utf-8', 'replace')
+        result.setdefault(name, []).append(value)
+    return result
+
 
 try:
     from urllib.parse import urlparse, urlencode, parse_qs
@@ -136,9 +163,10 @@ class Http_Handler(simple_http_server.HttpServerHandler):
 
         try:
             content_type = self.headers.get('Content-Type', "")
-            ctype, pdict = cgi.parse_header(content_type)
+            ctype, pdict = parse_content_type(content_type)
             if ctype == 'multipart/form-data':
-                self.postvars = cgi.parse_multipart(self.rfile, pdict)
+                length = int(self.headers.get('Content-Length'))
+                self.postvars = parse_multipart(self.rfile, content_type, length)
             elif ctype == 'application/x-www-form-urlencoded':
                 length = int(self.headers.get('Content-Length'))
                 content = self.rfile.read(length)

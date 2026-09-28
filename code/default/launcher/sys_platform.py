@@ -114,7 +114,6 @@ elif sys.platform == "darwin":
     sys.path.append(extra_lib)
 
     def show_systray():
-        global sys_tray
         try:
             import mac_tray as sys_tray
         except Exception as e:
@@ -123,7 +122,11 @@ elif sys.platform == "darwin":
         sys_tray.serve_forever()
 
     def on_quit():
-        global sys_tray
+        try:
+            import mac_tray as sys_tray
+        except Exception as e:
+            xlog.warn("import mac_tray except:%r, Please try run 'sudo pip3 install -U PyObjC Pillow' by yourself.", e)
+            from non_tray import sys_tray
         sys_tray.on_quit()
 
 elif sys.platform == "ios":

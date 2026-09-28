@@ -63,6 +63,13 @@ import utils
 from gae_proxy.local.front import front
 
 
+def server_wrap_socket(sock, certfile):
+    # ssl.wrap_socket was removed in Python 3.12.
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile, CertUtil.cert_keyfile)
+    return context.wrap_socket(sock, server_side=True)
+
+
 class GAEProxyHandler(simple_http_server.HttpServerHandler):
     gae_support_methods = tuple([b"GET", b"POST", b"HEAD", b"PUT", b"DELETE", b"PATCH"])
     # GAE don't support command like OPTION
@@ -183,7 +190,7 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
         leadbyte = self.connection.recv(1, socket.MSG_PEEK)
         if leadbyte in (b'\x80', b'\x16'):
             try:
-                ssl_sock = ssl.wrap_socket(self.connection, keyfile=CertUtil.cert_keyfile, certfile=certfile, server_side=True)
+                ssl_sock = server_wrap_socket(self.connection, certfile)
             except ssl.SSLError as e:
                 xlog.info('ssl error: %s, create full domain cert for host:%s', e, host)
                 certfile = CertUtil.get_cert(host, full_name=True)
@@ -332,7 +339,6 @@ class GAEProxyHandler(simple_http_server.HttpServerHandler):
 # called by smart_router
 def wrap_ssl(sock, host, port, client_address):
     certfile = CertUtil.get_cert(host or b'www.google.com')
-    ssl_sock = ssl.wrap_socket(sock, keyfile=CertUtil.cert_keyfile,
-                               certfile=certfile, server_side=True)
+    ssl_sock = server_wrap_socket(sock, certfile)
     return ssl_sock
 

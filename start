@@ -111,18 +111,43 @@ if [ $os_name = 'Linux' ]; then
 elif [ $os_name = 'Darwin' ]; then
 
   PYTHON3="python3/bin/python3"
-  if test -f "$PYTHON3"; then
+  if [ ! -f "$PYTHON3" ] && [ -f "python3.zip" ]; then
+    # The release ships the embedded python (with BoringSSL) zipped; without it
+    # we fall back to system python, whose LibreSSL makes connections unstable.
+    echo "Extracting embedded python..."
+    rm -rf python3.tmp
+    if unzip -q python3.zip -d python3.tmp; then
+      if [ -f "python3.tmp/python3/bin/python3" ]; then
+        rm -rf python3 && mv python3.tmp/python3 python3
+      elif [ -f "python3.tmp/bin/python3" ]; then
+        rm -rf python3 && mv python3.tmp python3
+      fi
+      xattr -c -r python3 2> /dev/null
+    fi
+    rm -rf python3.tmp
+    if [ ! -f "$PYTHON3" ]; then
+      echo "Extract python3.zip failed."
+    fi
+  fi
+
+  # The embedded python is x86_64, it needs Rosetta 2 on Apple Silicon.
+  if test -f "$PYTHON3" && "$PYTHON3" -c 'pass' 2> /dev/null; then
     echo "Darwin using embedded python."
     PYTHON="$PYTHON3"
   else
+    if test -f "$PYTHON3"; then
+      echo "Embedded python can't run, install Rosetta 2 with: softwareupdate --install-rosetta"
+    fi
+    echo "Using system python, TLS will fall back to system SSL instead of BoringSSL."
     if ! ${PYTHON} -c 'import PyObjCTools, AppKit, SystemConfiguration' 2> /dev/null; then
       sudo pip3 install -U PyObjC Pillow
     fi
   fi
 
-  if [ ! -d "data/launcher/installed" ]; then
+  if [ ! -f "data/launcher/installed" ]; then
     # remove the mask for download file warning
-    xattr -c -r *
+    xattr -c -r * 2> /dev/null
+    mkdir -p "data/launcher"
     touch "data/launcher/installed"
   fi
 fi

@@ -22,8 +22,12 @@ import socket
 # for OpenWrt
 import threading
 try:
-    threading.stack_size(64 * 1024)
-except Exception:
+    if sys.version_info >= (3, 14):
+        # Python 3.14 checks C stack usage and raises RecursionError on 64K stacks.
+        threading.stack_size(256 * 1024)
+    else:
+        threading.stack_size(64 * 1024)
+except:
     pass
 
 
@@ -32,6 +36,11 @@ sys.path.append(current_path)
 default_path = os.path.abspath(os.path.join(current_path, os.pardir))
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
+
+if sys.platform == "darwin":
+    darwin_lib = os.path.abspath(os.path.join(default_path, 'lib', 'darwin'))
+    if os.path.isdir(darwin_lib):
+        sys.path.insert(0, darwin_lib)
 
 import env_info
 data_path = env_info.data_path

@@ -2,11 +2,19 @@
 # coding:utf-8
 
 import os
-import shutil
 import sys
+import stat
+import shlex
+import filecmp
+import shutil
+import tempfile
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-helper_path = os.path.join('/tmp', 'helper')
+bundled_helper_path = os.path.join(current_path, 'mac_helper')
+# The setuid helper lives in a root-owned directory, so no user-level process
+# can plant or swap it, and it survives reboots (unlike /tmp).
+helper_dir = '/Library/Application Support/XX-Net'
+helper_path = os.path.join(helper_dir, 'mac_helper')
 
 if __name__ == "__main__":
     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -17,7 +25,8 @@ if __name__ == "__main__":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/3.8/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 
-from config import config, app_name
+from config import config, app_name, get_language
+from simple_i18n import SimpleI18N
 import module_init
 import subprocess
 import webbrowser
@@ -25,9 +34,26 @@ import webbrowser
 from xlog import getLogger
 xlog = getLogger("launcher")
 
+import objc
 import AppKit
 import SystemConfiguration
 from PyObjCTools import AppHelper
+
+
+def load_translation():
+    po_file = os.path.join(current_path, 'lang', get_language(), 'LC_MESSAGES', 'messages.po')
+    try:
+        return SimpleI18N.po_loader(po_file)
+    except Exception:
+        return {}
+
+
+po_dict = load_translation()
+
+
+def _(text):
+    value = po_dict.get(text.encode('utf-8'))
+    return value.decode('utf-8') if value else text
 
 
 class MacTrayObject(AppKit.NSObject):
@@ -35,6 +61,11 @@ class MacTrayObject(AppKit.NSObject):
         pass
 
     def applicationDidFinishLaunching_(self, notification):
+        # serve_forever() calls finishLaunching() itself, NSApp.run() may call it again.
+        if getattr(self, 'launched', False):
+            return
+        self.launched = True
+
         setupHelper()
         loadConfig()
         self.setupUI()
@@ -67,7 +98,7 @@ class MacTrayObject(AppKit.NSObject):
         # Build a very simple menu
         self.menu = AppKit.NSMenu.alloc().initWithTitle_(app_name)
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Config'), 'config:', '')
         self.menu.addItem_(menuitem)
 
         menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
@@ -75,14 +106,14 @@ class MacTrayObject(AppKit.NSObject):
         self.currentServiceMenuItem = menuitem
 
         if config.enable_gae_proxy == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Auto GAEProxy'),
                                                                                      'enableAutoProxy:', '')
             if proxyState == 'pac':
                 menuitem.setState_(AppKit.NSOnState)
             self.menu.addItem_(menuitem)
             self.autoGaeProxyMenuItem = menuitem
 
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global GAEProxy'),
                                                                                      'enableGlobalProxy:', '')
             if proxyState == 'gae':
                 menuitem.setState_(AppKit.NSOnState)
@@ -90,7 +121,7 @@ class MacTrayObject(AppKit.NSObject):
             self.globalGaeProxyMenuItem = menuitem
 
         if config.enable_x_tunnel == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global X-Tunnel',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global X-Tunnel'),
                                                                                      'enableGlobalXTunnel:', '')
             if proxyState == 'x_tunnel':
                 menuitem.setState_(AppKit.NSOnState)
@@ -98,14 +129,14 @@ class MacTrayObject(AppKit.NSObject):
             self.globalXTunnelMenuItem = menuitem
 
         if config.enable_smart_router == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global Smart-Router',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global Smart-Router'),
                                                                                      'enableGlobalSmartRouter:', '')
             if proxyState == 'smart_router':
                 menuitem.setState_(AppKit.NSOnState)
             self.menu.addItem_(menuitem)
             self.globalSmartRouterMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable Proxy', 'disableProxy:',
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Disable Proxy'), 'disableProxy:',
                                                                                  '')
         if proxyState == 'disable':
             menuitem.setState_(AppKit.NSOnState)
@@ -113,11 +144,11 @@ class MacTrayObject(AppKit.NSObject):
         self.disableGaeProxyMenuItem = menuitem
 
         # Reset Menu Item
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reset Each Module',
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Reset Each Module'),
                                                                                  'restartEachModule:', '')
         self.menu.addItem_(menuitem)
         # Default event
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Quit'), 'windowWillClose:', '')
         self.menu.addItem_(menuitem)
         # Bind it to the status item
         self.statusitem.setMenu_(self.menu)
@@ -285,31 +316,70 @@ class MacTrayObject(AppKit.NSObject):
         self.updateStatusBarMenu()
 
 
-def setupHelper():
+def isHelperInstalled():
     try:
-        with open(os.devnull) as devnull:
-            subprocess.check_call(helper_path, stderr=devnull)
-    except:
-        if os.path.exists(helper_path):
-            os.remove(helper_path)
-        shutil.copyfile(os.path.join(current_path, 'mac_helper'), helper_path)
+        dir_st = os.lstat(helper_dir)
+        if not stat.S_ISDIR(dir_st.st_mode) or dir_st.st_uid != 0 or dir_st.st_mode & 0o022:
+            return False
 
-        chownCommand = "chown root \\\"%s\\\"" % helper_path
-        chmodCommand = "chmod 4755 \\\"%s\\\"" % helper_path
-        executeCommand = 'do shell script "%s;%s" with administrator privileges' % (
-            chownCommand,
-            chmodCommand
-        )
+        st = os.lstat(helper_path)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or not st.st_mode & stat.S_ISUID:
+            return False
 
-        xlog.info("try setup helper:%s", executeCommand)
-        subprocess.call(['osascript', '-e', executeCommand])
+        # Reinstall when the bundled helper changes (e.g. after an update).
+        return filecmp.cmp(helper_path, bundled_helper_path, shallow=False)
+    except OSError:
+        return False
+
+
+def setupHelper():
+    if isHelperInstalled():
+        return
+
+    # root can't read the bundled helper when XX-Net is under a privacy
+    # protected folder like ~/Documents, so stage a copy in our private temp dir.
+    staging_dir = tempfile.mkdtemp(prefix='xxnet_helper_')
+    staged_helper_path = os.path.join(staging_dir, 'mac_helper')
+    try:
+        shutil.copyfile(bundled_helper_path, staged_helper_path)
+        installHelper(staged_helper_path)
+    finally:
+        shutil.rmtree(staging_dir, ignore_errors=True)
+
+    if not isHelperInstalled():
+        xlog.warn("setup helper failed")
+
+
+def installHelper(source_path):
+    # Copy, chown and chmod all run as root inside the root-owned directory,
+    # so there is no window where a user-writable file gets the setuid bit.
+    q = shlex.quote
+    tmp_path = os.path.join(helper_dir, '.mac_helper.tmp')
+    script = ' && '.join([
+        'if [ -L %s ]; then rm -f %s; fi' % (q(helper_dir), q(helper_dir)),
+        'mkdir -p %s' % q(helper_dir),
+        'chown root:wheel %s' % q(helper_dir),
+        'chmod 755 %s' % q(helper_dir),
+        'rm -f %s' % q(tmp_path),
+        'cp %s %s' % (q(source_path), q(tmp_path)),
+        'chown root:wheel %s' % q(tmp_path),
+        'chmod 4755 %s' % q(tmp_path),
+        'mv -f %s %s' % (q(tmp_path), q(helper_path)),
+    ])
+    apple_script = 'do shell script "%s" with administrator privileges' % (
+        script.replace('\\', '\\\\').replace('"', '\\"'))
+
+    xlog.info("try setup helper:%s", apple_script)
+    res = subprocess.run(['osascript', '-e', apple_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if res.returncode != 0:
+        xlog.warn("setup helper osascript ret:%d err:%s", res.returncode, res.stderr.decode(errors='replace').strip())
 
 
 def getCurrentServiceMenuItemTitle():
     if currentService:
-        return 'Connection: %s' % currentService
+        return _('Connection: %s') % currentService
     else:
-        return 'Connection: None'
+        return _('Connection: None')
 
 
 def getProxyState(service):
@@ -432,23 +502,33 @@ currentService = None
 
 def fetchCurrentService(protocol):
     global currentService
-    status = SystemConfiguration.SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
-    if not status:
+    try:
+        status = SystemConfiguration.SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
+        if not status:
+            currentService = None
+            return
+        serviceID = status.get('PrimaryService')
+        if not serviceID:
+            currentService = None
+            return
+        service = SystemConfiguration.SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
+        if not service:
+            currentService = None
+            return
+        currentService = service.get('UserDefinedName')
+    except Exception as e:
+        xlog.warn("fetchCurrentService exception: %r", e)
         currentService = None
-        return
-    serviceID = status['PrimaryService']
-    service = SystemConfiguration.SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
-    if not service:
-        currentService = None
-        return
-    currentService = service['UserDefinedName']
 
 
-@AppKit.objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
+@objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
 def networkChanged(center, observer, name, object, userInfo):
-    fetchCurrentService('IPv4')
-    loadConfig()
-    sys_tray.updateStatusBarMenu()
+    try:
+        fetchCurrentService('IPv4')
+        loadConfig()
+        sys_tray.updateStatusBarMenu()
+    except Exception as e:
+        xlog.warn("networkChanged exception: %r", e)
 
 
 # Note: the following code can't run in class
@@ -462,6 +542,9 @@ def serve_forever():
                                            AppKit.CFNotificationSuspensionBehaviorDeliverImmediately)
 
     fetchCurrentService('IPv4')
+    # When started from terminal (not an .app bundle) the delegate may not get
+    # applicationDidFinishLaunching_, so no tray icon; trigger it explicitly.
+    app.finishLaunching()
     AppHelper.runEventLoop()
 
 

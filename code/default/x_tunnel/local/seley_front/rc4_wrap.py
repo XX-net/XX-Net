@@ -21,6 +21,11 @@ except Exception as e:
 
     try:
         from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        try:
+            # CFB moved to decrepit in newer cryptography and will be removed from modes.
+            from cryptography.hazmat.decrepit.ciphers import modes
+        except ImportError:
+            pass
         logger.debug("load cryptography success")
     except:
         logger.warn("load cryptography failed:%r", e)
