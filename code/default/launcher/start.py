@@ -23,6 +23,11 @@ default_path = os.path.abspath(os.path.join(current_path, os.path.pardir))
 noarch_lib = os.path.abspath(os.path.join(default_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
 
+if sys.platform == "darwin":
+    darwin_lib = os.path.abspath(os.path.join(default_path, 'lib', 'darwin'))
+    if os.path.isdir(darwin_lib):
+        sys.path.insert(0, darwin_lib)
+
 import env_info
 data_path = env_info.data_path
 data_launcher_path = os.path.join(data_path, 'launcher')
