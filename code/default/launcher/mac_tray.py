@@ -6,6 +6,8 @@ import sys
 import stat
 import shlex
 import filecmp
+import shutil
+import tempfile
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 bundled_helper_path = os.path.join(current_path, 'mac_helper')
@@ -334,6 +336,21 @@ def setupHelper():
     if isHelperInstalled():
         return
 
+    # root can't read the bundled helper when XX-Net is under a privacy
+    # protected folder like ~/Documents, so stage a copy in our private temp dir.
+    staging_dir = tempfile.mkdtemp(prefix='xxnet_helper_')
+    staged_helper_path = os.path.join(staging_dir, 'mac_helper')
+    try:
+        shutil.copyfile(bundled_helper_path, staged_helper_path)
+        installHelper(staged_helper_path)
+    finally:
+        shutil.rmtree(staging_dir, ignore_errors=True)
+
+    if not isHelperInstalled():
+        xlog.warn("setup helper failed")
+
+
+def installHelper(source_path):
     # Copy, chown and chmod all run as root inside the root-owned directory,
     # so there is no window where a user-writable file gets the setuid bit.
     q = shlex.quote
@@ -344,7 +361,7 @@ def setupHelper():
         'chown root:wheel %s' % q(helper_dir),
         'chmod 755 %s' % q(helper_dir),
         'rm -f %s' % q(tmp_path),
-        'cp %s %s' % (q(bundled_helper_path), q(tmp_path)),
+        'cp %s %s' % (q(source_path), q(tmp_path)),
         'chown root:wheel %s' % q(tmp_path),
         'chmod 4755 %s' % q(tmp_path),
         'mv -f %s %s' % (q(tmp_path), q(helper_path)),
@@ -353,10 +370,9 @@ def setupHelper():
         script.replace('\\', '\\\\').replace('"', '\\"'))
 
     xlog.info("try setup helper:%s", apple_script)
-    subprocess.call(['osascript', '-e', apple_script])
-
-    if not isHelperInstalled():
-        xlog.warn("setup helper failed")
+    res = subprocess.run(['osascript', '-e', apple_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if res.returncode != 0:
+        xlog.warn("setup helper osascript ret:%d err:%s", res.returncode, res.stderr.decode(errors='replace').strip())
 
 
 def getCurrentServiceMenuItemTitle():
