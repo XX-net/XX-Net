@@ -17,9 +17,7 @@ desktop.ini
 /code/default/gae_proxy/local/ipv6_tunnel/set_best_server_temp.bat
 .pytest_cache
 *.log
-*.key
 code/version.txt
-patches/
 
 
 # Babel files

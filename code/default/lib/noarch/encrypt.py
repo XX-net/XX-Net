@@ -51,12 +51,6 @@ def random_string(length):
 cached_keys = {}
 
 
-def _get_cache_key(password):
-    if isinstance(password, bytes):
-        return hashlib.sha256(password).digest()
-    return hashlib.sha256(password.encode('utf-8')).digest()
-
-
 def try_cipher(key, method=None):
     Encryptor(key, method)
 
@@ -64,13 +58,9 @@ def try_cipher(key, method=None):
 def EVP_BytesToKey(password, key_len, iv_len):
     # equivalent to OpenSSL's EVP_BytesToKey() with count 1
     # so that we make the same key and iv as nodejs version
-    # NOTE: MD5 is used here per shadowsocks protocol specification,
-    #       NOT a security vulnerability. Changing this would break
-    #       compatibility with shadowsocks servers.
     if hasattr(password, 'encode'):
         password = password.encode('utf-8')
-    cache_key = _get_cache_key(password)
-    r = cached_keys.get(cache_key, None)
+    r = cached_keys.get(password, None)
     if r:
         return r
     m = []
@@ -86,7 +76,7 @@ def EVP_BytesToKey(password, key_len, iv_len):
     ms = b''.join(m)
     key = ms[:key_len]
     iv = ms[key_len:key_len + iv_len]
-    cached_keys[cache_key] = (key, iv)
+    cached_keys[password] = (key, iv)
     return key, iv
 
 
@@ -110,8 +100,6 @@ class Encryptor(object):
     def get_method_info(self, method):
         method = method.lower()
         m = method_supported.get(method)
-        if m is None and isinstance(method, str):
-            m = method_supported.get(method.encode('utf-8'))
         return m
 
     def iv_len(self):
@@ -141,7 +129,7 @@ class Encryptor(object):
             head = self.cipher_iv
             self.iv_sent = True
         else:
-            head = b""
+            head = ""
         return head + self.cipher.update(buf)
 
     def decrypt(self, buf):
@@ -177,25 +165,22 @@ def encrypt_all(password, method, op, data):
 
 
 try:
-    from crypto import RC4Cipher
-except ImportError as e:
-    xlog.warn('Load crypto.RC4Cipher Failed: %s, falling back to local implementation', e)
+    from Crypto.Cipher.ARC4 import new as RC4Cipher
+except:
+    xlog.warn('Load Crypto.Cipher.ARC4 Failed, Use Pure Python Instead.')
     class RC4Cipher(object):
         def __init__(self, key):
-            if isinstance(key, str):
-                key = key.encode('utf-8')
             x = 0
             box = list(range(256))
             for i, y in enumerate(box):
-                x = (x + y + key[i % len(key)]) & 0xff
+                x = (x + y + ord(key[i % len(key)])) & 0xff
                 box[i], box[x] = box[x], y
             self.__box = box
             self.__x = 0
             self.__y = 0
         def encrypt(self, data):
-            if isinstance(data, str):
-                data = data.encode('utf-8')
-            out = bytearray()
+            out = []
+            out_append = out.append
             x = self.__x
             y = self.__y
             box = self.__box
@@ -203,9 +188,7 @@ except ImportError as e:
                 x = (x + 1) & 0xff
                 y = (y + box[x]) & 0xff
                 box[x], box[y] = box[y], box[x]
-                out.append(char ^ box[(box[x] + box[y]) & 0xff])
+                out_append(chr(ord(char) ^ box[(box[x] + box[y]) & 0xff]))
             self.__x = x
             self.__y = y
-            return bytes(out)
-        def update(self, data):
-            return self.encrypt(data)
+            return ''.join(out)
