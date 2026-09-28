@@ -23,7 +23,8 @@ if __name__ == "__main__":
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/3.8/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 
-from config import config, app_name
+from config import config, app_name, get_language
+from simple_i18n import SimpleI18N
 import module_init
 import subprocess
 import webbrowser
@@ -35,6 +36,22 @@ import objc
 import AppKit
 import SystemConfiguration
 from PyObjCTools import AppHelper
+
+
+def load_translation():
+    po_file = os.path.join(current_path, 'lang', get_language(), 'LC_MESSAGES', 'messages.po')
+    try:
+        return SimpleI18N.po_loader(po_file)
+    except Exception:
+        return {}
+
+
+po_dict = load_translation()
+
+
+def _(text):
+    value = po_dict.get(text.encode('utf-8'))
+    return value.decode('utf-8') if value else text
 
 
 class MacTrayObject(AppKit.NSObject):
@@ -74,7 +91,7 @@ class MacTrayObject(AppKit.NSObject):
         # Build a very simple menu
         self.menu = AppKit.NSMenu.alloc().initWithTitle_(app_name)
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Config'), 'config:', '')
         self.menu.addItem_(menuitem)
 
         menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(getCurrentServiceMenuItemTitle(), None, '')
@@ -82,14 +99,14 @@ class MacTrayObject(AppKit.NSObject):
         self.currentServiceMenuItem = menuitem
 
         if config.enable_gae_proxy == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Auto GAEProxy',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Auto GAEProxy'),
                                                                                      'enableAutoProxy:', '')
             if proxyState == 'pac':
                 menuitem.setState_(AppKit.NSOnState)
             self.menu.addItem_(menuitem)
             self.autoGaeProxyMenuItem = menuitem
 
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global GAEProxy',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global GAEProxy'),
                                                                                      'enableGlobalProxy:', '')
             if proxyState == 'gae':
                 menuitem.setState_(AppKit.NSOnState)
@@ -97,7 +114,7 @@ class MacTrayObject(AppKit.NSObject):
             self.globalGaeProxyMenuItem = menuitem
 
         if config.enable_x_tunnel == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global X-Tunnel',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global X-Tunnel'),
                                                                                      'enableGlobalXTunnel:', '')
             if proxyState == 'x_tunnel':
                 menuitem.setState_(AppKit.NSOnState)
@@ -105,14 +122,14 @@ class MacTrayObject(AppKit.NSObject):
             self.globalXTunnelMenuItem = menuitem
 
         if config.enable_smart_router == 1:
-            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global Smart-Router',
+            menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Enable Global Smart-Router'),
                                                                                      'enableGlobalSmartRouter:', '')
             if proxyState == 'smart_router':
                 menuitem.setState_(AppKit.NSOnState)
             self.menu.addItem_(menuitem)
             self.globalSmartRouterMenuItem = menuitem
 
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable Proxy', 'disableProxy:',
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Disable Proxy'), 'disableProxy:',
                                                                                  '')
         if proxyState == 'disable':
             menuitem.setState_(AppKit.NSOnState)
@@ -120,11 +137,11 @@ class MacTrayObject(AppKit.NSObject):
         self.disableGaeProxyMenuItem = menuitem
 
         # Reset Menu Item
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reset Each Module',
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Reset Each Module'),
                                                                                  'restartEachModule:', '')
         self.menu.addItem_(menuitem)
         # Default event
-        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
+        menuitem = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(_('Quit'), 'windowWillClose:', '')
         self.menu.addItem_(menuitem)
         # Bind it to the status item
         self.statusitem.setMenu_(self.menu)
@@ -339,9 +356,9 @@ def setupHelper():
 
 def getCurrentServiceMenuItemTitle():
     if currentService:
-        return 'Connection: %s' % currentService
+        return _('Connection: %s') % currentService
     else:
-        return 'Connection: None'
+        return _('Connection: None')
 
 
 def getProxyState(service):

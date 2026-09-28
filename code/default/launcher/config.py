@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import subprocess
 import locale
 import json
@@ -103,14 +104,17 @@ def _get_os_language():
 
     if sys_platform.platform == "mac":
         try:
-            lang_code = subprocess.check_output(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'])
-            if b'zh' in lang_code:
+            out = subprocess.check_output(["/usr/bin/defaults", 'read', 'NSGlobalDomain', 'AppleLanguages'])
+            # Output looks like: (\n    "en-US",\n    "zh-Hans-NZ"\n), use the first (preferred) one.
+            langs = re.findall(br'[A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*', out)
+            lang_code = langs[0] if langs else b''
+            if lang_code.startswith(b'zh'):
                 return 'zh_CN'
-            elif b'en' in lang_code:
+            elif lang_code.startswith(b'en'):
                 return 'en_US'
-            elif b'fa' in lang_code:
+            elif lang_code.startswith(b'fa'):
                 return 'fa_IR'
-            elif b'ru' in lang_code:
+            elif lang_code.startswith(b'ru'):
                 return 'ru_RU'
 
         except:
