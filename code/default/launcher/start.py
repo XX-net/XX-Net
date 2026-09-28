@@ -12,7 +12,11 @@ import atexit
 # for OpenWrt
 import threading
 try:
-    threading.stack_size(64 * 1024)
+    if sys.version_info >= (3, 14):
+        # Python 3.14 checks C stack usage and raises RecursionError on 64K stacks.
+        threading.stack_size(256 * 1024)
+    else:
+        threading.stack_size(64 * 1024)
 except:
     pass
 
