@@ -49,6 +49,18 @@ echo "Start version:$REAL_VERSION"
 # launch xx-net service by ignore hungup signal
 launchWithNoHungup() {
     nohup ${PYTHON} code/${VERSION}/launcher/start.py $@>/dev/null 2>&1 &
+    PID=$!
+
+    # Output goes to /dev/null, so a startup failure (e.g. a broken python env)
+    # would be silent; if it quits with an error, run it again to show why.
+    sleep 3
+    if ! kill -0 $PID 2> /dev/null; then
+      wait $PID
+      if [ $? -ne 0 ]; then
+        echo "XX-Net failed to start, run again in foreground to show the error:"
+        ${PYTHON} code/${VERSION}/launcher/start.py $@
+      fi
+    fi
 }
 
 # launch xx-net service by hungup signal
