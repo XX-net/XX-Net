@@ -281,15 +281,25 @@ class HttpServerHandler():
                 if h is None or len(h) == 0:
                     break
 
-                length = ord(h[1]) & 127
+                # RFC 6455 §5.2: bit 7 of byte 2 is the MASK flag.
+                # If MASK=1 a 4-byte masking key follows the (extended) length;
+                # if MASK=0 the payload begins immediately — no key is present.
+                is_masked = bool(ord(h[1]) & 0x80)
+                length = ord(h[1]) & 0x7F
                 if length == 126:
                     length = struct.unpack(">H", self.rfile.read(2))[0]
                 elif length == 127:
                     length = struct.unpack(">Q", self.rfile.read(8))[0]
-                masks = [ord(byte) for byte in self.rfile.read(4)]
-                decoded = ""
-                for char in self.rfile.read(length):
-                    decoded += chr(ord(char) ^ masks[len(decoded) % 4])
+
+                if is_masked:
+                    masks = [ord(byte) for byte in self.rfile.read(4)]
+                    decoded = "".join(
+                        chr(ord(char) ^ masks[i % 4])
+                        for i, char in enumerate(self.rfile.read(length))
+                    )
+                else:
+                    decoded = "".join(chr(ord(c)) for c in self.rfile.read(length))
+
                 try:
                     self.WebSocket_on_message(decoded)
                 except Exception as e:
@@ -633,7 +643,7 @@ class HTTPServer():
             return
 
         client_obj = self.handler(sock, address, self.args)
-        client_thread = threading.Thread(target=client_obj.handle, name="handle_%s:%d" % address)
+        client_thread = threading.Thread(target=client_obj.handle, name="handle:{}".format(address))
         client_thread.start()
 
     def check_listen_port(self, ip, port):
