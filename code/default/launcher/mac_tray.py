@@ -59,6 +59,11 @@ class MacTrayObject(AppKit.NSObject):
         pass
 
     def applicationDidFinishLaunching_(self, notification):
+        # serve_forever() calls finishLaunching() itself, NSApp.run() may call it again.
+        if getattr(self, 'launched', False):
+            return
+        self.launched = True
+
         setupHelper()
         loadConfig()
         self.setupUI()
@@ -521,6 +526,9 @@ def serve_forever():
                                            AppKit.CFNotificationSuspensionBehaviorDeliverImmediately)
 
     fetchCurrentService('IPv4')
+    # When started from terminal (not an .app bundle) the delegate may not get
+    # applicationDidFinishLaunching_, so no tray icon; trigger it explicitly.
+    app.finishLaunching()
     AppHelper.runEventLoop()
 
 
