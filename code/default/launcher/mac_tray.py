@@ -2,11 +2,17 @@
 # coding:utf-8
 
 import os
-import shutil
 import sys
+import stat
+import shlex
+import filecmp
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-helper_path = os.path.join('/tmp', 'helper')
+bundled_helper_path = os.path.join(current_path, 'mac_helper')
+# The setuid helper lives in a root-owned directory, so no user-level process
+# can plant or swap it, and it survives reboots (unlike /tmp).
+helper_dir = '/Library/Application Support/XX-Net'
+helper_path = os.path.join(helper_dir, 'mac_helper')
 
 if __name__ == "__main__":
     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -25,6 +31,7 @@ import webbrowser
 from xlog import getLogger
 xlog = getLogger("launcher")
 
+import objc
 import AppKit
 import SystemConfiguration
 from PyObjCTools import AppHelper
@@ -285,24 +292,49 @@ class MacTrayObject(AppKit.NSObject):
         self.updateStatusBarMenu()
 
 
-def setupHelper():
+def isHelperInstalled():
     try:
-        with open(os.devnull) as devnull:
-            subprocess.check_call(helper_path, stderr=devnull)
-    except:
-        if os.path.exists(helper_path):
-            os.remove(helper_path)
-        shutil.copyfile(os.path.join(current_path, 'mac_helper'), helper_path)
+        dir_st = os.lstat(helper_dir)
+        if not stat.S_ISDIR(dir_st.st_mode) or dir_st.st_uid != 0 or dir_st.st_mode & 0o022:
+            return False
 
-        chownCommand = "chown root \\\"%s\\\"" % helper_path
-        chmodCommand = "chmod 4755 \\\"%s\\\"" % helper_path
-        executeCommand = 'do shell script "%s;%s" with administrator privileges' % (
-            chownCommand,
-            chmodCommand
-        )
+        st = os.lstat(helper_path)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or not st.st_mode & stat.S_ISUID:
+            return False
 
-        xlog.info("try setup helper:%s", executeCommand)
-        subprocess.call(['osascript', '-e', executeCommand])
+        # Reinstall when the bundled helper changes (e.g. after an update).
+        return filecmp.cmp(helper_path, bundled_helper_path, shallow=False)
+    except OSError:
+        return False
+
+
+def setupHelper():
+    if isHelperInstalled():
+        return
+
+    # Copy, chown and chmod all run as root inside the root-owned directory,
+    # so there is no window where a user-writable file gets the setuid bit.
+    q = shlex.quote
+    tmp_path = os.path.join(helper_dir, '.mac_helper.tmp')
+    script = ' && '.join([
+        'if [ -L %s ]; then rm -f %s; fi' % (q(helper_dir), q(helper_dir)),
+        'mkdir -p %s' % q(helper_dir),
+        'chown root:wheel %s' % q(helper_dir),
+        'chmod 755 %s' % q(helper_dir),
+        'rm -f %s' % q(tmp_path),
+        'cp %s %s' % (q(bundled_helper_path), q(tmp_path)),
+        'chown root:wheel %s' % q(tmp_path),
+        'chmod 4755 %s' % q(tmp_path),
+        'mv -f %s %s' % (q(tmp_path), q(helper_path)),
+    ])
+    apple_script = 'do shell script "%s" with administrator privileges' % (
+        script.replace('\\', '\\\\').replace('"', '\\"'))
+
+    xlog.info("try setup helper:%s", apple_script)
+    subprocess.call(['osascript', '-e', apple_script])
+
+    if not isHelperInstalled():
+        xlog.warn("setup helper failed")
 
 
 def getCurrentServiceMenuItemTitle():
@@ -432,23 +464,33 @@ currentService = None
 
 def fetchCurrentService(protocol):
     global currentService
-    status = SystemConfiguration.SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
-    if not status:
+    try:
+        status = SystemConfiguration.SCDynamicStoreCopyValue(None, "State:/Network/Global/" + protocol)
+        if not status:
+            currentService = None
+            return
+        serviceID = status.get('PrimaryService')
+        if not serviceID:
+            currentService = None
+            return
+        service = SystemConfiguration.SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
+        if not service:
+            currentService = None
+            return
+        currentService = service.get('UserDefinedName')
+    except Exception as e:
+        xlog.warn("fetchCurrentService exception: %r", e)
         currentService = None
-        return
-    serviceID = status['PrimaryService']
-    service = SystemConfiguration.SCDynamicStoreCopyValue(None, "Setup:/Network/Service/" + serviceID)
-    if not service:
-        currentService = None
-        return
-    currentService = service['UserDefinedName']
 
 
-@AppKit.objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
+@objc.callbackFor(AppKit.CFNotificationCenterAddObserver)
 def networkChanged(center, observer, name, object, userInfo):
-    fetchCurrentService('IPv4')
-    loadConfig()
-    sys_tray.updateStatusBarMenu()
+    try:
+        fetchCurrentService('IPv4')
+        loadConfig()
+        sys_tray.updateStatusBarMenu()
+    except Exception as e:
+        xlog.warn("networkChanged exception: %r", e)
 
 
 # Note: the following code can't run in class

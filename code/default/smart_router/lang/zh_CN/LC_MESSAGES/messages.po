@@ -74,6 +74,12 @@ msgstr "自动尝试 GAEProxy"
 msgid "Enable Fake CA"
 msgstr "允许替换证书"
 
+msgid "Bypass Speed Test Sites"
+msgstr "绕过测速网站"
+
+msgid "All->Direct"
+msgstr "全部->直连"
+
 msgid "Block Advertisement"
 msgstr "阻止广告"
 

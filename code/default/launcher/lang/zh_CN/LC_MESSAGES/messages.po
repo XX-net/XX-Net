@@ -305,7 +305,7 @@ msgid "Download completed."
 msgstr "下载完成。"
 
 msgid "Info"
-msgstr "信息和"
+msgstr "信息"
 
 msgid "System"
 msgstr "系统"
@@ -498,4 +498,61 @@ msgstr "全局 Smart-Router 代理"
 
 msgid "Global Proxy disabled"
 msgstr "全局代理禁用"
+
+msgid "Configuration"
+msgstr "配置"
+
+msgid "Generally not needed, only those who need internal proxy to access the external network (companies, Intranet, campus, etc.) need to configure this."
+msgstr "通常无需设置，只有需要通过内网代理访问外部网络（公司、内网、校园网等）的用户才需要配置此项。"
+
+msgid "Proxy type"
+msgstr "代理类型"
+
+msgid "Proxy IP address or domain name"
+msgstr "代理 IP 地址或域名"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "User name"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Failed reading the settings."
+msgstr "读取配置失败。"
+
+msgid "Do you really need LAN proxy? <a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">Help</a>."
+msgstr "你真的需要前置代理吗？<a href=\"https://github.com/XX-net/XX-Net/wiki/LAN-proxy-setting\">帮助</a>。"
+
+msgid "Checking settings ..."
+msgstr "正在检查配置..."
+
+msgid "Python Version"
+msgstr "Python 版本"
+
+msgid "OpenSSL Version"
+msgstr "OpenSSL 版本"
+
+msgid "System Platform"
+msgstr "系统平台"
+
+msgid "OS System"
+msgstr "操作系统"
+
+msgid "OS Version"
+msgstr "系统版本"
+
+msgid "OS Release"
+msgstr "系统发行版"
+
+msgid "OS Detail"
+msgstr "系统详情"
+
+msgid "Architecture"
+msgstr "系统架构"
+
+msgid "Browser"
+msgstr "浏览器"
 
