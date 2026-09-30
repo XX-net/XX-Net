@@ -212,16 +212,11 @@ exit 0
 
 
 set_iptables(){
-    if [ "$1" = '' ]; then
-      INF="br-lan"
-    else
-      INF=$1
-    fi
+    INF="${1:-br-lan}"
     echo "set interface $INF"
 
-    # TODO: check if rule exist
-
-    iptables -t nat -N REDSOCKS
+    # Recreate chain content so rules exist only once.
+    iptables -t nat -N REDSOCKS 2>/dev/null || iptables -t nat -F REDSOCKS
     iptables -t nat -A REDSOCKS -d 0.0.0.0/8 -j RETURN
     iptables -t nat -A REDSOCKS -d 10.0.0.0/8 -j RETURN
     iptables -t nat -A REDSOCKS -d 127.0.0.0/8 -j RETURN
@@ -231,28 +226,22 @@ set_iptables(){
     iptables -t nat -A REDSOCKS -d 224.0.0.0/4 -j RETURN
     iptables -t nat -A REDSOCKS -d 240.0.0.0/4 -j RETURN
     iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports 8086
-    iptables -t nat -A PREROUTING --in-interface $INF -p tcp -j REDSOCKS
+    iptables -t nat -C PREROUTING -i "$INF" -p tcp -j REDSOCKS 2>/dev/null || \
+        iptables -t nat -A PREROUTING -i "$INF" -p tcp -j REDSOCKS
     exit 0
 }
 
 unset_iptables(){
-    if [ "$1" = '' ]; then
-      INF="br-lan"
-    else
-      INF=$1
-    fi
+    INF="${1:-br-lan}"
 
-    iptables -t nat -D PREROUTING --in-interface $INF -p tcp -j REDSOCKS
-    iptables -t nat -D REDSOCKS -d 0.0.0.0/8 -j RETURN
-    iptables -t nat -D REDSOCKS -d 10.0.0.0/8 -j RETURN
-    iptables -t nat -D REDSOCKS -d 127.0.0.0/8 -j RETURN
-    iptables -t nat -D REDSOCKS -d 169.254.0.0/16 -j RETURN
-    iptables -t nat -D REDSOCKS -d 172.16.0.0/12 -j RETURN
-    iptables -t nat -D REDSOCKS -d 192.168.0.0/16 -j RETURN
-    iptables -t nat -D REDSOCKS -d 224.0.0.0/4 -j RETURN
-    iptables -t nat -D REDSOCKS -d 240.0.0.0/4 -j RETURN
-    iptables -t nat -D REDSOCKS -p tcp -j REDIRECT --to-ports 8086
-    iptables -t nat -X REDSOCKS
+    # Loop to also remove duplicated jumps left by older versions.
+    while iptables -t nat -D PREROUTING -i "$INF" -p tcp -j REDSOCKS 2>/dev/null; do :; done
+    # Keep the chain if another interface still jumps to it.
+    if ! iptables -t nat -S PREROUTING | grep -q -- "-j REDSOCKS"; then
+        iptables -t nat -F REDSOCKS 2>/dev/null
+        iptables -t nat -X REDSOCKS 2>/dev/null
+    fi
+    exit 0
 }
 
 
@@ -284,7 +273,7 @@ case $1 in
 
 set_iptables) set_iptables $2;shift 1;;
 
-unset_iptables) unset_iptables $2;exit 1;;
+unset_iptables) unset_iptables $2;;
 
 *) echo "unknown option $1."; exit 1;;
 esac
